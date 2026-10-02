@@ -7,4 +7,14 @@ export default defineConfig({
   adapter: node({ mode: 'standalone' }),
   integrations: [react()],
   devToolbar: { enabled: false },
+  vite: {
+    optimizeDeps: {
+      include: [
+        'lucide-react',
+        '@uiw/react-codemirror',
+        '@codemirror/lang-python',
+        'better-auth/react',
+      ],
+    },
+  },
 });

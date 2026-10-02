@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+data/
+public/pyodide/
+test-results/
+playwright-report/
+tmp/
+package-lock.json

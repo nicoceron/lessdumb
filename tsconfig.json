@@ -1,6 +1,17 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "node_modules"],
-  "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "react" }
+  "exclude": [
+    "dist",
+    "node_modules",
+    "tmp",
+    "public/pyodide",
+    "playwright-report",
+    "test-results"
+  ],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "skipLibCheck": true
+  }
 }
