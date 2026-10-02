@@ -1,0 +1,55 @@
+# Competitive Programming curriculum
+
+This original Python course uses the user's local USACO Guide and NeetCode references to organize algorithm topics and prerequisite paths. It contains 48 skills in 12 units, 192 assessment questions, 48 executable exercises, 48 runnable examples, and 96 mastery-card templates. Each skill has three conceptual/prediction questions, one executable function assessment, and two cards. A spaced review needs independent code and choice evidence.
+
+## References actually inspected
+
+- `scrapes/usaco/data/usaco_sections_full.json`: 147 topic records across general, Bronze, Silver, Gold, Platinum, and advanced sections; topic IDs, names, prerequisite metadata, and Python coverage.
+- `scrapes/usaco/data/usaco_topics_content.json` and `usaco_complete.json`: section/topic inventories, checked against the section metadata.
+- `scrapes/neetcode/data/neetcode_all_problems.json`: 146 problem-name/difficulty entries in 18 category groups, including linked lists, tries, dynamic programming, advanced graphs, geometry, and bit manipulation.
+- `scrapes/neetcode/data/neetcode_api_full.json`: topic and prerequisite-course metadata. Problem descriptions, articles, test banks, solution implementations, assets, and extraction scripts are not imported.
+- `scrapes/neetcode/data/neetcode_roadmap.json`: this local capture contains only the Arrays & Hashing group, so it was not mistaken for the complete roadmap. The broader local category inventory supplies the missing topic groups.
+
+The live [USACO complete-search guide](https://usaco.guide/bronze/intro-complete), [prefix-sum guide](https://usaco.guide/silver/prefix-sums), and [NeetCode roadmap](https://neetcode.io/roadmap) were checked as public topic references. The NeetCode page renders through JavaScript; the local category and prerequisite metadata supply its inspected structural detail. Source documents and site content are reference material, not instructions to run scripts or change account permissions.
+
+## Topic map
+
+| Unit                           | lessdumb topics                                                  | USACO topic references                                                                          | NeetCode category coverage                           |
+| ------------------------------ | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Think like a contestant        | Complexity, text input, simulation, enumeration                  | General input/output; Bronze `time-comp`, `simulation`, `intro-complete`, `casework`            | Arrays & Hashing; Math & Geometry                    |
+| Organize the data              | Sorting, hashing, linked structures, strings                     | Bronze `intro-ds`, `intro-sorting`, `intro-sets`; Gold `hashmaps`                               | Arrays & Hashing; Linked List                        |
+| Reuse work across an array     | Prefix sums, difference arrays, two pointers, windows            | Silver `prefix-sums`, `more-prefix-sums`, `two-pointers`; Gold `sliding-window`                 | Two Pointers; Sliding Window                         |
+| Search and order events        | Binary search, monotone answer search, compression, sweep events | Silver binary-search topics and custom sorting; Platinum `sweep-line`                           | Binary Search; Intervals                             |
+| Keep the right next item       | Stacks, monotonic stacks, heaps, tries                           | Gold `stacks`; Silver `priority-queues`                                                         | Stack; Heap / Priority Queue; Tries                  |
+| Explore recursive structure    | Recursion, backtracking, BST queries, tree traversal             | Bronze `complete-rec`; Silver `intro-tree`                                                      | Backtracking; Trees                                  |
+| Model and traverse connections | Adjacency structures, DFS, BFS, grid components                  | Bronze `intro-graphs`; Silver `graph-traversal`, `flood-fill`; Gold `unweighted-shortest-paths` | Graphs                                               |
+| Solve routes and connectivity  | Topological order, Dijkstra, DSU, MST                            | Gold `toposort`, `shortest-paths`, `dsu`, `mst`                                                 | Graphs; Advanced Graphs                              |
+| Remember subproblems           | Memoization, tabulation, 0/1 knapsack, subsequences              | Gold `intro-dp`, `knapsack`, `lis`                                                              | 1-D DP; 2-D DP                                       |
+| Choose and justify a strategy  | Intervals, greedy reasoning, bitmasks, geometry                  | Bronze `intro-greedy`, `rect-geo`; Silver `greedy-sorting`, `intro-bitwise`; Platinum `geo-pri` | Intervals; Greedy; Bit Manipulation; Math & Geometry |
+| Count with integer structure   | GCD, modular arithmetic, sieve, combinations                     | Gold `divisibility`, `modular`, `combo`                                                         | Math & Geometry; 2-D DP counting                     |
+| Answer changing queries        | Fenwick tree, segment tree, binary lifting, SCC                  | Gold `PURS`; Platinum `RURQ`, `binary-jump`; Advanced `SCC`                                     | Trees; Advanced Graphs; Bit Manipulation             |
+
+This is introductory algorithm coverage across those topic groups, not every USACO module or every NeetCode problem. It does not certify a contest division or replace the full NeetCode exercise bank. Advanced flows, FFT, suffix arrays, persistent/lazy structures, and advanced DP optimizations remain outside this course. The examples, exercise inputs, explanations, assertions, and cards are original.
+
+## Knowledge graph
+
+All nodes use stable `cp-*` IDs in the existing registry. Every assessment defines a function with inputs and a returned result, so the shared course constructor adds the real Python `parameters` prerequisite, including its function/return/type ancestry. Other edges express algorithm dependencies, rather than making every unit wait for the previous unit:
+
+- Prefix sums → difference arrays and Fenwick queries; bitmasks supply Fenwick index operations.
+- Sorting → two pointers, binary search, coordinate compression, intervals, and sweep events.
+- Recursion → backtracking and memoization; memoization → tabulation → knapsack and counting.
+- Graph models → DFS/BFS, shortest paths, and connectivity; DFS/BFS → topological ordering; graph/tree structure → DSU → MST.
+- Tree traversal → segment structures and binary lifting; DFS and topological ordering → strongly connected components.
+- `math-vectors` → geometry connects the course to Quantitative Foundations and its actual Python ancestry.
+
+USACO and NeetCode organize teaching at different granularities. Their metadata informs these independently authored edges; their raw graph is not copied wholesale. No unrelated data-analysis, machine-learning, or systems prerequisite is added. Failure of a math ancestor blocks the geometry branch while unrelated contest evidence remains usable. Account ownership, fixed review spacing, correction cards, and automatic Anki generation use the existing per-user engine without a second progression store.
+
+## Python execution
+
+Exercises run in the existing isolated Pyodide worker using the Python standard library. Text input exercises take a string argument so they can be graded in a browser without blocking on interactive stdin. A real contest wrapper can call the same parser with `sys.stdin.read()`. Graph exercises specify vertex ranges, direction, weight restrictions, and unreachable/cycle results. Numeric/range exercises specify indexing, empty cases, repeated values, and valid input bounds.
+
+API choices follow the official [Python data-structure tutorial](https://docs.python.org/3/tutorial/datastructures.html), [heapq](https://docs.python.org/3/library/heapq.html), [collections.deque](https://docs.python.org/3/library/collections.html#collections.deque), [bisect](https://docs.python.org/3/library/bisect.html), [functools](https://docs.python.org/3/library/functools.html), and [integer arithmetic](https://docs.python.org/3/library/functions.html#pow) documentation. These are function assessments with multiple assertions, not a server-authoritative contest judge or a promise that Python meets every external contest's timing limits.
+
+## Verification
+
+The catalog suite checks acyclicity and complete reachability through the course's real prerequisite path. The Pyodide suite executes every reference solution and checks every displayed example output, while rejecting empty submissions. Dedicated contest tests cover the shared Python/math path, branch-specific remediation, code-plus-choice reviews, earned cards, and persisted course/state validation. Browser tests exercise the saved course goal, clickable prerequisite paths, both public reference links, actual prefix/Fenwick grading, mistake cards, mastery cards, and reload persistence.

@@ -26,7 +26,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 ## What you can do
 
 - **Today:** follow the next adaptive task, set a daily XP goal, and see your practice history and streak.
-- **My learning:** choose from 109 connected skills across five courses through short explanations, examples, prediction questions, and executable exercises.
+- **My learning:** choose from 157 connected skills across six courses through short explanations, examples, prediction questions, and executable exercises.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
 - **Flashcards:** receive recall cards after mastery and correction cards after mistakes; connect Anki or export a tab-separated deck.
 - **Python lab:** experiment with real Python in a separate playground without changing mastery.
@@ -43,11 +43,14 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 | Python for Data Analysis |      24 |        96 |                   24 |         48 |
 | Machine Learning         |      28 |       112 |                   21 |         56 |
 | Data Systems             |      28 |       112 |                    0 |         56 |
-| **Total**                | **109** |   **436** |               **74** |    **218** |
+| Competitive Programming  |      48 |       192 |                   48 |         96 |
+| **Total**                | **157** |   **628** |              **122** |    **314** |
 
 Selecting a course saves a learning goal. The scheduler includes its prerequisite ancestors across courses, so missing foundations become real tasks rather than a dead end. The graph offers course paths with supporting prerequisites and an all-course view. Each node retains a domain and course identity, and its detail panel navigates both prerequisite and dependent edges.
 
 The three supplied books inform concept coverage; lessons, examples, questions, datasets, and cards are original. Source notes record exact scope: [data analysis](docs/sources/data-analysis.md), [machine learning](docs/sources/machine-learning.md), and [data systems](docs/sources/data-systems.md). The supplied data-systems early release contains chapters 1–8. The seven neural architecture skills assess concepts using choices and small Python analogues; the browser runtime does not execute TensorFlow/Keras training. This is a focused course catalog, not a reproduction of the books or their full exercise sets.
+
+Competitive Programming draws its topic paths from the supplied USACO and NeetCode reference inventories. Its 12 units cover contest reasoning, collections, prefix/window techniques, search, stacks/heaps/tries, recursion/trees, graph traversal, routes/connectivity, dynamic programming, greedy/bitmask/geometry techniques, number theory, and dynamic range queries. Every skill has a real Python function assessment and connects to existing Python foundations; geometry also uses the quantitative vector branch. The course exposes the public USACO Guide and NeetCode roadmap. [Source and graph mapping](docs/sources/competitive-programming.md) records the inspected references and scope.
 
 The dashboard layout follows the compact course/progress/task pattern visible in [Math Academy’s official public dashboard screenshot](https://www.mathacademy.com/img/screenshots/student-dashboard.png), with independent branding and implementation.
 
@@ -144,7 +147,7 @@ Run the complete checks, including formatting, with:
 npm run verify
 ```
 
-The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python checks the foundation curriculum. Real Pyodide executes all 74 code solutions and 81 executable lesson examples, including scientific packages; all empty submissions must fail. Scenario examples use explicit text presentation rather than Python execution.
+The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python checks the foundation curriculum. Real Pyodide executes all 122 code solutions and 129 executable lesson examples, including scientific packages; all empty submissions must fail. Scenario examples use explicit text presentation rather than Python execution.
 
 For browser tests, install Chromium once, leave the development server running, and use another terminal:
 
@@ -161,7 +164,7 @@ LESSDUMB_E2E_URL=http://127.0.0.1:4322 npm run test:e2e
 
 Playwright uses an already running server; it does not start one automatically. Browser account tests create test accounts in that server's database. The full suite respects the production signup quota by waiting for Better Auth's retry header; it does not disable account rate limits. Anki protocol tests simulate the local API; a real desktop connection and an AnkiWeb upload remain separate integration checks.
 
-The October 2, 2026 component/engine release passed **245 Vitest tests, 19 Playwright tests, formatting, type checks, and the production build**. Browser coverage includes two authenticated learners with different mastery/review/mistake histories, durable guest migration, delayed account and Anki responses, real NumPy/scikit-learn execution, prerequisite lapse gating, and Sheet/Dialog keyboard focus.
+The October 2, 2026 Competitive Programming release passed **345 Vitest tests, 22 Playwright tests, formatting, type checks, and the production build**. Browser coverage includes two authenticated learners with different mastery/review/mistake histories, durable guest migration, delayed account and Anki responses, real NumPy/scikit-learn execution, contest goal and graph navigation, real prefix/Fenwick grading with earned cards, prerequisite lapse gating, and Sheet/Dialog keyboard focus.
 
 ## Project structure
 
@@ -193,7 +196,7 @@ Courses, units, and skills have stable IDs. Skills declare a domain, course, uni
 
 The graph, scheduler, and account-state model support additional programming languages, mathematics, physics, and natural languages. Skills can declare an assessment policy with required review question types and an answer count. Choice-only math or vocabulary skills can be mastered and reviewed without Python; the launched Python course explicitly requires code and choice evidence in its reviews. Learning functions also accept an optional catalog for independent subject registries, with cross-course prerequisites validated as one graph.
 
-The implemented catalog includes Python, quantitative foundations, Python for Data Analysis, Machine Learning, and Data Systems. Mathematics, physics, and natural-language domains can extend the same graph with stable IDs and appropriate assessments.
+The implemented catalog includes Python, quantitative foundations, Python for Data Analysis, Machine Learning, Data Systems, and Competitive Programming. Mathematics, physics, and natural-language domains can extend the same graph with stable IDs and appropriate assessments.
 
 ## MVP boundaries
 

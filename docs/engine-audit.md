@@ -4,7 +4,7 @@ Audited against the user-supplied _The Math Academy Way_ working-draft PDF and [
 
 **The MVP's adaptive learning loop is implemented and tested. The complete engine described in the book is not.** lessdumb makes recommendations from each learner's evidence, mistakes, hints, activity, review dates, and course goal. Its graph and review rules are working product behavior, but they are a simpler model than Math Academy's diagnostics, retention calibration, and hierarchical reinforcement.
 
-The current catalog has 109 original skills and four authored questions per skill, across Python, quantitative foundations, data analysis, machine learning, and data systems. Original content and transparent rules do not establish equivalence to Math Academy's proprietary implementation or reported educational outcomes. Account and browser ownership checks are documented separately in [the account isolation audit](account-isolation.md).
+The current catalog has 157 original skills and four authored questions per skill, across Python, quantitative foundations, data analysis, machine learning, data systems, and competitive programming. Original content and transparent rules do not establish equivalence to Math Academy's proprietary implementation or reported educational outcomes. Account and browser ownership checks are documented separately in [the account isolation audit](account-isolation.md).
 
 ## Implemented, partial, and missing
 
