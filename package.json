@@ -15,9 +15,14 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "verify": "npm run format:check && npm run check && npm test && npm run build",
-    "postinstall": "node scripts/copy-python.mjs"
+    "postinstall": "node scripts/copy-python.mjs",
+    "build:cloudflare": "LESSDUMB_PLATFORM=cloudflare npm run build",
+    "preview:cloudflare": "LESSDUMB_PLATFORM=cloudflare astro preview --host 127.0.0.1 --port 4333",
+    "deploy:cloudflare": "npm run build:cloudflare && wrangler deploy",
+    "db:migrate:cloudflare": "wrangler d1 migrations apply lessdumb --remote"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^14.3.3",
     "@astrojs/node": "^11.1.6",
     "@astrojs/react": "^7.0.0",
     "@codemirror/lang-cpp": "6.0.3",
@@ -44,18 +49,23 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@cloudflare/workers-types": "^5.20261002.1",
     "@playwright/test": "^1.63.0",
     "@types/better-sqlite3": "^9.6.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "miniflare": "^5.20261001.0-alpha",
     "prettier": "3.9.9",
     "prettier-plugin-astro": "1.1.0",
     "typescript": "^6.0.3",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "wrangler": "^4.147.0"
   },
   "allowScripts": {
     "better-sqlite3@13.0.3": true,
     "esbuild@0.28.2": true,
-    "fsevents@2.3.3": true
+    "fsevents@2.3.3": true,
+    "workerd@1.20261001.1": true,
+    "esbuild@0.28.1": true
   }
 }

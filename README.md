@@ -2,7 +2,9 @@
 
 Learn deliberately. Remember automatically.
 
-lessdumb is a working adaptive learning MVP built with Astro, React, shadcn/ui, and free ReUI components. It combines a prerequisite knowledge graph, original lessons, real Python, Rust, and C++ exercises, evidence-based progression, spaced review, account persistence, and automatic Anki card creation. The application runs locally with free tools and no paid backend dependency.
+lessdumb is a working adaptive learning MVP built with Astro, React, shadcn/ui, and free ReUI components. It combines a prerequisite knowledge graph, original lessons, real Python, Rust, and C++ exercises, evidence-based progression, spaced review, account persistence, and automatic Anki card creation. The application runs locally with free tools and is deployed on Cloudflare Workers with D1 account storage.
+
+Public application: [lessdumb.nicocerond.workers.dev](https://lessdumb.nicocerond.workers.dev). [Cloudflare deployment and verification](docs/cloudflare.md).
 
 ## Quickstart
 

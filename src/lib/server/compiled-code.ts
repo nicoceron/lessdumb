@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { skillById, type Skill } from '../curriculum';
 import type { CodeResult } from '../code-runner';
-import type { Backend } from './backend';
+import type { Backend } from './backend-contract';
 
 export type CompiledLanguage = 'rust' | 'cpp';
 
@@ -351,7 +351,7 @@ export function createCompiledCodeService(options: ServiceOptions = {}) {
             },
           }),
           signal: controller.signal,
-          redirect: 'error',
+          redirect: 'manual',
         },
       );
       if (!response.ok) {
@@ -369,7 +369,11 @@ export function createCompiledCodeService(options: ServiceOptions = {}) {
       if (controller.signal.aborted)
         return unavailable('The run was cancelled.');
       return compilerResult(value, completionMarker);
-    } catch {
+    } catch (error) {
+      console.error(
+        'Compiler transport failed:',
+        error instanceof Error ? error.message : 'Unknown transport error',
+      );
       return unavailable(
         signal?.aborted
           ? 'The run was cancelled.'

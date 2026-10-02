@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getBackend } from '../../lib/server/backend';
+import { getBackend } from '#request-backend';
 import { handleCodeRequest } from '../../lib/server/compiled-code';
 
 export const prerender = false;

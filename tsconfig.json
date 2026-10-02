@@ -7,10 +7,14 @@
     "tmp",
     "public/pyodide",
     "playwright-report",
-    "test-results"
+    "test-results",
+    "worker-configuration.d.ts"
   ],
   "compilerOptions": {
-    "paths": { "@/*": ["./src/*"] },
+    "paths": {
+      "@/*": ["./src/*"],
+      "#request-backend": ["./src/lib/server/request-backend.ts"]
+    },
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "skipLibCheck": true
