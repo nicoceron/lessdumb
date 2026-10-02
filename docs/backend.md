@@ -36,6 +36,14 @@ The browser maintains separate guest and per-account caches. Unknown cloud revis
 
 Learner state uses generic skill IDs and a versioned structure. Authentication never accepts a client-supplied user ID: all reads and writes are scoped to `session.user.id`. This supports future subject catalogs without changing account isolation. Anki API keys stay on the browser and are never accepted in the learner-state schema.
 
+## Per-learner engine behavior
+
+The knowledge graph and authored questions are shared course data. The engine receives a particular learner's `Progress` on every call: mastery, prerequisite unlocking, the next task, review due dates, XP, and streaks are derived from that state. Account-specific goals, course selection, and Anki queues live in the same versioned learner state. The engine does not maintain a process-wide mutable learner record.
+
+Grading and progression are trusted client-side calculations. The server enforces authentication, ownership, state shape, request limits, and revision consistency; it does not independently execute submissions or certify that every claimed correct answer was earned. This is suitable for the current personal-learning MVP, and differs from server-authoritative examination or competitive scoring.
+
+The schema currently permits up to 5,000 retained attempts and a 2 MiB state request. The engine keeps its attempt history rather than silently dropping it. Reaching either limit prevents a cloud save, so long-term history compaction or event storage needs an explicit migration. The current course and review tests do not constitute a retention policy beyond those limits.
+
 ## Verification
 
 `npm test` includes real account/session persistence, per-account isolation, stale-cookie rejection, revision conflicts, schema validation, and progress reconciliation tests. `LESSDUMB_E2E_URL=http://127.0.0.1:4321 npm run test:e2e` runs browser tests against a running local server; these exercise failed cloud loads, retry behavior, and account switches in another tab. Browser tests create unique test accounts in that server's ignored database.

@@ -4,8 +4,19 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createBackend, type Backend } from '../src/lib/server/backend';
 import { handleStateRequest } from '../src/lib/server/state-api';
-import { createState } from '../src/lib/state';
-import { applyAttempt, recordLesson } from '../src/lib/learning';
+import {
+  createState,
+  recordLearningAnswer,
+  type LearnerState,
+} from '../src/lib/state';
+import {
+  applyAttempt,
+  DAY_MS,
+  getStats,
+  isMastered,
+  nextTask,
+  recordLesson,
+} from '../src/lib/learning';
 import { skills } from '../src/lib/curriculum';
 
 const baseURL = 'http://localhost:4321';
@@ -201,6 +212,186 @@ function stateRequest(
 }
 
 describe('versioned per-account progress', () => {
+  it('persists distinct engine mastery, review queues, cards, and preferences for two real accounts', async () => {
+    const { backend } = await freshBackend();
+    const firstCookie = await register(backend, 'engine-first@example.test');
+    const secondCookie = await register(backend, 'engine-second@example.test');
+    const firstSkill = skills.find((skill) => skill.id === 'print-output')!;
+    const secondSkill = skills.find((skill) => skill.id === 'ds-workloads')!;
+    const now = Date.now();
+    const learnedAt = now - 2 * DAY_MS;
+    const first = createState();
+    first.dailyGoal = 100;
+    first.activeCourseId = firstSkill.courseId;
+    first.anki.deck = 'First learner';
+    for (const [index, question] of firstSkill.questions.entries()) {
+      first.progress = applyAttempt(
+        first.progress,
+        {
+          skillId: firstSkill.id,
+          questionId: question.id,
+          correct: true,
+          mode: 'learn',
+        },
+        learnedAt + index,
+      );
+    }
+    first.cards = firstSkill.flashcards.map((card) => ({
+      ...card,
+      skillName: firstSkill.title,
+      kind: 'mastery',
+      status: 'pending',
+    }));
+    let second = createState();
+    second.dailyGoal = 25;
+    second.activeCourseId = secondSkill.courseId;
+    second.anki.deck = 'Second learner';
+    for (const question of secondSkill.questions) {
+      second = recordLearningAnswer(second, {
+        skillId: secondSkill.id,
+        questionId: question.id,
+        correct: true,
+        mode: 'learn',
+      });
+    }
+    second = recordLearningAnswer(second, {
+      skillId: secondSkill.id,
+      questionId: secondSkill.questions[0].id,
+      correct: false,
+      mode: 'learn',
+    });
+
+    for (const [cookie, state] of [
+      [firstCookie, first],
+      [secondCookie, second],
+    ] as const) {
+      expect(
+        (await stateRequest(backend, cookie, { state, revision: 0 })).status,
+      ).toBe(200);
+    }
+    const load = async (cookie: string) =>
+      (await (await stateRequest(backend, cookie)).json()) as {
+        state: LearnerState;
+        revision: number;
+      };
+    const storedFirst = await load(firstCookie);
+    const storedSecond = await load(secondCookie);
+    expect(storedFirst.state).toEqual(first);
+    expect(storedSecond.state).toEqual(second);
+    expect(getStats(storedFirst.state.progress, now).mastered).toBe(1);
+    expect(getStats(storedSecond.state.progress, now).mastered).toBe(0);
+    expect(isMastered(storedFirst.state.progress, secondSkill.id)).toBe(false);
+    expect(isMastered(storedSecond.state.progress, firstSkill.id)).toBe(false);
+    expect(
+      nextTask(storedFirst.state.progress, now, firstSkill.courseId),
+    ).toMatchObject({
+      skillId: firstSkill.id,
+      mode: 'review',
+    });
+    expect(
+      nextTask(storedSecond.state.progress, now, secondSkill.courseId),
+    ).toMatchObject({
+      skillId: secondSkill.id,
+      mode: 'learn',
+    });
+    expect(storedFirst.state.cards.map((card) => card.skillId)).toEqual([
+      firstSkill.id,
+      firstSkill.id,
+    ]);
+    expect(storedSecond.state.cards).toHaveLength(3);
+    expect(
+      storedSecond.state.cards.every((card) => card.skillId === secondSkill.id),
+    ).toBe(true);
+    expect(
+      storedSecond.state.cards.some((card) => card.kind === 'mistake'),
+    ).toBe(true);
+
+    const reviewQuestions = [
+      firstSkill.questions.find((question) => question.type === 'choice')!,
+      firstSkill.questions.find((question) => question.type === 'code')!,
+    ];
+    for (const [index, question] of reviewQuestions.entries()) {
+      storedFirst.state.progress = applyAttempt(
+        storedFirst.state.progress,
+        {
+          skillId: firstSkill.id,
+          questionId: question.id,
+          correct: true,
+          mode: 'review',
+        },
+        now + index,
+      );
+    }
+    const saved = await stateRequest(backend, firstCookie, {
+      state: storedFirst.state,
+      revision: storedFirst.revision,
+    });
+    expect(saved.status).toBe(200);
+    const reviewed = await load(firstCookie);
+    expect(reviewed.state.progress.skills[firstSkill.id]).toMatchObject({
+      reviewCount: 1,
+      intervalDays: 3,
+    });
+    expect(reviewed.state.progress.totalXp).toBe(58);
+    expect((await load(secondCookie)).state).toEqual(second);
+    expect((await load(secondCookie)).revision).toBe(1);
+  });
+
+  it('cannot select another account through headers, query parameters, or a body user ID', async () => {
+    const { backend } = await freshBackend();
+    const firstCookie = await register(backend, 'scope-first@example.test');
+    const secondCookie = await register(backend, 'scope-second@example.test');
+    const secondSession = await backend.auth.api.getSession({
+      headers: new Headers({ cookie: secondCookie }),
+    });
+    const secondId = secondSession!.user.id;
+    const first = { ...createState(), dailyGoal: 25 };
+    const second = { ...createState(), dailyGoal: 100 };
+    expect(
+      (await stateRequest(backend, firstCookie, { state: first, revision: 0 }))
+        .status,
+    ).toBe(200);
+    expect(
+      (
+        await stateRequest(backend, secondCookie, {
+          state: second,
+          revision: 0,
+        })
+      ).status,
+    ).toBe(200);
+
+    const query = await handleStateRequest(
+      new Request(
+        `${baseURL}/api/state?userId=${encodeURIComponent(secondId)}`,
+        {
+          headers: { cookie: firstCookie },
+        },
+      ),
+      backend,
+    );
+    expect(query.status).toBe(200);
+    expect((await query.json()).state).toEqual(first);
+    const asserted = await handleStateRequest(
+      new Request(`${baseURL}/api/state`, {
+        headers: { cookie: firstCookie, 'X-Lessdumb-User': secondId },
+      }),
+      backend,
+    );
+    expect(asserted.status).toBe(401);
+    const body = await stateRequest(backend, firstCookie, {
+      state: { ...first, dailyGoal: 75 },
+      revision: 1,
+      userId: secondId,
+    });
+    expect(body.status).toBe(400);
+    expect(
+      (await (await stateRequest(backend, firstCookie)).json()).state,
+    ).toEqual(first);
+    expect(
+      (await (await stateRequest(backend, secondCookie)).json()).state,
+    ).toEqual(second);
+  });
+
   it('rejects an old tab when its cookie now belongs to a different learner', async () => {
     const { backend } = await freshBackend();
     const firstCookie = await register(backend, 'old-tab@example.test');

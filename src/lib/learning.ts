@@ -161,13 +161,26 @@ export function isUnlocked(
   skillId: string,
   catalog: CurriculumCatalog = defaultCatalog,
 ): boolean {
-  const item = catalog.skills.find((skill) => skill.id === skillId);
-  return (
-    !!item &&
-    item.prerequisites.every((prerequisite) =>
-      isMastered(progress, prerequisite, catalog),
-    )
-  );
+  const byId = new Map(catalog.skills.map((skill) => [skill.id, skill]));
+  const checked = new Map<string, boolean>();
+  const visiting = new Set<string>();
+  function prerequisitesReady(id: string): boolean {
+    const item = byId.get(id);
+    if (!item || visiting.has(id)) return false;
+    if (checked.has(id)) return checked.get(id)!;
+    visiting.add(id);
+    // A parent's earlier evidence remains intact after an ancestor lapses,
+    // but it cannot open a path through that ancestor until remediation.
+    const ready = item.prerequisites.every(
+      (prerequisite) =>
+        isMastered(progress, prerequisite, catalog) &&
+        prerequisitesReady(prerequisite),
+    );
+    visiting.delete(id);
+    checked.set(id, ready);
+    return ready;
+  }
+  return prerequisitesReady(skillId);
 }
 
 function courseSkills(
@@ -434,10 +447,11 @@ export function applyAttempt(
       includesRequiredTypes
     ) {
       state.reviewCount += 1;
+      // reviewCount is lifetime activity, not the strength of the current
+      // schedule. Relearning restarts at one day even after many past reviews.
       state.intervalDays =
-        REVIEW_INTERVALS[
-          Math.min(state.reviewCount, REVIEW_INTERVALS.length - 1)
-        ];
+        REVIEW_INTERVALS.find((days) => days > old.intervalDays) ??
+        REVIEW_INTERVALS[REVIEW_INTERVALS.length - 1];
       state.dueAt = time + state.intervalDays * DAY_MS;
       state.reviewQuestionIds = [];
     }

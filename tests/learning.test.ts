@@ -436,6 +436,114 @@ describe('mastery and the prerequisite frontier', () => {
     expect(isMastered(progress, 'variables')).toBe(true);
   });
 
+  it('adapts a deep prerequisite path to two learners with different retention histories', () => {
+    const shared = master(
+      master(master(fresh(), 'print-output'), 'variables'),
+      'numbers',
+    );
+    const original = JSON.stringify(shared);
+    const lapse = applyAttempt(
+      shared,
+      {
+        skillId: 'print-output',
+        questionId: 'print-output-q1',
+        correct: false,
+        mode: 'review',
+      },
+      NOW + DAY_MS,
+    );
+    let retained = shared;
+    for (const id of ['print-output-q4', 'print-output-q1'])
+      retained = applyAttempt(
+        retained,
+        {
+          skillId: 'print-output',
+          questionId: id,
+          correct: true,
+          mode: 'review',
+        },
+        NOW + DAY_MS,
+      );
+
+    expect(isMastered(lapse, 'variables')).toBe(true);
+    expect(isMastered(lapse, 'numbers')).toBe(true);
+    expect(isUnlocked(lapse, 'numbers')).toBe(false);
+    expect(isUnlocked(retained, 'numbers')).toBe(true);
+    expect(nextTask(lapse, NOW + DAY_MS, 'python-foundations')).toMatchObject({
+      skillId: 'print-output',
+      questionId: 'print-output-q1',
+      mode: 'learn',
+    });
+    expect(
+      nextTask(retained, NOW + DAY_MS, 'python-foundations'),
+    ).toMatchObject({
+      skillId: 'variables',
+      mode: 'review',
+    });
+    expect(() => recordLesson(lapse, 'numbers', NOW + DAY_MS)).toThrow(
+      'prerequisites',
+    );
+    expect(() =>
+      applyAttempt(
+        lapse,
+        {
+          skillId: 'numbers',
+          questionId: 'numbers-q1',
+          correct: true,
+          mode: 'learn',
+        },
+        NOW + DAY_MS,
+      ),
+    ).toThrow('prerequisites');
+
+    const repaired = applyAttempt(
+      lapse,
+      {
+        skillId: 'print-output',
+        questionId: 'print-output-q1',
+        correct: true,
+        mode: 'learn',
+      },
+      NOW + DAY_MS,
+    );
+    expect(isUnlocked(repaired, 'numbers')).toBe(true);
+    expect(repaired.totalXp).toBe(lapse.totalXp);
+    expect(JSON.stringify(shared)).toBe(original);
+  });
+
+  it('distinguishes independent evidence from hints despite identical answer accuracy', () => {
+    let independent = fresh();
+    let assisted = fresh();
+    for (const question of skillById['print-output'].questions) {
+      const input = {
+        skillId: 'print-output',
+        questionId: question.id,
+        correct: true,
+        mode: 'learn' as const,
+      };
+      independent = applyAttempt(independent, input, NOW);
+      assisted = applyAttempt(
+        assisted,
+        { ...input, usedHint: question.type === 'code' },
+        NOW,
+      );
+    }
+    expect(getStats(independent, NOW).accuracy).toBe(1);
+    expect(getStats(assisted, NOW).accuracy).toBe(1);
+    expect(independent.attempts).toHaveLength(assisted.attempts.length);
+    expect(nextTask(independent, NOW, 'python-foundations')).toMatchObject({
+      skillId: 'variables',
+      mode: 'learn',
+    });
+    expect(nextTask(assisted, NOW, 'python-foundations')).toMatchObject({
+      skillId: 'print-output',
+      questionId: 'print-output-q4',
+      mode: 'learn',
+    });
+    expect(getSkillState(independent, 'print-output').dueAt).toBe(NOW + DAY_MS);
+    expect(getSkillState(assisted, 'print-output').dueAt).toBeNull();
+  });
+
   it('can reach every skill from the graph without manually unlocking nodes', () => {
     let progress = fresh();
     for (let i = 0; i < 96; i++) {
@@ -526,6 +634,64 @@ describe('spaced retrieval, XP and dates', () => {
     );
     expect(getSkillState(progress, 'print-output').reviewQuestionIds).toEqual(
       [],
+    );
+  });
+
+  it('restarts spacing after a lapse instead of using lifetime reviews as current strength', () => {
+    function review(progress: Progress, time: number): Progress {
+      let result = progress;
+      for (const id of ['print-output-q4', 'print-output-q1'])
+        result = applyAttempt(
+          result,
+          {
+            skillId: 'print-output',
+            questionId: id,
+            correct: true,
+            mode: 'review',
+          },
+          time,
+        );
+      return result;
+    }
+    let established = master(fresh(), 'print-output');
+    for (let i = 0; i < 4; i++)
+      established = review(
+        established,
+        getSkillState(established, 'print-output').dueAt!,
+      );
+    expect(getSkillState(established, 'print-output').intervalDays).toBe(30);
+    const lapseTime = getSkillState(established, 'print-output').dueAt!;
+    const retained = review(established, lapseTime);
+    let recovered = applyAttempt(
+      established,
+      {
+        skillId: 'print-output',
+        questionId: 'print-output-q4',
+        correct: false,
+        mode: 'review',
+      },
+      lapseTime,
+    );
+    recovered = applyAttempt(
+      recovered,
+      {
+        skillId: 'print-output',
+        questionId: 'print-output-q4',
+        correct: true,
+        mode: 'learn',
+      },
+      lapseTime,
+    );
+    expect(getSkillState(recovered, 'print-output').intervalDays).toBe(1);
+    expect(getSkillState(recovered, 'print-output').reviewCount).toBe(4);
+    recovered = review(recovered, lapseTime + DAY_MS);
+
+    expect(getSkillState(retained, 'print-output').reviewCount).toBe(5);
+    expect(getSkillState(recovered, 'print-output').reviewCount).toBe(5);
+    expect(getSkillState(retained, 'print-output').intervalDays).toBe(60);
+    expect(getSkillState(recovered, 'print-output').intervalDays).toBe(3);
+    expect(getSkillState(recovered, 'print-output').dueAt).toBe(
+      lapseTime + 4 * DAY_MS,
     );
   });
 
