@@ -6,6 +6,7 @@ self.onmessage = async ({ data }) => {
   const { id, code, tests = '' } = data;
   try {
     const python = await runtime;
+    await python.loadPackagesFromImports(`${code}\n${tests}`);
     self.postMessage({ id, ready: true });
     self.postMessage({ id, ...(await executePython(python, code, tests)) });
   } catch (error) {

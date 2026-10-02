@@ -9,15 +9,13 @@ import {
 } from 'vitest';
 import { loadPyodide, type PyodideInterface } from 'pyodide';
 import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { Worker as NodeWorker } from 'node:worker_threads';
 import { skills, type CodeQuestion } from '../src/lib/curriculum';
 import { runPython, type PythonResult } from '../src/lib/python';
 
-const require = createRequire(import.meta.url);
-const pyodideDirectory = `${dirname(require.resolve('pyodide/pyodide.mjs'))}/`;
+const pyodideDirectory = `${resolve('public/pyodide')}/`;
 const runtimeUrl = pathToFileURL(resolve('public/python-runtime.mjs')).href;
 type ExecutePython = (
   runtime: PyodideInterface,
@@ -35,6 +33,7 @@ describe('real Pyodide curriculum execution', () => {
   let executePython: ExecutePython;
   beforeAll(async () => {
     runtime = await loadPyodide({ indexURL: pyodideDirectory });
+    await runtime.loadPackage(['numpy', 'pandas', 'scikit-learn']);
     executePython = (await import(runtimeUrl)).executePython;
   }, 60_000);
 
@@ -54,7 +53,7 @@ describe('real Pyodide curriculum execution', () => {
     });
   }
 
-  for (const skill of skills) {
+  for (const skill of skills.filter((s) => s.lesson.example.kind !== 'text')) {
     it(`matches the published lesson output for ${skill.id}`, async () => {
       const result = await executePython(runtime, skill.lesson.example.code);
       expect(result).toMatchObject({
