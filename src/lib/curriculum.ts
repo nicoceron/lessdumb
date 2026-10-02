@@ -1,3 +1,7 @@
+import { quantitativeCatalog } from './courses/quantitative';
+import { dataAnalysisCatalog } from './courses/data-analysis';
+import { machineLearningCatalog } from './courses/machine-learning';
+import { dataSystemsCatalog } from './courses/data-systems';
 export type Domain = 'programming' | 'mathematics' | 'physics' | 'language';
 
 export interface Course {
@@ -59,7 +63,13 @@ export interface Skill {
   estimatedMinutes: number;
   lesson: {
     paragraphs: string[];
-    example: { code: string; output: string; explanation: string };
+    example: {
+      code: string;
+      output: string;
+      explanation: string;
+      kind?: 'code' | 'text';
+      label?: string;
+    };
   };
   questions: Question[];
   flashcards: Flashcard[];
@@ -141,7 +151,7 @@ function skill(
   };
 }
 
-export const units: Unit[] = [
+const pythonUnits: Unit[] = [
   {
     id: 'first-programs',
     title: 'First programs',
@@ -1667,14 +1677,11 @@ const curriculum = [
   ),
 ];
 
-export const skills: Skill[] = curriculum.map((item, index) => ({
+const pythonSkills: Skill[] = curriculum.map((item, index) => ({
   ...item,
   order: index,
 }));
-export const skillById: Record<string, Skill> = Object.fromEntries(
-  skills.map((item) => [item.id, item]),
-);
-export const courses: Course[] = [
+const pythonCourses: Course[] = [
   {
     id: 'python-foundations',
     title: 'Python foundations',
@@ -1682,9 +1689,31 @@ export const courses: Course[] = [
       'From your first print statement to a tested word counter. Learn by writing real Python, then keep it with spaced practice.',
     domain: 'programming',
     language: 'python',
-    skillIds: skills.map((item) => item.id),
+    skillIds: pythonSkills.map((item) => item.id),
   },
 ];
+
+const extensions = [
+  quantitativeCatalog,
+  dataAnalysisCatalog,
+  machineLearningCatalog,
+  dataSystemsCatalog,
+];
+export const courses: Course[] = [
+  ...pythonCourses,
+  ...extensions.flatMap((c) => c.courses),
+];
+export const units: Unit[] = [
+  ...pythonUnits,
+  ...extensions.flatMap((c) => c.units),
+];
+export const skills: Skill[] = [
+  ...pythonSkills,
+  ...extensions.flatMap((c) => c.skills),
+];
+export const skillById: Record<string, Skill> = Object.fromEntries(
+  skills.map((item) => [item.id, item]),
+);
 
 export const allFlashcards: Flashcard[] = skills.flatMap(
   (item) => item.flashcards,

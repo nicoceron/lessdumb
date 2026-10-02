@@ -1,3 +1,4 @@
+import { courses } from '../curriculum';
 import type { LearnerState } from '../state';
 
 export class StateValidationError extends Error {
@@ -263,6 +264,7 @@ export function parseStateUpdate(value: unknown): {
     'version',
     'progress',
     'dailyGoal',
+    'activeCourseId',
     'cards',
     'anki',
     'createdAt',
@@ -270,6 +272,8 @@ export function parseStateUpdate(value: unknown): {
   ]);
   if (state.version !== 1) fail('state.version', '1');
   number(state.dailyGoal, 'state.dailyGoal', 1, 10_000);
+  if (state.activeCourseId !== undefined)
+    string(state.activeCourseId, 'state.activeCourseId', 128);
   timestamp(state.createdAt, 'state.createdAt');
   timestamp(state.updatedAt, 'state.updatedAt');
   validateProgress(state.progress);
@@ -286,5 +290,11 @@ export function parseStateUpdate(value: unknown): {
   boolean(anki.connected, 'state.anki.connected');
   if (anki.profile !== null) string(anki.profile, 'state.anki.profile', 256);
   string(anki.deck, 'state.anki.deck', 256);
-  return { state: body.state as LearnerState, revision };
+  const parsed = body.state as LearnerState;
+  const normalized =
+    parsed.activeCourseId &&
+    !courses.some((c) => c.id === parsed.activeCourseId)
+      ? { ...parsed, activeCourseId: courses[0].id }
+      : parsed;
+  return { state: normalized, revision };
 }

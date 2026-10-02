@@ -1,9 +1,8 @@
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import {
-  skills,
+  skills as allSkills,
   skillById,
-  allFlashcards,
   validateCurriculum,
   type CurriculumCatalog,
   type Skill,
@@ -23,6 +22,8 @@ import {
   type Progress,
 } from '../src/lib/learning';
 
+const skills = allSkills.filter((s) => s.courseId === 'python-foundations');
+const allFlashcards = skills.flatMap((s) => s.flashcards);
 const NOW = Date.parse('2026-10-01T16:00:00Z');
 function fresh() {
   return emptyProgress(NOW, 'America/Bogota');
@@ -438,12 +439,12 @@ describe('mastery and the prerequisite frontier', () => {
   it('can reach every skill from the graph without manually unlocking nodes', () => {
     let progress = fresh();
     for (let i = 0; i < 96; i++) {
-      const task = nextTask(progress, NOW);
+      const task = nextTask(progress, NOW, 'python-foundations');
       expect(task, `The graph stalled after ${i} answers.`).not.toBeNull();
       progress = applyAttempt(progress, { ...task!, correct: true }, NOW);
     }
     expect(getStats(progress, NOW).mastered).toBe(24);
-    expect(nextTask(progress, NOW)).toBeNull();
+    expect(nextTask(progress, NOW, 'python-foundations')).toBeNull();
     expect(earnedFlashcards(progress)).toHaveLength(48);
   });
 });
@@ -616,7 +617,9 @@ describe('subject-specific catalogs and assessment policies', () => {
   it('validates choice-only skills and cross-course prerequisites without adding public courses', () => {
     const catalog = subjectCatalog();
     expect(validateCurriculum(catalog.skills, catalog)).toEqual([]);
-    expect(nextTask(fresh(), NOW, 'fixture-language', catalog)).toBeNull();
+    expect(nextTask(fresh(), NOW, 'fixture-language', catalog)?.skillId).toBe(
+      'fixture-addition',
+    );
     expect(nextTask(fresh(), NOW, undefined, catalog)?.skillId).toBe(
       'fixture-addition',
     );

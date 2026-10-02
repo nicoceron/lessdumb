@@ -6,7 +6,12 @@ import {
   isMastered,
   recordLesson,
 } from '../src/lib/learning';
-import { createState, mergeStates, type LearnerState } from '../src/lib/state';
+import {
+  createState,
+  mergeStates,
+  recordLearningAnswer,
+  type LearnerState,
+} from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
 
 const skill = skills.find((candidate) => candidate.prerequisites.length === 0)!;
@@ -41,6 +46,188 @@ function baseline() {
     progress: recordLesson(state.progress, skill.id, start),
   };
 }
+
+describe('recording learning answers against current state', () => {
+  const systemsSkill = skills.find(
+    (candidate) => candidate.id === 'ds-workloads',
+  )!;
+
+  it('preserves a concurrent unrelated attempt, its cards, and current account preferences', () => {
+    const unrelated = recordLearningAnswer(baseline(), {
+      skillId: systemsSkill.id,
+      questionId: systemsSkill.questions[0].id,
+      correct: false,
+      mode: 'learn',
+    });
+    const latest: LearnerState = {
+      ...unrelated,
+      dailyGoal: 100,
+      activeCourseId: 'data-systems-foundations',
+      anki: { connected: true, profile: 'Learner', deck: 'My learning' },
+      cards: unrelated.cards.map((card) => ({
+        ...card,
+        status: 'synced',
+        noteId: 701,
+      })),
+    };
+    const before = structuredClone(latest);
+    const result = recordLearningAnswer(latest, {
+      skillId: skill.id,
+      questionId: skill.questions[0].id,
+      correct: true,
+      mode: 'learn',
+    });
+
+    expect(latest).toEqual(before);
+    expect(result.progress.skills[systemsSkill.id]).toEqual(
+      before.progress.skills[systemsSkill.id],
+    );
+    expect(result.progress.attempts).toHaveLength(2);
+    expect(result.progress.attempts[0]).toEqual(before.progress.attempts[0]);
+    expect(result.progress.totalXp).toBe(before.progress.totalXp + 10);
+    expect(result.cards).toEqual(before.cards);
+    expect(result.cards[0]).toBe(latest.cards[0]);
+    expect(result.dailyGoal).toBe(100);
+    expect(result.activeCourseId).toBe('data-systems-foundations');
+    expect(result.anki).toBe(latest.anki);
+    expect(result.createdAt).toBe(latest.createdAt);
+    expect(result.updatedAt).toBe(latest.updatedAt);
+  });
+
+  it('deduplicates repeated mistake cards without replacing their synced Anki metadata', () => {
+    const input = {
+      skillId: skill.id,
+      questionId: skill.questions[0].id,
+      correct: false,
+      mode: 'learn' as const,
+    };
+    const first = recordLearningAnswer(baseline(), input);
+    const synced: LearnerState = {
+      ...first,
+      cards: first.cards.map((card) => ({
+        ...card,
+        status: 'synced',
+        noteId: 809,
+      })),
+    };
+    const result = recordLearningAnswer(
+      recordLearningAnswer(synced, input),
+      input,
+    );
+    expect(result.progress.attempts).toHaveLength(3);
+    expect(result.cards).toHaveLength(1);
+    expect(result.cards[0]).toBe(synced.cards[0]);
+    expect(result.cards[0]).toMatchObject({
+      id: `mistake:${skill.id}:${input.questionId}`,
+      kind: 'mistake',
+      status: 'synced',
+      noteId: 809,
+    });
+    const question = skill.questions[0];
+    expect(result.cards[0].front).toContain(question.prompt);
+    if (question.type === 'choice') {
+      expect(result.cards[0].back).toBe(
+        `${question.choices[question.answer]}\n\n${question.explanation}`,
+      );
+      if (question.code) expect(result.cards[0].front).toContain(question.code);
+    }
+  });
+
+  it('replays a stable event identity as a no-op after unrelated new work', () => {
+    const input = {
+      attemptId: '10456670-4979-4a8e-9f43-4d2e2f088d0a',
+      skillId: skill.id,
+      questionId: skill.questions[0].id,
+      correct: true,
+      mode: 'learn' as const,
+    };
+    const first = recordLearningAnswer(baseline(), input);
+    expect(first.progress.attempts[0].id).toBe(input.attemptId);
+    const latest = recordLearningAnswer(first, {
+      attemptId: 'd2ea41e2-ad99-48e6-b3a8-29ffb90a1e46',
+      skillId: systemsSkill.id,
+      questionId: systemsSkill.questions[0].id,
+      correct: false,
+      mode: 'learn',
+    });
+    const before = structuredClone(latest);
+    const replayed = recordLearningAnswer(latest, input);
+    expect(replayed).toBe(latest);
+    expect(replayed).toEqual(before);
+    expect(replayed.progress.attempts).toHaveLength(2);
+    expect(replayed.progress.totalXp).toBe(10);
+    expect(replayed.cards).toHaveLength(1);
+  });
+
+  it('adds the actual authored mastery cards when a choice-only systems skill becomes mastered', () => {
+    expect(systemsSkill.questions.every((q) => q.type === 'choice')).toBe(true);
+    let current = baseline();
+    for (const question of systemsSkill.questions.slice(0, -1)) {
+      current = recordLearningAnswer(current, {
+        skillId: systemsSkill.id,
+        questionId: question.id,
+        correct: true,
+        mode: 'learn',
+      });
+    }
+    expect(current.cards).toHaveLength(0);
+    const lastQuestion = systemsSkill.questions.at(-1)!;
+    const mastered = recordLearningAnswer(current, {
+      skillId: systemsSkill.id,
+      questionId: lastQuestion.id,
+      correct: true,
+      mode: 'learn',
+    });
+    expect(isMastered(mastered.progress, systemsSkill.id)).toBe(true);
+    expect(mastered.progress.totalXp).toBe(40);
+    expect(mastered.cards).toEqual(
+      systemsSkill.flashcards.map((card) => ({
+        ...card,
+        skillName: systemsSkill.title,
+        kind: 'mastery',
+        status: 'pending',
+      })),
+    );
+    const repeated = recordLearningAnswer(mastered, {
+      skillId: systemsSkill.id,
+      questionId: lastQuestion.id,
+      correct: true,
+      mode: 'learn',
+    });
+    expect(repeated.cards).toEqual(mastered.cards);
+    expect(repeated.progress.totalXp).toBe(40);
+  });
+
+  it('includes the executable solution in a code-exercise mistake card', () => {
+    const question = skill.questions.find((q) => q.type === 'code')!;
+    const result = recordLearningAnswer(baseline(), {
+      skillId: skill.id,
+      questionId: question.id,
+      correct: false,
+      mode: 'learn',
+    });
+    expect(question.type).toBe('code');
+    if (question.type !== 'code') throw new Error('Expected code exercise.');
+    expect(result.cards[0].back).toBe(
+      `${question.solution}\n\n${question.explanation}`,
+    );
+    expect(result.progress.totalXp).toBe(0);
+  });
+
+  it('rejects an invalid question before changing progress or queuing cards', () => {
+    const current = baseline();
+    const before = structuredClone(current);
+    expect(() =>
+      recordLearningAnswer(current, {
+        skillId: skill.id,
+        questionId: systemsSkill.questions[0].id,
+        correct: false,
+        mode: 'learn',
+      }),
+    ).toThrow('This question does not belong to the skill.');
+    expect(current).toEqual(before);
+  });
+});
 
 describe('device progress reconciliation', () => {
   it('credits different questions answered offline on the same day', () => {

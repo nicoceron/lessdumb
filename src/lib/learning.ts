@@ -56,6 +56,8 @@ export interface AttemptInput {
   correct: boolean;
   mode: 'learn' | 'review';
   usedHint?: boolean;
+  /** Stable event identity, generated before asynchronous grading completes. */
+  attemptId?: string;
 }
 
 export interface NextTask {
@@ -177,6 +179,25 @@ function courseSkills(
     : catalog.skills;
 }
 
+/** A course goal includes its prerequisite ancestors, even when they live in another subject. */
+export function coursePath(
+  courseId: string | undefined,
+  catalog: CurriculumCatalog = defaultCatalog,
+): Skill[] {
+  if (!courseId) return catalog.skills;
+  const ids = new Set<string>();
+  const byId = new Map(catalog.skills.map((item) => [item.id, item]));
+  function visit(id: string) {
+    if (ids.has(id)) return;
+    const item = byId.get(id);
+    if (!item) return;
+    ids.add(id);
+    item.prerequisites.forEach(visit);
+  }
+  courseSkills(courseId, catalog).forEach((item) => visit(item.id));
+  return catalog.skills.filter((item) => ids.has(item.id));
+}
+
 export function selectQuestion(
   progress: Progress,
   item: Skill,
@@ -239,7 +260,7 @@ export function nextTask(
   catalog: CurriculumCatalog = defaultCatalog,
 ): NextTask | null {
   const time = timestamp(now);
-  const registry = courseSkills(courseId, catalog);
+  const registry = coursePath(courseId, catalog);
   const lastSkill = progress.attempts.at(-1)?.skillId;
   const due = registry.filter(
     (item) =>
@@ -249,6 +270,11 @@ export function nextTask(
       getSkillState(progress, item.id).dueAt! <= time,
   );
   due.sort((a, b) => {
+    // Keep the selected course's due retrieval ahead of its supporting ancestors.
+    if (courseId && a.courseId === courseId && b.courseId !== courseId)
+      return -1;
+    if (courseId && b.courseId === courseId && a.courseId !== courseId)
+      return 1;
     // Interleave due skills when several are available.
     if (a.id === lastSkill && b.id !== lastSkill) return 1;
     if (b.id === lastSkill && a.id !== lastSkill) return -1;
@@ -291,7 +317,15 @@ export function nextTask(
         (getSkillState(progress, a.id).lastPracticedAt ?? 0),
     );
   const item =
-    remediation[0] ?? active[0] ?? ready.sort((a, b) => a.order - b.order)[0];
+    remediation[0] ??
+    active[0] ??
+    ready.sort((a, b) => {
+      if (courseId && a.courseId === courseId && b.courseId !== courseId)
+        return -1;
+      if (courseId && b.courseId === courseId && a.courseId !== courseId)
+        return 1;
+      return a.order - b.order;
+    })[0];
   if (!item) return null;
   return {
     skillId: item.id,
@@ -301,7 +335,9 @@ export function nextTask(
       ? 'Restore the missing evidence for this skill before building on it.'
       : active.length
         ? 'Finish this skill with distinct, independent answers.'
-        : 'You have the prerequisite evidence to learn this skill.',
+        : courseId && item.courseId !== courseId
+          ? 'Build this prerequisite from another course to advance your selected learning goal.'
+          : 'You have the prerequisite evidence to learn this skill.',
   };
 }
 
@@ -331,6 +367,11 @@ export function applyAttempt(
   now: Now = new Date(),
   catalog: CurriculumCatalog = defaultCatalog,
 ): Progress {
+  if (
+    input.attemptId &&
+    progress.attempts.some((a) => a.id === input.attemptId)
+  )
+    return progress;
   const item = catalog.skills.find((skill) => skill.id === input.skillId);
   if (!item) throw new Error(`Unknown skill: ${input.skillId}`);
   const question = item.questions.find(
@@ -421,7 +462,7 @@ export function applyAttempt(
         ? progress.streak + 1
         : 1;
   const attempt: Attempt = {
-    id: crypto.randomUUID(),
+    id: input.attemptId ?? crypto.randomUUID(),
     skillId: item.id,
     questionId: question.id,
     correct: input.correct,

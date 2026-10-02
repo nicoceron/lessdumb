@@ -1,8 +1,11 @@
 import {
   DAY_MS,
+  applyAttempt,
   dateKey,
   emptyProgress,
+  isMastered,
   type Attempt,
+  type AttemptInput,
   type Progress,
 } from './learning';
 import { defaultCatalog, type CurriculumCatalog } from './curriculum';
@@ -17,6 +20,8 @@ export interface LearnerState {
   version: 1;
   progress: Progress;
   dailyGoal: number;
+  /** Optional for backward compatibility with existing saved accounts. */
+  activeCourseId?: string;
   cards: QueuedCard[];
   anki: { connected: boolean; profile: string | null; deck: string };
   createdAt: number;
@@ -27,11 +32,61 @@ export function createState(): LearnerState {
     version: 1,
     progress: emptyProgress(),
     dailyGoal: 50,
+    activeCourseId: 'python-foundations',
     cards: [],
-    anki: { connected: false, profile: null, deck: 'lessdumb::Python' },
+    anki: { connected: false, profile: null, deck: 'lessdumb::Learning' },
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
+}
+
+/** Record an answer against the current state without replacing concurrent work. */
+export function recordLearningAnswer(
+  state: LearnerState,
+  input: AttemptInput,
+): LearnerState {
+  const progress = applyAttempt(state.progress, input);
+  // A stable attempt identity can be replayed by a state updater or save retry.
+  if (progress === state.progress) return state;
+  const skill = defaultCatalog.skills.find(
+    (candidate) => candidate.id === input.skillId,
+  )!;
+  const question = skill.questions.find(
+    (candidate) => candidate.id === input.questionId,
+  )!;
+  const cards = [...state.cards];
+  const cardIds = new Set(cards.map((card) => card.id));
+  const add = (card: QueuedCard) => {
+    if (cardIds.has(card.id)) return;
+    cardIds.add(card.id);
+    cards.push(card);
+  };
+
+  if (!input.correct) {
+    add({
+      id: `mistake:${skill.id}:${question.id}`,
+      skillId: skill.id,
+      skillName: skill.title,
+      kind: 'mistake',
+      front: `${question.prompt}${question.type === 'choice' && question.code ? `\n\n${question.code}` : ''}`,
+      back:
+        question.type === 'choice'
+          ? `${question.choices[question.answer]}\n\n${question.explanation}`
+          : `${question.solution}\n\n${question.explanation}`,
+      status: 'pending',
+    });
+  }
+  if (isMastered(progress, skill.id) && !isMastered(state.progress, skill.id)) {
+    for (const card of skill.flashcards) {
+      add({
+        ...card,
+        skillName: skill.title,
+        kind: 'mastery',
+        status: 'pending',
+      });
+    }
+  }
+  return { ...state, progress, cards };
 }
 
 const learnRewardKey = (skillId: string, questionId: string) =>
