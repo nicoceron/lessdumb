@@ -1,0 +1,1696 @@
+import type { Skill } from '../../curriculum';
+import { choice, exercise, skill } from './shared';
+
+export const competitiveAdvanced: Skill[] = [
+  skill(
+    'cp-memoization',
+    'cp-dynamic',
+    'Memoize repeated states',
+    'Define a recursive state once and cache its answer for later calls.',
+    ['cp-recursion', 'cp-hashing'],
+    [
+      'Dynamic programming applies when different decision paths lead to the same subproblem. Define a state using all information that determines its answer. For a route with advances of one or three units, ways(remaining) counts ordered advance sequences that cover exactly remaining units. The empty route contributes one way at zero; a negative remainder contributes none.',
+      'The recurrence is ways(r) = ways(r - 1) + ways(r - 3). A cache stores the completed answer for each r, so repeated calls reuse it. functools.cache requires hashable arguments. Create the cached helper inside the public function when it depends on that call’s input; otherwise cached answers could outlive the data that made them valid.',
+      'The dependency must make progress toward a base case: a cache alone cannot resolve a cycle of unfinished recursive calls. This example accepts integer distances from 0 through 200 to keep recursion depth modest. It evaluates O(distance) states with O(distance) cache entries and stack depth, assuming constant-time integer arithmetic. For much deeper chains, use bottom-up iteration.',
+    ],
+    `from functools import cache
+
+def routes(distance):
+    @cache
+    def ways(remaining):
+        if remaining == 0:
+            return 1
+        if remaining < 0:
+            return 0
+        return ways(remaining - 1) + ways(remaining - 3)
+    return ways(distance)
+
+print(routes(5))
+print(routes(0))`,
+    '4\n1',
+    'The four length-five routes use five ones, or place one three before, between, or after two ones. The empty sequence covers distance zero.',
+    [
+      choice(
+        'What must a memoization key contain?',
+        [
+          'Only the recursion depth',
+          'All information that determines the state’s answer',
+          'Only the last returned answer',
+          'The number of cache hits',
+        ],
+        1,
+        'Two calls may share an answer only when their state keys describe the same subproblem.',
+        'Think about which changing inputs could change the result.',
+      ),
+      choice(
+        'Why does ways(0) return 1 when counting exact routes?',
+        [
+          'Zero is always a valid step size',
+          'It counts a failed route',
+          'It counts the one empty continuation',
+          'It forces every route to use three',
+        ],
+        2,
+        'Once the remaining distance is zero, there is exactly one successful way to finish: take no more steps.',
+        'A counting base case represents a completed construction.',
+      ),
+      choice(
+        'A cached function calls itself with exactly the same unfinished state. What happens?',
+        [
+          'The cache automatically solves the cycle',
+          'The function returns zero',
+          'The state is skipped',
+          'Recursion continues because no completed answer is cached',
+        ],
+        3,
+        'Memoization stores returned answers; a dependency cycle still needs separate handling.',
+        'The first call has not returned yet.',
+      ),
+      exercise(
+        'Implement count_routes(distance) for an integer 0 <= distance <= 200. Count ordered sequences of advances of size 1 or 3 whose sum is exactly distance. The empty sequence counts once for distance zero. Use a memoized recurrence.',
+        'def count_routes(distance):\n    # Cache answers for remaining distances.\n    pass\n',
+        `from functools import cache
+
+def count_routes(distance):
+    @cache
+    def count(remaining):
+        if remaining == 0:
+            return 1
+        if remaining < 0:
+            return 0
+        return count(remaining - 1) + count(remaining - 3)
+    return count(distance)`,
+        `assert count_routes(0) == 1, "Count the empty route."
+assert count_routes(1) == 1
+assert count_routes(2) == 1
+assert count_routes(3) == 2, "One three or three ones."
+assert count_routes(5) == 4
+assert count_routes(6) == 6
+assert count_routes(10) == 28
+expected = [1]
+for distance in range(1, 41):
+    expected.append(expected[distance - 1] + (expected[distance - 3] if distance >= 3 else 0))
+assert count_routes(40) == expected[40], "Reuse repeated states on longer routes."`,
+        'Each nonempty route ends in either a one-unit or three-unit advance. Cache the answer for the remaining distance so each state is solved once.',
+        'Use a nested helper with @cache, return 1 at zero and 0 below zero, then add the two smaller states.',
+      ),
+    ],
+    [
+      [
+        'What is the central invariant of memoization?',
+        'A cached key identifies one subproblem, and its stored value is that subproblem’s completed answer.',
+      ],
+      [
+        'Does memoization make recursive dependency cycles safe?',
+        'No. Dependencies must terminate, or cycles need an explicit algorithm.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-tabulation',
+    'cp-dynamic',
+    'Build a table in dependency order',
+    'Compute smaller states before the larger states that depend on them.',
+    ['cp-memoization', 'ranges', 'list-mutation'],
+    [
+      'Tabulation writes dynamic-programming answers into a table without recursive calls. First give every entry a precise meaning. Here dp[t] is the minimum number of packets needed to total exactly t units, using unlimited packets from a list of positive integer sizes. dp[0] is zero, while an unreachable total starts at infinity.',
+      'For each total t in increasing order, try every size s <= t and improve dp[t] with dp[t - s] + 1. Positivity guarantees t - s < t, so every dependency is already final. Adding one to infinity remains infinity; after the table is complete, convert an unreachable final entry to -1.',
+      'The input contract allows an empty size list and a nonnegative target; zero or negative sizes are excluded because they break this dependency order. With m sizes and target T, time is O(mT) and storage is O(T). This method handles sizes for which taking the largest available packet first would miss the optimum.',
+    ],
+    `def min_packets(sizes, target):
+    dp = [float("inf")] * (target + 1)
+    dp[0] = 0
+    for total in range(1, target + 1):
+        for size in sizes:
+            if size <= total:
+                dp[total] = min(dp[total], dp[total - size] + 1)
+    return -1 if dp[target] == float("inf") else dp[target]
+
+print(min_packets([3, 5], 11))
+print(min_packets([3, 5], 7))`,
+    '3\n-1',
+    'Two size-three packets and one size-five packet total eleven. No nonnegative combination of those sizes totals seven.',
+    [
+      choice(
+        'Why is increasing total order valid for positive packet sizes?',
+        [
+          'Every dependency has a smaller total',
+          'The input sizes must be sorted',
+          'The largest size always wins',
+          'Each size may be used only once',
+        ],
+        0,
+        'For s > 0, the dependency t - s is smaller than t and has already been computed.',
+        'Compare the current state with its predecessor.',
+      ),
+      choice(
+        'Which initialization represents minimum packets for exact totals?',
+        [
+          'All entries are zero',
+          'dp[0] = 0 and other entries are infinity',
+          'dp[0] = 1 and other entries are zero',
+          'All entries are the largest size',
+        ],
+        1,
+        'Zero packets reach zero units. Other totals are unreachable until a valid transition reaches them.',
+        'Separate the base case from states not yet reached.',
+      ),
+      choice(
+        'For sizes [1, 4, 6] and target 8, what is the minimum packet count?',
+        ['4', '3', '2', '1'],
+        2,
+        'Two size-four packets reach eight; choosing six first would require two additional ones.',
+        'Try repeated size-four packets.',
+      ),
+      exercise(
+        'Implement min_packets(sizes, target). sizes is a list of positive integers, each usable any number of times; target is an integer from 0 through 5000. Return the minimum number of packets totaling exactly target, or -1 when impossible. An empty list reaches only zero.',
+        'def min_packets(sizes, target):\n    # Fill a table for exact totals.\n    pass\n',
+        `def min_packets(sizes, target):
+    dp = [float("inf")] * (target + 1)
+    dp[0] = 0
+    for total in range(1, target + 1):
+        for size in sizes:
+            if size <= total:
+                dp[total] = min(dp[total], dp[total - size] + 1)
+    return -1 if dp[target] == float("inf") else dp[target]`,
+        `assert min_packets([], 0) == 0
+assert min_packets([], 7) == -1
+assert min_packets([1, 4, 6], 8) == 2, "Greedy largest-first is insufficient."
+assert min_packets([3, 5], 11) == 3
+assert min_packets([4, 6], 7) == -1
+assert min_packets([9], 18) == 2, "Packet sizes may be reused."
+assert min_packets([2, 2, 7], 9) == 2
+assert min_packets([8, 3], 0) == 0
+assert min_packets([7, 11], 121) == 11`,
+        'The table stores the optimum for every exact total. Trying every possible last packet preserves all choices without enumerating whole sequences.',
+        'Initialize dp[0] to zero, fill totals from 1 upward, and relax from dp[total - size].',
+      ),
+    ],
+    [
+      [
+        'How do you choose a tabulation order?',
+        'Process each state only after the states it depends on have been computed.',
+      ],
+      [
+        'How can a minimum-cost DP mark an unreachable state?',
+        'Use infinity, then translate it to the required failure value at the boundary.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-knapsack',
+    'cp-dynamic',
+    'Choose each item at most once',
+    'Use a descending capacity loop to preserve 0/1 knapsack states.',
+    ['cp-tabulation', 'cp-enumeration'],
+    [
+      'In 0/1 knapsack, each item has a positive integer weight and a nonnegative value, and can be selected at most once. dp[c] means the greatest value achievable with total weight at most c after the items processed so far. Starting all entries at zero permits choosing nothing; the result need not fill the capacity exactly.',
+      'For an item (weight, value), update dp[c] = max(dp[c], dp[c - weight] + value). Iterate c from capacity down to weight. Descending order ensures dp[c - weight] still belongs to the previous item stage, so the current item cannot be taken twice. An ascending loop could read a state already improved by the same item, which instead permits unlimited reuse.',
+      'For n items and capacity W, this compressed table uses O(nW) time and O(W) storage. It is useful when W is moderate, even if the number of possible subsets is huge. These bounds depend on the numeric capacity, so large weights may require a different state definition. Empty item lists and capacity zero return zero.',
+    ],
+    `def best_value(items, capacity):
+    dp = [0] * (capacity + 1)
+    for weight, value in items:
+        for limit in range(capacity, weight - 1, -1):
+            dp[limit] = max(dp[limit], dp[limit - weight] + value)
+    return dp[capacity]
+
+print(best_value([(2, 5), (3, 7), (4, 8)], 5))
+print(best_value([(2, 5)], 4))`,
+    '12\n5',
+    'The first two items fit together for value twelve. The single item in the second call is available only once, despite space for two copies.',
+    [
+      choice(
+        'Why does the compressed 0/1 knapsack loop run capacities downward?',
+        [
+          'To sort items by weight',
+          'To leave smaller capacities at the previous item stage',
+          'To forbid selecting light items',
+          'To make the table use constant memory',
+        ],
+        1,
+        'The transition must read a value that does not already include the current item.',
+        'Consider what happens if dp[c - weight] was updated earlier in this item’s loop.',
+      ),
+      choice(
+        'One item has weight 2 and value 5; capacity is 4. What is the 0/1 optimum?',
+        ['0', '4', '10', '5'],
+        3,
+        'Only one copy is available, so its value is five even though some capacity remains unused.',
+        '0/1 means skip or take once.',
+      ),
+      choice(
+        'All dp entries start at zero. What does dp[c] represent here?',
+        [
+          'Best value with weight at most c',
+          'Best value with weight exactly c',
+          'The number of subsets of size c',
+          'The weight of the heaviest item',
+        ],
+        0,
+        'Choosing no items is feasible under every capacity bound. Exact-weight DP would need unreachable-state markers.',
+        'Zero is feasible even when no subset has weight exactly c.',
+      ),
+      exercise(
+        'Implement best_value(items, capacity). Each (weight, value) pair is a distinct item, even when pairs repeat. Weights are positive integers, values are nonnegative integers, and 0 <= capacity <= 5000. Return the greatest total value with weight at most capacity, using each item at most once. Preserve items.',
+        'def best_value(items, capacity):\n    # Update capacities downward for each item.\n    pass\n',
+        `def best_value(items, capacity):
+    dp = [0] * (capacity + 1)
+    for weight, value in items:
+        for limit in range(capacity, weight - 1, -1):
+            dp[limit] = max(dp[limit], dp[limit - weight] + value)
+    return dp[capacity]`,
+        `assert best_value([], 8) == 0
+assert best_value([(1, 9)], 0) == 0
+assert best_value([(2, 5)], 4) == 5, "Do not reuse the same item."
+assert best_value([(2, 5), (2, 5)], 4) == 10, "Equal pairs can be distinct items."
+assert best_value([(2, 5), (3, 7), (4, 8)], 5) == 12
+assert best_value([(9, 100), (3, 4)], 4) == 4
+assert best_value([(2, 0), (3, 6)], 5) == 6
+items = [(4, 9), (3, 7), (2, 4)]
+assert best_value(items, 6) == 13
+assert items == [(4, 9), (3, 7), (2, 4)], "Preserve the input list."`,
+        'A descending pass separates the previous item stage from the current stage without storing a second table.',
+        'Use range(capacity, weight - 1, -1), then compare skipping with taking the item once.',
+      ),
+    ],
+    [
+      [
+        'Which capacity direction enforces 0/1 knapsack with one table?',
+        'Descending capacity, so the transition reads a state from before the current item.',
+      ],
+      [
+        'What are compressed 0/1 knapsack’s time and space bounds?',
+        'O(nW) time and O(W) space for n items and capacity W.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-subsequences',
+    'cp-dynamic',
+    'Track increasing subsequence tails',
+    'Find a strictly increasing subsequence length without storing every path.',
+    ['cp-tabulation', 'cp-binary-search'],
+    [
+      'A subsequence preserves original order but may skip elements; a substring or subarray is contiguous. For a strictly increasing subsequence, every next value must be greater, so equal values cannot extend it. A direct DP stores the best length ending at each position and tries earlier smaller values, using O(n²) time.',
+      'The faster method stores tails[length - 1], the smallest ending value found for any increasing subsequence of that length in the processed prefix. A smaller tail leaves at least as much room for future extension. The tails list stays sorted. For each value, bisect_left finds the first tail greater than or equal to it: replace that tail, or append if no such tail exists.',
+      'Replacing an equal tail preserves strictness; bisect_right would instead allow equal values to extend a nondecreasing subsequence. The tails entries need not belong to one actual subsequence, but its length is the correct optimum. For a list of comparable integers, time is O(n log n) and storage is O(n). An empty input has length zero.',
+    ],
+    `from bisect import bisect_left
+
+def increasing_length(values):
+    tails = []
+    for value in values:
+        position = bisect_left(tails, value)
+        if position == len(tails):
+            tails.append(value)
+        else:
+            tails[position] = value
+    return len(tails)
+
+print(increasing_length([7, 2, 5, 3, 6, 6, 9]))
+print(increasing_length([4, 4, 4]))`,
+    '4\n1',
+    'For example, 2, 3, 6, 9 is strictly increasing. Equal fours can provide only a single element.',
+    [
+      choice(
+        'What does tails[k] represent after processing a prefix?',
+        [
+          'The kth original input value',
+          'The largest value in the prefix',
+          'The smallest tail found for a subsequence of length k + 1',
+          'The count of subsequences of length k',
+        ],
+        2,
+        'The invariant records the most extendable ending value for each available subsequence length.',
+        'A smaller ending value helps future extensions.',
+      ),
+      choice(
+        'Which search keeps an increasing subsequence strictly increasing when duplicates occur?',
+        [
+          'bisect_left',
+          'bisect_right',
+          'list.index',
+          'A search for only larger values',
+        ],
+        0,
+        'bisect_left replaces the first tail >= value, so an equal value does not extend the length.',
+        'Equal elements should replace a tail rather than append.',
+      ),
+      choice(
+        'What is the strictly increasing subsequence length of [3, 1, 1, 2]?',
+        ['4', '3', '1', '2'],
+        3,
+        'One 1 followed by 2 gives length two. The equal ones cannot both appear in a strictly increasing sequence.',
+        'Keep input order, and require each comparison to be <.',
+      ),
+      exercise(
+        'Implement increasing_length(values), returning the length of a longest strictly increasing subsequence of an integer list. Elements may repeat or be negative. Preserve values, return 0 for an empty list, and use sorted tails with binary search.',
+        'def increasing_length(values):\n    # Keep the smallest tail for each subsequence length.\n    pass\n',
+        `from bisect import bisect_left
+
+def increasing_length(values):
+    tails = []
+    for value in values:
+        position = bisect_left(tails, value)
+        if position == len(tails):
+            tails.append(value)
+        else:
+            tails[position] = value
+    return len(tails)`,
+        `assert increasing_length([]) == 0
+assert increasing_length([5]) == 1
+assert increasing_length([4, 4, 4]) == 1, "Increasing is strict."
+assert increasing_length([5, 4, 3, 2]) == 1
+assert increasing_length([3, 1, 1, 2]) == 2
+assert increasing_length([-3, -2, -2, 0, -1, 4]) == 4
+assert increasing_length([7, 2, 5, 3, 6, 6, 9]) == 4
+values = [2, 8, 3, 9, 4]
+assert increasing_length(values) == 3
+assert values == [2, 8, 3, 9, 4], "Preserve the input."
+assert increasing_length(list(range(1000))) == 1000`,
+        'Replacing a tail improves its future extension opportunities without losing any achievable length.',
+        'Use bisect_left(tails, value), append at the end, and otherwise replace that position.',
+      ),
+    ],
+    [
+      [
+        'Why does strict LIS use bisect_left?',
+        'It replaces the first tail >= value, preventing equal values from extending a subsequence.',
+      ],
+      [
+        'Is the final tails list necessarily one actual subsequence?',
+        'No. Its entries summarize best endings for different lengths; its length is the LIS length.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-intervals',
+    'cp-strategy',
+    'Merge occupied intervals',
+    'Sort intervals and maintain one unfinished union span.',
+    ['cp-sorting', 'list-mutation'],
+    [
+      'An interval must have a clear endpoint convention. Here each booking is half-open [start, end): it includes start and excludes end, with integer start < end. Touching bookings such as [1, 3) and [3, 5) do not overlap, but their union is the single continuous span [1, 5), so this merge task combines touching spans too.',
+      'Sort by start, then keep the latest merged span. If the next start is <= its end, extend the end to the larger endpoint. Otherwise the previous span is complete and a new one begins. The invariant is that all earlier output spans are final and the last span contains the union of every booking connected to it so far.',
+      'Sorting costs O(n log n), and the scan costs O(n). The result uses O(n) space; sorted(...) also leaves the original list unchanged. Nested intervals require max(old_end, new_end), since the next interval may end earlier. Empty input returns an empty list. Change <= to < only when the desired representation keeps touching spans separate.',
+    ],
+    `def merge_bookings(bookings):
+    merged = []
+    for start, end in sorted(bookings):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+print(merge_bookings([(6, 8), (1, 4), (3, 5), (5, 6), (2, 3)]))`,
+    '[(1, 8)]',
+    'Overlap, nesting, and touching endpoints connect all the bookings into one continuous occupied span.',
+    [
+      choice(
+        'Do half-open intervals [1, 3) and [3, 5) share any time?',
+        [
+          'Yes, every endpoint overlaps',
+          'No, the first excludes 3',
+          'Yes, they share 1',
+          'Only if they are sorted',
+        ],
+        1,
+        'The first interval ends before including time 3. Their union can still be represented as [1, 5).',
+        'A half-open interval excludes its right endpoint.',
+      ),
+      choice(
+        'The current merged span is (2, 10), and the next booking is (4, 6). What should the merged span become?',
+        ['(2, 6)', '(4, 10)', '(2, 10)', '(4, 6)'],
+        2,
+        'The new booking is fully contained, so the outer endpoints stay unchanged.',
+        'Extend the right endpoint using max, never overwrite it blindly.',
+      ),
+      choice(
+        'Why can an interval ending before the next sorted start be finalized?',
+        [
+          'All later starts are at least that next start',
+          'Its length is the longest',
+          'Its end is always positive',
+          'Sorting removes every overlap',
+        ],
+        0,
+        'No later booking can start early enough to connect to that completed span.',
+        'Use the nondecreasing order of starts.',
+      ),
+      exercise(
+        'Implement merge_bookings(bookings) for half-open integer intervals (start, end) with start < end. Return a sorted list of tuples representing their union, merging both overlapping and touching bookings. Support negative endpoints and empty input; preserve the input list.',
+        'def merge_bookings(bookings):\n    # Scan a sorted copy and extend the latest span.\n    pass\n',
+        `def merge_bookings(bookings):
+    merged = []
+    for start, end in sorted(bookings):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged`,
+        `assert merge_bookings([]) == []
+assert merge_bookings([(2, 7)]) == [(2, 7)]
+assert merge_bookings([(1, 3), (3, 5)]) == [(1, 5)], "Merge touching spans."
+assert merge_bookings([(2, 10), (4, 6)]) == [(2, 10)], "Preserve a containing span."
+assert merge_bookings([(8, 10), (1, 2), (5, 7)]) == [(1, 2), (5, 7), (8, 10)]
+assert merge_bookings([(-5, -2), (-3, 0), (4, 6)]) == [(-5, 0), (4, 6)]
+bookings = [(6, 8), (1, 4), (3, 5), (5, 6), (2, 3)]
+assert merge_bookings(bookings) == [(1, 8)]
+assert bookings == [(6, 8), (1, 4), (3, 5), (5, 6), (2, 3)]
+assert merge_bookings([(1, 4), (1, 4)]) == [(1, 4)]`,
+        'After sorting, only the most recent span can connect to the next booking. Extending by the maximum end handles nested intervals correctly.',
+        'Use sorted(bookings), merge when start <= merged[-1][1], and keep tuple outputs.',
+      ),
+    ],
+    [
+      [
+        'Which endpoint convention does [start, end) use?',
+        'It includes start and excludes end; touching intervals have no overlap.',
+      ],
+      [
+        'How does an interval-union scan handle a nested interval?',
+        'Keep the earlier start and use max(current_end, next_end).',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-greedy',
+    'cp-strategy',
+    'Prove an earliest-finish choice',
+    'Use an exchange argument to justify maximum interval scheduling.',
+    ['cp-intervals', 'cp-complexity'],
+    [
+      'A greedy algorithm commits to a local choice without reconsidering it. That commitment needs a proof matching the objective. For the maximum number of compatible sessions on one resource, each session is a half-open interval [start, end) with start < end. Sessions may touch, and all sessions have equal value: maximizing total duration or weighted value is a different problem.',
+      'Sort sessions by end time and accept a session when its start is at least the end of the last accepted session. The selected schedule remains compatible. To justify the choice, replace the first session of an optimal remaining schedule with the earliest-finishing available session. It ends no later, so every later session in that schedule remains feasible. Repeat the exchange for the remaining sessions.',
+      'Sorting takes O(n log n), followed by an O(n) scan. Use None for the initial end rather than zero, so sessions at negative times are considered. An empty input gives zero. Earliest start and shortest duration lack this exchange guarantee; counterexamples can reject a greedy rule, while the exchange argument establishes this one.',
+    ],
+    `def max_sessions(sessions):
+    end_of_last = None
+    count = 0
+    for start, end in sorted(sessions, key=lambda session: session[1]):
+        if end_of_last is None or start >= end_of_last:
+            count += 1
+            end_of_last = end
+    return count
+
+print(max_sessions([(0, 8), (1, 3), (3, 5), (5, 7)]))
+print(max_sessions([(-6, -4), (-4, -1), (0, 2)]))`,
+    '3\n3',
+    'Choosing the earliest finish admits three short sessions instead of the long one. Touching sessions and negative times remain valid.',
+    [
+      choice(
+        'Which local choice maximizes the number of unweighted compatible sessions?',
+        [
+          'Earliest start',
+          'Longest duration',
+          'Earliest finish among the remaining feasible sessions',
+          'Highest endpoint sum',
+        ],
+        2,
+        'Earliest finish leaves at least as much remaining time as any alternative first session.',
+        'Look for the choice supported by an exchange argument.',
+      ),
+      choice(
+        'Why may an optimal schedule’s first session be replaced with the earliest-finishing session?',
+        [
+          'The replacement starts at zero',
+          'It ends no later, preserving all later sessions',
+          'It always has identical endpoints',
+          'It makes every session longer',
+        ],
+        1,
+        'If later sessions begin after the old finish, they also begin after an equal or earlier replacement finish.',
+        'Compare finishing times, then inspect the rest of the schedule.',
+      ),
+      choice(
+        'What change invalidates this proof for the same objective?',
+        [
+          'Allowing negative times',
+          'Allowing touching sessions',
+          'Sorting equal ends in any order',
+          'Giving sessions different rewards and maximizing total reward',
+        ],
+        3,
+        'The exchange preserves the number of sessions, but may lose reward when values differ.',
+        'The proof depends on every accepted session contributing the same value.',
+      ),
+      exercise(
+        'Implement max_sessions(sessions), returning the maximum number of pairwise compatible half-open sessions (start, end), with integer start < end. Each session is available once and has equal value. Touching endpoints are compatible, times may be negative, and the input must remain unchanged.',
+        'def max_sessions(sessions):\n    # Accept feasible sessions in earliest-finish order.\n    pass\n',
+        `def max_sessions(sessions):
+    end_of_last = None
+    count = 0
+    for start, end in sorted(sessions, key=lambda session: session[1]):
+        if end_of_last is None or start >= end_of_last:
+            count += 1
+            end_of_last = end
+    return count`,
+        `assert max_sessions([]) == 0
+assert max_sessions([(2, 5)]) == 1
+assert max_sessions([(0, 8), (1, 3), (3, 5), (5, 7)]) == 3
+assert max_sessions([(0, 3), (1, 3), (2, 3)]) == 1
+assert max_sessions([(-6, -4), (-4, -1), (0, 2)]) == 3
+assert max_sessions([(0, 2), (2, 4), (4, 6)]) == 3, "Touching endpoints are compatible."
+assert max_sessions([(1, 10), (2, 3), (4, 5), (6, 7), (8, 9)]) == 4
+sessions = [(5, 9), (0, 2), (2, 5)]
+assert max_sessions(sessions) == 3
+assert sessions == [(5, 9), (0, 2), (2, 5)]`,
+        'Each accepted session ends as early as possible for the next choice, and an exchange with an optimal schedule proves no session count is lost.',
+        'Sort using the end field. Accept the first session, then accept when start >= end_of_last.',
+      ),
+    ],
+    [
+      [
+        'What must accompany a greedy choice?',
+        'A correctness argument showing the local choice can belong to an optimal solution.',
+      ],
+      [
+        'Why is earliest finish safe for unweighted interval scheduling?',
+        'Replacing an optimal first session with one ending no later preserves every later session.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-bitmasks',
+    'cp-strategy',
+    'Encode subsets with bits',
+    'Represent membership by bit position and enumerate small subset spaces.',
+    ['numbers', 'cp-enumeration', 'list-mutation'],
+    [
+      'For n indexed items, a nonnegative integer mask encodes a subset: bit i is one exactly when item i is selected. Test membership with mask & (1 << i), add membership with |, and toggle it with ^. The zero mask is the empty subset. Different indices remain distinct even when their item values are equal.',
+      'Enumerate all masks with range(1 << n). To sum the selected values, scan indices and add values whose bits are set. The invariant is that the partial total includes exactly the selected indices examined so far. Negative item values are fine because masks encode membership, not numeric magnitude.',
+      'Scanning n bits for each of 2ⁿ masks costs O(n·2ⁿ) time and O(1) auxiliary storage when only a count is returned. This lesson’s function accepts at most 18 items, keeping exhaustive work practical. Python integers are not fixed-width; when using ~mask as a finite-set complement, restrict it with ((1 << n) - 1) & ~mask.',
+    ],
+    `values = [2, -1, 2]
+matches = []
+for mask in range(1 << len(values)):
+    total = 0
+    for index, value in enumerate(values):
+        if mask & (1 << index):
+            total += value
+    if total == 2:
+        matches.append(mask)
+print(matches)
+print(5 & (1 << 2) != 0)`,
+    '[1, 4]\nTrue',
+    'Masks 1 and 4 select the first or third item independently. Mask 5 has bit two set because its binary representation is 101.',
+    [
+      choice(
+        'Which expression tests whether index i belongs to mask?',
+        ['mask + i', 'mask & (1 << i)', 'mask >> len(mask)', 'mask == i'],
+        1,
+        'A bitwise AND keeps the selected bit if it is present, producing a nonzero result.',
+        'Construct a mask with just bit i set.',
+      ),
+      choice(
+        'How many indexed subsets does a list of four items have, including the empty subset?',
+        ['4', '8', '16', '24'],
+        2,
+        'Each of four indices has two independent membership choices, giving 2⁴ subsets.',
+        'Count the binary decisions.',
+      ),
+      choice(
+        'For values [0, 0], how many indexed subsets sum to zero?',
+        ['0', '1', '2', '4'],
+        3,
+        'Empty, first-only, second-only, and both indices all sum to zero and are distinct subsets.',
+        'Equal values do not collapse distinct indices.',
+      ),
+      exercise(
+        'Implement subset_count(values, target). values contains at most 18 integers, which may be negative, zero, or repeated. Return the number of indexed subsets whose sum equals target. Include the empty subset, and count equal-valued items at different indices independently. Enumerate bitmasks.',
+        'def subset_count(values, target):\n    # Visit every mask, including zero.\n    pass\n',
+        `def subset_count(values, target):
+    count = 0
+    for mask in range(1 << len(values)):
+        total = 0
+        for index, value in enumerate(values):
+            if mask & (1 << index):
+                total += value
+        if total == target:
+            count += 1
+    return count`,
+        `assert subset_count([], 0) == 1, "Include the empty subset."
+assert subset_count([], 5) == 0
+assert subset_count([0, 0], 0) == 4
+assert subset_count([2, 2], 2) == 2, "Count indexed choices separately."
+assert subset_count([2, -1, 2], 2) == 2
+assert subset_count([-3, 1, 2], 0) == 2
+assert subset_count([1, 2, 3, 4], 5) == 2
+assert subset_count([5, 7], 1) == 0
+assert subset_count([1] * 10, 3) == 120`,
+        'Every n-bit mask identifies one indexed subset exactly once, so counting matching mask sums neither omits nor duplicates a choice.',
+        'Loop over range(1 << len(values)); test each bit and count totals equal to target.',
+      ),
+    ],
+    [
+      [
+        'What does bit i in a subset mask mean?',
+        'Bit i is one exactly when indexed item i is selected.',
+      ],
+      [
+        'What is the cost of scanning n items for every subset mask?',
+        'O(n·2ⁿ) time; it is appropriate only for small n.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-geometry',
+    'cp-strategy',
+    'Use orientation predicates',
+    'Classify left, right, and collinear turns with an integer cross product.',
+    ['cp-sorting', 'math-vectors', 'slicing', 'list-mutation'],
+    [
+      'Many geometry algorithms depend on a reliable orientation test rather than angles. For points A, B, and C, form vectors B - A and C - A. Their two-dimensional cross product is (Bx - Ax)(Cy - Ay) - (By - Ay)(Cx - Ax). In ordinary Cartesian coordinates, a positive result puts C to the left of directed line A → B, a negative result to the right, and zero on the line.',
+      'The cross product is the signed doubled triangle area. Integer coordinates allow exact comparisons in Python, including large values, without computing slopes or dividing by a horizontal difference. Repeated points or three collinear points produce zero. If screen coordinates increase downward, the visual meaning of left and right reverses; the algebraic formula stays the same.',
+      'For a path of n integer-coordinate points, classify each consecutive triple independently. The invariant is that each reported sign belongs to exactly one triple in path order. Each test uses O(1) arithmetic operations; producing all signs costs O(n) time and O(n) result space, under constant-time arithmetic assumptions. This predicate is a building block for hulls and segment tests, not by itself a complete intersection algorithm.',
+    ],
+    `def orientation(a, b, c):
+    cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    return (cross > 0) - (cross < 0)
+
+print(orientation((0, 0), (3, 0), (2, 2)))
+print(orientation((0, 0), (0, 4), (2, 1)))
+print(orientation((1, 1), (2, 2), (4, 4)))`,
+    '1\n-1\n0',
+    'The first triple turns left, the second right, and the third stays on one line in Cartesian coordinates.',
+    [
+      choice(
+        'A cross product for A → B and A → C is positive. What does that mean in Cartesian coordinates?',
+        [
+          'C lies to the left of A → B',
+          'The three points are collinear',
+          'C lies to the right of A → B',
+          'B and C are equal',
+        ],
+        0,
+        'A positive signed area indicates a counterclockwise, or left, orientation.',
+        'Use x rightward and y upward.',
+      ),
+      choice(
+        'Why use a cross product instead of comparing slopes?',
+        [
+          'It always returns the exact angle',
+          'It avoids division and works for vertical lines',
+          'It requires every x coordinate to differ',
+          'It sorts points automatically',
+        ],
+        1,
+        'Slope division fails for vertical lines and can introduce floating-point error; integer cross products compare exactly.',
+        'Think about a zero horizontal difference.',
+      ),
+      choice(
+        'What orientation sign do (0, 0), (2, 2), and (2, 2) produce?',
+        ['1', '-1', '0', 'An undefined division'],
+        2,
+        'Repeated points give linearly dependent vectors and a zero cross product.',
+        'The two vectors from the first point are equal.',
+      ),
+      exercise(
+        'Implement turn_signs(points). points is a list of (x, y) integer tuples in Cartesian coordinates. Return one sign for every consecutive triple: 1 for a left turn, -1 for a right turn, and 0 for collinear or repeated points. Return [] for fewer than three points and preserve the input.',
+        'def turn_signs(points):\n    # Use the cross product for each consecutive triple.\n    pass\n',
+        `def turn_signs(points):
+    signs = []
+    for index in range(len(points) - 2):
+        a, b, c = points[index:index + 3]
+        cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        signs.append((cross > 0) - (cross < 0))
+    return signs`,
+        `assert turn_signs([]) == []
+assert turn_signs([(1, 2), (3, 4)]) == []
+assert turn_signs([(0, 0), (3, 0), (2, 2)]) == [1]
+assert turn_signs([(0, 0), (0, 4), (2, 1)]) == [-1]
+assert turn_signs([(1, 1), (2, 2), (4, 4)]) == [0]
+assert turn_signs([(0, 0), (2, 2), (2, 2)]) == [0]
+assert turn_signs([(0, 0), (10**12, 0), (10**12, 1)]) == [1]
+points = [(0, 0), (2, 0), (2, 2), (4, 2), (6, 2)]
+assert turn_signs(points) == [1, -1, 0]
+assert points == [(0, 0), (2, 0), (2, 2), (4, 2), (6, 2)]`,
+        'Subtract the first point to form two vectors, then classify the signed cross product without division.',
+        'For each triple compute dx1 * dy2 - dy1 * dx2. Compare it with zero to produce -1, 0, or 1.',
+      ),
+    ],
+    [
+      [
+        'What does a zero orientation cross product mean?',
+        'The points are collinear, including cases with repeated points.',
+      ],
+      [
+        'What does the 2D cross product measure geometrically?',
+        'Signed doubled triangle area; its sign gives the orientation.',
+      ],
+    ],
+  ),
+  skill(
+    'cp-gcd',
+    'cp-number-theory',
+    'Reduce with the Euclidean algorithm',
+    'Compute greatest common divisors and derive least common multiples safely.',
+    ['numbers', 'while-loops'],
+    [
+      'The greatest common divisor gcd(a, b) is the largest positive integer dividing both numbers, except that gcd(0, 0) is defined as zero. Normalize signs with abs. Euclid’s invariant is gcd(a, b) = gcd(b, a % b): subtracting any multiple of b does not change the common divisors.',
+      'Repeatedly replace (a, b) with (b, a % b) until b becomes zero; the remaining a is the gcd. The nonzero second argument decreases, so the process terminates. For nonnegative inputs it takes O(log(max(a, b))) remainder operations when at least one input is nonzero, and O(1) extra variables. Actual arithmetic costs also depend on integer bit length.',
+      'The least common multiple satisfies lcm(a, b) = abs((a // gcd(a, b)) * b) when both values are nonzero. Divide before multiplying to keep intermediate values smaller. If either argument is zero, define the lcm as zero and skip the division, including for (0, 0). Python’s math.gcd and math.lcm implement these conventions, but writing Euclid makes the invariant visible.',
+    ],
+    `def gcd_lcm(a, b):
+    x, y = abs(a), abs(b)
+    while y:
+        x, y = y, x % y
+    multiple = 0 if a == 0 or b == 0 else abs((a // x) * b)
+    return x, multiple
+
+print(gcd_lcm(18, 30))
+print(gcd_lcm(-12, 18))
+print(gcd_lcm(0, 0))`,
+    '(6, 90)\n(6, 36)\n(0, 0)',
+    'Signs do not change common divisors or the nonnegative lcm. The all-zero case avoids division by zero.',
+    [
+      choice(
+        'Which equality preserves the gcd when b is nonzero?',
+        [
+          'gcd(a, b) = gcd(a + 1, b)',
+          'gcd(a, b) = gcd(b, a % b)',
+          'gcd(a, b) = a * b',
+          'gcd(a, b) = abs(a - b) always',
+        ],
+        1,
+        'A number divides both a and b exactly when it divides b and the remainder a % b.',
+        'Remove an integer multiple of b from a.',
+      ),
+      choice(
+        'What should gcd_lcm(0, 15) return under this contract?',
+        ['(0, 15)', '(15, 15)', '(15, 0)', 'A division error'],
+        2,
+        'Every positive divisor of fifteen divides zero, so the gcd is fifteen. The lcm convention gives zero.',
+        'Handle gcd and lcm’s zero cases separately.',
+      ),
+      choice(
+        'Why compute (a // gcd(a, b)) * b before taking the absolute value?',
+        [
+          'It makes the intermediate product smaller',
+          'It allows division by zero',
+          'It changes the gcd',
+          'It forces the answer to be prime',
+        ],
+        0,
+        'The gcd divides a exactly, so the division loses no precision and reduces the magnitude before multiplication.',
+        'Compare dividing first with multiplying a * b first.',
+      ),
+      exercise(
+        'Implement gcd_lcm(a, b) for arbitrary integer arguments. Return a tuple (gcd, lcm), both nonnegative. Define gcd(0, 0) = 0 and lcm = 0 whenever either argument is zero. Use the Euclidean remainder loop for the gcd.',
+        'def gcd_lcm(a, b):\n    # Normalize signs, run Euclid, then handle the lcm.\n    pass\n',
+        `def gcd_lcm(a, b):
+    x, y = abs(a), abs(b)
+    while y:
+        x, y = y, x % y
+    multiple = 0 if a == 0 or b == 0 else abs((a // x) * b)
+    return x, multiple`,
+        `assert gcd_lcm(18, 30) == (6, 90)
+assert gcd_lcm(-12, 18) == (6, 36)
+assert gcd_lcm(-8, -20) == (4, 40)
+assert gcd_lcm(0, 15) == (15, 0)
+assert gcd_lcm(-7, 0) == (7, 0)
+assert gcd_lcm(0, 0) == (0, 0), "Avoid dividing by zero."
+assert gcd_lcm(13, 17) == (1, 221)
+assert gcd_lcm(21, 21) == (21, 21)
+assert gcd_lcm(10**12, 10**12 + 1) == (1, 10**12 * (10**12 + 1))`,
+        'Each remainder update preserves the gcd and reduces the second nonnegative argument. Derive the lcm only after checking for zero inputs.',
+        'Start x, y = abs(a), abs(b), then use x, y = y, x % y while y is nonzero.',
+      ),
+    ],
+    [
+      [
+        'What invariant drives Euclid’s algorithm?',
+        'gcd(a, b) = gcd(b, a % b) for b != 0.',
+      ],
+      [
+        'How do you compute the lcm safely when zeros are allowed?',
+        'Return 0 if either input is 0; otherwise use abs((a // gcd(a, b)) * b).',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-modular',
+    'cp-number-theory',
+    'Compute with modular powers',
+    'Reduce intermediate values and square a base to process exponent bits.',
+    ['cp-gcd', 'numbers'],
+    [
+      'For a positive modulus m, Python a % m is the representative from 0 through m - 1, including when a is negative. Addition and multiplication can be reduced after every operation: ((a % m) * (b % m)) % m equals (a * b) % m. This keeps intermediate values bounded without changing the residue.',
+      'To compute aᵉ mod m for a nonnegative integer exponent, keep a result, a squared base, and the unprocessed exponent. If the exponent is odd, multiply the result by the current base; square the base and halve the exponent. The invariant is result * base**remaining ≡ original_a**original_e (mod m). There are O(log(e + 1)) iterations and O(1) extra variables.',
+      'Initialize result as 1 % m so exponent zero works even for m = 1, where every residue is zero. Modular division is not ordinary integer division: a denominator b has an inverse only when gcd(b, m) = 1. Python pow(b, -1, m) can compute that inverse for coprime inputs. The shortcut pow(b, p - 2, p) requires prime p and b not divisible by p; it is invalid as a general composite-modulus rule.',
+    ],
+    `def mod_power(base, exponent, modulus):
+    result = 1 % modulus
+    base %= modulus
+    while exponent:
+        if exponent % 2:
+            result = result * base % modulus
+        base = base * base % modulus
+        exponent //= 2
+    return result
+
+print(mod_power(2, 20, 1000))
+print(mod_power(-2, 3, 5))
+print(mod_power(9, 0, 1))`,
+    '576\n2\n0',
+    'Squaring processes a large exponent in a few iterations. Negative bases normalize correctly, and modulus one has only residue zero.',
+    [
+      choice(
+        'Which condition is required for b to have an inverse modulo m?',
+        [
+          'b < m only',
+          'm must always be prime',
+          'gcd(b, m) = 1',
+          'b must be even',
+        ],
+        2,
+        'Coprimality is necessary and sufficient. Composite moduli also allow inverses for coprime values.',
+        'Use the gcd rather than an ordering comparison.',
+      ),
+      choice(
+        'What must the initial result be in modular exponentiation if modulus may equal 1?',
+        [
+          '0 for every modulus',
+          '1 % modulus',
+          'base % modulus',
+          'exponent % modulus',
+        ],
+        1,
+        'The multiplicative identity is represented by one modulo m, which is zero when m is one.',
+        'Check the exponent-zero case.',
+      ),
+      choice(
+        'What does the odd-exponent branch accomplish?',
+        [
+          'It subtracts the modulus from the exponent',
+          'It resets the base',
+          'It enumerates every smaller power',
+          'It transfers one current base factor into the result',
+        ],
+        3,
+        'For odd e, base**e = base * (base²)**(e // 2), so one base factor belongs in the result.',
+        'Write e as 2q + 1.',
+      ),
+      exercise(
+        'Implement mod_power(base, exponent, modulus) using repeated squaring. base is any integer, exponent is a nonnegative integer, and modulus is a positive integer. Return the residue in [0, modulus). Treat exponent zero as the empty product, including base zero. Support modulus 1.',
+        'def mod_power(base, exponent, modulus):\n    # Consume exponent bits while reducing every multiplication.\n    pass\n',
+        `def mod_power(base, exponent, modulus):
+    result = 1 % modulus
+    base %= modulus
+    while exponent:
+        if exponent % 2:
+            result = result * base % modulus
+        base = base * base % modulus
+        exponent //= 2
+    return result`,
+        `assert mod_power(2, 20, 1000) == 576
+assert mod_power(-2, 3, 5) == 2
+assert mod_power(9, 0, 7) == 1
+assert mod_power(0, 0, 7) == 1, "Use the empty-product convention."
+assert mod_power(0, 5, 7) == 0
+assert mod_power(9, 0, 1) == 0
+assert mod_power(123, 500, 1) == 0
+assert mod_power(7, 10**9, 97) == pow(7, 10**9, 97), "Consume exponent bits instead of multiplying a billion times."
+for base in [-8, -1, 0, 2, 13]:
+    for exponent in range(10):
+        assert mod_power(base, exponent, 12) == pow(base, exponent, 12)`,
+        'Each step preserves the modular-power invariant while removing one exponent bit. Reducing both multiplications keeps residues bounded.',
+        'Start at 1 % modulus. For an odd exponent multiply the result, then square the base and use exponent //= 2.',
+      ),
+    ],
+    [
+      [
+        'When does a modular inverse of b modulo m exist?',
+        'Exactly when gcd(b, m) = 1.',
+      ],
+      [
+        'Why does repeated squaring take logarithmically many iterations?',
+        'Each iteration halves the remaining exponent, processing one binary digit.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-sieve',
+    'cp-number-theory',
+    'Mark primes in a bounded range',
+    'Use one primality table instead of testing every number independently.',
+    ['cp-complexity', 'ranges', 'comprehensions'],
+    [
+      'The Sieve of Eratosthenes finds every prime from two through an integer bound n. Create a boolean table of length n + 1, initially true, and mark zero and one false. A remaining true entry is a candidate prime. The contract here permits 0 <= n <= 100000; bounds below two return an empty result.',
+      'For each still-true p with p * p <= n, mark p * p, p * p + p, and later multiples false. Starting at p² is safe because any smaller composite multiple of p has a smaller factor and has already been marked. Every composite up to n has a prime factor at most √n, so no composite remains after the scan.',
+      'The marking invariant is that multiples of all processed primes are excluded. The sieve uses O(n log log n) marking time and O(n) storage, plus an O(n) scan to collect results. A table is ideal for many bounded primality queries; allocating a table up to one enormous isolated number would be wasteful.',
+    ],
+    `def primes_up_to(limit):
+    if limit < 2:
+        return []
+    prime = [True] * (limit + 1)
+    prime[0] = prime[1] = False
+    p = 2
+    while p * p <= limit:
+        if prime[p]:
+            for multiple in range(p * p, limit + 1, p):
+                prime[multiple] = False
+        p += 1
+    return [value for value in range(2, limit + 1) if prime[value]]
+
+print(primes_up_to(20))
+print(primes_up_to(1))`,
+    '[2, 3, 5, 7, 11, 13, 17, 19]\n[]',
+    'Zero and one are excluded, and composite multiples are removed. The upper bound is inclusive.',
+    [
+      choice(
+        'Why can marking for a prime p begin at p * p?',
+        [
+          'Every smaller multiple is prime',
+          'Smaller composite multiples already have a processed smaller factor',
+          'p * p is never composite',
+          'It excludes p itself',
+        ],
+        1,
+        'A smaller multiple k * p has k < p; a prime factor of k has already caused it to be marked.',
+        'Inspect a smaller multiplier k.',
+      ),
+      choice(
+        'Why is it enough to process candidates through √n?',
+        [
+          'Every prime is below √n',
+          'The output excludes larger primes',
+          'Every composite <= n has a prime factor <= √n',
+          'There are exactly √n composites',
+        ],
+        2,
+        'If both factors were larger than √n, their product would exceed n.',
+        'Consider a composite’s smallest factor.',
+      ),
+      choice(
+        'Which pair must always be marked nonprime?',
+        ['0 and 1', '1 and 2', '2 and 3', 'All odd numbers'],
+        0,
+        'A prime is an integer greater than one with exactly two positive divisors.',
+        'Apply the definition of prime.',
+      ),
+      exercise(
+        'Implement primes_up_to(limit) with a sieve. limit is an integer from 0 through 100000. Return all prime integers <= limit in increasing order. Return [] below two, exclude zero and one, and begin each prime’s marking at its square.',
+        'def primes_up_to(limit):\n    # Mark a bounded primality table.\n    pass\n',
+        `def primes_up_to(limit):
+    if limit < 2:
+        return []
+    prime = [True] * (limit + 1)
+    prime[0] = prime[1] = False
+    p = 2
+    while p * p <= limit:
+        if prime[p]:
+            for multiple in range(p * p, limit + 1, p):
+                prime[multiple] = False
+        p += 1
+    return [value for value in range(2, limit + 1) if prime[value]]`,
+        `assert primes_up_to(0) == []
+assert primes_up_to(1) == []
+assert primes_up_to(2) == [2], "The bound is inclusive."
+assert primes_up_to(4) == [2, 3]
+assert primes_up_to(20) == [2, 3, 5, 7, 11, 13, 17, 19]
+assert primes_up_to(49) == [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47], "Mark prime squares."
+assert primes_up_to(97)[-1] == 97
+result = primes_up_to(1000)
+assert len(result) == 168 and result[-1] == 997
+assert result == sorted(set(result)), "Return each prime once in order."`,
+        'Each prime marks its composite multiples. Processing through its square bound suffices to eliminate every composite in the table.',
+        'Handle limit < 2 first, allocate limit + 1 entries, and mark with range(p * p, limit + 1, p).',
+      ),
+    ],
+    [
+      [
+        'Where should a sieve begin marking multiples of a prime p?',
+        'At p²; smaller composite multiples were already marked by smaller primes.',
+      ],
+      [
+        'What are the standard sieve’s time and space bounds?',
+        'O(n log log n) time and O(n) space for bound n.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-combinatorics',
+    'cp-number-theory',
+    'Count combinations with Pascal states',
+    'Build binomial coefficients modulo any positive modulus without division.',
+    ['cp-tabulation', 'cp-modular'],
+    [
+      'The binomial coefficient C(n, k) counts unordered selections of k distinct indexed items from n. Divide the selections according to whether they contain one distinguished item: C(n, k) = C(n - 1, k) + C(n - 1, k - 1). The boundary C(n, 0) = 1 counts the empty selection, and C(n, k) = 0 when k < 0 or k > n.',
+      'A one-dimensional Pascal table starts with dp[0] = 1 % modulus and other entries zero. After processing i items, dp[r] equals C(i, r) modulo the modulus. Update r downward so dp[r - 1] still belongs to the previous row. Symmetry C(n, k) = C(n, n - k) allows a shorter table.',
+      'For 0 <= n <= 500, this addition-only method uses O(n·(1 + min(k, n - k))) time and O(1 + min(k, n - k)) storage for valid k, and works with any positive integer modulus, including composite values and one. The added one covers the outer-loop work even when k is zero or n. Factorial-based division modulo m would require invertible denominators. Do not apply a prime-modulus inverse shortcut to arbitrary moduli, or when a factorial denominator is divisible by that prime.',
+    ],
+    `def choose_mod(n, k, modulus):
+    if k < 0 or k > n:
+        return 0
+    k = min(k, n - k)
+    dp = [0] * (k + 1)
+    dp[0] = 1 % modulus
+    for count in range(1, n + 1):
+        for selected in range(min(count, k), 0, -1):
+            dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp[k]
+
+print(choose_mod(6, 2, 10))
+print(choose_mod(0, 0, 7))
+print(choose_mod(5, 6, 7))`,
+    '5\n1\n0',
+    'There are fifteen two-item selections from six items, giving residue five modulo ten. Empty and impossible selections use explicit boundaries.',
+    [
+      choice(
+        'Why does Pascal’s recurrence add two counts?',
+        [
+          'It counts orders of all n items',
+          'It partitions selections into those including or excluding one item',
+          'It assumes every modulus is prime',
+          'It subtracts duplicate values',
+        ],
+        1,
+        'The include and exclude cases are disjoint and together contain all k-item selections.',
+        'Ask whether a distinguished item belongs to the selection.',
+      ),
+      choice(
+        'Why update the compressed Pascal row downward?',
+        [
+          'To sort combinations',
+          'To discard C(n, 0)',
+          'To read dp[r - 1] from the previous row',
+          'To make k negative',
+        ],
+        2,
+        'An ascending update would reuse a newly changed entry from the same row and overcount.',
+        'The recurrence uses two entries from row i - 1.',
+      ),
+      choice(
+        'What makes this Pascal method valid modulo a composite number?',
+        [
+          'It uses only addition and reduction, with no modular division',
+          'Composite moduli make every integer invertible',
+          'Every factorial is zero',
+          'It requires k = 0',
+        ],
+        0,
+        'Addition preserves residues for any positive modulus; no inverse is required.',
+        'Inspect the operations used by the recurrence.',
+      ),
+      exercise(
+        'Implement choose_mod(n, k, modulus) using Pascal’s recurrence. n is an integer from 0 through 500, k is any integer, and modulus is a positive integer. Return C(n, k) % modulus, or 0 when k is outside [0, n]. Support composite moduli and modulus 1 without modular division.',
+        'def choose_mod(n, k, modulus):\n    # Build a compressed Pascal table, updating downward.\n    pass\n',
+        `def choose_mod(n, k, modulus):
+    if k < 0 or k > n:
+        return 0
+    k = min(k, n - k)
+    dp = [0] * (k + 1)
+    dp[0] = 1 % modulus
+    for count in range(1, n + 1):
+        for selected in range(min(count, k), 0, -1):
+            dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp[k]`,
+        `assert choose_mod(0, 0, 7) == 1
+assert choose_mod(6, 2, 10) == 5
+assert choose_mod(6, 4, 10) == 5, "Use combination symmetry."
+assert choose_mod(5, -1, 7) == 0
+assert choose_mod(5, 6, 7) == 0
+assert choose_mod(8, 0, 9) == 1
+assert choose_mod(8, 8, 9) == 1
+assert choose_mod(0, 0, 1) == 0
+assert choose_mod(12, 6, 8) == 4, "Composite moduli need no inverse."
+from math import comb
+for n in range(21):
+    for k in range(n + 1):
+        for modulus in [1, 4, 13]:
+            assert choose_mod(n, k, modulus) == comb(n, k) % modulus`,
+        'The include/exclude partition produces Pascal’s recurrence. Descending updates preserve the previous row, and addition works for every positive modulus.',
+        'Reject invalid k, initialize the empty selection, then add dp[r - 1] to dp[r] in descending r order.',
+      ),
+    ],
+    [
+      [
+        'What does C(n, k) count?',
+        'Unordered k-item selections from n distinct indexed items; C(n, 0) = 1.',
+      ],
+      [
+        'Why is Pascal DP safe for composite moduli?',
+        'It uses addition and reduction only, so no denominator needs an inverse.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-fenwick',
+    'cp-range',
+    'Maintain sums with a Fenwick tree',
+    'Support point additions and half-open range sums in logarithmic time.',
+    ['cp-prefix-sums', 'cp-bitmasks'],
+    [
+      'Ordinary prefix sums answer range sums quickly, but changing one value can force many prefix entries to change. A Fenwick tree stores partial sums in overlapping power-of-two blocks. With a 1-based internal index i, tree[i] covers exactly lowbit(i) entries ending at i, where lowbit(i) = i & -i.',
+      'The public array remains zero-based. Adding delta at public index p starts internally at i = p + 1 and repeatedly adds lowbit(i) to visit every stored block containing that position. A prefix query for public [0, end) starts internally at i = end and repeatedly subtracts lowbit(i), combining disjoint blocks. Never start an update at internal zero: its lowbit is zero and the loop would not advance.',
+      'A sum over [left, right) is prefix(right) - prefix(left); empty ranges sum to zero. The function below accepts valid point-add and sum operations, including negative values and deltas. Each operation costs O(log n), storage is O(n), and building by n point additions costs O(n log n). Keep the indexing conversion at the public boundary to make the invariant easy to check.',
+    ],
+    `def range_sums(values, operations):
+    n = len(values)
+    tree = [0] * (n + 1)
+    def add(index, delta):
+        index += 1
+        while index <= n:
+            tree[index] += delta
+            index += index & -index
+    def prefix(end):
+        total = 0
+        while end > 0:
+            total += tree[end]
+            end -= end & -end
+        return total
+    for index, value in enumerate(values):
+        add(index, value)
+    answers = []
+    for kind, left, right in operations:
+        if kind == "add":
+            add(left, right)
+        else:
+            answers.append(prefix(right) - prefix(left))
+    return answers
+
+print(range_sums([2, 1, 4, 3], [("sum", 1, 4), ("add", 2, 5), ("sum", 0, 3)]))`,
+    '[8, 12]',
+    'The first sum uses indices one through three. Adding five to index two changes the subsequent prefix total without rebuilding all prefixes.',
+    [
+      choice(
+        'Where does a public update at index 0 start inside a Fenwick tree?',
+        [
+          'Internal index 0',
+          'Internal index 1',
+          'Internal index n',
+          'Internal index -1',
+        ],
+        1,
+        'The internal representation is one-based, so public p maps to p + 1.',
+        'An update at zero would have lowbit zero.',
+      ),
+      choice(
+        'If prefix(end) sums [0, end), which expression sums [left, right)?',
+        [
+          'prefix(right) + prefix(left)',
+          'prefix(right - 1)',
+          'prefix(right) - prefix(left)',
+          'prefix(left) - prefix(right)',
+        ],
+        2,
+        'Subtract the prefix before left from the prefix ending before right.',
+        'Use the same half-open convention at both boundaries.',
+      ),
+      choice(
+        'What happens if an update loop starts with internal index 0 and advances by index & -index?',
+        [
+          'It never advances',
+          'It jumps to index 1 automatically',
+          'It updates every entry once',
+          'It returns the total sum',
+        ],
+        0,
+        '0 & -0 is zero, so the loop repeats the same index indefinitely.',
+        'Compute lowbit(0).',
+      ),
+      exercise(
+        'Implement range_sums(values, operations) using a Fenwick tree. values is an integer list. Each operation is ("add", index, delta), with 0 <= index < len(values), or ("sum", left, right), with 0 <= left <= right <= len(values). Return sum answers in operation order. Ranges are half-open [left, right); empty ranges sum to zero. Additions may be negative. Preserve values.',
+        'def range_sums(values, operations):\n    # Convert public indices to a 1-based Fenwick representation.\n    pass\n',
+        `def range_sums(values, operations):
+    n = len(values)
+    tree = [0] * (n + 1)
+    def add(index, delta):
+        index += 1
+        while index <= n:
+            tree[index] += delta
+            index += index & -index
+    def prefix(end):
+        total = 0
+        while end > 0:
+            total += tree[end]
+            end -= end & -end
+        return total
+    for index, value in enumerate(values):
+        add(index, value)
+    answers = []
+    for kind, left, right in operations:
+        if kind == "add":
+            add(left, right)
+        else:
+            answers.append(prefix(right) - prefix(left))
+    return answers`,
+        `assert range_sums([], []) == []
+assert range_sums([], [("sum", 0, 0)]) == [0]
+assert range_sums([5], [("sum", 0, 1), ("add", 0, -7), ("sum", 0, 1)]) == [5, -2]
+assert range_sums([2, 1, 4, 3], [("sum", 1, 4), ("add", 2, 5), ("sum", 0, 3)]) == [8, 12]
+assert range_sums([1, -3, 6], [("sum", 1, 1), ("sum", 0, 3), ("add", 2, -6), ("sum", 2, 3)]) == [0, 4, 0]
+values = [3, 1, 5, 2, 4]
+operations = [("add", 0, 2), ("add", 4, -3), ("sum", 0, 5), ("sum", 1, 4), ("sum", 4, 5)]
+assert range_sums(values, operations) == [14, 8, 1]
+assert values == [3, 1, 5, 2, 4], "Preserve the source array."
+assert range_sums([7, 8], [("add", 1, 0)]) == []`,
+        'Fenwick blocks preserve their sums under point additions. Prefix queries partition the requested prefix into disjoint stored blocks, and subtraction yields the range.',
+        'Use index + 1 for updates, end for prefix queries, and i & -i to move between blocks.',
+      ),
+    ],
+    [
+      [
+        'What does Fenwick tree[i] store with 1-based internal indexing?',
+        'The sum of lowbit(i) entries ending at internal position i, with lowbit(i) = i & -i.',
+      ],
+      [
+        'How do Fenwick point updates and prefix queries move?',
+        'Updates add lowbit(i); prefix queries subtract it. Public update p starts at p + 1.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-segment-tree',
+    'cp-range',
+    'Combine ranges with a segment tree',
+    'Maintain range minima under point assignment using associative summaries.',
+    ['cp-tree-traversal', 'cp-prefix-sums', 'slicing', 'ranges'],
+    [
+      'A segment tree stores an associative summary of each interval, combining two child summaries into their parent. For range minima, the combine operation is min and the identity is infinity. Pad the leaf count to a power of two, fill unused leaves with infinity, and build parents upward. The invariant is that every node stores the minimum of the real values in its interval.',
+      'Point assignment changes one leaf and recomputes its ancestors. An iterative query uses a half-open range [left, right): move the boundaries to leaf positions, include a left node when the left boundary is a right child, include the node just before an odd right boundary, then move both boundaries upward. The included nodes form disjoint pieces of exactly the requested range.',
+      'Building costs O(n) time and space, and each point assignment or range query costs O(log n). Unlike sums, minima cannot be recovered by subtracting two prefix minima, which motivates a general range structure. In this function, an empty query returns None, including on an empty array. Input values are integers, assignments use valid indices, and queries satisfy 0 <= left <= right <= n.',
+    ],
+    `def range_minima(values, operations):
+    size = 1
+    while size < len(values):
+        size *= 2
+    tree = [float("inf")] * (2 * size)
+    tree[size:size + len(values)] = values
+    for node in range(size - 1, 0, -1):
+        tree[node] = min(tree[2 * node], tree[2 * node + 1])
+    answers = []
+    for kind, left, right in operations:
+        if kind == "set":
+            node = size + left
+            tree[node] = right
+            node //= 2
+            while node:
+                tree[node] = min(tree[2 * node], tree[2 * node + 1])
+                node //= 2
+        elif left == right:
+            answers.append(None)
+        else:
+            left += size
+            right += size
+            best = float("inf")
+            while left < right:
+                if left % 2:
+                    best = min(best, tree[left])
+                    left += 1
+                if right % 2:
+                    right -= 1
+                    best = min(best, tree[right])
+                left //= 2
+                right //= 2
+            answers.append(best)
+    return answers
+
+print(range_minima([8, 3, 6, 1, 9], [("min", 0, 3), ("set", 1, 7), ("min", 0, 3), ("min", 3, 5)]))`,
+    '[3, 6, 1]',
+    'Setting index one to seven changes ancestors, and the minimum of [0, 3) rises from three to six. The last query covers only indices three and four.',
+    [
+      choice(
+        'Why pad unused leaves with infinity for a minimum tree?',
+        [
+          'Infinity forces every query to return infinity',
+          'min(x, infinity) = x, so padding cannot change a real minimum',
+          'Infinity counts as a real input',
+          'It makes subtraction valid',
+        ],
+        1,
+        'Infinity is the identity for min, so combining a real value with padding preserves the value.',
+        'An identity leaves the other argument unchanged.',
+      ),
+      choice(
+        'Which positions are covered by query [2, 5)?',
+        ['2, 3, 4, 5', '3, 4, 5', '2, 3, 4', 'Only 2 and 5'],
+        2,
+        'The left endpoint is included and the right endpoint is excluded.',
+        'Use Python slice conventions.',
+      ),
+      choice(
+        'Why can two prefix minima not generally determine an arbitrary range minimum?',
+        [
+          'Minima have no subtraction operation that removes an earlier prefix',
+          'Prefix minima are always negative',
+          'All values must be distinct',
+          'A range minimum is not associative',
+        ],
+        0,
+        'A small value before the range can dominate both prefix minima, hiding the values inside the range.',
+        'Consider prefix minima for [1, 9, 8] and the range [1, 3).',
+      ),
+      exercise(
+        'Implement range_minima(values, operations) with a segment tree. values is an integer list. Operations are ("set", index, value) for valid indices, or ("min", left, right) with 0 <= left <= right <= len(values). Return query answers in order, using half-open [left, right) ranges and None for empty ranges. Assignments replace rather than add. Preserve values.',
+        'def range_minima(values, operations):\n    # Build a minimum tree, then apply assignments and queries.\n    pass\n',
+        `def range_minima(values, operations):
+    size = 1
+    while size < len(values):
+        size *= 2
+    tree = [float("inf")] * (2 * size)
+    tree[size:size + len(values)] = values
+    for node in range(size - 1, 0, -1):
+        tree[node] = min(tree[2 * node], tree[2 * node + 1])
+    answers = []
+    for kind, left, right in operations:
+        if kind == "set":
+            node = size + left
+            tree[node] = right
+            node //= 2
+            while node:
+                tree[node] = min(tree[2 * node], tree[2 * node + 1])
+                node //= 2
+        elif left == right:
+            answers.append(None)
+        else:
+            left += size
+            right += size
+            best = float("inf")
+            while left < right:
+                if left % 2:
+                    best = min(best, tree[left])
+                    left += 1
+                if right % 2:
+                    right -= 1
+                    best = min(best, tree[right])
+                left //= 2
+                right //= 2
+            answers.append(best)
+    return answers`,
+        `assert range_minima([], []) == []
+assert range_minima([], [("min", 0, 0)]) == [None]
+assert range_minima([7], [("min", 0, 1), ("set", 0, -2), ("min", 0, 1), ("min", 1, 1)]) == [7, -2, None]
+assert range_minima([8, 3, 6, 1, 9], [("min", 0, 3), ("set", 1, 7), ("min", 0, 3), ("min", 3, 5)]) == [3, 6, 1]
+assert range_minima([1, 9, 8], [("min", 1, 3)]) == [8], "Exclude values before left."
+assert range_minima([4, -3, 2], [("min", 0, 3), ("set", 1, 10), ("min", 0, 3)]) == [-3, 2]
+values = [5, 5, 5, 5, 5]
+assert range_minima(values, [("set", 4, 1), ("min", 0, 4), ("min", 4, 5), ("min", 2, 2)]) == [5, 1, None]
+assert values == [5, 5, 5, 5, 5]
+assert range_minima([1, 2], [("set", 0, 3)]) == []`,
+        'Each assignment restores the ancestor-minimum invariant. The query collects disjoint tree intervals covering exactly the requested half-open range.',
+        'Use infinity for padding, rebuild parents after a set, and move query endpoints upward while consuming odd boundaries.',
+      ),
+    ],
+    [
+      [
+        'What properties does a segment-tree summary need?',
+        'An associative combine operation and a suitable identity for empty pieces.',
+      ],
+      [
+        'What do [left, right) segment queries include?',
+        'Indices left through right - 1; an equal-endpoint range is empty.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-binary-lifting',
+    'cp-range',
+    'Jump through ancestor powers',
+    'Precompute doubling steps and answer bounded-tree ancestor queries safely.',
+    ['cp-tree-traversal', 'cp-binary-search', 'cp-bitmasks', 'slicing'],
+    [
+      'Binary lifting preprocesses repeated jumps in a parent-pointer forest. parents[v] is v’s immediate parent, with -1 for every root; the parent pointers must be acyclic and all other parents must be valid vertex indices. up[j][v] stores the ancestor 2ʲ steps above v. The base row is parents, and the next row composes two jumps from the preceding row.',
+      'To answer the kth ancestor, split nonnegative k into binary bits. For each set bit j, replace the current vertex with up[j][vertex]. The invariant is that the current vertex has moved by exactly the processed bit distances. Stop at -1; never index a row with -1, since Python would silently select its last entry. For k = 0, the answer is the original vertex.',
+      'A forest of n vertices has fewer than n parent edges on any chain. Therefore k >= n immediately returns -1, even for a huge k, avoiding access beyond the table. max(1, n.bit_length()) rows suffice for smaller k. Preprocessing uses O(n log n) time and space, and each query uses O(log n) time. An empty forest supports an empty query list only; query vertices otherwise must be valid.',
+    ],
+    `def kth_ancestors(parents, queries):
+    n = len(parents)
+    up = [parents[:]]
+    for _ in range(1, max(1, n.bit_length())):
+        previous = up[-1]
+        up.append([-1 if parent == -1 else previous[parent] for parent in previous])
+    answers = []
+    for vertex, steps in queries:
+        if steps >= n:
+            answers.append(-1)
+            continue
+        bit = 0
+        while steps and vertex != -1:
+            if steps & 1:
+                vertex = up[bit][vertex]
+            steps >>= 1
+            bit += 1
+        answers.append(vertex)
+    return answers
+
+print(kth_ancestors([-1, 0, 0, 1, 3], [(4, 0), (4, 2), (4, 3), (4, 4), (0, 1)]))`,
+    '[4, 1, 0, -1, -1]',
+    'Vertex four follows the chain 4 → 3 → 1 → 0. A zero-step query stays at four, and moving above the root returns -1.',
+    [
+      choice(
+        'What does up[3][v] represent?',
+        [
+          'The third child of v',
+          'The ancestor three edges above v',
+          'The ancestor eight edges above v',
+          'The number of descendants of v',
+        ],
+        2,
+        'Row j represents a jump of 2ʲ parent edges, so row three jumps eight.',
+        'Interpret the row number as a power of two.',
+      ),
+      choice(
+        'Why must a missing ancestor -1 be checked before another table lookup?',
+        [
+          'Python negative indexing would read a valid final entry',
+          '-1 is always the root’s index',
+          'The table is sorted',
+          'Every forest has exactly one root',
+        ],
+        0,
+        'A lookup with -1 would silently use the last vertex instead of preserving the missing-ancestor sentinel.',
+        'Recall what a_list[-1] means.',
+      ),
+      choice(
+        'A valid forest has n vertices. What should a query with k >= n return?',
+        [
+          'The original vertex',
+          'The last table entry',
+          'The deepest leaf',
+          '-1',
+        ],
+        3,
+        'An acyclic parent chain has at most n - 1 edges; k >= n is above every root.',
+        'A parent chain cannot revisit a vertex in a forest.',
+      ),
+      exercise(
+        'Implement kth_ancestors(parents, queries). parents describes an acyclic forest: each parent is -1 for a root or a valid vertex index. Each query (vertex, k) uses a valid vertex and nonnegative integer k; k may be arbitrarily large. Return the kth ancestor for each query, -1 if absent, and the vertex itself for k = 0. Empty parents comes with no queries. Use a doubling table and preserve parents.',
+        'def kth_ancestors(parents, queries):\n    # Precompute 2**j jumps, preserving -1 roots.\n    pass\n',
+        `def kth_ancestors(parents, queries):
+    n = len(parents)
+    up = [parents[:]]
+    for _ in range(1, max(1, n.bit_length())):
+        previous = up[-1]
+        up.append([-1 if parent == -1 else previous[parent] for parent in previous])
+    answers = []
+    for vertex, steps in queries:
+        if steps >= n:
+            answers.append(-1)
+            continue
+        bit = 0
+        while steps and vertex != -1:
+            if steps & 1:
+                vertex = up[bit][vertex]
+            steps >>= 1
+            bit += 1
+        answers.append(vertex)
+    return answers`,
+        `assert kth_ancestors([], []) == []
+assert kth_ancestors([-1], [(0, 0), (0, 1), (0, 10**50)]) == [0, -1, -1]
+assert kth_ancestors([-1, 0, 0, 1, 3], [(4, 0), (4, 2), (4, 3), (4, 4), (0, 1)]) == [4, 1, 0, -1, -1]
+assert kth_ancestors([2, 2, -1], [(0, 1), (0, 2), (1, 0)]) == [2, -1, 1], "Parents need not precede children."
+assert kth_ancestors([-1, 0, -1, 2], [(1, 1), (3, 1), (3, 2)]) == [0, 2, -1]
+parents = [-1] + list(range(19))
+assert kth_ancestors(parents, [(19, 16), (19, 19), (19, 20), (19, 10**100)]) == [3, 0, -1, -1]
+assert parents == [-1] + list(range(19)), "Preserve parent pointers."`,
+        'Each doubling row composes two existing jumps, guarding the -1 sentinel. Query bits select disjoint jump lengths; k >= n has no ancestor in an acyclic forest.',
+        'Store the parent row first, compose each row through the previous row, then consume k bits while the current vertex exists.',
+      ),
+    ],
+    [
+      [
+        'How is a binary-lifting row computed?',
+        'up[j][v] = up[j - 1][up[j - 1][v]], unless the intermediate ancestor is -1.',
+      ],
+      [
+        'How do you avoid table overflow for a huge ancestor distance?',
+        'In an acyclic n-vertex forest, k >= n has no ancestor; return -1 before table lookups.',
+      ],
+    ],
+  ),
+
+  skill(
+    'cp-scc',
+    'cp-range',
+    'Group mutual reachability',
+    'Find strongly connected components and separate directed cycles from DAG structure.',
+    ['cp-dfs', 'cp-topological', 'cp-sorting'],
+    [
+      'A strongly connected component (SCC) is a maximal group of directed-graph vertices in which every vertex can reach every other. Reachability in one direction is insufficient. Every vertex belongs to exactly one SCC, including isolated vertices. A component with at least two vertices contains a directed cycle; a singleton contains a cycle only if it has a self-loop.',
+      'Kosaraju’s algorithm first runs DFS on the original graph and records each vertex when its traversal finishes. Then reverse every edge and explore vertices in decreasing finishing order. Each second-pass traversal finds one whole SCC. Finishing order isolates a source component of the remaining original component graph, so reversed traversal cannot escape it. Use explicit DFS frames to record completion after all neighbors, rather than recording discovery order.',
+      'Contracting SCCs into one vertex each produces a DAG: a cycle between distinct components would make them mutually reachable and therefore one component. Both DFS passes use O(V + E) time and O(V + E) graph storage. The function uses iterative stacks to avoid Python recursion depth limits. Sorting vertices within groups and groups lexicographically makes results deterministic and adds up to O(V log V) reporting time. Edges may repeat or be self-loops, with vertices numbered 0 through n - 1.',
+    ],
+    `def scc_groups(n, edges):
+    graph = [[] for _ in range(n)]
+    reverse = [[] for _ in range(n)]
+    for source, target in edges:
+        graph[source].append(target)
+        reverse[target].append(source)
+    seen = [False] * n
+    order = []
+    for root in range(n):
+        if seen[root]:
+            continue
+        seen[root] = True
+        stack = [(root, 0)]
+        while stack:
+            vertex, next_index = stack[-1]
+            if next_index == len(graph[vertex]):
+                order.append(vertex)
+                stack.pop()
+            else:
+                neighbor = graph[vertex][next_index]
+                stack[-1] = (vertex, next_index + 1)
+                if not seen[neighbor]:
+                    seen[neighbor] = True
+                    stack.append((neighbor, 0))
+    seen = [False] * n
+    groups = []
+    for root in reversed(order):
+        if seen[root]:
+            continue
+        seen[root] = True
+        stack = [root]
+        group = []
+        while stack:
+            vertex = stack.pop()
+            group.append(vertex)
+            for neighbor in reverse[vertex]:
+                if not seen[neighbor]:
+                    seen[neighbor] = True
+                    stack.append(neighbor)
+        groups.append(sorted(group))
+    return sorted(groups)
+
+edges = [(0, 1), (1, 0), (1, 2), (2, 3), (3, 2), (3, 4)]
+print(scc_groups(5, edges))`,
+    '[[0, 1], [2, 3], [4]]',
+    'Vertices zero and one are mutually reachable, as are two and three. One-way edges connect those groups to each other and to vertex four.',
+    [
+      choice(
+        'Edges are 0 → 1, 1 → 0, and 1 → 2. Which SCC partition is correct?',
+        ['[[0, 1, 2]]', '[[0, 1], [2]]', '[[0], [1, 2]]', '[[0], [1], [2]]'],
+        1,
+        'Zero and one reach each other. Vertex two has no return path to either, so it remains separate.',
+        'Check reachability in both directions.',
+      ),
+      choice(
+        'Which statement about cycles and SCCs is correct?',
+        [
+          'Every singleton SCC contains a cycle',
+          'No SCC can contain a cycle',
+          'A singleton has a directed cycle only with a self-loop',
+          'A one-way edge makes its endpoints one SCC',
+        ],
+        2,
+        'A singleton is strongly connected by the zero-edge path to itself, but a directed cycle requires a self-loop in that one-vertex component.',
+        'Distinguish a zero-edge reachability path from a cycle.',
+      ),
+      choice(
+        'Why is the graph obtained by contracting SCCs acyclic?',
+        [
+          'A directed cycle between components would make them mutually reachable and one SCC',
+          'Contraction deletes every edge',
+          'The original graph must already be a DAG',
+          'Every component has one vertex',
+        ],
+        0,
+        'A cycle would provide paths both ways among its component vertices, contradicting their separation into maximal SCCs.',
+        'Apply the SCC definition to a proposed component-level cycle.',
+      ),
+      exercise(
+        'Implement scc_groups(n, edges) for a directed graph on vertices 0 through n - 1, with n >= 0. Every edge endpoint is valid; duplicate edges and self-loops are allowed. Return the SCC partition as sorted lists of vertex indices, with the groups sorted lexicographically. Include isolated vertices, return [] for n = 0, and use iterative graph traversals to support long chains.',
+        'def scc_groups(n, edges):\n    # Record DFS finishing order, then explore the reversed graph.\n    pass\n',
+        `def scc_groups(n, edges):
+    graph = [[] for _ in range(n)]
+    reverse = [[] for _ in range(n)]
+    for source, target in edges:
+        graph[source].append(target)
+        reverse[target].append(source)
+    seen = [False] * n
+    order = []
+    for root in range(n):
+        if seen[root]:
+            continue
+        seen[root] = True
+        stack = [(root, 0)]
+        while stack:
+            vertex, next_index = stack[-1]
+            if next_index == len(graph[vertex]):
+                order.append(vertex)
+                stack.pop()
+            else:
+                neighbor = graph[vertex][next_index]
+                stack[-1] = (vertex, next_index + 1)
+                if not seen[neighbor]:
+                    seen[neighbor] = True
+                    stack.append((neighbor, 0))
+    seen = [False] * n
+    groups = []
+    for root in reversed(order):
+        if seen[root]:
+            continue
+        seen[root] = True
+        stack = [root]
+        group = []
+        while stack:
+            vertex = stack.pop()
+            group.append(vertex)
+            for neighbor in reverse[vertex]:
+                if not seen[neighbor]:
+                    seen[neighbor] = True
+                    stack.append(neighbor)
+        groups.append(sorted(group))
+    return sorted(groups)`,
+        `assert scc_groups(0, []) == []
+assert scc_groups(3, []) == [[0], [1], [2]], "Include isolated vertices."
+assert scc_groups(1, [(0, 0), (0, 0)]) == [[0]]
+assert scc_groups(3, [(0, 1), (1, 0), (1, 2)]) == [[0, 1], [2]]
+assert scc_groups(4, [(0, 1), (1, 2), (2, 0), (2, 3)]) == [[0, 1, 2], [3]]
+assert scc_groups(5, [(0, 1), (1, 0), (1, 2), (2, 3), (3, 2), (3, 4)]) == [[0, 1], [2, 3], [4]]
+assert scc_groups(5, [(4, 1), (1, 4), (4, 1), (2, 3)]) == [[0], [1, 4], [2], [3]]
+assert scc_groups(1500, [(i, i + 1) for i in range(1499)]) == [[i] for i in range(1500)], "Avoid recursive depth limits."
+assert scc_groups(1500, [(i, (i + 1) % 1500) for i in range(1500)]) == [list(range(1500))]`,
+        'Finishing order on the original graph followed by reversed-edge traversals separates the maximal mutual-reachability groups. Explicit stacks handle deep graphs.',
+        'In the first pass, save a (vertex, next-neighbor-index) frame so a vertex enters order only after all neighbors finish. Traverse reverse edges in reversed(order).',
+      ),
+    ],
+    [
+      [
+        'What defines a strongly connected component?',
+        'A maximal group of vertices mutually reachable by directed paths.',
+      ],
+      [
+        'Why is an SCC condensation graph a DAG?',
+        'A cycle among distinct components would make them mutually reachable and merge them into one SCC.',
+      ],
+    ],
+  ),
+];

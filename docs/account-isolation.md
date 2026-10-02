@@ -1,0 +1,42 @@
+# Per-user learning engine audit
+
+## Data ownership
+
+Course content is shared and immutable. Learner data is not: each request to the progression engine receives one learner's `Progress`. It contains answer evidence, permanent reward IDs, attempt history, FSRS retention state, review evidence, dates, and XP. The surrounding `LearnerState` carries that learner's goal, selected course, cards, and Anki preferences.
+
+The authenticated server chooses the database key from Better Auth's validated session. A request body cannot supply an owner. Query parameters do not select another learner. `X-Lessdumb-User` only confirms the browser's expected active account and rejects a stale cookie/account combination. SQLite transactions enforce revision checks before storing an account snapshot.
+
+The browser loads `lessdumb.guest` for a guest and `lessdumb.account.<id>` for an authenticated learner. Owner checks happen during render and inside state updates, before a previous account's state can be written under a new account. Account changes abort old save operations, invalidate generations, and reject late load/save continuations. Local caches support offline work; they are ordinary browser storage, not encrypted private vaults.
+
+A fresh session lookup that fails with a rate limit, server error, or network failure does not confirm guest ownership. It remains unresolved with a retry screen, so account caches are not imported into a guest workspace or trusted as proof of identity. Previously validated session data survives non-401 errors using Better Auth's documented client behavior. Successful null responses and 401 clear ownership. Session reads have an explicit database-backed limit of 600 per minute; sign-in and sign-up retain their separate limit of 10 per minute.
+
+Guest progress migrates only to an empty account. A claim prevents another account from importing that same pending guest snapshot. The guest copy is removed only after a durable account write, and only if it still equals the imported snapshot. Signing out restores a separate guest workspace rather than treating account progress as guest progress.
+
+After server-confirmed sign-out, the documented success callback reloads the current route in a fresh document. A failed follow-up session lookup therefore cannot retain the revoked account from the previous SDK store; it shows the unresolved-connection screen until retry. A failed sign-out request does not reload or clear the current account.
+
+## Verified scenarios
+
+`tests/backend.test.ts` uses the real Better Auth handler, real scrypt authentication, real session cookies, and a temporary SQLite file. The two-account engine regression verifies:
+
+- One learner has a mastered Python skill with a due review; another has systems mastery evidence removed by a wrong answer and is scheduled to relearn.
+- Their goals, selected courses, deck names, attempt histories, and mastery/mistake cards remain different after independent writes and reads.
+- Completing the first learner's review advances only that learner's interval, review count, and XP; the second account's state and revision remain unchanged.
+- An authenticated learner cannot select the other account using an identity header, query parameter, or extra body owner field.
+
+`tests/engine-users.spec.ts` uses two actual authenticated browser contexts and visible learning controls. One learner masters a systems skill; the other makes a Python mistake. It checks separate cards and preferences after reload, advances the first learner's clock to a due review, completes that review, and confirms the other learner remains unchanged. A second browser regression learns as a guest, verifies a durable import into the first account, signs out, opens a new empty account, and confirms no guest/account progress crosses into it.
+
+`tests/account-sync.spec.ts` covers failed cloud loads, retry/merge preservation, an old tab holding another account's cookie, and a delayed account response crossing an account switch. Initial 429/503 session failures and a failed lookup after confirmed sign-out show the retry gate without importing or overwriting guest progress. The delayed response test switches shared cookies while retaining the same document, then checks actual cancellation and separate account evidence. `tests/anki-account.spec.ts` likewise retains the document while exercising delayed Anki connection and synchronization ownership. The pure answer helper tests ensure an async grade applies to current state without replacing unrelated work or duplicating an event/card.
+
+`tests/compiled-code.test.ts` verifies that the Rust/C++ endpoint rejects an expired or different `X-Lessdumb-User`, selects the authored assessment by skill/question ID, and sends no account identifiers or cookies to Compiler Explorer. Browser learning sessions abort old grading requests when they unmount or change accounts, and generation guards ignore late responses. Provider outages and cancellation leave answer evidence unchanged. These focused transport tests use injected responses; separate live compiler probes establish actual execution for both languages.
+
+## Enforcement and limits
+
+Python grading runs on the client using official Pyodide. Rust and C++ source is sent through a same-origin server endpoint to Compiler Explorer's sandbox with the server's canonical assessment harness; both compiler and program execution must succeed. The progression engine still runs on the client, and the state endpoint accepts the learner's claimed evidence after ownership, shape, size, and revision checks. The compiler result is not a signed grade receipt. A learner with access to developer tools can alter their own claimed state; this MVP provides personal-learning persistence rather than a server-authoritative examination system. See [compiled execution](compiled-code.md) for source transmission, sandbox bounds, and provider availability.
+
+Requests are limited to 4 MiB; the server accepts up to 5,000 events for compatibility with older snapshots. The current engine retains only the latest 2,000 diagnostic events. Per-question evidence checkpoints preserve later failures across compaction and stale-device merges. Permanent reward ledgers, per-skill XP/calendar totals and per-runtime grow-only activity counters preserve learning statistics; FSRS memory is independent of retained event history. Stable attempt identities protect retries within the retained window. Writer maps are retained for convergence and grow with runtime sessions, not answer volume; they are also subject to the payload limit. Scalar counters remain readable for older accounts, but independently divergent histories from clients without writer provenance cannot always be reconstructed exactly. This is bounded snapshot persistence, not a full historical event archive.
+
+The complete 609-skill catalog was traversed through real prerequisite gates. Independent correct completion produces a roughly 1.38 MiB snapshot with 1,218 mastery cards. An initial mistake on every question followed by repair produces a roughly 2.54 MiB snapshot, 3,654 mastery/mistake cards, and 2,000 retained events from 4,872 total answers. That valid state exceeded the previous 2 MiB limit. The authenticated backend regression now saves and reads it under the explicit 4 MiB bound, while oversized requests still return 413. This leaves finite headroom for subsequent review calendars and writer counters; it does not promise unlimited history or account size.
+
+The local-cache reader uses the same 4 MiB limit, checks UTF-8 bytes before parsing, and preserves separate owner keys. `tests/multilanguage.spec.ts` verified this large snapshot in the production-built Chromium app: guest seed and reload, migration into a new account, durable cloud save, then an account reload with the state endpoint deliberately returning 503. Mastery, XP, and all 3,654 cards survived. Browser storage capacity still depends on the browser and origin's other data; storage failures are surfaced to the learner rather than silently reported as saved.
+
+The authenticated account tests do not prove public deployment, multi-instance SQLite operation, email verification/recovery delivery, or AnkiWeb cloud upload. Those are separate integration/deployment concerns.

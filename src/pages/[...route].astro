@@ -1,0 +1,24 @@
+---
+import Layout from '../layouts/Layout.astro';
+import App from '../components/App';
+const page = Astro.params.route || 'today';
+const routes = [
+  'today',
+  'learn',
+  'graph',
+  'cards',
+  'settings',
+  'courses',
+  'lab',
+];
+if (!routes.includes(page)) Astro.response.status = 404;
+---
+
+<Layout>
+  <App
+    client:load
+    transition:persist="lessdumb-app"
+    page={routes.includes(page) ? page : '404'}
+    routeKey={Astro.url.pathname + Astro.url.search}
+  />
+</Layout>
