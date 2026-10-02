@@ -26,7 +26,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 ## What you can do
 
 - **Today:** follow the next adaptive task, set a daily XP goal, and see your practice history and streak.
-- **My learning:** choose from 157 connected skills across six courses through short explanations, examples, prediction questions, and executable exercises.
+- **My learning:** choose from 301 connected skills across six courses through short explanations, examples, prediction questions, and executable exercises.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
 - **Flashcards:** receive recall cards after mastery and correction cards after mistakes; connect Anki or export a tab-separated deck.
 - **Python lab:** experiment with real Python in a separate playground without changing mastery.
@@ -43,14 +43,14 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 | Python for Data Analysis |      24 |        96 |                   24 |         48 |
 | Machine Learning         |      28 |       112 |                   21 |         56 |
 | Data Systems             |      28 |       112 |                    0 |         56 |
-| Competitive Programming  |      48 |       192 |                   48 |         96 |
-| **Total**                | **157** |   **628** |              **122** |    **314** |
+| Competitive Programming  |     192 |       768 |                  192 |        384 |
+| **Total**                | **301** | **1,204** |              **266** |    **602** |
 
 Selecting a course saves a learning goal. The scheduler includes its prerequisite ancestors across courses, so missing foundations become real tasks rather than a dead end. The graph offers course paths with supporting prerequisites and an all-course view. Each node retains a domain and course identity, and its detail panel navigates both prerequisite and dependent edges.
 
 The three supplied books inform concept coverage; lessons, examples, questions, datasets, and cards are original. Source notes record exact scope: [data analysis](docs/sources/data-analysis.md), [machine learning](docs/sources/machine-learning.md), and [data systems](docs/sources/data-systems.md). The supplied data-systems early release contains chapters 1–8. The seven neural architecture skills assess concepts using choices and small Python analogues; the browser runtime does not execute TensorFlow/Keras training. This is a focused course catalog, not a reproduction of the books or their full exercise sets.
 
-Competitive Programming draws its topic paths from the supplied USACO and NeetCode reference inventories. Its 12 units cover contest reasoning, collections, prefix/window techniques, search, stacks/heaps/tries, recursion/trees, graph traversal, routes/connectivity, dynamic programming, greedy/bitmask/geometry techniques, number theory, and dynamic range queries. Every skill has a real Python function assessment and connects to existing Python foundations; geometry also uses the quantitative vector branch. The course exposes the public USACO Guide and NeetCode roadmap. [Source and graph mapping](docs/sources/competitive-programming.md) records the inspected references and scope.
+Competitive Programming draws its topic paths from the supplied USACO and NeetCode reference inventories. Its 12 units cover contest reasoning, collections, prefix/window techniques, search, stacks/heaps/tries, recursion/trees, graph traversal, routes/connectivity, dynamic programming, greedy/bitmask/geometry techniques, number theory, and dynamic range queries. Each of its 48 algorithm topics has three individually taught and assessed concepts followed by the original application skill: 192 nodes with 768 checks. Stable application IDs and earned evidence remain; newly added concepts require their own proof. Every node has a real Python function assessment and connects to existing Python foundations; geometry also uses the quantitative vector branch. The course exposes the public USACO Guide and NeetCode roadmap. [Source and graph mapping](docs/sources/competitive-programming.md) records the inspected references and scope.
 
 The dashboard layout follows the compact course/progress/task pattern visible in [Math Academy’s official public dashboard screenshot](https://www.mathacademy.com/img/screenshots/student-dashboard.png), with independent branding and implementation.
 
@@ -69,7 +69,7 @@ The curriculum contains **24 original skills, 96 questions, 24 runnable code exe
 
 Skills unlock through their graph prerequisites rather than an arbitrary calendar. Mastery requires a correct answer to **all four distinct questions without a hint**, including a passing Python exercise. Repeating one question cannot unlock a skill or farm learn XP. Hints support practice but do not count as independent mastery evidence.
 
-Initial mastery schedules a review one day later. A due review cycle needs two distinct independent answers, including executable code. Successful reviews advance through 1, 3, 7, 14, 30, 60, and 120-day intervals. A mistake removes the relevant answer evidence and prompts remediation; it does not erase unrelated prerequisite knowledge. XP and streaks reflect practice in the learner's timezone.
+Initial mastery schedules a review one day later. A due review cycle needs two distinct independent answers, including executable code. Later spacing uses FSRS-6 memory state per learner and skill, with a 90% target retention and a 365-day maximum. Independent review cycles strengthen memory; cycles needing a hint receive Hard rather than Good. Defaults are shared model parameters, not individually fitted weights. A mistake removes the relevant answer evidence and prompts remediation; it does not erase unrelated prerequisite knowledge. XP and streaks reflect practice in the learner's timezone.
 
 See [the engine audit](docs/engine-audit.md), [per-user isolation evidence](docs/account-isolation.md), [interface components](docs/ui-components.md), and [the learning design](docs/learning-design.md) for the evidence model, scheduling rules, sources, and limitations. The supplied _The Math Academy Way_ informed the prerequisite/mastery/retrieval design. lessdumb uses its own content and scheduler and does not claim parity with Math Academy's proprietary algorithms or outcomes.
 
@@ -147,7 +147,7 @@ Run the complete checks, including formatting, with:
 npm run verify
 ```
 
-The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python checks the foundation curriculum. Real Pyodide executes all 122 code solutions and 129 executable lesson examples, including scientific packages; all empty submissions must fail. Scenario examples use explicit text presentation rather than Python execution.
+The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python checks the foundation curriculum. Real Pyodide executes all 266 code solutions and 273 executable lesson examples, including scientific packages; all empty submissions must fail. Scenario examples use explicit text presentation rather than Python execution.
 
 For browser tests, install Chromium once, leave the development server running, and use another terminal:
 
@@ -164,7 +164,7 @@ LESSDUMB_E2E_URL=http://127.0.0.1:4322 npm run test:e2e
 
 Playwright uses an already running server; it does not start one automatically. Browser account tests create test accounts in that server's database. The full suite respects the production signup quota by waiting for Better Auth's retry header; it does not disable account rate limits. Anki protocol tests simulate the local API; a real desktop connection and an AnkiWeb upload remain separate integration checks.
 
-The October 2, 2026 Competitive Programming release passed **345 Vitest tests, 22 Playwright tests, formatting, type checks, and the production build**. Browser coverage includes two authenticated learners with different mastery/review/mistake histories, durable guest migration, delayed account and Anki responses, real NumPy/scikit-learn execution, contest goal and graph navigation, real prefix/Fenwick grading with earned cards, prerequisite lapse gating, and Sheet/Dialog keyboard focus.
+The October 2, 2026 granular Competitive Programming and FSRS release passed **652 Vitest tests, 23 Playwright tests, formatting, type checks, and the production build**. Browser coverage includes atomic topic stages, adaptive review interleaving, two authenticated learners with different mastery/review/mistake histories, durable guest migration, delayed account and Anki responses, real NumPy/scikit-learn execution, real prefix/Fenwick grading with earned cards, prerequisite lapse gating, and Sheet/Dialog keyboard focus with deliberately delayed hydration.
 
 ## Project structure
 
@@ -177,6 +177,8 @@ src/components/reui/            Free ReUI Stepper and CodeBlock
 src/components/useLearner.ts    Device persistence and account synchronization
 src/lib/curriculum.ts           Original course, unit, skill, question, card registry
 src/lib/learning.ts             Mastery evidence, task selection, review, XP, streaks
+src/lib/retention.ts            Per-learner FSRS memory and recall estimates
+src/lib/activity.ts             Durable offline answer counters
 src/lib/python.ts              Terminable Python worker client
 public/python-worker.mjs       Real Pyodide execution and exercise assertions
 src/lib/anki.ts                 Documented AnkiConnect client and note identity

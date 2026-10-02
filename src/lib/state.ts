@@ -1,14 +1,26 @@
 import {
-  DAY_MS,
   applyAttempt,
   dateKey,
   emptyProgress,
   isMastered,
+  MAX_RECENT_ATTEMPTS,
+  type EvidenceUpdate,
   type Attempt,
   type AttemptInput,
   type Progress,
 } from './learning';
-import { defaultCatalog, type CurriculumCatalog } from './curriculum';
+import {
+  assessmentPolicy,
+  defaultCatalog,
+  type CurriculumCatalog,
+} from './curriculum';
+import {
+  acquisitionMemory,
+  legacyMemory,
+  reviewMemory,
+  type MemoryState,
+} from './retention';
+import { activityTotals, mergeActivity } from './activity';
 import type { AnkiCard } from './anki';
 
 export interface QueuedCard extends AnkiCard {
@@ -91,9 +103,14 @@ export function recordLearningAnswer(
 
 const learnRewardKey = (skillId: string, questionId: string) =>
   JSON.stringify([skillId, questionId]);
+const reviewRewardKey = (attempt: Attempt) =>
+  attempt.mode === 'review' && attempt.reviewDueAt !== undefined
+    ? JSON.stringify([attempt.skillId, attempt.questionId, attempt.reviewDueAt])
+    : null;
 
 function representedXp(progress: Progress) {
   const learnRewards = new Set<string>();
+  const reviewRewards = new Set<string>();
   const daily: Record<string, number> = {};
   let total = 0;
   for (const attempt of [...progress.attempts].sort(
@@ -104,6 +121,11 @@ function representedXp(progress: Progress) {
       const key = learnRewardKey(attempt.skillId, attempt.questionId);
       if (learnRewards.has(key)) continue;
       learnRewards.add(key);
+    }
+    const reviewKey = reviewRewardKey(attempt);
+    if (reviewKey) {
+      if (reviewRewards.has(reviewKey)) continue;
+      reviewRewards.add(reviewKey);
     }
     const day = dateKey(attempt.at, progress.timeZone);
     daily[day] = (daily[day] ?? 0) + attempt.xp;
@@ -132,6 +154,7 @@ function reconcileXp(
     ...representedRemote.historicalLearnRewards,
   ]);
   const creditedLearnRewards = new Set<string>();
+  const creditedReviewRewards = new Set<string>();
   const representedDaily: Record<string, number> = {};
   let representedTotal = 0;
   const attempts = merged.map((attempt) => {
@@ -140,6 +163,11 @@ function reconcileXp(
       const key = learnRewardKey(attempt.skillId, attempt.questionId);
       if (historicalRewards.has(key) || creditedLearnRewards.has(key)) xp = 0;
       else creditedLearnRewards.add(key);
+    }
+    const reviewKey = reviewRewardKey(attempt);
+    if (xp > 0 && reviewKey) {
+      if (creditedReviewRewards.has(reviewKey)) xp = 0;
+      else creditedReviewRewards.add(reviewKey);
     }
     const day = dateKey(attempt.at, timeZone);
     representedDaily[day] = (representedDaily[day] ?? 0) + xp;
@@ -174,6 +202,20 @@ function reconcileXp(
     Object.values(dailyXp).reduce((sum, xp) => sum + xp, 0),
   );
   return { attempts, dailyXp, totalXp };
+}
+
+/** Newer retrieval wins; simultaneous outcomes choose conservative, stable ties. */
+function compareMemory(left: MemoryState, right: MemoryState): number {
+  return (
+    right.lastReviewAt - left.lastReviewAt ||
+    right.lapses - left.lapses ||
+    left.stability - right.stability ||
+    right.difficulty - left.difficulty ||
+    left.scheduledDays - right.scheduledDays ||
+    left.dueAt - right.dueAt ||
+    right.reps - left.reps ||
+    right.elapsedDays - left.elapsedDays
+  );
 }
 
 export function mergeStates(
@@ -212,7 +254,49 @@ export function mergeStates(
       const latest =
         (a.lastPracticedAt ?? 0) > (b.lastPracticedAt ?? 0) ? a : b;
       const history = attempts.filter((attempt) => attempt.skillId === id);
-      const attemptCount = Math.max(a.attempts, b.attempts, history.length);
+      const localHistory = local.progress.attempts.filter(
+        (event) => event.skillId === id,
+      );
+      const remoteHistory = remote.progress.attempts.filter(
+        (event) => event.skillId === id,
+      );
+      const activity =
+        a.activity && b.activity
+          ? mergeActivity(a.activity, b.activity)
+          : (a.activity ?? b.activity);
+      const counters = activity
+        ? activityTotals(activity)
+        : { attempts: 0, correct: 0 };
+      const attemptCount = Math.max(
+        a.attempts,
+        b.attempts,
+        history.length,
+        counters.attempts,
+      );
+      const skillSnapshot = (
+        progress: Progress,
+        snapshot: typeof a,
+        events: Attempt[],
+      ): Progress => {
+        const represented = representedXp({
+          ...progress,
+          attempts: events,
+          skills: { [id]: snapshot },
+        });
+        return {
+          ...progress,
+          attempts: events,
+          skills: { [id]: snapshot },
+          totalXp: snapshot.totalXp ?? represented.total,
+          dailyXp: snapshot.dailyXp ?? represented.daily,
+        };
+      };
+      const skillXp = reconcileXp(
+        skillSnapshot(local.progress, a, localHistory),
+        skillSnapshot(remote.progress, b, remoteHistory),
+        history,
+        recent.progress.timeZone,
+      );
       const evidence = new Set([...a.questionIds, ...b.questionIds]);
       for (const attempt of history) {
         if (!attempt.correct) evidence.delete(attempt.questionId);
@@ -220,6 +304,37 @@ export function mergeStates(
           evidence.add(attempt.questionId);
       }
       const definition = skillById[id];
+      const evidenceUpdates: Record<string, EvidenceUpdate> = {};
+      for (const source of [a.evidenceUpdates ?? {}, b.evidenceUpdates ?? {}]) {
+        for (const [questionId, update] of Object.entries(source)) {
+          const existing = evidenceUpdates[questionId];
+          if (
+            !existing ||
+            update.at > existing.at ||
+            (update.at === existing.at &&
+              (update.sequence > existing.sequence ||
+                (update.sequence === existing.sequence && !update.correct)))
+          )
+            evidenceUpdates[questionId] = update;
+        }
+      }
+      for (const [questionId, update] of Object.entries(evidenceUpdates)) {
+        const newer = history.findLast(
+          (event) =>
+            event.questionId === questionId &&
+            Date.parse(event.at) > update.at &&
+            (!event.correct || (!event.usedHint && event.mode === 'learn')),
+        );
+        const correct = newer ? newer.correct : update.correct;
+        if (newer)
+          evidenceUpdates[questionId] = {
+            at: Date.parse(newer.at),
+            sequence: attemptCount,
+            correct,
+          };
+        if (correct) evidence.add(questionId);
+        else evidence.delete(questionId);
+      }
       const mastery = definition
         ? definition.questions.filter((question) => evidence.has(question.id))
             .length / definition.questions.length
@@ -227,6 +342,72 @@ export function mergeStates(
       const newlyMastered = mastery === 1 && latest.mastery < 1;
       const lastPracticedAt =
         Math.max(a.lastPracticedAt ?? 0, b.lastPracticedAt ?? 0) || null;
+      // Lesson reads can be newer than retrieval. Preserve the newest memory
+      // event independently, rather than replacing it with an older snapshot.
+      let memory =
+        a.memory && b.memory
+          ? compareMemory(a.memory, b.memory) <= 0
+            ? a.memory
+            : b.memory
+          : (a.memory ?? b.memory);
+      let dueAt = mastery < 1 ? null : latest.dueAt;
+      let intervalDays = mastery < 1 ? 0 : latest.intervalDays;
+      let reviewCount = Math.max(a.reviewCount, b.reviewCount);
+      let reviewQuestionIds = mastery < 1 ? [] : latest.reviewQuestionIds;
+      let reviewHadHint = mastery < 1 ? false : latest.reviewHadHint;
+      if (
+        mastery === 1 &&
+        memory &&
+        (!latest.memory || compareMemory(memory, latest.memory) < 0)
+      ) {
+        dueAt = memory.dueAt;
+        intervalDays = memory.scheduledDays;
+        reviewQuestionIds = [];
+        reviewHadHint = false;
+      }
+      if (newlyMastered && lastPracticedAt !== null) {
+        memory = acquisitionMemory(lastPracticedAt, memory);
+        dueAt = memory.dueAt;
+        intervalDays = 1;
+        reviewQuestionIds = [];
+        reviewHadHint = false;
+      } else if (
+        definition &&
+        mastery === 1 &&
+        a.dueAt !== null &&
+        a.dueAt === b.dueAt &&
+        a.reviewCount === b.reviewCount
+      ) {
+        // Two devices may supply different independent answers to the same
+        // due cycle. Union that evidence and schedule it exactly once.
+        reviewQuestionIds = [
+          ...new Set([...a.reviewQuestionIds, ...b.reviewQuestionIds]),
+        ];
+        reviewHadHint = !!a.reviewHadHint || !!b.reviewHadHint;
+        const policy = assessmentPolicy(definition);
+        if (
+          lastPracticedAt !== null &&
+          lastPracticedAt >= a.dueAt &&
+          reviewQuestionIds.length >= policy.reviewAnswers &&
+          policy.requiredTypes.every((type) =>
+            reviewQuestionIds.some(
+              (id) =>
+                definition.questions.find((q) => q.id === id)?.type === type,
+            ),
+          )
+        ) {
+          memory = reviewMemory(
+            legacyMemory({ ...latest, memory }, lastPracticedAt),
+            lastPracticedAt,
+            reviewHadHint ? 'hard' : 'pass',
+          );
+          dueAt = memory.dueAt;
+          intervalDays = memory.scheduledDays;
+          reviewCount += 1;
+          reviewQuestionIds = [];
+          reviewHadHint = false;
+        }
+      }
       let consecutiveCorrect = 0;
       for (const attempt of [...history].reverse()) {
         if (!attempt.correct || attempt.usedHint) break;
@@ -244,20 +425,26 @@ export function mergeStates(
               a.correct,
               b.correct,
               history.filter((attempt) => attempt.correct).length,
+              counters.correct,
             ),
           ),
           consecutiveCorrect: history.length
             ? consecutiveCorrect
             : latest.consecutiveCorrect,
           questionIds: [...evidence],
+          ...(Object.keys(evidenceUpdates).length ? { evidenceUpdates } : {}),
+          ...(a.totalXp !== undefined || b.totalXp !== undefined
+            ? { totalXp: skillXp.totalXp, dailyXp: skillXp.dailyXp }
+            : {}),
           mastery,
           lastPracticedAt,
-          reviewCount: Math.max(a.reviewCount, b.reviewCount),
-          intervalDays: newlyMastered ? 1 : latest.intervalDays,
-          dueAt:
-            newlyMastered && lastPracticedAt !== null
-              ? lastPracticedAt + DAY_MS
-              : latest.dueAt,
+          ...(activity ? { activity } : {}),
+          reviewCount,
+          intervalDays,
+          dueAt,
+          reviewQuestionIds,
+          ...(memory ? { memory } : {}),
+          ...(reviewHadHint !== undefined ? { reviewHadHint } : {}),
           // A later failure can remove mastery evidence, but must not erase awarded XP.
           rewardedQuestionIds: [
             ...new Set([...a.rewardedQuestionIds, ...b.rewardedQuestionIds]),
@@ -329,6 +516,7 @@ export function mergeStates(
       ...recent.progress,
       skills,
       ...xp,
+      attempts: xp.attempts.slice(-MAX_RECENT_ATTEMPTS),
       lastActivityDate,
       streak: activitySource.progress.streak,
     },

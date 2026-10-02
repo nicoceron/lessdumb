@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   BookOpen,
   ChevronRight,
@@ -65,6 +65,8 @@ export function WorkspaceHeader({
   accountOpen: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [interactive, setInteractive] = useState(false);
+  useEffect(() => setInteractive(true), []);
   const current =
     page === 'learn'
       ? 'Practice'
@@ -118,6 +120,7 @@ export function WorkspaceHeader({
                   variant="outline"
                   size="icon"
                   aria-label="Open navigation"
+                  disabled={!interactive}
                 >
                   <Menu />
                 </Button>
@@ -178,6 +181,7 @@ export function WorkspaceHeader({
             variant="ghost"
             size="icon"
             aria-label="Open account"
+            disabled={!interactive}
             onClick={accountOpen}
           >
             <Avatar className="size-8">

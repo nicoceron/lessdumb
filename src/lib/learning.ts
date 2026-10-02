@@ -5,9 +5,23 @@ import {
   type Question,
   type Skill,
 } from './curriculum';
+import {
+  acquisitionMemory,
+  legacyMemory,
+  reviewMemory,
+  recallProbability,
+  type MemoryState,
+} from './retention';
+import { createActivity, recordActivity, type ActivityState } from './activity';
 
 export const DAY_MS = 86_400_000;
-export const REVIEW_INTERVALS = [1, 3, 7, 14, 30, 60, 120] as const;
+/** Keep recent diagnostics bounded; durable evidence and counters live on skills. */
+export const MAX_RECENT_ATTEMPTS = 2000;
+export interface EvidenceUpdate {
+  at: number;
+  sequence: number;
+  correct: boolean;
+}
 
 export interface SkillProgress {
   lessonSeen: boolean;
@@ -26,6 +40,13 @@ export interface SkillProgress {
   reviewQuestionIds: string[];
   learnedAt: string | null;
   lastQuestionId: string | null;
+  /** Optional so saved accounts from the fixed scheduler remain readable. */
+  memory?: MemoryState;
+  reviewHadHint?: boolean;
+  evidenceUpdates?: Record<string, EvidenceUpdate>;
+  totalXp?: number;
+  dailyXp?: Record<string, number>;
+  activity?: ActivityState;
 }
 
 export interface Attempt {
@@ -37,6 +58,8 @@ export interface Attempt {
   usedHint: boolean;
   at: string;
   xp: number;
+  /** Identifies a due cycle across devices, independently of event UUIDs. */
+  reviewDueAt?: number;
 }
 
 export interface Progress {
@@ -58,6 +81,8 @@ export interface AttemptInput {
   usedHint?: boolean;
   /** Stable event identity, generated before asynchronous grading completes. */
   attemptId?: string;
+  /** Tests may name independent devices; browsers use a unique runtime writer. */
+  writerId?: string;
 }
 
 export interface NextTask {
@@ -68,6 +93,15 @@ export interface NextTask {
 }
 
 type Now = Date | number | string;
+const calendarFormatters = new Map<string, Intl.DateTimeFormat>();
+const defaultIndex = new Map(
+  defaultCatalog.skills.map((item) => [item.id, item]),
+);
+function skillIndex(catalog: CurriculumCatalog) {
+  return catalog === defaultCatalog
+    ? defaultIndex
+    : new Map(catalog.skills.map((item) => [item.id, item]));
+}
 const timestamp = (now: Now) => {
   const result = now instanceof Date ? now.getTime() : new Date(now).getTime();
   if (!Number.isFinite(result)) throw new Error('A valid date is required.');
@@ -75,12 +109,18 @@ const timestamp = (now: Now) => {
 };
 
 export function dateKey(now: Now = new Date(), timeZone = 'UTC'): string {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date(timestamp(now)));
+  let formatter = calendarFormatters.get(timeZone);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    if (calendarFormatters.size >= 32) calendarFormatters.clear();
+    calendarFormatters.set(timeZone, formatter);
+  }
+  const parts = formatter.formatToParts(new Date(timestamp(now)));
   return `${parts.find((part) => part.type === 'year')!.value}-${parts.find((part) => part.type === 'month')!.value}-${parts.find((part) => part.type === 'day')!.value}`;
 }
 
@@ -137,7 +177,7 @@ export function isMastered(
   skillId: string,
   catalog: CurriculumCatalog = defaultCatalog,
 ): boolean {
-  const item = catalog.skills.find((skill) => skill.id === skillId);
+  const item = skillIndex(catalog).get(skillId);
   if (!item) return false;
   const state = getSkillState(progress, skillId);
   // Recompute from evidence so an inconsistent persisted numeric score cannot unlock a node.
@@ -161,7 +201,12 @@ export function isUnlocked(
   skillId: string,
   catalog: CurriculumCatalog = defaultCatalog,
 ): boolean {
-  const byId = new Map(catalog.skills.map((skill) => [skill.id, skill]));
+  return unlockChecker(progress, catalog)(skillId);
+}
+
+/** Reuse one traversal across a scheduling pass; cycles and missing nodes fail closed. */
+function unlockChecker(progress: Progress, catalog: CurriculumCatalog) {
+  const byId = skillIndex(catalog);
   const checked = new Map<string, boolean>();
   const visiting = new Set<string>();
   function prerequisitesReady(id: string): boolean {
@@ -180,7 +225,7 @@ export function isUnlocked(
     checked.set(id, ready);
     return ready;
   }
-  return prerequisitesReady(skillId);
+  return prerequisitesReady;
 }
 
 function courseSkills(
@@ -274,11 +319,12 @@ export function nextTask(
 ): NextTask | null {
   const time = timestamp(now);
   const registry = coursePath(courseId, catalog);
+  const unlocked = unlockChecker(progress, catalog);
   const lastSkill = progress.attempts.at(-1)?.skillId;
   const due = registry.filter(
     (item) =>
       isMastered(progress, item.id, catalog) &&
-      isUnlocked(progress, item.id, catalog) &&
+      unlocked(item.id) &&
       getSkillState(progress, item.id).dueAt !== null &&
       getSkillState(progress, item.id).dueAt! <= time,
   );
@@ -291,9 +337,12 @@ export function nextTask(
     // Interleave due skills when several are available.
     if (a.id === lastSkill && b.id !== lastSkill) return 1;
     if (b.id === lastSkill && a.id !== lastSkill) return -1;
+    const left = getSkillState(progress, a.id),
+      right = getSkillState(progress, b.id);
     return (
-      (getSkillState(progress, a.id).dueAt ?? time) -
-      (getSkillState(progress, b.id).dueAt ?? time)
+      recallProbability(legacyMemory(left, time), time) -
+        recallProbability(legacyMemory(right, time), time) ||
+      left.dueAt! - right.dueAt!
     );
   });
   if (due.length) {
@@ -307,9 +356,7 @@ export function nextTask(
     };
   }
   const ready = registry.filter(
-    (item) =>
-      !isMastered(progress, item.id, catalog) &&
-      isUnlocked(progress, item.id, catalog),
+    (item) => !isMastered(progress, item.id, catalog) && unlocked(item.id),
   );
   const remediation = ready
     .filter((item) => getSkillState(progress, item.id).learnedAt !== null)
@@ -402,7 +449,30 @@ export function applyAttempt(
     questionIds: [...old.questionIds],
     rewardedQuestionIds: [...(old.rewardedQuestionIds ?? [])],
     reviewQuestionIds: [...(old.reviewQuestionIds ?? [])],
+    evidenceUpdates: { ...old.evidenceUpdates },
+    totalXp:
+      old.totalXp ??
+      progress.attempts
+        .filter((a) => a.skillId === item.id)
+        .reduce((sum, a) => sum + a.xp, 0),
+    dailyXp: old.dailyXp
+      ? { ...old.dailyXp }
+      : progress.attempts
+          .filter((a) => a.skillId === item.id)
+          .reduce<Record<string, number>>((days, a) => {
+            const day = dateKey(a.at, progress.timeZone || 'UTC');
+            days[day] = (days[day] ?? 0) + a.xp;
+            return days;
+          }, {}),
   };
+  // Seed legacy evidence before compaction so an old device cannot resurrect
+  // a later observed failure when its event falls out of the recent log.
+  for (const id of old.questionIds)
+    state.evidenceUpdates![id] ??= {
+      at: old.lastPracticedAt ?? time,
+      sequence: old.attempts,
+      correct: true,
+    };
   const wasMastered = isMastered(progress, item.id, catalog);
   const policy = assessmentPolicy(item);
   const unassisted = input.correct && !input.usedHint;
@@ -411,16 +481,34 @@ export function applyAttempt(
   state.lessonSeen = true;
   state.attempts += 1;
   state.correct += input.correct ? 1 : 0;
+  state.activity = recordActivity(
+    old.activity ?? createActivity(old.attempts, old.correct),
+    input.correct,
+    input.writerId,
+  );
   state.consecutiveCorrect = unassisted ? state.consecutiveCorrect + 1 : 0;
   state.lastPracticedAt = time;
   state.lastQuestionId = question.id;
 
   if (!input.correct) {
+    state.evidenceUpdates![question.id] = {
+      at: time,
+      sequence: state.attempts,
+      correct: false,
+    };
+    if (wasMastered)
+      state.memory = reviewMemory(legacyMemory(old, time), time, 'fail');
     state.questionIds = state.questionIds.filter((id) => id !== question.id);
     state.reviewQuestionIds = [];
+    state.reviewHadHint = false;
     state.intervalDays = 0;
     state.dueAt = null;
   } else if (input.mode === 'learn' && unassisted && !wasMastered) {
+    state.evidenceUpdates![question.id] = {
+      at: time,
+      sequence: state.attempts,
+      correct: true,
+    };
     if (!state.questionIds.includes(question.id))
       state.questionIds.push(question.id);
     if (!state.rewardedQuestionIds.includes(question.id)) {
@@ -447,15 +535,21 @@ export function applyAttempt(
       includesRequiredTypes
     ) {
       state.reviewCount += 1;
-      // reviewCount is lifetime activity, not the strength of the current
-      // schedule. Relearning restarts at one day even after many past reviews.
-      state.intervalDays =
-        REVIEW_INTERVALS.find((days) => days > old.intervalDays) ??
-        REVIEW_INTERVALS[REVIEW_INTERVALS.length - 1];
-      state.dueAt = time + state.intervalDays * DAY_MS;
+      state.memory = reviewMemory(
+        legacyMemory(old, time),
+        time,
+        state.reviewHadHint ? 'hard' : 'pass',
+      );
+      state.intervalDays = state.memory.scheduledDays;
+      state.dueAt = state.memory.dueAt;
       state.reviewQuestionIds = [];
+      state.reviewHadHint = false;
     }
   }
+  // Assisted answers never postpone retrieval; a later independent completion
+  // records a harder cycle rather than treating it like effortless recall.
+  if (input.mode === 'review' && reviewDue && input.usedHint && input.correct)
+    state.reviewHadHint = true;
 
   state.mastery =
     item.questions.filter((candidate) =>
@@ -463,11 +557,15 @@ export function applyAttempt(
     ).length / item.questions.length;
   if (state.mastery === 1 && !wasMastered) {
     state.learnedAt ??= new Date(time).toISOString();
+    state.memory = acquisitionMemory(time, state.memory);
     state.intervalDays = 1;
     state.dueAt = time + DAY_MS;
     state.reviewQuestionIds = [];
+    state.reviewHadHint = false;
   }
   const today = dateKey(time, progress.timeZone || 'UTC');
+  state.totalXp! += xp;
+  state.dailyXp![today] = (state.dailyXp![today] ?? 0) + xp;
   const previous = progress.lastActivityDate;
   const streak =
     previous === today
@@ -484,6 +582,9 @@ export function applyAttempt(
     usedHint: !!input.usedHint,
     at: new Date(time).toISOString(),
     xp,
+    ...(input.mode === 'review' && reviewDue
+      ? { reviewDueAt: old.dueAt! }
+      : {}),
   };
   return {
     ...progress,
@@ -495,7 +596,7 @@ export function applyAttempt(
     },
     lastActivityDate: today,
     streak,
-    attempts: [...progress.attempts, attempt],
+    attempts: [...progress.attempts, attempt].slice(-MAX_RECENT_ATTEMPTS),
   };
 }
 
@@ -515,17 +616,33 @@ export function getStats(
   const mastered = registry.filter((item) =>
     isMastered(progress, item.id, catalog),
   ).length;
+  const unlocked = unlockChecker(progress, catalog);
   return {
     todayXp: courseId
-      ? attempts
-          .filter(
-            (attempt) =>
-              dateKey(attempt.at, progress.timeZone || 'UTC') === today,
-          )
-          .reduce((sum, attempt) => sum + attempt.xp, 0)
+      ? registry.reduce(
+          (sum, item) =>
+            sum +
+            (getSkillState(progress, item.id).dailyXp?.[today] ??
+              attempts
+                .filter(
+                  (a) =>
+                    a.skillId === item.id &&
+                    dateKey(a.at, progress.timeZone || 'UTC') === today,
+                )
+                .reduce((n, a) => n + a.xp, 0)),
+          0,
+        )
       : (progress.dailyXp[today] ?? 0),
     totalXp: courseId
-      ? attempts.reduce((sum, attempt) => sum + attempt.xp, 0)
+      ? registry.reduce(
+          (sum, item) =>
+            sum +
+            (getSkillState(progress, item.id).totalXp ??
+              attempts
+                .filter((a) => a.skillId === item.id)
+                .reduce((n, a) => n + a.xp, 0)),
+          0,
+        )
       : progress.totalXp,
     mastered,
     started: registry.filter(
@@ -533,12 +650,23 @@ export function getStats(
         getSkillState(progress, item.id).lessonSeen ||
         getSkillState(progress, item.id).attempts > 0,
     ).length,
-    accuracy: attempts.length
-      ? attempts.filter((attempt) => attempt.correct).length / attempts.length
+    accuracy: registry.reduce(
+      (n, item) => n + getSkillState(progress, item.id).attempts,
+      0,
+    )
+      ? registry.reduce(
+          (n, item) => n + getSkillState(progress, item.id).correct,
+          0,
+        ) /
+        registry.reduce(
+          (n, item) => n + getSkillState(progress, item.id).attempts,
+          0,
+        )
       : 0,
     dueCount: registry.filter(
       (item) =>
         isMastered(progress, item.id, catalog) &&
+        unlocked(item.id) &&
         getSkillState(progress, item.id).dueAt !== null &&
         getSkillState(progress, item.id).dueAt! <= time,
     ).length,

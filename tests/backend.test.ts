@@ -330,7 +330,7 @@ describe('versioned per-account progress', () => {
     const reviewed = await load(firstCookie);
     expect(reviewed.state.progress.skills[firstSkill.id]).toMatchObject({
       reviewCount: 1,
-      intervalDays: 3,
+      intervalDays: 11,
     });
     expect(reviewed.state.progress.totalXp).toBe(58);
     expect((await load(secondCookie)).state).toEqual(second);

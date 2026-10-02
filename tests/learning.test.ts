@@ -593,9 +593,9 @@ describe('spaced retrieval, XP and dates', () => {
       NOW + DAY_MS,
     );
     expect(getSkillState(progress, 'print-output').reviewCount).toBe(1);
-    expect(getSkillState(progress, 'print-output').intervalDays).toBe(3);
+    expect(getSkillState(progress, 'print-output').intervalDays).toBe(7);
     expect(getSkillState(progress, 'print-output').dueAt).toBe(
-      NOW + 4 * DAY_MS,
+      NOW + 8 * DAY_MS,
     );
     expect(getStats(progress, NOW + DAY_MS).dueCount).toBe(0);
   });
@@ -659,7 +659,9 @@ describe('spaced retrieval, XP and dates', () => {
         established,
         getSkillState(established, 'print-output').dueAt!,
       );
-    expect(getSkillState(established, 'print-output').intervalDays).toBe(30);
+    expect(
+      getSkillState(established, 'print-output').intervalDays,
+    ).toBeGreaterThan(30);
     const lapseTime = getSkillState(established, 'print-output').dueAt!;
     const retained = review(established, lapseTime);
     let recovered = applyAttempt(
@@ -688,10 +690,17 @@ describe('spaced retrieval, XP and dates', () => {
 
     expect(getSkillState(retained, 'print-output').reviewCount).toBe(5);
     expect(getSkillState(recovered, 'print-output').reviewCount).toBe(5);
-    expect(getSkillState(retained, 'print-output').intervalDays).toBe(60);
-    expect(getSkillState(recovered, 'print-output').intervalDays).toBe(3);
+    expect(getSkillState(recovered, 'print-output').memory!.lapses).toBe(1);
+    expect(
+      getSkillState(recovered, 'print-output').memory!.stability,
+    ).toBeLessThan(getSkillState(retained, 'print-output').memory!.stability);
+    expect(getSkillState(recovered, 'print-output').intervalDays).toBeLessThan(
+      getSkillState(retained, 'print-output').intervalDays,
+    );
     expect(getSkillState(recovered, 'print-output').dueAt).toBe(
-      lapseTime + 4 * DAY_MS,
+      lapseTime +
+        DAY_MS +
+        getSkillState(recovered, 'print-output').intervalDays * DAY_MS,
     );
   });
 
@@ -841,7 +850,7 @@ describe('subject-specific catalogs and assessment policies', () => {
       catalog,
     );
     expect(getSkillState(progress, math.id).reviewCount).toBe(1);
-    expect(getSkillState(progress, math.id).dueAt).toBe(NOW + 4 * DAY_MS);
+    expect(getSkillState(progress, math.id).dueAt).toBe(NOW + 8 * DAY_MS);
   });
 
   it('honors a declared one-answer language review policy and rejects impossible policies', () => {

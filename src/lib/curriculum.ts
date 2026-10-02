@@ -64,6 +64,10 @@ export interface Skill {
   prerequisites: string[];
   order: number;
   estimatedMinutes: number;
+  /** Optional atomic sequence metadata; prerequisites remain the unlock authority. */
+  topicId?: string;
+  stage?: number;
+  stageCount?: number;
   lesson: {
     paragraphs: string[];
     example: {
@@ -1785,6 +1789,46 @@ export function validateCurriculum(
     for (const prerequisite of item.prerequisites)
       if (!ids.has(prerequisite))
         errors.push(`${item.id}: unknown prerequisite ${prerequisite}.`);
+    if (
+      item.topicId !== undefined ||
+      item.stage !== undefined ||
+      item.stageCount !== undefined
+    ) {
+      const topic = registry.find((candidate) => candidate.id === item.topicId);
+      if (
+        !topic ||
+        topic.courseId !== item.courseId ||
+        topic.unitId !== item.unitId
+      )
+        errors.push(`${item.id}: invalid stage topic.`);
+      if (
+        !Number.isInteger(item.stage) ||
+        !Number.isInteger(item.stageCount) ||
+        item.stage! < 1 ||
+        item.stageCount! < 2 ||
+        item.stage! > item.stageCount!
+      )
+        errors.push(`${item.id}: invalid stage position.`);
+      const members = registry.filter(
+        (candidate) => candidate.topicId === item.topicId,
+      );
+      if (
+        members.length !== item.stageCount ||
+        new Set(members.map((member) => member.stage)).size !==
+          item.stageCount ||
+        members.some((member) => member.stageCount !== item.stageCount)
+      )
+        errors.push(`${item.id}: incomplete stage sequence.`);
+      if (
+        item.stage! > 1 &&
+        !members.some(
+          (member) =>
+            member.stage === item.stage! - 1 &&
+            item.prerequisites.includes(member.id),
+        )
+      )
+        errors.push(`${item.id}: missing preceding stage prerequisite.`);
+    }
     if (!item.questions.length)
       errors.push(`${item.id}: missing assessment questions.`);
     // The launched Python course retains its authored four-question assessment standard.

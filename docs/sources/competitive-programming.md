@@ -1,6 +1,6 @@
 # Competitive Programming curriculum
 
-This original Python course uses the user's local USACO Guide and NeetCode references to organize algorithm topics and prerequisite paths. It contains 48 skills in 12 units, 192 assessment questions, 48 executable exercises, 48 runnable examples, and 96 mastery-card templates. Each skill has three conceptual/prediction questions, one executable function assessment, and two cards. A spaced review needs independent code and choice evidence.
+This original Python course uses the user's local USACO Guide and NeetCode references to organize algorithm topics and prerequisite paths. It contains 192 skills in 12 units: 48 algorithm topics, each with three focused prerequisite concepts followed by the original application skill. The course has 768 assessment questions, 192 executable exercises, 192 runnable examples, and 384 mastery-card templates. Each skill has three conceptual/prediction questions, one executable function assessment, and two cards. A spaced review needs independent code and choice evidence.
 
 ## References actually inspected
 
@@ -33,7 +33,7 @@ This is introductory algorithm coverage across those topic groups, not every USA
 
 ## Knowledge graph
 
-All nodes use stable `cp-*` IDs in the existing registry. Every assessment defines a function with inputs and a returned result, so the shared course constructor adds the real Python `parameters` prerequisite, including its function/return/type ancestry. Other edges express algorithm dependencies, rather than making every unit wait for the previous unit:
+All nodes use stable `cp-*` IDs in the existing registry. The 48 original application IDs and their saved evidence are preserved. Each application retains its original prerequisites and adds the final concept stage; three new, ordered prerequisite stages teach smaller operations, invariants, and boundary decisions. The new stages require their own evidence even when the older application was previously mastered. `topicId`, `stage`, and `stageCount` label the sequence without granting implicit credit. Every assessment defines a function with inputs and a returned result, so the shared course constructor adds the real Python `parameters` prerequisite, including its function/return/type ancestry. Other edges express algorithm dependencies, rather than making every unit wait for the previous unit:
 
 - Prefix sums → difference arrays and Fenwick queries; bitmasks supply Fenwick index operations.
 - Sorting → two pointers, binary search, coordinate compression, intervals, and sweep events.
@@ -42,13 +42,13 @@ All nodes use stable `cp-*` IDs in the existing registry. Every assessment defin
 - Tree traversal → segment structures and binary lifting; DFS and topological ordering → strongly connected components.
 - `math-vectors` → geometry connects the course to Quantitative Foundations and its actual Python ancestry.
 
-USACO and NeetCode organize teaching at different granularities. Their metadata informs these independently authored edges; their raw graph is not copied wholesale. No unrelated data-analysis, machine-learning, or systems prerequisite is added. Failure of a math ancestor blocks the geometry branch while unrelated contest evidence remains usable. Account ownership, fixed review spacing, correction cards, and automatic Anki generation use the existing per-user engine without a second progression store.
+USACO and NeetCode organize teaching at different granularities. Their metadata informs these independently authored edges; their raw graph is not copied wholesale. No unrelated data-analysis, machine-learning, or systems prerequisite is added. Failure of a math ancestor blocks the geometry branch while unrelated contest evidence remains usable. Account ownership, FSRS retention state and evidence-based review scheduling, correction cards, and automatic Anki generation use the existing per-user engine without a second progression store.
 
 ## Python execution
 
 Exercises run in the existing isolated Pyodide worker using the Python standard library. Text input exercises take a string argument so they can be graded in a browser without blocking on interactive stdin. A real contest wrapper can call the same parser with `sys.stdin.read()`. Graph exercises specify vertex ranges, direction, weight restrictions, and unreachable/cycle results. Numeric/range exercises specify indexing, empty cases, repeated values, and valid input bounds.
 
-API choices follow the official [Python data-structure tutorial](https://docs.python.org/3/tutorial/datastructures.html), [heapq](https://docs.python.org/3/library/heapq.html), [collections.deque](https://docs.python.org/3/library/collections.html#collections.deque), [bisect](https://docs.python.org/3/library/bisect.html), [functools](https://docs.python.org/3/library/functools.html), and [integer arithmetic](https://docs.python.org/3/library/functions.html#pow) documentation. These are function assessments with multiple assertions, not a server-authoritative contest judge or a promise that Python meets every external contest's timing limits.
+API choices follow the official [Python data-structure tutorial](https://docs.python.org/3/tutorial/datastructures.html), [heapq](https://docs.python.org/3/library/heapq.html), [collections.deque](https://docs.python.org/3/library/collections.html#collections.deque), [bisect](https://docs.python.org/3/library/bisect.html), [functools](https://docs.python.org/3/library/functools.html), and [integer arithmetic](https://docs.python.org/3/library/functions.html#pow) documentation. Assertions verify observable results on authored inputs rather than mandating a particular API or proving asymptotic complexity. These are function assessments with multiple assertions, not a server-authoritative contest judge or a promise that Python meets every external contest's timing limits.
 
 ## Verification
 

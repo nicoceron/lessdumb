@@ -56,6 +56,7 @@ import {
 } from '../lib/learning';
 import { createAnkiClient, type AnkiClient } from '../lib/anki';
 import { type LearnerState } from '../lib/state';
+import { legacyMemory, recallProbability } from '../lib/retention';
 import { useLearner } from './useLearner';
 
 function masteryStatus(state: LearnerState, skill: Skill) {
@@ -788,6 +789,7 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
   const [search, setSearch] = useState('');
   const [zoom, setZoom] = useState(1);
   const [filter, setFilter] = useState(initialCourse);
+  const [allConnections, setAllConnections] = useState(false);
   const visible = coursePath(filter === 'all' ? undefined : filter);
   const graphUnits = units.filter((u) =>
     visible.some((s) => s.unitId === u.id),
@@ -796,17 +798,25 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
     setSelected(skill);
     if (!visible.some((s) => s.id === skill.id)) setFilter(skill.courseId);
   }
-  const positions = Object.fromEntries(
-    visible.map((s) => {
-      const row = graphUnits.findIndex((u) => u.id === s.unitId);
-      const peers = visible.filter((p) => p.unitId === s.unitId);
-      const col = peers.findIndex((p) => p.id === s.id);
-      return [s.id, { x: 145 + col * 245, y: 100 + row * 155 }];
-    }),
-  );
+  // Atomic topics occupy a row with their concept stages and application.
+  // Bound columns so a growing curriculum remains readable on small screens.
+  const positions: Record<string, { x: number; y: number }> = {};
+  const unitRows: Record<string, number> = {};
+  let row = 0;
+  for (const unit of graphUnits) {
+    unitRows[unit.id] = row;
+    const peers = visible.filter((p) => p.unitId === unit.id);
+    peers.forEach((s, index) => {
+      positions[s.id] = {
+        x: 145 + (index % 4) * 245,
+        y: 100 + (row + Math.floor(index / 4)) * 155,
+      };
+    });
+    row += Math.ceil(peers.length / 4) + 0.35;
+  }
   const width =
     Math.max(650, ...Object.values(positions).map((p) => p.x)) + 145;
-  const height = graphUnits.length * 155 + 45;
+  const height = row * 155 + 45;
   const viewport = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const container = viewport.current;
@@ -822,16 +832,29 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
     );
   }, [selected.id, filter, zoom]);
 
-  const ancestors = new Set<string>();
-  function visit(id: string) {
-    for (const dep of skillById[id].prerequisites) {
-      if (!ancestors.has(dep)) {
-        ancestors.add(dep);
-        visit(dep);
-      }
+  const topicMembers = new Set(
+    visible
+      .filter((item) =>
+        selected.topicId
+          ? item.topicId === selected.topicId
+          : item.id === selected.id,
+      )
+      .map((item) => item.id),
+  );
+  // Transitive edges remain enforced by the engine; the focused display can
+  // omit them to reveal the actual concept chain.
+  const ancestorCache = new Map<string, Set<string>>();
+  function prerequisiteAncestors(id: string): Set<string> {
+    const cached = ancestorCache.get(id);
+    if (cached) return cached;
+    const result = new Set<string>();
+    ancestorCache.set(id, result);
+    for (const parent of skillById[id].prerequisites) {
+      result.add(parent);
+      prerequisiteAncestors(parent).forEach((ancestor) => result.add(ancestor));
     }
+    return result;
   }
-  visit(selected.id);
   return (
     <>
       <PageTitle
@@ -904,7 +927,15 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
               <i />
               Locked
             </span>
-            <small>Click a skill to explore its connections</small>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto h-6 text-xs"
+              aria-pressed={allConnections}
+              onClick={() => setAllConnections(!allConnections)}
+            >
+              {allConnections ? 'Focus this topic' : 'Show all connections'}
+            </Button>
           </div>
           <ScrollArea
             className="h-[620px] w-full max-sm:h-[380px]"
@@ -935,17 +966,36 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
               </defs>
               {visible.flatMap((skill) =>
                 skill.prerequisites.map((dep) => {
+                  const contextual =
+                    topicMembers.has(skill.id) || topicMembers.has(dep);
+                  if (
+                    !allConnections &&
+                    (!contextual ||
+                      skill.prerequisites.some(
+                        (other) =>
+                          other !== dep &&
+                          prerequisiteAncestors(other).has(dep),
+                      ))
+                  )
+                    return null;
                   const from = positions[dep],
                     to = positions[skill.id];
                   const lit =
-                    ancestors.has(dep) &&
-                    (ancestors.has(skill.id) || selected.id === skill.id);
+                    topicMembers.has(skill.id) &&
+                    (topicMembers.has(dep) ||
+                      selected.prerequisites.includes(dep));
+                  const horizontal = Math.abs(from.y - to.y) < 1;
                   return (
                     <path
                       key={`${dep}-${skill.id}`}
-                      d={`M${from.x} ${from.y + 20}C${from.x} ${from.y + 76},${to.x} ${to.y - 76},${to.x} ${to.y - 22}`}
+                      d={
+                        horizontal
+                          ? `M${from.x + 20} ${from.y}L${to.x - 22} ${to.y}`
+                          : `M${from.x} ${from.y + 20}C${from.x} ${from.y + 76},${to.x} ${to.y - 76},${to.x} ${to.y - 22}`
+                      }
                       stroke={lit ? '#3479bc' : '#d8e2ec'}
                       strokeWidth={lit ? 2 : 1.5}
+                      opacity={lit ? 1 : contextual ? 0.5 : 0.12}
                       fill="none"
                       markerEnd="url(#arrow)"
                     />
@@ -957,7 +1007,7 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                   className="graph-unit-label"
                   key={u.id}
                   x="12"
-                  y={35 + i * 155}
+                  y={35 + unitRows[u.id] * 155}
                 >
                   {String(i + 1).padStart(2, '0')} / {u.title.toUpperCase()}
                 </text>
@@ -1043,7 +1093,60 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
             {courses.find((c) => c.id === selected.courseId)?.title}
           </small>
           <h2>{selected.title}</h2>
+          {selected.stage && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              <Badge variant="secondary">
+                Step {selected.stage} of {selected.stageCount}
+              </Badge>
+              <Badge variant="outline">
+                {selected.stage === selected.stageCount
+                  ? 'Apply the algorithm'
+                  : 'One concept'}
+              </Badge>
+            </div>
+          )}
           <p>{selected.summary}</p>
+          {getSkillState(state.progress, selected.id).mastery === 1 &&
+            !isUnlocked(state.progress, selected.id) && (
+              <p className="detail-note">
+                Your earlier evidence is saved. Complete or restore the
+                prerequisite evidence before practicing this skill again.
+              </p>
+            )}
+          {selected.topicId && (
+            <div className="mb-5">
+              <p className="detail-note">
+                Topic: {skillById[selected.topicId].title}
+              </p>
+              <div
+                aria-label="Topic learning steps"
+                className="mt-3 flex flex-col gap-1"
+              >
+                {skills
+                  .filter((item) => item.topicId === selected.topicId)
+                  .map((item) => (
+                    <Button
+                      asChild
+                      key={item.id}
+                      variant={item.id === selected.id ? 'secondary' : 'ghost'}
+                      className="h-auto justify-start whitespace-normal px-2 py-2 text-left text-xs"
+                    >
+                      <a
+                        href={`/graph?skill=${item.id}`}
+                        aria-current={
+                          item.id === selected.id ? 'step' : undefined
+                        }
+                      >
+                        <span className="shrink-0 font-mono text-muted-foreground">
+                          {item.stage}.
+                        </span>
+                        {item.title}
+                      </a>
+                    </Button>
+                  ))}
+              </div>
+            </div>
+          )}
           <div className="detail-progress">
             <span>Mastery</span>
             <strong>
@@ -1057,6 +1160,29 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
               aria-label="Selected skill mastery"
             />
           </div>
+          {getSkillState(state.progress, selected.id).mastery === 1 &&
+            (() => {
+              const p = getSkillState(state.progress, selected.id);
+              if (p.dueAt === null) return null;
+              return (
+                <div className="mb-5 rounded-lg border bg-muted/30 p-3 text-sm">
+                  <p className="font-medium">
+                    Your next review: {new Date(p.dueAt).toLocaleDateString()}
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    Estimated recall:{' '}
+                    {Math.round(
+                      recallProbability(
+                        legacyMemory(p, Date.now()),
+                        Date.now(),
+                      ) * 100,
+                    )}
+                    %. Your independent answers, hints, and mistakes shape this
+                    schedule.
+                  </p>
+                </div>
+              );
+            })()}
           <h3>Builds on</h3>
           {selected.prerequisites.length ? (
             selected.prerequisites.map((id) => (

@@ -108,11 +108,25 @@ test('mobile navigation traps keyboard focus and restores its trigger on Escape'
   page,
 }) => {
   await page.setViewportSize({ width: 900, height: 900 });
-  await page.goto('/');
+  let hydrate: (() => void) | undefined;
+  const hydrationGate = new Promise<void>((resolve) => {
+    hydrate = resolve;
+  });
+  await page.route(/\/_astro\/App\.[^/]+\.js$/, async (route) => {
+    await hydrationGate;
+    await route.continue();
+  });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   const trigger = page.getByRole('button', {
     name: 'Open navigation',
     exact: true,
   });
+  try {
+    await expect(trigger).toBeDisabled();
+  } finally {
+    hydrate?.();
+  }
+  await expect(trigger).toBeEnabled();
   await trigger.press('Enter');
   const sheet = page.getByRole('dialog', { name: 'lessdumb', exact: true });
   await expect(sheet).toBeVisible();
@@ -142,6 +156,7 @@ test('the account dialog traps keyboard focus and returns focus to its opener', 
     name: 'Open account',
     exact: true,
   });
+  await expect(opener).toBeEnabled();
   await opener.press('Enter');
   const dialog = page.getByRole('dialog', {
     name: 'Make yourself at home.',

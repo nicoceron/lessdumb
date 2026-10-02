@@ -16,6 +16,7 @@ import {
 } from '../src/lib/learning';
 import { createState, recordLearningAnswer } from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
+import { competitiveTopicStages } from '../src/lib/courses/competitive-programming';
 
 const courseId = 'competitive-programming';
 const NOW = Date.parse('2026-10-02T15:00:00Z');
@@ -54,7 +55,7 @@ describe('competitive programming in the shared knowledge graph', () => {
       new Set(['python-foundations', 'quantitative-foundations', courseId]),
     );
     expect(skills.filter((skill) => skill.courseId === courseId)).toHaveLength(
-      48,
+      192,
     );
     for (const skill of path.filter((item) => item.courseId === courseId)) {
       expect(skill.prerequisites).toContain('parameters');
@@ -158,7 +159,7 @@ describe('competitive programming in the shared knowledge graph', () => {
       mode: 'review',
     });
     expect(getSkillState(state.progress, 'cp-prefix-sums').dueAt).toBe(
-      due + 3 * DAY_MS,
+      due + 7 * DAY_MS,
     );
     expect(state.cards).toHaveLength(2);
     state.activeCourseId = courseId;
@@ -166,5 +167,44 @@ describe('competitive programming in the shared knowledge graph', () => {
     expect(
       courses.find((course) => course.id === courseId)?.skillIds,
     ).toContain('cp-prefix-sums');
+  });
+
+  it('requires all three new concepts before each preserved application skill', () => {
+    expect(Object.keys(competitiveTopicStages)).toHaveLength(48);
+    for (const [topic, stages] of Object.entries(competitiveTopicStages)) {
+      expect(stages).toHaveLength(3);
+      stages.forEach((id, index) => {
+        expect(skillById[id]).toMatchObject({
+          topicId: topic,
+          stage: index + 1,
+          stageCount: 4,
+          unitId: skillById[topic].unitId,
+        });
+        if (index)
+          expect(skillById[id].prerequisites).toContain(stages[index - 1]);
+      });
+      expect(skillById[topic].prerequisites).toContain(stages[2]);
+      expect(skillById[topic]).toMatchObject({
+        topicId: topic,
+        stage: 4,
+        stageCount: 4,
+      });
+    }
+    const topic = 'cp-prefix-sums';
+    const [first, second, third] = competitiveTopicStages[topic];
+    let progress = createState().progress;
+    for (const parent of skillById[first].prerequisites)
+      progress = master(progress, parent);
+    expect(isUnlocked(progress, first)).toBe(true);
+    expect(isUnlocked(progress, second)).toBe(false);
+    expect(isUnlocked(progress, topic)).toBe(false);
+    progress = master(progress, first);
+    expect(isUnlocked(progress, second)).toBe(true);
+    expect(isUnlocked(progress, third)).toBe(false);
+    progress = master(progress, second);
+    expect(isUnlocked(progress, third)).toBe(true);
+    expect(isUnlocked(progress, topic)).toBe(false);
+    progress = master(progress, third);
+    expect(isUnlocked(progress, topic)).toBe(true);
   });
 });

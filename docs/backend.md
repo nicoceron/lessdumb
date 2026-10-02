@@ -42,7 +42,7 @@ The knowledge graph and authored questions are shared course data. The engine re
 
 Grading and progression are trusted client-side calculations. The server enforces authentication, ownership, state shape, request limits, and revision consistency; it does not independently execute submissions or certify that every claimed correct answer was earned. This is suitable for the current personal-learning MVP, and differs from server-authoritative examination or competitive scoring.
 
-The schema currently permits up to 5,000 retained attempts and a 2 MiB state request. The engine keeps its attempt history rather than silently dropping it. Reaching either limit prevents a cloud save, so long-term history compaction or event storage needs an explicit migration. The current course and review tests do not constitute a retention policy beyond those limits.
+The schema permits up to 5,000 retained attempts for older clients and a 2 MiB state request. The engine compacts recent diagnostic events to 2,000 while preserving question evidence checkpoints, permanent reward ledgers, XP/calendar totals, per-runtime grow-only activity counters, and FSRS memory. Writer contributions remain for convergent offline merges and are subject to the payload limit. Older snapshots without writer provenance remain readable, but independently divergent legacy histories cannot always be reconstructed exactly. Full historical event archiving is not implemented; see [account isolation](account-isolation.md) for persistence boundaries.
 
 ## Verification
 

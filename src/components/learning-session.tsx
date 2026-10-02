@@ -189,13 +189,17 @@ export default function LearningSession({
     if (
       (mode === 'learn' && p.mastery >= 1) ||
       (mode === 'review' &&
-        (p.mastery < 1 ||
+        (!params.get('skill') ||
+          p.mastery < 1 ||
           (p.reviewQuestionIds.length === 0 &&
             p.dueAt &&
             p.dueAt > Date.now())))
     ) {
       const task = nextTask(state.progress, new Date(), goal);
-      if (task) {
+      if (
+        task &&
+        !(params.get('mode') === 'review' && task.mode !== 'review')
+      ) {
         setSkillId(task.skillId);
         setMode(task.mode);
         setQuestionId(null);
@@ -272,6 +276,11 @@ export default function LearningSession({
             ? 'SPACED REVIEW'
             : courses.find((c) => c.id === skill.courseId)?.title}
         </Pill>
+        {skill.stage && (
+          <Badge variant="secondary">
+            Step {skill.stage} of {skill.stageCount}
+          </Badge>
+        )}
         <span>
           {units.find((u) => u.id === skill.unitId)?.title} / {skill.title}
         </span>

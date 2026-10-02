@@ -2,7 +2,7 @@
 
 ## Data ownership
 
-Course content is shared and immutable. Learner data is not: each request to the progression engine receives one learner's `Progress`. It contains answer evidence, permanent reward IDs, attempt history, review state, dates, and XP. The surrounding `LearnerState` carries that learner's goal, selected course, cards, and Anki preferences.
+Course content is shared and immutable. Learner data is not: each request to the progression engine receives one learner's `Progress`. It contains answer evidence, permanent reward IDs, attempt history, FSRS retention state, review evidence, dates, and XP. The surrounding `LearnerState` carries that learner's goal, selected course, cards, and Anki preferences.
 
 The authenticated server chooses the database key from Better Auth's validated session. A request body cannot supply an owner. Query parameters do not select another learner. `X-Lessdumb-User` only confirms the browser's expected active account and rejects a stale cookie/account combination. SQLite transactions enforce revision checks before storing an account snapshot.
 
@@ -27,6 +27,6 @@ Guest progress migrates only to an empty account. A claim prevents another accou
 
 Python grading and progression run on the client, using the official Pyodide runtime. The server validates ownership, request shape, request size, and revisions. It does not re-execute submitted code or independently certify scores. A learner with access to developer tools can alter their own claimed state; this MVP provides personal-learning persistence rather than a server-authoritative examination system.
 
-Requests are limited to 2 MiB, and retained attempt logs are limited to 5,000 entries. The engine currently retains all attempts. Long-running use beyond those limits requires a deliberate history-compaction or event-storage migration; this audit does not change retention behavior.
+Requests are limited to 2 MiB; the server accepts up to 5,000 events for compatibility with older snapshots. The current engine retains only the latest 2,000 diagnostic events. Per-question evidence checkpoints preserve later failures across compaction and stale-device merges. Permanent reward ledgers, per-skill XP/calendar totals and per-runtime grow-only activity counters preserve learning statistics; FSRS memory is independent of retained event history. Stable attempt identities protect retries within the retained window. Writer maps are retained for convergence and grow with runtime sessions, not answer volume; they are also subject to the payload limit. Scalar counters remain readable for older accounts, but independently divergent histories from clients without writer provenance cannot always be reconstructed exactly. This is bounded snapshot persistence, not a full historical event archive.
 
 The authenticated account tests do not prove public deployment, multi-instance SQLite operation, email verification/recovery delivery, or AnkiWeb cloud upload. Those are separate integration/deployment concerns.

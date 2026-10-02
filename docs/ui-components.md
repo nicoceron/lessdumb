@@ -9,6 +9,7 @@ Setup follows [shadcn's Astro installation](https://ui.shadcn.com/docs/installat
 - Buttons, badges, cards, inputs, labels, native selects, progress, alerts, accordion, skeletons, and avatars use shadcn/ui.
 - Desktop navigation uses NavigationMenu; compact screens use a Sheet. Breadcrumbs identify the current page.
 - Account forms use Dialog, with a title, description, focus trap, Escape handling, and explicit focus restoration to the external opener.
+- Navigation and account triggers stay disabled until React attaches their handlers. Native navigation links work during server rendering. This follows [Playwright's hydration guidance](https://playwright.dev/docs/navigations#hydration); a browser regression deliberately delays the client script before testing keyboard interaction.
 - Flashcard filters use Tabs; daily goals use ToggleGroup; account and Anki sections use CardHeader, CardContent, and CardFooter.
 - The graph uses Card and ScrollArea with both scrollbars. SVG nodes and edges are domain-specific visualizations, retaining keyboard selection and automatic viewport centering. The source-owned ScrollArea exposes a viewport ref so selection scrolls the documented Radix viewport.
 - Worked examples, solutions, and output use [ReUI CodeBlock](https://reui.io/docs/components/radix/code-block), including lazy syntax grammars and copy controls. Editable code uses CodeMirror, a specialized editor.
@@ -18,4 +19,4 @@ Setup follows [shadcn's Astro installation](https://ui.shadcn.com/docs/installat
 
 ## Verification
 
-Browser tests cover actual Python mastery and persistence, account/Anki ownership races, course prerequisites, scientific packages, narrow-screen layout, Sheet keyboard focus/navigation, Dialog focus trapping/return, and ancestor-failure gating. The per-user engine findings and product limits are recorded separately in [the engine audit](engine-audit.md) and [account isolation](account-isolation.md).
+Browser tests cover actual Python mastery and persistence, atomic topic stages, adaptive review interleaving, account/Anki ownership races, course prerequisites, scientific packages, narrow-screen layout, Sheet keyboard focus/navigation, Dialog focus trapping/return, and ancestor-failure gating. The per-user engine findings and product limits are recorded separately in [the engine audit](engine-audit.md) and [account isolation](account-isolation.md).
