@@ -47,6 +47,14 @@ async function cloud(page: Page): Promise<LearnerState | null> {
   return (await response.json()).state;
 }
 
+async function writeCode(page: Page, value: string) {
+  const editor = page.locator('.cm-content');
+  await editor.fill(value);
+  // These short solutions fit the editor's rendered range. Wait for CodeMirror
+  // to reconcile the input into its line DOM before submitting the exercise.
+  await expect(editor.locator('.cm-line')).toHaveText(value.split('\n'));
+}
+
 test('a saved contest goal exposes its complete graph and navigates both reference and math paths', async ({
   page,
 }) => {
@@ -129,7 +137,7 @@ for (const id of ['cp-prefix-sums', 'cp-fenwick']) {
           .click();
       } else {
         if (id === 'cp-prefix-sums') {
-          await page.locator('.cm-content').fill('pass');
+          await writeCode(page, 'pass');
           await page
             .getByRole('button', { name: 'Run & check', exact: true })
             .click();
@@ -142,21 +150,20 @@ for (const id of ['cp-prefix-sums', 'cp-fenwick']) {
             .getByRole('button', { name: 'Continue', exact: true })
             .click();
         }
-        await page
-          .locator('.cm-content')
-          .fill((question as CodeQuestion).solution);
+        await writeCode(page, (question as CodeQuestion).solution);
         await page
           .getByRole('button', { name: 'Run & check', exact: true })
           .click();
       }
-      await expect(
-        page.getByText(
-          question === skill.questions.at(-1)
-            ? 'Skill mastered. A new connection made.'
-            : 'That’s a small win.',
-          { exact: true },
-        ),
-      ).toBeVisible({ timeout: 60000 });
+      const feedback = page.locator(
+        '.question-paper [data-slot="alert"][role="status"]',
+      );
+      await expect(feedback).toBeVisible({ timeout: 60000 });
+      await expect(feedback).toContainText(
+        question === skill.questions.at(-1)
+          ? 'Skill mastered. A new connection made.'
+          : 'That’s a small win.',
+      );
       if (question !== skill.questions.at(-1))
         await page
           .getByRole('button', { name: 'Continue', exact: true })
