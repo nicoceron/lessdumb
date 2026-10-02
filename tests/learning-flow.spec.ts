@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { skillById } from '../src/lib/curriculum';
 import { applyAttempt, getSkillState } from '../src/lib/learning';
 import { createState } from '../src/lib/state';
+import { replaceCode } from './helpers/editor';
 
 test('a learner masters a skill with real Python, earns cards, and keeps progress after reload', async ({
   page,
@@ -19,9 +20,10 @@ test('a learner masters a skill with real Python, earns cards, and keeps progres
     ).toBeVisible();
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
   }
-  await page
-    .locator('.cm-content')
-    .fill('print("Hello, lessdumb!")\nprint("I can learn Python.")');
+  await replaceCode(
+    page,
+    'print("Hello, lessdumb!")\nprint("I can learn Python.")',
+  );
   await page.getByRole('button', { name: 'Run & check', exact: true }).click();
   await expect(
     page.getByText('Skill mastered. A new connection made.', { exact: true }),

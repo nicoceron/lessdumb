@@ -17,6 +17,7 @@ import {
   type LearnerState,
 } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
+import { replaceCode as fillCode } from './helpers/editor';
 
 const baseURL = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 test.use({ baseURL });
@@ -25,13 +26,6 @@ async function cloud(page: Page): Promise<LearnerState> {
   const response = await page.request.get(`${baseURL}/api/state`);
   expect(response.status()).toBe(200);
   return (await response.json()).state;
-}
-
-async function fillCode(page: Page, source: string) {
-  await page.locator('.cm-content').fill(source);
-  await expect(page.locator('.cm-content .cm-line')).toHaveText(
-    source.split('\n'),
-  );
 }
 
 async function runAndCheck(page: Page) {

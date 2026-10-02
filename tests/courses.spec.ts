@@ -3,6 +3,7 @@ import { skillById, type CodeQuestion } from '../src/lib/curriculum';
 import { applyAttempt, coursePath } from '../src/lib/learning';
 import { createState } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
+import { replaceCode } from './helpers/editor';
 const origin = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 async function ready(page: Page) {
   await expect(page.getByText('Preparing your learning space…')).toHaveCount(0);
@@ -124,9 +125,7 @@ for (const id of ['da-arrays', 'ml-linear-regression']) {
           .getByRole('button', { name: 'Check answer', exact: true })
           .click();
       } else {
-        await page
-          .locator('.cm-content')
-          .fill((question as CodeQuestion).solution);
+        await replaceCode(page, (question as CodeQuestion).solution);
         await page
           .getByRole('button', { name: 'Run & check', exact: true })
           .click();
@@ -245,7 +244,7 @@ test('leaving a lesson cancels its real Python worker and locks submitted hints'
   const exercise = skill.questions.find(
     (q): q is CodeQuestion => q.type === 'code',
   )!;
-  await page.locator('.cm-content').fill(exercise.solution);
+  await replaceCode(page, exercise.solution);
   let release!: () => void;
   const gate = new Promise<void>((resolve) => {
     release = resolve;

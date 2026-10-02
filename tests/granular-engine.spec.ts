@@ -14,6 +14,7 @@ import {
 } from '../src/lib/learning';
 import { createState, type LearnerState } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
+import { replaceCode } from './helpers/editor';
 
 const origin = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 const password = 'granular-engine-browser-123';
@@ -70,9 +71,7 @@ async function answerCode(
   solution: string,
 ) {
   await expect(page.locator('.question-paper h1')).toHaveText(question.prompt);
-  const editor = page.locator('.cm-content');
-  await editor.fill(solution);
-  await expect(editor.locator('.cm-line')).toHaveText(solution.split('\n'));
+  await replaceCode(page, solution);
   await page.getByRole('button', { name: 'Run & check', exact: true }).click();
 }
 

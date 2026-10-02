@@ -3,6 +3,7 @@ import { skillById, type CodeQuestion } from '../src/lib/curriculum';
 import { applyAttempt, coursePath } from '../src/lib/learning';
 import { createState, type LearnerState } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
+import { replaceCode as writeCode } from './helpers/editor';
 
 const origin = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 const courseId = 'competitive-programming';
@@ -45,14 +46,6 @@ async function cloud(page: Page): Promise<LearnerState | null> {
   const response = await page.request.get(`${origin}/api/state`);
   expect(response.status()).toBe(200);
   return (await response.json()).state;
-}
-
-async function writeCode(page: Page, value: string) {
-  const editor = page.locator('.cm-content');
-  await editor.fill(value);
-  // These short solutions fit the editor's rendered range. Wait for CodeMirror
-  // to reconcile the input into its line DOM before submitting the exercise.
-  await expect(editor.locator('.cm-line')).toHaveText(value.split('\n'));
 }
 
 test('a saved contest goal exposes its complete graph and navigates both reference and math paths', async ({
