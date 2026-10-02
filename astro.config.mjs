@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import node from '@astrojs/node';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   output: 'server',
@@ -8,6 +9,7 @@ export default defineConfig({
   integrations: [react()],
   devToolbar: { enabled: false },
   vite: {
+    plugins: [tailwindcss()],
     optimizeDeps: {
       include: [
         'lucide-react',

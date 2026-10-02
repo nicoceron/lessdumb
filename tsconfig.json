@@ -10,6 +10,7 @@
     "test-results"
   ],
   "compilerOptions": {
+    "paths": { "@/*": ["./src/*"] },
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "skipLibCheck": true

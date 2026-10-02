@@ -2,7 +2,7 @@
 
 Learn deliberately. Remember automatically.
 
-lessdumb is a working adaptive learning MVP built with Astro and React. It combines a prerequisite knowledge graph, original lessons, real Python exercises, evidence-based progression, spaced review, account persistence, and automatic Anki card creation. The application runs locally with free tools and no paid backend dependency.
+lessdumb is a working adaptive learning MVP built with Astro, React, shadcn/ui, and free ReUI components. It combines a prerequisite knowledge graph, original lessons, real Python exercises, evidence-based progression, spaced review, account persistence, and automatic Anki card creation. The application runs locally with free tools and no paid backend dependency.
 
 ## Quickstart
 
@@ -68,7 +68,7 @@ Skills unlock through their graph prerequisites rather than an arbitrary calenda
 
 Initial mastery schedules a review one day later. A due review cycle needs two distinct independent answers, including executable code. Successful reviews advance through 1, 3, 7, 14, 30, 60, and 120-day intervals. A mistake removes the relevant answer evidence and prompts remediation; it does not erase unrelated prerequisite knowledge. XP and streaks reflect practice in the learner's timezone.
 
-See [the learning design](docs/learning-design.md) for the evidence model, scheduling rules, sources, and limitations. The supplied _The Math Academy Way_ informed the prerequisite/mastery/retrieval design. lessdumb uses its own content and scheduler and does not claim parity with Math Academy's proprietary algorithms or outcomes.
+See [the engine audit](docs/engine-audit.md), [per-user isolation evidence](docs/account-isolation.md), [interface components](docs/ui-components.md), and [the learning design](docs/learning-design.md) for the evidence model, scheduling rules, sources, and limitations. The supplied _The Math Academy Way_ informed the prerequisite/mastery/retrieval design. lessdumb uses its own content and scheduler and does not claim parity with Math Academy's proprietary algorithms or outcomes.
 
 ## Real Python in the browser
 
@@ -159,12 +159,18 @@ To test an alternative server origin:
 LESSDUMB_E2E_URL=http://127.0.0.1:4322 npm run test:e2e
 ```
 
-Playwright uses an already running server; it does not start one automatically. Browser account tests create test accounts in that server's database. Anki protocol tests simulate the local API; a real desktop connection and an AnkiWeb upload remain separate integration checks.
+Playwright uses an already running server; it does not start one automatically. Browser account tests create test accounts in that server's database. The full suite respects the production signup quota by waiting for Better Auth's retry header; it does not disable account rate limits. Anki protocol tests simulate the local API; a real desktop connection and an AnkiWeb upload remain separate integration checks.
+
+The October 2, 2026 component/engine release passed **245 Vitest tests, 19 Playwright tests, formatting, type checks, and the production build**. Browser coverage includes two authenticated learners with different mastery/review/mistake histories, durable guest migration, delayed account and Anki responses, real NumPy/scikit-learn execution, prerequisite lapse gating, and Sheet/Dialog keyboard focus.
 
 ## Project structure
 
 ```text
-src/components/App.tsx          Learning interface, graph, cards, account UI
+src/components/App.tsx          Workspace, course goals, knowledge graph
+src/components/learning-session.tsx  Lessons, assessment, real Python grading
+src/components/secondary-pages.tsx   Flashcards, settings, account Dialog, Python lab
+src/components/ui/              shadcn/ui source components
+src/components/reui/            Free ReUI Stepper and CodeBlock
 src/components/useLearner.ts    Device persistence and account synchronization
 src/lib/curriculum.ts           Original course, unit, skill, question, card registry
 src/lib/learning.ts             Mastery evidence, task selection, review, XP, streaks

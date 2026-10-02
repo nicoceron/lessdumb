@@ -6,6 +6,7 @@ import {
 } from '../src/lib/state';
 import { skillById } from '../src/lib/curriculum';
 import { ankiCardTag } from '../src/lib/anki';
+import { signUp } from './helpers/accounts';
 
 const baseURL = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 const password = 'testing-anki-races-123';
@@ -32,13 +33,11 @@ function queuedCard(skillId: string): QueuedCard {
 async function account(page: Page, label: string, cards: QueuedCard[]) {
   const name = `Anki ${label}`;
   const email = `anki-${label.toLowerCase().replaceAll(' ', '-')}-${Date.now()}-${Math.random().toString(16).slice(2)}@example.test`;
-  const registered = await page.request.post(
-    `${baseURL}/api/auth/sign-up/email`,
-    {
-      headers: { origin: baseURL },
-      data: { name, email, password },
-    },
-  );
+  const registered = await signUp(page.request, baseURL, {
+    name,
+    email,
+    password,
+  });
   expect(registered.status()).toBe(200);
   const id = (await registered.json()).user.id as string;
   const state = createState();

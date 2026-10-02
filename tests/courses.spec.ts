@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { skillById, type CodeQuestion } from '../src/lib/curriculum';
 import { applyAttempt, coursePath } from '../src/lib/learning';
 import { createState } from '../src/lib/state';
+import { signUp } from './helpers/accounts';
 const origin = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 async function ready(page: Page) {
   await expect(page.getByText('Preparing your learning space…')).toHaveCount(0);
@@ -38,13 +39,10 @@ async function seedPrerequisites(
     );
     return;
   }
-  const response = await page.request.post(`${origin}/api/auth/sign-up/email`, {
-    headers: { origin },
-    data: {
-      name: 'Course QA',
-      email: `course-${Date.now()}-${Math.random().toString(16).slice(2)}@example.test`,
-      password: 'course-integration-test-123',
-    },
+  const response = await signUp(page.request, origin, {
+    name: 'Course QA',
+    email: `course-${Date.now()}-${Math.random().toString(16).slice(2)}@example.test`,
+    password: 'course-integration-test-123',
   });
   expect(response.status()).toBe(200);
   const owner = (await response.json()).user.id;
