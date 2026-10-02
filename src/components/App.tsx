@@ -1,5 +1,11 @@
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,8 +24,8 @@ const Cards = lazy(() =>
 const Settings = lazy(() =>
   import('./secondary-pages').then((m) => ({ default: m.Settings })),
 );
-const PythonLab = lazy(() =>
-  import('./secondary-pages').then((m) => ({ default: m.PythonLab })),
+const CodeLab = lazy(() =>
+  import('./secondary-pages').then((m) => ({ default: m.CodeLab })),
 );
 const AccountModal = lazy(() =>
   import('./secondary-pages').then((m) => ({ default: m.AccountModal })),
@@ -77,6 +83,9 @@ export default function App({
 }) {
   const learner = useLearner();
   const { state, update, ready, session, sync } = learner;
+  const activeLanguage = courses.find(
+    (course) => course.id === state.activeCourseId,
+  )?.language;
   const [accountOpen, setAccountOpen] = useState(false);
   const [ankiMessage, setAnkiMessage] = useState('');
   const [ankiBusy, setAnkiBusy] = useState(false);
@@ -242,10 +251,29 @@ export default function App({
           className={`main-content ${page === 'learn' ? 'learning-content' : ''}`}
         >
           {!ready ? (
-            <div className="loading-space">
-              <LoaderCircle className="spin" />
-              Preparing your learning space…
-            </div>
+            session.error && !session.data ? (
+              <Card role="alert" className="mx-auto max-w-xl">
+                <CardHeader>
+                  <CardTitle>
+                    <h1>Couldn’t check your account.</h1>
+                  </CardTitle>
+                  <CardDescription>
+                    Your learning space will open when the account connection is
+                    restored.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={session.refetch}>
+                    <RotateCcw className="size-4" /> Retry account connection
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="loading-space">
+                <LoaderCircle className="spin" />
+                Preparing your learning space…
+              </div>
+            )
           ) : (
             <Suspense
               fallback={
@@ -269,6 +297,7 @@ export default function App({
                   key={`${routeKey}:${session.data?.user.id ?? 'guest'}`}
                   state={state}
                   update={update}
+                  userId={session.data?.user.id}
                 />
               )}
               {page === 'courses' && <Courses state={state} update={update} />}
@@ -312,7 +341,17 @@ export default function App({
                   retrySync={learner.retrySync}
                 />
               )}
-              {page === 'lab' && <PythonLab />}
+              {page === 'lab' && (
+                <CodeLab
+                  key={session.data?.user.id ?? 'guest'}
+                  userId={session.data?.user.id}
+                  initialLanguage={
+                    activeLanguage === 'rust' || activeLanguage === 'cpp'
+                      ? activeLanguage
+                      : 'python'
+                  }
+                />
+              )}
               {page === '404' && (
                 <div className="empty-state">
                   <h1>This page wandered off.</h1>
@@ -1100,7 +1139,9 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
               </Badge>
               <Badge variant="outline">
                 {selected.stage === selected.stageCount
-                  ? 'Apply the algorithm'
+                  ? selected.courseId === 'competitive-programming'
+                    ? 'Apply the algorithm'
+                    : 'Apply the concept'
                   : 'One concept'}
               </Badge>
             </div>

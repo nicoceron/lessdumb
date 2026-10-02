@@ -2,18 +2,18 @@
 
 Learn deliberately. Remember automatically.
 
-lessdumb is a working adaptive learning MVP built with Astro, React, shadcn/ui, and free ReUI components. It combines a prerequisite knowledge graph, original lessons, real Python exercises, evidence-based progression, spaced review, account persistence, and automatic Anki card creation. The application runs locally with free tools and no paid backend dependency.
+lessdumb is a working adaptive learning MVP built with Astro, React, shadcn/ui, and free ReUI components. It combines a prerequisite knowledge graph, original lessons, real Python, Rust, and C++ exercises, evidence-based progression, spaced review, account persistence, and automatic Anki card creation. The application runs locally with free tools and no paid backend dependency.
 
 ## Quickstart
 
-Requirements: **Node.js 22.12 or newer** and npm. **Python 3** is also needed to run the curriculum verification tests; learners execute Python in the browser and do not need a local Python installation.
+Requirements: **Node.js 22.12 or newer** and npm. **Python 3**, **rustc 1.96.0 or newer**, and a **C++20 compiler** (`clang++` or `g++`) are needed for curriculum verification. Learners do not need installed compilers: Python runs in the browser; Rust and C++ use the free Compiler Explorer sandbox.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open [http://127.0.0.1:4321](http://127.0.0.1:4321). The install script copies the pinned Pyodide core and downloads official NumPy, pandas, scikit-learn, and dependency wheels, verifying their SHA-256 hashes against Pyodide’s lockfile. Subsequent setup reuses verified local files. Python execution and these packages are served from this application; learner code is not sent to a runtime CDN.
+Open [http://127.0.0.1:4321](http://127.0.0.1:4321). The install script copies the pinned Pyodide core and downloads official NumPy, pandas, scikit-learn, and dependency wheels, verifying their SHA-256 hashes against Pyodide’s lockfile. Subsequent setup reuses verified local files. Python execution and these packages are served from this application; Python learner code is not sent to a runtime CDN. Rust and C++ source is sent through the server to Compiler Explorer; accounts and progress are never forwarded.
 
 If port 4321 is occupied, keep the server and authentication origins aligned:
 
@@ -26,10 +26,10 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 ## What you can do
 
 - **Today:** follow the next adaptive task, set a daily XP goal, and see your practice history and streak.
-- **My learning:** choose from 301 connected skills across six courses through short explanations, examples, prediction questions, and executable exercises.
+- **My learning:** choose from 609 connected skills across eight courses through short explanations, examples, prediction questions, and executable exercises.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
 - **Flashcards:** receive recall cards after mastery and correction cards after mistakes; connect Anki or export a tab-separated deck.
-- **Python lab:** experiment with real Python in a separate playground without changing mastery.
+- **Code lab:** experiment with real Python, Rust, or C++ in a separate playground without changing mastery.
 - **Accounts and settings:** create an email/password account, save progress across browsers using the same server, configure Anki, and export a JSON backup.
 
 You can start as a guest. Guest progress is saved on the device; creating a new account can carry that progress into the account. Signed-in learners retain a device copy while account sync is unavailable and can retry from Settings.
@@ -44,13 +44,17 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 | Machine Learning         |      28 |       112 |                   21 |         56 |
 | Data Systems             |      28 |       112 |                    0 |         56 |
 | Competitive Programming  |     192 |       768 |                  192 |        384 |
-| **Total**                | **301** | **1,204** |              **266** |    **602** |
+| Rust                     |     128 |       512 |                  128 |        256 |
+| C++                      |     180 |       720 |                  180 |        360 |
+| **Total**                | **609** | **2,436** |              **574** |  **1,218** |
 
 Selecting a course saves a learning goal. The scheduler includes its prerequisite ancestors across courses, so missing foundations become real tasks rather than a dead end. The graph offers course paths with supporting prerequisites and an all-course view. Each node retains a domain and course identity, and its detail panel navigates both prerequisite and dependent edges.
 
 The three supplied books inform concept coverage; lessons, examples, questions, datasets, and cards are original. Source notes record exact scope: [data analysis](docs/sources/data-analysis.md), [machine learning](docs/sources/machine-learning.md), and [data systems](docs/sources/data-systems.md). The supplied data-systems early release contains chapters 1–8. The seven neural architecture skills assess concepts using choices and small Python analogues; the browser runtime does not execute TensorFlow/Keras training. This is a focused course catalog, not a reproduction of the books or their full exercise sets.
 
 Competitive Programming draws its topic paths from the supplied USACO and NeetCode reference inventories. Its 12 units cover contest reasoning, collections, prefix/window techniques, search, stacks/heaps/tries, recursion/trees, graph traversal, routes/connectivity, dynamic programming, greedy/bitmask/geometry techniques, number theory, and dynamic range queries. Each of its 48 algorithm topics has three individually taught and assessed concepts followed by the original application skill: 192 nodes with 768 checks. Stable application IDs and earned evidence remain; newly added concepts require their own proof. Every node has a real Python function assessment and connects to existing Python foundations; geometry also uses the quantitative vector branch. The course exposes the public USACO Guide and NeetCode roadmap. [Source and graph mapping](docs/sources/competitive-programming.md) records the inspected references and scope.
+
+Rust has 32 four-step topics, covering first programs, ownership and borrowing, UTF-8, data modeling, collections, traits, lifetimes, iterators, Cargo/build concepts, testing, smart pointers, concurrency, async mechanics, unsafe invariants, FFI, algorithms, and a framed-message codec. C++ has 45 four-step topics, covering values and control flow, pointers and references, RAII and moves, STL, generic code, errors, build/link contracts, concurrency, memory layout, measurement, ring buffers, order books, protocols, and risk checks. Both courses start from zero and have their own explicit prerequisites; Python mastery is not required. Every step has three conceptual checks, one executable assessment, a runnable lesson, and two cards. [Rust scope](docs/sources/rust.md) and [C++ sources and GetCracked mapping](docs/sources/cpp.md) record the course boundaries. GetCracked supplied topic inspiration; its repeated local inventory is not a bank of 700 distinct exercises.
 
 The dashboard layout follows the compact course/progress/task pattern visible in [Math Academy’s official public dashboard screenshot](https://www.mathacademy.com/img/screenshots/student-dashboard.png), with independent branding and implementation.
 
@@ -77,7 +81,15 @@ See [the engine audit](docs/engine-audit.md), [per-user isolation evidence](docs
 
 Exercises and the lab use **Pyodide**, a WebAssembly Python runtime, through a dedicated Web Worker. Exercise assertions run against the learner's actual variables, functions, and captured output. Each run gets a separate namespace and worker; execution is terminated after 30 seconds so an infinite loop does not block the application. Learner code is not executed on the account server.
 
-The editor uses CodeMirror with Python syntax support. The bundled runtime is a substantial download on first use. General-purpose third-party package installation is outside this MVP.
+The editor uses CodeMirror with matching language syntax support. The bundled runtime is a substantial download on first use. General-purpose third-party package installation is outside this MVP.
+
+## Real Rust and C++ execution
+
+The shared runner selects the question's declared language. Rust uses rustc 1.96.0 with Rust 2021; C++ uses GCC 15.2 with C++20 and threads enabled. The server appends the catalog's assertion harness and uses Compiler Explorer's documented free execution API. It requires successful compilation and execution; printed success text alone cannot pass. Each course uses the standard library, so external Cargo crates and platform SDKs are outside the executable assessment scope.
+
+The source and authored harness leave the application for that service. Account identifiers, cookies, passwords, progress, and cards stay with lessdumb. The editor shows this before running compiled code. Compiler errors and failed assertions create learner feedback; provider outages, cancellation, and account changes preserve evidence and allow retry. Compiled execution needs an internet connection and available provider capacity. [Runtime documentation](docs/compiled-code.md) covers compiler versions, time/size limits, canonical harnesses, and ownership guards.
+
+The Code lab preserves a separate buffer for each language. It runs code without awarding mastery, XP, or flashcards. CodeMirror and ReUI use the matching language grammar.
 
 ## Free accounts and persistence
 
@@ -147,7 +159,7 @@ Run the complete checks, including formatting, with:
 npm run verify
 ```
 
-The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python checks the foundation curriculum. Real Pyodide executes all 266 code solutions and 273 executable lesson examples, including scientific packages; all empty submissions must fail. Scenario examples use explicit text presentation rather than Python execution.
+The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python checks the foundation curriculum. Real Pyodide executes all 266 code solutions and 273 executable lesson examples, including scientific packages; all empty submissions must fail. Native compiler batches also run every Rust/C++ reference assessment and lesson example, reject unfinished starters and empty submissions, and verify their documented output. Scenario examples use explicit text presentation rather than code execution.
 
 For browser tests, install Chromium once, leave the development server running, and use another terminal:
 
@@ -164,14 +176,14 @@ LESSDUMB_E2E_URL=http://127.0.0.1:4322 npm run test:e2e
 
 Playwright uses an already running server; it does not start one automatically. Browser account tests create test accounts in that server's database. The full suite respects the production signup quota by waiting for Better Auth's retry header; it does not disable account rate limits. Anki protocol tests simulate the local API; a real desktop connection and an AnkiWeb upload remain separate integration checks.
 
-The October 2, 2026 granular Competitive Programming and FSRS release passed **652 Vitest tests, 23 Playwright tests, formatting, type checks, and the production build**. Browser coverage includes atomic topic stages, adaptive review interleaving, two authenticated learners with different mastery/review/mistake histories, durable guest migration, delayed account and Anki responses, real NumPy/scikit-learn execution, real prefix/Fenwick grading with earned cards, prerequisite lapse gating, and Sheet/Dialog keyboard focus with deliberately delayed hydration.
+The October 2, 2026 eight-course release passed **719 Vitest tests, 31 Playwright tests, formatting, type checks, and the production build**. Browser coverage includes atomic topic stages, adaptive review interleaving, two authenticated learners with different mastery/review/mistake histories, durable guest migration, delayed account and Anki responses within the same document, initial session failures and confirmed sign-out, real NumPy/scikit-learn execution, real Python/Rust/C++ grading with earned cards and due reviews, advanced compiled-library contracts, the full-catalog mistake/repair snapshot, prerequisite lapse gating, and Sheet/Dialog keyboard focus with deliberately delayed hydration. Live compiled assessments retry at most once for infrastructure failures after checking that evidence and cards remain unchanged; actual grading failures are never retried or replaced with simulated success.
 
 ## Project structure
 
 ```text
 src/components/App.tsx          Workspace, course goals, knowledge graph
-src/components/learning-session.tsx  Lessons, assessment, real Python grading
-src/components/secondary-pages.tsx   Flashcards, settings, account Dialog, Python lab
+src/components/learning-session.tsx  Lessons, assessment, language-aware grading
+src/components/secondary-pages.tsx   Flashcards, settings, account Dialog, Code lab
 src/components/ui/              shadcn/ui source components
 src/components/reui/            Free ReUI Stepper and CodeBlock
 src/components/useLearner.ts    Device persistence and account synchronization
@@ -180,11 +192,13 @@ src/lib/learning.ts             Mastery evidence, task selection, review, XP, st
 src/lib/retention.ts            Per-learner FSRS memory and recall estimates
 src/lib/activity.ts             Durable offline answer counters
 src/lib/python.ts              Terminable Python worker client
+src/lib/code-runner.ts         Language-aware execution and cancellation
+src/lib/server/compiled-code.ts  Canonical assessment and free sandbox adapter
 public/python-worker.mjs       Real Pyodide execution and exercise assertions
 src/lib/anki.ts                 Documented AnkiConnect client and note identity
 src/lib/state.ts                Versioned learner state and conflict merging
 src/lib/server/                SQLite auth, state storage, API validation
-src/pages/api/                 Auth and learner-state endpoints
+src/pages/api/                 Auth, learner-state, and compiled-code endpoints
 src/styles/global.css          Application styling and responsive layout
 scripts/copy-python.mjs         Prepares pinned runtime and hash-verified scientific wheels
 scripts/serve.mjs               Starts the built server with configurable host/port
@@ -198,8 +212,8 @@ Courses, units, and skills have stable IDs. Skills declare a domain, course, uni
 
 The graph, scheduler, and account-state model support additional programming languages, mathematics, physics, and natural languages. Skills can declare an assessment policy with required review question types and an answer count. Choice-only math or vocabulary skills can be mastered and reviewed without Python; the launched Python course explicitly requires code and choice evidence in its reviews. Learning functions also accept an optional catalog for independent subject registries, with cross-course prerequisites validated as one graph.
 
-The implemented catalog includes Python, quantitative foundations, Python for Data Analysis, Machine Learning, Data Systems, and Competitive Programming. Mathematics, physics, and natural-language domains can extend the same graph with stable IDs and appropriate assessments.
+The implemented catalog includes Python, quantitative foundations, Python for Data Analysis, Machine Learning, Data Systems, Competitive Programming, Rust, and C++. Mathematics, physics, and natural-language domains can extend the same graph with stable IDs and appropriate assessments.
 
 ## MVP boundaries
 
-The scheduler uses transparent default intervals rather than a calibrated personalized memory model. Each skill has four authored questions, with no placement test, unlimited generated question bank, or automatic transfer credit between subjects. Account email delivery/recovery and a backup-import interface are not implemented. The app provides exports, local persistence, and same-server account sync; it does not provision hosting or a managed cloud service.
+FSRS adapts stability, difficulty, and spacing per learner and skill, using shared default weights that have not been fitted or validated on lessdumb learners. Each skill has four authored questions, with no placement test, unlimited generated question bank, or automatic transfer credit between subjects. Account email delivery/recovery and a backup-import interface are not implemented. The app provides exports, local persistence, and same-server account sync; it does not provision hosting or a managed cloud service.

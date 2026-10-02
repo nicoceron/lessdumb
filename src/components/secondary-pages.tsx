@@ -15,10 +15,16 @@ import {
   Target,
   X,
 } from 'lucide-react';
-import { python } from '@codemirror/lang-python';
 import { exportCardsTsv } from '../lib/anki';
 import { authClient } from '../lib/account';
-import { runPython, type PythonResult } from '../lib/python';
+import { type PythonResult } from '../lib/python';
+import { type CodeLanguage } from '../lib/curriculum';
+import { runCode } from '../lib/code-runner';
+import {
+  codeLanguage,
+  codeLanguageLabels,
+  editorLanguage,
+} from '../lib/code-language';
 import { type LearnerState } from '../lib/state';
 import { Pill, PageTitle, download } from './shared';
 import { Button } from './ui/button';
@@ -41,6 +47,7 @@ import {
 } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { NativeSelect, NativeSelectOption } from './ui/native-select';
 import { Separator } from './ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
@@ -553,24 +560,48 @@ export function Settings({
   );
 }
 
-export function PythonLab() {
-  const [code, setCode] = useState(
-    '# A little space to experiment.\nname = "world"\nprint(f"Hello, {name}!")',
+export function CodeLab({
+  userId,
+  initialLanguage = 'python',
+}: {
+  userId?: string;
+  initialLanguage?: CodeLanguage;
+}) {
+  const [language, setLanguage] = useState<CodeLanguage>(() =>
+    codeLanguage(
+      new URLSearchParams(window.location.search).get('language') ??
+        initialLanguage,
+    ),
   );
+  const [programs, setPrograms] = useState<Record<CodeLanguage, string>>({
+    python:
+      '# A little space to experiment.\nname = "world"\nprint(f"Hello, {name}!")',
+    rust: 'fn main() {\n    let name = "world";\n    println!("Hello, {name}!");\n}',
+    cpp: '#include <iostream>\n#include <string>\n\nint main() {\n    std::string name = "world";\n    std::cout << "Hello, " << name << "!\\n";\n}',
+  });
+  const code = programs[language];
+  const setCode = (value: string) =>
+    setPrograms((saved) => ({ ...saved, [language]: value }));
   const [result, setResult] = useState<PythonResult | null>(null);
   const [busy, setBusy] = useState(false);
   const runGeneration = useRef(0);
+  const controller = useRef<AbortController | null>(null);
   useEffect(
     () => () => {
       runGeneration.current += 1;
+      controller.current?.abort();
     },
     [],
   );
   async function run() {
     if (busy) return;
     const generation = ++runGeneration.current;
+    controller.current = new AbortController();
     setBusy(true);
-    const output = await runPython(code);
+    const output = await runCode(code, '', language, {
+      userId,
+      signal: controller.current.signal,
+    });
     if (generation !== runGeneration.current) return;
     setResult(output);
     setBusy(false);
@@ -580,19 +611,43 @@ export function PythonLab() {
       <PageTitle
         eyebrow="CURIOSITY NEEDS A PLAYGROUND"
         title="Try an idea."
-        description="Real Python, right in your browser. Experiment without affecting your mastery."
+        description="Experiment with Python, Rust, or C++ without affecting your mastery."
       />
       <Card>
         <CardHeader className="flex flex-wrap items-center justify-between gap-2 sm:flex-row">
           <CardTitle className="flex items-center gap-2">
             <Code2 className="size-4 text-primary" />
-            Python playground
+            {codeLanguageLabels[language]} playground
           </CardTitle>
           <span className="text-xs text-muted-foreground">
             Independent, isolated runs
           </span>
         </CardHeader>
         <CardContent className="min-w-0 space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <Label htmlFor="lab-language">Language</Label>
+            <NativeSelect
+              id="lab-language"
+              aria-label="Playground language"
+              value={language}
+              disabled={busy}
+              onChange={(event) => {
+                setLanguage(codeLanguage(event.target.value));
+                setResult(null);
+              }}
+            >
+              {Object.entries(codeLanguageLabels).map(([value, label]) => (
+                <NativeSelectOption key={value} value={value}>
+                  {label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+            <p className="text-xs text-muted-foreground">
+              {language === 'python'
+                ? 'Python runs on your device.'
+                : 'Only your code is sent to Compiler Explorer’s free sandbox.'}
+            </p>
+          </div>
           <div className="overflow-hidden rounded-lg border">
             <Suspense
               fallback={
@@ -604,17 +659,19 @@ export function PythonLab() {
             >
               <CodeMirror
                 value={code}
-                extensions={[python()]}
+                extensions={[editorLanguage(language)]}
                 height="370px"
                 onChange={setCode}
                 editable={!busy}
-                aria-label="Python playground editor"
+                aria-label={`${codeLanguageLabels[language]} playground editor`}
               />
             </Suspense>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-xs text-muted-foreground">
-              Execution stops after 30 seconds.
+              {language === 'python'
+                ? 'Execution stops after 30 seconds.'
+                : 'Compilation and execution have bounded time limits.'}
             </span>
             <Button onClick={run} disabled={busy}>
               {busy ? (
@@ -622,7 +679,9 @@ export function PythonLab() {
               ) : (
                 <Play size={17} />
               )}
-              {busy ? 'Running Python…' : 'Run Python'}
+              {busy
+                ? `Running ${codeLanguageLabels[language]}…`
+                : `Run ${codeLanguageLabels[language]}`}
             </Button>
           </div>
           <div className="runner-output space-y-3" aria-live="polite">
@@ -635,7 +694,7 @@ export function PythonLab() {
               language="text"
               highlight={false}
               defaultWrap
-              label="Python output"
+              label={`${codeLanguageLabels[language]} output`}
               className="max-h-80 overflow-auto"
             >
               <CodeBlockHeader>

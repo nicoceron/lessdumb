@@ -41,7 +41,7 @@ const navigation = [
   { page: 'courses', label: 'My learning', icon: BookOpen, href: '/courses' },
   { page: 'graph', label: 'Knowledge graph', icon: GitBranch, href: '/graph' },
   { page: 'cards', label: 'Flashcards', icon: Layers, href: '/cards' },
-  { page: 'lab', label: 'Python lab', icon: Terminal, href: '/lab' },
+  { page: 'lab', label: 'Code lab', icon: Terminal, href: '/lab' },
   {
     page: 'settings',
     label: 'Settings & connections',

@@ -1,8 +1,10 @@
 import type { Backend } from './backend';
 import { readState, writeState } from './state-store';
-import { parseStateUpdate, StateValidationError } from './state-validation';
-
-const MAX_BODY_BYTES = 2 * 1024 * 1024;
+import {
+  MAX_STATE_BODY_BYTES,
+  parseStateUpdate,
+  StateValidationError,
+} from './state-validation';
 
 function json(value: unknown, status = 200): Response {
   return Response.json(value, {
@@ -13,7 +15,7 @@ function json(value: unknown, status = 200): Response {
 
 async function readJSON(request: Request): Promise<unknown> {
   const contentLength = request.headers.get('content-length');
-  if (contentLength && Number(contentLength) > MAX_BODY_BYTES)
+  if (contentLength && Number(contentLength) > MAX_STATE_BODY_BYTES)
     throw new StateValidationError('Progress backup is too large.', 413);
   if (!request.body)
     throw new StateValidationError('A JSON request body is required.');
@@ -24,7 +26,7 @@ async function readJSON(request: Request): Promise<unknown> {
     const { value, done } = await reader.read();
     if (done) break;
     size += value.byteLength;
-    if (size > MAX_BODY_BYTES) {
+    if (size > MAX_STATE_BODY_BYTES) {
       await reader.cancel();
       throw new StateValidationError('Progress backup is too large.', 413);
     }

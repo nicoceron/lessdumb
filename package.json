@@ -1,6 +1,6 @@
 {
   "name": "lessdumb",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -20,7 +20,9 @@
   "dependencies": {
     "@astrojs/node": "^11.1.6",
     "@astrojs/react": "^7.0.0",
+    "@codemirror/lang-cpp": "6.0.3",
     "@codemirror/lang-python": "^6.2.1",
+    "@codemirror/lang-rust": "6.0.2",
     "@fontsource-variable/geist": "^5.3.0",
     "@tailwindcss/vite": "^4.3.3",
     "@uiw/react-codemirror": "^4.25.12",

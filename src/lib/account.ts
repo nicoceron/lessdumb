@@ -40,9 +40,13 @@ const client = createAuthClient();
 export const authClient: AccountAuthClient = {
   useSession() {
     const result = client.useSession();
+    // A failed first lookup has not established either an account or a guest.
+    // Better Auth already retains previously validated data on non-401 errors.
+    const unavailable =
+      !result.data && !!result.error && result.error.status !== 401;
     return {
       data: result.data,
-      isPending: result.isPending,
+      isPending: result.isPending || unavailable,
       error: result.error,
       refetch: () => {
         void result.refetch();
@@ -51,7 +55,14 @@ export const authClient: AccountAuthClient = {
   },
   signUp: { email: async (input) => client.signUp.email(input) },
   signIn: { email: async (input) => client.signIn.email(input) },
-  signOut: async () => client.signOut(),
+  signOut: async () =>
+    client.signOut({
+      fetchOptions: {
+        // A fresh document cannot retain the SDK's previous account if the
+        // post-sign-out session refresh fails after the server revoked it.
+        onSuccess: () => window.location.reload(),
+      },
+    }),
 };
 
 export interface AccountState {

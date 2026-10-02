@@ -24,7 +24,9 @@ type ExecutePython = (
 ) => Promise<PythonResult>;
 const exercises = skills.flatMap((skill) =>
   skill.questions.filter(
-    (question): question is CodeQuestion => question.type === 'code',
+    (question): question is CodeQuestion =>
+      question.type === 'code' &&
+      (!question.language || question.language === 'python'),
   ),
 );
 
@@ -53,7 +55,11 @@ describe('real Pyodide curriculum execution', () => {
     });
   }
 
-  for (const skill of skills.filter((s) => s.lesson.example.kind !== 'text')) {
+  for (const skill of skills.filter(
+    (s) =>
+      s.lesson.example.kind !== 'text' &&
+      (!s.lesson.example.language || s.lesson.example.language === 'python'),
+  )) {
     it(`matches the published lesson output for ${skill.id}`, async () => {
       const result = await executePython(runtime, skill.lesson.example.code);
       expect(result).toMatchObject({
@@ -254,6 +260,41 @@ describe('browser runner lifecycle', () => {
       infrastructure: true,
     });
     expect(MockWorker.instances[0].terminations).toBe(1);
+  });
+
+  it('cancels abandoned work without a mistake or interference with another learner run', async () => {
+    vi.useFakeTimers();
+    const abandoned = new AbortController();
+    abandoned.abort();
+    expect(await runPython('print(1)', '', abandoned.signal)).toMatchObject({
+      passed: false,
+      infrastructure: true,
+      error: 'The run was cancelled.',
+    });
+    expect(MockWorker.instances).toHaveLength(0);
+    const controller = new AbortController();
+    const first = runPython('while True: pass', '', controller.signal);
+    const second = runPython('print(2)');
+    const [one, two] = MockWorker.instances;
+    one.reply({ ready: true });
+    controller.abort();
+    one.reply({
+      output: 'late',
+      passed: true,
+      error: null,
+      infrastructure: false,
+    });
+    expect(await first).toMatchObject({ passed: false, infrastructure: true });
+    expect(one.terminations).toBe(1);
+    expect(two.terminations).toBe(0);
+    two.reply({
+      output: '2\n',
+      passed: true,
+      error: null,
+      infrastructure: false,
+    });
+    expect(await second).toMatchObject({ passed: true, output: '2\n' });
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('returns infrastructure failure for load errors and malformed worker messages', async () => {

@@ -12,7 +12,6 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { python } from '@codemirror/lang-python';
 import {
   courses,
   skills,
@@ -27,7 +26,13 @@ import {
   recordLesson,
   selectQuestion,
 } from '../lib/learning';
-import { runPython, type PythonResult } from '../lib/python';
+import { type PythonResult } from '../lib/python';
+import { runCode } from '../lib/code-runner';
+import {
+  codeLanguage,
+  codeLanguageLabels,
+  editorLanguage,
+} from '../lib/code-language';
 import { recordLearningAnswer, type LearnerState } from '../lib/state';
 import { Btn, Pill } from './shared';
 import { Button } from '@/components/ui/button';
@@ -52,9 +57,11 @@ const CodeMirror = lazy(() => import('@uiw/react-codemirror'));
 export default function LearningSession({
   state,
   update,
+  userId,
 }: {
   state: LearnerState;
   update: (fn: (s: LearnerState) => LearnerState) => void;
+  userId?: string;
 }) {
   const params = new URLSearchParams(window.location.search);
   const goal =
@@ -97,21 +104,33 @@ export default function LearningSession({
   const live = useRef(true);
   const gradingGeneration = useRef(0);
   const activeRun = useRef<symbol | null>(null);
+  const activeController = useRef<AbortController | null>(null);
   useEffect(() => {
     live.current = true;
     return () => {
       live.current = false;
       gradingGeneration.current++;
       activeRun.current = null;
+      activeController.current?.abort();
     };
   }, []);
   useEffect(() => {
     gradingGeneration.current++;
   }, [skillId, questionId]);
   const skill = skillById[skillId];
+  const courseLanguage = codeLanguage(
+    courses.find((course) => course.id === skill?.courseId)?.language,
+  );
   const progress = skill ? getSkillState(state.progress, skillId) : null;
   const available = skill && isUnlocked(state.progress, skillId);
   const question = skill?.questions.find((q) => q.id === questionId);
+  const language =
+    question?.type === 'code'
+      ? codeLanguage(question.language)
+      : courseLanguage;
+  const exampleLanguage = codeLanguage(
+    skill?.lesson.example.language ?? courseLanguage,
+  );
   const showingLesson = skill && !progress?.lessonSeen && mode === 'learn';
   const reviewPolicy = skill
     ? assessmentPolicy(skill)
@@ -168,11 +187,18 @@ export default function LearningSession({
   }
   async function checkCode() {
     if (!question || question.type !== 'code' || activeRun.current) return;
-    const token = Symbol('Python run');
+    const token = Symbol('Code run');
     activeRun.current = token;
+    const controller = new AbortController();
+    activeController.current = controller;
     const generation = gradingGeneration.current;
     setRunning(true);
-    const result = await runPython(code, question.tests);
+    const result = await runCode(code, question.tests, language, {
+      skillId,
+      questionId: question.id,
+      userId,
+      signal: controller.signal,
+    });
     if (
       !live.current ||
       activeRun.current !== token ||
@@ -180,6 +206,7 @@ export default function LearningSession({
     )
       return;
     activeRun.current = null;
+    activeController.current = null;
     setOutput(result);
     setRunning(false);
     if (!result.infrastructure) record(result.passed);
@@ -234,7 +261,9 @@ export default function LearningSession({
           </a>
         </Button>
         <Button asChild variant="link" className="h-auto justify-start p-0">
-          <a href="/lab">Try a project in the Python lab</a>
+          <a href={`/lab?language=${courseLanguage}`}>
+            Try a project in the code lab
+          </a>
         </Button>
       </div>
     );
@@ -295,7 +324,9 @@ export default function LearningSession({
           ))}
           <CodeBlock
             code={skill.lesson.example.code}
-            language={skill.lesson.example.kind === 'text' ? 'text' : 'python'}
+            language={
+              skill.lesson.example.kind === 'text' ? 'text' : exampleLanguage
+            }
             highlight={skill.lesson.example.kind !== 'text'}
             defaultWrap
             className="my-6"
@@ -305,7 +336,7 @@ export default function LearningSession({
                 {skill.lesson.example.label ??
                   (skill.lesson.example.kind === 'text'
                     ? 'Worked scenario'
-                    : 'Python')}
+                    : codeLanguageLabels[exampleLanguage])}
               </CodeBlockTitle>
               <CodeBlockCopyButton className="ml-auto" />
             </CodeBlockHeader>
@@ -361,7 +392,7 @@ export default function LearningSession({
             {question.type === 'choice' && question.code && (
               <CodeBlock
                 code={question.code}
-                language="python"
+                language={courseLanguage}
                 defaultWrap
                 className="my-5"
               />
@@ -389,12 +420,30 @@ export default function LearningSession({
               </div>
             ) : (
               <>
+                {question.contract && (
+                  <CodeBlock
+                    code={question.contract}
+                    language={language}
+                    defaultWrap
+                    className="my-5"
+                    aria-label="Required behavior checks"
+                  >
+                    <CodeBlockHeader>
+                      <CodeBlockTitle>REQUIRED BEHAVIOR</CodeBlockTitle>
+                      <CodeBlockCopyButton className="ml-auto" />
+                    </CodeBlockHeader>
+                  </CodeBlock>
+                )}
                 <div className="editor-label">
                   <span>
                     <Code2 size={16} />
-                    Your Python code
+                    Your {codeLanguageLabels[language]} code
                   </span>
-                  <small>Runs on your device</small>
+                  <small>
+                    {language === 'python'
+                      ? 'Runs on your device'
+                      : 'Only your code is sent to Compiler Explorer’s free sandbox'}
+                  </small>
                 </div>
                 <Suspense
                   fallback={
@@ -405,11 +454,11 @@ export default function LearningSession({
                 >
                   <CodeMirror
                     value={code}
-                    extensions={[python()]}
+                    extensions={[editorLanguage(language)]}
                     height="230px"
                     onChange={setCode}
                     editable={!feedback && !running}
-                    aria-label="Python code editor"
+                    aria-label={`${codeLanguageLabels[language]} code editor`}
                     basicSetup={{ lineNumbers: true, foldGutter: false }}
                   />
                 </Suspense>
@@ -427,7 +476,9 @@ export default function LearningSession({
                     </CodeBlock>
                     {output.error && (
                       <Alert variant="destructive">
-                        <AlertDescription>{output.error}</AlertDescription>
+                        <AlertDescription className="break-words whitespace-pre-wrap">
+                          {output.error}
+                        </AlertDescription>
                       </Alert>
                     )}
                   </div>
@@ -478,7 +529,7 @@ export default function LearningSession({
                         <AccordionContent>
                           <CodeBlock
                             code={question.solution}
-                            language="python"
+                            language={language}
                             defaultWrap
                           />
                         </AccordionContent>
@@ -517,7 +568,7 @@ export default function LearningSession({
                   {running ? (
                     <>
                       <LoaderCircle className="spin" size={17} />
-                      Running Python…
+                      Running {codeLanguageLabels[language]}…
                     </>
                   ) : (
                     <>

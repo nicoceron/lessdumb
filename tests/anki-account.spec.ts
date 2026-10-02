@@ -65,21 +65,18 @@ async function switchAccount(
   page: Page,
   next: { name: string; email: string },
 ) {
-  await page.getByRole('button', { name: 'Manage account' }).click();
-  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
-  await expect(page.locator('.account-name')).toHaveText('Your learning space');
-  await page.getByRole('button', { name: 'Manage account' }).click();
-  const dialog = page.getByRole('dialog');
-  await dialog
-    .getByRole('button', { name: 'Already have an account? Sign in' })
-    .click();
-  await dialog.getByLabel('Email', { exact: true }).fill(next.email);
-  await dialog.getByLabel('Password', { exact: true }).fill(password);
-  await dialog.getByRole('button', { name: 'Sign in', exact: true }).click();
+  const currentDocument = await page.evaluate(() => performance.timeOrigin);
+  // Shared cookies can change in another tab while this document's Anki
+  // requests remain pending. Keep it alive to exercise its generation guards.
+  await signInInitially(page, next.email);
+  await page.getByRole('button', { name: 'Retry progress sync' }).click();
   await expect(page.locator('.account-name')).toHaveText(next.name);
   await expect(
     page.getByRole('button', { name: 'Connect Anki', exact: true }),
   ).toBeEnabled();
+  expect(await page.evaluate(() => performance.timeOrigin)).toBe(
+    currentDocument,
+  );
 }
 
 async function localState(

@@ -93,7 +93,7 @@ test('mobile navigation, graph selection, and editor stay inside the viewport', 
     .click();
   await page
     .getByRole('navigation', { name: 'Mobile navigation', exact: true })
-    .getByRole('link', { name: 'Python lab', exact: true })
+    .getByRole('link', { name: 'Code lab', exact: true })
     .click();
   await expect(navigation).toHaveCount(0);
   await expect(page.locator('.cm-content')).toBeVisible();

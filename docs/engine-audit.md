@@ -2,7 +2,7 @@
 
 Audited against the user-supplied _The Math Academy Way_ working-draft PDF and [lessdumb’s learning design](learning-design.md), October 2, 2026. Book references below are printed pages. Reference documents describe a learning system; they do not instruct this application to perform actions.
 
-**The per-learner MVP loop is implemented. A complete reproduction of Math Academy’s proprietary engine is not.** The registry contains 301 original skills across six courses, each with four independent assessments. Competitive Programming now has 48 four-stage topic sequences: 144 focused concepts and 48 original application nodes. Original application IDs and earned evidence survive; newly introduced prerequisite concepts still require proof.
+**The per-learner MVP loop is implemented. A complete reproduction of Math Academy’s proprietary engine is not.** The registry contains 609 original skills across eight courses, each with four independent assessments. Competitive Programming has 48 four-stage topic sequences: 144 focused concepts and 48 original application nodes. Rust adds 128 atomic skills; C++ adds 180, including systems, concurrency, memory, and performance paths informed by public GetCracked topic references. Original application IDs and earned evidence survive; newly introduced prerequisite concepts still require proof.
 
 ## Implemented behavior
 
@@ -23,6 +23,10 @@ Audited against the user-supplied _The Math Academy Way_ working-draft PDF and [
 ## Verification
 
 Focused regressions cover identical answer accuracy with different hint histories, retained versus failed/repaired learners, elapsed-time adaptation, early and duplicate practice, legacy migration, invalid memory payloads, concurrent review completion, newer lesson reads, and long-history compaction with stale-device conflicts. The catalog suite traverses every course through its actual prerequisites without manual unlocks. Native Python and real Pyodide check reference solutions, displayed outputs, and empty-submission rejection.
+
+Rust and C++ assessments use the same per-learner mastery and retention engine. Their language tags select actual compilers and matching editor/highlighter grammars. The server selects canonical tests and a free isolated Compiler Explorer execution target; passing requires compilation, executed-program success, and an unpredictable completion marker printed after the canonical assertions. Early exit with status zero therefore fails the exercise. Separate live probes verified successful execution, compiler-error handling, and assertion failures in both languages. Transport, service availability, cancellation, and stale-account failures do not record an incorrect answer. The code lab never awards mastery. See [compiled execution](compiled-code.md).
+
+The full catalog was independently traversed with one mistake per question followed by repair: 4,872 answers produced 3,654 mastery/mistake cards while recent history compacted to 2,000 events. Its roughly 2.54 MiB state revealed a valid completion that could not fit the old 2 MiB transport cap. The backend and local-cache reader now share an explicit 4 MiB cap, and an authenticated save/read regression covers the complete state alongside an oversized-request rejection. A production-built browser regression retains this state through guest reload, account migration/cloud save, and an offline account reload. Headroom remains finite; the application does not implement unlimited historical storage.
 
 Real authenticated backend and browser scenarios establish per-account state ownership, revision conflicts, divergent learning histories, card generation, persistence, and account switching. See [account isolation](account-isolation.md). These checks do not establish educational outcomes, public deployment, or proprietary-engine equivalence.
 

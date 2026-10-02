@@ -13,6 +13,10 @@ export interface BackendOptions {
   rateLimit?: boolean;
 }
 
+// Navigation, focus refreshes, and multiple tabs all validate their session.
+// Keep reads bounded without applying the tighter credential-operation quota.
+export const SESSION_READ_RATE_LIMIT = { window: 60, max: 600 } as const;
+
 interface BackendAuth {
   handler: (request: Request) => Promise<Response>;
   api: {
@@ -56,6 +60,7 @@ export function createBackend(options: BackendOptions): Backend {
       window: 60,
       max: 100,
       customRules: {
+        '/get-session': SESSION_READ_RATE_LIMIT,
         '/sign-in/email': { window: 60, max: 10 },
         '/sign-up/email': { window: 60, max: 10 },
       },

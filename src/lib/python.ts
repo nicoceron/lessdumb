@@ -6,7 +6,11 @@ export type PythonResult = {
 };
 
 /** Each run uses an isolated, terminable worker. Learner code never runs on the server. */
-export function runPython(code: string, tests = ''): Promise<PythonResult> {
+export function runPython(
+  code: string,
+  tests = '',
+  signal?: AbortSignal,
+): Promise<PythonResult> {
   return new Promise((resolve) => {
     let worker: Worker | undefined;
     let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -16,6 +20,7 @@ export function runPython(code: string, tests = ''): Promise<PythonResult> {
       settled = true;
       clearTimeout(timeout);
       worker?.terminate();
+      signal?.removeEventListener('abort', cancelled);
       resolve(result);
     };
     const unavailable = () =>
@@ -25,6 +30,18 @@ export function runPython(code: string, tests = ''): Promise<PythonResult> {
         error: 'Python could not load. Refresh the page and try again.',
         infrastructure: true,
       });
+    const cancelled = () =>
+      finish({
+        output: '',
+        passed: false,
+        error: 'The run was cancelled.',
+        infrastructure: true,
+      });
+    if (signal?.aborted) {
+      cancelled();
+      return;
+    }
+    signal?.addEventListener('abort', cancelled, { once: true });
     try {
       worker = new Worker('/python-worker.mjs', { type: 'module' });
       const id = crypto.randomUUID();

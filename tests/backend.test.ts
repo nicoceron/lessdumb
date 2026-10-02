@@ -2,8 +2,13 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createBackend, type Backend } from '../src/lib/server/backend';
+import {
+  createBackend,
+  SESSION_READ_RATE_LIMIT,
+  type Backend,
+} from '../src/lib/server/backend';
 import { handleStateRequest } from '../src/lib/server/state-api';
+import { MAX_STATE_BODY_BYTES } from '../src/lib/server/state-validation';
 import {
   createState,
   recordLearningAnswer,
@@ -14,6 +19,8 @@ import {
   DAY_MS,
   getStats,
   isMastered,
+  isUnlocked,
+  MAX_RECENT_ATTEMPTS,
   nextTask,
   recordLesson,
 } from '../src/lib/learning';
@@ -27,14 +34,14 @@ afterEach(() => {
   for (const dispose of cleanup.splice(0).reverse()) dispose();
 });
 
-async function freshBackend() {
+async function freshBackend(rateLimit = false) {
   const directory = mkdtempSync(join(tmpdir(), 'lessdumb-backend-'));
   cleanup.push(() => rmSync(directory, { recursive: true, force: true }));
   const backend = createBackend({
     databasePath: join(directory, 'test.sqlite'),
     secret,
     baseURL,
-    rateLimit: false,
+    rateLimit,
   });
   cleanup.push(() => backend.close());
   await backend.ready();
@@ -76,6 +83,46 @@ async function register(backend: Backend, email = 'first@example.test') {
 }
 
 describe('documented Better Auth account backend', () => {
+  it('allows session reads beyond the generic quota, then enforces the bounded read rule', async () => {
+    const { backend } = await freshBackend(true);
+    const cookie = await register(backend);
+    for (let index = 0; index < SESSION_READ_RATE_LIMIT.max; index++) {
+      const response = await authRequest(
+        backend,
+        '/get-session',
+        undefined,
+        cookie,
+      );
+      expect(response.status, `session lookup ${index + 1}`).toBe(200);
+      expect((await response.json()).user.email).toBe('first@example.test');
+    }
+    const limited = await authRequest(
+      backend,
+      '/get-session',
+      undefined,
+      cookie,
+    );
+    expect(limited.status).toBe(429);
+    expect(Number(limited.headers.get('x-retry-after'))).toBeGreaterThan(0);
+  }, 15000);
+
+  it('keeps credential attempts at ten per minute independently of session reads', async () => {
+    const { backend } = await freshBackend(true);
+    await register(backend);
+    for (let index = 0; index < 10; index++) {
+      const response = await authRequest(backend, '/sign-in/email', {
+        email: 'first@example.test',
+        password: 'wrong-password',
+      });
+      expect(response.status).toBe(401);
+    }
+    const limited = await authRequest(backend, '/sign-in/email', {
+      email: 'first@example.test',
+      password: 'wrong-password',
+    });
+    expect(limited.status).toBe(429);
+  }, 15000);
+
   it('registers, hashes the password, persists the session, and signs out', async () => {
     const { backend } = await freshBackend();
     const cookie = await register(backend);
@@ -572,6 +619,62 @@ describe('versioned per-account progress', () => {
     });
   });
 
+  it('saves every current course after mistakes and repair with compacted history and all cards', async () => {
+    const { backend } = await freshBackend();
+    const cookie = await register(backend, 'complete-catalog@example.test');
+    let state = createState();
+    const remaining = new Map(skills.map((skill) => [skill.id, skill]));
+    while (remaining.size) {
+      const skill = [...remaining.values()].find((candidate) =>
+        isUnlocked(state.progress, candidate.id),
+      );
+      if (!skill)
+        throw new Error('The current catalog has unreachable prerequisites.');
+      for (const question of skill.questions) {
+        for (const correct of [false, true]) {
+          state = recordLearningAnswer(state, {
+            skillId: skill.id,
+            questionId: question.id,
+            correct,
+            mode: 'learn',
+            attemptId: crypto.randomUUID(),
+            writerId: 'complete-catalog',
+          });
+        }
+      }
+      expect(isMastered(state.progress, skill.id)).toBe(true);
+      remaining.delete(skill.id);
+    }
+    const questionCount = skills.reduce(
+      (sum, skill) => sum + skill.questions.length,
+      0,
+    );
+    const masteryCards = skills.reduce(
+      (sum, skill) => sum + skill.flashcards.length,
+      0,
+    );
+    expect(state.cards).toHaveLength(questionCount + masteryCards);
+    expect(state.progress.attempts).toHaveLength(MAX_RECENT_ATTEMPTS);
+    expect(
+      Object.values(state.progress.skills).reduce(
+        (sum, skill) => sum + skill.attempts,
+        0,
+      ),
+    ).toBe(questionCount * 2);
+    const body = { state, revision: 0 };
+    const bytes = Buffer.byteLength(JSON.stringify(body));
+    // The old 2 MiB bound rejected this valid, finite learning history.
+    expect(bytes).toBeGreaterThan(2 * 1024 * 1024);
+    expect(bytes).toBeLessThan(MAX_STATE_BODY_BYTES);
+    const saved = await stateRequest(backend, cookie, body);
+    expect(saved.status).toBe(200);
+    expect(await (await stateRequest(backend, cookie)).json()).toEqual({
+      state,
+      revision: 1,
+    });
+    expect(getStats(state.progress).mastered).toBe(skills.length);
+  });
+
   it('rejects oversized requests before parsing them', async () => {
     const { backend } = await freshBackend();
     const cookie = await register(backend);
@@ -583,7 +686,7 @@ describe('versioned per-account progress', () => {
           cookie,
           'content-type': 'application/json',
         },
-        body: 'x'.repeat(2 * 1024 * 1024 + 1),
+        body: 'x'.repeat(MAX_STATE_BODY_BYTES + 1),
       }),
       backend,
     );

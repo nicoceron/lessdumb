@@ -8,7 +8,10 @@ import {
   type AccountSessionState,
 } from '../lib/account';
 import { createState, mergeStates, type LearnerState } from '../lib/state';
-import { parseStateUpdate } from '../lib/server/state-validation';
+import {
+  MAX_STATE_BODY_BYTES,
+  parseStateUpdate,
+} from '../lib/server/state-validation';
 
 interface Snapshot {
   owner: string | null | undefined;
@@ -32,7 +35,9 @@ function storageKey(owner: string | null): string {
 function readLocal(key: string): { state: LearnerState; raw: string } | null {
   try {
     const raw = localStorage.getItem(key);
-    if (!raw || raw.length > 2 * 1024 * 1024) return null;
+    if (!raw || raw.length > MAX_STATE_BODY_BYTES) return null;
+    if (new TextEncoder().encode(raw).byteLength > MAX_STATE_BODY_BYTES)
+      return null;
     return {
       state: parseStateUpdate({ state: JSON.parse(raw), revision: 0 }).state,
       raw,

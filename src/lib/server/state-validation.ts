@@ -2,6 +2,9 @@ import { courses } from '../curriculum';
 import type { LearnerState } from '../state';
 import { activityTotals, type ActivityState } from '../activity';
 
+/** The full current catalog plus every mastery/mistake card fits with headroom. */
+export const MAX_STATE_BODY_BYTES = 4 * 1024 * 1024;
+
 export class StateValidationError extends Error {
   constructor(
     message: string,

@@ -202,13 +202,18 @@ test('data-systems scenarios teach and earn cards without a code exercise', asyn
   );
 });
 
-test('leaving a lesson ignores a late real Python grade and locks submitted hints', async ({
+test('leaving a lesson cancels its real Python worker and locks submitted hints', async ({
   page,
 }) => {
   test.setTimeout(60000);
   await page.addInitScript(() => {
     const NativeWorker = window.Worker;
     window.Worker = class extends NativeWorker {
+      terminate() {
+        (window as any).__pythonWorkersTerminated =
+          ((window as any).__pythonWorkersTerminated ?? 0) + 1;
+        super.terminate();
+      }
       set onmessage(handler: ((this: Worker, ev: MessageEvent) => any) | null) {
         super.onmessage = (event) => {
           if (typeof event.data?.passed === 'boolean')
@@ -266,10 +271,17 @@ test('leaving a lesson ignores a late real Python grade and locks submitted hint
     .click();
   release();
   await expect
-    .poll(() => page.evaluate(() => (window as any).__pythonResultObserved), {
-      timeout: 40000,
-    })
-    .toBe(true);
+    .poll(() => page.evaluate(() => (window as any).__pythonWorkersTerminated))
+    .toBe(1);
+  expect(
+    await page.evaluate(() => (window as any).__pythonResultObserved),
+  ).not.toBe(true);
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('lessdumb.guest')!),
+  );
+  expect(saved.progress.skills[skill.id].questionIds).toHaveLength(3);
+  expect(saved.progress.skills[skill.id].memory).toBeUndefined();
+  expect(saved.progress.totalXp).toBe(30);
   await expect(page.getByRole('button', { name: /BREAKTHROUGH/ })).toHaveCount(
     0,
   );

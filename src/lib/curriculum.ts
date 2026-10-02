@@ -3,7 +3,10 @@ import { dataAnalysisCatalog } from './courses/data-analysis';
 import { machineLearningCatalog } from './courses/machine-learning';
 import { dataSystemsCatalog } from './courses/data-systems';
 import { competitiveProgrammingCatalog } from './courses/competitive-programming';
+import { rustCatalog } from './courses/rust';
+import { cppCatalog } from './courses/cpp';
 export type Domain = 'programming' | 'mathematics' | 'physics' | 'language';
+export type CodeLanguage = 'python' | 'rust' | 'cpp';
 
 export interface Course {
   id: string;
@@ -39,9 +42,13 @@ export interface ChoiceQuestion extends QuestionBase {
 
 export interface CodeQuestion extends QuestionBase {
   type: 'code';
+  /** Omitted in existing accounts/catalogs means Python. */
+  language?: CodeLanguage;
   starterCode: string;
   solution: string;
-  /** Python assertions, executed in the user's namespace after their code. */
+  /** Learner-visible behavior checks, separate from the reference solution. */
+  contract?: string;
+  /** Authored assertions/harness in the question's actual language. */
   tests: string;
 }
 
@@ -76,6 +83,7 @@ export interface Skill {
       explanation: string;
       kind?: 'code' | 'text';
       label?: string;
+      language?: CodeLanguage;
     };
   };
   questions: Question[];
@@ -1706,6 +1714,8 @@ const extensions = [
   machineLearningCatalog,
   dataSystemsCatalog,
   competitiveProgrammingCatalog,
+  rustCatalog,
+  cppCatalog,
 ];
 export const courses: Course[] = [
   ...pythonCourses,
@@ -1789,6 +1799,20 @@ export function validateCurriculum(
     for (const prerequisite of item.prerequisites)
       if (!ids.has(prerequisite))
         errors.push(`${item.id}: unknown prerequisite ${prerequisite}.`);
+    const courseLanguage = catalog.courses.find(
+      (course) => course.id === item.courseId,
+    )?.language;
+    if (
+      item.lesson.example.language !== undefined &&
+      !['python', 'rust', 'cpp'].includes(item.lesson.example.language)
+    )
+      errors.push(`${item.id}: unsupported example language.`);
+    if (
+      item.lesson.example.kind !== 'text' &&
+      ['rust', 'cpp'].includes(courseLanguage ?? '') &&
+      item.lesson.example.language !== courseLanguage
+    )
+      errors.push(`${item.id}: example language must match its course.`);
     if (
       item.topicId !== undefined ||
       item.stage !== undefined ||
@@ -1878,6 +1902,18 @@ export function validateCurriculum(
         (!question.tests.trim() || !question.solution.trim())
       )
         errors.push(`${question.id}: missing tests or solution.`);
+      if (
+        question.type === 'code' &&
+        question.language !== undefined &&
+        !['python', 'rust', 'cpp'].includes(question.language)
+      )
+        errors.push(`${question.id}: unsupported code language.`);
+      if (
+        question.type === 'code' &&
+        ['rust', 'cpp'].includes(courseLanguage ?? '') &&
+        question.language !== courseLanguage
+      )
+        errors.push(`${question.id}: code language must match its course.`);
     }
     for (const card of item.flashcards) {
       if (cards.has(card.id)) errors.push(`Duplicate flashcard ID ${card.id}.`);
