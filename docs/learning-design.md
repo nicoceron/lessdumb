@@ -1,6 +1,6 @@
 # The lessdumb learning model
 
-The MVP teaches Python through an original curriculum: 24 skills, 96 questions, 24 executable code exercises, and 48 flashcards. The learning engine operates on a subject-neutral graph. A course is a selection of skill IDs; each skill names its domain, unit, course, and prerequisites. Additional programming languages, mathematics, physics, and natural languages can use the same registry and scheduler. Learning functions accept an optional `CurriculumCatalog` so another catalog can be evaluated independently of the public Python registry.
+The MVP contains 109 original skills, 436 questions, 74 executable exercises, and 218 cards across Python, quantitative foundations, data analysis, machine learning, and data systems. The learning engine operates on a subject-neutral graph. A course is a selection of skill IDs; each skill names its domain, unit, course, and prerequisites. Additional programming languages, mathematics, physics, and natural languages can use the same registry and scheduler. Learning functions accept an optional `CurriculumCatalog` so another catalog can be evaluated independently of the public Python registry.
 
 ## Sources and boundaries
 
@@ -36,6 +36,6 @@ Flashcards contain one idea each and are associated with stable skill/card IDs. 
 
 ## Verification and limitations
 
-Tests cover graph references and cycles, mastery evidence, hint handling, prerequisite gates, question rotation, review timing, distinct executable review evidence, XP replay resistance, immutable updates, timezone/streak boundaries, and reachability of all 24 skills. Python executes all 24 solutions, all 24 lesson examples, and 26 terminating code-based choice predictions. Test-only math and vocabulary catalogs verify cross-course prerequisites, choice-only mastery/review, and a custom one-answer review policy. Those fixtures do not add unfinished courses to the application's public catalog.
+Tests cover graph references and cycles, mastery evidence, hint handling, prerequisite gates, question rotation, review timing, distinct executable review evidence, XP replay resistance, immutable updates, timezone/streak boundaries, and reachability of each course and its full prerequisite path. Real Pyodide executes all 74 solutions and 81 executable lesson examples with the locally served scientific packages. The original Python course also retains native execution and choice-output verification. Test-only math and vocabulary catalogs verify cross-course prerequisites, choice-only mastery/review, and a custom one-answer review policy. The production catalog now includes original cross-course math, data, ML, and systems nodes.
 
 The scheduling intervals are product defaults, not a validated personalized memory model. Four authored questions per skill provide finite evidence rather than unlimited randomized assessment. The MVP has no automatic transfer credit between domains and no placement test. The generic graph and versioned progress contract leave room for those features without replacing the learning record.

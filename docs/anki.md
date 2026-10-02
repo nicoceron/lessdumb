@@ -8,7 +8,7 @@ lessdumb creates cards in **Anki desktop**, in the profile you explicitly connec
 2. Open the profile you want to use. In Anki, choose **Tools → Add-ons → Get Add-ons**, enter **2055492159**, and restart Anki. This installs [AnkiConnect](https://ankiweb.net/shared/info/2055492159).
 3. In Anki, use **Sync** to sign into your free [AnkiWeb account](https://ankiweb.net/). Follow Anki's instructions carefully if your first sync asks whether to upload or download an existing collection. See the [Anki sync manual](https://docs.ankiweb.net/syncing.html).
 4. Leave Anki open. In lessdumb, click **Connect Anki**. If Anki displays a permission dialog, allow the website. Trusted local origins such as `http://127.0.0.1:4321` may already be permitted by AnkiConnect and connect without another dialog. Allow local-network access in your browser if requested.
-5. Check the **connected profile name** displayed in lessdumb. New cards are sent to **lessdumb::Python**. Keep Anki open while studying so automatic card creation can run.
+5. Check the **connected profile name** displayed in lessdumb. New cards are sent to **lessdumb::Learning**. Keep Anki open while studying so automatic card creation can run.
 
 If your AnkiConnect configuration enables an `apiKey`, enter that **add-on API key** when connecting. It is different from an AnkiWeb password. Never put either secret in source code.
 
@@ -59,7 +59,7 @@ const cards: AnkiCard[] = [
     back: 'It binds the name score to the integer 10.',
   },
 ];
-const result = await client.syncCards(cards, { deck: 'lessdumb::Python' });
+const result = await client.syncCards(cards, { deck: 'lessdumb::Learning' });
 // Remove result.synced card IDs from the durable queue.
 // Keep result.failed cards and display their error/retryable fields.
 ```

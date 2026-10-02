@@ -2,7 +2,7 @@
 
 Learn deliberately. Remember automatically.
 
-lessdumb is a working Python learning MVP built with Astro and React. It combines a prerequisite knowledge graph, original lessons, real Python exercises, evidence-based progression, spaced review, account persistence, and automatic Anki card creation. The application runs locally with free tools and no paid backend dependency.
+lessdumb is a working adaptive learning MVP built with Astro and React. It combines a prerequisite knowledge graph, original lessons, real Python exercises, evidence-based progression, spaced review, account persistence, and automatic Anki card creation. The application runs locally with free tools and no paid backend dependency.
 
 ## Quickstart
 
@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-Open [http://127.0.0.1:4321](http://127.0.0.1:4321). The install and development scripts copy the bundled Pyodide runtime into `public/pyodide/`; Python execution is served from this application, without relying on an external runtime CDN.
+Open [http://127.0.0.1:4321](http://127.0.0.1:4321). The install script copies the pinned Pyodide core and downloads official NumPy, pandas, scikit-learn, and dependency wheels, verifying their SHA-256 hashes against Pyodide’s lockfile. Subsequent setup reuses verified local files. Python execution and these packages are served from this application; learner code is not sent to a runtime CDN.
 
 If port 4321 is occupied, keep the server and authentication origins aligned:
 
@@ -26,13 +26,30 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 ## What you can do
 
 - **Today:** follow the next adaptive task, set a daily XP goal, and see your practice history and streak.
-- **My learning:** study 24 Python skills through short explanations, examples, prediction questions, and executable exercises.
+- **My learning:** choose from 109 connected skills across five courses through short explanations, examples, prediction questions, and executable exercises.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
 - **Flashcards:** receive recall cards after mastery and correction cards after mistakes; connect Anki or export a tab-separated deck.
 - **Python lab:** experiment with real Python in a separate playground without changing mastery.
 - **Accounts and settings:** create an email/password account, save progress across browsers using the same server, configure Anki, and export a JSON backup.
 
 You can start as a guest. Guest progress is saved on the device; creating a new account can carry that progress into the account. Signed-in learners retain a device copy while account sync is unavailable and can retry from Settings.
+
+## Connected course catalog
+
+| Course                   |  Skills | Questions | Executable exercises | Anki cards |
+| ------------------------ | ------: | --------: | -------------------: | ---------: |
+| Python foundations       |      24 |        96 |                   24 |         48 |
+| Quantitative foundations |       5 |        20 |                    5 |         10 |
+| Python for Data Analysis |      24 |        96 |                   24 |         48 |
+| Machine Learning         |      28 |       112 |                   21 |         56 |
+| Data Systems             |      28 |       112 |                    0 |         56 |
+| **Total**                | **109** |   **436** |               **74** |    **218** |
+
+Selecting a course saves a learning goal. The scheduler includes its prerequisite ancestors across courses, so missing foundations become real tasks rather than a dead end. The graph offers course paths with supporting prerequisites and an all-course view. Each node retains a domain and course identity, and its detail panel navigates both prerequisite and dependent edges.
+
+The three supplied books inform concept coverage; lessons, examples, questions, datasets, and cards are original. Source notes record exact scope: [data analysis](docs/sources/data-analysis.md), [machine learning](docs/sources/machine-learning.md), and [data systems](docs/sources/data-systems.md). The supplied data-systems early release contains chapters 1–8. The seven neural architecture skills assess concepts using choices and small Python analogues; the browser runtime does not execute TensorFlow/Keras training. This is a focused course catalog, not a reproduction of the books or their full exercise sets.
+
+The dashboard layout follows the compact course/progress/task pattern visible in [Math Academy’s official public dashboard screenshot](https://www.mathacademy.com/img/screenshots/student-dashboard.png), with independent branding and implementation.
 
 ## Python foundations
 
@@ -80,7 +97,7 @@ lessdumb connects to **Anki desktop through AnkiConnect**. Anki desktop synchron
 2. In Anki, select **Tools → Add-ons → Get Add-ons**, enter **2055492159**, and restart Anki.
 3. Use Anki's **Sync** button to connect that profile to your AnkiWeb account.
 4. Keep Anki open. In lessdumb Settings or Flashcards, choose **Connect Anki** and approve the website origin in Anki if requested.
-5. Check the connected profile name. New cards sync automatically into `lessdumb::Python` while the connection is active.
+5. Check the connected profile name. New cards sync automatically into `lessdumb::Learning` while the connection is active.
 
 Cards have stable identities, so retries find or update existing notes. Failed cards remain queued for retry. Profile changes stop sending until you reconnect. A saved connection must be reconnected in a new browser session; an optional AnkiConnect API key stays in that session. Use Anki's own Sync to upload locally created cards to AnkiWeb.
 
@@ -127,7 +144,7 @@ Run the complete checks, including formatting, with:
 npm run verify
 ```
 
-The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python executes every reference solution, lesson example, and terminating code-based choice prediction.
+The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python checks the foundation curriculum. Real Pyodide executes all 74 code solutions and 81 executable lesson examples, including scientific packages; all empty submissions must fail. Scenario examples use explicit text presentation rather than Python execution.
 
 For browser tests, install Chromium once, leave the development server running, and use another terminal:
 
@@ -158,7 +175,7 @@ src/lib/state.ts                Versioned learner state and conflict merging
 src/lib/server/                SQLite auth, state storage, API validation
 src/pages/api/                 Auth and learner-state endpoints
 src/styles/global.css          Application styling and responsive layout
-scripts/copy-python.mjs         Copies the bundled Python runtime assets
+scripts/copy-python.mjs         Prepares pinned runtime and hash-verified scientific wheels
 scripts/serve.mjs               Starts the built server with configurable host/port
 tests/                         Unit, integration, and browser tests
 docs/                          Learning, backend, and Anki implementation notes
@@ -166,11 +183,11 @@ docs/                          Learning, backend, and Anki implementation notes
 
 ## Growing the knowledge graph
 
-Courses, units, and skills have stable IDs. Skills declare a domain, course, unit, and explicit prerequisite IDs; a course lists its member skills. To add content, extend the registry in `src/lib/curriculum.ts`, author its questions and cards, and run the graph validator and tests to catch missing references and cycles. Keep published IDs stable so saved progress and Anki notes continue to refer to the same concepts.
+Courses, units, and skills have stable IDs. Skills declare a domain, course, unit, and explicit prerequisite IDs; a course lists its member skills. To add content, add an original catalog module under `src/lib/courses/` and register it in `src/lib/curriculum.ts`, author its questions and cards, and run the graph validator and tests to catch missing references and cycles. Keep published IDs stable so saved progress and Anki notes continue to refer to the same concepts.
 
 The graph, scheduler, and account-state model support additional programming languages, mathematics, physics, and natural languages. Skills can declare an assessment policy with required review question types and an answer count. Choice-only math or vocabulary skills can be mastered and reviewed without Python; the launched Python course explicitly requires code and choice evidence in its reviews. Learning functions also accept an optional catalog for independent subject registries, with cross-course prerequisites validated as one graph.
 
-**Python is the only implemented course.** Additional subject content must be authored before launch; new programming runtimes and additional assessment formats can be introduced as needed. Test fixtures verify cross-course math/language prerequisites and subject-specific review behavior without exposing unfinished courses in the application.
+The implemented catalog includes Python, quantitative foundations, Python for Data Analysis, Machine Learning, and Data Systems. Mathematics, physics, and natural-language domains can extend the same graph with stable IDs and appropriate assessments.
 
 ## MVP boundaries
 
