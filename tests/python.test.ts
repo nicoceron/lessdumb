@@ -17,6 +17,9 @@ import { runPython, type PythonResult } from '../src/lib/python';
 
 const pyodideDirectory = `${resolve('public/pyodide')}/`;
 const runtimeUrl = pathToFileURL(resolve('public/python-runtime.mjs')).href;
+// Cold scientific Python imports can exceed Vitest's default 5-second budget.
+// Await each trusted run before the next test reuses the shared runtime.
+const REAL_PYTHON_TEST_TIMEOUT_MS = 30_000;
 type ExecutePython = (
   runtime: PyodideInterface,
   code: string,
@@ -44,15 +47,19 @@ describe('real Pyodide curriculum execution', () => {
   });
 
   for (const exercise of exercises) {
-    it(`passes the real solution for ${exercise.id} and rejects an empty submission`, async () => {
-      expect(
-        await executePython(runtime, exercise.solution, exercise.tests),
-      ).toMatchObject({ passed: true, error: null, infrastructure: false });
-      expect(await executePython(runtime, '', exercise.tests)).toMatchObject({
-        passed: false,
-        infrastructure: false,
-      });
-    });
+    it(
+      `passes the real solution for ${exercise.id} and rejects an empty submission`,
+      async () => {
+        expect(
+          await executePython(runtime, exercise.solution, exercise.tests),
+        ).toMatchObject({ passed: true, error: null, infrastructure: false });
+        expect(await executePython(runtime, '', exercise.tests)).toMatchObject({
+          passed: false,
+          infrastructure: false,
+        });
+      },
+      REAL_PYTHON_TEST_TIMEOUT_MS,
+    );
   }
 
   for (const skill of skills.filter(
@@ -60,15 +67,19 @@ describe('real Pyodide curriculum execution', () => {
       s.lesson.example.kind !== 'text' &&
       (!s.lesson.example.language || s.lesson.example.language === 'python'),
   )) {
-    it(`matches the published lesson output for ${skill.id}`, async () => {
-      const result = await executePython(runtime, skill.lesson.example.code);
-      expect(result).toMatchObject({
-        passed: true,
-        error: null,
-        infrastructure: false,
-      });
-      expect(result.output.trim()).toBe(skill.lesson.example.output.trim());
-    });
+    it(
+      `matches the published lesson output for ${skill.id}`,
+      async () => {
+        const result = await executePython(runtime, skill.lesson.example.code);
+        expect(result).toMatchObject({
+          passed: true,
+          error: null,
+          infrastructure: false,
+        });
+        expect(result.output.trim()).toBe(skill.lesson.example.output.trim());
+      },
+      REAL_PYTHON_TEST_TIMEOUT_MS,
+    );
   }
 
   it('preserves learner output while reporting failed assertions', async () => {
