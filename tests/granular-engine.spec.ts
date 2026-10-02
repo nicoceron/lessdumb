@@ -227,7 +227,7 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
     await reviewPage.clock.setFixedTime(reviewTime);
     await reviewPage.goto('/learn?mode=review');
     await expect(
-      reviewPage.getByText('SPACED REVIEW', { exact: true }),
+      reviewPage.getByText('Spaced review', { exact: true }),
     ).toBeVisible();
     let current = (await cloud(reviewPage)).state!;
     const visited: string[] = [];

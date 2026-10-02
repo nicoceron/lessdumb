@@ -18,6 +18,8 @@ Assessment policies belong to skills rather than being universal Python assumpti
 
 New lessons are selected from the knowledge frontier: skills whose full prerequisite ancestry has mastery evidence. Questions not previously attempted are served before retrying a missed question. A learner can inspect the graph, but learning submissions for locked skills are rejected. Viewing a lesson earns no XP.
 
+The instructional player separates introduction slides, worked-example subgoals, and practice, following the scaffolded sequence described in Math Academy's public learning process and the supplied PDF (pages 74–75, 219, and 397). Each graph skill remains an independently assessed atom; a topic's four stages retain their own graph identities. Reopening an introduction or example for an unanswered question sets the existing assisted-answer flag while retaining the question, selected choice, and code. It does not award evidence or reset the question. During a due review, this help cannot strengthen memory or move the due date; subsequent independent answers must still complete the skill's review policy.
+
 A wrong answer removes evidence only for that question. Descendants are unavailable until the missing evidence is restored. Other prerequisite evidence is preserved: a mistake in a difficult skill is not proof that every ancestor is weak. If an ancestor separately loses its own evidence, the frontier naturally selects that ancestor first. This is targeted remediation based on observed evidence.
 
 ## Retrieval and spacing
