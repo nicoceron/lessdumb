@@ -2,6 +2,7 @@ import { quantitativeCatalog } from './courses/quantitative';
 import { dataAnalysisCatalog } from './courses/data-analysis';
 import { machineLearningCatalog } from './courses/machine-learning';
 import { dataSystemsCatalog } from './courses/data-systems';
+import { competitiveProgrammingCatalog } from './courses/competitive-programming';
 export type Domain = 'programming' | 'mathematics' | 'physics' | 'language';
 
 export interface Course {
@@ -11,6 +12,8 @@ export interface Course {
   domain: Domain;
   language?: string;
   skillIds: string[];
+  /** Public topic references, never part of a learner's private progress. */
+  resources?: { label: string; url: string }[];
 }
 
 export interface Unit {
@@ -1698,6 +1701,7 @@ const extensions = [
   dataAnalysisCatalog,
   machineLearningCatalog,
   dataSystemsCatalog,
+  competitiveProgrammingCatalog,
 ];
 export const courses: Course[] = [
   ...pythonCourses,

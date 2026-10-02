@@ -28,6 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import {
   ArrowRight,
+  ArrowUpRight,
   BookOpen,
   Check,
   CheckCircle2,
@@ -697,6 +698,31 @@ function Courses({
           View prerequisite graph <GitBranch size={16} />
         </a>
       </div>
+      {course.resources?.length ? (
+        <Card className="mb-5 gap-3 p-4">
+          <div>
+            <h3 className="text-sm font-semibold">
+              Explore the reference topic paths
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Practice here, then explore the broader topic guides.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {course.resources.map((resource) => (
+              <Button key={resource.url} variant="outline" size="sm" asChild>
+                <a
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {resource.label} <ArrowUpRight size={14} />
+                </a>
+              </Button>
+            ))}
+          </div>
+        </Card>
+      ) : null}
       {units
         .filter((u) => u.courseId === course.id)
         .map((unit, index) => (
