@@ -1,0 +1,32 @@
+name: Verify MVP
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: npm ci
+      - run: npm run verify
+      - run: npx playwright install --with-deps chromium
+      - name: Run browser integration tests
+        env:
+          BETTER_AUTH_URL: http://127.0.0.1:4323
+          BETTER_AUTH_SECRET: ci-only-isolated-test-secret-at-least-32-characters
+          LESSDUMB_DATA_DIR: /tmp/lessdumb-ci-data
+          NODE_ENV: production
+          PORT: 4323
+          LESSDUMB_E2E_URL: http://127.0.0.1:4323
+        run: |
+          npm start > /tmp/lessdumb-server.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:4323/ > /dev/null && break
+            sleep 1
+          done
+          npm run test:e2e

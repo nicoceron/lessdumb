@@ -2,10 +2,176 @@
 
 Learn deliberately. Remember automatically.
 
-A free, extensible adaptive learning app. Python foundations is the first course; a subject-aware prerequisite graph provides the structure for future mathematics, physics, and language courses.
+lessdumb is a working Python learning MVP built with Astro and React. It combines a prerequisite knowledge graph, original lessons, real Python exercises, evidence-based progression, spaced review, account persistence, and automatic Anki card creation. The application runs locally with free tools and no paid backend dependency.
 
-## Development
+## Quickstart
 
-Use Node.js 22.12 or newer. Run `npm install` and `npm run dev`, then open http://localhost:4321.
+Requirements: **Node.js 22.12 or newer** and npm. **Python 3** is also needed to run the curriculum verification tests; learners execute Python in the browser and do not need a local Python installation.
 
-Implementation and verification documentation will be added with the MVP.
+```sh
+npm ci
+npm run dev
+```
+
+Open [http://127.0.0.1:4321](http://127.0.0.1:4321). The install and development scripts copy the bundled Pyodide runtime into `public/pyodide/`; Python execution is served from this application, without relying on an external runtime CDN.
+
+If port 4321 is occupied, keep the server and authentication origins aligned:
+
+```sh
+BETTER_AUTH_URL=http://127.0.0.1:4322 npx astro dev --host 127.0.0.1 --port 4322
+```
+
+Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname and port consistently when signing in. `npm ci` already performs the Python asset-copy step for the direct Astro command.
+
+## What you can do
+
+- **Today:** follow the next adaptive task, set a daily XP goal, and see your practice history and streak.
+- **My learning:** study 24 Python skills through short explanations, examples, prediction questions, and executable exercises.
+- **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
+- **Flashcards:** receive recall cards after mastery and correction cards after mistakes; connect Anki or export a tab-separated deck.
+- **Python lab:** experiment with real Python in a separate playground without changing mastery.
+- **Accounts and settings:** create an email/password account, save progress across browsers using the same server, configure Anki, and export a JSON backup.
+
+You can start as a guest. Guest progress is saved on the device; creating a new account can carry that progress into the account. Signed-in learners retain a device copy while account sync is unavailable and can retry from Settings.
+
+## Python foundations
+
+The curriculum contains **24 original skills, 96 questions, 24 runnable code exercises, and 48 mastery flashcards**, plus correction cards generated from mistakes. Each skill has three choice/prediction questions and one executable exercise.
+
+| Unit                | Skills                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------ |
+| First programs      | Your first output; Names and variables; Numbers and arithmetic; Build strings              |
+| Make decisions      | Types and conversion; Compare values; Combine conditions; Choose a branch                  |
+| Work with sequences | Collect values in lists; Access by index; Repeat with for; Count with range                |
+| Build with loops    | Accumulate a result; Repeat while a condition holds; Change a list; Take a slice           |
+| Organize your code  | Map keys to values; Loop through mappings; Define a function; Return a result              |
+| Solve real problems | Design useful inputs; Transform and filter; Handle expected failures; Build a word counter |
+
+Skills unlock through their graph prerequisites rather than an arbitrary calendar. Mastery requires a correct answer to **all four distinct questions without a hint**, including a passing Python exercise. Repeating one question cannot unlock a skill or farm learn XP. Hints support practice but do not count as independent mastery evidence.
+
+Initial mastery schedules a review one day later. A due review cycle needs two distinct independent answers, including executable code. Successful reviews advance through 1, 3, 7, 14, 30, 60, and 120-day intervals. A mistake removes the relevant answer evidence and prompts remediation; it does not erase unrelated prerequisite knowledge. XP and streaks reflect practice in the learner's timezone.
+
+See [the learning design](docs/learning-design.md) for the evidence model, scheduling rules, sources, and limitations. The supplied _The Math Academy Way_ informed the prerequisite/mastery/retrieval design. lessdumb uses its own content and scheduler and does not claim parity with Math Academy's proprietary algorithms or outcomes.
+
+## Real Python in the browser
+
+Exercises and the lab use **Pyodide**, a WebAssembly Python runtime, through a dedicated Web Worker. Exercise assertions run against the learner's actual variables, functions, and captured output. Each run gets a separate namespace and worker; execution is terminated after 30 seconds so an infinite loop does not block the application. Learner code is not executed on the account server.
+
+The editor uses CodeMirror with Python syntax support. The bundled runtime is a substantial download on first use. General-purpose third-party package installation is outside this MVP.
+
+## Free accounts and persistence
+
+The Astro Node server uses **Better Auth's documented SQLite adapter** for email/password accounts. Authentication uses the library's password hashing, sessions, and origin protections. Progress reads and writes are scoped to the signed-in account; versioned revisions detect stale saves, and the client combines progress before retrying a conflict.
+
+On the first account request, the server initializes:
+
+- `data/lessdumb.sqlite`: account records, sessions, and learner state.
+- `data/auth-secret`: a generated local signing secret so sessions survive a restart.
+
+The `data/` directory is ignored by Git. Keep it to preserve local accounts and progress. No Supabase project or external account provider is required. The default local setup trusts `http://localhost:4321` and `http://127.0.0.1:4321`; set `BETTER_AUTH_URL` when changing the origin.
+
+The MVP does not send verification or password-reset emails. Email is a login identifier and is not marked as verified. Read [backend documentation](docs/backend.md) for the account API, migrations, and server configuration.
+
+## Connect your Anki account
+
+lessdumb connects to **Anki desktop through AnkiConnect**. Anki desktop synchronizes its collection with the AnkiWeb account attached to that profile. lessdumb does not log into AnkiWeb directly or ask for an AnkiWeb password.
+
+1. Install the free [Anki desktop application](https://apps.ankiweb.net/) and open the profile you want to use.
+2. In Anki, select **Tools → Add-ons → Get Add-ons**, enter **2055492159**, and restart Anki.
+3. Use Anki's **Sync** button to connect that profile to your AnkiWeb account.
+4. Keep Anki open. In lessdumb Settings or Flashcards, choose **Connect Anki** and approve the website origin in Anki if requested.
+5. Check the connected profile name. New cards sync automatically into `lessdumb::Python` while the connection is active.
+
+Cards have stable identities, so retries find or update existing notes. Failed cards remain queued for retry. Profile changes stop sending until you reconnect. A saved connection must be reconnected in a new browser session; an optional AnkiConnect API key stays in that session. Use Anki's own Sync to upload locally created cards to AnkiWeb.
+
+The [complete Anki guide](docs/anki.md) covers setup, permissions, profiles, optional API keys, note types, troubleshooting, and the documented API. The Flashcards page also exports TSV for manual Anki import.
+
+## Build and run the server
+
+```sh
+npm run build
+npm start
+```
+
+`npm start` defaults to **127.0.0.1:4321** and respects an explicitly configured `HOST` or `PORT`. For a production host, set these **runtime environment variables**:
+
+| Variable              | Purpose                                                                   |
+| --------------------- | ------------------------------------------------------------------------- |
+| `NODE_ENV=production` | Enables production configuration checks.                                  |
+| `BETTER_AUTH_URL`     | The application's public origin, for example `https://learn.example.com`. |
+| `BETTER_AUTH_SECRET`  | A stable, randomly generated secret of at least 32 characters.            |
+| `LESSDUMB_DATA_DIR`   | An absolute path to persistent writable storage for SQLite.               |
+| `HOST`, `PORT`        | Optional listening address and port; defaults are `127.0.0.1` and `4321`. |
+
+Generate the signing secret once and retain it in the host's environment configuration. The production backend rejects missing auth URL/secret settings. A standalone Node process reads environment variables supplied by the host or shell; exporting them is required unless your process manager loads them.
+
+For a different listening address or port:
+
+```sh
+HOST=0.0.0.0 PORT=8080 npm start
+```
+
+This command assumes the production variables above are already configured. Serve the public origin over HTTPS and retain the persistent data directory. SQLite suits one Node server instance. A host with disposable storage cannot retain accounts; horizontal scaling needs a supported shared database and a migration of learner state. No public deployment is implied by running a local build.
+
+## Verification
+
+```sh
+npm run check
+npm test
+npm run build
+```
+
+Run the complete checks, including formatting, with:
+
+```sh
+npm run verify
+```
+
+The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python executes every reference solution, lesson example, and terminating code-based choice prediction.
+
+For browser tests, install Chromium once, leave the development server running, and use another terminal:
+
+```sh
+npx playwright install chromium
+npm run test:e2e
+```
+
+To test an alternative server origin:
+
+```sh
+LESSDUMB_E2E_URL=http://127.0.0.1:4322 npm run test:e2e
+```
+
+Playwright uses an already running server; it does not start one automatically. Browser account tests create test accounts in that server's database. Anki protocol tests simulate the local API; a real desktop connection and an AnkiWeb upload remain separate integration checks.
+
+## Project structure
+
+```text
+src/components/App.tsx          Learning interface, graph, cards, account UI
+src/components/useLearner.ts    Device persistence and account synchronization
+src/lib/curriculum.ts           Original course, unit, skill, question, card registry
+src/lib/learning.ts             Mastery evidence, task selection, review, XP, streaks
+src/lib/python.ts              Terminable Python worker client
+public/python-worker.mjs       Real Pyodide execution and exercise assertions
+src/lib/anki.ts                 Documented AnkiConnect client and note identity
+src/lib/state.ts                Versioned learner state and conflict merging
+src/lib/server/                SQLite auth, state storage, API validation
+src/pages/api/                 Auth and learner-state endpoints
+src/styles/global.css          Application styling and responsive layout
+scripts/copy-python.mjs         Copies the bundled Python runtime assets
+scripts/serve.mjs               Starts the built server with configurable host/port
+tests/                         Unit, integration, and browser tests
+docs/                          Learning, backend, and Anki implementation notes
+```
+
+## Growing the knowledge graph
+
+Courses, units, and skills have stable IDs. Skills declare a domain, course, unit, and explicit prerequisite IDs; a course lists its member skills. To add content, extend the registry in `src/lib/curriculum.ts`, author its questions and cards, and run the graph validator and tests to catch missing references and cycles. Keep published IDs stable so saved progress and Anki notes continue to refer to the same concepts.
+
+The graph, scheduler, and account-state model support additional programming languages, mathematics, physics, and natural languages. Skills can declare an assessment policy with required review question types and an answer count. Choice-only math or vocabulary skills can be mastered and reviewed without Python; the launched Python course explicitly requires code and choice evidence in its reviews. Learning functions also accept an optional catalog for independent subject registries, with cross-course prerequisites validated as one graph.
+
+**Python is the only implemented course.** Additional subject content must be authored before launch; new programming runtimes and additional assessment formats can be introduced as needed. Test fixtures verify cross-course math/language prerequisites and subject-specific review behavior without exposing unfinished courses in the application.
+
+## MVP boundaries
+
+The scheduler uses transparent default intervals rather than a calibrated personalized memory model. Each skill has four authored questions, with no placement test, unlimited generated question bank, or automatic transfer credit between subjects. Account email delivery/recovery and a backup-import interface are not implemented. The app provides exports, local persistence, and same-server account sync; it does not provision hosting or a managed cloud service.
