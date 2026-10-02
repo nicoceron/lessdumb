@@ -10,7 +10,6 @@ import {
   ArrowDownToLine,
   ArrowRight,
   BookOpen,
-  Braces,
   Check,
   CheckCircle2,
   ChevronRight,
@@ -28,7 +27,6 @@ import {
   Play,
   RotateCcw,
   Settings2,
-  Sparkles,
   Target,
   Terminal,
   X,
@@ -42,20 +40,21 @@ import {
   skillById,
   units,
   type Skill,
+  assessmentPolicy,
 } from '../lib/curriculum';
 import {
-  applyAttempt,
   getSkillState,
   getStats,
   isUnlocked,
   nextTask,
   recordLesson,
   selectQuestion,
+  coursePath,
 } from '../lib/learning';
 import { createAnkiClient, exportCardsTsv, type AnkiClient } from '../lib/anki';
 import { authClient } from '../lib/account';
 import { runPython, type PythonResult } from '../lib/python';
-import { type LearnerState, type QueuedCard } from '../lib/state';
+import { recordLearningAnswer, type LearnerState } from '../lib/state';
 import { useLearner } from './useLearner';
 
 const navigation = [
@@ -65,7 +64,6 @@ const navigation = [
   { page: 'cards', label: 'Flashcards', icon: Layers, href: '/cards' },
   { page: 'lab', label: 'Python lab', icon: Terminal, href: '/lab' },
 ];
-const unitColors = ['#dce8a7', '#b6d6cb', '#efc399', '#c3c4df', '#b8d8e6'];
 function Btn({
   children,
   onClick,
@@ -89,14 +87,6 @@ function Btn({
 }
 function Pill({ children }: { children: ReactNode }) {
   return <span className="pill">{children}</span>;
-}
-function PythonMark({ small = false }: { small?: boolean }) {
-  return (
-    <div className={`python-mark ${small ? 'small' : ''}`} aria-hidden="true">
-      <Braces />
-      <span>py</span>
-    </div>
-  );
 }
 function masteryStatus(state: LearnerState, skill: Skill) {
   const p = getSkillState(state.progress, skill.id);
@@ -141,7 +131,11 @@ export default function App({
   const [flushVersion, setFlushVersion] = useState(0);
   const stats = getStats(state.progress);
   const pendingCards = state.cards.filter((c) => c.status === 'pending');
-  const task = nextTask(state.progress);
+  const task = nextTask(
+    state.progress,
+    new Date(),
+    courses.find((c) => c.id === state.activeCourseId)?.id ?? courses[0].id,
+  );
   const name = session.data?.user.name?.split(' ')[0] ?? 'Learner';
   useEffect(() => setMenu(false), [routeKey]);
 
@@ -283,7 +277,6 @@ export default function App({
           </span>
           lessdumb<span className="logo-dot">.</span>
         </a>
-        <div className="workspace-label">YOUR LITTLE LEARNING SPACE</div>
         <nav aria-label="Main navigation">
           {navigation.map((item) => (
             <a
@@ -291,51 +284,21 @@ export default function App({
               href={item.href}
               className={`nav-item ${page === item.page || (page === 'learn' && item.page === 'today') ? 'active' : ''}`}
             >
-              <item.icon size={19} />
+              <item.icon size={17} />
               <span>{item.label}</span>
               {item.page === 'cards' && pendingCards.length > 0 && (
                 <b>{pendingCards.length}</b>
               )}
             </a>
           ))}
-        </nav>
-        <div className="sidebar-note">
-          <span className="tiny-orbit">
-            <Sparkles size={19} />
-          </span>
-          <p>
-            Small steps.
-            <br />
-            <strong>Unreasonably far.</strong>
-          </p>
-          <div className="note-line" />
-        </div>
-        <div className="sidebar-bottom">
           <a
             className={`nav-item ${page === 'settings' ? 'active' : ''}`}
             href="/settings"
           >
-            <Settings2 size={18} />
-            Settings & connections
+            <Settings2 size={17} />
+            <span>Settings & connections</span>
           </a>
-          <button
-            className="profile-button"
-            onClick={() => setAccountOpen(true)}
-          >
-            <span className="avatar">{name.slice(0, 1).toUpperCase()}</span>
-            <span>
-              <strong>
-                {session.data ? session.data.user.name : 'Your learning space'}
-              </strong>
-              <small>
-                {session.data
-                  ? 'Account connected'
-                  : 'Create your free account'}
-              </small>
-            </span>
-            <ChevronRight size={16} />
-          </button>
-        </div>
+        </nav>
       </aside>
       {menu && (
         <button
@@ -377,6 +340,9 @@ export default function App({
               onClick={() => setAccountOpen(true)}
             >
               {name.slice(0, 1).toUpperCase()}
+              <span className="account-name sr-only">
+                {session.data?.user.name ?? 'Your learning space'}
+              </span>
             </button>
           </div>
         </header>
@@ -397,12 +363,17 @@ export default function App({
                   name={name}
                   stats={stats}
                   task={task}
+                  update={update}
                 />
               )}
               {page === 'learn' && (
-                <LearningSession key={routeKey} state={state} update={update} />
+                <LearningSession
+                  key={`${routeKey}:${session.data?.user.id ?? 'guest'}`}
+                  state={state}
+                  update={update}
+                />
               )}
-              {page === 'courses' && <Courses state={state} />}
+              {page === 'courses' && <Courses state={state} update={update} />}
               {page === 'graph' && (
                 <KnowledgeGraph key={routeKey} state={state} />
               )}
@@ -458,7 +429,7 @@ export default function App({
         <footer className="app-footer">
           <span>A little better, every day.</span>
           <span>
-            lessdumb · Python MVP <i>↗</i>
+            lessdumb · Connected learning <i>↗</i>
           </span>
         </footer>
       </div>
@@ -479,21 +450,31 @@ function Dashboard({
   name,
   stats,
   task,
+  update,
 }: {
   state: LearnerState;
   name: string;
   stats: Stats;
   task: Task;
+  update: (fn: (s: LearnerState) => LearnerState) => void;
 }) {
-  const skill = task ? skillById[task.skillId] : null;
-  const percent = Math.round((stats.mastered / skills.length) * 100);
-  const goalPercent = Math.min(
-    100,
-    Math.round((stats.todayXp / state.dailyGoal) * 100),
+  const course =
+    courses.find((c) => c.id === state.activeCourseId) ?? courses[0];
+  const courseStats = getStats(state.progress, new Date(), course.id);
+  const percent = Math.round(
+    (courseStats.mastered / course.skillIds.length) * 100,
   );
-  const recent = skills
-    .filter((s) => getSkillState(state.progress, s.id).attempts > 0)
-    .slice(-3);
+  const path = coursePath(course.id);
+  const candidates = path.filter(
+    (s) =>
+      isUnlocked(state.progress, s.id) &&
+      (getSkillState(state.progress, s.id).mastery < 1 ||
+        (getSkillState(state.progress, s.id).dueAt ?? Infinity) <= Date.now()),
+  );
+  const queue = [
+    ...(task ? [skillById[task.skillId]] : []),
+    ...candidates.filter((s) => s.id !== task?.skillId),
+  ].slice(0, 5);
   const week = Array.from({ length: 7 }, (_, index) => {
     const date = new Date();
     date.setDate(date.getDate() - 6 + index);
@@ -510,298 +491,217 @@ function Dashboard({
   });
   return (
     <>
-      <div className="page-eyebrow">
-        <span className="eyebrow-line" />
-        LET'S KEEP THE MOMENTUM
-      </div>
-      <div className="page-heading">
+      <div className="ma-page-title">
         <div>
-          <h1>
-            A little better.
-            <br />
-            <span>Every day.</span>
-          </h1>
-          <p>
-            {stats.totalXp > 0
-              ? `Good to see you, ${name}. Your next small step is ready.`
-              : 'Big ideas start with small steps. Let’s take your first one.'}
-          </p>
+          <h1>Learn</h1>
+          <p>Welcome back, {name}. Your next tasks are ready.</p>
         </div>
-        <div className="date-label">
-          {new Date().toLocaleDateString('en', {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-          })}
-          <span>
-            <i />A good day to learn something
-          </span>
-        </div>
+        <a className="text-link" href="/graph">
+          Explore graph <GitBranch size={16} />
+        </a>
       </div>
-      <div className="dashboard-grid">
-        <div className="dashboard-left">
-          <section className="course-hero">
-            <div className="hero-text">
-              <Pill>
-                <i />
-                YOUR CURRENT COURSE
-              </Pill>
-              <h2>Think in Python.</h2>
-              <p>
-                From your first line of code to solving
-                <br className="desktop-br" /> problems with confidence.
-              </p>
-              <div className="hero-progress">
-                <span>Python foundations</span>
-                <strong>{percent}%</strong>
-                <div className="progress-track">
-                  <i style={{ width: `${percent}%` }} />
-                </div>
-                <small>
-                  {stats.mastered} of {skills.length} skills mastered
-                </small>
-              </div>
-              <a
-                className="btn"
-                href={
-                  task
-                    ? `/learn?skill=${task.skillId}&mode=${task.mode}`
-                    : '/graph'
-                }
-              >
-                {stats.totalXp ? 'Continue learning' : 'Start learning'}
-                <ArrowRight size={18} />
-              </a>
-            </div>
-            <div className="hero-art">
-              <div className="orbit orbit-one" />
-              <div className="orbit orbit-two" />
-              <div className="orbit-point p-one" />
-              <div className="orbit-point p-two" />
-              <span className="art-code code-one">hello, world</span>
-              <PythonMark />
-              <span className="art-code code-two">one step at a time_</span>
-              <span className="art-star">✳</span>
-            </div>
-          </section>
-          <div className="section-heading">
-            <h2>Your next small steps</h2>
-            <a href="/graph">
-              See the bigger picture <ArrowRight size={15} />
-            </a>
-          </div>
-          <section className="next-steps">
-            <a
-              className="step-row"
-              href={
-                task
-                  ? `/learn?skill=${task.skillId}&mode=${task.mode}`
-                  : '/graph'
+      <div className="ma-dashboard">
+        <aside className="ma-progress-column">
+          <section className="ma-panel ma-course-summary">
+            <label htmlFor="active-course">CURRENT COURSE</label>
+            <select
+              id="active-course"
+              value={course.id}
+              onChange={(e) =>
+                update((s) => ({ ...s, activeCourseId: e.target.value }))
               }
             >
-              <span className="step-icon green">
-                <Play size={19} />
-              </span>
-              <div>
-                <small>
-                  {task?.mode === 'review' ? 'SPACED REVIEW' : 'UP NEXT'}
-                </small>
-                <h3>{skill?.title ?? 'Your foundation is complete'}</h3>
-                <p>
-                  {skill
-                    ? skill.summary
-                    : 'Keep your skills fresh with review.'}
-                </p>
-              </div>
-              <span className="step-time">
-                {skill?.estimatedMinutes ?? 5} min
-              </span>
-              <ArrowRight size={18} />
-            </a>
-            <a
-              className="step-row"
-              href={stats.dueCount ? '/learn?mode=review' : '/graph'}
-            >
-              <span className="step-icon peach">
-                <RotateCcw size={19} />
-              </span>
-              <div>
-                <small>MAKE IT STICK</small>
-                <h3>
-                  {stats.dueCount
-                    ? `${stats.dueCount} skills ready for review`
-                    : 'Build a foundation that lasts'}
-                </h3>
-                <p>
-                  {stats.dueCount
-                    ? 'A little retrieval keeps yesterday’s progress alive.'
-                    : 'Master a skill to start your spaced review schedule.'}
-                </p>
-              </div>
-              <span className="step-time">
-                {stats.dueCount ? 'Review' : 'Explore'}
-              </span>
-              <ArrowRight size={18} />
-            </a>
-          </section>
-          <div className="section-heading">
-            <h2>A connected way to learn</h2>
-            <a href="/graph">
-              Open graph <ArrowRight size={15} />
-            </a>
-          </div>
-          <section className="graph-preview">
-            <div className="mini-graph" aria-hidden="true">
-              <svg viewBox="0 0 430 125">
-                <path
-                  d="M46 64H122M122 64L202 32M122 64L202 94M202 32L286 64M202 94L286 64M286 64H378"
-                  fill="none"
-                  stroke="#d2dad4"
-                  strokeWidth="2"
-                />
-                {[
-                  [46, 64],
-                  [122, 64],
-                  [202, 32],
-                  [202, 94],
-                  [286, 64],
-                  [378, 64],
-                ].map(([x, y], i) => (
-                  <g key={i}>
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r={i === 1 ? 20 : 14}
-                      fill={i < 2 ? '#dce8a7' : '#eef0eb'}
-                      stroke={i === 1 ? '#45614b' : '#ccd6cc'}
-                      strokeWidth="1.5"
-                    />
-                    <text
-                      x={x}
-                      y={y + 4}
-                      textAnchor="middle"
-                      fill="#566459"
-                      fontSize="11"
-                    >
-                      {i < 2 ? ['{ }', 'x'][i] : '·'}
-                    </text>
-                  </g>
-                ))}
-              </svg>
-            </div>
-            <div>
-              <h3>Nothing learned in isolation.</h3>
-              <p>
-                Every new skill connects to what you know.
-                <br />
-                Your knowledge graph grows with you.
-              </p>
-            </div>
-            <a
-              href="/graph"
-              className="round-link"
-              aria-label="Explore your knowledge graph"
-            >
-              <ArrowRight size={20} />
-            </a>
-          </section>
-        </div>
-        <aside className="dashboard-right">
-          <section className="daily-card">
-            <div className="card-title">
-              <h3>Your daily goal</h3>
-              <Target size={19} />
-            </div>
-            <div
-              className="goal-ring"
-              style={
-                { '--goal': `${goalPercent * 3.6}deg` } as React.CSSProperties
-              }
-            >
-              <div>
-                <strong>
-                  {stats.todayXp}
-                  <span> / {state.dailyGoal}</span>
-                </strong>
-                <small>XP TODAY</small>
-              </div>
-            </div>
-            <p>
-              {goalPercent >= 100
-                ? 'You showed up. That counts.'
-                : 'A little effort. A lasting difference.'}
-            </p>
-            <div className="goal-caption">
-              <Zap size={15} />
-              <span>
-                {Math.max(0, state.dailyGoal - stats.todayXp)} XP to your daily
-                goal
-              </span>
-            </div>
-          </section>
-          <section className="week-card">
-            <div className="card-title">
-              <h3>A week of small wins</h3>
-              <span>7 DAYS</span>
-            </div>
-            <div className="week-bars">
-              {week.map((day, i) => (
-                <div key={i}>
-                  <span
-                    className={`week-bar ${i === 6 ? 'current' : ''}`}
-                    style={{
-                      height: `${Math.max(5, Math.min(76, (day.xp / state.dailyGoal) * 76))}px`,
-                    }}
-                    title={`${day.xp} XP`}
-                  />
-                  <small>{day.day}</small>
-                </div>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
               ))}
+            </select>
+            <div className="ma-course-percent">
+              <strong>{percent}%</strong>
+              <span>
+                {courseStats.mastered} / {course.skillIds.length} skills
+                mastered
+              </span>
             </div>
-            <div className="week-summary">
-              <strong>{week.reduce((sum, d) => sum + d.xp, 0)} XP</strong>
-              <span>one step adds up</span>
+            <div className="progress-track">
+              <i style={{ width: `${percent}%` }} />
+            </div>
+            <a className="text-link" href="/courses">
+              Course details <ChevronRight size={14} />
+            </a>
+          </section>
+          <section className="ma-panel ma-xp-panel">
+            <div className="ma-total-xp">
+              <small>TOTAL EARNED</small>
+              <strong>{stats.totalXp} XP</strong>
+            </div>
+            <div className="ma-today-xp">
+              <small>TODAY</small>
+              <div className="progress-track">
+                <i
+                  style={{
+                    width: `${Math.min(100, (stats.todayXp / state.dailyGoal) * 100)}%`,
+                  }}
+                />
+              </div>
+              <span>
+                {stats.todayXp} / {state.dailyGoal} XP
+              </span>
+            </div>
+            <div className="ma-week-xp">
+              <small>THIS WEEK</small>
+              <strong>{week.reduce((n, d) => n + d.xp, 0)} XP</strong>
+              <div className="week-bars">
+                {week.map((d, i) => (
+                  <div key={i}>
+                    <span
+                      className="week-bar"
+                      style={{
+                        height: `${Math.max(3, Math.min(85, (d.xp / state.dailyGoal) * 85))}px`,
+                      }}
+                      title={`${d.xp} XP`}
+                    />
+                    <small>{d.day}</small>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
-          <section className="anki-promo">
-            <div className="anki-icon">
-              <Layers size={22} />
-              <i>✦</i>
-            </div>
-            <Pill>LESS FRICTION. MORE RETENTION.</Pill>
-            <h3>
-              You learn it.
-              <br />
-              We help you keep it.
-            </h3>
-            <p>
-              Your breakthroughs and tricky bits become Anki cards.
-              Automatically.
-            </p>
+          <section className="ma-panel ma-retention">
+            <h3>Spaced practice</h3>
+            <p>{stats.dueCount} skills due for review</p>
             <a href="/cards">
-              {state.anki.connected ? 'View your flashcards' : 'Connect Anki'}{' '}
-              <ArrowRight size={17} />
+              <Layers size={16} />
+              {state.cards.length} automatically created Anki cards{' '}
+              <ChevronRight size={14} />
             </a>
           </section>
         </aside>
-      </div>
-      {recent.length > 0 && (
-        <section className="recent-skills">
-          <div className="section-heading">
-            <h2>Your growing foundation</h2>
-            <span>{Math.round(stats.accuracy * 100)}% accuracy</span>
+        <section className="ma-task-column" aria-label="Learning tasks">
+          <div className="ma-task-heading">
+            <h2>Your learning tasks</h2>
+            <span>{course.title}</span>
           </div>
-          <div className="recent-grid">
-            {recent.map((s) => (
-              <a key={s.id} href={`/graph?skill=${s.id}`}>
-                <CheckCircle2 size={20} />
-                <strong>{s.title}</strong>
-                <span>{masteryStatus(state, s)}</span>
+          {queue.length ? (
+            queue.map((skill, index) => {
+              const p = getSkillState(state.progress, skill.id);
+              const review = p.mastery >= 1;
+              const prerequisite = skill.courseId !== course.id;
+              const earned = p.rewardedQuestionIds;
+              const xp = review
+                ? skill.questions
+                    .filter((q) => !p.reviewQuestionIds.includes(q.id))
+                    .map((q) => (q.type === 'code' ? 8 : 5))
+                    .sort((a, b) => b - a)
+                    .slice(
+                      0,
+                      Math.max(
+                        0,
+                        assessmentPolicy(skill).reviewAnswers -
+                          p.reviewQuestionIds.length,
+                      ),
+                    )
+                    .reduce((n, x) => n + x, 0)
+                : skill.questions
+                    .filter((q) => !earned.includes(q.id))
+                    .reduce((n, q) => n + (q.type === 'code' ? 15 : 10), 0);
+              return (
+                <article
+                  className={`ma-panel ma-task ${index === 0 ? 'primary-task' : ''}`}
+                  key={skill.id}
+                >
+                  <div className="ma-task-meta">
+                    <strong>
+                      {review ? (
+                        <RotateCcw size={17} />
+                      ) : (
+                        <BookOpen size={17} />
+                      )}{' '}
+                      {review
+                        ? 'Review'
+                        : p.lessonSeen
+                          ? 'Resume lesson'
+                          : 'Lesson'}
+                      {prerequisite && (
+                        <span className="prerequisite-badge">Prerequisite</span>
+                      )}
+                    </strong>
+                    <span>Up to {xp} XP</span>
+                  </div>
+                  <h3>{skill.title}</h3>
+                  <p>{skill.summary}</p>
+                  {(index === 0 || p.mastery > 0) && (
+                    <div className="task-progress">
+                      <div className="progress-track">
+                        <i style={{ width: `${p.mastery * 100}%` }} />
+                      </div>
+                      <span>{Math.round(p.mastery * 100)}%</span>
+                    </div>
+                  )}
+                  {index === 0 && (
+                    <div className="ma-task-detail">
+                      <small>
+                        {prerequisite
+                          ? 'FROM ' +
+                            courses
+                              .find((c) => c.id === skill.courseId)
+                              ?.title.toUpperCase()
+                          : 'PREREQUISITES'}
+                      </small>
+                      {skill.prerequisites.length ? (
+                        <div className="ma-prerequisites">
+                          {skill.prerequisites.map((id) => (
+                            <a key={id} href={`/graph?skill=${id}`}>
+                              <Check size={14} />
+                              {skillById[id].title}
+                            </a>
+                          ))}
+                        </div>
+                      ) : (
+                        <p>No prerequisites. Start here.</p>
+                      )}
+                      {task && <p className="task-reason">{task.reason}</p>}
+                    </div>
+                  )}
+                  <a
+                    className={index === 0 ? 'btn' : 'text-link'}
+                    href={`/learn?skill=${skill.id}&mode=${review ? 'review' : 'learn'}&course=${course.id}`}
+                  >
+                    {p.lessonSeen ? 'Continue learning' : 'Start learning'}{' '}
+                    <ArrowRight size={15} />
+                  </a>
+                </article>
+              );
+            })
+          ) : (
+            <div className="ma-panel ma-task">
+              <CheckCircle2 />
+              <h3>All caught up</h3>
+              <p>
+                You have completed this course path. Choose another course or
+                return when a review is due.
+              </p>
+              <a className="btn" href="/courses">
+                Choose a course
               </a>
-            ))}
+            </div>
+          )}
+          <div className="ma-graph-note">
+            <GitBranch size={20} />
+            <div>
+              <strong>Every task has a place in your graph.</strong>
+              <p>
+                Missing prerequisites are included in your learning path across
+                courses.
+              </p>
+            </div>
+            <a href="/graph" aria-label="Explore your knowledge graph">
+              <ArrowRight size={18} />
+            </a>
           </div>
         </section>
-      )}
+      </div>
     </>
   );
 }
@@ -814,7 +714,12 @@ function LearningSession({
   update: (fn: (s: LearnerState) => LearnerState) => void;
 }) {
   const params = new URLSearchParams(window.location.search);
-  const suggested = nextTask(state.progress);
+  const goal =
+    courses.find((c) => c.id === params.get('course'))?.id ??
+    skillById[params.get('skill') ?? '']?.courseId ??
+    courses.find((c) => c.id === state.activeCourseId)?.id ??
+    courses[0].id;
+  const suggested = nextTask(state.progress, new Date(), goal);
   const [skillId, setSkillId] = useState(
     params.get('skill') ?? suggested?.skillId ?? skills[0].id,
   );
@@ -826,9 +731,9 @@ function LearningSession({
         : 'learn',
   );
   const [complete, setComplete] = useState(
-    params.get('mode') === 'review' &&
-      !params.get('skill') &&
-      suggested?.mode !== 'review',
+    !params.get('skill') &&
+      (!suggested ||
+        (params.get('mode') === 'review' && suggested.mode !== 'review')),
   );
   const [questionId, setQuestionId] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
@@ -840,13 +745,47 @@ function LearningSession({
   const [hint, setHint] = useState(false);
   const [running, setRunning] = useState(false);
   const [output, setOutput] = useState<PythonResult | null>(null);
-  const [sessionCount, setSessionCount] = useState(0);
-  const [sessionXp, setSessionXp] = useState(0);
+  const [sessionAttemptIds, setSessionAttemptIds] = useState<string[]>([]);
+  const sessionAttempts = state.progress.attempts.filter((a) =>
+    sessionAttemptIds.includes(a.id),
+  );
+  const sessionCount = sessionAttempts.length;
+  const sessionXp = sessionAttempts.reduce((n, a) => n + a.xp, 0);
+  const live = useRef(true);
+  const gradingGeneration = useRef(0);
+  const activeRun = useRef<symbol | null>(null);
+  useEffect(() => {
+    live.current = true;
+    return () => {
+      live.current = false;
+      gradingGeneration.current++;
+      activeRun.current = null;
+    };
+  }, []);
+  useEffect(() => {
+    gradingGeneration.current++;
+  }, [skillId, questionId]);
   const skill = skillById[skillId];
   const progress = skill ? getSkillState(state.progress, skillId) : null;
   const available = skill && isUnlocked(state.progress, skillId);
   const question = skill?.questions.find((q) => q.id === questionId);
   const showingLesson = skill && !progress?.lessonSeen && mode === 'learn';
+  const reviewPolicy = skill
+    ? assessmentPolicy(skill)
+    : { requiredTypes: [], reviewAnswers: 1 };
+  const reviewCount = progress?.reviewQuestionIds.length ?? 0;
+  const missingReviewTypes = reviewPolicy.requiredTypes.filter(
+    (type) =>
+      !progress?.reviewQuestionIds.some(
+        (id) => skill.questions.find((q) => q.id === id)?.type === type,
+      ),
+  );
+  const reviewFraction = Math.min(
+    1,
+    reviewCount / reviewPolicy.reviewAnswers,
+    (reviewPolicy.requiredTypes.length - missingReviewTypes.length) /
+      (reviewPolicy.requiredTypes.length || 1),
+  );
 
   function chooseQuestion(id = skillId, nextMode = mode) {
     const s = skillById[id];
@@ -866,62 +805,41 @@ function LearningSession({
     chooseQuestion();
   }
   function record(correct: boolean) {
-    if (!question || feedback) return;
-    const nextProgress = applyAttempt(state.progress, {
+    if (!question || feedback || !live.current) return;
+    const attemptId = crypto.randomUUID();
+    const input = {
       skillId,
       questionId: question.id,
       correct,
       mode,
       usedHint: hint,
-    });
-    setSessionXp(
-      (x) => x + Math.max(0, nextProgress.totalXp - state.progress.totalXp),
+      attemptId,
+    };
+    update((s) =>
+      live.current && isUnlocked(s.progress, skillId)
+        ? recordLearningAnswer(s, input)
+        : s,
     );
-    update((s) => {
-      const next = nextProgress;
-      const cards: QueuedCard[] = [...s.cards];
-      const add = (card: QueuedCard) => {
-        if (!cards.some((c) => c.id === card.id)) cards.push(card);
-      };
-      if (!correct)
-        add({
-          id: `mistake:${skillId}:${question.id}`,
-          skillId,
-          skillName: skill.title,
-          kind: 'mistake',
-          front: `${question.prompt}${'code' in question && question.code ? `\n\n${question.code}` : ''}`,
-          back:
-            question.type === 'choice'
-              ? `${question.choices[question.answer]}\n\n${question.explanation}`
-              : `${question.solution}\n\n${question.explanation}`,
-          status: 'pending',
-        });
-      if (
-        getSkillState(next, skillId).mastery >= 1 &&
-        getSkillState(s.progress, skillId).mastery < 1
-      ) {
-        skill.flashcards.forEach((card) =>
-          add({
-            ...card,
-            skillName: skill.title,
-            kind: 'mastery',
-            status: 'pending',
-          }),
-        );
-      }
-      return { ...s, progress: next, cards };
-    });
-    setSessionCount((c) => c + 1);
+    setSessionAttemptIds((ids) => [...ids, attemptId]);
     setFeedback({ correct, text: question.explanation });
   }
   async function checkCode() {
-    if (!question || question.type !== 'code') return;
+    if (!question || question.type !== 'code' || activeRun.current) return;
+    const token = Symbol('Python run');
+    activeRun.current = token;
+    const generation = gradingGeneration.current;
     setRunning(true);
     const result = await runPython(code, question.tests);
+    if (
+      !live.current ||
+      activeRun.current !== token ||
+      gradingGeneration.current !== generation
+    )
+      return;
+    activeRun.current = null;
     setOutput(result);
     setRunning(false);
-    if (result.infrastructure) return;
-    record(result.passed);
+    if (!result.infrastructure) record(result.passed);
   }
   function next() {
     const p = getSkillState(state.progress, skillId);
@@ -933,7 +851,7 @@ function LearningSession({
             p.dueAt &&
             p.dueAt > Date.now())))
     ) {
-      const task = nextTask(state.progress);
+      const task = nextTask(state.progress, new Date(), goal);
       if (task) {
         setSkillId(task.skillId);
         setMode(task.mode);
@@ -997,13 +915,15 @@ function LearningSession({
       <div className="session-progress">
         <i
           style={{
-            width: `${(mode === 'review' ? progress!.reviewQuestionIds.length / 2 : progress!.mastery) * 100}%`,
+            width: `${(mode === 'review' ? reviewFraction : progress!.mastery) * 100}%`,
           }}
         />
       </div>
       <div className="lesson-meta">
         <Pill>
-          {mode === 'review' ? 'SPACED REVIEW' : 'PYTHON FOUNDATIONS'}
+          {mode === 'review'
+            ? 'SPACED REVIEW'
+            : courses.find((c) => c.id === skill.courseId)?.title}
         </Pill>
         <span>
           {units.find((u) => u.id === skill.unitId)?.title} / {skill.title}
@@ -1020,11 +940,16 @@ function LearningSession({
           <div className="code-example">
             <div>
               <Code2 size={15} />
-              Python
+              {skill.lesson.example.label ??
+                (skill.lesson.example.kind === 'text'
+                  ? 'Worked scenario'
+                  : 'Python')}
             </div>
             <pre>{skill.lesson.example.code}</pre>
             <div className="example-output">
-              <small>OUTPUT</small>
+              <small>
+                {skill.lesson.example.kind === 'text' ? 'DECISION' : 'OUTPUT'}
+              </small>
               <pre>{skill.lesson.example.output}</pre>
             </div>
           </div>
@@ -1050,10 +975,16 @@ function LearningSession({
               </span>
               <span>
                 {mode === 'review'
-                  ? progress!.reviewQuestionIds.length
+                  ? Math.min(reviewCount, reviewPolicy.reviewAnswers)
                   : progress!.questionIds.length}{' '}
-                / {mode === 'review' ? 2 : skill.questions.length}{' '}
+                /{' '}
+                {mode === 'review'
+                  ? assessmentPolicy(skill).reviewAnswers
+                  : skill.questions.length}{' '}
                 {mode === 'review' ? 'review checks' : 'learning checks'}
+                {mode === 'review' &&
+                  missingReviewTypes.length > 0 &&
+                  ` · ${missingReviewTypes.join(' + ')} evidence required`}
               </span>
             </div>
             <h1>{question.prompt}</h1>
@@ -1098,14 +1029,18 @@ function LearningSession({
                     extensions={[python()]}
                     height="230px"
                     onChange={setCode}
-                    editable={!feedback}
+                    editable={!feedback && !running}
                     aria-label="Python code editor"
                     basicSetup={{ lineNumbers: true, foldGutter: false }}
                   />
                 </Suspense>
                 {output && (
                   <div className="runner-output">
-                    <small>OUTPUT</small>
+                    <small>
+                      {skill.lesson.example.kind === 'text'
+                        ? 'DECISION'
+                        : 'OUTPUT'}
+                    </small>
                     <pre>{output.output || '(no output)'}</pre>
                     {output.error && (
                       <p className="error-text">{output.error}</p>
@@ -1164,7 +1099,7 @@ function LearningSession({
               <button
                 className="text-link"
                 onClick={() => setHint(true)}
-                disabled={hint || !!feedback}
+                disabled={running || hint || !!feedback}
               >
                 <CircleHelp size={17} />
                 Give me a hint
@@ -1207,91 +1142,129 @@ function LearningSession({
   );
 }
 
-function Courses({ state }: { state: LearnerState }) {
-  const stats = getStats(state.progress);
+function Courses({
+  state,
+  update,
+}: {
+  state: LearnerState;
+  update: (fn: (s: LearnerState) => LearnerState) => void;
+}) {
+  const [expanded, setExpanded] = useState(
+    state.activeCourseId ?? courses[0].id,
+  );
+  const course = courses.find((c) => c.id === expanded) ?? courses[0];
   return (
     <>
       <PageTitle
-        eyebrow="FOLLOW YOUR CURIOSITY"
+        eyebrow="COURSE CATALOG"
         title="Your learning, connected."
-        description="A strong foundation opens up a whole new world."
+        description="Choose your destination. The graph finds the prerequisites you need."
       />
-      <section className="course-overview">
-        <PythonMark small />
-        <div>
-          <Pill>ACTIVE COURSE</Pill>
-          <h2>Python foundations</h2>
-          <p>{courses[0].description}</p>
-        </div>
-        <div className="course-numbers">
-          <strong>
-            {stats.mastered}
-            <span> / {skills.length}</span>
-          </strong>
-          <small>SKILLS MASTERED</small>
-          <a className="btn" href="/learn">
-            Keep learning <ArrowRight size={17} />
-          </a>
-        </div>
-      </section>
-      {units.map((unit, index) => (
-        <section className="unit-card" key={unit.id}>
-          <div className="unit-heading">
-            <span style={{ background: unitColors[index % unitColors.length] }}>
-              0{index + 1}
-            </span>
-            <div>
-              <h2>{unit.title}</h2>
-              <p>{unit.description}</p>
-            </div>
-          </div>
-          <div className="skill-list">
-            {skills
-              .filter((s) => s.unitId === unit.id)
-              .map((skill) => {
-                const status = masteryStatus(state, skill);
-                return (
-                  <a
-                    key={skill.id}
-                    href={
-                      status === 'Locked'
-                        ? `/graph?skill=${skill.id}`
-                        : `/learn?skill=${skill.id}`
-                    }
-                  >
-                    <span
-                      className={`skill-status ${status.replaceAll(' ', '-').toLowerCase()}`}
-                    >
-                      {status === 'Mastered' ? (
-                        <Check size={15} />
-                      ) : status === 'Locked' ? (
-                        <LockKeyhole size={13} />
-                      ) : (
-                        <span />
-                      )}
-                    </span>
-                    <div>
-                      <strong>{skill.title}</strong>
-                      <small>{skill.summary}</small>
-                    </div>
-                    <span className="skill-list-state">{status}</span>
-                    <ChevronRight size={16} />
-                  </a>
-                );
-              })}
-          </div>
-        </section>
-      ))}
-      <div className="future-subjects">
-        <GitBranch size={23} />
-        <div>
-          <h3>A bigger picture, built in.</h3>
-          <p>
-            The subject-aware graph is ready for math, physics, and languages.
-            Python is the first course.
-          </p>
-        </div>
+      <div className="ma-course-grid">
+        {courses.map((c) => {
+          const stats = getStats(state.progress, new Date(), c.id);
+          const active = c.id === (state.activeCourseId ?? courses[0].id);
+          const cross = coursePath(c.id).filter((s) => s.courseId !== c.id);
+          const needed = cross.filter(
+            (s) => getSkillState(state.progress, s.id).mastery < 1,
+          ).length;
+          return (
+            <article
+              className={`ma-panel ma-catalog-card ${expanded === c.id ? 'selected' : ''}`}
+              key={c.id}
+            >
+              <div className="ma-catalog-meta">
+                <span>
+                  {c.domain === 'mathematics' ? 'MATHEMATICS' : 'COMPUTING'}
+                </span>
+                {active && <Pill>ACTIVE COURSE</Pill>}
+              </div>
+              <h2>{c.title}</h2>
+              <p>{c.description}</p>
+              <div className="progress-track">
+                <i
+                  style={{
+                    width: `${(stats.mastered / c.skillIds.length) * 100}%`,
+                  }}
+                />
+              </div>
+              <small>
+                {stats.mastered} / {c.skillIds.length} skills mastered ·{' '}
+                {needed} prerequisite skills remaining
+              </small>
+              <div className="ma-catalog-actions">
+                <button
+                  className="btn"
+                  onClick={() => {
+                    update((s) => ({ ...s, activeCourseId: c.id }));
+                    setExpanded(c.id);
+                  }}
+                >
+                  {active ? 'Selected' : 'Set learning goal'}
+                  <Check size={14} />
+                </button>
+                <button className="text-link" onClick={() => setExpanded(c.id)}>
+                  View topics <ChevronRight size={15} />
+                </button>
+              </div>
+            </article>
+          );
+        })}
       </div>
+      <div className="section-heading">
+        <h2>{course.title} · Topics</h2>
+        <a href={`/graph?course=${course.id}`}>
+          View prerequisite graph <GitBranch size={16} />
+        </a>
+      </div>
+      {units
+        .filter((u) => u.courseId === course.id)
+        .map((unit, index) => (
+          <section className="unit-card" key={unit.id}>
+            <div className="unit-heading">
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <h2>{unit.title}</h2>
+                <p>{unit.description}</p>
+              </div>
+            </div>
+            <div className="skill-list">
+              {skills
+                .filter((s) => s.unitId === unit.id)
+                .map((skill) => {
+                  const status = masteryStatus(state, skill);
+                  return (
+                    <a
+                      key={skill.id}
+                      href={
+                        status === 'Locked'
+                          ? `/graph?skill=${skill.id}`
+                          : `/learn?skill=${skill.id}`
+                      }
+                    >
+                      <span
+                        className={`skill-status ${status.replaceAll(' ', '-').toLowerCase()}`}
+                      >
+                        {status === 'Mastered' ? (
+                          <Check size={15} />
+                        ) : status === 'Locked' ? (
+                          <LockKeyhole size={13} />
+                        ) : (
+                          <span />
+                        )}
+                      </span>
+                      <div>
+                        <strong>{skill.title}</strong>
+                        <small>{skill.summary}</small>
+                      </div>
+                      <span className="skill-list-state">{status}</span>
+                      <ChevronRight size={16} />
+                    </a>
+                  );
+                })}
+            </div>
+          </section>
+        ))}
     </>
   );
 }
@@ -1321,22 +1294,53 @@ function PageTitle({
 }
 
 function KnowledgeGraph({ state }: { state: LearnerState }) {
-  const requested = new URLSearchParams(window.location.search).get('skill');
+  const params = new URLSearchParams(window.location.search);
+  const requested = skillById[params.get('skill') ?? ''];
+  const initialCourse =
+    requested?.courseId ??
+    courses.find((c) => c.id === params.get('course'))?.id ??
+    courses.find((c) => c.id === state.activeCourseId)?.id ??
+    courses[0].id;
   const [selected, setSelected] = useState(
-    skillById[requested ?? ''] ?? skills[0],
+    requested ?? skills.find((s) => s.courseId === initialCourse)!,
   );
   const [search, setSearch] = useState('');
   const [zoom, setZoom] = useState(1);
+  const [filter, setFilter] = useState(initialCourse);
+  const visible = coursePath(filter === 'all' ? undefined : filter);
+  const graphUnits = units.filter((u) =>
+    visible.some((s) => s.unitId === u.id),
+  );
+  function selectSkill(skill: Skill) {
+    setSelected(skill);
+    if (!visible.some((s) => s.id === skill.id)) setFilter(skill.courseId);
+  }
   const positions = Object.fromEntries(
-    skills.map((s) => {
-      const row = units.findIndex((u) => u.id === s.unitId);
-      const peers = skills.filter((p) => p.unitId === s.unitId);
+    visible.map((s) => {
+      const row = graphUnits.findIndex((u) => u.id === s.unitId);
+      const peers = visible.filter((p) => p.unitId === s.unitId);
       const col = peers.findIndex((p) => p.id === s.id);
-      return [s.id, { x: 130 + col * 205, y: 92 + row * 150 }];
+      return [s.id, { x: 145 + col * 245, y: 100 + row * 155 }];
     }),
   );
-  const width = Math.max(...Object.values(positions).map((p) => p.x)) + 130;
-  const height = units.length * 150 + 45;
+  const width =
+    Math.max(650, ...Object.values(positions).map((p) => p.x)) + 145;
+  const height = graphUnits.length * 155 + 45;
+  const viewport = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const container = viewport.current;
+    const position = positions[selected.id];
+    if (!container || !position) return;
+    container.scrollTop = Math.max(
+      0,
+      position.y * zoom - container.clientHeight / 2,
+    );
+    container.scrollLeft = Math.max(
+      0,
+      position.x * zoom - container.clientWidth / 2,
+    );
+  }, [selected.id, filter, zoom]);
+
   const ancestors = new Set<string>();
   function visit(id: string) {
     for (const dep of skillById[id].prerequisites) {
@@ -1355,10 +1359,28 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
         description="Build on what you know. See what it makes possible."
       />
       <div className="graph-toolbar">
-        <Pill>
-          <i />
-          Python foundations
-        </Pill>
+        <label className="graph-course-filter">
+          <span className="sr-only">Graph course</span>
+          <select
+            aria-label="Graph course"
+            value={filter}
+            onChange={(e) => {
+              setFilter(e.target.value);
+              const first =
+                coursePath(
+                  e.target.value === 'all' ? undefined : e.target.value,
+                ).find((s) => s.courseId === e.target.value) ?? skills[0];
+              setSelected(first);
+            }}
+          >
+            <option value="all">All courses</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </label>
         <label>
           <span className="sr-only">Find a skill</span>
           <input
@@ -1400,7 +1422,7 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
             </span>
             <small>Click a skill to explore its connections</small>
           </div>
-          <div className="graph-scroll">
+          <div className="graph-scroll" ref={viewport}>
             <svg
               className="knowledge-svg"
               viewBox={`0 0 ${width} ${height}`}
@@ -1409,7 +1431,7 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                 height: `${height * zoom}px`,
               }}
               role="group"
-              aria-label="Python prerequisite knowledge graph"
+              aria-label="Cross-course prerequisite knowledge graph"
             >
               <defs>
                 <marker
@@ -1423,7 +1445,7 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                   <path d="M0 0L6 3L0 6" fill="none" stroke="#b9c6ba" />
                 </marker>
               </defs>
-              {skills.flatMap((skill) =>
+              {visible.flatMap((skill) =>
                 skill.prerequisites.map((dep) => {
                   const from = positions[dep],
                     to = positions[skill.id];
@@ -1434,7 +1456,7 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                     <path
                       key={`${dep}-${skill.id}`}
                       d={`M${from.x} ${from.y + 20}C${from.x} ${from.y + 76},${to.x} ${to.y - 76},${to.x} ${to.y - 22}`}
-                      stroke={lit ? '#657e46' : '#d7dfd6'}
+                      stroke={lit ? '#3479bc' : '#d8e2ec'}
                       strokeWidth={lit ? 2 : 1.5}
                       fill="none"
                       markerEnd="url(#arrow)"
@@ -1442,17 +1464,17 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                   );
                 }),
               )}
-              {units.map((u, i) => (
+              {graphUnits.map((u, i) => (
                 <text
                   className="graph-unit-label"
                   key={u.id}
                   x="12"
-                  y={35 + i * 150}
+                  y={35 + i * 155}
                 >
                   {String(i + 1).padStart(2, '0')} / {u.title.toUpperCase()}
                 </text>
               ))}
-              {skills.map((skill) => {
+              {visible.map((skill) => {
                 const p = positions[skill.id],
                   status = masteryStatus(state, skill),
                   focused = selected.id === skill.id;
@@ -1467,11 +1489,11 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                     tabIndex={0}
                     aria-label={`${skill.title}: ${status}`}
                     aria-pressed={focused}
-                    onClick={() => setSelected(skill)}
+                    onClick={() => selectSkill(skill)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        setSelected(skill);
+                        selectSkill(skill);
                       }
                     }}
                     style={{ opacity: matches ? 1 : 0.22 }}
@@ -1482,17 +1504,17 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                       r={focused ? 24 : 20}
                       fill={
                         status === 'Mastered'
-                          ? '#203e36'
+                          ? '#3479bc'
                           : status === 'Locked'
                             ? '#f2f4ef'
-                            : '#e2edb9'
+                            : '#e9f3ff'
                       }
                       stroke={
                         focused
-                          ? '#203e36'
+                          ? '#3479bc'
                           : status === 'Locked'
                             ? '#d5ddd3'
-                            : '#b0c187'
+                            : '#7ba7d0'
                       }
                       strokeWidth={focused ? 2 : 1.5}
                     />
@@ -1500,7 +1522,7 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                       x={p.x}
                       y={p.y + 5}
                       textAnchor="middle"
-                      fill={status === 'Mastered' ? '#e5efcb' : '#5e7253'}
+                      fill={status === 'Mastered' ? '#fff' : '#3479bc'}
                       fontSize="13"
                     >
                       {status === 'Mastered'
@@ -1528,6 +1550,9 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
             <GitBranch size={24} />
           </span>
           <Pill>{masteryStatus(state, selected)}</Pill>
+          <small className="graph-course-name">
+            {courses.find((c) => c.id === selected.courseId)?.title}
+          </small>
           <h2>{selected.title}</h2>
           <p>{selected.summary}</p>
           <div className="detail-progress">
@@ -1552,10 +1577,13 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
               <button
                 className="connection-link"
                 key={id}
-                onClick={() => setSelected(skillById[id])}
+                onClick={() => selectSkill(skillById[id])}
               >
                 <GitBranch size={14} />
                 {skillById[id].title}
+                <small>
+                  {courses.find((c) => c.id === skillById[id].courseId)?.title}
+                </small>
                 <ChevronRight size={13} />
               </button>
             ))
@@ -1571,7 +1599,7 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
               <button
                 className="connection-link"
                 key={s.id}
-                onClick={() => setSelected(s)}
+                onClick={() => selectSkill(s)}
               >
                 {s.title}
                 <ChevronRight size={13} />
@@ -1891,7 +1919,7 @@ function Settings({
                       anki: { ...s.anki, deck: deck.trim() },
                     }));
                 }}
-                placeholder="lessdumb::Python"
+                placeholder="lessdumb::Learning"
               />
             </label>
             <label>

@@ -56,7 +56,6 @@ test('mobile navigation, graph selection, and editor stay inside the viewport', 
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Open navigation' }).click();
   await page
     .getByRole('link', { name: 'Knowledge graph', exact: true })
     .click();
@@ -78,7 +77,6 @@ test('mobile navigation, graph selection, and editor stay inside the viewport', 
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('link', { name: 'Python lab', exact: true }).click();
   await expect(page.locator('.cm-content')).toBeVisible();
   expect(

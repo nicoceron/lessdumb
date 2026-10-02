@@ -3,7 +3,7 @@
  * API reference: https://github.com/ankiultimate/anki-connect#supported-actions
  */
 export const ANKI_ENDPOINT = 'http://127.0.0.1:8765';
-export const ANKI_DECK = 'lessdumb::Python';
+export const ANKI_DECK = 'lessdumb::Learning';
 export const ANKI_MODEL = 'lessdumb';
 const API_VERSION = 6;
 const MODEL_FIELDS = ['Front', 'Back', 'Skill'];
