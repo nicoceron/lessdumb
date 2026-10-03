@@ -4,7 +4,7 @@ A lesson teaches a skill as a short sequence of knowledge points, in the Math Ac
 
 ## Authoring
 
-Knowledge points live in `src/lib/knowledge-points/*.kp.ts`, keyed by skill ID. Each file exports `knowledgePoints: KnowledgePointModule`, imports its helpers from `./authoring`, and is registered in its course's content module, `src/lib/content/<course>.ts` (a test fails if a file is not registered). The browser downloads a course's content module only when a lesson needs it (see [content loading](knowledge-graph.md#how-the-browser-loads-the-catalog)), so a file may only name skills of that course. Explicit imports keep the catalog loadable outside Vite, for example by Playwright. A skill may appear in only one file. IDs are assigned from position (`<skill>-kp<n>`, `<skill>-kp<n>-q<m>`), so append new points or questions rather than reordering published ones.
+Knowledge points live in `src/lib/knowledge-points/*.kp.ts`, keyed by skill ID. Each file exports `knowledgePoints: KnowledgePointModule`, imports its helpers from `./authoring`, and is registered in its course's content module, `src/lib/content/<course>.ts` (a test fails if a file is not registered). The browser downloads lesson content one unit at a time, built from these modules, only when a lesson needs it (see [content loading](knowledge-graph.md#how-the-browser-loads-the-catalog)), so a file may only name skills of that course. Explicit imports keep the catalog loadable outside Vite, for example by Playwright. A skill may appear in only one file. IDs are assigned from position (`<skill>-kp<n>`, `<skill>-kp<n>-q<m>`), so append new points or questions rather than reordering published ones.
 
 ```ts
 import { choose, predictOutput, type KnowledgePointModule } from './authoring';
@@ -43,7 +43,7 @@ Lesson prose is typeset with [KaTeX](https://katex.org/docs/supported): lesson p
 - Inline math cannot start or end with a space, and only ASCII belongs inside it: use `\times`, `\le`, `\sigma`, `\bar{x}`, and `\text{mean}` rather than Unicode symbols or bare words.
 - Use display math only for a long standalone formula in an explanation, never in choices. It scrolls inside its own box on narrow screens.
 - If one choice is a formula, write the comparable choices in TeX too, so formatting never hints at the answer.
-- Titles, summaries, and authored flashcards are plain text everywhere; keep math out of them. A mistake card copies the question's prose, so it shows the TeX source.
+- Titles, summaries, and authored flashcards are plain text everywhere; keep math out of them. A mistake card copies the question's prose and code separately, so its math is typeset on the Flashcards page and in Anki (see [math in cards](anki.md#math-in-cards)).
 
 The catalog validator rejects unclosed, empty, or space-padded `$` delimiters, and a test renders every math span with KaTeX in strict mode, so a TeX typo fails CI. Competitive Programming keeps complexity notation such as O(n log n) as plain text.
 

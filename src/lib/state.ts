@@ -17,7 +17,7 @@ import {
 import type { GraphCatalog, SkillOutline } from './curriculum';
 import { defaultCatalog, skillById } from './catalog-index';
 import { contentOf } from './content';
-import { plainProse } from './math-text';
+import { mistakeCardText } from './card-text';
 import { mergeQuizzes, type Quiz } from './quiz';
 import { mergeDiagnostics } from './placement';
 import {
@@ -103,14 +103,7 @@ export function recordLearningAnswer(
       skillId: skill.id,
       skillName: skill.title,
       kind: 'mistake',
-      front: `${plainProse(question.prompt)}${question.type === 'choice' && question.code ? `\n\n${question.code}` : ''}`,
-      back: `${
-        question.type === 'code'
-          ? question.solution
-          : question.checksOutput
-            ? question.choices[question.answer]
-            : plainProse(question.choices[question.answer])
-      }\n\n${plainProse(question.explanation)}`,
+      ...mistakeCardText(question),
       status: 'pending',
     });
   }

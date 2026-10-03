@@ -19,6 +19,7 @@ import {
   type LearnerState,
 } from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
+import { cardBlocks, plainText } from '../src/lib/card-text';
 import { earnedXp, lessonXp } from '../src/lib/xp';
 import { lessonAnswerIds, masterSkill } from './helpers/mastery';
 
@@ -172,7 +173,7 @@ describe('recording learning answers against current state', () => {
     expect(question.id).toBe(input.questionId);
     expect(result.cards[0].front).toContain(question.prompt);
     if (question.type === 'choice') {
-      expect(result.cards[0].back).toBe(
+      expect(plainText(cardBlocks(result.cards[0].back))).toBe(
         `${question.choices[question.answer]}\n\n${question.explanation}`,
       );
       if (question.code) expect(result.cards[0].front).toContain(question.code);
@@ -265,9 +266,10 @@ describe('recording learning answers against current state', () => {
     });
     expect(question.type).toBe('code');
     if (question.type !== 'code') throw new Error('Expected code exercise.');
-    expect(result.cards[0].back).toBe(
-      `${question.solution}\n\n${question.explanation}`,
-    );
+    expect(cardBlocks(result.cards[0].back)).toEqual([
+      { kind: 'code', text: question.solution },
+      { kind: 'prose', text: question.explanation },
+    ]);
     expect(result.progress.totalXp).toBe(0);
   });
 

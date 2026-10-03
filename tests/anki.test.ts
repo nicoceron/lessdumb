@@ -5,6 +5,7 @@ import {
   ANKI_MODEL,
   AnkiConnectError,
   ankiCardTag,
+  ankiProseHtml,
   createAnkiClient,
   exportCardsTsv,
   type AnkiCard,
@@ -513,5 +514,82 @@ describe('Anki card queue flushing', () => {
     await expect(client.syncToAnkiWeb()).rejects.toMatchObject({
       code: 'NOT_CONNECTED',
     });
+  });
+});
+
+// Math in card prose (CEN-128). Anki typesets with MathJax, whose delimiters
+// are \(…\) and \[…\] and which skips <pre> and <code>.
+describe('math in Anki cards', () => {
+  it('converts inline and display math to MathJax delimiters', () => {
+    expect(ankiProseHtml('The slope is $\\frac{dL}{dp} = 2(p - y)$.')).toBe(
+      'The slope is \\(\\frac{dL}{dp} = 2(p - y)\\).',
+    );
+    expect(ankiProseHtml('Expand:\n$$(a + b)^2 =\n a^2 + 2ab + b^2$$')).toBe(
+      'Expand:<br>\\[(a + b)^2 = a^2 + 2ab + b^2\\]',
+    );
+  });
+
+  it('keeps an escaped dollar as a plain dollar sign', () => {
+    expect(ankiProseHtml('It costs \\$20, or $2 \\times \\$10$.')).toBe(
+      'It costs $20, or \\(2 \\times \\$10\\).',
+    );
+    expect(ankiProseHtml('Between \\$5 and \\$10')).toBe('Between $5 and $10');
+  });
+
+  it('leaves code spans untouched and escapes HTML inside math', () => {
+    expect(ankiProseHtml('Use `print("$x$")` when $a < b$.')).toBe(
+      'Use <code>print(&quot;$x$&quot;)</code> when \\(a &lt; b\\).',
+    );
+    expect(ankiProseHtml('Plain text <b>, no math.')).toBe(
+      'Plain text &lt;b&gt;, no math.',
+    );
+  });
+
+  const mathCard: AnkiCard = {
+    id: 'mistake:math-gradient:math-gradient-kp1-q1',
+    skillId: 'math-gradient',
+    skillName: 'Gradients',
+    kind: 'mistake',
+    format: 'prose',
+    front:
+      'What is $\\frac{d}{dp}(p - y)^2$ for $p = 3$?\n\n```\nif p:\n\tprint(2 * (3 - 1))  # $x$\n```',
+    back: '$4$\n\nThe derivative is $2(p - y)$, which costs \\$1, not \\$2.',
+  };
+
+  it('sends prose outside <pre>, with math as MathJax, and code inside <pre>', async () => {
+    const server = fakeAnki();
+    const client = createAnkiClient({ fetch: server.fetcher });
+    await client.connect();
+    expect((await client.syncCards([mathCard])).synced).toHaveLength(1);
+    const note = server.notes.get(1000)!;
+    expect(note.fields.Front.value).toBe(
+      '<div class="lessdumb-text" style="white-space:pre-wrap">What is \\(\\frac{d}{dp}(p - y)^2\\) for \\(p = 3\\)?</div>' +
+        '<pre style="white-space:pre-wrap">if p:<br>\tprint(2 * (3 - 1))  # $x$</pre>',
+    );
+    expect(note.fields.Back.value).toBe(
+      '<div class="lessdumb-text" style="white-space:pre-wrap">\\(4\\)' +
+        '<br><br>The derivative is \\(2(p - y)\\), which costs $1, not $2.</div>',
+    );
+  });
+
+  it('exports math for TSV import outside <pre>, keeping one line per card', () => {
+    const exported = exportCardsTsv([mathCard, card]);
+    const rows = exported
+      .trimEnd()
+      .split('\n')
+      .slice(4)
+      .map((line) => line.split('\t'));
+    expect(rows.map((row) => row.length)).toEqual([3, 3]);
+    const [front, back] = rows[0];
+    expect(front).toBe(
+      '<div class="lessdumb-text" style="white-space:pre-wrap">What is \\(\\frac{d}{dp}(p - y)^2\\) for \\(p = 3\\)?</div>' +
+        '<pre style="white-space:pre-wrap">if p:<br>    print(2 * (3 - 1))  # $x$</pre>',
+    );
+    expect(back).not.toMatch(/<pre[^>]*>[^<]*\\\(/);
+    expect(back).toContain('\\(2(p - y)\\), which costs $1, not $2.');
+    // A plain-text card keeps its single <pre> field.
+    expect(rows[1][0]).toBe(
+      '<pre style="white-space:pre-wrap">What does x = 4 do?</pre>',
+    );
   });
 });

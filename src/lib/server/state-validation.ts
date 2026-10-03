@@ -322,6 +322,7 @@ function validateCard(value: unknown, path: string): string {
     'skillName',
     'front',
     'back',
+    'format',
     'kind',
     'status',
     'noteId',
@@ -332,6 +333,8 @@ function validateCard(value: unknown, path: string): string {
   string(card.skillName, `${path}.skillName`);
   string(card.front, `${path}.front`, 100_000);
   string(card.back, `${path}.back`, 100_000);
+  if (card.format !== undefined && card.format !== 'prose')
+    fail(`${path}.format`, 'prose');
   if (card.kind !== 'mastery' && card.kind !== 'mistake')
     fail(`${path}.kind`, 'mastery or mistake');
   if (card.status !== 'pending' && card.status !== 'synced')
