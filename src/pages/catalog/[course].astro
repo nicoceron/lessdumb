@@ -1,0 +1,68 @@
+---
+import Catalog from '../../layouts/Catalog.astro';
+import { courses, skills, type Course } from '../../lib/curriculum';
+import { catalogPath, siteUrl } from '../../lib/site';
+export const prerender = true;
+export function getStaticPaths() {
+  return courses.map((course) => ({
+    params: { course: course.id },
+    props: { course },
+  }));
+}
+const { course } = Astro.props as { course: Course };
+const courseSkills = skills.filter((skill) =>
+  course.skillIds.includes(skill.id),
+);
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Course',
+  name: course.title,
+  description: course.description,
+  url: siteUrl(catalogPath(course.id)),
+  provider: { '@type': 'Organization', name: 'lessdumb', url: siteUrl('/') },
+};
+---
+
+<Catalog title={`${course.title} — lessdumb`} description={course.description}>
+  <h1>{course.title}</h1>
+  <p>{course.description}</p>
+  <p>
+    {courseSkills.length} connected skills with lessons and deliberate practice.
+  </p>
+  <ol>
+    {courseSkills.map((skill) => (
+      <li>
+        <h2>{skill.title}</h2>
+        <p>{skill.summary}</p>
+        <p>
+          <a
+            href={`/learn?skill=${encodeURIComponent(skill.id)}&course=${encodeURIComponent(course.id)}`}
+          >
+            Practice {skill.title}
+          </a>
+        </p>
+      </li>
+    ))}
+  </ol>
+  {Boolean(course.resources?.length) && (
+    <section>
+      <h2>Public references</h2>
+      <ul>
+        {course.resources?.map((resource) => (
+          <li>
+            <a href={resource.url}>{resource.label}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+  <p>
+    <a href={catalogPath(course.id, 'markdown')}>
+      Read this course as Markdown
+    </a>
+  </p>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(schema).replace(/</g, '\\u003c')}
+  />
+</Catalog>
