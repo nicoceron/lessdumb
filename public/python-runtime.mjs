@@ -1,10 +1,12 @@
 // Device calibration for timed checks. A hidden large case's time limit is
-// set for the reference machine, where this benchmark's median repetition
-// takes CALIBRATION_REFERENCE_SECONDS. A device that runs it k times slower
-// (a low-end phone can be 5–20× slower) gets a limit k times longer, clamped
-// to [1, MAX_TIME_SCALE]: never stricter than the authored limit, and never
-// beyond the runner's 30-second execution deadline.
+// set for the reference machine (an Apple M4 Max in Chromium), where the
+// benchmark below takes CALIBRATION_REFERENCE_SECONDS. A device that runs it
+// k times slower (a low-end phone can be 5–20× slower) gets a limit k times
+// longer, and a faster device a shorter one, so the gap between an efficient
+// solution and brute force is the same on every device. The scale is clamped
+// to [MIN_TIME_SCALE, MAX_TIME_SCALE]; the runner stops any run after 30 s.
 export const CALIBRATION_REFERENCE_SECONDS = 0.025;
+export const MIN_TIME_SCALE = 0.5;
 export const MAX_TIME_SCALE = 10;
 
 /** Multiplier for timed limits on a device whose benchmark took `seconds`. */
@@ -12,16 +14,17 @@ export function timeScale(seconds) {
   if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds <= 0)
     return 1;
   const scale = Math.round((seconds / CALIBRATION_REFERENCE_SECONDS) * 10) / 10;
-  return Math.min(MAX_TIME_SCALE, Math.max(1, scale));
+  return Math.min(MAX_TIME_SCALE, Math.max(MIN_TIME_SCALE, scale));
 }
 
 /** Only checks that read the scale need the benchmark. */
-export const usesTimeScale = (tests) =>
-  tests.includes('__lessdumb_time_scale');
+export const usesTimeScale = (tests) => tests.includes('__lessdumb_time_scale');
 
 // Loops, list and dictionary updates, and a sort: the operations contest
-// solutions spend their time on. Three repetitions; the median resists a
-// single interruption.
+// solutions spend their time on. Interference (garbage collection, code
+// still compiling, other work) only slows a repetition down, so the fastest
+// of three is the device's speed. Overestimating slowness is the dangerous
+// direction: it would lengthen the limit for brute force too.
 const benchmark = `
 def __ld_benchmark():
     import time
@@ -47,11 +50,11 @@ def __ld_benchmark():
         start = time.perf_counter()
         work()
         times.append(time.perf_counter() - start)
-    return sorted(times)[1]
+    return min(times)
 __ld_benchmark()
 `;
 
-/** Seconds this device takes for the fixed benchmark (median of three). */
+/** Seconds this device takes for the fixed benchmark (fastest of three). */
 export async function calibrate(python) {
   return Number(await python.runPythonAsync(benchmark));
 }

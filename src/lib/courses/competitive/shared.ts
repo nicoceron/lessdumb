@@ -5,8 +5,12 @@ export const courseId = 'competitive-programming';
 /**
  * Seconds a hidden large case may take on the reference machine. The runner
  * multiplies it by the device's measured slowness (`__lessdumb_time_scale`,
- * see public/python-runtime.mjs), so a slow phone gets a longer limit.
- * Brute force needs far longer.
+ * see public/python-runtime.mjs), so a slow phone gets a longer limit and a
+ * fast computer a shorter one. Each case is sized so that, on the reference
+ * machine, the reference solution has at least 7× headroom and every brute
+ * force known to the tests needs at least 7× the limit; calibration keeps both
+ * margins on other devices. A case may pass its own base limit to
+ * `_check_time` when no size achieves both (the sieve uses 1.5 s).
  */
 export const TIME_LIMIT_SECONDS = 3;
 
@@ -42,8 +46,8 @@ def _timed(function, *arguments):
     result = function(*arguments)
     return result, _time.perf_counter() - start
 
-def _check_time(seconds, case, advice):
-    limit = ${TIME_LIMIT_SECONDS} * globals().get("__lessdumb_time_scale", 1)
+def _check_time(seconds, case, advice, base=${TIME_LIMIT_SECONDS}):
+    limit = base * globals().get("__lessdumb_time_scale", 1)
     assert seconds < limit, f"{case} took {seconds:.1f} s; the limit on this device is {limit:.3g} s. {advice}"`;
 
 /**
