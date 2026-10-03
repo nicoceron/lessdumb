@@ -1,5 +1,12 @@
 import type { Skill } from '../../curriculum';
-import { choice, exercise, skill } from './shared';
+import {
+  choice,
+  exercise,
+  insideWith,
+  skill,
+  withLargeCase,
+  withoutShortcuts,
+} from './shared';
 
 export const competitiveAdvanced: Skill[] = [
   skill(
@@ -72,7 +79,7 @@ print(routes(0))`,
         'The first call has not returned yet.',
       ),
       exercise(
-        'Implement count_routes(distance) for an integer 0 <= distance <= 200. Count ordered sequences of advances of size 1 or 3 whose sum is exactly distance. The empty sequence counts once for distance zero. Use a memoized recurrence.',
+        'Implement count_routes(distance) for an integer 0 <= distance <= 200. Count ordered sequences of advances of size 1 or 3 whose sum is exactly distance. The empty sequence counts once for distance zero. Use a memoized recurrence. count_routes(200) must finish within 3 seconds.',
         'def count_routes(distance):\n    # Cache answers for remaining distances.\n    pass\n',
         `from functools import cache
 
@@ -85,7 +92,8 @@ def count_routes(distance):
             return 0
         return count(remaining - 1) + count(remaining - 3)
     return count(distance)`,
-        `assert count_routes(0) == 1, "Count the empty route."
+        withLargeCase(
+          `assert count_routes(0) == 1, "Count the empty route."
 assert count_routes(1) == 1
 assert count_routes(2) == 1
 assert count_routes(3) == 2, "One three or three ones."
@@ -96,6 +104,10 @@ expected = [1]
 for distance in range(1, 41):
     expected.append(expected[distance - 1] + (expected[distance - 3] if distance >= 3 else 0))
 assert count_routes(40) == expected[40], "Reuse repeated states on longer routes."`,
+          `_result, _seconds = _timed(count_routes, 200)
+assert _result == 972248041367800504724352407998099, "count_routes(200) returned the wrong count."
+_check_time(_seconds, "count_routes(200)", "Cache each remaining distance so it is computed once.")`,
+        ),
         'Each nonempty route ends in either a one-unit or three-unit advance. Cache the answer for the remaining distance so each state is solved once.',
         'Use a nested helper with @cache, return 1 at zero and 0 below zero, then add the two smaller states.',
       ),
@@ -169,7 +181,7 @@ print(min_packets([3, 5], 7))`,
         'Try repeated size-four packets.',
       ),
       exercise(
-        'Implement min_packets(sizes, target). sizes is a list of positive integers, each usable any number of times; target is an integer from 0 through 5000. Return the minimum number of packets totaling exactly target, or -1 when impossible. An empty list reaches only zero.',
+        'Implement min_packets(sizes, target). sizes is a list of positive integers, each usable any number of times; target is an integer from 0 through 5000. Return the minimum number of packets totaling exactly target, or -1 when impossible. An empty list reaches only zero. Hidden cases with targets near 5,000 must finish within 3 seconds.',
         'def min_packets(sizes, target):\n    # Fill a table for exact totals.\n    pass\n',
         `def min_packets(sizes, target):
     dp = [float("inf")] * (target + 1)
@@ -179,7 +191,8 @@ print(min_packets([3, 5], 7))`,
             if size <= total:
                 dp[total] = min(dp[total], dp[total - size] + 1)
     return -1 if dp[target] == float("inf") else dp[target]`,
-        `assert min_packets([], 0) == 0
+        withLargeCase(
+          `assert min_packets([], 0) == 0
 assert min_packets([], 7) == -1
 assert min_packets([1, 4, 6], 8) == 2, "Greedy largest-first is insufficient."
 assert min_packets([3, 5], 11) == 3
@@ -188,6 +201,13 @@ assert min_packets([9], 18) == 2, "Packet sizes may be reused."
 assert min_packets([2, 2, 7], 9) == 2
 assert min_packets([8, 3], 0) == 0
 assert min_packets([7, 11], 121) == 11`,
+          `_sizes = sorted(set(_numbers(30, 7, 400, 301)))
+def _run():
+    return [min_packets(_sizes, 4999), min_packets(_sizes, 5000), min_packets([2, 4], 4999)]
+_result, _seconds = _timed(_run)
+assert _result == [13, 13, -1], "The 5,000-total cases returned wrong counts."
+_check_time(_seconds, "Three 5,000-total cases", "Fill one table entry per total instead of recomputing smaller totals recursively.")`,
+        ),
         'The table stores the optimum for every exact total. Trying every possible last packet preserves all choices without enumerating whole sequences.',
         'Initialize dp[0] to zero, fill totals from 1 upward, and relax from dp[total - size].',
       ),
@@ -259,7 +279,7 @@ print(best_value([(2, 5)], 4))`,
         'Zero is feasible even when no subset has weight exactly c.',
       ),
       exercise(
-        'Implement best_value(items, capacity). Each (weight, value) pair is a distinct item, even when pairs repeat. Weights are positive integers, values are nonnegative integers, and 0 <= capacity <= 5000. Return the greatest total value with weight at most capacity, using each item at most once. Preserve items.',
+        'Implement best_value(items, capacity). Each (weight, value) pair is a distinct item, even when pairs repeat. Weights are positive integers, values are nonnegative integers, and 0 <= capacity <= 5000. Return the greatest total value with weight at most capacity, using each item at most once. Preserve items. A hidden case with 100 items and capacity 5,000 must finish within 3 seconds.',
         'def best_value(items, capacity):\n    # Update capacities downward for each item.\n    pass\n',
         `def best_value(items, capacity):
     dp = [0] * (capacity + 1)
@@ -267,7 +287,8 @@ print(best_value([(2, 5)], 4))`,
         for limit in range(capacity, weight - 1, -1):
             dp[limit] = max(dp[limit], dp[limit - weight] + value)
     return dp[capacity]`,
-        `assert best_value([], 8) == 0
+        withLargeCase(
+          `assert best_value([], 8) == 0
 assert best_value([(1, 9)], 0) == 0
 assert best_value([(2, 5)], 4) == 5, "Do not reuse the same item."
 assert best_value([(2, 5), (2, 5)], 4) == 10, "Equal pairs can be distinct items."
@@ -277,6 +298,11 @@ assert best_value([(2, 0), (3, 6)], 5) == 6
 items = [(4, 9), (3, 7), (2, 4)]
 assert best_value(items, 6) == 13
 assert items == [(4, 9), (3, 7), (2, 4)], "Preserve the input list."`,
+          `_items = list(zip(_numbers(100, 1, 800, 311), _numbers(100, 0, 1000, 312)))
+_result, _seconds = _timed(best_value, _items, 5000)
+assert _result == 21297, "The 100-item case returned the wrong value."
+_check_time(_seconds, "The 100-item case", "Fill one capacity table per item instead of trying every subset of items.")`,
+        ),
         'A descending pass separates the previous item stage from the current stage without storing a second table.',
         'Use range(capacity, weight - 1, -1), then compare skipping with taking the item once.',
       ),
@@ -353,7 +379,7 @@ print(increasing_length([4, 4, 4]))`,
         'Keep input order, and require each comparison to be <.',
       ),
       exercise(
-        'Implement increasing_length(values), returning the length of a longest strictly increasing subsequence of an integer list. Elements may repeat or be negative. Preserve values, return 0 for an empty list, and use sorted tails with binary search.',
+        'Implement increasing_length(values), returning the length of a longest strictly increasing subsequence of an integer list. Elements may repeat or be negative. Preserve values, return 0 for an empty list, and use sorted tails with binary search. A hidden case with 200,000 values must finish within 3 seconds.',
         'def increasing_length(values):\n    # Keep the smallest tail for each subsequence length.\n    pass\n',
         `from bisect import bisect_left
 
@@ -366,7 +392,8 @@ def increasing_length(values):
         else:
             tails[position] = value
     return len(tails)`,
-        `assert increasing_length([]) == 0
+        withLargeCase(
+          `assert increasing_length([]) == 0
 assert increasing_length([5]) == 1
 assert increasing_length([4, 4, 4]) == 1, "Increasing is strict."
 assert increasing_length([5, 4, 3, 2]) == 1
@@ -377,6 +404,11 @@ values = [2, 8, 3, 9, 4]
 assert increasing_length(values) == 3
 assert values == [2, 8, 3, 9, 4], "Preserve the input."
 assert increasing_length(list(range(1000))) == 1000`,
+          `_values = _numbers(200000, -10**9, 10**9, 321)
+_result, _seconds = _timed(increasing_length, _values)
+assert _result == 874, "The 200,000-value case returned the wrong length."
+_check_time(_seconds, "The 200,000-value case", "Keep the smallest tail for each length and binary-search it instead of comparing every earlier value.")`,
+        ),
         'Replacing a tail improves its future extension opportunities without losing any achievable length.',
         'Use bisect_left(tails, value), append at the end, and otherwise replace that position.',
       ),
@@ -449,7 +481,7 @@ print(merge_bookings([(6, 8), (1, 4), (3, 5), (5, 6), (2, 3)]))`,
         'Use the nondecreasing order of starts.',
       ),
       exercise(
-        'Implement merge_bookings(bookings) for half-open integer intervals (start, end) with start < end. Return a sorted list of tuples representing their union, merging both overlapping and touching bookings. Support negative endpoints and empty input; preserve the input list.',
+        'Implement merge_bookings(bookings) for half-open integer intervals (start, end) with start < end. Return a sorted list of tuples representing their union, merging both overlapping and touching bookings. Support negative endpoints and empty input; preserve the input list. A hidden case with 100,000 bookings must finish within 3 seconds.',
         'def merge_bookings(bookings):\n    # Scan a sorted copy and extend the latest span.\n    pass\n',
         `def merge_bookings(bookings):
     merged = []
@@ -459,7 +491,8 @@ print(merge_bookings([(6, 8), (1, 4), (3, 5), (5, 6), (2, 3)]))`,
         else:
             merged.append((start, end))
     return merged`,
-        `assert merge_bookings([]) == []
+        withLargeCase(
+          `assert merge_bookings([]) == []
 assert merge_bookings([(2, 7)]) == [(2, 7)]
 assert merge_bookings([(1, 3), (3, 5)]) == [(1, 5)], "Merge touching spans."
 assert merge_bookings([(2, 10), (4, 6)]) == [(2, 10)], "Preserve a containing span."
@@ -469,6 +502,13 @@ bookings = [(6, 8), (1, 4), (3, 5), (5, 6), (2, 3)]
 assert merge_bookings(bookings) == [(1, 8)]
 assert bookings == [(6, 8), (1, 4), (3, 5), (5, 6), (2, 3)]
 assert merge_bookings([(1, 4), (1, 4)]) == [(1, 4)]`,
+          `_starts = _numbers(100000, -10**9, 10**9, 331)
+_lengths = _numbers(100000, 1, 20000, 332)
+_bookings = [(_starts[i], _starts[i] + _lengths[i]) for i in range(100000)]
+_result, _seconds = _timed(merge_bookings, _bookings)
+assert _checksum(_result) == 1927797419062957549, "The 100,000-booking case returned the wrong union."
+_check_time(_seconds, "The 100,000-booking case", "Sort once and extend the latest merged span instead of merging pairs repeatedly.")`,
+        ),
         'After sorting, only the most recent span can connect to the next booking. Extending by the maximum end handles nested intervals correctly.',
         'Use sorted(bookings), merge when start <= merged[-1][1], and keep tuple outputs.',
       ),
@@ -547,7 +587,7 @@ print(max_sessions([(-6, -4), (-4, -1), (0, 2)]))`,
         'The proof depends on every accepted session contributing the same value.',
       ),
       exercise(
-        'Implement max_sessions(sessions), returning the maximum number of pairwise compatible half-open sessions (start, end), with integer start < end. Each session is available once and has equal value. Touching endpoints are compatible, times may be negative, and the input must remain unchanged.',
+        'Implement max_sessions(sessions), returning the maximum number of pairwise compatible half-open sessions (start, end), with integer start < end. Each session is available once and has equal value. Touching endpoints are compatible, times may be negative, and the input must remain unchanged. A hidden case with 100,000 sessions must finish within 3 seconds.',
         'def max_sessions(sessions):\n    # Accept feasible sessions in earliest-finish order.\n    pass\n',
         `def max_sessions(sessions):
     end_of_last = None
@@ -557,7 +597,8 @@ print(max_sessions([(-6, -4), (-4, -1), (0, 2)]))`,
             count += 1
             end_of_last = end
     return count`,
-        `assert max_sessions([]) == 0
+        withLargeCase(
+          `assert max_sessions([]) == 0
 assert max_sessions([(2, 5)]) == 1
 assert max_sessions([(0, 8), (1, 3), (3, 5), (5, 7)]) == 3
 assert max_sessions([(0, 3), (1, 3), (2, 3)]) == 1
@@ -567,6 +608,13 @@ assert max_sessions([(1, 10), (2, 3), (4, 5), (6, 7), (8, 9)]) == 4
 sessions = [(5, 9), (0, 2), (2, 5)]
 assert max_sessions(sessions) == 3
 assert sessions == [(5, 9), (0, 2), (2, 5)]`,
+          `_starts = _numbers(100000, -10**9, 10**9, 341)
+_lengths = _numbers(100000, 1, 10**7, 342)
+_sessions = [(_starts[i], _starts[i] + _lengths[i]) for i in range(100000)]
+_result, _seconds = _timed(max_sessions, _sessions)
+assert _result == 3525, "The 100,000-session case returned the wrong count."
+_check_time(_seconds, "The 100,000-session case", "Sort by finish time and accept compatible sessions greedily instead of trying subsets.")`,
+        ),
         'Each accepted session ends as early as possible for the next choice, and an exchange with an optimal schedule proves no session count is lost.',
         'Sort using the end field. Accept the first session, then accept when start >= end_of_last.',
       ),
@@ -587,26 +635,38 @@ assert sessions == [(5, 9), (0, 2), (2, 5)]`,
     'cp-bitmasks',
     'cp-strategy',
     'Encode subsets with bits',
-    'Represent membership by bit position and enumerate small subset spaces.',
-    ['cp-bit-set-clear', 'cp-enumeration', 'zip-enumerate'],
+    'Update a selection mask and enumerate only its submasks.',
     [
-      'For n indexed items, a nonnegative integer mask encodes a subset: bit i is one exactly when item i is selected. Test membership with mask & (1 << i), add membership with |, and toggle it with ^. The zero mask is the empty subset. Different indices remain distinct even when their item values are equal.',
-      'Enumerate all masks with range(1 << n). To sum the selected values, scan indices and add values whose bits are set. The invariant is that the partial total includes exactly the selected indices examined so far. Negative item values are fine because masks encode membership, not numeric magnitude.',
-      'Scanning n bits for each of 2ⁿ masks costs O(n·2ⁿ) time and O(1) auxiliary storage when only a count is returned. This lesson’s function accepts at most 18 items, keeping exhaustive work practical. Python integers are not fixed-width; when using ~mask as a finite-set complement, restrict it with ((1 << n) - 1) & ~mask.',
+      'cp-bit-set-clear',
+      'cp-bit-submask-step',
+      'cp-enumeration',
+      'zip-enumerate',
     ],
-    `values = [2, -1, 2]
+    [
+      'For n indexed items, a nonnegative integer mask encodes a selection: bit i is one exactly when item i is selected. Test membership with mask & (1 << i). Set a bit with mask | (1 << i) and clear it with mask & ~(1 << i); both are idempotent, so repeating a change leaves the mask unchanged. The zero mask is the empty selection, and equal values at different indices stay distinct items.',
+      'The subsets of the current selection are exactly the submasks of its mask. Start at sub = mask, process it, stop after processing zero, and otherwise step with sub = (sub - 1) & mask. The walk visits each of the 2ᵏ submasks of a k-item selection once, in decreasing order, and never a subset that uses an unselected item. To score a submask, scan the item positions and add the values whose bits are set; negative values are fine because the mask records membership, not magnitude.',
+      'Looping over range(1 << n) and discarding masks outside the selection costs 2ⁿ steps per query even when only k items are selected. With 20 items and at most 10 selected, the submask walk takes at most 1,024 steps where the full range takes 1,048,576. Python integers are not fixed-width, so a complement used as a finite set must be restricted with ((1 << n) - 1) & ~mask.',
+    ],
+    `values = [4, -1, 3, 2]
+mask = 0
+for index in [0, 2, 3]:
+    mask |= 1 << index
+mask &= ~(1 << 3)
 matches = []
-for mask in range(1 << len(values)):
+sub = mask
+while True:
     total = 0
-    for index, value in enumerate(values):
-        if mask & (1 << index):
-            total += value
-    if total == 2:
-        matches.append(mask)
-print(matches)
-print(5 & (1 << 2) != 0)`,
-    '[1, 4]\nTrue',
-    'Masks 1 and 4 select the first or third item independently. Mask 5 has bit two set because its binary representation is 101.',
+    for position in range(len(values)):
+        if sub & (1 << position):
+            total += values[position]
+    if total == 7:
+        matches.append(sub)
+    if sub == 0:
+        break
+    sub = (sub - 1) & mask
+print(mask, matches)`,
+    '5 [5]',
+    'Setting items 0, 2, and 3 and then clearing item 3 leaves mask 5 (binary 101). Its submasks are 5, 4, 1, and 0, and only 5 (items 0 and 2) sums to 7.',
     [
       choice(
         'Which expression tests whether index i belongs to mask?',
@@ -616,57 +676,89 @@ print(5 & (1 << 2) != 0)`,
         'Construct a mask with just bit i set.',
       ),
       choice(
-        'How many indexed subsets does a list of four items have, including the empty subset?',
-        ['4', '8', '16', '24'],
-        2,
-        'Each of four indices has two independent membership choices, giving 2⁴ subsets.',
-        'Count the binary decisions.',
+        'Which expression removes item 2 from mask = 6 (binary 0110) and leaves the other bits alone?',
+        ['mask ^ (1 << 3)', 'mask | (1 << 2)', 'mask - 2', 'mask & ~(1 << 2)'],
+        3,
+        'The complement of the single bit keeps every other position, and AND clears position 2.',
+        'Build a mask that has every bit except position 2.',
       ),
       choice(
-        'For values [0, 0], how many indexed subsets sum to zero?',
-        ['0', '1', '2', '4'],
-        3,
-        'Empty, first-only, second-only, and both indices all sum to zero and are distinct subsets.',
-        'Equal values do not collapse distinct indices.',
+        'Mask 11 (binary 1011) selects three items. How many submasks does the walk sub = (sub - 1) & mask visit, counting the mask and zero?',
+        ['3', '8', '11', '16'],
+        1,
+        'Each of the three selected items is either in or out of a submask, giving 2³ = 8.',
+        'Only selected bits can vary.',
       ),
       exercise(
-        'Implement subset_count(values, target). values contains at most 18 integers, which may be negative, zero, or repeated. Return the number of indexed subsets whose sum equals target. Include the empty subset, and count equal-valued items at different indices independently. Enumerate bitmasks.',
-        'def subset_count(values, target):\n    # Visit every mask, including zero.\n    pass\n',
-        `def subset_count(values, target):
-    count = 0
-    for mask in range(1 << len(values)):
-        total = 0
-        for index, value in enumerate(values):
-            if mask & (1 << index):
-                total += value
-        if total == target:
-            count += 1
-    return count`,
-        `assert subset_count([], 0) == 1, "Include the empty subset."
-assert subset_count([], 5) == 0
-assert subset_count([0, 0], 0) == 4
-assert subset_count([2, 2], 2) == 2, "Count indexed choices separately."
-assert subset_count([2, -1, 2], 2) == 2
-assert subset_count([-3, 1, 2], 0) == 2
-assert subset_count([1, 2, 3, 4], 5) == 2
-assert subset_count([5, 7], 1) == 0
-assert subset_count([1] * 10, 3) == 120`,
-        'Every n-bit mask identifies one indexed subset exactly once, so counting matching mask sums neither omits nor duplicates a choice.',
-        'Loop over range(1 << len(values)); test each bit and count totals equal to target.',
+        'Implement selection_counts(values, changes, target). values holds at most 20 integers, which may be negative, zero, or repeated. The selection starts empty. Each change (index, present) sets item index in the selection mask when present is True and clears it when False; repeating a change has no effect. At most 10 items are selected at any time. After each change, count the submasks of the current selection whose selected values sum to target, including the empty submask, and return the counts in change order. Preserve both lists. Walk submasks with (sub - 1) & mask: a hidden case with 20 items and 200 changes must finish within 3 seconds.',
+        `def selection_counts(values, changes, target):
+    # Keep one mask; after each change, walk its submasks.
+    pass`,
+        `def selection_counts(values, changes, target):
+    mask = 0
+    counts = []
+    for index, present in changes:
+        if present:
+            mask |= 1 << index
+        else:
+            mask &= ~(1 << index)
+        count = 0
+        sub = mask
+        while True:
+            total = 0
+            for position, value in enumerate(values):
+                if sub & (1 << position):
+                    total += value
+            if total == target:
+                count += 1
+            if sub == 0:
+                break
+            sub = (sub - 1) & mask
+        counts.append(count)
+    return counts`,
+        withLargeCase(
+          `assert selection_counts([], [], 0) == []
+assert selection_counts([5], [(0, True)], 0) == [1], "The empty submask sums to zero."
+assert selection_counts([5], [(0, True), (0, True)], 5) == [1, 1], "Setting a set bit changes nothing."
+assert selection_counts([2, 2], [(0, True), (1, True)], 2) == [1, 2], "Equal values at different indices are distinct items."
+assert selection_counts([3, -1, 4, 1], [(0, True), (2, True), (1, True), (0, False)], 3) == [1, 1, 2, 1], "Count only submasks of the current selection."
+assert selection_counts([1, 2, 3], [(1, False), (2, True)], 0) == [1, 1], "Clearing an absent item changes nothing."
+assert selection_counts([0, 0, 0], [(0, True), (1, True), (2, True)], 0) == [2, 4, 8]
+values = [1] * 20
+changes = [(index, True) for index in range(10)]
+assert selection_counts(values, changes, 3)[-1] == 120
+assert values == [1] * 20 and changes == [(index, True) for index in range(10)], "Preserve both lists."`,
+          `_values = _numbers(20, -60, 60, 701)
+_selected = set()
+_changes = []
+for _pick in _numbers(1000, 0, 19, 702):
+    if _pick in _selected:
+        _selected.discard(_pick)
+        _changes.append((_pick, False))
+    elif len(_selected) < 10:
+        _selected.add(_pick)
+        _changes.append((_pick, True))
+    if len(_changes) == 200:
+        break
+_result, _seconds = _timed(selection_counts, _values, _changes, 40)
+assert _checksum(_result) == 666043684648720918, "The 200-change case returned wrong counts."
+_check_time(_seconds, "The 200-change case", "Walk only the submasks of the current selection instead of every mask below 1 << 20.")`,
+        ),
+        'Set and clear keep one mask equal to the current selection, and the submask walk visits each subset of that selection exactly once, so every count neither omits nor repeats a choice.',
+        'Update the mask with | or & ~. Then start at sub = mask, count matching totals, stop after zero, and step with (sub - 1) & mask.',
       ),
     ],
     [
       [
-        'What does bit i in a subset mask mean?',
-        'Bit i is one exactly when indexed item i is selected.',
+        'How do you visit every subset of a selection mask exactly once?',
+        'Start at sub = mask, process it, stop after zero, and otherwise step with sub = (sub - 1) & mask.',
       ],
       [
-        'What is the cost of scanning n items for every subset mask?',
-        'O(n·2ⁿ) time; it is appropriate only for small n.',
+        'Why walk submasks instead of every mask below 1 << n?',
+        'A k-item selection has only 2ᵏ submasks; scanning all 2ⁿ masks wastes work on subsets that use unselected items.',
       ],
     ],
   ),
-
   skill(
     'cp-geometry',
     'cp-strategy',
@@ -815,7 +907,7 @@ print(gcd_lcm(0, 0))`,
         'Compare dividing first with multiplying a * b first.',
       ),
       exercise(
-        'Implement gcd_lcm(a, b) for arbitrary integer arguments. Return a tuple (gcd, lcm), both nonnegative. Define gcd(0, 0) = 0 and lcm = 0 whenever either argument is zero. Use the Euclidean remainder loop for the gcd.',
+        'Implement gcd_lcm(a, b) for arbitrary integer arguments. Return a tuple (gcd, lcm), both nonnegative. Define gcd(0, 0) = 0 and lcm = 0 whenever either argument is zero. Use the Euclidean remainder loop for the gcd. The checks disable math.gcd and math.lcm, and a hidden case of 20,000 pairs up to 10¹⁸ must finish within 3 seconds.',
         'def gcd_lcm(a, b):\n    # Normalize signs, run Euclid, then handle the lcm.\n    pass\n',
         `def gcd_lcm(a, b):
     x, y = abs(a), abs(b)
@@ -823,7 +915,13 @@ print(gcd_lcm(0, 0))`,
         x, y = y, x % y
     multiple = 0 if a == 0 or b == 0 else abs((a // x) * b)
     return x, multiple`,
-        `assert gcd_lcm(18, 30) == (6, 90)
+        withoutShortcuts(
+          'import math',
+          'math',
+          ['gcd', 'lcm'],
+          'This exercise asks you to write the Euclidean loop yourself, so math.gcd and math.lcm are disabled during the checks.',
+          withLargeCase(
+            `assert gcd_lcm(18, 30) == (6, 90)
 assert gcd_lcm(-12, 18) == (6, 36)
 assert gcd_lcm(-8, -20) == (4, 40)
 assert gcd_lcm(0, 15) == (15, 0)
@@ -832,6 +930,18 @@ assert gcd_lcm(0, 0) == (0, 0), "Avoid dividing by zero."
 assert gcd_lcm(13, 17) == (1, 221)
 assert gcd_lcm(21, 21) == (21, 21)
 assert gcd_lcm(10**12, 10**12 + 1) == (1, 10**12 * (10**12 + 1))`,
+            `_fibonacci = [1, 1]
+while len(_fibonacci) < 88:
+    _fibonacci.append(_fibonacci[-1] + _fibonacci[-2])
+_pairs = list(zip(_numbers(20000, -10**18, 10**18, 351), _numbers(20000, -10**18, 10**18, 352)))
+_pairs += [(_fibonacci[i + 1], _fibonacci[i]) for i in range(80)] + [(10**18, 1), (1, 10**18)]
+def _run():
+    return [gcd_lcm(a, b) for a, b in _pairs]
+_result, _seconds = _timed(_run)
+assert _checksum(_result) == 1176360124805248735, "The 20,000-pair case returned wrong results."
+_check_time(_seconds, "The 20,000-pair case", "Replace (a, b) with (b, a % b) instead of subtracting or trying every divisor.")`,
+          ),
+        ),
         'Each remainder update preserves the gcd and reduces the second nonnegative argument. Derive the lcm only after checking for zero inputs.',
         'Start x, y = abs(a), abs(b), then use x, y = y, x % y while y is nonzero.',
       ),
@@ -912,7 +1022,7 @@ print(mod_power(9, 0, 1))`,
         'Write e as 2q + 1.',
       ),
       exercise(
-        'Implement mod_power(base, exponent, modulus) using repeated squaring. base is any integer, exponent is a nonnegative integer, and modulus is a positive integer. Return the residue in [0, modulus). Treat exponent zero as the empty product, including base zero. Support modulus 1.',
+        'Implement mod_power(base, exponent, modulus) using repeated squaring. base is any integer, exponent is a nonnegative integer, and modulus is a positive integer. Return the residue in [0, modulus). Treat exponent zero as the empty product, including base zero. Support modulus 1. The checks disable three-argument pow, and a hidden case of 10,000 powers with exponents up to 10¹⁸ must finish within 3 seconds.',
         'def mod_power(base, exponent, modulus):\n    # Consume exponent bits while reducing every multiplication.\n    pass\n',
         `def mod_power(base, exponent, modulus):
     result = 1 % modulus
@@ -923,17 +1033,50 @@ print(mod_power(9, 0, 1))`,
         base = base * base % modulus
         exponent //= 2
     return result`,
-        `assert mod_power(2, 20, 1000) == 576
+        insideWith(
+          `import builtins as _builtins
+import contextlib as _contextlib
+
+_small_powers = {(base, exponent): pow(base, exponent, 12) for base in [-8, -1, 0, 2, 13] for exponent in range(10)}
+_message = "This exercise asks you to implement repeated squaring, so three-argument pow is disabled during the checks."
+
+@_contextlib.contextmanager
+def _without_modular_pow():
+    original = _builtins.pow
+    for value in list(globals().values()):
+        assert value is not original, _message
+    def two_argument_pow(base, exponent, mod=None):
+        if mod is not None:
+            raise AssertionError(_message)
+        return original(base, exponent)
+    _builtins.pow = two_argument_pow
+    try:
+        yield
+    finally:
+        _builtins.pow = original`,
+          '_without_modular_pow()',
+          withLargeCase(
+            `assert mod_power(2, 20, 1000) == 576
 assert mod_power(-2, 3, 5) == 2
 assert mod_power(9, 0, 7) == 1
 assert mod_power(0, 0, 7) == 1, "Use the empty-product convention."
 assert mod_power(0, 5, 7) == 0
 assert mod_power(9, 0, 1) == 0
 assert mod_power(123, 500, 1) == 0
-assert mod_power(7, 10**9, 97) == pow(7, 10**9, 97), "Consume exponent bits instead of multiplying a billion times."
+assert mod_power(7, 10**9, 97) == 61, "Consume exponent bits instead of multiplying a billion times."
 for base in [-8, -1, 0, 2, 13]:
     for exponent in range(10):
-        assert mod_power(base, exponent, 12) == pow(base, exponent, 12)`,
+        assert mod_power(base, exponent, 12) == _small_powers[(base, exponent)]`,
+            `_bases = _numbers(10000, -10**12, 10**12, 361)
+_exponents = _numbers(10000, 0, 10**18, 362)
+_moduli = _numbers(10000, 1, 10**9, 363)
+def _run():
+    return [mod_power(_bases[i], _exponents[i], _moduli[i]) for i in range(10000)]
+_result, _seconds = _timed(_run)
+assert _checksum(_result) == 1223432634806913176, "The 10,000-power case returned wrong residues."
+_check_time(_seconds, "The 10,000-power case", "Square the base and halve the exponent instead of multiplying once per exponent step.")`,
+          ),
+        ),
         'Each step preserves the modular-power invariant while removing one exponent bit. Reducing both multiplications keeps residues bounded.',
         'Start at 1 % modulus. For an odd exponent multiply the result, then square the base and use exponent //= 2.',
       ),
@@ -1016,7 +1159,7 @@ print(primes_up_to(1))`,
         'Apply the definition of prime.',
       ),
       exercise(
-        'Implement primes_up_to(limit) with a sieve. limit is an integer from 0 through 100000. Return all prime integers <= limit in increasing order. Return [] below two, exclude zero and one, and begin each prime’s marking at its square.',
+        'Implement primes_up_to(limit) with a sieve. limit is an integer from 0 through 5000000. Return all prime integers <= limit in increasing order. Return [] below two, exclude zero and one, and begin each prime’s marking at its square. A hidden case with limit 5,000,000 must finish within 3 seconds.',
         'def primes_up_to(limit):\n    # Mark a bounded primality table.\n    pass\n',
         `def primes_up_to(limit):
     if limit < 2:
@@ -1030,7 +1173,8 @@ print(primes_up_to(1))`,
                 prime[multiple] = False
         p += 1
     return [value for value in range(2, limit + 1) if prime[value]]`,
-        `assert primes_up_to(0) == []
+        withLargeCase(
+          `assert primes_up_to(0) == []
 assert primes_up_to(1) == []
 assert primes_up_to(2) == [2], "The bound is inclusive."
 assert primes_up_to(4) == [2, 3]
@@ -1040,6 +1184,10 @@ assert primes_up_to(97)[-1] == 97
 result = primes_up_to(1000)
 assert len(result) == 168 and result[-1] == 997
 assert result == sorted(set(result)), "Return each prime once in order."`,
+          `_result, _seconds = _timed(primes_up_to, 5000000)
+assert _checksum(_result) == 1620756028218592251, "primes_up_to(5000000) returned the wrong primes."
+_check_time(_seconds, "primes_up_to(5000000)", "Mark multiples in one table instead of testing each number by trial division.")`,
+        ),
         'Each prime marks its composite multiples. Processing through its square bound suffices to eliminate every composite in the table.',
         'Handle limit < 2 first, allocate limit + 1 entries, and mark with range(p * p, limit + 1, p).',
       ),
@@ -1121,7 +1269,7 @@ print(choose_mod(5, 6, 7))`,
         'Inspect the operations used by the recurrence.',
       ),
       exercise(
-        'Implement choose_mod(n, k, modulus) using Pascal’s recurrence. n is an integer from 0 through 500, k is any integer, and modulus is a positive integer. Return C(n, k) % modulus, or 0 when k is outside [0, n]. Support composite moduli and modulus 1 without modular division.',
+        'Implement choose_mod(n, k, modulus) using Pascal’s recurrence. n is an integer from 0 through 500, k is any integer, and modulus is a positive integer. Return C(n, k) % modulus, or 0 when k is outside [0, n]. Support composite moduli and modulus 1 without modular division. The checks disable math.comb, math.perm, and math.factorial, and hidden n = 500 cases must finish within 3 seconds.',
         'def choose_mod(n, k, modulus):\n    # Build a compressed Pascal table, updating downward.\n    pass\n',
         `def choose_mod(n, k, modulus):
     if k < 0 or k > n:
@@ -1133,7 +1281,17 @@ print(choose_mod(5, 6, 7))`,
         for selected in range(min(count, k), 0, -1):
             dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
     return dp[k]`,
-        `assert choose_mod(0, 0, 7) == 1
+        withoutShortcuts(
+          `import math
+_pascal = [[1]]
+for _row in range(1, 21):
+    _previous = _pascal[-1]
+    _pascal.append([1] + [_previous[k - 1] + _previous[k] for k in range(1, _row)] + [1])`,
+          'math',
+          ['comb', 'perm', 'factorial'],
+          'This exercise asks you to build Pascal rows yourself, so math.comb, math.perm, and math.factorial are disabled during the checks.',
+          withLargeCase(
+            `assert choose_mod(0, 0, 7) == 1
 assert choose_mod(6, 2, 10) == 5
 assert choose_mod(6, 4, 10) == 5, "Use combination symmetry."
 assert choose_mod(5, -1, 7) == 0
@@ -1142,11 +1300,17 @@ assert choose_mod(8, 0, 9) == 1
 assert choose_mod(8, 8, 9) == 1
 assert choose_mod(0, 0, 1) == 0
 assert choose_mod(12, 6, 8) == 4, "Composite moduli need no inverse."
-from math import comb
 for n in range(21):
     for k in range(n + 1):
         for modulus in [1, 4, 13]:
-            assert choose_mod(n, k, modulus) == comb(n, k) % modulus`,
+            assert choose_mod(n, k, modulus) == _pascal[n][k] % modulus`,
+            `def _run():
+    return [choose_mod(500, 250, 10**9 + 7), choose_mod(500, 137, 1000), choose_mod(499, 300, 2**61 - 1)]
+_result, _seconds = _timed(_run)
+assert _result == [515561345, 0, 2102609650960852793], "The n = 500 cases returned wrong residues."
+_check_time(_seconds, "Three n = 500 cases", "Build Pascal rows with one table instead of recursing on both smaller counts.")`,
+          ),
+        ),
         'The include/exclude partition produces Pascal’s recurrence. Descending updates preserve the previous row, and addition works for every positive modulus.',
         'Reject invalid k, initialize the empty selection, then add dp[r - 1] to dp[r] in descending r order.',
       ),
@@ -1245,7 +1409,7 @@ print(range_sums([2, 1, 4, 3], [("sum", 1, 4), ("add", 2, 5), ("sum", 0, 3)]))`,
         'Compute lowbit(0).',
       ),
       exercise(
-        'Implement range_sums(values, operations) using a Fenwick tree. values is an integer list. Each operation is ("add", index, delta), with 0 <= index < len(values), or ("sum", left, right), with 0 <= left <= right <= len(values). Return sum answers in operation order. Ranges are half-open [left, right); empty ranges sum to zero. Additions may be negative. Preserve values.',
+        'Implement range_sums(values, operations) using a Fenwick tree. values is an integer list. Each operation is ("add", index, delta), with 0 <= index < len(values), or ("sum", left, right), with 0 <= left <= right <= len(values). Return sum answers in operation order. Ranges are half-open [left, right); empty ranges sum to zero. Additions may be negative. Preserve values. A hidden case with 100,000 values and 100,000 operations must finish within 3 seconds.',
         'def range_sums(values, operations):\n    # Convert public indices to a 1-based Fenwick representation.\n    pass\n',
         `def range_sums(values, operations):
     n = len(values)
@@ -1270,7 +1434,8 @@ print(range_sums([2, 1, 4, 3], [("sum", 1, 4), ("add", 2, 5), ("sum", 0, 3)]))`,
         else:
             answers.append(prefix(right) - prefix(left))
     return answers`,
-        `assert range_sums([], []) == []
+        withLargeCase(
+          `assert range_sums([], []) == []
 assert range_sums([], [("sum", 0, 0)]) == [0]
 assert range_sums([5], [("sum", 0, 1), ("add", 0, -7), ("sum", 0, 1)]) == [5, -2]
 assert range_sums([2, 1, 4, 3], [("sum", 1, 4), ("add", 2, 5), ("sum", 0, 3)]) == [8, 12]
@@ -1280,6 +1445,15 @@ operations = [("add", 0, 2), ("add", 4, -3), ("sum", 0, 5), ("sum", 1, 4), ("sum
 assert range_sums(values, operations) == [14, 8, 1]
 assert values == [3, 1, 5, 2, 4], "Preserve the source array."
 assert range_sums([7, 8], [("add", 1, 0)]) == []`,
+          `_values = _numbers(100000, -1000, 1000, 401)
+_kinds = _numbers(100000, 0, 1, 402)
+_xs = _numbers(100000, 0, 100000, 403)
+_ys = _numbers(100000, 0, 100000, 404)
+_operations = [("add", min(_xs[i], 99999), _ys[i] % 2001 - 1000) if _kinds[i] else ("sum", min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(100000)]
+_result, _seconds = _timed(range_sums, _values, _operations)
+assert _checksum(_result) == 907746960654767997, "The 100,000-operation case returned wrong sums."
+_check_time(_seconds, "The 100,000-operation case", "Walk the Fenwick tree in O(log n) per operation instead of re-adding each range.")`,
+        ),
         'Fenwick blocks preserve their sums under point additions. Prefix queries partition the requested prefix into disjoint stored blocks, and subtraction yields the range.',
         'Use index + 1 for updates, end for prefix queries, and i & -i to move between blocks.',
       ),
@@ -1378,7 +1552,7 @@ print(range_minima([8, 3, 6, 1, 9], [("min", 0, 3), ("set", 1, 7), ("min", 0, 3)
         'Consider prefix minima for [1, 9, 8] and the range [1, 3).',
       ),
       exercise(
-        'Implement range_minima(values, operations) with a segment tree. values is an integer list. Operations are ("set", index, value) for valid indices, or ("min", left, right) with 0 <= left <= right <= len(values). Return query answers in order, using half-open [left, right) ranges and None for empty ranges. Assignments replace rather than add. Preserve values.',
+        'Implement range_minima(values, operations) with a segment tree. values is an integer list. Operations are ("set", index, value) for valid indices, or ("min", left, right) with 0 <= left <= right <= len(values). Return query answers in order, using half-open [left, right) ranges and None for empty ranges. Assignments replace rather than add. Preserve values. A hidden case with 200,000 values and 40,000 operations must finish within 3 seconds.',
         'def range_minima(values, operations):\n    # Build a minimum tree, then apply assignments and queries.\n    pass\n',
         `def range_minima(values, operations):
     size = 1
@@ -1414,7 +1588,8 @@ print(range_minima([8, 3, 6, 1, 9], [("min", 0, 3), ("set", 1, 7), ("min", 0, 3)
                 right //= 2
             answers.append(best)
     return answers`,
-        `assert range_minima([], []) == []
+        withLargeCase(
+          `assert range_minima([], []) == []
 assert range_minima([], [("min", 0, 0)]) == [None]
 assert range_minima([7], [("min", 0, 1), ("set", 0, -2), ("min", 0, 1), ("min", 1, 1)]) == [7, -2, None]
 assert range_minima([8, 3, 6, 1, 9], [("min", 0, 3), ("set", 1, 7), ("min", 0, 3), ("min", 3, 5)]) == [3, 6, 1]
@@ -1424,6 +1599,16 @@ values = [5, 5, 5, 5, 5]
 assert range_minima(values, [("set", 4, 1), ("min", 0, 4), ("min", 4, 5), ("min", 2, 2)]) == [5, 1, None]
 assert values == [5, 5, 5, 5, 5]
 assert range_minima([1, 2], [("set", 0, 3)]) == []`,
+          `_values = _numbers(200000, -10**9, 10**9, 411)
+_kinds = _numbers(40000, 0, 1, 412)
+_xs = _numbers(40000, 0, 200000, 413)
+_ys = _numbers(40000, 0, 200000, 414)
+_zs = _numbers(40000, -10**9, 10**9, 415)
+_operations = [("set", min(_xs[i], 199999), _zs[i]) if _kinds[i] else ("min", min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(40000)]
+_result, _seconds = _timed(range_minima, _values, _operations)
+assert _checksum(_result) == 208278054782203810, "The 40,000-operation case returned wrong minima."
+_check_time(_seconds, "The 40,000-operation case", "Combine O(log n) boundary nodes per query instead of scanning the whole range.")`,
+        ),
         'Each assignment restores the ancestor-minimum invariant. The query collects disjoint tree intervals covering exactly the requested half-open range.',
         'Use infinity for padding, rebuild parents after a set, and move query endpoints upward while consuming odd boundaries.',
       ),
@@ -1512,7 +1697,7 @@ print(kth_ancestors([-1, 0, 0, 1, 3], [(4, 0), (4, 2), (4, 3), (4, 4), (0, 1)]))
         'A parent chain cannot revisit a vertex in a forest.',
       ),
       exercise(
-        'Implement kth_ancestors(parents, queries). parents describes an acyclic forest: each parent is -1 for a root or a valid vertex index. Each query (vertex, k) uses a valid vertex and nonnegative integer k; k may be arbitrarily large. Return the kth ancestor for each query, -1 if absent, and the vertex itself for k = 0. Empty parents comes with no queries. Use a doubling table and preserve parents.',
+        'Implement kth_ancestors(parents, queries). parents describes an acyclic forest: each parent is -1 for a root or a valid vertex index. Each query (vertex, k) uses a valid vertex and nonnegative integer k; k may be arbitrarily large. Return the kth ancestor for each query, -1 if absent, and the vertex itself for k = 0. Empty parents comes with no queries. Use a doubling table and preserve parents. A hidden case with 50,000 vertices and 50,000 queries must finish within 3 seconds.',
         'def kth_ancestors(parents, queries):\n    # Precompute 2**j jumps, preserving -1 roots.\n    pass\n',
         `def kth_ancestors(parents, queries):
     n = len(parents)
@@ -1533,7 +1718,8 @@ print(kth_ancestors([-1, 0, 0, 1, 3], [(4, 0), (4, 2), (4, 3), (4, 4), (0, 1)]))
             bit += 1
         answers.append(vertex)
     return answers`,
-        `assert kth_ancestors([], []) == []
+        withLargeCase(
+          `assert kth_ancestors([], []) == []
 assert kth_ancestors([-1], [(0, 0), (0, 1), (0, 10**50)]) == [0, -1, -1]
 assert kth_ancestors([-1, 0, 0, 1, 3], [(4, 0), (4, 2), (4, 3), (4, 4), (0, 1)]) == [4, 1, 0, -1, -1]
 assert kth_ancestors([2, 2, -1], [(0, 1), (0, 2), (1, 0)]) == [2, -1, 1], "Parents need not precede children."
@@ -1541,6 +1727,13 @@ assert kth_ancestors([-1, 0, -1, 2], [(1, 1), (3, 1), (3, 2)]) == [0, 2, -1]
 parents = [-1] + list(range(19))
 assert kth_ancestors(parents, [(19, 16), (19, 19), (19, 20), (19, 10**100)]) == [3, 0, -1, -1]
 assert parents == [-1] + list(range(19)), "Preserve parent pointers."`,
+          `_back = _numbers(50000, 1, 3, 421)
+_parents = [-1] + [max(-1, vertex - _back[vertex]) for vertex in range(1, 50000)]
+_queries = list(zip(_numbers(50000, 0, 49999, 422), _numbers(50000, 0, 50000, 423)))
+_result, _seconds = _timed(kth_ancestors, _parents, _queries)
+assert _checksum(_result) == 364325291241199138, "The 50,000-query case returned wrong ancestors."
+_check_time(_seconds, "The 50,000-query case", "Jump by powers of two from a doubling table instead of stepping one parent at a time.")`,
+        ),
         'Each doubling row composes two existing jumps, guarding the -1 sentinel. Query bits select disjoint jump lengths; k >= n has no ancestor in an acyclic forest.',
         'Store the parent row first, compose each row through the previous row, then consume k bits while the current vertex exists.',
       ),
@@ -1647,7 +1840,7 @@ print(scc_groups(5, edges))`,
         'Apply the SCC definition to a proposed component-level cycle.',
       ),
       exercise(
-        'Implement scc_groups(n, edges) for a directed graph on vertices 0 through n - 1, with n >= 0. Every edge endpoint is valid; duplicate edges and self-loops are allowed. Return the SCC partition as sorted lists of vertex indices, with the groups sorted lexicographically. Include isolated vertices, return [] for n = 0, and use iterative graph traversals to support long chains.',
+        'Implement scc_groups(n, edges) for a directed graph on vertices 0 through n - 1, with n >= 0. Every edge endpoint is valid; duplicate edges and self-loops are allowed. Return the SCC partition as sorted lists of vertex indices, with the groups sorted lexicographically. Include isolated vertices, return [] for n = 0, and use iterative graph traversals to support long chains. A hidden graph with 50,000 vertices and about 150,000 edges must finish within 3 seconds.',
         'def scc_groups(n, edges):\n    # Record DFS finishing order, then explore the reversed graph.\n    pass\n',
         `def scc_groups(n, edges):
     graph = [[] for _ in range(n)]
@@ -1690,7 +1883,8 @@ print(scc_groups(5, edges))`,
                     stack.append(neighbor)
         groups.append(sorted(group))
     return sorted(groups)`,
-        `assert scc_groups(0, []) == []
+        withLargeCase(
+          `assert scc_groups(0, []) == []
 assert scc_groups(3, []) == [[0], [1], [2]], "Include isolated vertices."
 assert scc_groups(1, [(0, 0), (0, 0)]) == [[0]]
 assert scc_groups(3, [(0, 1), (1, 0), (1, 2)]) == [[0, 1], [2]]
@@ -1699,6 +1893,19 @@ assert scc_groups(5, [(0, 1), (1, 0), (1, 2), (2, 3), (3, 2), (3, 4)]) == [[0, 1
 assert scc_groups(5, [(4, 1), (1, 4), (4, 1), (2, 3)]) == [[0], [1, 4], [2], [3]]
 assert scc_groups(1500, [(i, i + 1) for i in range(1499)]) == [[i] for i in range(1500)], "Avoid recursive depth limits."
 assert scc_groups(1500, [(i, (i + 1) % 1500) for i in range(1500)]) == [list(range(1500))]`,
+          `_cuts = sorted(set(_numbers(2500, 1, 49999, 431)))
+_bounds = [0] + _cuts + [50000]
+_edges = [(i, i + 1) for i in range(49999)]
+for _first, _last in zip(_bounds, _bounds[1:]):
+    if _last - _first > 1 and _first % 3:
+        _edges.append((_last - 1, _first))
+_sources = _numbers(100000, 0, 49999, 432)
+_hops = _numbers(100000, 1, 400, 433)
+_edges += [(_sources[i], min(49999, _sources[i] + _hops[i])) for i in range(100000)]
+_result, _seconds = _timed(scc_groups, 50000, _edges)
+assert _checksum(_result) == 1230589931274524807, "The 50,000-vertex graph returned wrong groups."
+_check_time(_seconds, "The 50,000-vertex graph", "Use two linear passes (finishing order, then the reversed graph) instead of a search from every vertex.")`,
+        ),
         'Finishing order on the original graph followed by reversed-edge traversals separates the maximal mutual-reachability groups. Explicit stacks handle deep graphs.',
         'In the first pass, save a (vertex, next-neighbor-index) frame so a vertex enters order only after all neighbors finish. Traverse reverse edges in reversed(order).',
       ),

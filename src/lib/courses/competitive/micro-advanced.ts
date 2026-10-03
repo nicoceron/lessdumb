@@ -1,5 +1,5 @@
 import type { Skill } from '../../curriculum';
-import { choice, exercise, skill } from './shared';
+import { choice, exercise, skill, withLargeCase } from './shared';
 
 type Check = [string, string[], number, string, string];
 type Atom = {
@@ -193,11 +193,23 @@ stages('cp-binary-lifting', 'cp-range', [
     ],
     signature: 'def jump_ancestor(table, vertex, steps)',
     contract:
-      'Implement jump_ancestor(table, vertex, steps). table is a valid binary-lifting table for a nonempty acyclic n-vertex forest, with at least max(1, n.bit_length()) rows; vertex is valid and steps is nonnegative, possibly huge. Return the ancestor or -1 if absent. Preserve table.',
+      'Implement jump_ancestor(table, vertex, steps). table is a valid binary-lifting table for a nonempty acyclic n-vertex forest, with at least max(1, n.bit_length()) rows; vertex is valid and steps is nonnegative, possibly huge. Return the ancestor or -1 if absent. Preserve table. A hidden case runs 50,000 queries on a 100,000-vertex chain and must finish within 3 seconds.',
     solution:
       'def jump_ancestor(table, vertex, steps):\n    n = len(table[0])\n    if steps >= n:\n        return -1\n    bit = 0\n    while steps and vertex != -1:\n        if steps & 1:\n            vertex = table[bit][vertex]\n        steps >>= 1\n        bit += 1\n    return vertex',
-    checks:
+    checks: withLargeCase(
       'table = [[-1, 0, 1, 2, 3], [-1, -1, 0, 1, 2], [-1, -1, -1, -1, 0]]\nassert jump_ancestor(table, 4, 0) == 4\nassert jump_ancestor(table, 4, 1) == 3\nassert jump_ancestor(table, 4, 3) == 1\nassert jump_ancestor(table, 4, 4) == 0\nassert jump_ancestor(table, 4, 5) == -1\nassert jump_ancestor(table, 0, 1) == -1\nassert jump_ancestor(table, 4, 10**100) == -1\nassert table[0] == [-1, 0, 1, 2, 3]',
+      `_table = [[vertex - 1 for vertex in range(100000)]]
+for _ in range(1, 17):
+    _previous = _table[-1]
+    _table.append([-1 if parent == -1 else _previous[parent] for parent in _previous])
+_vertices = _numbers(50000, 0, 99999, 451)
+_steps = _numbers(50000, 0, 100000, 452)
+def _run():
+    return [jump_ancestor(_table, _vertices[i], _steps[i]) for i in range(50000)]
+_result, _seconds = _timed(_run)
+assert _checksum(_result) == 273083971310116976, "50,000 queries on a 100,000-vertex chain returned wrong ancestors."
+_check_time(_seconds, "50,000 queries on a 100,000-vertex chain", "Use one table row per set bit of steps instead of walking single parents.")`,
+    ),
     demonstration:
       'table = [[-1, 0, 1, 2, 3], [-1, -1, 0, 1, 2], [-1, -1, -1, -1, 0]]\nprint(jump_ancestor(table, 4, 3))',
     output: '1',
@@ -784,11 +796,23 @@ stages('cp-segment-tree', 'cp-range', [
     ],
     signature: 'def query_minimum(tree, size, left, right)',
     contract:
-      'Implement query_minimum(tree, size, left, right) for a built padded minimum tree and valid public 0 <= left <= right <= size. Return the minimum on [left, right), or None if empty. Preserve tree.',
+      'Implement query_minimum(tree, size, left, right) for a built padded minimum tree and valid public 0 <= left <= right <= size. Return the minimum on [left, right), or None if empty. Preserve tree. A hidden case runs 30,000 queries on a 131,072-leaf tree and must finish within 3 seconds.',
     solution:
       'def query_minimum(tree, size, left, right):\n    if left == right:\n        return None\n    left += size\n    right += size\n    best = float("inf")\n    while left < right:\n        if left % 2:\n            best = min(best, tree[left])\n            left += 1\n        if right % 2:\n            right -= 1\n            best = min(best, tree[right])\n        left //= 2\n        right //= 2\n    return best',
-    checks:
+    checks: withLargeCase(
       'tree = [float("inf"), 1, 3, 1, 8, 3, 6, 1]\nassert query_minimum(tree, 4, 0, 4) == 1\nassert query_minimum(tree, 4, 0, 3) == 3\nassert query_minimum(tree, 4, 1, 3) == 3\nassert query_minimum(tree, 4, 2, 3) == 6\nassert query_minimum(tree, 4, 2, 2) is None\nassert query_minimum(tree, 4, 3, 4) == 1\nassert tree == [float("inf"), 1, 3, 1, 8, 3, 6, 1]',
+      `_size = 1 << 17
+_tree = [float("inf")] * _size + _numbers(_size, -10**9, 10**9, 441)
+for _node in range(_size - 1, 0, -1):
+    _tree[_node] = min(_tree[2 * _node], _tree[2 * _node + 1])
+_xs = _numbers(30000, 0, _size, 442)
+_ys = _numbers(30000, 0, _size, 443)
+def _run():
+    return [query_minimum(_tree, _size, min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(30000)]
+_result, _seconds = _timed(_run)
+assert _checksum(_result) == 141335678600146869, "30,000 queries on a 131,072-leaf tree returned wrong minima."
+_check_time(_seconds, "30,000 queries on a 131,072-leaf tree", "Consume boundary nodes while moving upward instead of scanning the leaves.")`,
+    ),
     demonstration:
       'print(query_minimum([float("inf"), 1, 3, 1, 8, 3, 6, 1], 4, 0, 3))',
     output: '3',

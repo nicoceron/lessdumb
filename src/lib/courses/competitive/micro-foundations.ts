@@ -1,5 +1,5 @@
 import type { Skill } from '../../curriculum';
-import { skill, choice, exercise } from './shared';
+import { skill, choice, exercise, withLargeCase } from './shared';
 
 // Each stage isolates one invariant before the original synthesis exercise.
 export const competitiveMicroFoundations: Skill[] = [
@@ -99,10 +99,15 @@ export const competitiveMicroFoundations: Skill[] = [
         'Distinguish sequence from nesting.',
       ),
       exercise(
-        'Implement pair_checks(rows, columns) for nonnegative integers. Return how many actions a full rows-by-columns nested loop performs, using a formula.',
+        'Implement pair_checks(rows, columns) for nonnegative integers. Return how many actions a full rows-by-columns nested loop performs, using a formula. A hidden case with a billion rows and columns must finish within 3 seconds.',
         'def pair_checks(rows, columns):\n    pass',
         'def pair_checks(rows, columns):\n    return rows * columns',
-        'assert pair_checks(0, 9) == 0\nassert pair_checks(7, 0) == 0\nassert pair_checks(2, 3) == 6\nassert pair_checks(1, 8) == 8\nassert pair_checks(1000, 1000) == 1000000',
+        withLargeCase(
+          'assert pair_checks(0, 9) == 0\nassert pair_checks(7, 0) == 0\nassert pair_checks(2, 3) == 6\nassert pair_checks(1, 8) == 8\nassert pair_checks(1000, 1000) == 1000000',
+          `_result, _seconds = _timed(pair_checks, 10**9, 10**9)
+assert _result == 1000000000000000000, "pair_checks(10**9, 10**9) returned the wrong count."
+_check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes instead of running the loops.")`,
+        ),
         'Two rows each contain three counted visits.',
         'Multiply the two independent dimensions.',
       ),
@@ -2205,10 +2210,16 @@ export const competitiveMicroFoundations: Skill[] = [
         'Keep as much valid input as possible.',
       ),
       exercise(
-        'Implement repair_left(labels, max_types), with hashable integer or string labels and max_types >= 0. Treat the whole list as one expanded window. Return the smallest left index whose suffix labels[left:] has at most max_types distinct labels.',
+        'Implement repair_left(labels, max_types), with hashable integer or string labels and max_types >= 0. Treat the whole list as one expanded window. Return the smallest left index whose suffix labels[left:] has at most max_types distinct labels. A hidden case with 200,000 labels must finish within 3 seconds.',
         'def repair_left(labels, max_types):\n    pass',
         'def repair_left(labels, max_types):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    left = 0\n    while len(counts) > max_types:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n    return left',
-        'assert repair_left([], 0) == 0\nassert repair_left(["a", "b", "a", "c"], 2) == 2\nassert repair_left([1, 1, 2], 1) == 2\nassert repair_left([1, 2, 3], 0) == 3\nassert repair_left([1, 2, 1], 2) == 0\nassert repair_left([7, 7, 7], 1) == 0',
+        withLargeCase(
+          'assert repair_left([], 0) == 0\nassert repair_left(["a", "b", "a", "c"], 2) == 2\nassert repair_left([1, 1, 2], 1) == 2\nassert repair_left([1, 2, 3], 0) == 3\nassert repair_left([1, 2, 1], 2) == 0\nassert repair_left([7, 7, 7], 1) == 0',
+          `_labels = _numbers(200000, 0, 99999, 13)
+_result, _seconds = _timed(repair_left, _labels, 40000)
+assert _result == 148891, "The 200,000-label case returned the wrong index."
+_check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from the count map per step instead of recounting the suffix.")`,
+        ),
         'Removing the first a is insufficient; removing b leaves the suffix a,c with two distinct labels.',
         'Build counts for the expanded window, then remove from the left while too many keys remain.',
       ),

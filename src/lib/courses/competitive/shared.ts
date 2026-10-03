@@ -2,6 +2,99 @@ import type { ChoiceQuestion, CodeQuestion, Skill } from '../../curriculum';
 
 export const courseId = 'competitive-programming';
 
+/** Seconds a hidden large case may take. Brute force needs far longer. */
+export const TIME_LIMIT_SECONDS = 3;
+
+// Shared by every large case: deterministic pseudo-random input, an
+// order-sensitive checksum for big results, and a wall-clock check whose
+// message names the faster idea. Underscored names avoid learner globals.
+const largeCaseHelpers = `import time as _time
+
+def _numbers(count, low, high, seed):
+    # Deterministic pseudo-random integers in [low, high].
+    state = seed
+    span = high - low + 1
+    result = []
+    for _ in range(count):
+        state = (state * 6364136223846793005 + 1442695040888963407) % 18446744073709551616
+        result.append(low + (state >> 33) % span)
+    return result
+
+def _checksum(items):
+    # Order-sensitive digest of nested lists or tuples of integers or None.
+    total = 0
+    for item in items:
+        if isinstance(item, (list, tuple)):
+            item = _checksum(item) + 7
+        elif item is None:
+            item = -1
+        total = (total * 1000003 + item) % 2305843009213693951
+    return total
+
+def _timed(function, *arguments):
+    start = _time.perf_counter()
+    result = function(*arguments)
+    return result, _time.perf_counter() - start
+
+def _check_time(seconds, case, advice):
+    assert seconds < ${TIME_LIMIT_SECONDS}, f"{case} took {seconds:.1f} s; the limit is ${TIME_LIMIT_SECONDS} s. {advice}"`;
+
+/**
+ * Appends a hidden large case after the small correctness checks, so an
+ * exercise about an efficient algorithm rejects a brute-force solution that
+ * would pass every small input.
+ */
+export function withLargeCase(tests: string, largeCase: string): string {
+  return `${tests}\n\n${largeCaseHelpers}\n\n${largeCase}`;
+}
+
+// Exercises about implementing an algorithm disable the library shortcut
+// during the checks. A shortcut captured at module level is rejected too.
+const ruleHelpers = `import contextlib as _contextlib
+
+@_contextlib.contextmanager
+def _without(module, names, message):
+    originals = [getattr(module, name) for name in names]
+    for value in list(globals().values()):
+        assert all(value is not original for original in originals), message
+    def blocked(*arguments, **keywords):
+        raise AssertionError(message)
+    for name in names:
+        setattr(module, name, blocked)
+    try:
+        yield
+    finally:
+        for name, original in zip(names, originals):
+            setattr(module, name, original)`;
+
+/** Runs checks indented inside a `with` block, so cleanup always happens. */
+export function insideWith(
+  setup: string,
+  context: string,
+  checks: string,
+): string {
+  const body = checks
+    .split('\n')
+    .map((line) => (line ? `    ${line}` : line))
+    .join('\n');
+  return `${setup}\nwith ${context}:\n${body}`;
+}
+
+/** Runs checks with the named module functions disabled. */
+export function withoutShortcuts(
+  setup: string,
+  module: string,
+  names: string[],
+  message: string,
+  checks: string,
+): string {
+  return insideWith(
+    `${ruleHelpers}\n\n${setup}`,
+    `_without(${module}, ${JSON.stringify(names)}, ${JSON.stringify(message)})`,
+    checks,
+  );
+}
+
 export function choice(
   prompt: string,
   choices: string[],
