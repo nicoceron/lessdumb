@@ -4987,10 +4987,3001 @@ const futures: KnowledgePointModule = {
   ],
 };
 
+const memoryModels: KnowledgePointModule = {
+  'cpp-page-offset': [
+    {
+      title: 'Split an address into page number and offset',
+      explanation: [
+        'Memory is managed in fixed-size pages. In a model with page size P, address A lies in page number A / P, at offset A % P from the start of that page, using unsigned integer division and remainder.',
+        'The page size is an input to the model, not a constant of nature: 4096 bytes is common, but systems also use 16384-byte and larger pages. Keep it as a named value.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          int main() {
+            std::size_t page_size = 256;
+            std::size_t address = 1000;
+            std::cout << address / page_size << " " << address % page_size << "\\n";
+          }
+        `),
+        output: '3 232',
+        explanation:
+          'Three whole pages cover 768 bytes, so address 1000 is in page 3 at offset 1000 - 768 = 232.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t page_size = 4096;
+              std::size_t address = 8200;
+              std::cout << address / page_size << " " << address % page_size << "\\n";
+            }
+          `),
+          ['8 2', '2 8', '2 4104', '3 8'],
+          1,
+          'Two pages cover 8192 bytes, so the address is in page 2 at offset 8.',
+        ),
+        predictOutput(
+          'The address sits exactly on a page boundary. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t page_size = 256;
+              std::size_t address = 512;
+              std::cout << address / page_size << " " << address % page_size << "\\n";
+            }
+          `),
+          ['1 256', '2 1', '1 0', '2 0'],
+          3,
+          'An offset is always below the page size: 512 is the first byte of page 2, offset 0.',
+        ),
+        predictOutput(
+          'The same address is split under two page sizes. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t address = 3000;
+              std::size_t large_page = 4096;
+              std::size_t small_page = 1024;
+              std::cout << address % large_page << " " << address % small_page << "\\n";
+            }
+          `),
+          ['952 3000', '0 952', '3000 952', '3000 0'],
+          2,
+          '3000 fits inside the first 4096-byte page; with 1024-byte pages it is 952 bytes into page 2.',
+        ),
+        choose(
+          'Why should the page size be a named input rather than the literal 4096 repeated through the code?',
+          [
+            '4096 is the page size on every system',
+            'Literals cannot be used with %',
+            'Named values make % faster',
+            'Page sizes differ between systems and configurations, so the model must state its own',
+          ],
+          3,
+          'A model is only correct for the page size it assumes, and that assumption should be explicit.',
+        ),
+      ],
+    },
+    {
+      title: 'Guard the page size and rebuild the address',
+      explanation: [
+        'Division or remainder by zero is undefined behavior, so a model that takes the page size as input must reject 0 before computing A / P or A % P.',
+        'The split loses nothing: page * P + offset gives the original address back, and address - offset is the first byte of its page.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          int main() {
+            std::size_t page_size = 0;
+            std::size_t address = 70;
+            if (page_size == 0) {
+              std::cout << "invalid page size\\n";
+            } else {
+              std::cout << address % page_size << "\\n";
+            }
+          }
+        `),
+        output: 'invalid page size',
+        explanation:
+          'The check runs before any division, so a zero page size is reported instead of evaluating 70 % 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t page_size = 100;
+              std::size_t address = 1234;
+              std::size_t page = address / page_size;
+              std::size_t offset = address % page_size;
+              std::cout << page << " " << offset << " " << page * page_size + offset << "\\n";
+            }
+          `),
+          ['12 34 1200', '12 34 1234', '34 12 1234', '12 3 1234'],
+          1,
+          'Page 12 at offset 34; recombining 12 * 100 + 34 gives back 1234.',
+        ),
+        choose(
+          'What does `address % page_size` do when page_size is 0?',
+          [
+            'Returns address',
+            'Returns 0',
+            'Throws std::domain_error',
+            'It is undefined behavior',
+          ],
+          3,
+          'Integer division and remainder by zero are undefined, so the divisor must be checked first.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t page_size = 64;
+              std::size_t address = 130;
+              if (page_size == 0) {
+                std::cout << "invalid page size\\n";
+              } else {
+                std::cout << address % page_size << "\\n";
+              }
+            }
+          `),
+          ['invalid page size', '130', '2', '64'],
+          2,
+          'The page size is valid, and 130 is 2 bytes past the start of page 2 (128).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t page_size = 256;
+              std::size_t address = 777;
+              std::size_t offset = address % page_size;
+              std::cout << address - offset << " " << offset << "\\n";
+            }
+          `),
+          ['512 9', '768 9', '3 9', '768 265'],
+          1,
+          '777 is 9 bytes into the page that starts at 3 * 256 = 768.',
+        ),
+      ],
+    },
+  ],
+  'cpp-page-translation': [
+    {
+      title: 'Look up the frame and keep the offset',
+      explanation: [
+        'A page table maps virtual page numbers to physical frame numbers. To translate an address, split it into page and offset, look up the page’s frame, and rebuild the address as frame * page_size + offset. The offset passes through unchanged.',
+        'In this model the page table is a std::vector<int>: the index is the page number and the element is its frame number.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            constexpr std::size_t page_size = 256;
+            std::vector<int> frames = {4, 9, 2};
+            std::size_t address = 300;
+            std::size_t page = address / page_size;
+            std::size_t offset = address % page_size;
+            std::size_t physical = static_cast<std::size_t>(frames[page]) * page_size + offset;
+            std::cout << page << " " << offset << " " << physical << "\\n";
+          }
+        `),
+        output: '1 44 2348',
+        explanation:
+          'Address 300 is page 1, offset 44. Page 1 maps to frame 9, so the physical address is 9 * 256 + 44.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              constexpr std::size_t page_size = 256;
+              std::vector<int> frames = {7, 3, 5};
+              std::size_t address = 600;
+              std::size_t page = address / page_size;
+              std::size_t offset = address % page_size;
+              std::cout << static_cast<std::size_t>(frames[page]) * page_size + offset << "\\n";
+            }
+          `),
+          ['600', '2048', '1368', '1280'],
+          2,
+          '600 is page 2, offset 88; page 2 maps to frame 5, giving 5 * 256 + 88.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              constexpr std::size_t page_size = 100;
+              std::vector<int> frames = {6};
+              std::size_t address = 10;
+              std::size_t page = address / page_size;
+              std::size_t offset = address % page_size;
+              std::cout << static_cast<std::size_t>(frames[page]) * page_size + offset << "\\n";
+            }
+          `),
+          ['16', '610', '10', '600'],
+          1,
+          'Page 0 maps to frame 6, and the offset 10 is kept: 600 + 10.',
+        ),
+        choose(
+          'Which part of a virtual address is copied unchanged into the physical address?',
+          [
+            'The page number',
+            'Both the page number and the offset',
+            'The offset within the page',
+            'Neither; both are replaced by the frame',
+          ],
+          2,
+          'Translation replaces the page number with a frame number and keeps the position within the page.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              constexpr std::size_t page_size = 1024;
+              std::vector<int> frames = {1, 0, 3};
+              std::size_t address = 2050;
+              std::size_t page = address / page_size;
+              std::size_t offset = address % page_size;
+              std::cout << static_cast<std::size_t>(frames[page]) * page_size + offset << "\\n";
+            }
+          `),
+          ['2050', '3072', '1026', '3074'],
+          3,
+          '2050 is page 2, offset 2; page 2 maps to frame 3: 3072 + 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Reject pages the table does not map',
+      explanation: [
+        'A page number at or beyond frames.size() has no entry, and reading frames[page] there is undefined behavior; operator[] does not check. A table may also mark a page as unmapped, here with a negative frame number. Both cases must be checked before the frame is used.',
+        'Report such an address as a fault instead of computing a physical address from whatever memory happens to be there.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            constexpr std::size_t page_size = 100;
+            std::vector<int> frames = {5, -1};
+            std::size_t address = 150;
+            std::size_t page = address / page_size;
+            if (page >= frames.size()) {
+              std::cout << "fault: no entry\\n";
+            } else if (frames[page] < 0) {
+              std::cout << "fault: unmapped\\n";
+            } else {
+              std::cout << static_cast<std::size_t>(frames[page]) * page_size + address % page_size << "\\n";
+            }
+          }
+        `),
+        output: 'fault: unmapped',
+        explanation:
+          'Page 1 exists in the table, but its frame is -1, so the translation reports a fault.',
+      },
+      questions: [
+        predictOutput(
+          'With the same table, address 250 is translated. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              constexpr std::size_t page_size = 100;
+              std::vector<int> frames = {5, -1};
+              std::size_t address = 250;
+              std::size_t page = address / page_size;
+              if (page >= frames.size()) {
+                std::cout << "fault: no entry\\n";
+              } else if (frames[page] < 0) {
+                std::cout << "fault: unmapped\\n";
+              } else {
+                std::cout << static_cast<std::size_t>(frames[page]) * page_size + address % page_size << "\\n";
+              }
+            }
+          `),
+          ['fault: no entry', 'fault: unmapped', '550', '50'],
+          0,
+          'Page 2 is past the end of a two-entry table, so the first check reports it before frames[2] is read.',
+        ),
+        predictOutput(
+          'Address 40 is translated with the same table. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              constexpr std::size_t page_size = 100;
+              std::vector<int> frames = {5, -1};
+              std::size_t address = 40;
+              std::size_t page = address / page_size;
+              if (page >= frames.size()) {
+                std::cout << "fault: no entry\\n";
+              } else if (frames[page] < 0) {
+                std::cout << "fault: unmapped\\n";
+              } else {
+                std::cout << static_cast<std::size_t>(frames[page]) * page_size + address % page_size << "\\n";
+              }
+            }
+          `),
+          ['fault: unmapped', '540', '40', '500'],
+          1,
+          'Page 0 maps to frame 5, so the address becomes 500 + 40.',
+        ),
+        predictOutput(
+          'Address 199 is translated with the same table. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              constexpr std::size_t page_size = 100;
+              std::vector<int> frames = {5, -1};
+              std::size_t address = 199;
+              std::size_t page = address / page_size;
+              if (page >= frames.size()) {
+                std::cout << "fault: no entry\\n";
+              } else if (frames[page] < 0) {
+                std::cout << "fault: unmapped\\n";
+              } else {
+                std::cout << static_cast<std::size_t>(frames[page]) * page_size + address % page_size << "\\n";
+              }
+            }
+          `),
+          ['-1', 'fault: no entry', '99', 'fault: unmapped'],
+          3,
+          '199 is the last byte of page 1, which has an entry marked unmapped.',
+        ),
+        choose(
+          'Why must `page < frames.size()` be checked before reading frames[page]?',
+          [
+            'frames[page] throws std::out_of_range when page is too large',
+            'Reading past the end of the vector is undefined behavior',
+            'The check makes translation faster',
+            'Pages beyond the table map to frame 0',
+          ],
+          1,
+          'operator[] performs no bounds check, so an out-of-range index reads memory that is not an element.',
+        ),
+      ],
+    },
+  ],
+  'cpp-aligned-size': [
+    {
+      title: 'Round a size up to the next multiple of the alignment',
+      explanation: [
+        'Allocators often hand out sizes that are multiples of an alignment A. To round a byte count n up: if n % A is 0, n is already aligned; otherwise add A - n % A. Rounding must go up, never down, or the block would be smaller than requested.',
+        'For n = 13 and A = 8 the remainder is 5, so 3 bytes are added and the result is 16.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          int main() {
+            std::size_t bytes = 13;
+            std::size_t alignment = 8;
+            std::size_t remainder = bytes % alignment;
+            std::size_t rounded = bytes;
+            if (remainder != 0) rounded = bytes + (alignment - remainder);
+            std::cout << rounded << "\\n";
+          }
+        `),
+        output: '16',
+        explanation:
+          '13 leaves remainder 5, so 8 - 5 = 3 bytes of padding make it 16.',
+      },
+      questions: [
+        predictOutput(
+          'The size is already a multiple. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t bytes = 16;
+              std::size_t alignment = 8;
+              std::size_t remainder = bytes % alignment;
+              std::size_t rounded = bytes;
+              if (remainder != 0) rounded = bytes + (alignment - remainder);
+              std::cout << rounded << "\\n";
+            }
+          `),
+          ['24', '16', '8', '0'],
+          1,
+          'The remainder is 0, so no padding is added.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t bytes = 33;
+              std::size_t alignment = 16;
+              std::size_t remainder = bytes % alignment;
+              std::size_t rounded = bytes;
+              if (remainder != 0) rounded = bytes + (alignment - remainder);
+              std::cout << rounded << "\\n";
+            }
+          `),
+          ['32', '49', '48', '33'],
+          2,
+          '33 leaves remainder 1, so 15 bytes are added to reach 48.',
+        ),
+        predictOutput(
+          'A zero-byte request is rounded. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t bytes = 0;
+              std::size_t alignment = 4;
+              std::size_t remainder = bytes % alignment;
+              std::size_t rounded = bytes;
+              if (remainder != 0) rounded = bytes + (alignment - remainder);
+              std::cout << rounded << "\\n";
+            }
+          `),
+          ['4', '1', '3', '0'],
+          3,
+          '0 is a multiple of every positive alignment, so it stays 0.',
+        ),
+        choose(
+          'A programmer rounds with `bytes / alignment * alignment`. What goes wrong for 13 bytes and alignment 8?',
+          [
+            'It gives 16, which is correct',
+            'It gives 8, smaller than the 13 bytes requested',
+            'It gives 13 unchanged',
+            'It divides by zero',
+          ],
+          1,
+          'Integer division truncates, so this rounds down and the block would be too small.',
+        ),
+      ],
+    },
+    {
+      title: 'Check that rounding cannot wrap around',
+      explanation: [
+        'std::size_t arithmetic wraps around past its maximum. If bytes is close to that maximum, bytes + extra wraps to a tiny number, and an allocator would hand out a block far too small. Check `bytes > max - extra` before adding, using std::numeric_limits<std::size_t>::max() from <limits>.',
+        'An alignment of 0 has no multiples and must be rejected before the remainder is computed.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <limits>
+          int main() {
+            std::size_t max = std::numeric_limits<std::size_t>::max();
+            std::size_t bytes = max - 2;
+            std::size_t alignment = 8;
+            std::size_t remainder = bytes % alignment;
+            std::size_t extra = 0;
+            if (remainder != 0) extra = alignment - remainder;
+            if (bytes > max - extra) {
+              std::cout << "too large\\n";
+            } else {
+              std::cout << bytes + extra << "\\n";
+            }
+          }
+        `),
+        output: 'too large',
+        explanation:
+          'max - 2 needs 3 bytes of padding, but only 2 values remain before the maximum, so the request is rejected instead of wrapping.',
+      },
+      questions: [
+        predictOutput(
+          'This version adds without checking. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <limits>
+            int main() {
+              std::size_t bytes = std::numeric_limits<std::size_t>::max();
+              std::size_t alignment = 2;
+              std::size_t extra = alignment - bytes % alignment;
+              std::size_t wrapped = bytes + extra;
+              std::cout << wrapped << "\\n";
+            }
+          `),
+          ['1', '0', '2', '18446744073709551616'],
+          1,
+          'The maximum is odd, so extra is 1, and max + 1 wraps around to 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t bytes = 100;
+              std::size_t alignment = 0;
+              if (alignment == 0) {
+                std::cout << "invalid alignment\\n";
+              } else {
+                std::size_t remainder = bytes % alignment;
+                std::cout << remainder << "\\n";
+              }
+            }
+          `),
+          ['invalid alignment', '0', '100', 'Undefined: division by zero'],
+          0,
+          'The zero alignment is rejected before the remainder is computed, so no division by zero happens.',
+        ),
+        choose(
+          'Why compare `bytes > max - extra` instead of computing bytes + extra and checking whether the sum is too big?',
+          [
+            'Signed overflow would throw an exception',
+            'The comparison is faster but otherwise the same',
+            'Unsigned addition wraps, so a too-big sum can already look small and valid',
+            'max - extra can overflow',
+          ],
+          2,
+          'After wrapping, the sum carries no sign of the overflow; the subtraction form never wraps because extra <= max.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <limits>
+            int main() {
+              std::size_t max = std::numeric_limits<std::size_t>::max();
+              std::size_t bytes = 100;
+              std::size_t alignment = 64;
+              std::size_t remainder = bytes % alignment;
+              std::size_t extra = 0;
+              if (remainder != 0) extra = alignment - remainder;
+              if (bytes > max - extra) {
+                std::cout << "too large\\n";
+              } else {
+                std::cout << bytes + extra << "\\n";
+              }
+            }
+          `),
+          ['64', '100', 'too large', '128'],
+          3,
+          '100 needs 28 bytes of padding, which fits easily, so the result is 128.',
+        ),
+      ],
+    },
+  ],
+  'cpp-addressing': [
+    {
+      title: 'A static local survives between calls',
+      explanation: [
+        'An ordinary local variable is created fresh every time its function runs. A local declared static is initialized once, the first time control passes its declaration, and keeps its value for the rest of the program.',
+        'So a static counter inside a function or lambda counts across all calls, while an ordinary one starts over each time.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            auto call = [] {
+              int fresh = 0;
+              static int kept = 0;
+              fresh += 1;
+              kept += 1;
+              std::cout << fresh << kept << " ";
+            };
+            call();
+            call();
+            call();
+            std::cout << "\\n";
+          }
+        `),
+        output: '11 12 13',
+        explanation:
+          'fresh is recreated as 0 on every call and always reaches 1; kept is initialized once and keeps counting.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              auto next_id = [] {
+                static int id = 100;
+                id += 1;
+                std::cout << id << " ";
+              };
+              next_id();
+              next_id();
+              std::cout << "\\n";
+            }
+          `),
+          ['101 101', '100 101', '101 102', '102 102'],
+          2,
+          'id starts at 100 once and keeps each increment between calls.',
+        ),
+        predictOutput(
+          'start changes between the two calls. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int start = 5;
+              auto report = [&start] {
+                static int first_seen = start;
+                std::cout << first_seen << " ";
+              };
+              report();
+              start = 9;
+              report();
+              std::cout << "\\n";
+            }
+          `),
+          ['5 9', '5 5', '9 9', '0 5'],
+          1,
+          'The static initializer runs only on the first call, when start was 5.',
+        ),
+        choose(
+          'A function declares `static int calls = 0;` and then increments calls. What value does the third call see just before incrementing?',
+          ['0', '3', '2', 'An indeterminate value'],
+          2,
+          'The first two calls left calls at 2, and the initializer does not run again.',
+        ),
+        predictOutput(
+          'Two lambdas each declare their own static. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              auto a = [] {
+                static int n = 0;
+                n += 1;
+                std::cout << n << " ";
+              };
+              auto b = [] {
+                static int n = 0;
+                n += 10;
+                std::cout << n << " ";
+              };
+              a();
+              b();
+              a();
+              b();
+              std::cout << "\\n";
+            }
+          `),
+          ['1 10 11 21', '1 10 2 20', '1 11 12 22', '1 10 1 10'],
+          1,
+          'Each lambda has its own static n, and each keeps its value between that lambda’s calls.',
+        ),
+      ],
+    },
+    {
+      title: 'Hidden persistent state makes calls depend on history',
+      explanation: [
+        'Because a static local remembers earlier calls, the same call with the same arguments can give different results depending on what ran before. That is right for something meant to persist, such as an ID generator, but wrong for scratch work that each call should start from scratch.',
+        'Per-call state belongs in ordinary locals or parameters; state that persists should be deliberate and visible.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            auto sum_pair = [](int a, int b, int& out) {
+              static int scratch = 0;
+              scratch += a;
+              scratch += b;
+              out = scratch;
+            };
+            int first = 0;
+            int second = 0;
+            sum_pair(2, 3, first);
+            sum_pair(2, 3, second);
+            std::cout << first << " " << second << "\\n";
+          }
+        `),
+        output: '5 10',
+        explanation:
+          'The static scratch keeps 5 from the first call, so the identical second call reports 10.',
+      },
+      questions: [
+        predictOutput(
+          'scratch is now an ordinary local. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              auto sum_pair = [](int a, int b, int& out) {
+                int scratch = 0;
+                scratch += a;
+                scratch += b;
+                out = scratch;
+              };
+              int first = 0;
+              int second = 0;
+              sum_pair(2, 3, first);
+              sum_pair(2, 3, second);
+              std::cout << first << " " << second << "\\n";
+            }
+          `),
+          ['5 10', '10 10', '5 5', '0 5'],
+          2,
+          'An ordinary local starts at 0 on every call, so identical calls give identical results.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              auto label = [](int& out) {
+                static int calls = 0;
+                calls += 1;
+                out = calls * 100;
+              };
+              int a = 0;
+              int b = 0;
+              int c = 0;
+              label(a);
+              label(b);
+              label(c);
+              std::cout << a << " " << b << " " << c << "\\n";
+            }
+          `),
+          ['100 100 100', '0 100 200', '300 300 300', '100 200 300'],
+          3,
+          'Each call sees the count left by the previous calls, so the labels grow.',
+        ),
+        choose(
+          'A test calls parse(line) twice with the same line and gets different results. Which cause fits?',
+          [
+            'parse keeps per-call scratch data in a static local',
+            'parse uses an ordinary local variable',
+            'parse takes line by value',
+            'parse is called from main',
+          ],
+          0,
+          'Only persistent state can make the same input produce different outputs.',
+        ),
+        choose(
+          'Which variable should be a static local?',
+          [
+            'A running sum used only during one call',
+            'A temporary buffer for formatting one message',
+            'A counter that hands out unique request IDs for the whole run',
+            'The loop index of a search',
+          ],
+          2,
+          'The ID counter must persist between calls; the others are per-call scratch state.',
+        ),
+      ],
+    },
+  ],
+  'cpp-contiguous-traversal': [
+    {
+      title: 'Vector elements sit next to each other',
+      explanation: [
+        'A std::vector stores its elements contiguously: element i + 1 lives immediately after element i. v.data() returns a pointer to the first element, data() + i points at element i, and subtracting two element pointers gives the number of elements between them, not bytes.',
+        'Visiting elements in index order touches memory in address order, the access pattern that caches and hardware prefetchers handle best.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> v = {2, 3, 4};
+            const int* p = v.data();
+            int sum = 0;
+            for (std::size_t i = 0; i < v.size(); ++i) sum += *(p + i);
+            std::cout << sum << " " << p[2] << "\\n";
+          }
+        `),
+        output: '9 4',
+        explanation:
+          'p + i walks the contiguous elements in order; p[2] is the same as *(p + 2), the third element.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> v = {10, 20, 30, 40, 50};
+              std::cout << &v[3] - &v[0] << "\\n";
+            }
+          `),
+          ['12', '3', '4', 'It depends on the addresses'],
+          1,
+          'Pointer subtraction counts elements: element 3 is three elements after element 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> v = {5, 1, 7, 3};
+              const int* first = v.data();
+              const int* last = v.data() + v.size();
+              int count = 0;
+              int total = 0;
+              for (const int* p = first; p != last; ++p) {
+                ++count;
+                total += *p;
+              }
+              std::cout << count << " " << total << "\\n";
+            }
+          `),
+          ['3 13', '5 16', '4 16', '4 9'],
+          2,
+          'The loop stops at the one-past-the-end pointer after visiting all four elements.',
+        ),
+        choose(
+          'Which statement about a std::vector<int> v with 5 elements is guaranteed?',
+          [
+            '&v[4] == v.data() + 4',
+            'Each element is a separate heap allocation',
+            'v.data() + 5 may be dereferenced',
+            'The elements are stored in reverse order',
+          ],
+          0,
+          'Contiguous storage means element i is at data() + i.',
+        ),
+        choose(
+          'Why is summing a vector in index order usually faster than visiting the same elements in random order?',
+          [
+            'Random order changes the sum',
+            'Index order skips bounds checks',
+            'The compiler cannot add numbers out of order',
+            'Sequential addresses use whole cache lines and are easy to prefetch',
+          ],
+          3,
+          'Neighbouring elements arrive in the same cache line, and a predictable stride lets the hardware fetch ahead.',
+        ),
+      ],
+    },
+    {
+      title: 'Pointer arithmetic stays inside one array',
+      explanation: [
+        'Pointer arithmetic is defined only within one array (a vector’s buffer counts) and the position one past its end. Stepping from one vector’s pointer into another vector, or into a separate variable, is undefined behavior, even if the objects happen to be adjacent in memory.',
+        'The one-past-the-end pointer may be compared and used as a stop marker, but never dereferenced.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> left = {1, 2};
+            std::vector<int> right = {3, 4, 5};
+            int total = 0;
+            for (const int* p = left.data(); p != left.data() + left.size(); ++p) total += *p;
+            for (const int* p = right.data(); p != right.data() + right.size(); ++p) total += *p;
+            std::cout << total << "\\n";
+          }
+        `),
+        output: '15',
+        explanation:
+          'Each vector is walked with its own begin and one-past-the-end pointers; no pointer crosses from one buffer into the other.',
+      },
+      questions: [
+        choose(
+          'left holds {1, 2}. What is wrong with this code?',
+          [
+            'p points at right[0], so total gains 3',
+            'p points one past the end of left, and dereferencing it is undefined',
+            'p wraps around to left[0]',
+            'Nothing; index 2 is valid for two elements',
+          ],
+          1,
+          'left.data() + 2 is the one-past-the-end position: valid to form, invalid to read.',
+          cpp(`
+            const int* p = left.data() + 2;
+            total += *p;
+          `),
+        ),
+        choose(
+          'Two vectors a and b happen to be adjacent in memory. Is `a.data() + a.size()` a valid way to reach b’s first element?',
+          [
+            'Yes, if the addresses match',
+            'Yes, because vectors are contiguous',
+            'No: a pointer into a may only move within a’s elements and its one-past-the-end position',
+            'Only for vectors of int',
+          ],
+          2,
+          'Contiguity holds within one vector; separate allocations are unrelated for pointer arithmetic.',
+        ),
+        predictOutput(
+          'A pointer into the middle serves as the stop marker. What is printed?',
+          cpp(`
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> v = {9, 8, 7, 6, 5};
+              const int* stop = v.data() + 3;
+              int count = 0;
+              for (const int* p = v.data(); p != stop; ++p) ++count;
+              std::cout << count << " " << *(stop - 1) << "\\n";
+            }
+          `),
+          ['4 6', '3 7', '3 6', '4 7'],
+          1,
+          'The half-open range [data, data + 3) covers 9, 8 and 7; stop - 1 points at 7.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> v = {4, 6, 8, 10};
+              int total = 0;
+              for (const int* p = v.data() + 1; p != v.data() + 3; ++p) total += *p;
+              std::cout << total << "\\n";
+            }
+          `),
+          ['24', '18', '14', '6'],
+          2,
+          'The pointers cover elements 1 and 2: 6 + 8.',
+        ),
+      ],
+    },
+  ],
+  'cpp-cache-line-model': [
+    {
+      title: 'Count whole lines with ceiling division',
+      explanation: [
+        'Caches move memory in fixed-size lines. In a model where a range starts at the beginning of a line and lines are L bytes long, n bytes need ceil(n / L) lines. With unsigned integers: take n / L and add one line if n % L is not 0, or compute (n + L - 1) / L when that sum cannot overflow.',
+        'A model like this counts lines touched; it says nothing about how long the accesses take.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          int main() {
+            std::size_t bytes = 129;
+            std::size_t line = 64;
+            std::size_t lines = bytes / line;
+            if (bytes % line != 0) lines += 1;
+            std::cout << lines << "\\n";
+          }
+        `),
+        output: '3',
+        explanation:
+          'Two full lines hold 128 bytes; the 129th byte needs a third line.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t bytes = 128;
+              std::size_t line = 64;
+              std::size_t lines = bytes / line;
+              if (bytes % line != 0) lines += 1;
+              std::cout << lines << "\\n";
+            }
+          `),
+          ['3', '2', '1', '64'],
+          1,
+          '128 bytes fill exactly two lines, with no partial line left over.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t bytes = 1;
+              std::size_t line = 64;
+              std::size_t lines = bytes / line;
+              if (bytes % line != 0) lines += 1;
+              std::cout << lines << "\\n";
+            }
+          `),
+          ['0', '64', '1', '2'],
+          2,
+          'Even a single byte occupies a whole line.',
+        ),
+        predictOutput(
+          'The rounding is written as one expression. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t bytes = 200;
+              std::size_t line = 64;
+              std::cout << (bytes + line - 1) / line << "\\n";
+            }
+          `),
+          ['3', '5', '200', '4'],
+          3,
+          '(200 + 63) / 64 is 263 / 64, which truncates to 4: three full lines plus a partial one.',
+        ),
+        choose(
+          'Why does `bytes / line` alone undercount?',
+          [
+            'Integer division drops the partial last line',
+            'It overcounts by one line',
+            'It divides by the wrong value',
+            'It is correct for every byte count',
+          ],
+          0,
+          'The truncated quotient ignores the remainder bytes, which still need a line.',
+        ),
+      ],
+    },
+    {
+      title: 'A range that starts mid-line can touch one more line',
+      explanation: [
+        'If a range does not start on a line boundary, count lines from the first and last byte instead: first = start / L, last = (start + n - 1) / L, and the range touches last - first + 1 lines (for n > 0). A 64-byte object that starts at offset 32 spans two 64-byte lines, not one.',
+        'State both assumptions, the line size and the starting offset, whenever you quote a line count.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          int main() {
+            std::size_t line = 64;
+            std::size_t start = 32;
+            std::size_t bytes = 64;
+            std::size_t first = start / line;
+            std::size_t last = (start + bytes - 1) / line;
+            std::cout << last - first + 1 << "\\n";
+          }
+        `),
+        output: '2',
+        explanation: 'Bytes 32 to 95 begin in line 0 and end in line 1.',
+      },
+      questions: [
+        predictOutput(
+          'The object starts on a line boundary. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t line = 64;
+              std::size_t start = 0;
+              std::size_t bytes = 64;
+              std::size_t first = start / line;
+              std::size_t last = (start + bytes - 1) / line;
+              std::cout << last - first + 1 << "\\n";
+            }
+          `),
+          ['2', '1', '0', '64'],
+          1,
+          'Bytes 0 to 63 all lie in line 0.',
+        ),
+        predictOutput(
+          'An 8-byte value starts at offset 60. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t line = 64;
+              std::size_t start = 60;
+              std::size_t bytes = 8;
+              std::size_t first = start / line;
+              std::size_t last = (start + bytes - 1) / line;
+              std::cout << last - first + 1 << "\\n";
+            }
+          `),
+          ['1', '8', '2', '0'],
+          2,
+          'Bytes 60 to 67 straddle the boundary at 64, so two lines are touched.',
+        ),
+        predictOutput(
+          'The aligned count and the actual span are compared. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t line = 64;
+              std::size_t start = 10;
+              std::size_t bytes = 120;
+              std::size_t aligned = (bytes + line - 1) / line;
+              std::size_t spanned = (start + bytes - 1) / line - start / line + 1;
+              std::cout << aligned << " " << spanned << "\\n";
+            }
+          `),
+          ['2 2', '3 3', '3 2', '2 3'],
+          3,
+          '120 bytes would fit 2 aligned lines, but bytes 10 to 129 reach into line 2.',
+        ),
+        choose(
+          'A model reports 1 line for a 16-byte object without saying where the object starts. What is missing?',
+          [
+            'The starting offset: an object that crosses a line boundary touches 2 lines',
+            'Nothing: 16 bytes always fit one 64-byte line',
+            'The CPU frequency',
+            'The number of threads',
+          ],
+          0,
+          'The count depends on alignment as well as size.',
+        ),
+      ],
+    },
+  ],
+  'cpp-row-major-index': [
+    {
+      title: 'Row r, column c lives at r * cols + c',
+      explanation: [
+        'A matrix stored in one flat std::vector in row-major order keeps each row contiguous: row 0’s elements first, then row 1’s, and so on. The element at row r, column c is at index r * cols + c, where cols, the row length, is the stride.',
+        'Neighbours in a row are adjacent in memory; neighbours in a column are cols elements apart.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> cells = {1, 2, 3, 4, 5, 6};
+            std::size_t cols = 3;
+            std::size_t r = 1;
+            std::size_t c = 1;
+            std::cout << cells[r * cols + c] << "\\n";
+          }
+        `),
+        output: '5',
+        explanation:
+          'Row 1 starts at index 3; column 1 of it is index 4, which holds 5.',
+      },
+      questions: [
+        predictOutput(
+          'A 3 x 4 matrix holds 0 to 11. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> cells = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+              std::size_t cols = 4;
+              std::size_t r = 2;
+              std::size_t c = 1;
+              std::cout << cells[r * cols + c] << "\\n";
+            }
+          `),
+          ['7', '9', '6', '10'],
+          1,
+          'With 4 columns per row, row 2 starts at 8; column 1 is index 9.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t cols = 5;
+              std::size_t here = 2 * cols + 3;
+              std::size_t below = 3 * cols + 3;
+              std::cout << here << " " << below - here << "\\n";
+            }
+          `),
+          ['13 1', '17 4', '13 5', '13 18'],
+          2,
+          'Cell (2, 3) is at 13, and the cell below it is one full row, 5 elements, further on.',
+        ),
+        choose(
+          'In a row-major matrix with 4 rows and 6 columns, how far apart are (r, c) and (r + 1, c) in the flat vector?',
+          ['1', '4', '6', '24'],
+          2,
+          'Moving down one row skips a whole row of cols = 6 elements.',
+        ),
+        predictOutput(
+          'A 2 x 3 matrix is read with the correct formula and with a mixed-up one. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> cells = {1, 2, 3, 4, 5, 6};
+              std::size_t rows = 2;
+              std::size_t cols = 3;
+              std::size_t r = 0;
+              std::size_t c = 2;
+              std::cout << cells[r * cols + c] << " " << cells[c * rows + r] << "\\n";
+            }
+          `),
+          ['3 5', '3 3', '5 3', '5 5'],
+          0,
+          'The correct index for (0, 2) is 2; the column-major formula gives 4, a different cell.',
+        ),
+      ],
+    },
+    {
+      title: 'Validate the shape before indexing',
+      explanation: [
+        'Indexing is only meaningful when r < rows, c < cols and cells.size() == rows * cols. A column index that is too large does not fail on its own: r * cols + c silently lands in the next row, or past the end of the vector.',
+        'Check the shape and bounds first and report a failure, rather than reading whichever cell the formula reaches.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> cells = {1, 2, 3, 4, 5, 6};
+            std::size_t cols = 3;
+            std::size_t r = 0;
+            std::size_t c = 4;
+            std::cout << "unchecked " << cells[r * cols + c] << "\\n";
+            if (c >= cols) std::cout << "column out of range\\n";
+          }
+        `),
+        output: 'unchecked 5\ncolumn out of range',
+        explanation:
+          'Column 4 does not exist in a 3-column row, yet the formula quietly reads index 4, which is row 1, column 1.',
+      },
+      questions: [
+        choose(
+          'For a 2 x 3 matrix, what does r * cols + c give for r = 1, c = 3, and why is that a problem?',
+          [
+            '4, a valid cell in row 1',
+            '6, which is past the end of the 6-element vector',
+            '3, the first cell of row 1',
+            '6, which wraps around to cell 0',
+          ],
+          1,
+          '1 * 3 + 3 is 6, one past the last valid index 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> cells = {1, 2, 3, 4, 5};
+              std::size_t rows = 2;
+              std::size_t cols = 3;
+              std::size_t r = 1;
+              std::size_t c = 1;
+              if (cells.size() != rows * cols) {
+                std::cout << "bad shape\\n";
+              } else if (r >= rows) {
+                std::cout << "out of range\\n";
+              } else if (c >= cols) {
+                std::cout << "out of range\\n";
+              } else {
+                std::cout << cells[r * cols + c] << "\\n";
+              }
+            }
+          `),
+          ['5', 'bad shape', '6', 'out of range'],
+          1,
+          'Five cells cannot form a 2 x 3 matrix, so the shape check fails first.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> cells = {1, 2, 3, 4, 5, 6};
+              std::size_t rows = 2;
+              std::size_t cols = 3;
+              std::size_t r = 1;
+              std::size_t c = 2;
+              if (cells.size() != rows * cols) {
+                std::cout << "bad shape\\n";
+              } else if (r >= rows) {
+                std::cout << "out of range\\n";
+              } else if (c >= cols) {
+                std::cout << "out of range\\n";
+              } else {
+                std::cout << cells[r * cols + c] << "\\n";
+              }
+            }
+          `),
+          ['out of range', '5', 'bad shape', '6'],
+          3,
+          'All checks pass, and (1, 2) is index 5, the last cell.',
+        ),
+        choose(
+          'Why check c < cols even when r * cols + c is less than cells.size()?',
+          [
+            'It prevents integer overflow',
+            'operator[] needs it in order to throw',
+            'An oversized column index silently reads a cell from the next row',
+            'It is not needed in that case',
+          ],
+          2,
+          'An in-bounds flat index can still be the wrong logical cell.',
+        ),
+      ],
+    },
+  ],
+  'cpp-locality': [
+    {
+      title: 'A structure of arrays keeps one field contiguous',
+      explanation: [
+        'An array of structures (AoS), such as a vector of Order records with price, size and id, interleaves all fields of each record. A structure of arrays (SoA) keeps one vector per field: all prices together, all sizes together.',
+        'A loop that reads only prices touches only price bytes in the SoA layout, while in the AoS layout it drags every record’s unused fields through the cache too. In a simple model with 4-byte fields and 12-byte records, scanning prices covers 4 bytes per record in SoA but 12 in AoS.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          struct Book {
+            std::vector<int> prices;
+            std::vector<int> sizes;
+          };
+          int main() {
+            Book book{{10, 20, 30}, {2, 3, 1}};
+            long long total = 0;
+            for (std::size_t i = 0; i < book.prices.size(); ++i)
+              total += static_cast<long long>(book.prices[i]) * book.sizes[i];
+            std::cout << total << "\\n";
+          }
+        `),
+        output: '110',
+        explanation:
+          'Record i is the pair prices[i], sizes[i]; the notional is 20 + 60 + 30.',
+      },
+      questions: [
+        predictOutput(
+          'The loop reads prices to decide and sizes to add. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> prices = {10, 20, 30};
+              std::vector<int> sizes = {2, 3, 1};
+              int total = 0;
+              for (std::size_t i = 0; i < prices.size(); ++i)
+                if (prices[i] > 15) total += sizes[i];
+              std::cout << total << "\\n";
+            }
+          `),
+          ['6', '4', '3', '5'],
+          1,
+          'Records 1 and 2 have prices above 15; their sizes are 3 and 1.',
+        ),
+        predictOutput(
+          'A model compares bytes covered when scanning one 8-byte field of 500 records. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int records = 500;
+              int field_bytes = 8;
+              int record_bytes = 32;
+              std::cout << records * field_bytes << " " << records * record_bytes << "\\n";
+            }
+          `),
+          ['16000 4000', '4000 4000', '4000 16000', '500 500'],
+          2,
+          'SoA covers 500 * 8 bytes of prices; AoS steps through whole 32-byte records.',
+        ),
+        choose(
+          'A hot loop reads only the price of each order. Which layout reads fewer bytes?',
+          [
+            'A vector of Order structs with price, size and id',
+            'A separate vector that holds only prices',
+            'Both read exactly the same bytes',
+            'A std::map from id to Order',
+          ],
+          1,
+          'Only the price vector keeps the needed field densely packed.',
+        ),
+        choose(
+          'When is an array of structures the better fit?',
+          [
+            'When a loop scans one field across all records',
+            'Never; SoA is always faster',
+            'When records have only one field',
+            'When each step uses most fields of one record together',
+          ],
+          3,
+          'If every field of a record is needed at once, keeping them together uses the loaded bytes fully.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep the parallel arrays the same length',
+      explanation: [
+        'In SoA, record i is spread across several vectors, so every field vector must have the same length. If prices has 3 elements and sizes has 2, index 2 exists in one and not the other, and reading sizes[2] is undefined behavior.',
+        'Check the lengths once before the loop, and add or remove a record in every field vector together.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> prices = {10, 20, 30};
+            std::vector<int> sizes = {2, 3};
+            if (prices.size() != sizes.size()) {
+              std::cout << "mismatched\\n";
+            } else {
+              int total = 0;
+              for (std::size_t i = 0; i < prices.size(); ++i) total += prices[i] * sizes[i];
+              std::cout << total << "\\n";
+            }
+          }
+        `),
+        output: 'mismatched',
+        explanation:
+          'The lengths differ, so the program reports it instead of reading a third size that does not exist.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> prices = {5, 6};
+              std::vector<int> sizes = {4, 3};
+              if (prices.size() != sizes.size()) {
+                std::cout << "mismatched\\n";
+              } else {
+                int total = 0;
+                for (std::size_t i = 0; i < prices.size(); ++i) total += prices[i] * sizes[i];
+                std::cout << total << "\\n";
+              }
+            }
+          `),
+          ['mismatched', '38', '11', '20'],
+          1,
+          'The lengths match, so the notional is 5 * 4 + 6 * 3.',
+        ),
+        choose(
+          'A new order is added to prices but not to sizes. What goes wrong next?',
+          [
+            'sizes grows automatically to match',
+            'Nothing, because the missing size counts as 0',
+            'A loop bounded by prices.size() reads past the end of sizes',
+            'The new price is ignored',
+          ],
+          2,
+          'The field vectors now disagree on how many records exist.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> prices = {1, 2, 3, 4};
+              std::vector<int> sizes = {2, 0, 1, 3};
+              if (prices.size() != sizes.size()) {
+                std::cout << "mismatched\\n";
+              } else {
+                int total = 0;
+                for (std::size_t i = 0; i < prices.size(); ++i) total += prices[i] * sizes[i];
+                std::cout << total << "\\n";
+              }
+            }
+          `),
+          ['17', '10', '6', 'mismatched'],
+          0,
+          'The products are 2, 0, 3 and 12, which add up to 17.',
+        ),
+        choose(
+          'After checking prices.size() == sizes.size(), which loop bound is correct?',
+          [
+            'i <= prices.size()',
+            'i < prices.size() + sizes.size()',
+            'i < prices.size() - 1',
+            'i < prices.size()',
+          ],
+          3,
+          'Each index from 0 to size - 1 names one record in both vectors.',
+        ),
+      ],
+    },
+  ],
+};
+
+const layout: KnowledgePointModule = {
+  'cpp-alignas-contract': [
+    {
+      title: 'alignas raises a type’s alignment',
+      explanation: [
+        'Every type has an alignment: its objects must start at an address that is a multiple of it, and alignof(T) reports it. Writing alignas(N) on a struct asks for a stricter alignment N, a power of two, so `struct alignas(64) Slot { int value; };` makes every Slot start on a 64-byte boundary.',
+        'alignas can only strengthen alignment. Requesting less than the type naturally needs is an error, and a value larger than the implementation supports is rejected at compile time.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          struct alignas(64) Slot {
+            int value;
+          };
+          int main() {
+            Slot s{7};
+            std::cout << alignof(Slot) << " " << s.value << "\\n";
+          }
+        `),
+        output: '64 7',
+        explanation:
+          'alignof reports the requested 64; the member still holds the 7 it was initialized with.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            struct alignas(32) Packet {
+              int id;
+              int size;
+            };
+            int main() {
+              std::cout << alignof(Packet) << "\\n";
+            }
+          `),
+          ['8', '32', '64', '4'],
+          1,
+          'The struct asks for 32-byte alignment, which is stricter than its int members need.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            struct alignas(16) Small {
+              int value;
+            };
+            struct alignas(128) Large {
+              int value;
+            };
+            int main() {
+              std::cout << alignof(Small) << " " << alignof(Large) << "\\n";
+            }
+          `),
+          ['16 128', '128 16', '16 16', '64 64'],
+          0,
+          'Each type reports the alignment its own alignas requested.',
+        ),
+        choose(
+          'What does alignas(64) on a struct guarantee?',
+          [
+            'Its member values are rounded to multiples of 64',
+            'The CPU’s cache line is 64 bytes',
+            'Every object of the type starts at an address that is a multiple of 64',
+            'Accesses to it are atomic',
+          ],
+          2,
+          'alignas controls placement of objects, nothing else.',
+        ),
+        choose(
+          'Why can `struct alignas(1) Pair { int a; int b; };` not lower Pair’s alignment below int’s?',
+          [
+            'alignas(1) is applied only at run time',
+            'alignas may only make alignment stricter; a weaker request is ill-formed',
+            'alignas accepts only 64',
+            'It can; Pair becomes 1-byte aligned',
+          ],
+          1,
+          'An alignment specifier may not request less than the entity would need without it.',
+        ),
+      ],
+    },
+    {
+      title: 'An alignment request is not a hardware measurement',
+      explanation: [
+        'alignas(64) is often used because 64 bytes is a common cache-line size, but the program chose that number; it does not prove the cache line is 64 bytes on the machine running it. Lines of 128 bytes exist, for example.',
+        'Treat such values as stated assumptions. std::hardware_destructive_interference_size in <new> gives the implementation’s suggestion, but it is still a compile-time guess for a target, not a measurement.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          struct alignas(64) Counter {
+            int hits;
+          };
+          int main() {
+            Counter a{3};
+            Counter b{4};
+            std::cout << a.hits + b.hits << " " << alignof(Counter) << "\\n";
+          }
+        `),
+        output: '7 64',
+        explanation:
+          'Alignment changes where each Counter is placed, not the values it holds.',
+      },
+      questions: [
+        choose(
+          'A program declares `struct alignas(64) Slot` and claims this proves the CPU’s cache line is 64 bytes. What is wrong?',
+          [
+            'Nothing; alignas reads the cache line size',
+            'alignas(64) is invalid',
+            'Cache lines are always 32 bytes',
+            'alignas states the program’s choice; it does not measure the hardware',
+          ],
+          3,
+          'The number is an assumption written into the code.',
+        ),
+        choose(
+          'What does alignas do to the value stored in a member?',
+          [
+            'Nothing; it only affects where objects are placed',
+            'Rounds it up to a multiple of the alignment',
+            'Sets it to zero',
+            'Makes it atomic',
+          ],
+          0,
+          'Alignment is about addresses, never about stored values.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            struct alignas(128) Big {
+              int v;
+            };
+            int main() {
+              Big x{5};
+              std::cout << alignof(Big) << " " << x.v << "\\n";
+            }
+          `),
+          ['64 5', '5 128', '128 5', '128 0'],
+          2,
+          'Big asks for 128-byte alignment, and its member keeps the value 5.',
+        ),
+        choose(
+          'For `struct alignas(32) T { int v; };`, which statement about alignof(T) is guaranteed?',
+          [
+            'It equals sizeof(int)',
+            'It equals 32',
+            'It depends on the cache line size',
+            'It equals 64',
+          ],
+          1,
+          'The requested 32 is stricter than int’s alignment, so it becomes the type’s alignment.',
+        ),
+      ],
+    },
+  ],
+  'cpp-padded-counter': [
+    {
+      title: 'Give each thread’s counter its own aligned slot',
+      explanation: [
+        'When two threads keep writing to different variables that share one cache line, each write forces that line to move between their cores. This false sharing slows both threads, although they never touch the same variable.',
+        'Wrapping each counter in an alignas(64) struct places the counters at least 64 bytes apart, so on a machine with 64-byte lines they land on different lines. This changes performance only; the program’s results are the same either way.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <atomic>
+          #include <iostream>
+          #include <thread>
+          struct alignas(64) Slot {
+            std::atomic<int> value{0};
+          };
+          int main() {
+            Slot left;
+            Slot right;
+            std::thread a([&left] { left.value.store(30); });
+            std::thread b([&right] { right.value.store(12); });
+            a.join();
+            b.join();
+            std::cout << left.value.load() + right.value.load() << "\\n";
+          }
+        `),
+        output: '42',
+        explanation:
+          'Each worker writes only its own slot, and the slots sit on separate 64-byte boundaries; the sum is 30 + 12.',
+      },
+      questions: [
+        predictOutput(
+          'Three workers store into three padded slots. What is printed?',
+          cpp(`
+            #include <atomic>
+            #include <iostream>
+            #include <thread>
+            struct alignas(64) Slot {
+              std::atomic<int> value{0};
+            };
+            int main() {
+              Slot a;
+              Slot b;
+              Slot c;
+              std::thread ta([&a] { a.value.store(5); });
+              std::thread tb([&b] { b.value.store(6); });
+              std::thread tc([&c] { c.value.store(7); });
+              ta.join();
+              tb.join();
+              tc.join();
+              std::cout << a.value.load() + b.value.load() + c.value.load() << " " << alignof(Slot) << "\\n";
+            }
+          `),
+          ['18 3', '18 64', '64 18', '7 64'],
+          1,
+          'Each slot keeps its own value, and every Slot has the requested 64-byte alignment.',
+        ),
+        choose(
+          'Two threads write to different ints that sit in the same 64-byte cache line. Is that a data race?',
+          [
+            'No: they are different objects; it can be slow but it is not incorrect',
+            'Yes: sharing a cache line makes it a data race',
+            'Yes, unless both ints are atomic',
+            'No, because ints are always written in one instruction',
+          ],
+          0,
+          'Data races are about the same object; false sharing is a performance effect of sharing a line.',
+        ),
+        choose(
+          'What does putting two counters in separate alignas(64) structs change?',
+          [
+            'Correctness, by preventing data races',
+            'The values the counters hold',
+            'Only performance, by keeping them off a shared 64-byte line',
+            'Nothing at all on any machine',
+          ],
+          2,
+          'Padding moves objects apart in memory; it does not synchronize anything.',
+        ),
+        choose(
+          'Why can false sharing slow two threads that never touch each other’s variable?',
+          [
+            'The threads must take turns holding a lock',
+            'Each variable is copied on every read',
+            'The compiler inserts a mutex',
+            'Each write forces the shared cache line to move between their cores',
+          ],
+          3,
+          'Coherence works per line, so writes to neighbours keep invalidating the other core’s copy.',
+        ),
+      ],
+    },
+    {
+      title: 'Padding does not replace synchronization',
+      explanation: [
+        'Padding cannot fix a data race. If two threads write the same counter, it must still be atomic or protected by a mutex, however it is aligned. And a counter that only one thread writes, read after a join, needs no atomic at all, padded or not.',
+        'Decide correctness first (who writes what, and how it is synchronized), then add alignment only where a measurement shows false sharing matters.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          #include <thread>
+          struct alignas(64) Partial {
+            int sum = 0;
+          };
+          int main() {
+            Partial a_part;
+            Partial b_part;
+            std::thread a([&a_part] { a_part.sum = 1 + 2 + 3; });
+            std::thread b([&b_part] { b_part.sum = 4 + 5; });
+            a.join();
+            b.join();
+            std::cout << a_part.sum + b_part.sum << "\\n";
+          }
+        `),
+        output: '15',
+        explanation:
+          'Each plain int has a single writer and is read after the joins, so no atomic is needed; the padding only keeps the two partials on separate lines.',
+      },
+      questions: [
+        choose(
+          'Two threads both increment the same plain int, which lives in its own alignas(64) struct. What is true?',
+          [
+            'It is still a data race: padding separates objects, not accesses to one object',
+            'The padding makes the increments safe',
+            'It is safe because no cache line is shared',
+            'It is safe on machines with 64-byte lines only',
+          ],
+          0,
+          'Both threads access the very same int without synchronization.',
+        ),
+        choose(
+          'Each worker writes only its own padded plain int, and main reads them after joining all workers. What synchronization is needed?',
+          [
+            'Each int must be atomic',
+            'None beyond the joins',
+            'A mutex around every write',
+            'alignas(128) instead of 64',
+          ],
+          1,
+          'Single-writer data read after join() is already correctly ordered.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            #include <thread>
+            struct alignas(64) Partial {
+              int sum = 0;
+            };
+            int main() {
+              Partial a_part;
+              Partial b_part;
+              std::thread a([&a_part] { a_part.sum = 10 * 2; });
+              std::thread b([&b_part] { b_part.sum = 5 * 5; });
+              a.join();
+              b.join();
+              std::cout << a_part.sum + b_part.sum << "\\n";
+            }
+          `),
+          ['25', '20', '45', '0'],
+          2,
+          'Each worker fills its own partial, and main adds them after the joins.',
+        ),
+        choose(
+          'When should you add alignas padding to per-thread counters?',
+          [
+            'Always, to make counters correct',
+            'Instead of using atomics',
+            'Only in single-threaded code',
+            'When a measurement shows false sharing costs time',
+          ],
+          3,
+          'Padding has a memory cost and only a performance benefit, so it should follow evidence.',
+        ),
+      ],
+    },
+  ],
+  'cpp-layout-spacing': [
+    {
+      title: 'sizeof is always a multiple of alignof',
+      explanation: [
+        'Array elements are placed sizeof(T) bytes apart, and every element must be aligned. So the language makes sizeof(T) a multiple of alignof(T), adding padding at the end of the struct when needed. A struct alignas(64) with a single int member therefore occupies at least 64 bytes.',
+        'In a model with given member sizes, the size is the members’ bytes rounded up to the next multiple of the alignment, and element i of an array starts at i * size.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          struct alignas(64) Counter {
+            int value;
+          };
+          int main() {
+            int member_bytes = 4;
+            int alignment = 64;
+            int size = (member_bytes + alignment - 1) / alignment * alignment;
+            std::cout << size << " " << sizeof(Counter) % alignof(Counter) << "\\n";
+          }
+        `),
+        output: '64 0',
+        explanation:
+          'The model rounds 4 bytes up to 64. For the real type, the language guarantees sizeof is a multiple of alignof, so the remainder is 0.',
+      },
+      questions: [
+        predictOutput(
+          'Members take 72 bytes in a 64-aligned struct. What size does the model give?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int member_bytes = 72;
+              int alignment = 64;
+              int size = (member_bytes + alignment - 1) / alignment * alignment;
+              std::cout << size << "\\n";
+            }
+          `),
+          ['72', '136', '128', '64'],
+          2,
+          '72 bytes need two 64-byte units, so the padded size is 128.',
+        ),
+        predictOutput(
+          'An array holds 3 elements of a 128-byte type. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int size = 128;
+              int count = 3;
+              std::cout << 2 * size << " " << count * size << "\\n";
+            }
+          `),
+          ['256 384', '128 384', '256 256', '384 256'],
+          0,
+          'Element 2 starts two strides in, at 256, and the array spans 3 * 128 bytes.',
+        ),
+        choose(
+          'Why must sizeof(T) be a multiple of alignof(T)?',
+          [
+            'So the struct fits in one cache line',
+            'So every element of a T array is correctly aligned',
+            'Because sizeof counts cache lines',
+            'It need not be',
+          ],
+          1,
+          'Elements follow each other at sizeof(T) intervals, so the stride must preserve alignment.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            struct alignas(32) Pair {
+              int a;
+              int b;
+            };
+            int main() {
+              std::cout << sizeof(Pair) % alignof(Pair) << "\\n";
+            }
+          `),
+          ['8', '0', '24', '32'],
+          1,
+          'Whatever the exact size, it is a multiple of the alignment, so the remainder is 0.',
+        ),
+      ],
+    },
+    {
+      title: 'A layout check is not a speed measurement',
+      explanation: [
+        'Checking sizeof and alignof confirms the layout you asked for, for example that counters are 64 bytes apart. It does not show the program got faster. Whether false sharing mattered, and whether padding helped, can only be learned by timing the real workload on the target machine.',
+        'Padding also costs memory: 1,000 counters padded to 64 bytes use 64,000 bytes instead of 4,000, which can push other hot data out of the cache.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int counters = 1000;
+            int plain_bytes = 4;
+            int padded_bytes = 64;
+            std::cout << counters * plain_bytes << " " << counters * padded_bytes << "\\n";
+          }
+        `),
+        output: '4000 64000',
+        explanation:
+          'Padding multiplies the memory used by the counters by 16 in this model.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int counters = 256;
+              int plain_bytes = 8;
+              int padded_bytes = 128;
+              std::cout << counters * plain_bytes << " " << counters * padded_bytes << "\\n";
+            }
+          `),
+          ['32768 2048', '2048 2048', '2048 32768', '256 128'],
+          2,
+          '256 plain 8-byte counters take 2048 bytes; padded to 128 bytes each they take 32768.',
+        ),
+        choose(
+          'A test asserts sizeof(Slot) == 64, and the author concludes the hot loop is faster. What is missing?',
+          [
+            'A timing measurement of the workload on the target machine',
+            'Nothing; the size proves the speedup',
+            'A check that alignof(Slot) is 32',
+            'A larger alignas value',
+          ],
+          0,
+          'A size check confirms layout, not performance.',
+        ),
+        choose(
+          'What is a cost of padding every counter to 64 bytes?',
+          [
+            'Data races between counters',
+            'More memory use, which can evict other hot data from the cache',
+            'Slower compile times only',
+            'Counters can no longer be atomic',
+          ],
+          1,
+          'Padding inflates the footprint, and cache space is shared with everything else.',
+        ),
+        choose(
+          'Which evidence shows that padding helped?',
+          [
+            'sizeof(Slot) % 64 == 0',
+            'alignof(Slot) == 64',
+            'The program still prints the same totals',
+            'Timing the real workload before and after, over several runs',
+          ],
+          3,
+          'Only a measurement of the workload can show a speedup.',
+        ),
+      ],
+    },
+  ],
+  'cpp-false-sharing': [
+    {
+      title: 'Equal line indices mean a shared line',
+      explanation: [
+        'In a line model with line size L and lines starting at multiples of L, byte offset a lies in line a / L. Two offsets share a line exactly when a / L == b / L.',
+        'So two counters at offsets 0 and 8 share line 0 when lines are 64 bytes, while offsets 0 and 64 fall in lines 0 and 1.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          int main() {
+            std::size_t line = 64;
+            std::size_t a = 0;
+            std::size_t b = 8;
+            std::cout << a / line << " " << b / line << " " << (a / line == b / line) << "\\n";
+          }
+        `),
+        output: '0 0 1',
+        explanation:
+          'Both offsets are below 64, so both are in line 0 and the comparison prints 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t line = 64;
+              std::size_t a = 60;
+              std::size_t b = 68;
+              std::cout << a / line << " " << b / line << " " << (a / line == b / line) << "\\n";
+            }
+          `),
+          ['0 0 1', '0 1 0', '1 1 1', '0 1 1'],
+          1,
+          'Only 8 bytes apart, but a boundary at 64 separates them: lines 0 and 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t line = 64;
+              std::size_t a = 128;
+              std::size_t b = 191;
+              std::cout << a / line << " " << b / line << " " << (a / line == b / line) << "\\n";
+            }
+          `),
+          ['2 2 1', '2 3 0', '1 1 1', '2 2 0'],
+          0,
+          '128 to 191 is exactly line 2, so both offsets share it.',
+        ),
+        predictOutput(
+          'The same two offsets are checked under two line sizes. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t a = 0;
+              std::size_t b = 64;
+              std::cout << (a / 64 == b / 64) << " " << (a / 128 == b / 128) << "\\n";
+            }
+          `),
+          ['1 0', '0 0', '1 1', '0 1'],
+          3,
+          'With 64-byte lines they are in different lines; with 128-byte lines both are in line 0.',
+        ),
+        choose(
+          'Two counters are 8 bytes apart. Do they share a 64-byte line?',
+          [
+            'Always, because 8 is less than 64',
+            'Never',
+            'It depends on where they start: offsets 56 and 64 straddle a boundary',
+            'Only if both are atomic',
+          ],
+          2,
+          'Sharing depends on the line indices, not just the distance.',
+        ),
+      ],
+    },
+    {
+      title: 'A shared line matters only when threads write it',
+      explanation: [
+        'Sharing a line becomes false sharing only when at least one thread writes one variable while another thread uses a different variable on the same line. Data that every thread only reads can share lines freely.',
+        'The model answers a layout question, which variables share a line. It does not measure coherence traffic or time; confirming a slowdown takes a benchmark.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          int main() {
+            std::size_t line = 64;
+            std::size_t first = 0;
+            std::size_t second = 4;
+            std::size_t third = 64;
+            int shared_pairs = 0;
+            if (first / line == second / line) shared_pairs += 1;
+            if (first / line == third / line) shared_pairs += 1;
+            if (second / line == third / line) shared_pairs += 1;
+            std::cout << shared_pairs << "\\n";
+          }
+        `),
+        output: '1',
+        explanation:
+          'Three per-thread counters form three pairs; only the counters at 0 and 4 share a line.',
+      },
+      questions: [
+        predictOutput(
+          'Counters sit at offsets 0, 16 and 32. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t line = 64;
+              std::size_t first = 0;
+              std::size_t second = 16;
+              std::size_t third = 32;
+              int shared_pairs = 0;
+              if (first / line == second / line) shared_pairs += 1;
+              if (first / line == third / line) shared_pairs += 1;
+              if (second / line == third / line) shared_pairs += 1;
+              std::cout << shared_pairs << "\\n";
+            }
+          `),
+          ['1', '0', '3', '2'],
+          2,
+          'All three offsets are in line 0, so every pair shares it.',
+        ),
+        choose(
+          'Two threads only read different constants that share a cache line. Is that false sharing?',
+          [
+            'No: reads alone let both cores keep a copy of the line',
+            'Yes: any two threads on one line is false sharing',
+            'Yes, if the constants are ints',
+            'No, because constants are never cached',
+          ],
+          0,
+          'The cost comes from writes invalidating other cores’ copies.',
+        ),
+        choose(
+          'The model shows that two per-thread counters share a line. What does that prove?',
+          [
+            'That the program has a data race',
+            'That they share a line in this layout model; whether it costs time needs measurement',
+            'That the program runs twice as slowly',
+            'Nothing about the layout',
+          ],
+          1,
+          'A layout model identifies candidates for false sharing, not its cost.',
+        ),
+        predictOutput(
+          'The counters are padded to a 64-byte stride. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            int main() {
+              std::size_t line = 64;
+              std::size_t first = 0;
+              std::size_t second = 64;
+              std::size_t third = 128;
+              int shared_pairs = 0;
+              if (first / line == second / line) shared_pairs += 1;
+              if (first / line == third / line) shared_pairs += 1;
+              if (second / line == third / line) shared_pairs += 1;
+              std::cout << shared_pairs << "\\n";
+            }
+          `),
+          ['3', '1', '2', '0'],
+          3,
+          'Each counter starts its own line, so no pair shares one.',
+        ),
+      ],
+    },
+  ],
+};
+
+const measurement: KnowledgePointModule = {
+  'cpp-elapsed-duration': [
+    {
+      title: 'Elapsed time is end minus start',
+      explanation: [
+        'A duration is the difference between two readings of the same clock: elapsed = end - start, in that clock’s unit. A single reading is a point in time, not a duration.',
+        'Keep the unit attached to the number. 145 - 100 with nanosecond readings is 45 nanoseconds; converting to microseconds divides by 1000.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            long long start_ns = 100;
+            long long end_ns = 145;
+            std::cout << end_ns - start_ns << " ns\\n";
+          }
+        `),
+        output: '45 ns',
+        explanation:
+          'Both readings are in nanoseconds, so their difference is 45 nanoseconds.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long start_ns = 2000;
+              long long end_ns = 9500;
+              long long elapsed = end_ns - start_ns;
+              std::cout << elapsed << " ns = " << elapsed / 1000 << " us\\n";
+            }
+          `),
+          [
+            '7500 ns = 7.5 us',
+            '7500 ns = 7 us',
+            '11500 ns = 11 us',
+            '7 ns = 7500 us',
+          ],
+          1,
+          'The difference is 7500 ns, and integer division by 1000 gives 7 whole microseconds.',
+        ),
+        predictOutput(
+          'The readings are in milliseconds. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long start_ms = 1200;
+              long long end_ms = 1250;
+              std::cout << end_ms - start_ms << " ms\\n";
+            }
+          `),
+          ['1250 ms', '-50 ms', '50 ms', '2450 ms'],
+          2,
+          'The duration is the difference of the two readings: 50 ms.',
+        ),
+        choose(
+          'A log line says "request took 1700000000123 ns". What most likely went wrong?',
+          [
+            'A single clock reading, time since an epoch, was reported instead of a difference',
+            'The request really was that slow',
+            'The unit should have been microseconds',
+            'Nothing',
+          ],
+          0,
+          'The number looks like a timestamp, about 53 years after 1970 in nanoseconds, not an interval.',
+        ),
+        predictOutput(
+          'Three readings mark two phases. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long t0 = 10;
+              long long t1 = 35;
+              long long t2 = 90;
+              std::cout << t1 - t0 << " " << t2 - t1 << " " << t2 - t0 << "\\n";
+            }
+          `),
+          ['35 90 125', '25 80 55', '10 35 90', '25 55 80'],
+          3,
+          'Each phase is the difference of its own end and start; the total is t2 - t0.',
+        ),
+      ],
+    },
+    {
+      title: 'Use a monotonic clock and reject negative intervals',
+      explanation: [
+        'Wall-clock time (std::chrono::system_clock) can jump backwards or forwards when the system clock is adjusted, so an interval measured with it can come out negative or wildly wrong. std::chrono::steady_clock never goes backwards and is the clock to use for durations.',
+        'Code that receives readings from elsewhere should still check that end >= start, treat a negative difference as an error, and convert both readings to one unit before subtracting.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            long long start = 500;
+            long long end = 480;
+            if (end < start) {
+              std::cout << "invalid interval\\n";
+            } else {
+              std::cout << end - start << "\\n";
+            }
+          }
+        `),
+        output: 'invalid interval',
+        explanation:
+          'An end reading before the start cannot be a real duration, so it is reported instead of printing -20.',
+      },
+      questions: [
+        choose(
+          'Which clock should time how long a function takes?',
+          [
+            'std::chrono::system_clock',
+            'Either; they always agree',
+            'std::chrono::steady_clock',
+            'A clock that reads the calendar date',
+          ],
+          2,
+          'steady_clock is monotonic, so adjustments to the system time cannot distort an interval.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long start = 700;
+              long long end = 700;
+              if (end < start) {
+                std::cout << "invalid interval\\n";
+              } else {
+                std::cout << end - start << "\\n";
+              }
+            }
+          `),
+          ['invalid interval', '0', '1', '700'],
+          1,
+          'Equal readings are a valid interval of length 0.',
+        ),
+        choose(
+          'Interval readings come from system_clock, and the clock is adjusted during the run. What can happen?',
+          [
+            'A measured interval can be negative or far too large',
+            'Nothing; system_clock never moves backwards',
+            'The program stops',
+            'The clock pauses until the adjustment finishes',
+          ],
+          0,
+          'system_clock follows the wall clock, adjustments included.',
+        ),
+        predictOutput(
+          'start is in milliseconds and end in microseconds. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long start_ms = 2;
+              long long end_us = 2500;
+              long long start_us = start_ms * 1000;
+              std::cout << end_us - start_us << " us\\n";
+            }
+          `),
+          ['500 us', '2498 us', '0 us', '2500 us'],
+          0,
+          'Converting the start to 2000 us first makes the difference meaningful: 500 us.',
+        ),
+      ],
+    },
+  ],
+  'cpp-median-samples': [
+    {
+      title: 'Sort a copy, then take the middle',
+      explanation: [
+        'The median of a set of samples is the middle value after sorting. For an odd count n it is element n / 2 of the sorted samples; for an even count it is the mean of elements n / 2 - 1 and n / 2.',
+        'Sort a copy so the caller’s sample order is kept, and convert to double before averaging the two middle values so a .5 is not lost.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <algorithm>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> samples = {9, 2, 4};
+            std::vector<int> sorted = samples;
+            std::sort(sorted.begin(), sorted.end());
+            std::cout << sorted[sorted.size() / 2] << " " << samples[0] << "\\n";
+          }
+        `),
+        output: '4 9',
+        explanation:
+          'Sorted, the samples are 2, 4, 9, so the median is 4; the original vector still starts with 9.',
+      },
+      questions: [
+        predictOutput(
+          'There is an even number of samples. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples = {1, 4, 2, 8};
+              std::sort(samples.begin(), samples.end());
+              std::size_t middle = samples.size() / 2;
+              double median = (static_cast<double>(samples[middle - 1]) + samples[middle]) / 2;
+              std::cout << median << "\\n";
+            }
+          `),
+          ['3.75', '3', '2', '4'],
+          1,
+          'Sorted, the middle two are 2 and 4, whose mean is 3; 3.75 would be the mean of all four.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples = {5, 1, 2, 8};
+              std::sort(samples.begin(), samples.end());
+              std::size_t middle = samples.size() / 2;
+              double median = (static_cast<double>(samples[middle - 1]) + samples[middle]) / 2;
+              std::cout << median << "\\n";
+            }
+          `),
+          ['3', '4', '3.5', '2'],
+          2,
+          'The middle values are 2 and 5; converting before dividing keeps the .5.',
+        ),
+        predictOutput(
+          'One latency sample is an outlier. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples = {12, 11, 950, 13, 10};
+              std::sort(samples.begin(), samples.end());
+              std::cout << samples[samples.size() / 2] << "\\n";
+            }
+          `),
+          ['950', '199', '13', '12'],
+          3,
+          'Sorted, the samples are 10, 11, 12, 13, 950; the middle one is 12.',
+        ),
+        choose(
+          'Why is the median a better summary than the mean for latency samples with one 950 ms outlier?',
+          [
+            'One extreme sample barely moves the median but pulls the mean far up',
+            'The median is always smaller than the mean',
+            'The mean cannot be computed for latencies',
+            'The median ignores half of the samples',
+          ],
+          0,
+          'The median depends only on the order of the samples, not on how extreme the largest is.',
+        ),
+      ],
+    },
+    {
+      title: 'Define the empty case and branch on the count',
+      explanation: [
+        'With no samples there is no middle element; sorted[0] or sorted[sorted.size() / 2] would read past the end. Decide what empty input means, for example reporting "no samples", and check for it before sorting or indexing.',
+        'Then a branch on sorted.size() % 2 selects the right formula for nonempty input.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <algorithm>
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> samples;
+            if (samples.empty()) {
+              std::cout << "no samples\\n";
+            } else {
+              std::vector<int> sorted = samples;
+              std::sort(sorted.begin(), sorted.end());
+              std::size_t middle = sorted.size() / 2;
+              if (sorted.size() % 2 == 1) {
+                std::cout << sorted[middle] << "\\n";
+              } else {
+                std::cout << (static_cast<double>(sorted[middle - 1]) + sorted[middle]) / 2 << "\\n";
+              }
+            }
+          }
+        `),
+        output: 'no samples',
+        explanation:
+          'The empty check runs first, so nothing is sorted or indexed.',
+      },
+      questions: [
+        predictOutput(
+          'The same program runs on one sample. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples = {6};
+              if (samples.empty()) {
+                std::cout << "no samples\\n";
+              } else {
+                std::vector<int> sorted = samples;
+                std::sort(sorted.begin(), sorted.end());
+                std::size_t middle = sorted.size() / 2;
+                if (sorted.size() % 2 == 1) {
+                  std::cout << sorted[middle] << "\\n";
+                } else {
+                  std::cout << (static_cast<double>(sorted[middle - 1]) + sorted[middle]) / 2 << "\\n";
+                }
+              }
+            }
+          `),
+          ['no samples', '6', '3', '0'],
+          1,
+          'One sample is an odd count, and middle is index 0.',
+        ),
+        choose(
+          'What does `sorted[sorted.size() / 2]` do for an empty vector?',
+          [
+            'Returns 0',
+            'Throws std::out_of_range',
+            'Reads past the end, which is undefined behavior',
+            'Returns NaN',
+          ],
+          2,
+          'The index is 0 but there is no element 0, and operator[] does not check.',
+        ),
+        predictOutput(
+          'Two samples go through the same program. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples = {20, 10};
+              if (samples.empty()) {
+                std::cout << "no samples\\n";
+              } else {
+                std::vector<int> sorted = samples;
+                std::sort(sorted.begin(), sorted.end());
+                std::size_t middle = sorted.size() / 2;
+                if (sorted.size() % 2 == 1) {
+                  std::cout << sorted[middle] << "\\n";
+                } else {
+                  std::cout << (static_cast<double>(sorted[middle - 1]) + sorted[middle]) / 2 << "\\n";
+                }
+              }
+            }
+          `),
+          ['20', '10', '15', '30'],
+          2,
+          'An even count averages the two middle values, 10 and 20.',
+        ),
+        predictOutput(
+          'Three samples go through the same program. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples = {7, 3, 9};
+              if (samples.empty()) {
+                std::cout << "no samples\\n";
+              } else {
+                std::vector<int> sorted = samples;
+                std::sort(sorted.begin(), sorted.end());
+                std::size_t middle = sorted.size() / 2;
+                if (sorted.size() % 2 == 1) {
+                  std::cout << sorted[middle] << "\\n";
+                } else {
+                  std::cout << (static_cast<double>(sorted[middle - 1]) + sorted[middle]) / 2 << "\\n";
+                }
+              }
+            }
+          `),
+          ['3', '9', '6.33333', '7'],
+          3,
+          'Sorted, the samples are 3, 7, 9; the odd branch prints the middle value.',
+        ),
+      ],
+    },
+  ],
+  'cpp-nearest-rank-percentile': [
+    {
+      title: 'Nearest rank picks sample ceil(p * n / 100)',
+      explanation: [
+        'Several percentile definitions exist, so a reported percentile should name its rule. The nearest-rank rule sorts n samples and returns the sample at 1-based rank ceil(p * n / 100), which is 0-based index rank - 1.',
+        'With integers, ceil(p * n / 100) is (p * n + 99) / 100. For n = 4 and p = 50 the rank is 2, so p50 is the second smallest sample.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <algorithm>
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> samples = {4, 1, 9, 2};
+            std::sort(samples.begin(), samples.end());
+            std::size_t p = 50;
+            std::size_t rank = (p * samples.size() + 99) / 100;
+            std::cout << rank << " " << samples[rank - 1] << "\\n";
+          }
+        `),
+        output: '2 2',
+        explanation:
+          'Sorted, the samples are 1, 2, 4, 9. Rank ceil(50 * 4 / 100) = 2 selects 2.',
+      },
+      questions: [
+        predictOutput(
+          'The same samples are asked for p99. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples = {4, 1, 9, 2};
+              std::sort(samples.begin(), samples.end());
+              std::size_t p = 99;
+              std::size_t rank = (p * samples.size() + 99) / 100;
+              std::cout << rank << " " << samples[rank - 1] << "\\n";
+            }
+          `),
+          ['3 4', '4 9', '4 4', '1 9'],
+          1,
+          'ceil(99 * 4 / 100) = ceil(3.96) = 4, the largest of four samples.',
+        ),
+        predictOutput(
+          'Ten samples hold 1 to 10 in a shuffled order. What is p90?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples = {3, 10, 1, 7, 5, 9, 2, 8, 4, 6};
+              std::sort(samples.begin(), samples.end());
+              std::size_t p = 90;
+              std::size_t rank = (p * samples.size() + 99) / 100;
+              std::cout << samples[rank - 1] << "\\n";
+            }
+          `),
+          ['10', '8', '9', '90'],
+          2,
+          'Rank ceil(90 * 10 / 100) = 9, and the ninth smallest of 1 to 10 is 9.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples = {4, 1, 9, 2};
+              std::sort(samples.begin(), samples.end());
+              std::size_t p = 25;
+              std::size_t rank = (p * samples.size() + 99) / 100;
+              std::cout << samples[rank - 1] << "\\n";
+            }
+          `),
+          ['2', '1', '4', '9'],
+          1,
+          'Rank ceil(25 * 4 / 100) = 1 selects the smallest sample.',
+        ),
+        choose(
+          'A dashboard reports "p99 = 9 ms" computed from 4 samples. What should accompany it?',
+          [
+            'Nothing more',
+            'The mean of the samples',
+            'The CPU model',
+            'The sample count and percentile rule; with 4 samples, p99 is just the maximum',
+          ],
+          3,
+          'Without the count and rule, readers cannot tell how much the number means.',
+        ),
+      ],
+    },
+    {
+      title: 'Validate the percentile and the sample count',
+      explanation: [
+        'Nearest rank is defined for 0 < p <= 100 and at least one sample. p = 0 gives rank 0, and rank - 1 with unsigned arithmetic wraps around to a huge index; an empty sample set has no rank at all. Reject both before indexing.',
+        'With few samples, high percentiles collapse onto the maximum: for n = 4 every p above 75 selects the largest sample.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <algorithm>
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> samples = {4, 1, 9, 2};
+            std::size_t p = 0;
+            if (samples.empty()) {
+              std::cout << "no samples\\n";
+            } else if (p == 0) {
+              std::cout << "invalid percentile\\n";
+            } else if (p > 100) {
+              std::cout << "invalid percentile\\n";
+            } else {
+              std::sort(samples.begin(), samples.end());
+              std::size_t rank = (p * samples.size() + 99) / 100;
+              std::cout << samples[rank - 1] << "\\n";
+            }
+          }
+        `),
+        output: 'invalid percentile',
+        explanation:
+          'p = 0 is rejected before rank - 1 could wrap around to an enormous index.',
+      },
+      questions: [
+        predictOutput(
+          'p is 76 with four samples. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples = {4, 1, 9, 2};
+              std::size_t p = 76;
+              if (samples.empty()) {
+                std::cout << "no samples\\n";
+              } else if (p == 0) {
+                std::cout << "invalid percentile\\n";
+              } else if (p > 100) {
+                std::cout << "invalid percentile\\n";
+              } else {
+                std::sort(samples.begin(), samples.end());
+                std::size_t rank = (p * samples.size() + 99) / 100;
+                std::cout << samples[rank - 1] << "\\n";
+              }
+            }
+          `),
+          ['4', '2', '9', 'invalid percentile'],
+          2,
+          'ceil(76 * 4 / 100) = ceil(3.04) = 4: any p above 75 picks the maximum of four samples.',
+        ),
+        predictOutput(
+          'There are no samples. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples;
+              std::size_t p = 50;
+              if (samples.empty()) {
+                std::cout << "no samples\\n";
+              } else if (p == 0) {
+                std::cout << "invalid percentile\\n";
+              } else if (p > 100) {
+                std::cout << "invalid percentile\\n";
+              } else {
+                std::sort(samples.begin(), samples.end());
+                std::size_t rank = (p * samples.size() + 99) / 100;
+                std::cout << samples[rank - 1] << "\\n";
+              }
+            }
+          `),
+          ['invalid percentile', 'no samples', '0', 'Undefined'],
+          1,
+          'The empty check comes first, so nothing is indexed.',
+        ),
+        choose(
+          'With p == 0, what is rank - 1 as a std::size_t?',
+          ['A huge number, because 0 - 1 wraps around', '-1', '0', '3'],
+          0,
+          'Unsigned arithmetic cannot go negative; it wraps to the maximum value.',
+        ),
+        predictOutput(
+          'p is 101. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> samples = {4, 1, 9, 2};
+              std::size_t p = 101;
+              if (samples.empty()) {
+                std::cout << "no samples\\n";
+              } else if (p == 0) {
+                std::cout << "invalid percentile\\n";
+              } else if (p > 100) {
+                std::cout << "invalid percentile\\n";
+              } else {
+                std::sort(samples.begin(), samples.end());
+                std::size_t rank = (p * samples.size() + 99) / 100;
+                std::cout << samples[rank - 1] << "\\n";
+              }
+            }
+          `),
+          ['invalid percentile', '9', 'no samples', '4'],
+          0,
+          'p above 100 is outside the domain; unchecked, it would ask for a fifth sample.',
+        ),
+      ],
+    },
+  ],
+  'cpp-measurement': [
+    {
+      title: 'Count operations to describe work',
+      explanation: [
+        'An operation-count model counts how many times the important step runs, for example how many cells a nested loop visits. It describes the algorithm’s work as a function of input size and gives the same answer on every machine.',
+        'For r rows and c columns, a full nested loop visits r * c cells; a loop over one triangle of an n x n grid visits n * (n + 1) / 2.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int rows = 3;
+            int cols = 4;
+            int visits = 0;
+            for (int r = 0; r < rows; ++r)
+              for (int c = 0; c < cols; ++c) visits += 1;
+            std::cout << visits << "\\n";
+          }
+        `),
+        output: '12',
+        explanation: 'The inner loop runs 4 times for each of 3 rows.',
+      },
+      questions: [
+        predictOutput(
+          'The inner loop starts at the current row. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int n = 4;
+              int visits = 0;
+              for (int r = 0; r < n; ++r)
+                for (int c = r; c < n; ++c) visits += 1;
+              std::cout << visits << "\\n";
+            }
+          `),
+          ['16', '10', '6', '4'],
+          1,
+          'The rows contribute 4, 3, 2 and 1 visits: 4 * 5 / 2.',
+        ),
+        predictOutput(
+          'A grid pass is followed by a pass over the rows. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int rows = 3;
+              int cols = 4;
+              int visits = 0;
+              for (int r = 0; r < rows; ++r)
+                for (int c = 0; c < cols; ++c) visits += 1;
+              for (int r = 0; r < rows; ++r) visits += 1;
+              std::cout << visits << "\\n";
+            }
+          `),
+          ['15', '12', '7', '3'],
+          0,
+          'The grid costs 12 visits and the extra pass 3 more.',
+        ),
+        choose(
+          'A model says an algorithm makes 12 million comparisons. What can you conclude without measuring?',
+          [
+            'It takes 12 ms on any machine',
+            'It takes 12 million nanoseconds',
+            'How its work grows with input size, not how many milliseconds it takes',
+            'It is faster on every machine than any algorithm that makes more comparisons',
+          ],
+          2,
+          'A count describes work; converting it to time needs a measurement.',
+        ),
+        predictOutput(
+          'The same loop runs for 3 rows and then 6 rows. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int cols = 4;
+              int small = 0;
+              int large = 0;
+              for (int r = 0; r < 3; ++r)
+                for (int c = 0; c < cols; ++c) small += 1;
+              for (int r = 0; r < 6; ++r)
+                for (int c = 0; c < cols; ++c) large += 1;
+              std::cout << small << " " << large << "\\n";
+            }
+          `),
+          ['12 48', '12 24', '24 12', '12 12'],
+          1,
+          'The work is rows * cols, so doubling the rows doubles the visits.',
+        ),
+      ],
+    },
+    {
+      title: 'Report modeled work and measured time separately',
+      explanation: [
+        'Measured time depends on the machine, compiler, caches and load; an operation count does not. Keep them in separate, labeled fields, such as "work: 12 visits" and "time: 37 ns measured on machine X", rather than turning counts into invented nanoseconds.',
+        'Two loops with the same count can run at different speeds, for instance when one visits memory contiguously and the other jumps by a large stride.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int rows = 3;
+            int cols = 4;
+            int by_rows = 0;
+            int by_cols = 0;
+            for (int r = 0; r < rows; ++r)
+              for (int c = 0; c < cols; ++c) by_rows += 1;
+            for (int c = 0; c < cols; ++c)
+              for (int r = 0; r < rows; ++r) by_cols += 1;
+            std::cout << by_rows << " " << by_cols << "\\n";
+          }
+        `),
+        output: '12 12',
+        explanation:
+          'Row-by-row and column-by-column orders do the same work; on a row-major array they still differ in locality, which only a timing can reveal.',
+      },
+      questions: [
+        choose(
+          'A report turns 1,000 loop visits into "1 microsecond" by assuming 1 ns per visit. What is wrong?',
+          [
+            'Nothing',
+            'It presents an assumption as a measurement; time must be measured',
+            'It should assume 2 ns per visit',
+            'Visits cannot be counted',
+          ],
+          1,
+          'Keep the count as work and report time only from a real measurement.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int visits = 0;
+              for (int r = 0; r < 4; ++r)
+                for (int c = 0; c < 5; ++c) visits += 1;
+              std::cout << "work: " << visits << " visits\\n";
+            }
+          `),
+          ['work: 20 visits', 'work: 20 ns', 'work: 9 visits', 'time: 20 ns'],
+          0,
+          'The program counts 4 * 5 visits and labels them as work, not time.',
+        ),
+        choose(
+          'Two loops both make 1,000,000 visits, and one runs 4 times faster. What explains this?',
+          [
+            'One of the counts must be wrong',
+            'Counting changes the speed',
+            'Different memory access patterns, such as contiguous versus strided',
+            'Nothing can explain it',
+          ],
+          2,
+          'Equal work can still differ in cache behavior.',
+        ),
+        predictOutput(
+          'A full grid and its triangle are compared for n = 10. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int n = 10;
+              int full = 0;
+              int triangle = 0;
+              for (int r = 0; r < n; ++r)
+                for (int c = 0; c < n; ++c) full += 1;
+              for (int r = 0; r < n; ++r)
+                for (int c = r; c < n; ++c) triangle += 1;
+              std::cout << full << " " << triangle << "\\n";
+            }
+          `),
+          ['100 50', '55 100', '100 45', '100 55'],
+          3,
+          'The full grid is 10 * 10; the triangle includes the diagonal: 10 * 11 / 2.',
+        ),
+      ],
+    },
+  ],
+};
+
 export const knowledgePoints: KnowledgePointModule = {
   ...threads,
   ...signals,
   ...atomics,
   ...ordering,
   ...futures,
+  ...memoryModels,
+  ...layout,
+  ...measurement,
 };
