@@ -231,7 +231,7 @@ const curriculum = [
     'Match your split to the future predictions you need to make.',
     ['ml-learning-tasks', 'slicing'],
     [
-      'Training data fits parameters. Validation data guides choices such as model depth or decision threshold. A final test set estimates performance after those choices are finished. Repeatedly changing a model based on test results turns the test set into another validation set.',
+      'Training data fits parameters. Validation data guides choices you make about the model, such as which features to include or how flexible it should be. A final test set estimates performance after those choices are finished. Repeatedly changing a model based on test results turns the test set into another validation set.',
       'The split must reflect deployment. For forecasting, train on earlier observations and evaluate on later ones. If several rows belong to one person, keep that person in a single partition when the goal is generalization to new people. Stratification can preserve class proportions for an ordinary independent classification split; it does not fix time or group leakage.',
     ],
     {
@@ -242,15 +242,15 @@ const curriculum = [
     },
     [
       choice(
-        'Which set should guide the choice of tree depth?',
+        'Which data should guide a choice between two candidate feature sets?',
         [
           'The final test set',
-          'Validation data or cross-validation folds',
+          'A separate validation set',
           'A copy of the target column in the features',
           'Only the first training row',
         ],
         1,
-        'Hyperparameter choices belong to validation, leaving the final test set untouched.',
+        'Model choices belong to validation, leaving the final test set untouched.',
         'Keep one set for the final estimate.',
       ),
       choice(
@@ -289,7 +289,7 @@ const curriculum = [
     [
       [
         'What is the purpose of a final test set?',
-        'Estimate performance after model and hyperparameter choices have been made.',
+        'Estimate performance once, after every model choice has been made.',
       ],
       [
         'When should a split keep groups together?',
@@ -367,7 +367,7 @@ const curriculum = [
     ['ml-data-splits', 'math-variance', 'da-categories', 'methods'],
     [
       'Imputation, scaling, and category encoding turn raw features into usable model inputs. A standard scaler subtracts a training feature mean and divides by its training standard deviation. Learning those statistics from the test set leaks information, even when no target labels are involved.',
-      'A scikit-learn Pipeline joins preprocessing to an estimator. Calling fit on the training set fits each transformation and then the predictor. Calling predict on test data applies the already-fitted transformations. During cross-validation, putting the transformer inside the pipeline lets each fold learn its own statistics from its training portion.',
+      'A scikit-learn Pipeline joins preprocessing to an estimator. Calling fit on the training set fits each transformation and then the predictor. Calling predict on test data applies the already-fitted transformations. When you evaluate on several different train/validation splits, refitting the whole pipeline on each training portion lets every split learn its own statistics.',
     ],
     {
       code: 'from sklearn.preprocessing import StandardScaler\nscaler = StandardScaler().fit([[2.0], [6.0]])\nprint(scaler.transform([[4.0], [8.0]]).ravel().tolist())',
@@ -389,16 +389,16 @@ const curriculum = [
         'fit learns; transform applies.',
       ),
       choice(
-        'Why put a scaler inside a cross-validation pipeline?',
+        'You evaluate on several train/validation splits. Why refit the scaling pipeline on each split?',
         [
           'To erase labels',
-          'To guarantee perfect accuracy',
-          'To fit scaling statistics separately within each training fold',
+          'To guarantee zero validation error',
+          'To learn scaling statistics only from that split’s training rows',
           'To use future test statistics',
         ],
         2,
-        'The fold-specific training data must own all learned preprocessing statistics.',
-        'Each validation fold must stay unseen during fitting.',
+        'Each split’s training rows must own all learned preprocessing statistics.',
+        'Each validation part must stay unseen during fitting.',
       ),
       choice(
         'An unseen category arrives during prediction. What is an appropriate preparation?',
@@ -427,8 +427,8 @@ const curriculum = [
         'fit learns transformation parameters from training data; transform applies those learned parameters to data.',
       ],
       [
-        'How does a pipeline prevent preprocessing leakage during cross-validation?',
-        'Each training fold fits its own preprocessing before transforming the held-out validation fold.',
+        'How does a pipeline prevent preprocessing leakage when you evaluate on several splits?',
+        'Refitting it on each training portion learns the preprocessing from those rows before it transforms the held-out rows.',
       ],
     ],
   ),
@@ -503,7 +503,7 @@ const curriculum = [
     ['math-gradients', 'ml-baselines'],
     [
       'A gradient tells you how a loss changes when each parameter changes. Gradient descent updates a parameter vector by subtracting learning_rate times the gradient. For the scalar loss L(w) = (w - target)^2, the derivative is 2*(w - target). The subtraction moves toward the target when the step size is suitable.',
-      'A very small learning rate can make progress slow; a very large one can overshoot or diverge. Batch gradient descent uses all training examples per update. Stochastic descent uses one; mini-batch descent uses a small group. A neural-network loss need not be convex, so a zero gradient does not by itself prove that you found the best possible solution.',
+      'A very small learning rate can make progress slow; a very large one can overshoot or diverge. Batch gradient descent uses all training examples per update. Stochastic descent uses one; mini-batch descent uses a small group. A loss can have several valleys, so a zero gradient does not by itself prove that you found the best possible solution.',
     ],
     {
       code: 'w, target, rate = 0.0, 5.0, 0.1\ngradient = 2 * (w - target)\nw = w - rate * gradient\nprint(w)',
@@ -564,7 +564,7 @@ const curriculum = [
       ],
       [
         'Does a zero gradient always certify the global minimum?',
-        'No. In a nonconvex problem it can occur at a local minimum, a maximum, or a saddle point.',
+        'No. When a loss has several valleys or flat regions, it can occur at a local minimum, a maximum, or a saddle point.',
       ],
     ],
   ),
@@ -717,7 +717,7 @@ const curriculum = [
     ['ml-logistic-regression', 'conditional-expressions'],
     [
       'For a chosen positive class, a true positive is correctly predicted positive. A false positive is predicted positive but actually negative. A false negative is actually positive but missed. Precision = TP/(TP+FP) asks how many positive predictions were correct. Recall = TP/(TP+FN) asks how many actual positives were found.',
-      'Accuracy counts correct predictions across both classes. It can hide failure on a rare class: always predicting negative yields 99% accuracy when only 1% are positive. Report metrics that reflect the decision costs, inspect a confusion matrix, and consider multiple thresholds. The F1 score is the harmonic mean of precision and recall; it does not encode every possible business cost.',
+      'Accuracy counts correct predictions across both classes. It can hide failure on a rare class: always predicting negative yields 99% accuracy when only 1% are positive. Report metrics that reflect the decision costs, inspect a confusion matrix (the table of TP, FP, FN, and TN counts), and consider multiple thresholds. The F1 score is the harmonic mean of precision and recall; it does not encode every possible business cost.',
     ],
     {
       code: 'tp, fp, fn = 6, 2, 4\nprint(round(tp / (tp + fp), 2))\nprint(round(tp / (tp + fn), 2))',
@@ -847,7 +847,7 @@ const curriculum = [
     'Separate learned parameters from choices about the learning algorithm.',
     ['ml-cross-validation', 'ml-decision-trees', 'key-functions'],
     [
-      'Parameters such as regression weights are learned during fitting. Hyperparameters such as penalty strength, tree depth, or number of neighbors configure the fitting process. Grid search evaluates a predefined combination set; randomized search samples configurations from chosen distributions or lists.',
+      'Parameters such as regression weights are learned during fitting. Hyperparameters such as penalty strength, tree depth, or learning rate configure the fitting process. Grid search evaluates a predefined combination set; randomized search samples configurations from chosen distributions or lists.',
       'Compare configurations using the same appropriate validation strategy and metric. Searching more settings gives more opportunities to overfit validation results; the best observed score is not a guarantee of future performance. After selection, refit the chosen configuration on the available training data and evaluate once on the untouched test set. Nested cross-validation adds an outer evaluation loop when estimating the full selection procedure.',
     ],
     {
@@ -1134,7 +1134,7 @@ const curriculum = [
     'Reduce numeric dimensions while tracking retained variation.',
     ['ml-preprocessing', 'math-vectors'],
     [
-      'Principal component analysis finds orthogonal directions of large variance in centered numeric data. Keeping the first few components projects observations into a smaller feature space. It is unsupervised: the directions are selected without knowing which target you hope to predict.',
+      'Principal component analysis finds orthogonal directions (perpendicular, with a dot product of zero) of large variance in centered numeric data. Keeping the first few components projects observations into a smaller feature space. It is unsupervised: the directions are selected without knowing which target you hope to predict.',
       "High retained variance does not guarantee high predictive usefulness; a low-variance direction can still matter for a target. Scaling changes the variance geometry, so decide whether raw units or standardized features match your task. Fit PCA on training data, often inside a pipeline. The explained_variance_ratio_ values report each component's share of the total fitted variance.",
     ],
     {
@@ -1280,7 +1280,7 @@ const curriculum = [
     'Use scores and thresholds without equating rarity with wrongdoing.',
     ['ml-classification-metrics'],
     [
-      'An anomaly detector scores how unusual an observation is relative to a learned reference. Isolation forests, density models, or distance-based rules can supply such scores. Different libraries use different score directions: in one API larger means more unusual, while another returns larger values for more normal observations. Read the contract before applying a threshold.',
+      'An anomaly detector scores how unusual an observation is relative to a learned reference. Z-scores, density models, or distance-based rules can supply such scores. Different libraries use different score directions: in one API larger means more unusual, while another returns larger values for more normal observations. Read the contract before applying a threshold.',
       'An unusual row can be a measurement error, a rare legitimate event, or a genuine problem. Detection requires investigation and domain context. A threshold determines alert volume and the false-positive/false-negative trade-off. Evaluate with representative labels when available, and distinguish outlier detection in potentially contaminated training data from novelty detection using a mostly clean reference set.',
     ],
     {
@@ -1707,7 +1707,7 @@ const curriculum = [
     ['ml-neural-layers', 'da-window'],
     [
       'A recurrent network updates a hidden state using the current input and the previous state, reusing its parameters at each step. Its output can summarize an entire sequence or provide a prediction at every step. LSTM and GRU architectures use gates to control how information enters, persists in, and leaves their state.',
-      'Forecasting needs a causal input window: each prediction uses observations available before its forecast time. For multiple entities, group observations by entity before creating windows, so a sequence never crosses from one person or sensor to another. A one-step forecast and a multi-step forecast have different outputs and evaluation demands. Sequence models also include temporal convolution and attention, so recurrence is a design choice rather than a requirement. The Python example creates past-value windows; the assessment does not claim to train an RNN in the browser.',
+      'Forecasting needs a causal input window: each prediction uses observations available before its forecast time. For multiple entities, group observations by entity before creating windows, so a sequence never crosses from one person or sensor to another. A one-step forecast and a multi-step forecast have different outputs and evaluation demands. Non-recurrent sequence architectures also exist, so recurrence is a design choice rather than a requirement. The Python example creates past-value windows; the assessment does not claim to train an RNN in the browser.',
     ],
     {
       code: 'values = [10, 12, 11, 15, 14]\nwindow = 3\nexamples = [(values[i-window:i], values[i]) for i in range(window, len(values))]\nprint(examples)',
@@ -2086,7 +2086,7 @@ const curriculum = [
     ['ml-preprocessing', 'da-pipeline', 'sorting', 'sets'],
     [
       'Serving a model requires the same feature definitions and fitted preprocessing used during training. Store the model together with its schema, transformation state, package versions, and training-data lineage. Validate required fields and input types at the boundary. A reproducible prediction is more than a saved weight file.',
-      'Monitor input quality, latency, failures, prediction distributions, and eventual outcomes when labels arrive. Covariate shift changes input distributions; concept drift changes the relationship between inputs and targets. An input-distribution change is a warning to investigate, not automatic proof that accuracy fell. Re-evaluate with new representative labels, compare subgroup performance, and keep a rollback path for a bad release.',
+      'Monitor input quality, latency, failures, prediction distributions, and eventual outcomes when labels arrive. Covariate shift changes input distributions; concept drift changes the relationship between inputs and targets. An input-distribution change is a warning to investigate, not automatic proof that predictions got worse. Re-evaluate with new representative labels, compare subgroup performance, and keep a rollback path for a bad release.',
     ],
     {
       code: 'expected = {"distance_km", "rain"}\nrecord = {"distance_km": 8, "rain": 0}\nmissing = sorted(expected - record.keys())\nprint(missing)\nprint(len(missing) == 0)',
@@ -2110,14 +2110,14 @@ const curriculum = [
       choice(
         'An input distribution shifts. What can you conclude immediately?',
         [
-          'Accuracy certainly rose',
-          'Accuracy certainly fell',
+          'Prediction quality certainly improved',
+          'Prediction quality certainly got worse',
           'Something changed and should be investigated with outcomes when available',
           'The target is now a different file type',
         ],
         2,
         'Input shift can signal risk without proving the direction or magnitude of predictive degradation.',
-        'Distribution monitoring is a signal, not a label-based accuracy estimate.',
+        'Distribution monitoring is a signal, not a label-based estimate of prediction quality.',
       ),
       choice(
         'What is concept drift?',
