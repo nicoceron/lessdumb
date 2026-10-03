@@ -225,7 +225,7 @@ describe('documented Better Auth account backend', () => {
   });
 });
 
-function progressFixture(version = 4) {
+function progressFixture(version = 5) {
   return {
     version,
     progress: {
@@ -571,7 +571,7 @@ describe('versioned per-account progress', () => {
   });
 
   it('migrates accounts saved before knowledge-point lessons and before quizzes', async () => {
-    for (const version of [1, 2, 3]) {
+    for (const version of [1, 2, 3, 4]) {
       const { backend } = await freshBackend();
       const cookie = await register(backend);
       const legacy = progressFixture(version);
@@ -580,7 +580,7 @@ describe('versioned per-account progress', () => {
           .status,
       ).toBe(200);
       expect(await (await stateRequest(backend, cookie)).json()).toEqual({
-        state: progressFixture(4),
+        state: progressFixture(5),
         revision: 1,
       });
     }
@@ -591,7 +591,7 @@ describe('versioned per-account progress', () => {
     const cookie = await register(backend);
     const state = progressFixture();
     const invalid = await stateRequest(backend, cookie, {
-      state: { ...state, version: 5 },
+      state: { ...state, version: 6 },
       revision: 0,
     });
     expect(invalid.status).toBe(400);

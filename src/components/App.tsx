@@ -21,6 +21,10 @@ import { Dashboard } from './learn-dashboard';
 import { Courses } from './courses-page';
 const LearningSession = lazy(() => import('./learning-session'));
 const QuizSession = lazy(() => import('./quiz-session'));
+const PlacementSession = lazy(() => import('./placement-session'));
+/** /learn?placement=<course> opens that course's placement test. */
+const isPlacementRoute = (routeKey: string) =>
+  new URLSearchParams(routeKey.split('?')[1] ?? '').has('placement');
 /** /learn?quiz=… opens a quiz instead of a lesson or review. */
 const isQuizRoute = (routeKey: string) =>
   new URLSearchParams(routeKey.split('?')[1] ?? '').has('quiz');
@@ -291,14 +295,23 @@ export default function App({
                   update={update}
                 />
               )}
-              {page === 'learn' && !isQuizRoute(routeKey) && (
-                <LearningSession
+              {page === 'learn' && isPlacementRoute(routeKey) && (
+                <PlacementSession
                   key={`${routeKey}:${session.data?.user.id ?? 'guest'}`}
                   state={state}
                   update={update}
-                  userId={session.data?.user.id}
                 />
               )}
+              {page === 'learn' &&
+                !isQuizRoute(routeKey) &&
+                !isPlacementRoute(routeKey) && (
+                  <LearningSession
+                    key={`${routeKey}:${session.data?.user.id ?? 'guest'}`}
+                    state={state}
+                    update={update}
+                    userId={session.data?.user.id}
+                  />
+                )}
               {page === 'courses' && <Courses state={state} update={update} />}
               {page === 'graph' && (
                 <KnowledgeGraph key={routeKey} state={state} />

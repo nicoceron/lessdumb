@@ -166,6 +166,15 @@ export function Courses({
                   Set as active course
                 </Button>
               )}
+              {/* Optional: skipping starts from the beginning as usual. */}
+              {course.id === activeId &&
+                view.mastery.mastered < view.mastery.total && (
+                  <Button asChild size="sm" variant="outline">
+                    <a href={`/learn?placement=${course.id}`}>
+                      Take the placement test
+                    </a>
+                  </Button>
+                )}
             </div>
           </div>
           <Accordion

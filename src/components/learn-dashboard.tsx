@@ -78,6 +78,20 @@ export function Dashboard({ state }: { state: LearnerState }) {
             <h2 id="tasks-heading" className="sr-only">
               Tasks
             </h2>
+            {!progress.attempts.length && !progress.diagnostics?.length && (
+              <div className="ma-panel ma-task ma-placement-offer">
+                <h3>Already know some of {course.title}?</h3>
+                <p className="ma-muted">
+                  An optional placement test skips the lessons you can already
+                  do. Or start from the beginning with the first lesson below.
+                </p>
+                <Button asChild size="sm" variant="outline">
+                  <a href={`/learn?placement=${course.id}`}>
+                    Take the placement test
+                  </a>
+                </Button>
+              </div>
+            )}
             {view.tasks.length || view.quiz ? (
               <ol className="ma-task-list">
                 {view.quiz && (

@@ -2077,3 +2077,51 @@ code {
     padding: 18px 20px;
   }
 }
+
+/* Placement test: a progress bar, then a report of placed and next skills. */
+.placement-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.placement-progress > [data-slot='progress'] {
+  flex: 1;
+}
+.lesson-page .placement-report {
+  gap: 10px;
+  padding: 24px 30px;
+}
+.placement-report h2 {
+  font-size: 22px;
+  font-weight: 650;
+}
+.placement-list {
+  margin-bottom: 18px;
+}
+.placement-list h2 {
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 650;
+}
+.placement-list ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 18px;
+  list-style: disc;
+}
+.ma-placement-offer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+@media (max-width: 600px) {
+  .lesson-page .placement-report {
+    padding: 18px 20px;
+  }
+}

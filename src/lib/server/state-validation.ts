@@ -150,6 +150,7 @@ const SKILL_FIELDS = [
   'lessonFailedAt',
   'lessonRewarded',
   'implicitCredit',
+  'placement',
 ];
 
 function validateSkill(value: unknown, path: string) {
@@ -196,6 +197,22 @@ function validateSkill(value: unknown, path: string) {
   if (skill.totalXp !== undefined) number(skill.totalXp, `${path}.totalXp`);
   if (skill.lessonRewarded !== undefined)
     boolean(skill.lessonRewarded, `${path}.lessonRewarded`);
+  if (skill.placement !== undefined) {
+    const at = `${path}.placement`;
+    const placement = object(skill.placement, at, [
+      'at',
+      'diagnosticId',
+      'confirmedAt',
+      'demotedAt',
+    ]);
+    const placedAt = timestamp(placement.at, `${at}.at`)!;
+    string(placement.diagnosticId, `${at}.diagnosticId`, 128);
+    for (const key of ['confirmedAt', 'demotedAt'] as const)
+      if (placement[key] !== undefined) {
+        const when = timestamp(placement[key], `${at}.${key}`)!;
+        if (when < placedAt) fail(`${at}.${key}`, 'after the placement');
+      }
+  }
   if (skill.implicitCredit !== undefined) {
     const at = `${path}.implicitCredit`;
     const credit = object(skill.implicitCredit, at, [
@@ -337,9 +354,18 @@ function validateProgress(value: unknown) {
     'attempts',
     'timeZone',
     'quizzes',
+    'diagnostics',
   ]);
-  if (![1, 2, 3, 4].includes(progress.version as number))
-    fail(`${path}.version`, '1, 2, 3 or 4');
+  if (![1, 2, 3, 4, 5].includes(progress.version as number))
+    fail(`${path}.version`, '1 to 5');
+  if (progress.diagnostics !== undefined) {
+    const ids = array(progress.diagnostics, `${path}.diagnostics`, 10).map(
+      (diagnostic, index) =>
+        validateDiagnostic(diagnostic, `${path}.diagnostics[${index}]`),
+    );
+    if (new Set(ids).size !== ids.length)
+      fail(`${path}.diagnostics`, 'an array of distinct diagnostic IDs');
+  }
   if (progress.quizzes !== undefined) {
     const ids = array(
       progress.quizzes,
@@ -377,6 +403,70 @@ function validateProgress(value: unknown) {
   );
   if (new Set(attemptIds).size !== attemptIds.length)
     fail(`${path}.attempts`, 'an array of distinct attempt IDs');
+}
+
+function validateDiagnosticQuestion(
+  value: unknown,
+  path: string,
+  answered: boolean,
+) {
+  const question = object(
+    value,
+    path,
+    answered
+      ? [
+          'skillId',
+          'questionId',
+          'presentation',
+          'answer',
+          'correct',
+          'at',
+          'elapsedMs',
+        ]
+      : ['skillId', 'questionId', 'presentation'],
+  );
+  string(question.skillId, `${path}.skillId`);
+  string(question.questionId, `${path}.questionId`);
+  number(question.presentation, `${path}.presentation`);
+  if (answered) {
+    number(question.answer, `${path}.answer`, 0, 100);
+    boolean(question.correct, `${path}.correct`);
+    timestamp(question.at, `${path}.at`);
+    if (question.elapsedMs !== undefined)
+      number(question.elapsedMs, `${path}.elapsedMs`, 0, 24 * 3_600_000);
+  }
+}
+
+function validateDiagnostic(value: unknown, path: string): string {
+  const diagnostic = object(value, path, [
+    'id',
+    'courseId',
+    'startedAt',
+    'answers',
+    'current',
+    'completedAt',
+    'placed',
+  ]);
+  const id = string(diagnostic.id, `${path}.id`, 160);
+  string(diagnostic.courseId, `${path}.courseId`, 128);
+  const startedAt = timestamp(diagnostic.startedAt, `${path}.startedAt`)!;
+  array(diagnostic.answers, `${path}.answers`, 60).forEach((answer, index) =>
+    validateDiagnosticQuestion(answer, `${path}.answers[${index}]`, true),
+  );
+  if (diagnostic.current !== undefined)
+    validateDiagnosticQuestion(diagnostic.current, `${path}.current`, false);
+  if (diagnostic.completedAt !== undefined) {
+    const completedAt = timestamp(
+      diagnostic.completedAt,
+      `${path}.completedAt`,
+    )!;
+    if (completedAt < startedAt) fail(`${path}.completedAt`, 'after the start');
+    if (diagnostic.current !== undefined)
+      fail(`${path}.current`, 'absent once the test has ended');
+  }
+  if (diagnostic.placed !== undefined)
+    strings(diagnostic.placed, `${path}.placed`, 2000);
+  return id;
 }
 
 function validateQuiz(value: unknown, path: string): string {
@@ -494,8 +584,8 @@ export function parseStateUpdate(value: unknown): {
     'updatedAt',
   ]);
   // Version 1 accounts predate knowledge-point lessons; they migrate on read.
-  if (![1, 2, 3, 4].includes(state.version as number))
-    fail('state.version', '1, 2, 3 or 4');
+  if (![1, 2, 3, 4, 5].includes(state.version as number))
+    fail('state.version', '1 to 5');
   number(state.dailyGoal, 'state.dailyGoal', 1, 10_000);
   if (state.activeCourseId !== undefined)
     string(state.activeCourseId, 'state.activeCourseId', 128);
