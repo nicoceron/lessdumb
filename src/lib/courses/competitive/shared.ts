@@ -60,9 +60,7 @@ export function skill(
     unitId,
     title,
     summary,
-    // Every contest assessment defines a function with inputs and a result.
-    // Reuse the real Python foundation rather than granting assumed knowledge.
-    prerequisites: [...new Set(['parameters', ...prerequisites])],
+    prerequisites,
     order: 0,
     estimatedMinutes: 12,
     assessment: { requiredTypes: ['code', 'choice'], reviewAnswers: 2 },

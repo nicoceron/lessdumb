@@ -123,7 +123,7 @@ const skills: Skill[] = [
     'da-numpy',
     'Create numerical arrays',
     'Turn Python sequences into arrays with an explicit shape and data type.',
-    ['lists', 'numbers'],
+    ['lists'],
     [
       'A NumPy array stores values in a grid with a shared data type. Import the package with import numpy as np, then call np.array(...) with a Python list. Unlike a list, an ordinary numeric array supports arithmetic on all its entries.',
       'shape is a tuple containing the length of each axis. A flat array of three values has shape (3,); two rows with three values each have shape (2, 3). size counts all entries, while ndim counts axes. dtype describes their representation. Use dtype=float when decimal calculations are expected.',
@@ -190,7 +190,7 @@ const skills: Skill[] = [
     'da-numpy',
     'Calculate by column',
     'Apply arithmetic to complete arrays and reduce along an axis.',
-    ['da-arrays'],
+    ['da-arrays', 'math-mean', 'parameters'],
     [
       'Vectorized arithmetic applies an operation to every entry. With a numeric NumPy array, values * 2 doubles values; with a Python list, values * 2 repeats the list. An array expression usually returns a new array, so save that result in a variable.',
       'sum and mean can reduce a whole array to one value. On a two-dimensional array, axis=0 combines rows and leaves one result per column; axis=1 combines columns and leaves one result per row. The reduced axis disappears from the result.',
@@ -248,7 +248,7 @@ const skills: Skill[] = [
     'da-numpy',
     'Select array entries',
     'Combine two-axis indexing, boolean masks, and explicit copies.',
-    ['da-vectorization', 'slicing', 'comparisons'],
+    ['da-vectorization', 'slicing'],
     [
       'Select a matrix entry with array[row, column]. A colon selects a range along an axis, so array[:, 1] selects the second column across all rows. Positions start at zero; a slice stops before its ending position, just as it does for a Python list.',
       'A comparison such as values >= 10 creates an array of booleans. values[mask] returns entries whose positions are True. On a matrix, a one-dimensional row mask selects entire rows when used as matrix[mask].',
@@ -382,7 +382,7 @@ const skills: Skill[] = [
     'da-pandas',
     'Use labeled values',
     'Construct a pandas Series and distinguish labels from positions.',
-    ['da-arrays', 'dictionaries'],
+    ['da-vectorization', 'dictionaries'],
     [
       'Import pandas as pd. A Series pairs one-dimensional values with an index of labels. pd.Series([8, 12], index=["north", "south"]) gives each number a meaningful name. You can also create a Series from a dictionary: its keys become index labels.',
       'Use .loc[label] to select by label and .iloc[position] to select by zero-based position. This distinction matters when labels themselves are integers: a label of 10 is not position 10. Explicit .loc and .iloc make your intention readable.',
@@ -516,7 +516,7 @@ const skills: Skill[] = [
     'da-pandas',
     'Align by identity',
     'Understand automatic index alignment and explicit reindexing.',
-    ['da-dataframes', 'da-vectorization'],
+    ['da-series'],
     [
       'pandas arithmetic aligns labels, rather than blindly matching positions. If two Series list the same locations in different orders, addition still combines values for the same location. This is useful when independently collected datasets share stable identifiers.',
       'When a label exists on only one side, ordinary addition produces a missing result for it. .add(other, fill_value=0) can treat that absent side as zero when this matches the business meaning. Missing measurements are not automatically zero; make that decision explicitly.',
@@ -588,7 +588,7 @@ const skills: Skill[] = [
     'da-pandas',
     'Filter observations',
     'Express multiple conditions and choose rows and columns with loc.',
-    ['da-label-alignment', 'boolean-logic'],
+    ['da-dataframes', 'da-array-indexing', 'boolean-logic'],
     [
       'A column comparison produces a boolean Series with the same index as the table. table.loc[mask, ["name", "score"]] uses that mask to select rows and then selects the named columns. The result keeps the labels of its selected observations.',
       'Combine Series conditions with & for and, | for or, and ~ for not. Parenthesize every comparison: (table["score"] >= 80) & (table["active"] == True). Python\'s scalar and/or operators do not combine entire Series.',
@@ -655,7 +655,7 @@ const skills: Skill[] = [
     'da-cleaning',
     'Read a CSV dataset',
     'Parse delimited text from a file-like object and inspect its structure.',
-    ['da-table-filtering', 'strings'],
+    ['da-dataframes'],
     [
       'CSV stores tabular data as text: one header row names columns, and subsequent rows hold values separated by a delimiter. pd.read_csv(...) parses this representation into a DataFrame. The parser handles quoted fields, which a naive split(",") does not.',
       'These exercises use io.StringIO to wrap an embedded string as a file-like object. This makes the dataset self-contained and repeatable. With a local Python installation, read_csv can also read a file path; the table operations are the same.',
@@ -722,7 +722,7 @@ const skills: Skill[] = [
     'da-cleaning',
     'Make missingness explicit',
     'Detect absent values and choose a justified removal or filling rule.',
-    ['da-csv'],
+    ['da-dataframes'],
     [
       "Missing values describe unavailable information. pandas can represent them with NaN, None, or a nullable dtype's pd.NA. Use .isna() or .notna() to detect missingness; equality against NaN is not a reliable detection rule.",
       '.dropna(subset=["score"]) removes rows lacking a required score. .fillna(value) replaces missing entries with a chosen value. These operations return a result by default: store it or assign the cleaned column. Count missing entries before changing them so you can explain the effect.',
@@ -789,7 +789,7 @@ const skills: Skill[] = [
     'da-cleaning',
     'Validate numeric columns',
     'Convert text into numbers while exposing invalid inputs.',
-    ['da-missing-values', 'types'],
+    ['da-missing-values', 'da-table-filtering'],
     [
       'A column may look numeric while containing text, such as "12" or "unknown". pd.to_numeric(series, errors="coerce") converts valid numbers and marks invalid tokens as missing. errors="raise" instead stops at invalid input, which is useful when your schema promises all values are valid.',
       'Measure the conversion failures rather than silently discarding them. If the raw column is not missing but the converted result is missing, conversion rejected an input. This differs from a field that was already absent.',
@@ -851,7 +851,7 @@ const skills: Skill[] = [
     'da-cleaning',
     'Define unique observations',
     'Choose a key and make a duplicate-resolution policy explicit.',
-    ['da-conversion'],
+    ['da-dataframes'],
     [
       'Duplicate rows depend on the question: two identical full rows are one kind of duplicate, while two rows with the same event_id may disagree on other fields. .duplicated(subset=["event_id"]) checks the chosen key rather than every column.',
       '.drop_duplicates(subset=["event_id"], keep="first") keeps the first occurrence of each key; keep="last" keeps the last. Sorting by a trusted version or timestamp before deduplication can make that choice meaningful. Input order alone does not prove which observation is correct.',
@@ -923,7 +923,7 @@ const skills: Skill[] = [
     'da-wrangling',
     'Normalize text keys',
     'Apply vectorized string cleaning without confusing formatting with meaning.',
-    ['da-duplicates', 'strings'],
+    ['da-missing-values'],
     [
       'Text identifiers often differ only because of surrounding whitespace or letter case. A string Series exposes vectorized methods through .str: .str.strip() removes surrounding whitespace, and .str.lower() converts letters to lowercase.',
       'Cleaning an identifier is a modeling decision. Treating "North" and "north" as the same site is reasonable only if your source contract says case is irrelevant. Preserve the original text separately when you need an audit trail.',
@@ -990,7 +990,7 @@ const skills: Skill[] = [
     'da-wrangling',
     'Represent category meaning',
     'Distinguish labels, category order, and binary indicator columns.',
-    ['da-text', 'da-missing-values'],
+    ['da-missing-values'],
     [
       'A categorical variable takes values from a defined set, such as low, medium, high. pandas Categorical can record allowed categories and whether their order matters. Alphabetical order is not necessarily the meaningful order of a severity or size scale.',
       'An ordered categorical dtype makes sorting follow the specified category order. pd.Categorical(values, categories=["low", "medium", "high"], ordered=True) records that scale. Values outside the allowed set become missing; inspect them instead of assuming the conversion validated everything.',
@@ -1062,7 +1062,7 @@ const skills: Skill[] = [
     'da-wrangling',
     'Join tables with a contract',
     'Enrich rows by key and validate the expected relationship.',
-    ['da-duplicates', 'da-dataframes'],
+    ['da-duplicates'],
     [
       'pd.merge(left, right, on="key", how="left") adds matching right-table columns while retaining every left-table key. An inner join retains only keys found on both sides. Choosing a join type determines which observations remain in your analysis.',
       'A left join can still increase the row count when the right table contains repeated matching keys. If many events should match one site description, validate="many_to_one" checks that the right-side key is unique and raises an error if the contract is broken.',
@@ -1124,7 +1124,7 @@ const skills: Skill[] = [
     'da-wrangling',
     'Change table shape',
     'Move measurements between wide columns and long rows without changing meaning.',
-    ['da-dataframes', 'da-duplicates'],
+    ['da-duplicates'],
     [
       'A wide table has separate columns for repeated measurements, such as morning and evening. A long table has one measurement column and another variable identifying which measurement it represents. Long form often makes grouping and plotting easier.',
       '.melt(id_vars=["site"], value_vars=["morning", "evening"], var_name="period", value_name="count") keeps the site identifier while turning measurement columns into period/count rows. Each original observation contributes one row per measured period.',
@@ -1191,7 +1191,7 @@ const skills: Skill[] = [
     'da-grouping',
     'Summarize by group',
     'Separate group keys from measured values and reduce each group.',
-    ['da-table-filtering', 'da-reshape'],
+    ['da-missing-values'],
     [
       'groupby partitions observations by a key, then lets you calculate a result for each group. table.groupby("site")["count"].sum() sums counts for each site. The grouping object describes groups; a reduction such as sum or mean actually computes the summary.',
       'The key identifies groups and the selected numeric column supplies measurements. By default, a grouping key containing missing values is excluded. Use dropna=False when missing-key observations should form a visible group, and explain what that group represents.',
@@ -1258,7 +1258,7 @@ const skills: Skill[] = [
     'da-grouping',
     'Name summary measures',
     'Build a compact table containing multiple explicit group statistics.',
-    ['da-groupby', 'da-missing-values'],
+    ['da-groupby'],
     [
       'A useful grouped summary often needs several measures, such as revenue total and observation count. Named aggregation makes the output contract readable: table.groupby("shop").agg(total=("revenue", "sum"), records=("revenue", "size")). Each output name maps to an input column and reduction.',
       'Choose statistics based on their meaning, not habit. mean is sensitive to extreme values; median describes the middle value. A sum measures total activity and can hide differences in group size, so include counts when comparing groups.',
@@ -1330,7 +1330,7 @@ const skills: Skill[] = [
     'da-grouping',
     'Keep row-level context',
     'Attach group summaries to each observation with transform.',
-    ['da-aggregations', 'da-label-alignment'],
+    ['da-groupby', 'da-label-alignment'],
     [
       'An aggregation creates a reduced summary with one row per group. transform instead returns a value for each original observation. table.groupby("team")["score"].transform("mean") repeats each team\'s mean on the rows belonging to that team.',
       'This matching shape lets you compute deviations, shares, and within-group comparisons without a separate merge. A group-centered value is original minus group mean. A contribution share is original divided by group total, provided that total is nonzero.',
@@ -1402,7 +1402,7 @@ const skills: Skill[] = [
     'da-grouping',
     'Calculate moving summaries',
     'Use ordered rolling windows and understand incomplete leading windows.',
-    ['da-transforms', 'slicing'],
+    ['da-missing-values'],
     [
       'A rolling calculation summarizes a moving neighborhood of observations. values.rolling(window=3).mean() averages the current value and two preceding values in row order. Unlike a group summary, it can produce a different local reference for every row.',
       'The default min_periods for a fixed-size window requires a full window, so the first two results of a three-row mean are missing. min_periods=1 permits a result from fewer observations; that changes the amount of evidence supporting early results.',
@@ -1474,7 +1474,7 @@ const skills: Skill[] = [
     'da-analysis',
     'Parse and order timestamps',
     'Convert text into datetime values with explicit format and time-zone meaning.',
-    ['da-conversion', 'da-text'],
+    ['da-conversion'],
     [
       'Timestamps stored as text need parsing before time calculations. pd.to_datetime(values, format="%Y-%m-%d", errors="raise") makes the expected representation explicit. Ambiguous day/month strings should use a declared format rather than relying on guesses.',
       'utc=True converts timestamps containing offsets into a shared UTC time basis. A timestamp such as 2024-01-02T00:30:00+02:00 describes the same instant as 2024-01-01T22:30:00Z. Sorting normalized timestamps sorts instants rather than their original text.',
@@ -1686,11 +1686,11 @@ const skills: Skill[] = [
     'Build a repeatable analysis',
     'Combine loading, validation, deduplication, grouping, and assertions in a function.',
     [
-      'da-resampling',
-      'da-exploration',
-      'da-joins',
-      'da-window',
-      'functions',
+      'da-csv',
+      'da-conversion',
+      'da-duplicates',
+      'da-groupby',
+      'errors',
       'problem-solving',
     ],
     [

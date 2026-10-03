@@ -17,13 +17,11 @@ export interface RustDefinition {
   output: string;
   topic: string;
   stage: number;
-  extra: string[];
 }
 export interface RustTopic {
   slug: string;
   title: string;
   unit: string;
-  prereqs: string[];
 }
 
 export const rustTopics: RustTopic[] = [
@@ -31,197 +29,161 @@ export const rustTopics: RustTopic[] = [
     slug: 'programs',
     title: 'First Rust programs',
     unit: 'start',
-    prereqs: [],
   },
   {
     slug: 'values',
     title: 'Represent values',
     unit: 'start',
-    prereqs: ['rust-scope'],
   },
   {
     slug: 'control',
     title: 'Choose and repeat',
     unit: 'start',
-    prereqs: ['rust-tuples-arrays'],
   },
   {
     slug: 'functions',
     title: 'Function contracts',
     unit: 'start',
-    prereqs: ['rust-ranges'],
   },
   {
     slug: 'ownership',
     title: 'Ownership and destruction',
     unit: 'ownership',
-    prereqs: ['rust-recursion'],
   },
   {
     slug: 'borrowing',
     title: 'Borrow without moving',
     unit: 'ownership',
-    prereqs: ['rust-drop'],
   },
   {
     slug: 'strings',
     title: 'UTF-8 strings',
     unit: 'ownership',
-    prereqs: ['rust-slices'],
   },
   {
     slug: 'structs',
     title: 'Model records',
     unit: 'models',
-    prereqs: ['rust-string-conversion'],
   },
   {
     slug: 'enums',
     title: 'Represent alternatives',
     unit: 'models',
-    prereqs: ['rust-associated-functions', 'rust-match'],
   },
   {
     slug: 'option',
     title: 'Optional values',
     unit: 'models',
-    prereqs: ['rust-slices'],
   },
   {
     slug: 'errors',
     title: 'Recoverable errors',
     unit: 'models',
-    prereqs: ['rust-option-and-then', 'rust-destructure'],
   },
   {
     slug: 'vectors',
     title: 'Growable sequences',
     unit: 'collections',
-    prereqs: ['rust-question-mark', 'rust-slices'],
   },
   {
     slug: 'maps-sets',
     title: 'Maps and sets',
     unit: 'collections',
-    prereqs: ['rust-vec-extend'],
   },
   {
     slug: 'generics',
     title: 'Reusable type parameters',
     unit: 'abstraction',
-    prereqs: ['rust-btree-range'],
   },
   {
     slug: 'traits',
     title: 'Behavior contracts',
     unit: 'abstraction',
-    prereqs: ['rust-where', 'rust-methods'],
   },
   {
     slug: 'lifetimes',
     title: 'Reference lifetime relationships',
     unit: 'abstraction',
-    prereqs: ['rust-trait-objects', 'rust-borrow-ends'],
   },
   {
     slug: 'closures',
     title: 'Closures and captures',
     unit: 'abstraction',
-    prereqs: ['rust-static', 'rust-vec-extend'],
   },
   {
     slug: 'iterators',
     title: 'Iterator pipelines',
     unit: 'abstraction',
-    prereqs: ['rust-fn-once'],
   },
   {
     slug: 'modules',
     title: 'Modules and public APIs',
     unit: 'tooling',
-    prereqs: ['rust-collect'],
   },
   {
     slug: 'cargo',
     title: 'Cargo and build contracts',
     unit: 'tooling',
-    prereqs: ['rust-module-paths'],
   },
   {
     slug: 'testing',
     title: 'Assertions and edge cases',
     unit: 'tooling',
-    prereqs: ['rust-test-contract'],
   },
   {
     slug: 'smart-pointers',
     title: 'Shared and heap ownership',
     unit: 'memory',
-    prereqs: ['rust-panic-contracts', 'rust-drop'],
   },
   {
     slug: 'interior-mutability',
     title: 'Interior mutability',
     unit: 'memory',
-    prereqs: ['rust-weak'],
   },
   {
     slug: 'concurrency',
     title: 'Threads and communication',
     unit: 'concurrency',
-    prereqs: ['rust-cow', 'rust-arc'],
   },
   {
     slug: 'atomics',
     title: 'Atomic operations',
     unit: 'concurrency',
-    prereqs: ['rust-channels'],
   },
   {
     slug: 'send-sync',
     title: 'Send and Sync contracts',
     unit: 'concurrency',
-    prereqs: ['rust-acquire-release', 'rust-trait-bounds'],
   },
   {
     slug: 'async',
     title: 'Async mechanics',
     unit: 'concurrency',
-    prereqs: ['rust-deadlock-scope', 'rust-fn-once'],
   },
   {
     slug: 'unsafe',
     title: 'Unsafe proof obligations',
     unit: 'systems',
-    prereqs: ['rust-await', 'rust-slices'],
   },
   {
     slug: 'interop',
     title: 'Binary and C interoperability',
     unit: 'systems',
-    prereqs: ['rust-unsafe-wrapper'],
   },
   {
     slug: 'performance',
     title: 'Measure storage and work',
     unit: 'systems',
-    prereqs: ['rust-byte-order', 'rust-vec-extend'],
   },
   {
     slug: 'algorithms',
     title: 'Algorithm applications in Rust',
     unit: 'applications',
-    prereqs: ['rust-sort-dedup', 'rust-hash-set', 'rust-collect'],
   },
   {
     slug: 'systems-project',
     title: 'Build a bounded binary parser',
     unit: 'applications',
-    prereqs: [
-      'rust-heap-selection',
-      'rust-checked-arithmetic',
-      'rust-question-mark',
-    ],
   },
 ];
 
@@ -247,7 +209,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"hello, Rust"',
     topic: 'programs',
     stage: 1,
-    extra: [],
     solution: 'fn greeting() -> &\'static str {\n    "hello, Rust"\n}',
     exampleCode:
       'fn greeting() -> &\'static str {\n    "hello, Rust"\n}\n\nfn main() {\n    println!("{:?}", greeting());\n}',
@@ -276,7 +237,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"tasks: 3"',
     topic: 'programs',
     stage: 2,
-    extra: [],
     solution:
       'fn label(name: &str, count: u32) -> String {\n    format!("{}: {}", name, count)\n}',
     exampleCode:
@@ -305,7 +265,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '5',
     topic: 'programs',
     stage: 3,
-    extra: [],
     solution:
       'fn bump(n: i32) -> i32 {\n    let mut value = n;\n    value += 1;\n    value\n}',
     exampleCode:
@@ -335,7 +294,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '10',
     topic: 'programs',
     stage: 4,
-    extra: [],
     solution:
       'fn scoped(n: i32) -> i32 {\n    let inside = {\n        let n = n * 2;\n        n + 1\n    };\n    inside + n\n}',
     exampleCode:
@@ -366,7 +324,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '(3, 2)',
     topic: 'values',
     stage: 1,
-    extra: [],
     solution:
       'fn groups(items: u32, size: u32) -> (u32, u32) {\n    (items / size, items % size)\n}',
     exampleCode:
@@ -397,7 +354,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '1.5',
     topic: 'values',
     stage: 2,
-    extra: [],
     solution: 'fn ratio(a: u32, b: u32) -> f64 {\n    a as f64 / b as f64\n}',
     exampleCode:
       'fn ratio(a: u32, b: u32) -> f64 {\n    a as f64 / b as f64\n}\n\nfn main() {\n    println!("{:?}", ratio(3, 2));\n}',
@@ -427,7 +383,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'true',
     topic: 'values',
     stage: 3,
-    extra: [],
     solution:
       'fn in_range(n: i32, low: i32, high: i32) -> bool {\n    n >= low && n <= high\n}',
     exampleCode:
@@ -457,7 +412,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '(2, 8)',
     topic: 'values',
     stage: 4,
-    extra: [],
     solution:
       'fn endpoints(values: [i32; 3]) -> (i32, i32) {\n    (values[0], values[2])\n}',
     exampleCode:
@@ -487,7 +441,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'control',
     stage: 1,
-    extra: [],
     solution:
       'fn absolute(n: i32) -> i32 {\n    if n < 0 {\n        -n\n    } else {\n        n\n    }\n}',
     exampleCode:
@@ -517,7 +470,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"negative"',
     topic: 'control',
     stage: 2,
-    extra: [],
     solution:
       'fn sign(n: i32) -> &\'static str {\n    match n {\n        0 => "zero",\n        n if n < 0 => "negative",\n        _ => "positive",\n    }\n}',
     exampleCode:
@@ -548,7 +500,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '4',
     topic: 'control',
     stage: 3,
-    extra: [],
     solution:
       'fn next_even(n: i32) -> i32 {\n    let mut x = n;\n    loop {\n        if x % 2 == 0 {\n            break x;\n        }\n        x += 1;\n    }\n}',
     exampleCode:
@@ -578,7 +529,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '10',
     topic: 'control',
     stage: 4,
-    extra: [],
     solution:
       'fn sum_to(n: u32) -> u32 {\n    let mut total = 0;\n    for x in 1..=n {\n        total += x;\n    }\n    total\n}',
     exampleCode:
@@ -608,7 +558,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '5',
     topic: 'functions',
     stage: 1,
-    extra: [],
     solution: 'fn difference(a: i32, b: i32) -> i32 {\n    a - b\n}',
     exampleCode:
       'fn difference(a: i32, b: i32) -> i32 {\n    a - b\n}\n\nfn main() {\n    println!("{:?}", difference(8, 3));\n}',
@@ -637,7 +586,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '9',
     topic: 'functions',
     stage: 2,
-    extra: [],
     solution: 'fn square(n: i32) -> i32 {\n    n * n\n}',
     exampleCode:
       'fn square(n: i32) -> i32 {\n    n * n\n}\n\nfn main() {\n    println!("{:?}", square(-3));\n}',
@@ -667,7 +615,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '((), 0)',
     topic: 'functions',
     stage: 3,
-    extra: [],
     solution:
       'fn replacement_unit(start: i32, replacement: i32) -> ((), i32) {\n    let mut value = start;\n    let result = {\n        value = replacement;\n    };\n    (result, value)\n}',
     exampleCode:
@@ -697,7 +644,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '120',
     topic: 'functions',
     stage: 4,
-    extra: [],
     solution:
       'fn factorial(n: u32) -> u64 {\n    if n == 0 {\n        1\n    } else {\n        n as u64 * factorial(n - 1)\n    }\n}',
     exampleCode:
@@ -728,7 +674,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"rust"',
     topic: 'ownership',
     stage: 1,
-    extra: [],
     solution:
       'fn transfer(text: String) -> String {\n    let moved = text;\n    moved\n}',
     exampleCode:
@@ -757,7 +702,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '8',
     topic: 'ownership',
     stage: 2,
-    extra: [],
     solution:
       'fn copy_total(n: i32) -> i32 {\n    let other = n;\n    n + other\n}',
     exampleCode:
@@ -788,7 +732,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '("hi", "hi!")',
     topic: 'ownership',
     stage: 3,
-    extra: [],
     solution:
       'fn copied_suffix(original: String) -> (String, String) {\n    let mut copy = original.clone();\n    copy.push_str("!");\n    (original, copy)\n}',
     exampleCode:
@@ -820,7 +763,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"new"',
     topic: 'ownership',
     stage: 4,
-    extra: [],
     solution:
       'fn replace_released(obsolete: String, replacement: String) -> String {\n    std::mem::drop(obsolete);\n    replacement\n}',
     exampleCode:
@@ -851,7 +793,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '4',
     topic: 'borrowing',
     stage: 1,
-    extra: [],
     solution: 'fn observed_len(text: &String) -> usize {\n    text.len()\n}',
     exampleCode:
       'fn observed_len(text: &String) -> usize {\n    text.len()\n}\n\nfn main() {\n    println!("{:?}", observed_len(&String::from("rust")));\n}',
@@ -880,7 +821,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'borrowing',
     stage: 2,
-    extra: [],
     solution:
       'fn add_to(value: &mut i32, amount: i32) {\n    *value += amount;\n}',
     exampleCode:
@@ -911,7 +851,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '2',
     topic: 'borrowing',
     stage: 3,
-    extra: [],
     solution:
       "fn read_then_append(text: &mut String) -> usize {\n    let before = {\n        let view = &*text;\n        view.len()\n    };\n    text.push('!');\n    before\n}",
     exampleCode:
@@ -941,7 +880,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '[1, 2]',
     topic: 'borrowing',
     stage: 4,
-    extra: [],
     solution:
       'fn prefix(values: &[i32], n: usize) -> &[i32] {\n    &values[..n.min(values.len())]\n}',
     exampleCode:
@@ -972,7 +910,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '(2, 1)',
     topic: 'strings',
     stage: 1,
-    extra: [],
     solution:
       'fn text_units(text: &str) -> (usize, usize) {\n    (text.len(), text.chars().count())\n}',
     exampleCode:
@@ -1002,7 +939,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: "Some('é')",
     topic: 'strings',
     stage: 2,
-    extra: ['rust-option'],
     solution:
       'fn first_scalar(text: &str) -> Option<char> {\n    text.chars().next()\n}',
     exampleCode:
@@ -1033,7 +969,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some("é")',
     topic: 'strings',
     stage: 3,
-    extra: [],
     solution:
       'fn byte_prefix(text: &str, end: usize) -> Option<&str> {\n    text.get(..end)\n}',
     exampleCode:
@@ -1063,7 +998,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"go!"',
     topic: 'strings',
     stage: 4,
-    extra: [],
     solution:
       "fn shout(text: &str) -> String {\n    let mut owned = text.to_owned();\n    owned.push('!');\n    owned\n}",
     exampleCode:
@@ -1092,7 +1026,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '12',
     topic: 'structs',
     stage: 1,
-    extra: [],
     solution:
       'fn area(width: u32, height: u32) -> u32 {\n    struct Rect {\n        width: u32,\n        height: u32,\n    }\n    let rect = Rect { width, height };\n    rect.width * rect.height\n}',
     exampleCode:
@@ -1122,7 +1055,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '(9, true)',
     topic: 'structs',
     stage: 2,
-    extra: [],
     solution:
       'fn revised_score(old: u32, new: u32) -> (u32, bool) {\n    struct Entry {\n        score: u32,\n        active: bool,\n    }\n    let base = Entry {\n        score: old,\n        active: true,\n    };\n    let revised = Entry { score: new, ..base };\n    (revised.score, revised.active)\n}',
     exampleCode:
@@ -1153,7 +1085,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '12',
     topic: 'structs',
     stage: 3,
-    extra: [],
     solution:
       'fn doubled_score(score: u32) -> u32 {\n    struct Score(u32);\n    impl Score {\n        fn doubled(&self) -> u32 {\n            self.0 * 2\n        }\n    }\n    Score(score).doubled()\n}',
     exampleCode:
@@ -1182,7 +1113,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '0',
     topic: 'structs',
     stage: 4,
-    extra: [],
     solution:
       'fn default_count() -> u32 {\n    struct Counter {\n        value: u32,\n    }\n    impl Counter {\n        fn new() -> Self {\n            Self { value: 0 }\n        }\n    }\n    Counter::new().value\n}',
     exampleCode:
@@ -1210,7 +1140,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'true',
     topic: 'enums',
     stage: 1,
-    extra: [],
     solution:
       'fn is_ready(ready: bool) -> bool {\n    enum State {\n        Waiting,\n        Ready,\n    }\n    let state = if ready { State::Ready } else { State::Waiting };\n    matches!(state, State::Ready)\n}',
     exampleCode:
@@ -1241,7 +1170,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '4',
     topic: 'enums',
     stage: 2,
-    extra: [],
     solution:
       'fn message_size(text: String) -> usize {\n    enum Message {\n        Empty,\n        Text(String),\n    }\n    let message = if text.is_empty() {\n        Message::Empty\n    } else {\n        Message::Text(text)\n    };\n    match message {\n        Message::Empty => 0,\n        Message::Text(payload) => payload.len(),\n    }\n}',
     exampleCode:
@@ -1272,7 +1200,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'enums',
     stage: 3,
-    extra: [],
     solution:
       'fn present_or_zero(value: Option<i32>) -> i32 {\n    if let Some(n) = value {\n        n\n    } else {\n        0\n    }\n}',
     exampleCode:
@@ -1302,7 +1229,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(2)',
     topic: 'enums',
     stage: 4,
-    extra: [],
     solution:
       'fn left_value(pair: Option<(i32, i32)>) -> Option<i32> {\n    match pair {\n        Some((left, _)) => Some(left),\n        None => None,\n    }\n}',
     exampleCode:
@@ -1332,7 +1258,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(0)',
     topic: 'option',
     stage: 1,
-    extra: [],
     solution:
       'fn first_number(values: &[i32]) -> Option<i32> {\n    values.first().copied()\n}',
     exampleCode:
@@ -1363,7 +1288,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(6)',
     topic: 'option',
     stage: 2,
-    extra: [],
     solution:
       'fn doubled(value: Option<i32>) -> Option<i32> {\n    fn double_number(n: i32) -> i32 {\n        n * 2\n    }\n    value.map(double_number)\n}',
     exampleCode:
@@ -1395,7 +1319,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(4)',
     topic: 'option',
     stage: 3,
-    extra: [],
     solution:
       'fn optional_divide(value: Option<i32>, divisor: i32) -> Option<i32> {\n    fn divide_pair(pair: (i32, i32)) -> Option<i32> {\n        pair.0.checked_div(pair.1)\n    }\n    let pair = match value {\n        Some(n) => Some((n, divisor)),\n        None => None,\n    };\n    pair.and_then(divide_pair)\n}',
     exampleCode:
@@ -1427,7 +1350,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Ok(Some(12))',
     topic: 'option',
     stage: 4,
-    extra: ['rust-question-mark'],
     solution:
       'fn parse_optional(text: Option<&str>) -> Result<Option<i32>, std::num::ParseIntError> {\n    text.map(str::parse::<i32>).transpose()\n}',
     exampleCode:
@@ -1458,7 +1380,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Err("negative")',
     topic: 'errors',
     stage: 1,
-    extra: [],
     solution:
       'fn nonnegative(n: i32) -> Result<u32, &\'static str> {\n    if n < 0 {\n        Err("negative")\n    } else {\n        Ok(n as u32)\n    }\n}',
     exampleCode:
@@ -1490,7 +1411,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Ok(3)',
     topic: 'errors',
     stage: 2,
-    extra: [],
     solution:
       "fn add_success(value: Result<i32, &'static str>) -> Result<i32, &'static str> {\n    fn increment(n: i32) -> i32 {\n        n + 1\n    }\n    value.map(increment)\n}",
     exampleCode:
@@ -1521,7 +1441,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Err("input: bad")',
     topic: 'errors',
     stage: 3,
-    extra: [],
     solution:
       'fn contextual(value: Result<i32, &str>) -> Result<i32, String> {\n    fn context(error: &str) -> String {\n        format!("input: {}", error)\n    }\n    value.map_err(context)\n}',
     exampleCode:
@@ -1553,7 +1472,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Ok(7)',
     topic: 'errors',
     stage: 4,
-    extra: [],
     solution:
       'fn parse_sum(a: &str, b: &str) -> Result<i32, std::num::ParseIntError> {\n    let left = a.parse::<i32>()?;\n    let right = b.parse::<i32>()?;\n    Ok(left + right)\n}',
     exampleCode:
@@ -1584,7 +1502,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '(Some(9), 2)',
     topic: 'vectors',
     stage: 1,
-    extra: [],
     solution:
       'fn pushed_then_popped(mut values: Vec<i32>, extra: i32) -> (Option<i32>, usize) {\n    values.push(extra);\n    let removed = values.pop();\n    (removed, values.len())\n}',
     exampleCode:
@@ -1615,7 +1532,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(8)',
     topic: 'vectors',
     stage: 2,
-    extra: [],
     solution:
       'fn at(values: &[i32], index: usize) -> Option<i32> {\n    values.get(index).copied()\n}',
     exampleCode:
@@ -1646,7 +1562,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '[0, 3]',
     topic: 'vectors',
     stage: 3,
-    extra: [],
     solution:
       'fn keep_nonnegative(mut values: Vec<i32>) -> Vec<i32> {\n    fn is_nonnegative(n: &i32) -> bool {\n        *n >= 0\n    }\n    values.retain(is_nonnegative);\n    values\n}',
     exampleCode:
@@ -1677,7 +1592,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '[1, 2, 3]',
     topic: 'vectors',
     stage: 4,
-    extra: [],
     solution:
       'fn joined(mut left: Vec<i32>, right: &[i32]) -> Vec<i32> {\n    left.extend(right.iter().copied());\n    left\n}',
     exampleCode:
@@ -1708,7 +1622,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(2)',
     topic: 'maps-sets',
     stage: 1,
-    extra: [],
     solution:
       'fn frequencies(values: &[i32]) -> std::collections::HashMap<i32, usize> {\n    let mut counts = std::collections::HashMap::new();\n    for &n in values {\n        *counts.entry(n).or_insert(0) += 1;\n    }\n    counts\n}',
     exampleCode:
@@ -1739,7 +1652,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(8)',
     topic: 'maps-sets',
     stage: 2,
-    extra: [],
     solution:
       'fn find_score(entries: &[(String, u32)], name: &str) -> Option<u32> {\n    let map: std::collections::HashMap<&str, u32> =\n        entries.iter().map(|(k, v)| (k.as_str(), *v)).collect();\n    map.get(name).copied()\n}',
     exampleCode:
@@ -1770,7 +1682,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '2',
     topic: 'maps-sets',
     stage: 3,
-    extra: [],
     solution:
       'fn unique_count(values: &[i32]) -> usize {\n    values\n        .iter()\n        .copied()\n        .collect::<std::collections::HashSet<_>>()\n        .len()\n}',
     exampleCode:
@@ -1802,7 +1713,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '8',
     topic: 'maps-sets',
     stage: 4,
-    extra: [],
     solution:
       'fn range_total(entries: &[(i32, i32)], low: i32, high: i32) -> i32 {\n    let map: std::collections::BTreeMap<_, _> = entries.iter().copied().collect();\n    if low > high {\n        return 0;\n    }\n    map.range(low..=high).map(|(_, v)| *v).sum()\n}',
     exampleCode:
@@ -1833,7 +1743,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'generics',
     stage: 1,
-    extra: [],
     solution: 'fn identity<T>(value: T) -> T {\n    value\n}',
     exampleCode:
       'fn identity<T>(value: T) -> T {\n    value\n}\n\nfn main() {\n    println!("{:?}", identity(7));\n}',
@@ -1863,7 +1772,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"hi"',
     topic: 'generics',
     stage: 2,
-    extra: [],
     solution:
       'fn unwrap_holder<T>(value: T) -> T {\n    struct Holder<T> {\n        value: T,\n    }\n    let holder = Holder { value };\n    holder.value\n}',
     exampleCode:
@@ -1894,7 +1802,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '9',
     topic: 'generics',
     stage: 3,
-    extra: [],
     solution:
       'fn larger<T: Ord>(a: T, b: T) -> T {\n    if a >= b {\n        a\n    } else {\n        b\n    }\n}',
     exampleCode:
@@ -1925,7 +1832,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"hi"',
     topic: 'generics',
     stage: 4,
-    extra: [],
     solution:
       'fn owned_copy<T>(value: &T) -> T\nwhere\n    T: Clone,\n{\n    value.clone()\n}',
     exampleCode:
@@ -1955,7 +1861,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '5',
     topic: 'traits',
     stage: 1,
-    extra: [],
     solution:
       'fn measured(n: u32) -> u32 {\n    trait Measure {\n        fn size(&self) -> u32;\n    }\n    struct Count(u32);\n    impl Measure for Count {\n        fn size(&self) -> u32 {\n            self.0\n        }\n    }\n    Count(n).size()\n}',
     exampleCode:
@@ -1986,7 +1891,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '10',
     topic: 'traits',
     stage: 2,
-    extra: [],
     solution:
       'fn doubled_measure(n: u32) -> u32 {\n    trait Measure {\n        fn size(&self) -> u32;\n        fn doubled(&self) -> u32 {\n            self.size() * 2\n        }\n    }\n    struct Count(u32);\n    impl Measure for Count {\n        fn size(&self) -> u32 {\n            self.0\n        }\n    }\n    Count(n).doubled()\n}',
     exampleCode:
@@ -2017,7 +1921,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '-2',
     topic: 'traits',
     stage: 3,
-    extra: [],
     solution:
       'fn associated_value(n: i32) -> i32 {\n    trait Source {\n        type Item;\n        fn get(&self) -> Self::Item;\n    }\n    struct Number(i32);\n    impl Source for Number {\n        type Item = i32;\n        fn get(&self) -> Self::Item {\n            self.0\n        }\n    }\n    Number(n).get()\n}',
     exampleCode:
@@ -2048,7 +1951,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '8',
     topic: 'traits',
     stage: 4,
-    extra: [],
     solution:
       'fn dynamic_size(n: u32) -> u32 {\n    trait Measure {\n        fn size(&self) -> u32;\n    }\n    struct Count(u32);\n    impl Measure for Count {\n        fn size(&self) -> u32 {\n            self.0\n        }\n    }\n    fn observe(value: &dyn Measure) -> u32 {\n        value.size()\n    }\n    observe(&Count(n))\n}',
     exampleCode:
@@ -2079,7 +1981,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"hi"',
     topic: 'lifetimes',
     stage: 1,
-    extra: [],
     solution: 'fn trimmed(text: &str) -> &str {\n    text.trim()\n}',
     exampleCode:
       'fn trimmed(text: &str) -> &str {\n    text.trim()\n}\n\nfn main() {\n    println!("{:?}", trimmed("  hi  "));\n}',
@@ -2109,7 +2010,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"rust"',
     topic: 'lifetimes',
     stage: 2,
-    extra: [],
     solution:
       "fn longer<'a>(a: &'a str, b: &'a str) -> &'a str {\n    if a.len() >= b.len() {\n        a\n    } else {\n        b\n    }\n}",
     exampleCode:
@@ -2140,7 +2040,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '4',
     topic: 'lifetimes',
     stage: 3,
-    extra: [],
     solution:
       "fn view_length(text: &str) -> usize {\n    struct View<'a> {\n        text: &'a str,\n    }\n    impl View<'_> {\n        fn len(&self) -> usize {\n            self.text.len()\n        }\n    }\n    View { text }.len()\n}",
     exampleCode:
@@ -2171,7 +2070,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"ready"',
     topic: 'lifetimes',
     stage: 4,
-    extra: [],
     solution:
       'fn status_label(ok: bool) -> &\'static str {\n    if ok {\n        "ready"\n    } else {\n        "waiting"\n    }\n}',
     exampleCode:
@@ -2201,7 +2099,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'closures',
     stage: 1,
-    extra: [],
     solution:
       'fn offset_value(n: i32, offset: i32) -> i32 {\n    let shifted = |value| value + offset;\n    shifted(n)\n}',
     exampleCode:
@@ -2232,7 +2129,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'closures',
     stage: 2,
-    extra: [],
     solution:
       'fn twice<F: Fn(i32) -> i32>(value: i32, f: F) -> i32 {\n    f(f(value))\n}',
     exampleCode:
@@ -2263,7 +2159,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '5',
     topic: 'closures',
     stage: 3,
-    extra: [],
     solution:
       'fn running_sum(values: &[i32]) -> i32 {\n    let mut total = 0;\n    let mut add = |value| {\n        total += value;\n    };\n    for &value in values {\n        add(value);\n    }\n    total\n}',
     exampleCode:
@@ -2293,7 +2188,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"owned"',
     topic: 'closures',
     stage: 4,
-    extra: [],
     solution:
       'fn consume_text(text: String) -> String {\n    let take = move || text;\n    take()\n}',
     exampleCode:
@@ -2323,7 +2217,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '13',
     topic: 'iterators',
     stage: 1,
-    extra: [],
     solution:
       'fn squares_total(values: &[i32]) -> i32 {\n    values.iter().map(|n| n * n).sum()\n}',
     exampleCode:
@@ -2354,7 +2247,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '[4, 6]',
     topic: 'iterators',
     stage: 2,
-    extra: [],
     solution:
       'fn positive_doubles(values: &[i32]) -> Vec<i32> {\n    values\n        .iter()\n        .copied()\n        .filter(|n| *n > 0)\n        .map(|n| n * 2)\n        .collect()\n}',
     exampleCode:
@@ -2385,7 +2277,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '24',
     topic: 'iterators',
     stage: 3,
-    extra: [],
     solution:
       'fn product(values: &[i32]) -> i32 {\n    values.iter().fold(1, |acc, n| acc * n)\n}',
     exampleCode:
@@ -2417,7 +2308,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Ok([2, 3])',
     topic: 'iterators',
     stage: 4,
-    extra: [],
     solution:
       'fn parse_all(values: &[&str]) -> Result<Vec<i32>, std::num::ParseIntError> {\n    values.iter().map(|s| s.parse::<i32>()).collect()\n}',
     exampleCode:
@@ -2446,7 +2336,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '42',
     topic: 'modules',
     stage: 1,
-    extra: [],
     solution:
       'fn module_answer() -> u32 {\n    mod worker {\n        pub fn answer() -> u32 {\n            42\n        }\n    }\n    worker::answer()\n}',
     exampleCode:
@@ -2476,7 +2365,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '2',
     topic: 'modules',
     stage: 2,
-    extra: [],
     solution:
       'fn imported_length(values: &[i32]) -> usize {\n    use std::collections::VecDeque as Queue;\n    let q: Queue<_> = values.iter().copied().collect();\n    q.len()\n}',
     exampleCode:
@@ -2506,7 +2394,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'modules',
     stage: 3,
-    extra: [],
     solution:
       'fn facade_value() -> i32 {\n    mod api {\n        mod detail {\n            pub fn value() -> i32 {\n                7\n            }\n        }\n        pub use self::detail::value;\n    }\n    api::value()\n}',
     exampleCode:
@@ -2534,7 +2421,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'modules',
     stage: 4,
-    extra: [],
     solution:
       'fn parent_value() -> i32 {\n    mod outer {\n        const BASE: i32 = 6;\n        pub mod inner {\n            pub fn value() -> i32 {\n                super::BASE + 1\n            }\n        }\n    }\n    outer::inner::value()\n}',
     exampleCode:
@@ -2564,7 +2450,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"my_tool"',
     topic: 'cargo',
     stage: 1,
-    extra: [],
     solution:
       'fn crate_identifier(package: &str) -> String {\n    package.replace(\'-\', "_")\n}',
     exampleCode:
@@ -2595,7 +2480,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some((1, 2, 3))',
     topic: 'cargo',
     stage: 2,
-    extra: [],
     solution:
       "fn version_parts(text: &str) -> Option<(u32, u32, u32)> {\n    let mut parts = text.split('.');\n    let major = parts.next()?.parse().ok()?;\n    let minor = parts.next()?.parse().ok()?;\n    let patch = parts.next()?.parse().ok()?;\n    if parts.next().is_some() {\n        return None;\n    }\n    Some((major, minor, patch))\n}",
     exampleCode:
@@ -2625,7 +2509,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'cargo',
     stage: 3,
-    extra: [],
     solution:
       'fn build_value() -> u32 {\n    #[cfg(all())]\n    fn selected() -> u32 {\n        7\n    }\n    #[cfg(any())]\n    fn selected() -> u32 {\n        99\n    }\n    selected()\n}',
     exampleCode:
@@ -2655,7 +2538,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(5)',
     topic: 'cargo',
     stage: 4,
-    extra: [],
     solution:
       'fn checked_total(values: &[u32]) -> Option<u32> {\n    values\n        .iter()\n        .try_fold(0u32, |total, value| total.checked_add(*value))\n}',
     exampleCode:
@@ -2686,7 +2568,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'true',
     topic: 'testing',
     stage: 1,
-    extra: [],
     solution:
       'fn fits(used: usize, extra: usize, capacity: usize) -> bool {\n    used.checked_add(extra)\n        .is_some_and(|total| total <= capacity)\n}',
     exampleCode:
@@ -2717,7 +2598,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '2',
     topic: 'testing',
     stage: 2,
-    extra: [],
     solution: 'fn clamp_small(n: i32) -> i32 {\n    n.clamp(-2, 2)\n}',
     exampleCode:
       'fn clamp_small(n: i32) -> i32 {\n    n.clamp(-2, 2)\n}\n\nfn main() {\n    println!("{:?}", clamp_small(9));\n}',
@@ -2747,7 +2627,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '[3, 2, 1]',
     topic: 'testing',
     stage: 3,
-    extra: [],
     solution:
       'fn reverse_copy(values: &[i32]) -> Vec<i32> {\n    values.iter().rev().copied().collect()\n}',
     exampleCode:
@@ -2778,7 +2657,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'None',
     topic: 'testing',
     stage: 4,
-    extra: [],
     solution:
       'fn safe_quotient(a: i32, b: i32) -> Option<i32> {\n    a.checked_div(b)\n}',
     exampleCode:
@@ -2808,7 +2686,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '5',
     topic: 'smart-pointers',
     stage: 1,
-    extra: [],
     solution:
       'fn boxed_increment(n: i32) -> i32 {\n    let mut owned = Box::new(n);\n    *owned += 1;\n    *owned\n}',
     exampleCode:
@@ -2838,7 +2715,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '2',
     topic: 'smart-pointers',
     stage: 2,
-    extra: [],
     solution:
       'fn rc_owners() -> usize {\n    let first = std::rc::Rc::new(String::from("data"));\n    let second = std::rc::Rc::clone(&first);\n    let count = std::rc::Rc::strong_count(&second);\n    count\n}',
     exampleCode:
@@ -2867,7 +2743,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '2',
     topic: 'smart-pointers',
     stage: 3,
-    extra: [],
     solution:
       'fn arc_owners() -> usize {\n    let first = std::sync::Arc::new(7);\n    let second = std::sync::Arc::clone(&first);\n    std::sync::Arc::strong_count(&second)\n}',
     exampleCode:
@@ -2895,7 +2770,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'true',
     topic: 'smart-pointers',
     stage: 4,
-    extra: [],
     solution:
       'fn weak_expires() -> bool {\n    let strong = std::rc::Rc::new(7);\n    let weak = std::rc::Rc::downgrade(&strong);\n    assert!(weak.upgrade().is_some());\n    drop(strong);\n    weak.upgrade().is_none()\n}',
     exampleCode:
@@ -2924,7 +2798,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '4',
     topic: 'interior-mutability',
     stage: 1,
-    extra: [],
     solution:
       'fn cell_add(n: i32) -> i32 {\n    let value = std::cell::Cell::new(n);\n    let shared = &value;\n    shared.set(shared.get() + 1);\n    shared.get()\n}',
     exampleCode:
@@ -2954,7 +2827,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '[1, 2]',
     topic: 'interior-mutability',
     stage: 2,
-    extra: [],
     solution:
       'fn refcell_append() -> Vec<i32> {\n    let cell = std::cell::RefCell::new(vec![1]);\n    {\n        cell.borrow_mut().push(2);\n    }\n    let result = cell.borrow().clone();\n    result\n}',
     exampleCode:
@@ -2983,7 +2855,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'true',
     topic: 'interior-mutability',
     stage: 3,
-    extra: [],
     solution:
       'fn borrow_conflict() -> bool {\n    let cell = std::cell::RefCell::new(1);\n    let guard = cell.borrow_mut();\n    let blocked = cell.try_borrow().is_err();\n    drop(guard);\n    blocked && cell.try_borrow().is_ok()\n}',
     exampleCode:
@@ -3012,7 +2883,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '"a_b"',
     topic: 'interior-mutability',
     stage: 4,
-    extra: [],
     solution:
       "fn clean_spaces(text: &str) -> std::borrow::Cow<'_, str> {\n    if text.contains(' ') {\n        std::borrow::Cow::Owned(text.replace(' ', \"_\"))\n    } else {\n        std::borrow::Cow::Borrowed(text)\n    }\n}",
     exampleCode:
@@ -3042,7 +2912,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '4',
     topic: 'concurrency',
     stage: 1,
-    extra: [],
     solution:
       'fn thread_length(text: String) -> usize {\n    std::thread::spawn(move || text.len()).join().unwrap()\n}',
     exampleCode:
@@ -3073,7 +2942,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '5',
     topic: 'concurrency',
     stage: 2,
-    extra: [],
     solution:
       'fn scoped_sum(values: &[i32]) -> i32 {\n    std::thread::scope(|scope| scope.spawn(|| values.iter().sum()).join().unwrap())\n}',
     exampleCode:
@@ -3104,7 +2972,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '4',
     topic: 'concurrency',
     stage: 3,
-    extra: [],
     solution:
       'fn worker_increment(n: i32) -> i32 {\n    let shared = std::sync::Arc::new(std::sync::Mutex::new(n));\n    let other = std::sync::Arc::clone(&shared);\n    std::thread::spawn(move || {\n        *other.lock().unwrap() += 1;\n    })\n    .join()\n    .unwrap();\n    let result = *shared.lock().unwrap();\n    result\n}',
     exampleCode:
@@ -3135,7 +3002,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'concurrency',
     stage: 4,
-    extra: [],
     solution:
       'fn channel_value(n: i32) -> i32 {\n    let (sender, receiver) = std::sync::mpsc::channel();\n    let handle = std::thread::spawn(move || sender.send(n).unwrap());\n    let value = receiver.recv().unwrap();\n    handle.join().unwrap();\n    value\n}',
     exampleCode:
@@ -3166,7 +3032,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'atomics',
     stage: 1,
-    extra: [],
     solution:
       'fn atomic_replaced(n: u32) -> u32 {\n    use std::sync::atomic::{AtomicU32, Ordering};\n    let value = AtomicU32::new(0);\n    value.store(n, Ordering::Relaxed);\n    value.load(Ordering::Relaxed)\n}',
     exampleCode:
@@ -3196,7 +3061,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '(4, 5)',
     topic: 'atomics',
     stage: 2,
-    extra: [],
     solution:
       'fn atomic_increment(n: u32) -> (u32, u32) {\n    use std::sync::atomic::{AtomicU32, Ordering};\n    let value = AtomicU32::new(n);\n    let previous = value.fetch_add(1, Ordering::Relaxed);\n    (previous, value.load(Ordering::Relaxed))\n}',
     exampleCode:
@@ -3227,7 +3091,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '(true, 8)',
     topic: 'atomics',
     stage: 3,
-    extra: [],
     solution:
       'fn conditional_swap(current: u32, expected: u32, new: u32) -> (bool, u32) {\n    use std::sync::atomic::{AtomicU32, Ordering};\n    let value = AtomicU32::new(current);\n    let changed = value\n        .compare_exchange(expected, new, Ordering::SeqCst, Ordering::SeqCst)\n        .is_ok();\n    (changed, value.load(Ordering::SeqCst))\n}',
     exampleCode:
@@ -3257,7 +3120,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'true',
     topic: 'atomics',
     stage: 4,
-    extra: [],
     solution:
       'fn readiness_round_trip() -> bool {\n    use std::sync::atomic::{AtomicBool, Ordering};\n    let ready = AtomicBool::new(false);\n    ready.store(true, Ordering::Release);\n    ready.load(Ordering::Acquire)\n}',
     exampleCode:
@@ -3287,7 +3149,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'send-sync',
     stage: 1,
-    extra: [],
     solution:
       "fn send_identity<T: Send + 'static>(value: T) -> T {\n    std::thread::spawn(move || value).join().unwrap()\n}",
     exampleCode:
@@ -3318,7 +3179,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '9',
     topic: 'send-sync',
     stage: 2,
-    extra: [],
     solution:
       'fn synced_copy<T: Sync + Copy + Send>(value: &T) -> T {\n    std::thread::scope(|scope| scope.spawn(|| *value).join().unwrap())\n}',
     exampleCode:
@@ -3348,7 +3208,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '4',
     topic: 'send-sync',
     stage: 3,
-    extra: [],
     solution:
       'fn parallel_count(workers: usize) -> usize {\n    let count = std::sync::Arc::new(std::sync::Mutex::new(0));\n    let mut handles = Vec::new();\n    for _ in 0..workers {\n        let count = std::sync::Arc::clone(&count);\n        handles.push(std::thread::spawn(move || {\n            *count.lock().unwrap() += 1;\n        }));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    let result = *count.lock().unwrap();\n    result\n}',
     exampleCode:
@@ -3379,7 +3238,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'send-sync',
     stage: 4,
-    extra: [],
     solution:
       'fn two_updates(n: i32) -> i32 {\n    let value = std::sync::Mutex::new(n);\n    {\n        *value.lock().unwrap() += 1;\n    }\n    {\n        *value.lock().unwrap() += 2;\n    }\n    let result = *value.lock().unwrap();\n    result\n}',
     exampleCode:
@@ -3410,7 +3268,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'async',
     stage: 1,
-    extra: [],
     solution:
       'fn ready_value(n: i32) -> i32 {\n    use std::future::Future;\n    let mut future = std::pin::pin!(std::future::ready(n));\n    let mut context = std::task::Context::from_waker(std::task::Waker::noop());\n    match future.as_mut().poll(&mut context) {\n        std::task::Poll::Ready(value) => value,\n        std::task::Poll::Pending => unreachable!(),\n    }\n}',
     exampleCode:
@@ -3441,7 +3298,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '8',
     topic: 'async',
     stage: 2,
-    extra: [],
     solution:
       "fn two_poll_result(n: i32) -> i32 {\n    use std::future::Future;\n    struct Later {\n        value: i32,\n        waiting: bool,\n    }\n    impl Future for Later {\n        type Output = i32;\n        fn poll(\n            mut self: std::pin::Pin<&mut Self>,\n            cx: &mut std::task::Context<'_>,\n        ) -> std::task::Poll<i32> {\n            if self.waiting {\n                self.waiting = false;\n                cx.waker().wake_by_ref();\n                std::task::Poll::Pending\n            } else {\n                std::task::Poll::Ready(self.value)\n            }\n        }\n    }\n    let mut future = std::pin::pin!(Later {\n        value: n,\n        waiting: true\n    });\n    let mut cx = std::task::Context::from_waker(std::task::Waker::noop());\n    assert!(future.as_mut().poll(&mut cx).is_pending());\n    match future.as_mut().poll(&mut cx) {\n        std::task::Poll::Ready(n) => n,\n        _ => unreachable!(),\n    }\n}",
     exampleCode:
@@ -3472,7 +3328,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '6',
     topic: 'async',
     stage: 3,
-    extra: [],
     solution:
       'fn pinned_double(n: i32) -> i32 {\n    use std::future::Future;\n    let mut future = Box::pin(async move { n * 2 });\n    let mut cx = std::task::Context::from_waker(std::task::Waker::noop());\n    match future.as_mut().poll(&mut cx) {\n        std::task::Poll::Ready(n) => n,\n        _ => unreachable!(),\n    }\n}',
     exampleCode:
@@ -3503,7 +3358,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'async',
     stage: 4,
-    extra: [],
     solution:
       'fn await_sum(a: i32, b: i32) -> i32 {\n    use std::future::Future;\n    let mut future = Box::pin(async move {\n        let left = std::future::ready(a).await;\n        left + b\n    });\n    let mut cx = std::task::Context::from_waker(std::task::Waker::noop());\n    match future.as_mut().poll(&mut cx) {\n        std::task::Poll::Ready(n) => n,\n        _ => unreachable!(),\n    }\n}',
     exampleCode:
@@ -3534,7 +3388,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'true',
     topic: 'unsafe',
     stage: 1,
-    extra: [],
     solution:
       'fn same_location(a: &i32, b: &i32) -> bool {\n    std::ptr::eq(a, b)\n}',
     exampleCode:
@@ -3565,7 +3418,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(7)',
     topic: 'unsafe',
     stage: 2,
-    extra: [],
     solution:
       'fn raw_first(values: &[i32]) -> Option<i32> {\n    if values.is_empty() {\n        return None;\n    }\n    let pointer = values.as_ptr();\n    Some(unsafe { *pointer })\n}',
     exampleCode:
@@ -3596,7 +3448,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '5',
     topic: 'unsafe',
     stage: 3,
-    extra: [],
     solution:
       'fn raw_prefix_total(values: &[i32], count: usize) -> i32 {\n    let count = count.min(values.len());\n    let view = unsafe { std::slice::from_raw_parts(values.as_ptr(), count) };\n    view.iter().sum()\n}',
     exampleCode:
@@ -3627,7 +3478,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '[2, 3, 3]',
     topic: 'unsafe',
     stage: 4,
-    extra: [],
     solution:
       'fn increment_halves(values: &mut [i32], mid: usize) {\n    let mid = mid.min(values.len());\n    let len = values.len();\n    let pointer = values.as_mut_ptr();\n    let (left, right) = unsafe {\n        (\n            std::slice::from_raw_parts_mut(pointer, mid),\n            std::slice::from_raw_parts_mut(pointer.add(mid), len - mid),\n        )\n    };\n    for n in left {\n        *n += 1;\n    }\n    for n in right {\n        *n += 2;\n    }\n}',
     exampleCode:
@@ -3657,7 +3507,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '8',
     topic: 'interop',
     stage: 1,
-    extra: [],
     solution:
       'fn point_size() -> usize {\n    #[repr(C)]\n    struct Point {\n        x: i32,\n        y: i32,\n    }\n    std::mem::size_of::<Point>()\n}',
     exampleCode:
@@ -3687,7 +3536,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '7',
     topic: 'interop',
     stage: 2,
-    extra: [],
     solution:
       'fn c_boundary_add(a: i32, b: i32) -> i32 {\n    extern "C" fn add(a: i32, b: i32) -> i32 {\n        a + b\n    }\n    add(a, b)\n}',
     exampleCode:
@@ -3717,7 +3565,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(2)',
     topic: 'interop',
     stage: 3,
-    extra: [],
     solution:
       'fn c_string_length(bytes: &[u8]) -> Option<usize> {\n    std::ffi::CStr::from_bytes_with_nul(bytes)\n        .ok()\n        .map(|s| s.to_bytes().len())\n}',
     exampleCode:
@@ -3748,7 +3595,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(256)',
     topic: 'interop',
     stage: 4,
-    extra: [],
     solution:
       'fn big_endian_u32(bytes: &[u8]) -> Option<u32> {\n    let array: [u8; 4] = bytes.try_into().ok()?;\n    Some(u32::from_be_bytes(array))\n}',
     exampleCode:
@@ -3779,7 +3625,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '(5, true)',
     topic: 'performance',
     stage: 1,
-    extra: [],
     solution:
       'fn reserved_fill(n: usize) -> (usize, bool) {\n    let mut values = Vec::with_capacity(n);\n    for value in 0..n {\n        values.push(value);\n    }\n    (values.len(), values.capacity() >= n)\n}',
     exampleCode:
@@ -3808,7 +3653,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '(8, 4)',
     topic: 'performance',
     stage: 2,
-    extra: [],
     solution:
       'fn padded_layout() -> (usize, usize) {\n    #[repr(C)]\n    struct Record {\n        tag: u8,\n        value: u32,\n    }\n    (\n        std::mem::size_of::<Record>(),\n        std::mem::align_of::<Record>(),\n    )\n}',
     exampleCode:
@@ -3838,7 +3682,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(32)',
     topic: 'performance',
     stage: 3,
-    extra: [],
     solution:
       'fn byte_budget(items: usize, width: usize) -> Option<usize> {\n    items.checked_mul(width)\n}',
     exampleCode:
@@ -3869,7 +3712,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '[1, 2, 3]',
     topic: 'performance',
     stage: 4,
-    extra: [],
     solution:
       'fn sorted_unique(mut values: Vec<i32>) -> Vec<i32> {\n    values.sort_unstable();\n    values.dedup();\n    values\n}',
     exampleCode:
@@ -3900,7 +3742,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '1',
     topic: 'algorithms',
     stage: 1,
-    extra: [],
     solution:
       'fn lower_bound(values: &[i32], target: i32) -> usize {\n    let (mut low, mut high) = (0, values.len());\n    while low < high {\n        let mid = low + (high - low) / 2;\n        if values[mid] < target {\n            low = mid + 1;\n        } else {\n            high = mid;\n        }\n    }\n    low\n}',
     exampleCode:
@@ -3931,7 +3772,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'true',
     topic: 'algorithms',
     stage: 2,
-    extra: [],
     solution:
       'fn has_pair(values: &[i32], target: i64) -> bool {\n    if values.len() < 2 {\n        return false;\n    }\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] as i64 + values[right] as i64;\n        if sum == target {\n            return true;\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    false\n}',
     exampleCode:
@@ -3963,7 +3803,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '[Some(0), Some(1), Some(2)]',
     topic: 'algorithms',
     stage: 3,
-    extra: [],
     solution:
       'fn hop_distances(graph: &[Vec<usize>], start: usize) -> Vec<Option<usize>> {\n    let mut dist = vec![None; graph.len()];\n    if start >= graph.len() {\n        return dist;\n    }\n    let mut queue = std::collections::VecDeque::new();\n    dist[start] = Some(0);\n    queue.push_back(start);\n    while let Some(node) = queue.pop_front() {\n        for &next in &graph[node] {\n            if next < graph.len() && dist[next].is_none() {\n                dist[next] = Some(dist[node].unwrap() + 1);\n                queue.push_back(next);\n            }\n        }\n    }\n    dist\n}',
     exampleCode:
@@ -3993,7 +3832,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: '[8, 7]',
     topic: 'algorithms',
     stage: 4,
-    extra: [],
     solution:
       'fn top_k(values: &[i32], k: usize) -> Vec<i32> {\n    let mut heap = std::collections::BinaryHeap::new();\n    for &n in values {\n        heap.push(std::cmp::Reverse(n));\n        if heap.len() > k {\n            heap.pop();\n        }\n    }\n    let mut result: Vec<_> = heap.into_iter().map(|n| n.0).collect();\n    result.sort_unstable_by(|a, b| b.cmp(a));\n    result\n}',
     exampleCode:
@@ -4024,7 +3862,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some(3)',
     topic: 'systems-project',
     stage: 1,
-    extra: [],
     solution:
       'fn declared_length(bytes: &[u8]) -> Option<usize> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    Some(u16::from_be_bytes(header) as usize)\n}',
     exampleCode:
@@ -4054,7 +3891,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some([7, 8])',
     topic: 'systems-project',
     stage: 2,
-    extra: [],
     solution:
       'fn frame_payload(bytes: &[u8]) -> Option<&[u8]> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    let length = u16::from_be_bytes(header) as usize;\n    bytes.get(2..2usize.checked_add(length)?)\n}',
     exampleCode:
@@ -4085,7 +3921,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some([0, 2, 7, 8])',
     topic: 'systems-project',
     stage: 3,
-    extra: [],
     solution:
       'fn encode_frame(payload: &[u8]) -> Option<Vec<u8>> {\n    let length = u16::try_from(payload.len()).ok()?;\n    let mut output = Vec::with_capacity(2 + payload.len());\n    output.extend_from_slice(&length.to_be_bytes());\n    output.extend_from_slice(payload);\n    Some(output)\n}',
     exampleCode:
@@ -4116,7 +3951,6 @@ export const rustDefinitions: RustDefinition[] = [
     output: 'Some([[7], [8, 9]])',
     topic: 'systems-project',
     stage: 4,
-    extra: [],
     solution:
       'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}',
     exampleCode:

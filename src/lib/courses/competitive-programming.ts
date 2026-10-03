@@ -15,6 +15,7 @@ import {
   competitiveAdvancedStages,
 } from './competitive/micro-advanced';
 import { courseId } from './competitive/shared';
+import { withTeachingOrder } from './teaching-order';
 
 const definitions = [
   [
@@ -96,31 +97,25 @@ const atoms = new Map(
     ...competitiveMicroAdvanced,
   ].map((item) => [item.id, item]),
 );
-const skills = [
+const authored = [
   ...competitiveFoundations,
   ...competitiveStructures,
   ...competitiveAdvanced,
-]
-  .flatMap((item) => {
-    const stages = competitiveTopicStages[item.id];
-    if (!stages || stages.length !== 3)
-      throw new Error(`Missing atomic sequence for ${item.id}`);
-    const metadata = { topicId: item.id, stageCount: 4 };
-    return [
-      ...stages.map((id, index) => {
-        const atom = atoms.get(id);
-        if (!atom) throw new Error(`Missing atomic skill ${id}`);
-        return { ...atom, ...metadata, stage: index + 1, estimatedMinutes: 5 };
-      }),
-      {
-        ...item,
-        ...metadata,
-        stage: 4,
-        prerequisites: [...new Set([...item.prerequisites, stages[2]])],
-      },
-    ];
-  })
-  .map((item, order) => ({ ...item, order }));
+].flatMap((item) => {
+  const stages = competitiveTopicStages[item.id];
+  if (!stages || stages.length !== 3)
+    throw new Error(`Missing atomic sequence for ${item.id}`);
+  const metadata = { topicId: item.id, stageCount: 4 };
+  return [
+    ...stages.map((id, index) => {
+      const atom = atoms.get(id);
+      if (!atom) throw new Error(`Missing atomic skill ${id}`);
+      return { ...atom, ...metadata, stage: index + 1, estimatedMinutes: 5 };
+    }),
+    { ...item, ...metadata, stage: 4 },
+  ];
+});
+const skills = withTeachingOrder(authored);
 
 export const competitiveProgrammingCatalog: CurriculumCatalog = {
   courses: [

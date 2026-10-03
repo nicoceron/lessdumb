@@ -26,6 +26,64 @@ describe('connected course paths', () => {
       ),
     ).toBe(true);
   });
+  it('rejects prerequisites already implied by another prerequisite', () => {
+    const child = skills.find((s) =>
+      s.prerequisites.some((p) => skillById[p].prerequisites.length),
+    )!;
+    const parent =
+      skillById[
+        child.prerequisites.find((p) => skillById[p].prerequisites.length)!
+      ];
+    const grandparent = parent.prerequisites[0];
+    const registry = skills.map((s) =>
+      s.id === child.id
+        ? { ...s, prerequisites: [...s.prerequisites, grandparent] }
+        : s,
+    );
+    expect(validateCurriculum(registry)).toContain(
+      `${child.id}: prerequisite ${grandparent} is already implied by ${parent.id}.`,
+    );
+  });
+  for (const course of courses.filter((c) => c.skillIds.length >= 20)) {
+    it(`offers ${course.title} as a branching graph rather than a playlist`, () => {
+      const members = new Set(course.skillIds);
+      const depth = new Map<string, number>();
+      const chain = (id: string): number => {
+        if (!depth.has(id))
+          depth.set(
+            id,
+            1 +
+              Math.max(
+                0,
+                ...skillById[id].prerequisites
+                  .filter((p) => members.has(p))
+                  .map(chain),
+              ),
+          );
+        return depth.get(id)!;
+      };
+      const longest = Math.max(...course.skillIds.map(chain));
+      expect(longest).toBeLessThanOrEqual(course.skillIds.length / 2);
+      // With supporting courses complete, learn the lowest-order ready skill
+      // each time and count the choices the learner had.
+      const own = course.skillIds.map((id) => skillById[id]);
+      const known = new Set<string>();
+      const widths: number[] = [];
+      while (known.size < own.length) {
+        const ready = own
+          .filter(
+            (s) =>
+              !known.has(s.id) &&
+              s.prerequisites.every((p) => known.has(p) || !members.has(p)),
+          )
+          .sort((a, b) => a.order - b.order);
+        widths.push(ready.length);
+        known.add(ready[0].id);
+      }
+      widths.sort((a, b) => a - b);
+      expect(widths[Math.floor(widths.length / 2)]).toBeGreaterThanOrEqual(3);
+    });
+  }
   for (const course of courses) {
     it(`reaches ${course.title} through real prerequisites without unrelated detours`, () => {
       let progress = emptyProgress(now);

@@ -7,7 +7,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-foundations',
     'Count algorithm work',
     'Estimate how time and memory grow before choosing an approach.',
-    ['ranges', 'numbers', 'while-loops', 'accumulators'],
+    ['cp-work-pairs', 'cp-work-doubling'],
     [
       'Complexity describes how resource use grows with input size n. A scan that does constant work per element takes O(n) time; two complete nested scans take O(n²). Consecutive stages add their costs, and the fastest-growing term usually determines the asymptotic bound. These bounds compare growth, not exact seconds on a particular computer.',
       'A useful loop invariant explains the work already done. After i iterations of a scan, i elements have been processed; after i rows of an n-by-n pair scan, i × n pairs have been checked. A probe that doubles from 1 reaches n after about log₂(n) rounds. Doubling n roughly doubles a scan, quadruples a pair scan, and adds one doubling round.',
@@ -64,7 +64,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-foundations',
     'Parse a text case',
     'Separate whitespace tokens, convert types, and respect the input format.',
-    ['strings', 'types', 'functions', 'comprehensions', 'slicing'],
+    ['cp-input-count'],
     [
       'Contest input is text with a declared structure. text.split() separates whitespace-delimited tokens and treats spaces, tabs, and newlines alike. Every resulting token is still a string. Convert a token with int(...) before integer arithmetic; concatenating two numeric-looking strings does not add their values.',
       'When the first token declares a count n, use it to interpret the following n values. The parsing invariant is that each consumed token has one known role in the format. Do not accidentally count the size marker as a measurement. Here the precondition is a well-formed case with exactly n following integers; format validation is a separate task.',
@@ -131,7 +131,12 @@ export const competitiveFoundations: Skill[] = [
     'cp-foundations',
     'Simulate a state machine',
     'Turn each event into one precise state update.',
-    ['conditionals', 'while-loops', 'for-loops'],
+    [
+      'cp-state-transition',
+      'cp-state-bounds',
+      'cp-state-peak',
+      'cp-complexity',
+    ],
     [
       'Simulation follows a process one event at a time. Define the state before writing the loop: for a capped meter, keep its current level and the highest level reached. Specify each transition exactly: up adds two subject to a ceiling, down removes one subject to zero, and reset returns the current level to zero.',
       'After processing the first i commands, the level must equal the real process at that point, and the peak must be the greatest level reached so far. Update the current level first, then update the peak. A reset changes the present level; it does not erase the historical peak. This invariant provides a direct way to check the order of your statements.',
@@ -193,7 +198,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-foundations',
     'Enumerate candidates completely',
     'Build a correct baseline by checking every valid candidate once.',
-    ['ranges', 'lists', 'accumulators', 'indexing', 'cp-complexity'],
+    ['cp-enumerate-index-pairs', 'cp-enumerate-score', 'cp-enumerate-best'],
     [
       'Enumeration lists every candidate in a search space, evaluates each one, and keeps the best valid result. For the smallest gap between two positions in an unsorted list, candidates are index pairs i < j. This restriction excludes pairing an item with itself and avoids visiting the same unordered pair twice.',
       'The invariant is that best equals the smallest gap among the pairs already visited. Start without a best value, because lists shorter than two have no pair at all. After evaluating a new pair, replace best only when its gap is smaller. Correctness follows from complete coverage: the optimal pair must occur among the enumerated candidates.',
@@ -255,7 +260,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-collections',
     'Order records with a key',
     'Make order and tie-breaking rules explicit.',
-    ['lists', 'functions', 'indexing', 'cp-complexity'],
+    ['cp-sort-stability'],
     [
       'Sorting arranges values according to a comparison rule. sorted(values) creates a new list; values.sort() changes the original list and returns None. Supply a key function for records: lambda job: expression defines a short function that returns the expression for each job. A tuple key is compared field by field, so (deadline, -effort) orders earlier deadlines first and larger effort first within the same deadline.',
       'The result must preserve all records while making their keys nondecreasing. Python sorting is stable: records with equal keys keep their original relative order. Stability is useful when arrival order is meaningful; it does not invent an additional tie-breaker. Include every intended tie-breaker in the key and leave genuine ties in their original order.',
@@ -322,7 +327,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-collections',
     'Index values with hash tables',
     'Use membership and frequency maps to avoid repeated scans.',
-    ['dictionaries', 'functions', 'dictionary-loops'],
+    ['cp-hash-filter', 'cp-complexity'],
     [
       'A hash table associates a key with a stored value. Python dictionaries support key lookup and sets support membership. If you repeatedly search a list from the beginning, n lookups can cost O(n²); expected constant-time hash lookups can turn many such routines into an expected O(n) scan. Keys must be hashable, such as strings or integers; ordinary lists are not dictionary keys.',
       'For a frequency map, the invariant is that counts[key] equals the occurrences of that key in the processed prefix. counts.get(key, 0) supplies zero for a first occurrence. Increment once per item, then inspect the resulting counts to answer questions about duplicates or multiplicities. A set alone records presence and cannot distinguish two occurrences from ten.',
@@ -389,7 +394,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-collections',
     'Follow linked nodes',
     'Traverse next references rather than assuming contiguous storage.',
-    ['while-loops', 'dictionaries', 'list-mutation'],
+    ['cp-link-count'],
     [
       'A linked list stores a value and a next reference in each node. Nodes need not occupy neighboring positions. In this lesson a dictionary maps a node ID to a tuple (value, next_id); None marks the end. The head is the first node ID, and following references determines the list order, regardless of dictionary insertion order.',
       'Before each iteration, current identifies the next unvisited node, and the output contains the values already visited in link order. Read its value and next reference, append the value, then continue from the next ID. Use current is not None rather than a truthiness test: the valid node ID 0 must still be visited.',
@@ -456,7 +461,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-collections',
     'Normalize and count characters',
     'Define the alphabet before aggregating text.',
-    ['strings', 'for-loops', 'cp-hashing'],
+    ['cp-text-filter', 'cp-hash-frequency', 'cp-complexity'],
     [
       'String algorithms start with a precise definition of a character and the equivalences the task allows. Here the alphabet is the 26 ASCII letters a–z; uppercase ASCII letters count as their lowercase equivalents, and every other character is ignored. That rule differs from counting every Unicode letter or treating punctuation as meaningful.',
       'Scan characters and normalize each accepted one before updating its count. The invariant is that the map records the accepted letters in the processed prefix, already normalized. Python strings are immutable, so methods such as lower() return a new string rather than changing the original. Only ASCII uppercase characters need conversion for this contract.',
@@ -518,7 +523,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-linear',
     'Answer range totals with prefixes',
     'Precompute cumulative totals and subtract two boundaries per query.',
-    ['cp-enumeration', 'accumulators', 'list-mutation'],
+    ['cp-prefix-build', 'cp-prefix-query', 'cp-complexity'],
     [
       'A prefix sum stores a total for each boundary between elements. Define prefix[0] = 0 and prefix[i + 1] = prefix[i] + values[i]. The invariant is that prefix[i] equals the sum of the first i values. This extra zero makes empty ranges and ranges beginning at index zero follow the same formula as every other range.',
       'Use half-open ranges [left, right): left is included and right is excluded. The range total is prefix[right] − prefix[left], because the earlier prefix cancels everything before left. This identity works with negative values too; it does not require totals to increase. Require 0 ≤ left ≤ right ≤ n, where n is the list length.',
@@ -580,7 +585,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-linear',
     'Batch range changes with differences',
     'Mark where an addition starts and stops, then reconstruct once.',
-    ['cp-prefix-sums'],
+    ['cp-difference-recover'],
     [
       'A difference array represents changes between neighboring values. For a zero-filled list, adding delta to the half-open range [left, right) needs only two boundary marks: difference[left] += delta and difference[right] -= delta. The first mark activates the addition and the second cancels it before the excluded right endpoint.',
       'Store n + 1 difference entries for n output values, so an update ending at n has a valid cancellation slot. During reconstruction, the running sum at position i equals the sum of all additions active there. This invariant follows because every interval has contributed its start mark and only intervals ending earlier have contributed their cancellation marks. Empty updates [i, i) cancel themselves immediately.',
@@ -647,7 +652,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-linear',
     'Discard candidates with two pointers',
     'Use sorted order to count or reject whole groups of pairs.',
-    ['cp-sorting', 'while-loops'],
+    ['cp-pointer-discard', 'cp-pointer-count-block', 'while-loops'],
     [
       'Two pointers mark the ends of a remaining candidate interval. For an ascending list, let left point at its smallest remaining value and right at its largest. We want the number of distinct-index pairs whose sum is at most a limit. Values may repeat or be negative; the required property is sorted order.',
       'If values[left] + values[right] fits, the left value fits with every value between left + 1 and right. Count right − left pairs and advance left. If the sum is too large, even the smallest remaining value cannot pair with right, so discard right. The invariant is that all pairs outside the remaining interval have been counted or proved invalid, and every pair inside remains undecided.',
@@ -714,7 +719,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-linear',
     'Maintain a valid sliding window',
     'Track frequencies while finding the longest contiguous segment.',
-    ['cp-two-pointers', 'cp-hashing'],
+    ['cp-window-repair', 'cp-complexity'],
     [
       'A sliding window is a contiguous section of a sequence, represented by a left boundary and a moving right boundary. To find the longest section containing at most k distinct labels, add each new right label to a frequency map. If the map contains too many labels, remove values from the left until the window is valid again.',
       'The map must describe exactly the current window: decrement each removed label and use del counts[label] to delete its entry when the count reaches zero. After shrinking, every earlier left boundary would still violate the distinct-label limit, so the current valid window is the longest one ending at this right position. Recording its length maintains the best length seen among all processed right endpoints.',
@@ -781,7 +786,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-search',
     'Find an ordered boundary',
     'Keep a half-open candidate interval and preserve the first possible answer.',
-    ['cp-sorting', 'while-loops'],
+    ['cp-binary-sentinel', 'while-loops'],
     [
       'Binary search discards half of an ordered search interval with each comparison. For an ascending list, a lower-bound search finds the first index whose value is at least a target. If no value qualifies, return n, the boundary just past the list. This definition handles duplicates precisely instead of returning an arbitrary matching index.',
       'Maintain a half-open interval [low, high), initially [0, n). All indices before low are known to contain values smaller than the target, and all indices at or after high are known to qualify. Examine mid = (low + high) // 2. If its value is too small, move low to mid + 1; otherwise move high to mid, preserving mid as a possible first answer. When low equals high, that boundary satisfies the invariant.',
@@ -843,7 +848,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-search',
     'Search a monotone answer space',
     'Separate a feasibility test from the search for the smallest feasible limit.',
-    ['cp-binary-search', 'cp-prefix-sums'],
+    ['cp-capacity-bounds', 'cp-binary-search'],
     [
       'Sometimes the answer is a numeric limit rather than an element in a sorted list. Suppose nonnegative loads must be kept in their given order and partitioned into at most m consecutive, nonempty groups. We want the smallest possible maximum group total. For a proposed capacity, feasibility has a monotone boundary: an arrangement that fits at one capacity still fits at every larger capacity.',
       'Test a capacity greedily by putting each next load in the current group whenever it fits; otherwise open a new group. With nonnegative loads, taking the longest fitting prefix cannot force more groups than stopping that group earlier. The invariant is that the processed prefix has been assigned in order with every group total within the capacity. If too many groups are needed, the capacity is infeasible. A load greater than capacity also makes the test fail.',
@@ -914,7 +919,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-search',
     'Replace coordinates with ordered ranks',
     'Reduce sparse values to compact indices while preserving comparisons.',
-    ['cp-sorting', 'cp-hashing', 'list-mutation'],
+    ['cp-compress-translate', 'cp-hashing'],
     [
       'Coordinate compression replaces each distinct value with its position in a sorted list of distinct values. set(values) removes repeated keys; sorted(...) orders the remaining values. Assign ranks 0, 1, 2, and so on, then use a dictionary to translate every original value. Equal values receive the same rank, and smaller values receive smaller ranks.',
       'The translation invariant is that every processed item has been replaced by the rank of its original value while retaining its original position. Compression changes the representation, not the sequence order. A large negative coordinate and a large positive one become small valid array indices, without allocating storage for every integer between them.',
@@ -980,7 +985,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-search',
     'Sweep interval boundary events',
     'Sort starts and ends, then maintain the active count.',
-    ['cp-sorting', 'cp-difference-arrays'],
+    ['cp-sweep-ties', 'cp-sweep-active', 'cp-complexity'],
     [
       'A sweep processes only the coordinates where state changes. For half-open intervals [start, end), a start activates one interval and an end deactivates one. Store events as (coordinate, change), using +1 for starts and -1 for ends, then sort them by coordinate. Unlike a dense difference array, this representation does not require one entry for every possible coordinate.',
       'The active-count invariant is that the running total matches the intervals covering the swept position after its boundary events have been applied. Half-open intervals that end at x do not overlap intervals starting at x, so process end events before start events at equal coordinates. Python tuple sorting accomplishes this because -1 precedes +1. Ignore empty intervals with start == end; they occupy no position and should never increase the count.',

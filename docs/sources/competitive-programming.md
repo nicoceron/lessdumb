@@ -33,13 +33,13 @@ This is introductory algorithm coverage across those topic groups, not every USA
 
 ## Knowledge graph
 
-All nodes use stable `cp-*` IDs in the existing registry. The 48 original application IDs and their saved evidence are preserved. Each application retains its original prerequisites and adds the final concept stage; three new, ordered prerequisite stages teach smaller operations, invariants, and boundary decisions. The new stages require their own evidence even when the older application was previously mastered. `topicId`, `stage`, and `stageCount` label the sequence without granting implicit credit. Every assessment defines a function with inputs and a returned result, so the shared course constructor adds the real Python `parameters` prerequisite, including its function/return/type ancestry. Other edges express algorithm dependencies, rather than making every unit wait for the previous unit:
+All nodes use stable `cp-*` IDs in the existing registry. The 48 original application IDs and their saved evidence are preserved. Three concept stages per topic teach smaller operations, invariants, and boundary decisions; each application requires the concepts it uses, and concepts require each other only when one builds on another. The stages require their own evidence even when the older application was previously mastered. `topicId`, `stage`, and `stageCount` group the topic without granting implicit credit or imposing an order. Python edges name the constructs each node uses (for example `return-values`, `dictionaries`, `while-loops`), and cross-topic edges point at the specific stage that teaches the reused idea. Edges express algorithm dependencies, rather than making every unit wait for the previous unit:
 
-- Prefix sums → difference arrays and Fenwick queries; bitmasks supply Fenwick index operations.
-- Sorting → two pointers, binary search, coordinate compression, intervals, and sweep events.
-- Recursion → backtracking and memoization; memoization → tabulation → knapsack and counting.
-- Graph models → DFS/BFS, shortest paths, and connectivity; DFS/BFS → topological ordering; graph/tree structure → DSU → MST.
-- Tree traversal → segment structures and binary lifting; DFS and topological ordering → strongly connected components.
+- Prefix sums → difference arrays and Fenwick queries; bit positions supply Fenwick and binary-lifting index operations.
+- Sorting → coordinate compression, intervals, and sweep events. Two pointers and binary search take sorted input as a precondition rather than a sorting skill.
+- Recursion → backtracking and memoization; tabulation → knapsack and combination counting.
+- Graph models → DFS, BFS, and shortest paths; BFS layers and heaps → Dijkstra; queues → topological ordering (Kahn's algorithm); connectivity → DSU → MST.
+- The heap's implicit array tree → segment trees; DFS and topological ordering → strongly connected components.
 - `math-vectors` → geometry connects the course to Quantitative Foundations and its actual Python ancestry.
 
 USACO and NeetCode organize teaching at different granularities. Their metadata informs these independently authored edges; their raw graph is not copied wholesale. No unrelated data-analysis, machine-learning, or systems prerequisite is added. Failure of a math ancestor blocks the geometry branch while unrelated contest evidence remains usable. Account ownership, FSRS retention state and evidence-based review scheduling, correction cards, and automatic Anki generation use the existing per-user engine without a second progression store.

@@ -18,7 +18,7 @@ const definitions = [
   {
     id: 'math-mean',
     title: 'Means and weighted averages',
-    prerequisites: ['numbers', 'lists', 'for-loops'],
+    prerequisites: ['accumulators'],
     summary:
       'Summarize a collection while keeping track of what each observation contributes.',
     paragraphs: [
@@ -70,7 +70,7 @@ const definitions = [
   {
     id: 'math-variance',
     title: 'Variance and standard deviation',
-    prerequisites: ['math-mean'],
+    prerequisites: ['math-mean', 'comprehensions'],
     summary: 'Measure spread with squared distances from the mean.',
     paragraphs: [
       'Population variance averages the squared distance of each observation from the population mean. Squaring prevents positive and negative deviations from cancelling.',
@@ -123,7 +123,7 @@ const definitions = [
   {
     id: 'math-vectors',
     title: 'Vectors and dot products',
-    prerequisites: ['math-mean'],
+    prerequisites: ['ranges', 'indexing', 'comprehensions'],
     summary:
       'Represent features as ordered coordinates and combine them with weights.',
     paragraphs: [
@@ -181,7 +181,7 @@ const definitions = [
   {
     id: 'math-probability',
     title: 'Probability and conditional events',
-    prerequisites: ['math-mean'],
+    prerequisites: ['boolean-logic'],
     summary:
       'Distinguish an event probability from a probability within a selected group.',
     paragraphs: [

@@ -65,7 +65,7 @@ describe('atomic Rust course', () => {
         expect(skill.topicId).toBe(topicId);
         expect(skill.stage).toBe(index + 1);
         expect(skill.stageCount).toBe(4);
-        if (index) expect(skill.prerequisites).toContain(sequence[index - 1]);
+        expect(skill.topicTitle).toBeTruthy();
         expect(skill.questions.map((question) => question.type)).toEqual([
           'choice',
           'choice',
@@ -186,9 +186,11 @@ describe('atomic Rust course', () => {
       catalog,
     );
     expect(isUnlocked(failed, 'rust-trait-objects', catalog)).toBe(false);
-    expect(isUnlocked(failed, 'rust-frame-stream', catalog)).toBe(false);
+    expect(isUnlocked(failed, 'rust-future-ready', catalog)).toBe(false);
+    expect(getSkillState(failed, 'rust-future-ready').mastery).toBe(1);
+    // The binary codec and vectors never use traits, so they stay open.
+    expect(isUnlocked(failed, 'rust-frame-stream', catalog)).toBe(true);
     expect(isUnlocked(failed, 'rust-vec-extend', catalog)).toBe(true);
-    expect(getSkillState(failed, 'rust-frame-stream').mastery).toBe(1);
     const repaired = applyAttempt(
       failed,
       {
@@ -200,7 +202,7 @@ describe('atomic Rust course', () => {
       due,
       catalog,
     );
-    expect(isUnlocked(repaired, 'rust-frame-stream', catalog)).toBe(true);
+    expect(isUnlocked(repaired, 'rust-future-ready', catalog)).toBe(true);
   });
 
   it('keeps hinted Rust work out of mastery and ignores repeated event delivery', () => {

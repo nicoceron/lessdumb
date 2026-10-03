@@ -84,12 +84,12 @@ test('a saved contest goal exposes its complete graph and navigates both referen
   await page
     .locator('.graph-detail')
     .getByRole('button')
-    .filter({ hasText: skillById['cp-prefix-sums'].title })
+    .filter({ hasText: skillById['cp-prefix-query'].title })
     .click();
   await expect(page.locator('.graph-detail h2')).toHaveText(
-    skillById['cp-prefix-sums'].title,
+    skillById['cp-prefix-query'].title,
   );
-  await page.goto('/graph?skill=cp-geometry');
+  await page.goto('/graph?skill=cp-geometry-displacement');
   await page
     .locator('.graph-detail')
     .getByRole('button')

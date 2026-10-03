@@ -4,6 +4,8 @@ import type {
   CurriculumCatalog,
   Skill,
 } from '../curriculum';
+import { cppPrerequisites } from './cpp/prerequisites';
+import { withTeachingOrder } from './teaching-order';
 
 interface Atom {
   key: string;
@@ -23,7 +25,6 @@ interface Topic {
   key: string;
   title: string;
   unit: string;
-  prereqs: string[];
   atoms: Atom[];
 }
 
@@ -33,7 +34,6 @@ const topics: Topic[] = [
     key: 'values',
     title: 'Values and arithmetic',
     unit: 'cpp-values',
-    prereqs: [],
     atoms: [
       {
         key: 'integer-values',
@@ -123,7 +123,6 @@ const topics: Topic[] = [
     key: 'types',
     title: 'Type choices and conversions',
     unit: 'cpp-values',
-    prereqs: ['values'],
     atoms: [
       {
         key: 'bool-values',
@@ -214,7 +213,6 @@ const topics: Topic[] = [
     key: 'control',
     title: 'Decisions and loops',
     unit: 'cpp-control',
-    prereqs: ['types'],
     atoms: [
       {
         key: 'if-branches',
@@ -302,7 +300,6 @@ const topics: Topic[] = [
     key: 'functions',
     title: 'Function contracts',
     unit: 'cpp-control',
-    prereqs: ['control'],
     atoms: [
       {
         key: 'return-values',
@@ -391,7 +388,6 @@ const topics: Topic[] = [
     key: 'references',
     title: 'References and aliases',
     unit: 'cpp-memory',
-    prereqs: ['functions'],
     atoms: [
       {
         key: 'reference-alias',
@@ -482,7 +478,6 @@ const topics: Topic[] = [
     key: 'pointers',
     title: 'Pointers and nullable views',
     unit: 'cpp-memory',
-    prereqs: ['references'],
     atoms: [
       {
         key: 'pointer-address',
@@ -571,7 +566,6 @@ const topics: Topic[] = [
     key: 'views',
     title: 'Spans and string views',
     unit: 'cpp-memory',
-    prereqs: ['pointers'],
     atoms: [
       {
         key: 'span-size',
@@ -660,7 +654,6 @@ const topics: Topic[] = [
     key: 'lifetime',
     title: 'Object initialization and lifetime',
     unit: 'cpp-ownership',
-    prereqs: ['views'],
     atoms: [
       {
         key: 'aggregate-init',
@@ -752,7 +745,6 @@ const topics: Topic[] = [
     key: 'raii',
     title: 'RAII and resource scopes',
     unit: 'cpp-ownership',
-    prereqs: ['lifetime'],
     atoms: [
       {
         key: 'scope-resource',
@@ -843,7 +835,6 @@ const topics: Topic[] = [
     key: 'smart-pointers',
     title: 'Owning smart pointers',
     unit: 'cpp-ownership',
-    prereqs: ['raii'],
     atoms: [
       {
         key: 'unique-allocation',
@@ -933,7 +924,6 @@ const topics: Topic[] = [
     key: 'move',
     title: 'Move semantics and value categories',
     unit: 'cpp-ownership',
-    prereqs: ['smart-pointers'],
     atoms: [
       {
         key: 'lvalue-rvalue',
@@ -1025,7 +1015,6 @@ const topics: Topic[] = [
     key: 'value-semantics',
     title: 'Copying and the rule of zero',
     unit: 'cpp-ownership',
-    prereqs: ['move'],
     atoms: [
       {
         key: 'independent-copy',
@@ -1117,7 +1106,6 @@ const topics: Topic[] = [
     key: 'strings',
     title: 'Owning strings and parsing',
     unit: 'cpp-sequences',
-    prereqs: ['value-semantics'],
     atoms: [
       {
         key: 'string-size',
@@ -1207,7 +1195,6 @@ const topics: Topic[] = [
     key: 'vectors',
     title: 'Vectors and capacity',
     unit: 'cpp-sequences',
-    prereqs: ['strings'],
     atoms: [
       {
         key: 'vector-elements',
@@ -1296,7 +1283,6 @@ const topics: Topic[] = [
     key: 'iterators',
     title: 'Iterator ranges and invalidation',
     unit: 'cpp-sequences',
-    prereqs: ['vectors'],
     atoms: [
       {
         key: 'iterator-range',
@@ -1385,7 +1371,6 @@ const topics: Topic[] = [
     key: 'maps',
     title: 'Associative mappings',
     unit: 'cpp-containers',
-    prereqs: ['iterators'],
     atoms: [
       {
         key: 'map-find',
@@ -1475,7 +1460,6 @@ const topics: Topic[] = [
     key: 'sets',
     title: 'Sets and priority queues',
     unit: 'cpp-containers',
-    prereqs: ['maps'],
     atoms: [
       {
         key: 'set-membership',
@@ -1563,7 +1547,6 @@ const topics: Topic[] = [
     key: 'algorithms',
     title: 'Standard algorithms',
     unit: 'cpp-generic',
-    prereqs: ['iterators'],
     atoms: [
       {
         key: 'sort-order',
@@ -1653,7 +1636,6 @@ const topics: Topic[] = [
     key: 'lambdas',
     title: 'Lambdas and predicates',
     unit: 'cpp-generic',
-    prereqs: ['algorithms'],
     atoms: [
       {
         key: 'lambda-value-capture',
@@ -1745,7 +1727,6 @@ const topics: Topic[] = [
     key: 'templates',
     title: 'Generic functions and types',
     unit: 'cpp-generic',
-    prereqs: ['lambdas'],
     atoms: [
       {
         key: 'function-template',
@@ -1837,7 +1818,6 @@ const topics: Topic[] = [
     key: 'concepts',
     title: 'Constrained templates',
     unit: 'cpp-generic',
-    prereqs: ['templates'],
     atoms: [
       {
         key: 'integral-concept',
@@ -1928,7 +1908,6 @@ const topics: Topic[] = [
     key: 'constexpr',
     title: 'Compile-time computation',
     unit: 'cpp-generic',
-    prereqs: ['templates'],
     atoms: [
       {
         key: 'constexpr-function',
@@ -2018,7 +1997,6 @@ const topics: Topic[] = [
     key: 'optional',
     title: 'Represent absence and alternatives',
     unit: 'cpp-errors',
-    prereqs: ['constexpr'],
     atoms: [
       {
         key: 'optional-value',
@@ -2107,7 +2085,6 @@ const topics: Topic[] = [
     key: 'exceptions',
     title: 'Exception contracts',
     unit: 'cpp-errors',
-    prereqs: ['optional', 'raii'],
     atoms: [
       {
         key: 'throw-catch',
@@ -2198,7 +2175,6 @@ const topics: Topic[] = [
     key: 'polymorphism',
     title: 'Interfaces and virtual dispatch',
     unit: 'cpp-errors',
-    prereqs: ['exceptions', 'smart-pointers'],
     atoms: [
       {
         key: 'virtual-dispatch',
@@ -2290,7 +2266,6 @@ const topics: Topic[] = [
     key: 'build',
     title: 'Compilation and linkage',
     unit: 'cpp-tooling',
-    prereqs: ['functions'],
     atoms: [
       {
         key: 'declaration-definition',
@@ -2382,7 +2357,6 @@ const topics: Topic[] = [
     key: 'testing',
     title: 'Test contracts and boundary cases',
     unit: 'cpp-tooling',
-    prereqs: ['build', 'algorithms'],
     atoms: [
       {
         key: 'assert-contract',
@@ -2474,7 +2448,6 @@ const topics: Topic[] = [
     key: 'threads',
     title: 'Thread lifetimes',
     unit: 'cpp-concurrency',
-    prereqs: ['testing', 'references', 'lambdas'],
     atoms: [
       {
         key: 'thread-join',
@@ -2563,7 +2536,6 @@ const topics: Topic[] = [
     key: 'mutex',
     title: 'Protect shared invariants',
     unit: 'cpp-concurrency',
-    prereqs: ['threads', 'raii'],
     atoms: [
       {
         key: 'lock-guard',
@@ -2653,7 +2625,6 @@ const topics: Topic[] = [
     key: 'condition-variables',
     title: 'Condition-variable protocols',
     unit: 'cpp-concurrency',
-    prereqs: ['mutex'],
     atoms: [
       {
         key: 'wait-predicate',
@@ -2745,7 +2716,6 @@ const topics: Topic[] = [
     key: 'atomics',
     title: 'Atomic scalar operations',
     unit: 'cpp-concurrency',
-    prereqs: ['condition-variables'],
     atoms: [
       {
         key: 'atomic-load-store',
@@ -2836,7 +2806,6 @@ const topics: Topic[] = [
     key: 'memory-ordering',
     title: 'Atomic ordering and publication',
     unit: 'cpp-concurrency',
-    prereqs: ['atomics'],
     atoms: [
       {
         key: 'relaxed-counter',
@@ -2927,7 +2896,6 @@ const topics: Topic[] = [
     key: 'futures',
     title: 'Futures and result ownership',
     unit: 'cpp-concurrency',
-    prereqs: ['threads', 'exceptions'],
     atoms: [
       {
         key: 'async-result',
@@ -3018,7 +2986,6 @@ const topics: Topic[] = [
     key: 'addressing',
     title: 'Address spaces and storage models',
     unit: 'cpp-performance',
-    prereqs: ['pointers', 'types', 'lambdas'],
     atoms: [
       {
         key: 'page-offset',
@@ -3111,7 +3078,6 @@ const topics: Topic[] = [
     key: 'locality',
     title: 'Cache and traversal locality',
     unit: 'cpp-performance',
-    prereqs: ['addressing', 'vectors'],
     atoms: [
       {
         key: 'contiguous-traversal',
@@ -3206,7 +3172,6 @@ const topics: Topic[] = [
     key: 'false-sharing',
     title: 'Alignment and false sharing',
     unit: 'cpp-performance',
-    prereqs: ['locality', 'atomics'],
     atoms: [
       {
         key: 'alignas-contract',
@@ -3299,7 +3264,6 @@ const topics: Topic[] = [
     key: 'measurement',
     title: 'Performance measurement contracts',
     unit: 'cpp-performance',
-    prereqs: ['false-sharing', 'algorithms'],
     atoms: [
       {
         key: 'elapsed-duration',
@@ -3391,7 +3355,6 @@ const topics: Topic[] = [
     key: 'order-book',
     title: 'Order-book operations',
     unit: 'cpp-applications',
-    prereqs: ['maps', 'measurement'],
     atoms: [
       {
         key: 'book-add-level',
@@ -3482,7 +3445,6 @@ const topics: Topic[] = [
     key: 'ring-buffer',
     title: 'Bounded ring buffers',
     unit: 'cpp-applications',
-    prereqs: ['order-book', 'memory-ordering'],
     atoms: [
       {
         key: 'ring-wrap',
@@ -3572,7 +3534,6 @@ const topics: Topic[] = [
     key: 'protocol',
     title: 'Binary parsing and protocol bounds',
     unit: 'cpp-applications',
-    prereqs: ['ring-buffer', 'views'],
     atoms: [
       {
         key: 'big-endian-word',
@@ -3664,7 +3625,6 @@ const topics: Topic[] = [
     key: 'risk',
     title: 'Quantitative risk and event time',
     unit: 'cpp-applications',
-    prereqs: ['protocol', 'order-book'],
     atoms: [
       {
         key: 'book-imbalance',
@@ -3754,7 +3714,6 @@ const topics: Topic[] = [
     key: 'deque',
     title: 'Deque and queue adapters',
     unit: 'cpp-containers',
-    prereqs: ['vectors', 'iterators'],
     atoms: [
       {
         key: 'deque-front-back',
@@ -3844,7 +3803,6 @@ const topics: Topic[] = [
     key: 'callbacks',
     title: 'Callable objects and type erasure',
     unit: 'cpp-generic',
-    prereqs: ['lambdas', 'polymorphism'],
     atoms: [
       {
         key: 'function-object',
@@ -3934,7 +3892,6 @@ const topics: Topic[] = [
     key: 'architecture',
     title: 'Message-processing invariants',
     unit: 'cpp-applications',
-    prereqs: ['callbacks', 'deque', 'protocol', 'risk'],
     atoms: [
       {
         key: 'backpressure',
@@ -4028,7 +3985,6 @@ const topics: Topic[] = [
     key: 'determinism',
     title: 'Deterministic domain boundaries',
     unit: 'cpp-applications',
-    prereqs: ['architecture'],
     atoms: [
       {
         key: 'tie-break-order',
@@ -4195,13 +4151,9 @@ export const cppTopicStages: Record<string, string[]> = Object.fromEntries(
     ),
   ]),
 );
-const cppSkills: Skill[] = topics.flatMap((topic, topicIndex) =>
+const authored: Skill[] = topics.flatMap((topic, topicIndex) =>
   topic.atoms.map((atom, stageIndex) => {
     const id = cppTopicStages[`cpp-${topic.key}`][stageIndex];
-    const prerequisites =
-      stageIndex === 0
-        ? topic.prereqs.map((key) => `cpp-${key}`)
-        : [cppTopicStages[`cpp-${topic.key}`][stageIndex - 1]];
     const wrongOutput = atom.output === '0' ? '1' : '0';
     const traceChoices = [
       atom.output,
@@ -4256,10 +4208,11 @@ const cppSkills: Skill[] = topics.flatMap((topic, topicIndex) =>
       unitId: topic.unit,
       title: atom.title,
       summary: atom.definition,
-      prerequisites,
+      prerequisites: cppPrerequisites[id],
       order: topicIndex * 4 + stageIndex,
       estimatedMinutes: 6,
       topicId: `cpp-${topic.key}`,
+      topicTitle: topic.title,
       stage: stageIndex + 1,
       stageCount: 4,
       assessment: { requiredTypes: ['code', 'choice'], reviewAnswers: 2 },
@@ -4296,6 +4249,7 @@ const cppSkills: Skill[] = topics.flatMap((topic, topicIndex) =>
     };
   }),
 );
+const cppSkills = withTeachingOrder(authored);
 
 export const cppCatalog: CurriculumCatalog = {
   courses: [

@@ -73,6 +73,8 @@ export interface Skill {
   estimatedMinutes: number;
   /** Optional atomic sequence metadata; prerequisites remain the unlock authority. */
   topicId?: string;
+  /** Topic name when it differs from the title of the topic's final stage. */
+  topicTitle?: string;
   stage?: number;
   stageCount?: number;
   lesson: {
@@ -621,7 +623,7 @@ const curriculum = [
     'decisions',
     'Choose a branch',
     'Run different code for different conditions.',
-    ['boolean-logic'],
+    ['comparisons'],
     [
       'An if statement runs its indented body only when its condition is true. An else body runs when the if condition is false. The colon starts a block; indentation shows which statements belong to it.',
       'Use elif to check another condition after an earlier condition fails. In an if/elif/else chain, Python runs only the first matching branch. Put narrower or higher-threshold conditions first when their ranges overlap.',
@@ -747,7 +749,7 @@ const curriculum = [
     'sequences',
     'Access by index',
     'Retrieve list items and string characters by position.',
-    ['lists', 'strings'],
+    ['lists'],
     [
       'Python sequence indices start at zero: the first item is at index 0, the second at index 1. Use brackets after the sequence name, for example colors[0]. Strings also support indexing, which returns one character.',
       'Negative indices count backward from the end: -1 selects the last item, -2 the second-last. An index outside the available positions raises IndexError. For a nonempty sequence, the last positive index is len(sequence) - 1.',
@@ -863,7 +865,7 @@ const curriculum = [
     'sequences',
     'Count with range',
     'Generate precise sequences of integers for loops.',
-    ['for-loops', 'numbers'],
+    ['for-loops'],
     [
       'range(stop) produces integers starting at 0 and ending before stop. range(4) therefore produces 0, 1, 2, 3. The stop value is excluded; this aligns with zero-based list positions.',
       'range(start, stop, step) lets you choose a beginning and a step size. The default step is 1. A negative step can count downward. Use list(range(...)) when you want to see all the generated values together.',
@@ -919,7 +921,7 @@ const curriculum = [
     'iteration',
     'Accumulate a result',
     'Combine many values into a running total or count.',
-    ['for-loops', 'conditionals', 'numbers'],
+    ['for-loops', 'conditionals'],
     [
       'An accumulator keeps a result as a loop progresses. Initialize it before the loop, then update it inside the body. For a sum or count, start at 0. Initializing inside the loop would reset it every iteration.',
       'A conditional accumulator updates only when an item meets a rule. For example, count how many temperatures are above a threshold. Test an empty input: a sum or count should usually remain 0.',
@@ -982,7 +984,7 @@ const curriculum = [
     'iteration',
     'Repeat while a condition holds',
     'Control repetition with a condition that changes.',
-    ['conditionals', 'numbers'],
+    ['conditionals'],
     [
       'A while loop checks a condition before every iteration. If the condition is true, the indented body runs; if false, the loop ends. Unlike a for loop, a while loop does not require a collection of items.',
       'The body normally changes something used by the condition. If the condition can never become false, the loop runs forever. Trace the changing value and test its boundary to verify that the loop terminates.',
@@ -1054,7 +1056,7 @@ const curriculum = [
     'iteration',
     'Change a list',
     'Add, replace, and remove items deliberately.',
-    ['lists', 'indexing', 'for-loops'],
+    ['indexing', 'for-loops'],
     [
       'Lists are mutable: their contents can change. append(value) adds one item to the end, items[index] = value replaces one item, and pop() removes and returns the final item.',
       'Two variables can refer to the same list. If b = a, changes through b are visible through a. Use a.copy() when you want a separate shallow list. Prefer building a new list when filtering instead of removing items while iterating over the original.',
@@ -1178,7 +1180,7 @@ const curriculum = [
     'organize',
     'Map keys to values',
     'Look up named data and handle missing keys.',
-    ['types', 'strings'],
+    ['accumulators'],
     [
       'A dictionary maps unique keys to values. Create one with braces and key: value pairs, such as {"name": "Ada", "score": 10}. Retrieve a value with data[key] and assign a value with data[key] = new_value.',
       'Accessing a missing key with brackets raises KeyError. data.get(key, default) returns a default instead. The in operator checks keys, not values. Dictionary keys must be hashable; strings and integers are common choices.',
@@ -1243,7 +1245,7 @@ const curriculum = [
     'organize',
     'Loop through mappings',
     'Iterate through keys, values, or key-value pairs.',
-    ['dictionaries', 'for-loops', 'accumulators'],
+    ['dictionaries'],
     [
       'Looping directly over a dictionary visits its keys. .values() visits the values. .items() visits key-value pairs, which can be unpacked into two loop variables such as for name, score in scores.items().',
       'Choose the view that matches the task. To sum scores, values() is sufficient. To build messages containing both names and scores, use items(). Avoid adding or removing dictionary keys while iterating over that dictionary.',
@@ -1303,7 +1305,7 @@ const curriculum = [
     'organize',
     'Define a function',
     'Give a reusable block of code a name.',
-    ['variables', 'strings'],
+    ['strings'],
     [
       'A function packages a reusable block of code. Define one with def, a name, parentheses, and a colon, followed by an indented body. Defining a function does not execute its body; a call such as greet() does.',
       'A parameter is a name in a function definition that receives an input. An argument is the value passed in a call. A variable assigned inside a function is normally local to that call, keeping temporary work separate from other code.',
@@ -1368,7 +1370,7 @@ const curriculum = [
     'organize',
     'Return a result',
     'Make a function produce a value its caller can use.',
-    ['functions', 'conditionals', 'numbers'],
+    ['functions', 'conditionals'],
     [
       'return sends a value back to the caller and immediately exits the function. Printing displays output; returning provides data that can be assigned, tested, or combined with other results.',
       'If a function reaches its end without a return value, it returns None. Use early returns to handle a special case before the main calculation. A statement after an unconditional return in the same path is never reached.',
@@ -1433,7 +1435,7 @@ const curriculum = [
     'solve',
     'Design useful inputs',
     'Call functions with positional, keyword, and default arguments.',
-    ['return-values', 'types'],
+    ['return-values', 'list-mutation'],
     [
       'A function can accept several parameters. Positional arguments match parameters in order; keyword arguments name the parameter they fill. A default value makes an argument optional when the caller omits it.',
       'Put parameters without defaults before parameters with defaults. Use immutable default values such as numbers, strings, or None. A mutable default like [] is created once and can accidentally share state across calls.',
@@ -1498,7 +1500,7 @@ const curriculum = [
     'solve',
     'Transform and filter',
     'Build a list with an expression and an optional condition.',
-    ['for-loops', 'conditionals', 'list-mutation'],
+    ['for-loops', 'conditionals'],
     [
       'A list comprehension builds a new list from an iterable. The form is [expression for item in items]. The expression gives the new value, and the for part supplies the original items.',
       'Add if condition at the end to keep only selected items: [n * 2 for n in numbers if n > 0]. The condition applies to the original item before the result is added. Keep comprehensions short; a normal loop is clearer for complicated multi-step work.',
@@ -1563,7 +1565,7 @@ const curriculum = [
     'solve',
     'Handle expected failures',
     'Read errors and recover from invalid input.',
-    ['functions', 'types', 'while-loops'],
+    ['return-values'],
     [
       'An exception reports a failure during execution. Read the final line of a traceback for the exception type and message, then locate the indicated line of your code. A ValueError often means a conversion received unsuitable content; a NameError often means a name is missing or misspelled.',
       'Use try/except to handle an expected failure. Put the operation that can fail in try and catch the specific exception you know how to handle. Broadly catching every exception can hide programming errors that should be fixed.',
@@ -1632,7 +1634,7 @@ const curriculum = [
     'solve',
     'Build a word counter',
     'Combine functions, loops, dictionaries, and boundary tests.',
-    ['dictionary-loops', 'parameters', 'comprehensions', 'errors'],
+    ['dictionaries', 'return-values'],
     [
       'Before coding, state the input and output clearly. For a word counter, the input is a list of words and the output is a dictionary mapping each word to its frequency. Work through a tiny example by hand, then choose the data structure that matches the result.',
       'Build the solution one step at a time: initialize an empty dictionary, visit each word, read its previous count with a default of zero, and add one. Test an empty list, repeated words, and several different words. Small assertions document the behavior and expose mistakes early.',
@@ -1843,15 +1845,6 @@ export function validateCurriculum(
         members.some((member) => member.stageCount !== item.stageCount)
       )
         errors.push(`${item.id}: incomplete stage sequence.`);
-      if (
-        item.stage! > 1 &&
-        !members.some(
-          (member) =>
-            member.stage === item.stage! - 1 &&
-            item.prerequisites.includes(member.id),
-        )
-      )
-        errors.push(`${item.id}: missing preceding stage prerequisite.`);
     }
     if (!item.questions.length)
       errors.push(`${item.id}: missing assessment questions.`);
@@ -1936,5 +1929,40 @@ export function validateCurriculum(
     visited.add(id);
   }
   registry.forEach((item) => visit(item.id));
+  if (errors.some((error) => error.startsWith('Prerequisite cycle')))
+    return errors;
+  // Edges list direct requirements only. An edge already implied through
+  // another prerequisite hides the real structure and narrows no frontier.
+  const ancestors = new Map<string, Set<string>>();
+  function ancestorsOf(id: string): Set<string> {
+    const cached = ancestors.get(id);
+    if (cached) return cached;
+    const result = new Set<string>();
+    for (const parent of byId[id]?.prerequisites ?? []) {
+      result.add(parent);
+      ancestorsOf(parent).forEach((ancestor) => result.add(ancestor));
+    }
+    ancestors.set(id, result);
+    return result;
+  }
+  for (const item of registry) {
+    if (new Set(item.prerequisites).size !== item.prerequisites.length)
+      errors.push(`${item.id}: duplicate prerequisite.`);
+    for (const prerequisite of item.prerequisites) {
+      const parent = byId[prerequisite];
+      if (parent?.courseId === item.courseId && parent.order >= item.order)
+        errors.push(
+          `${item.id}: teaching order places it before prerequisite ${prerequisite}.`,
+        );
+      const via = item.prerequisites.find(
+        (other) =>
+          other !== prerequisite && ancestorsOf(other).has(prerequisite),
+      );
+      if (via)
+        errors.push(
+          `${item.id}: prerequisite ${prerequisite} is already implied by ${via}.`,
+        );
+    }
+  }
   return errors;
 }
