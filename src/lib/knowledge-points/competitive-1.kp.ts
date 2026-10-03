@@ -1682,4 +1682,1817 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'cp-sort-copy': [
+    {
+      title: 'sorted() returns a new list',
+      explanation: [
+        'sorted(values) builds a new list holding the same items in ascending order and leaves values exactly as it was. Sorting only rearranges: repeated items stay repeated and no item changes. Use sorted() when the original order still matters later.',
+      ],
+      example: {
+        code: 'values = [7, 2, 7, -1]\nordered = sorted(values)\nprint(ordered)\nprint(values)',
+        output: '[-1, 2, 7, 7]\n[7, 2, 7, -1]',
+        explanation:
+          'The new list holds the four items in ascending order, both 7s included. The original list keeps its order.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [3, 1, 2]\nordered = sorted(values)\nprint(values)',
+          ['[1, 2, 3]', 'None', '[2, 1, 3]', '[3, 1, 2]'],
+          3,
+          'sorted() put the ordered items in a new list; values itself was not changed.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print(sorted([5, -2, 5, 0]))',
+          ['[-2, 0, 5]', '[0, -2, 5, 5]', '[5, 5, 0, -2]', '[-2, 0, 5, 5]'],
+          3,
+          'Ascending order puts -2 first, and both copies of 5 remain.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print(sorted(["pear", "fig", "apple"]))',
+          [
+            "['apple', 'fig', 'pear']",
+            "['fig', 'pear', 'apple']",
+            "['pear', 'fig', 'apple']",
+            "['fig', 'apple', 'pear']",
+          ],
+          0,
+          'Strings sort alphabetically, character by character, not by length.',
+        ),
+        choose(
+          "A function needs the scores in order but must not disturb the caller's list. Which line should it use?",
+          [
+            'scores.sort()',
+            'ordered = scores.sort()',
+            'ordered = scores',
+            'ordered = sorted(scores)',
+          ],
+          3,
+          'sorted() returns an ordered copy. scores.sort() rearranges the caller’s list, and assigning its result stores None.',
+        ),
+      ],
+    },
+    {
+      title: 'list.sort() changes the list and returns None',
+      explanation: [
+        'values.sort() rearranges the existing list in place and returns None, so result = values.sort() stores None rather than the sorted list. Any other name that refers to the same list sees the new order too. Either way, comparison sorting of n items costs O(n log n) time.',
+      ],
+      example: {
+        code: 'values = [9, 4, 6]\nresult = values.sort()\nprint(result)\nprint(values)',
+        output: 'None\n[4, 6, 9]',
+        explanation: 'The method reorders values itself and hands back None.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'scores = [30, 10, 20]\nalias = scores\nscores.sort()\nprint(alias)',
+          ['[10, 20, 30]', '[30, 10, 20]', 'None', '[30, 20, 10]'],
+          0,
+          'alias and scores name the same list, so sorting it in place is visible through both names.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [2, 8, 5]\nordered = values.sort()\nprint(ordered)',
+          ['[2, 5, 8]', '[2, 8, 5]', '[]', 'None'],
+          3,
+          'list.sort() returns None; the sorted order lives in values, not in ordered.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'a = [3, 1, 2]\nb = sorted(a)\na.append(0)\nprint(b)',
+          ['[0, 1, 2, 3]', '[1, 2, 3]', '[3, 1, 2, 0]', 'None'],
+          1,
+          'b is a separate new list, so appending to a later does not affect it.',
+        ),
+        choose(
+          'How long does sorting n items take with sorted() or with list.sort()?',
+          [
+            'O(n log n) for both',
+            'O(n) for sorted(), because it only copies',
+            'O(1) for list.sort(), because it works in place',
+            'O(n²) for both, on every input',
+          ],
+          0,
+          'Both perform a comparison sort; working in place changes the memory used, not the comparison cost.',
+        ),
+      ],
+    },
+  ],
+  'cp-sort-key': [
+    {
+      title: 'Tuples compare field by field',
+      explanation: [
+        'Python compares tuples one field at a time: the first fields decide, and a later field is examined only when every earlier field ties. Sorting a list of (deadline, effort) tuples therefore orders by deadline and uses effort only to break deadline ties.',
+      ],
+      example: {
+        code: 'records = [(3, 2), (1, 9), (3, 1), (2, 5)]\nprint(sorted(records))\nprint((2, 100) < (3, 0))',
+        output: '[(1, 9), (2, 5), (3, 1), (3, 2)]\nTrue',
+        explanation:
+          'Deadlines 1, 2, 3 decide the order; effort only separates the two records with deadline 3. A smaller first field wins no matter how large the second one is.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'print(sorted([(2, 1), (1, 5), (2, 0)]))',
+          [
+            '[(2, 0), (2, 1), (1, 5)]',
+            '[(1, 5), (2, 1), (2, 0)]',
+            '[(2, 0), (1, 5), (2, 1)]',
+            '[(1, 5), (2, 0), (2, 1)]',
+          ],
+          3,
+          'The first field 1 comes first; the two records with first field 2 are then ordered by their second fields.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print((4, 1) < (3, 9))',
+          ['True', '(3, 9)', '(4, 1)', 'False'],
+          3,
+          'The first fields already differ, and 4 is not less than 3, so the second fields are never compared.',
+        ),
+        choose(
+          'Which tuple comes first in ascending order?',
+          ['(1, 50)', '(2, -9)', '(2, -8)', '(3, 0)'],
+          0,
+          'The smallest first field decides, regardless of the second field.',
+        ),
+        choose(
+          'When does Python examine the second fields while comparing two tuples?',
+          [
+            'Always, before the first fields',
+            'Only when the tuples contain negatives',
+            'Only when the first fields are equal',
+            'Only when the tuples differ in length',
+          ],
+          2,
+          'Comparison is lexicographic: later fields only break ties in earlier ones.',
+        ),
+      ],
+    },
+    {
+      title: 'A key function decides the order',
+      explanation: [
+        'sorted(records, key=f) compares f(record) instead of each record itself. A lambda writes a short key function inline: lambda record: (record[0], -record[1]) sorts by the first field ascending and, among equal first fields, by the second field descending, because negating a number reverses its order. The records returned are the original records, not their keys.',
+      ],
+      example: {
+        code: 'tasks = [(2, 4), (1, 3), (2, 8), (1, 6)]\nprint(sorted(tasks, key=lambda task: (task[0], -task[1])))\nprint(sorted(tasks, key=lambda task: task[1]))',
+        output:
+          '[(1, 6), (1, 3), (2, 8), (2, 4)]\n[(1, 3), (2, 4), (1, 6), (2, 8)]',
+        explanation:
+          'The first key groups by the first field and puts larger second fields first. The second key ignores the first field and orders by the second field alone.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'records = [(5, 1), (5, 4), (2, 2)]\nprint(sorted(records, key=lambda r: (r[0], -r[1])))',
+          [
+            '[(2, 2), (5, 4), (5, 1)]',
+            '[(2, 2), (5, 1), (5, 4)]',
+            '[(5, 4), (5, 1), (2, 2)]',
+            '[(2, -2), (5, -4), (5, -1)]',
+          ],
+          0,
+          'The first field 2 comes first. Among the two records with 5, the negated second field puts 4 before 1. The records themselves are not changed.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'people = [("ann", 3), ("bo", 1), ("cy", 2)]\nprint(sorted(people, key=lambda p: p[1]))',
+          [
+            "[('ann', 3), ('bo', 1), ('cy', 2)]",
+            "[('bo', 1), ('cy', 2), ('ann', 3)]",
+            '[1, 2, 3]',
+            "[('ann', 3), ('cy', 2), ('bo', 1)]",
+          ],
+          1,
+          'The key compares only the numbers, but sorted() returns the whole records in that order.',
+        ),
+        choose(
+          'Records are (deadline, effort). Which key sorts by effort descending, then deadline ascending?',
+          ['(r[0], -r[1])', '(-r[1], r[0])', '(r[1], -r[0])', '(-r[0], r[1])'],
+          1,
+          'Effort must be the first key field and negated; deadline breaks ties in its normal direction.',
+        ),
+        choose(
+          'What does sorted(records, key=lambda r: (r[0], -r[1])) return?',
+          [
+            'The original records, reordered',
+            'The key tuples, in sorted order',
+            'Records whose second field is negated',
+            'None, because the key changes the list',
+          ],
+          0,
+          'The key is used only for comparisons; the result holds the records themselves.',
+        ),
+      ],
+    },
+  ],
+  'cp-sort-stability': [
+    {
+      title: 'Equal keys keep their arrival order',
+      explanation: [
+        'Python sorting is stable: when two records have equal keys, they appear in the result in the same relative order as in the input. Sorting tickets by priority alone therefore keeps arrival order inside each priority.',
+      ],
+      example: {
+        code: 'tickets = [(2, "c"), (1, "x"), (2, "a"), (1, "b")]\nprint(sorted(tickets, key=lambda t: t[0]))',
+        output: "[(1, 'x'), (1, 'b'), (2, 'c'), (2, 'a')]",
+        explanation:
+          'Within priority 1, x arrived before b; within priority 2, c arrived before a. Both orders survive the sort.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'items = [(3, "p"), (1, "q"), (3, "r"), (1, "s")]\nprint(sorted(items, key=lambda t: t[0]))',
+          [
+            "[(1, 'q'), (1, 's'), (3, 'p'), (3, 'r')]",
+            "[(1, 's'), (1, 'q'), (3, 'r'), (3, 'p')]",
+            "[(1, 'q'), (3, 'p'), (1, 's'), (3, 'r')]",
+            "[(3, 'p'), (3, 'r'), (1, 'q'), (1, 's')]",
+          ],
+          0,
+          'The key groups by the number, and within each group the records stay in arrival order: q before s, p before r.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'words = ["kiwi", "fig", "plum", "pea"]\nprint(sorted(words, key=lambda w: len(w)))',
+          [
+            "['pea', 'fig', 'kiwi', 'plum']",
+            "['fig', 'pea', 'plum', 'kiwi']",
+            "['fig', 'pea', 'kiwi', 'plum']",
+            "['kiwi', 'fig', 'plum', 'pea']",
+          ],
+          2,
+          'Words of equal length keep their input order: fig before pea and kiwi before plum. They are not alphabetized.',
+        ),
+        choose(
+          'Orders arrive as (priority, id): (2, 7), (1, 4), (2, 3). After a stable sort by priority alone, how are the two priority-2 orders arranged?',
+          [
+            '3 before 7',
+            '7 before 3',
+            'In an unpredictable order',
+            'Only one of them remains',
+          ],
+          1,
+          'They tie on the key, so the one that arrived first, id 7, stays first.',
+        ),
+        choose(
+          'Does a stable sort keep the whole input order?',
+          [
+            'No, only the relative order of equal keys',
+            'Yes, every record stays where it was',
+            'Only for records that contain strings',
+            'Only when all keys are distinct',
+          ],
+          0,
+          'Records with different keys move to their sorted positions; stability only governs ties.',
+        ),
+      ],
+    },
+    {
+      title: 'Stability versus an explicit tie-breaker',
+      explanation: [
+        'Adding a field to the key changes the contract: with key (priority, label), ties are alphabetized instead of kept in arrival order. Use the key alone when arrival order should decide ties, and add fields only for tie-breakers the task asks for. Stability also allows sorting in passes: sort by the secondary field first, then stably by the primary field.',
+      ],
+      example: {
+        code: 'tickets = [(2, "c"), (1, "x"), (2, "a")]\nprint(sorted(tickets, key=lambda t: t[0]))\nprint(sorted(tickets, key=lambda t: (t[0], t[1])))',
+        output:
+          "[(1, 'x'), (2, 'c'), (2, 'a')]\n[(1, 'x'), (2, 'a'), (2, 'c')]",
+        explanation:
+          'The first sort keeps c before a, as they arrived. The second key adds the label, so the tie is broken alphabetically and a comes first.',
+      },
+      questions: [
+        predictOutput(
+          'This program sorts in two passes. What does it print?',
+          'people = [("dan", 30), ("amy", 25), ("cal", 30), ("bea", 25)]\nby_name = sorted(people, key=lambda p: p[0])\nby_age = sorted(by_name, key=lambda p: p[1])\nprint(by_age)',
+          [
+            "[('bea', 25), ('amy', 25), ('dan', 30), ('cal', 30)]",
+            "[('amy', 25), ('bea', 25), ('dan', 30), ('cal', 30)]",
+            "[('amy', 25), ('bea', 25), ('cal', 30), ('dan', 30)]",
+            "[('amy', 25), ('cal', 30), ('bea', 25), ('dan', 30)]",
+          ],
+          2,
+          'The second sort is by age, and equal ages keep the order of the first pass, which was alphabetical.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'rows = [(1, "z"), (1, "m"), (0, "q")]\nprint(sorted(rows, key=lambda t: (t[0], t[1])))',
+          [
+            "[(0, 'q'), (1, 'z'), (1, 'm')]",
+            "[(1, 'm'), (1, 'z'), (0, 'q')]",
+            "[(1, 'z'), (1, 'm'), (0, 'q')]",
+            "[(0, 'q'), (1, 'm'), (1, 'z')]",
+          ],
+          3,
+          'The label is part of the key, so the tie at 1 is broken alphabetically rather than by arrival.',
+        ),
+        choose(
+          'A queue serves requests by priority, and by arrival among equal priorities. Requests are (priority, name). Which key should the sort use?',
+          [
+            'The priority alone',
+            '(priority, name)',
+            'The whole request tuple',
+            '(priority, len(name))',
+          ],
+          0,
+          'Stability already keeps arrival order for ties; adding the name would reorder them.',
+        ),
+        choose(
+          'Records must end up ordered by city, and by name within each city, using two stable sorts. Which order of passes works?',
+          [
+            'Sort by name first, then by city',
+            'Sort by city first, then by name',
+            'Either order gives the same result',
+            'Sort by city twice, then by name',
+          ],
+          0,
+          'The last pass decides the main order; stability then preserves the name order from the earlier pass within each city.',
+        ),
+      ],
+    },
+  ],
+  'cp-sorting': [
+    {
+      title: 'Choose sorted() or sort(), then write the key',
+      explanation: [
+        'Sorting records takes two decisions. First, sorted(records) returns a new list and keeps the input, while records.sort() reorders the input and returns None. Second, the key states the order: (job[0], -job[1]) puts earlier deadlines first and, within a deadline, larger efforts first.',
+      ],
+      example: {
+        code: 'jobs = [(3, 1, "ink"), (1, 4, "map"), (3, 6, "oar")]\nordered = sorted(jobs, key=lambda job: (job[0], -job[1]))\nprint(ordered)\nprint(jobs[0])',
+        output: "[(1, 4, 'map'), (3, 6, 'oar'), (3, 1, 'ink')]\n(3, 1, 'ink')",
+        explanation:
+          'Deadline 1 comes first. At deadline 3, effort 6 precedes effort 1. The input list still starts with the ink job.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'jobs = [(2, 5, "a"), (1, 1, "b"), (2, 9, "c")]\nordered = sorted(jobs, key=lambda job: (job[0], -job[1]))\nfor job in ordered:\n    print(job[2])',
+          ['b\na\nc', 'a\nc\nb', 'c\na\nb', 'b\nc\na'],
+          3,
+          'Deadline 1 (b) comes first; at deadline 2 the larger effort 9 (c) precedes 5 (a).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'jobs = [(4, 2), (1, 3)]\nresult = jobs.sort()\nprint(result)\nprint(jobs)',
+          [
+            'None\n[(1, 3), (4, 2)]',
+            '[(1, 3), (4, 2)]\n[(1, 3), (4, 2)]',
+            'None\n[(4, 2), (1, 3)]',
+            '[(1, 3), (4, 2)]\n[(4, 2), (1, 3)]',
+          ],
+          0,
+          'sort() reorders jobs in place and returns None.',
+        ),
+        choose(
+          'Records are (score, time). Rank by score descending, then by time ascending. Which key?',
+          ['(r[0], -r[1])', '(-r[0], -r[1])', '(-r[0], r[1])', '(r[1], -r[0])'],
+          2,
+          'Score is the primary field and is negated for descending order; time breaks ties ascending.',
+        ),
+        choose(
+          'A function returns records ordered by deadline, and the caller still needs the original order afterwards. What should it use?',
+          [
+            'records.sort(key=...)',
+            'sorted(records, key=...)',
+            'records.reverse()',
+            'records = records.sort(key=...)',
+          ],
+          1,
+          'Only sorted() leaves the input untouched; sort() reorders it, and its return value is None.',
+        ),
+      ],
+    },
+    {
+      title: 'Ties keep arrival order unless the key says otherwise',
+      explanation: [
+        'The result contains every record, arranged so that keys never decrease. Records with equal keys keep their arrival order because the sort is stable; the sort does not invent an extra tie-breaker. If the task wants ties broken by a label, the label must be part of the key.',
+      ],
+      example: {
+        code: 'jobs = [(2, 5, "elm"), (1, 5, "ash"), (2, 5, "bay"), (2, 7, "fir")]\nfor job in sorted(jobs, key=lambda job: (job[0], -job[1])):\n    print(job[2])',
+        output: 'ash\nfir\nelm\nbay',
+        explanation:
+          'ash has the earliest deadline. At deadline 2, fir has the largest effort; elm and bay tie completely, so they stay in arrival order.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'jobs = [(1, 2, "q"), (1, 2, "a"), (0, 9, "z")]\nfor job in sorted(jobs, key=lambda job: (job[0], -job[1])):\n    print(job[2])',
+          ['z\na\nq', 'q\na\nz', 'a\nq\nz', 'z\nq\na'],
+          3,
+          'z has the earliest deadline. q and a have equal keys, so they keep their arrival order.',
+        ),
+        predictOutput(
+          'The label is now part of the key. What does this program print?',
+          'jobs = [(2, 5, "elm"), (1, 5, "ash"), (2, 5, "bay"), (2, 7, "fir")]\nfor job in sorted(jobs, key=lambda job: (job[0], -job[1], job[2])):\n    print(job[2])',
+          [
+            'ash\nfir\nelm\nbay',
+            'ash\nbay\nelm\nfir',
+            'ash\nfir\nbay\nelm',
+            'fir\nash\nbay\nelm',
+          ],
+          2,
+          'With the label in the key, the tie between elm and bay is broken alphabetically.',
+        ),
+        choose(
+          'Two records have identical keys. Where does the one that arrived first end up after sorted(..., key=...)?',
+          [
+            'After the other one',
+            'Wherever its label sorts',
+            'Before the other one',
+            'It is removed as a duplicate',
+          ],
+          2,
+          'Stability keeps tied records in their input order.',
+        ),
+        choose(
+          'Twelve records contain only 5 distinct keys. How many records does sorted(records, key=...) return?',
+          ['5', '7', '12', '1'],
+          2,
+          'Sorting rearranges records; it never merges records with equal keys.',
+        ),
+      ],
+    },
+    {
+      title: 'What sorting costs and what it enables',
+      explanation: [
+        'Sorting n records with constant-cost keys takes O(n log n) time, and sorted() uses O(n) extra space for the new list. Sorting often pays for itself by placing related candidates next to each other: in sorted numbers, the closest pair is always a neighboring pair, so checking the n − 1 neighbor gaps replaces checking all n(n − 1)/2 pairs. The total is still O(n log n), because the sort comes first.',
+      ],
+      example: {
+        code: 'ordered = sorted([31, 4, 18, 9, 27])\nprint(ordered)\nprint(ordered[1] - ordered[0])\nprint(ordered[2] - ordered[1])\nprint(ordered[3] - ordered[2])\nprint(ordered[4] - ordered[3])',
+        output: '[4, 9, 18, 27, 31]\n5\n9\n9\n4',
+        explanation:
+          'After sorting, only four neighboring gaps need checking. The smallest, 4 between 27 and 31, is the closest pair of the whole list.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'ordered = sorted([12, 3, 8])\nprint(ordered[1] - ordered[0])\nprint(ordered[2] - ordered[1])',
+          ['9\n5', '-9\n5', '4\n5', '5\n4'],
+          3,
+          'The sorted list is [3, 8, 12], so the neighbor gaps are 5 and 4.',
+        ),
+        choose(
+          'After sorting 6 numbers, how many neighboring gaps must be checked to find the closest pair?',
+          ['5', '15', '6', '30'],
+          0,
+          'Six sorted values have five neighboring pairs, instead of 15 pairs overall.',
+        ),
+        choose(
+          'Sorting n values and then scanning the neighbor gaps costs how much time overall?',
+          ['O(n log n)', 'O(n)', 'O(n²)', 'O(log n)'],
+          0,
+          'The O(n) scan is added to the O(n log n) sort, and the sort dominates.',
+        ),
+        choose(
+          'Why is the closest pair of sorted values always a neighboring pair?',
+          [
+            'Sorting removes all duplicate values',
+            'Neighbors in the original input are always closest',
+            'Sorting makes every gap the same size',
+            'Any value lying between two others is at least as close to each',
+          ],
+          3,
+          'If a < b < c, then b - a and c - b are both at most c - a, so a non-neighbor pair never wins.',
+        ),
+      ],
+    },
+  ],
+  'cp-hash-membership': [
+    {
+      title: 'A set keeps one copy of each value',
+      explanation: [
+        'A set stores distinct values. set() creates an empty set, seen.add(value) inserts a value, and adding a value that is already present changes nothing. len(seen) counts distinct values, and value in seen asks whether a value has appeared.',
+      ],
+      example: {
+        code: 'seen = set()\nfor label in ["oak", "elm", "oak", "ash", "elm"]:\n    seen.add(label)\nprint(len(seen))\nprint("ash" in seen)\nprint("fir" in seen)',
+        output: '3\nTrue\nFalse',
+        explanation:
+          'Five additions store three distinct labels. ash was added; fir never was.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'seen = set()\nfor value in [4, 4, 4, 1]:\n    seen.add(value)\nprint(len(seen))',
+          ['4', '2', '3', '1'],
+          1,
+          'The repeated 4 is stored once, so the set holds 4 and 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print(len(set([7, -7, 7, 0])))',
+          ['4', '3', '2', '1'],
+          1,
+          '7 and -7 are different values; only the second 7 is a duplicate.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'seen = set()\nseen.add("a")\nseen.add("a")\nprint("a" in seen)\nprint(len(seen))',
+          ['True\n2', 'False\n1', 'False\n0', 'True\n1'],
+          3,
+          'The second add finds "a" already present, so the set still has one member.',
+        ),
+        choose(
+          'A task asks only whether each visitor ID has appeared before. Why is a set enough?',
+          [
+            'Sets remember the order of every visit',
+            'Sets count repeated IDs automatically',
+            'Sets keep every duplicate occurrence',
+            'Only presence matters, not how many times',
+          ],
+          3,
+          'A set answers "seen or not" and deliberately forgets multiplicity.',
+        ),
+      ],
+    },
+    {
+      title: 'Detect repeats with membership; members must be hashable',
+      explanation: [
+        'Testing value in seen before adding the value tells whether it appeared earlier in the scan, in expected O(1) time per test. Building the set takes expected O(n) time and O(u) space for u distinct values. Set members must be hashable: integers, strings and tuples work, but a list cannot be a member because it can change.',
+      ],
+      example: {
+        code: 'seen = set()\nfor value in [5, 3, 8, 3, 5]:\n    if value in seen:\n        print(value)\n    seen.add(value)',
+        output: '3\n5',
+        explanation:
+          'Each value is tested before it is added. The second 3 and the second 5 find themselves already present.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'seen = set()\nfor value in [2, 9, 2, 2, 9]:\n    if value in seen:\n        print(value)\n    seen.add(value)',
+          ['2\n9', '9\n2', '2\n9\n2\n2\n9', '2\n2\n9'],
+          3,
+          'Every occurrence after the first is reported: the second and third 2, then the second 9.',
+        ),
+        predictOutput(
+          'This loop adds before it tests. What does it print?',
+          'seen = set()\nrepeats = 0\nfor value in [1, 6, 4]:\n    seen.add(value)\n    if value in seen:\n        repeats += 1\nprint(repeats)',
+          ['0', '1', '2', '3'],
+          3,
+          'Adding first makes every value look like a repeat, even though all three are distinct.',
+        ),
+        choose(
+          'Which value cannot be added to a set?',
+          ['(1, 2)', '"12"', '12', '[1, 2]'],
+          3,
+          'Lists are mutable and unhashable; tuples, strings and integers are hashable.',
+        ),
+        choose(
+          'A set is built from n values that contain u distinct ones. How much space does it use?',
+          ['O(n²)', 'O(u)', 'O(1)', 'O(n log n)'],
+          1,
+          'The set stores each distinct value once, however often it repeats.',
+        ),
+      ],
+    },
+  ],
+  'cp-hash-frequency': [
+    {
+      title: 'Count with counts.get(value, 0) + 1',
+      explanation: [
+        'A frequency map stores counts[value], the number of times value has appeared. counts.get(value, 0) returns 0 for a value not seen yet, so counts[value] = counts.get(value, 0) + 1 handles first and later occurrences with the same line. Printed keys appear in the order of their first occurrence.',
+      ],
+      example: {
+        code: 'counts = {}\nfor word in ["go", "stop", "go", "go", "wait"]:\n    counts[word] = counts.get(word, 0) + 1\nprint(counts)',
+        output: "{'go': 3, 'stop': 1, 'wait': 1}",
+        explanation:
+          'go is counted three times. stop and wait start from the default 0 and reach 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'counts = {}\nfor value in [4, 1, 4, 1, 4]:\n    counts[value] = counts.get(value, 0) + 1\nprint(counts)',
+          ['{1: 2, 4: 3}', '{4: 3, 1: 2}', '{4: 1, 1: 1}', '{4: 2, 1: 3}'],
+          1,
+          '4 appears three times and 1 twice; 4 is printed first because it occurred first.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'counts = {"x": 2}\ncounts["y"] = counts.get("y", 0) + 1\ncounts["x"] = counts.get("x", 0) + 1\nprint(counts)',
+          [
+            "{'x': 3, 'y': 1}",
+            "{'x': 1, 'y': 1}",
+            "{'y': 1, 'x': 3}",
+            "{'x': 2, 'y': 1}",
+          ],
+          0,
+          'y is new and gets 0 + 1. x already has 2, so it becomes 3 and keeps its position.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'counts = {}\nfor color in ["red", "blue", "red", "red"]:\n    counts[color] = counts.get(color, 0) + 1\nprint(counts["red"])',
+          ['1', '4', '2', '3'],
+          3,
+          'Each of the three "red" observations adds one to the same key.',
+        ),
+        choose(
+          'Why write counts.get(value, 0) + 1 instead of counts[value] + 1?',
+          [
+            'counts[value] raises KeyError for a new value',
+            'get() keeps the keys sorted while counting',
+            'counts[value] + 1 would add two instead of one',
+            'get() prevents duplicate keys from being created',
+          ],
+          0,
+          'Brackets require the key to exist; get() supplies the missing count 0.',
+        ),
+      ],
+    },
+    {
+      title: 'The map matches the processed prefix',
+      explanation: [
+        'The invariant of a frequency scan: after processing the first i items, every count equals that value’s occurrences among those i items, and the counts add up to i. A set cannot provide this, because it records only presence: one occurrence and ten look the same.',
+      ],
+      example: {
+        code: 'counts = {}\nfor value in [7, 2, 7]:\n    counts[value] = counts.get(value, 0) + 1\n    print(counts)',
+        output: '{7: 1}\n{7: 1, 2: 1}\n{7: 2, 2: 1}',
+        explanation:
+          'Each printed map describes exactly the items processed so far.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'counts = {}\nfor value in [1, 1, 2]:\n    counts[value] = counts.get(value, 0) + 1\n    print(counts)',
+          [
+            '{1: 2, 2: 1}\n{1: 2, 2: 1}\n{1: 2, 2: 1}',
+            '{1: 1}\n{1: 1}\n{1: 1, 2: 1}',
+            '{1: 1}\n{1: 2}\n{1: 2, 2: 1}',
+            '{1: 1}\n{1: 2}\n{2: 1}',
+          ],
+          2,
+          'After each item, the map counts the prefix processed so far; earlier keys are kept.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'counts = {}\nseen = set()\nfor value in [6, 6, 6]:\n    counts[value] = counts.get(value, 0) + 1\n    seen.add(value)\nprint(counts[6])\nprint(len(seen))',
+          ['3\n3', '3\n1', '1\n1', '1\n3'],
+          1,
+          'The map counts all three occurrences, while the set stores 6 once.',
+        ),
+        choose(
+          'A frequency scan has processed the first 10 items. Which statement is true?',
+          [
+            'Its counts add up to 10',
+            'It has exactly 10 keys',
+            'Every count is at most 1',
+            'It already counts the unprocessed items',
+          ],
+          0,
+          'Each processed item adds exactly one to one count; repeated items share a key.',
+        ),
+        choose(
+          'A task asks how often the most common value appears. Why is a set not enough?',
+          [
+            'Sets cannot hold integer values',
+            'A set loses values that appear only once',
+            'Sets are slower than lists for lookups',
+            'A set records presence, not how many times',
+          ],
+          3,
+          'Multiplicities need a count per value, which a dictionary stores.',
+        ),
+      ],
+    },
+  ],
+  'cp-hash-filter': [
+    {
+      title: 'Scan items() and keep entries that pass a test',
+      explanation: [
+        'Once counts is complete, for value, count in counts.items() visits one (key, count) entry per distinct key. To filter, write an entry into a new dictionary only when its count passes the test. The result can only have as many keys as counts, or fewer.',
+      ],
+      example: {
+        code: 'counts = {"oak": 3, "elm": 1, "ash": 2, "fir": 1}\nkept = {}\nfor tree, count in counts.items():\n    if count >= 2:\n        kept[tree] = count\nprint(kept)',
+        output: "{'oak': 3, 'ash': 2}",
+        explanation:
+          'Only oak and ash have counts of at least two; they enter kept in the order they are visited.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'counts = {5: 1, 8: 4, 2: 2}\nkept = {}\nfor value, count in counts.items():\n    if count >= 2:\n        kept[value] = count\nprint(kept)',
+          ['{8: 4}', '{8: 4, 2: 2}', '{5: 1}', '{2: 2, 8: 4}'],
+          1,
+          'The entries for 8 and 2 pass the threshold and keep their order from counts.',
+        ),
+        predictOutput(
+          'This filter keeps values that appear exactly once. What does it print?',
+          'counts = {"a": 2, "b": 1, "c": 1}\nonce = {}\nfor value, count in counts.items():\n    if count == 1:\n        once[value] = count\nprint(once)',
+          [
+            "{'b': 1, 'c': 1}",
+            "{'a': 2}",
+            "{'a': 2, 'b': 1, 'c': 1}",
+            "{'b': 1}",
+          ],
+          0,
+          'b and c each have count 1; a appears twice and is left out.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'counts = {"x": 3, "y": 3, "z": 1}\nqualifying = 0\nfor key, count in counts.items():\n    if count >= 3:\n        qualifying += 1\nprint(qualifying)',
+          ['6', '3', '1', '2'],
+          3,
+          'Two keys, x and y, meet the threshold. Adding their counts would answer a different question.',
+        ),
+        choose(
+          'What does each step of for key, count in counts.items() receive?',
+          [
+            'One key together with its count',
+            'Only the next key',
+            'Only the next count',
+            'The position of an input item',
+          ],
+          0,
+          'items() yields (key, value) pairs, which the loop unpacks into two names.',
+        ),
+      ],
+    },
+    {
+      title: 'Filter into a new dictionary, after counting is done',
+      explanation: [
+        'Deleting keys from a dictionary while looping over it raises RuntimeError, because the dictionary changes size during iteration. Writing the kept entries into a new dictionary avoids that and leaves counts intact for other questions. Keep the two steps separate: finish counting first, then ask questions about the completed counts.',
+      ],
+      example: {
+        code: 'counts = {"red": 1, "blue": 3}\nfrequent = {}\nfor color, count in counts.items():\n    if count > 1:\n        frequent[color] = count\nprint(frequent)\nprint(counts)',
+        output: "{'blue': 3}\n{'red': 1, 'blue': 3}",
+        explanation:
+          'The filtered result holds only blue, and counts still holds both entries.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def at_least(counts, threshold):\n    kept = {}\n    for key, count in counts.items():\n        if count >= threshold:\n            kept[key] = count\n    return kept\n\ncounts = {"a": 4, "b": 2, "c": 5}\nprint(at_least(counts, 4))\nprint(len(counts))',
+          [
+            "{'a': 4, 'c': 5}\n2",
+            "{'c': 5}\n3",
+            "{'a': 4, 'c': 5}\n3",
+            "{'a': 4, 'b': 2, 'c': 5}\n3",
+          ],
+          2,
+          'a and c pass the threshold 4 (inclusive), and counts keeps all three of its entries.',
+        ),
+        predictOutput(
+          'This program filters while it is still counting. What does it print?',
+          'counts = {}\nonce = {}\nfor value in [9, 4, 9]:\n    counts[value] = counts.get(value, 0) + 1\n    if counts[value] == 1:\n        once[value] = 1\nprint(once)',
+          ['{4: 1}', '{9: 2, 4: 1}', '{9: 1, 4: 1}', '{}'],
+          2,
+          '9 is judged before its second copy arrives, so it is wrongly kept. Filtering the completed counts would keep only 4.',
+        ),
+        choose(
+          'What happens if a loop over counts.items() deletes entries from counts as it goes?',
+          [
+            'The deleted keys are skipped and it works',
+            'Python silently loops over a copy instead',
+            'Python raises RuntimeError because the size changed',
+            'The loop restarts from the first key',
+          ],
+          2,
+          'A dictionary must not change size while it is being iterated.',
+        ),
+        choose(
+          'Why build a new dictionary for the filtered entries?',
+          [
+            'It keeps the original counts intact',
+            'A dictionary cannot lose keys once added',
+            'A new dictionary is sorted by count',
+            'It sets every count to the threshold',
+          ],
+          0,
+          'The source map stays complete for later questions, and nothing changes during the loop.',
+        ),
+      ],
+    },
+  ],
+  'cp-hashing': [
+    {
+      title: 'Replace repeated list searches with hash lookups',
+      explanation: [
+        'value in some_list checks items one by one: O(n) per lookup, so n lookups cost O(n²). A set or dictionary answers membership in expected O(1) time, so building it once and querying n times costs expected O(n) overall. Keys must be hashable: strings, integers and tuples, not lists.',
+      ],
+      example: {
+        code: 'stock = ["pen", "ink", "pad", "ink"]\navailable = set(stock)\nfound = 0\nfor request in ["ink", "cap", "pen", "ink"]:\n    if request in available:\n        found += 1\nprint(found)\nprint(len(available))',
+        output: '3\n3',
+        explanation:
+          'Three requests are in stock (ink twice and pen); cap is not. The set holds three distinct items.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'banned = set([4, 9])\nblocked = 0\nfor value in [4, 1, 9, 9, 2]:\n    if value in banned:\n        blocked += 1\nprint(blocked)',
+          ['3', '2', '5', '1'],
+          0,
+          'Every occurrence of a banned value counts: 4 once and 9 twice.',
+        ),
+        choose(
+          'A program checks 10⁵ queries with value in some_list, where the list holds 10⁵ items. Roughly how many comparisons can that take?',
+          ['About 10¹⁰', 'About 10⁵', 'About 2 × 10⁵', 'About 17'],
+          0,
+          'Each list search can scan all 10⁵ items, and there are 10⁵ searches.',
+        ),
+        choose(
+          'Which of these can be a dictionary key?',
+          ['["red", 3]', '{"red": 3}', '[("red", 3)]', '("red", 3)'],
+          3,
+          'A tuple of hashable values is hashable; lists and dictionaries are mutable and cannot be keys.',
+        ),
+        choose(
+          'Why is a hash lookup described as expected O(1) rather than always O(1)?',
+          [
+            'It is always O(log n) in Python',
+            'Rare collisions can make a lookup slower',
+            'It is O(1) only after sorting the keys',
+            'It is O(1) only for integer keys',
+          ],
+          1,
+          'Typical inputs spread keys well, but hashing has worse cases.',
+        ),
+      ],
+    },
+    {
+      title: 'Count once, then answer questions from the counts',
+      explanation: [
+        'Build the frequency map in one pass with counts[key] = counts.get(key, 0) + 1. Then answer questions about the completed counts—which keys repeat, which appear exactly once, how often a given key occurs—with lookups and a pass over counts.items(). counts.get(key, 0) also answers for keys that never appeared.',
+      ],
+      example: {
+        code: 'labels = ["n", "w", "n", "s", "n", "w"]\ncounts = {}\nfor label in labels:\n    counts[label] = counts.get(label, 0) + 1\nrepeated = {}\nfor label, count in counts.items():\n    if count >= 2:\n        repeated[label] = count\nprint(repeated)\nprint(counts.get("e", 0))',
+        output: "{'n': 3, 'w': 2}\n0",
+        explanation:
+          'n and w repeat; s does not. The missing label e reports the default 0.',
+      },
+      questions: [
+        predictOutput(
+          'This program keeps the values that occur exactly once, in input order. What does it print?',
+          'values = [4, 7, 4, 2, 7, 9]\ncounts = {}\nfor value in values:\n    counts[value] = counts.get(value, 0) + 1\nunique = []\nfor value in values:\n    if counts[value] == 1:\n        unique.append(value)\nprint(unique)',
+          ['[4, 7, 2, 9]', '[4, 7]', '[2]', '[2, 9]'],
+          3,
+          'The second pass uses the completed counts, so 4 and 7 are rejected even at their first occurrence.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'counts = {}\nfor word in ["up", "up", "down"]:\n    counts[word] = counts.get(word, 0) + 1\nfor query in ["up", "left", "down"]:\n    print(counts.get(query, 0))',
+          ['2\n1', '2\n0\n1', '1\n0\n1', '2\nNone\n1'],
+          1,
+          'Each query is one lookup; the missing word left gets the default 0.',
+        ),
+        predictOutput(
+          'This program counts copies beyond the first. What does it print?',
+          'counts = {}\nfor value in [1, 2, 2, 3, 3, 3]:\n    counts[value] = counts.get(value, 0) + 1\nextra = 0\nfor value, count in counts.items():\n    extra += count - 1\nprint(extra)',
+          ['6', '2', '3', '5'],
+          2,
+          'The extra copies are 0 for 1, 1 for 2 and 2 for 3.',
+        ),
+        choose(
+          'Which question needs a dictionary of counts rather than a set?',
+          [
+            'Has "n" appeared at all?',
+            'How many distinct labels are there?',
+            'Is "e" missing from the input?',
+            'How many times does "n" appear?',
+          ],
+          3,
+          'Only the multiplicity question needs counts; the others are about presence.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose the structure from the question, and know its costs',
+      explanation: [
+        'Presence needs a set; multiplicities or data attached to each key need a dictionary. For n items with u distinct keys, building either takes expected O(n) time and O(u) space. The space follows the number of distinct keys, not the number of items.',
+      ],
+      example: {
+        code: 'words = ["to", "be", "or", "not", "to", "be"]\ndistinct = set(words)\ncounts = {}\nfor word in words:\n    counts[word] = counts.get(word, 0) + 1\nprint(len(words))\nprint(len(distinct))\nprint(len(counts))\nprint(counts["to"])',
+        output: '6\n4\n4\n2',
+        explanation:
+          'Both hash structures hold u = 4 keys for n = 6 items, but only the dictionary can say that "to" appears twice.',
+      },
+      questions: [
+        choose(
+          'A million readings contain only 50 distinct values. How many entries does their frequency map hold?',
+          ['About a million', 'About 10¹²', 'About 50', 'About 20'],
+          2,
+          'One entry per distinct key, however many times each repeats.',
+        ),
+        choose(
+          'A task asks whether any ID appears twice in a list of n IDs. Which approach runs in expected O(n) time?',
+          [
+            'Scan once, testing and adding IDs to a set',
+            'For each ID, search the rest of the list',
+            'Compare every pair of IDs for equality',
+            'Sort a copy, then check every pair again',
+          ],
+          0,
+          'Each set test and insertion is expected O(1), so one scan is expected O(n).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'items = ["a", "b", "a"]\nprint(len(set(items)))\ncounts = {}\nfor item in items:\n    counts[item] = counts.get(item, 0) + 1\nprint(counts)',
+          [
+            "3\n{'a': 2, 'b': 1}",
+            "2\n{'a': 1, 'b': 1}",
+            "2\n{'b': 1, 'a': 2}",
+            "2\n{'a': 2, 'b': 1}",
+          ],
+          3,
+          'The set holds the two distinct items; the dictionary also records that a appeared twice.',
+        ),
+        choose(
+          'Each label arrives with a price, and the task asks for the total price per label. Which structure fits?',
+          [
+            'A set of the labels seen so far',
+            'A sorted list of all the prices',
+            'A set of (label, price) pairs',
+            'A dictionary from label to running total',
+          ],
+          3,
+          'Data attached to each key needs a dictionary; a set only records presence.',
+        ),
+      ],
+    },
+  ],
+  'cp-link-next': [
+    {
+      title: 'A node record holds a value and a next ID',
+      explanation: [
+        'Here a linked list is stored as a dictionary from node IDs to records (value, next_id). nodes[node_id][0] is the stored value and nodes[node_id][1] is the ID of the next node, or None at the end. Reading next_id performs one link step; it does not visit anything beyond it.',
+      ],
+      example: {
+        code: 'nodes = {"a": (7, "c"), "b": (2, None), "c": (5, "b")}\nprint(nodes["a"][0])\nprint(nodes["a"][1])\nprint(nodes["b"][1])',
+        output: '7\nc\nNone',
+        explanation:
+          'Node a stores 7 and points to c. Node b points to None, so it ends the chain.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'nodes = {1: (40, 3), 2: (10, None), 3: (25, 2)}\nprint(nodes[3][1])',
+          ['2', '25', '4', 'None'],
+          0,
+          'Field 1 of node 3’s record is its next ID, 2. It is not the next integer and not the stored value.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'nodes = {1: (40, 3), 2: (10, None), 3: (25, 2)}\nprint(nodes[1][0])',
+          ['3', '40', '1', '25'],
+          1,
+          'Field 0 of the record is the stored value; 3 is where the chain goes next.',
+        ),
+        choose(
+          'In the record (8, "q"), which part says where the chain goes next?',
+          [
+            '"q"',
+            '8',
+            'The record’s position in the dictionary',
+            'The next key in insertion order',
+          ],
+          0,
+          'A record is (value, next_id), so the second field is the link.',
+        ),
+        choose(
+          'nodes[x][1] is None. What does that mean?',
+          [
+            'Node x stores the value None',
+            'Node x does not exist',
+            'Node x is the last node of its chain',
+            'The chain starts again at the head',
+          ],
+          2,
+          'None in the next field is the end sentinel.',
+        ),
+      ],
+    },
+    {
+      title: 'Follow links, not dictionary order',
+      explanation: [
+        'The order of a linked list comes from its next references, not from the order the dictionary stores keys and not from neighboring integer IDs. To reach the node after next, read a next ID and use it as the key of another lookup: nodes[nodes[x][1]].',
+      ],
+      example: {
+        code: 'nodes = {"x": (1, "z"), "y": (3, None), "z": (2, "y")}\nafter_x = nodes["x"][1]\nprint(after_x)\nprint(nodes[after_x][0])\nprint(nodes[nodes[after_x][1]][0])',
+        output: 'z\n2\n3',
+        explanation:
+          'x links to z (value 2), and z links to y (value 3), even though y was stored before z.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'nodes = {10: (6, 30), 20: (9, None), 30: (4, 20)}\nsecond = nodes[10][1]\nprint(nodes[second][0])',
+          ['9', '30', '4', '6'],
+          2,
+          'Node 10 links to 30, whose value is 4. Node 20 comes next in the dictionary but not in the chain.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'nodes = {10: (6, 30), 20: (9, None), 30: (4, 20)}\nprint(nodes[nodes[10][1]][1])',
+          ['30', 'None', '20', '9'],
+          2,
+          'nodes[10][1] is 30, and node 30’s next ID is 20.',
+        ),
+        choose(
+          'A dictionary was filled in the order "tail", "mid", "head". What decides the list order starting from head?',
+          [
+            'The insertion order: tail, mid, head',
+            'The alphabetical order of the IDs',
+            'The order of the stored values',
+            'The next references, starting at head',
+          ],
+          3,
+          'Each record names its successor; storage order is irrelevant.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'nodes = {0: ("go", 2), 1: ("stop", None), 2: ("wait", 1)}\nprint(nodes[nodes[0][1]][0])',
+          ['stop', 'go', 'wait', '2'],
+          2,
+          'Node 0 links to node 2, whose value is "wait".',
+        ),
+      ],
+    },
+  ],
+  'cp-link-sentinel': [
+    {
+      title: 'Test the end with is None',
+      explanation: [
+        'A chain ends where the next reference is None, so the end test is node_id is None. It is True only for None itself. Valid IDs such as 0, "" (the empty string) or False are not None, even though Python treats them as false in conditions.',
+      ],
+      example: {
+        code: 'for node_id in [0, None, "", "a7"]:\n    print(node_id is None)',
+        output: 'False\nTrue\nFalse\nFalse',
+        explanation:
+          'Only the second ID is the sentinel. 0 and "" are ordinary values that merely count as false.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'node_id = 0\nprint(node_id is None)',
+          ['False', 'True', '0', 'None'],
+          0,
+          '0 is an integer, not the None object.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'for node_id in ["", None, 5]:\n    if node_id is None:\n        print("end")\n    else:\n        print("node")',
+          [
+            'end\nend\nnode',
+            'node\nnode\nnode',
+            'end\nnode\nend',
+            'node\nend\nnode',
+          ],
+          3,
+          'Only None is the end; the empty string and 5 are node IDs.',
+        ),
+        choose(
+          'Which test is True exactly when node_id is the end sentinel None?',
+          ['not node_id', 'node_id == 0', 'node_id == ""', 'node_id is None'],
+          3,
+          'Identity with None matches only None; the others also match valid IDs or miss None.',
+        ),
+        choose(
+          'Node IDs are the integers 0 to 9, and None ends a chain. Is ID 0 an end marker?',
+          [
+            'No, 0 is a valid node ID',
+            'Yes, because 0 counts as false',
+            'Only when it is the head',
+            'Only when its value is 0',
+          ],
+          0,
+          'The sentinel is None; 0 is just the first ID.',
+        ),
+      ],
+    },
+    {
+      title: 'Truthiness tests stop at valid IDs',
+      explanation: [
+        'Tests such as if not node_id or while node_id use truthiness: they treat 0, "" and False as if they were the end. A chain that legitimately uses ID 0 would be cut short before visiting that node. Compare against the specified sentinel exactly instead of relying on falsy values.',
+      ],
+      example: {
+        code: 'for node_id in [3, 0, None]:\n    if not node_id:\n        print("truthiness says end")\n    if node_id is None:\n        print("sentinel says end")',
+        output: 'truthiness says end\ntruthiness says end\nsentinel says end',
+        explanation:
+          'For 3 neither test fires. For 0 only the truthiness test fires—wrongly. For None both agree.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'stops = 0\nfor node_id in [0, 4, "", None, "b"]:\n    if not node_id:\n        stops = stops + 1\nprint(stops)',
+          ['1', '2', '5', '3'],
+          3,
+          'Truthiness treats 0, "" and None as false, so three IDs look like the end; only one is.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'stops = 0\nfor node_id in [0, 4, "", None, "b"]:\n    if node_id is None:\n        stops = stops + 1\nprint(stops)',
+          ['1', '3', '0', '2'],
+          0,
+          'Only the actual sentinel None matches.',
+        ),
+        choose(
+          'A traversal detects the end with if not current, and the head ID is 0. What happens?',
+          [
+            'It visits every node normally',
+            'It raises an error at node 0',
+            'It stops before visiting the head',
+            'It skips only the last node',
+          ],
+          2,
+          '0 is falsy, so the head is mistaken for the end and nothing is visited.',
+        ),
+        choose(
+          'Which valid IDs does the test not node_id wrongly treat as the end?',
+          [
+            'Only None',
+            'Every string ID',
+            '0 and the empty string',
+            'Negative integers',
+          ],
+          2,
+          '0 and "" are falsy; negative numbers and nonempty strings are truthy.',
+        ),
+      ],
+    },
+  ],
+  'cp-link-count': [
+    {
+      title: 'Advance a cursor until None',
+      explanation: [
+        'Set current to the head and count to 0. While current is not None, count the current node and replace current with its next ID, nodes[current][1]. Each pass visits exactly one node and moves exactly one link forward.',
+      ],
+      example: {
+        code: 'nodes = {"p": (4, "r"), "q": (8, None), "r": (6, "q")}\ncurrent = "p"\ncount = 0\nwhile current is not None:\n    count += 1\n    print(current)\n    current = nodes[current][1]\nprint(count)',
+        output: 'p\nr\nq\n3',
+        explanation:
+          'The cursor visits p, r and q by following links, then reaches None after three passes.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'nodes = {1: (5, 4), 2: (0, None), 3: (7, 2), 4: (9, 2)}\ncurrent = 1\ncount = 0\nwhile current is not None:\n    count += 1\n    current = nodes[current][1]\nprint(count)',
+          ['4', '2', '3', '5'],
+          2,
+          'From node 1 the links visit 1, 4 and 2. Node 3 is stored but never reached.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'nodes = {"s": (1, "t"), "t": (2, "u"), "u": (3, None)}\ncurrent = "t"\nwhile current is not None:\n    print(current)\n    current = nodes[current][1]',
+          ['s\nt\nu', 't\nu\nNone', 't\nu', 'u'],
+          2,
+          'The walk starts at t, so s is never visited, and None is a stop signal, not a node.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'nodes = {"a": (1, None)}\ncurrent = None\ncount = 0\nwhile current is not None:\n    count += 1\n    current = nodes[current][1]\nprint(count)',
+          ['1', 'None', '2', '0'],
+          3,
+          'A None head means the chain is empty: the loop test fails immediately.',
+        ),
+        choose(
+          'After k passes of the loop, what does current hold?',
+          [
+            'The ID of the k-th node that was visited',
+            'The ID of the next unvisited node, or None',
+            'The number k',
+            'The head ID, unchanged',
+          ],
+          1,
+          'Each pass counts one node and then moves current past it.',
+        ),
+      ],
+    },
+    {
+      title: 'Count only what is reachable',
+      explanation: [
+        'The count is the number of nodes reachable from the head, which can be smaller than len(nodes): records that no link reaches are never visited. A head of None gives 0, and a head ID of 0 still counts because the test is is not None. The loop ends only if the reachable chain is finite and acyclic; with a cycle it never reaches None.',
+      ],
+      example: {
+        code: 'nodes = {0: (8, 5), 5: (3, None), 9: (1, 0)}\nfor head in [0, 9, None]:\n    current = head\n    count = 0\n    while current is not None:\n        count += 1\n        current = nodes[current][1]\n    print(count)',
+        output: '2\n3\n0',
+        explanation:
+          'From 0 the chain is 0, 5. From 9 it is 9, 0, 5. From None it is empty.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'nodes = {"a": (1, "b"), "b": (2, None), "c": (3, "a"), "d": (4, None)}\ncurrent = "a"\ncount = 0\nwhile current is not None:\n    count += 1\n    current = nodes[current][1]\nprint(count)\nprint(len(nodes))',
+          ['2\n4', '4\n4', '2\n2', '3\n4'],
+          0,
+          'Only a and b are reachable from a; the dictionary stores four records.',
+        ),
+        predictOutput(
+          'This loop uses a truthiness test. What does it print?',
+          'nodes = {0: (5, 1), 1: (6, None)}\ncurrent = 0\ncount = 0\nwhile current:\n    count += 1\n    current = nodes[current][1]\nprint(count)',
+          ['2', '1', 'None', '0'],
+          3,
+          'The head ID 0 is falsy, so the loop body never runs.',
+        ),
+        choose(
+          'Node a links to b, and b links back to a. What happens when counting from a?',
+          [
+            'The loop never reaches None and never ends',
+            'It counts 2 nodes and then stops',
+            'It raises KeyError immediately',
+            'It returns 0 because there is no end',
+          ],
+          0,
+          'The cursor alternates between a and b forever; the simple loop needs an acyclic chain.',
+        ),
+        choose(
+          'A dictionary holds 7 node records. From the head, the links pass through 3 of them and reach None. What is the chain length?',
+          ['7', '4', '10', '3'],
+          3,
+          'Only reachable nodes belong to the chain.',
+        ),
+      ],
+    },
+  ],
+  'cp-linked-lists': [
+    {
+      title: 'Collect values in link order',
+      explanation: [
+        'Traversal reads each node’s record, appends its value and moves to its next ID. value, current = nodes[current] unpacks both parts of the record at once. The result lists the values in link order from the head, regardless of dictionary insertion order or the sorted order of the IDs.',
+      ],
+      example: {
+        code: 'nodes = {"end": (9, None), "mid": (6, "end"), "start": (4, "mid")}\ncurrent = "start"\nvalues = []\nwhile current is not None:\n    value, current = nodes[current]\n    values.append(value)\nprint(values)',
+        output: '[4, 6, 9]',
+        explanation:
+          'The walk follows start → mid → end, the reverse of the order the records were stored in.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'nodes = {3: ("c", 1), 1: ("a", None), 2: ("b", 3)}\ncurrent = 2\nvalues = []\nwhile current is not None:\n    value, current = nodes[current]\n    values.append(value)\nprint(values)',
+          [
+            "['b', 'c', 'a']",
+            "['c', 'a', 'b']",
+            "['a', 'b', 'c']",
+            "['b', 'c']",
+          ],
+          0,
+          'From 2 the links go to 3 and then 1, which ends the chain.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'nodes = {3: ("c", 1), 1: ("a", None), 2: ("b", 3)}\ncurrent = 3\nvalues = []\nwhile current is not None:\n    value, current = nodes[current]\n    values.append(value)\nprint(values)',
+          ["['c', 'a', 'b']", "['a']", "['c', 'a']", "['b', 'c', 'a']"],
+          2,
+          'Starting at 3 skips node 2, which only links into the chain from outside.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'nodes = {"a": (5, "c"), "b": (100, None), "c": (7, None)}\ncurrent = "a"\ntotal = 0\nwhile current is not None:\n    value, current = nodes[current]\n    total += value\nprint(total)',
+          ['12', '112', '107', '5'],
+          0,
+          'The chain is a → c → end, so only 5 and 7 are added; b is unreachable.',
+        ),
+        choose(
+          'What decides the order of the returned values?',
+          [
+            'The order the keys were inserted',
+            'The sorted order of the node IDs',
+            'The head and the chain of next IDs',
+            'The sorted order of the values',
+          ],
+          2,
+          'Traversal follows links; nothing else about storage matters.',
+        ),
+      ],
+    },
+    {
+      title: 'The traversal invariant',
+      explanation: [
+        'Before each pass, values holds the values of the nodes already visited, in link order, and current is the ID of the next unvisited node, or None when the chain is done. One pass extends values by exactly one node and moves current one link forward, so the invariant stays true. The test is current is not None, so a node with ID 0 is still visited.',
+      ],
+      example: {
+        code: 'nodes = {7: ("x", 2), 2: ("y", 0), 0: ("z", None)}\ncurrent = 7\nvalues = []\nwhile current is not None:\n    print(values)\n    value, current = nodes[current]\n    values.append(value)\nprint(values)',
+        output: "[]\n['x']\n['x', 'y']\n['x', 'y', 'z']",
+        explanation:
+          'Each printed list is the visited prefix before a pass. Node 0 is visited because 0 is not None.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'nodes = {"h": (1, "k"), "k": (2, None)}\ncurrent = "h"\nwhile current is not None:\n    value, current = nodes[current]\n    print(current)',
+          ['h\nk', 'h\nk\nNone', '1\n2', 'k\nNone'],
+          3,
+          'After each pass current names the next unvisited node; after the last node it is None.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'nodes = {0: (4, 1), 1: (8, None)}\ncurrent = 0\nvalues = []\nwhile current is not None:\n    value, current = nodes[current]\n    values.append(value)\nprint(values)',
+          ['[]', '[8]', '[4, 8]', '[4]'],
+          2,
+          'The head ID 0 is not None, so both nodes are visited.',
+        ),
+        choose(
+          'Just before the third pass of the loop, what does values contain?',
+          [
+            'The first three values in link order',
+            'Every value of the chain',
+            'The first two values in link order',
+            'The two most recently inserted values',
+          ],
+          2,
+          'Two passes have completed, and each appended one value.',
+        ),
+        predictOutput(
+          'This version tests while current. What does it print?',
+          'nodes = {0: (4, 1), 1: (8, None)}\ncurrent = 0\nvalues = []\nwhile current:\n    value, current = nodes[current]\n    values.append(value)\nprint(values)',
+          ['[4, 8]', '[]', '[8]', '[4]'],
+          1,
+          'The falsy head ID 0 stops the loop before any node is visited.',
+        ),
+      ],
+    },
+    {
+      title: 'Preconditions and cost of traversal',
+      explanation: [
+        'Visiting k reachable nodes takes O(k) time with expected O(1) dictionary lookups, plus O(k) space for the returned list. A None head returns []. The simple loop relies on two preconditions: every referenced ID exists (otherwise nodes[current] raises KeyError) and the chain has no cycle (otherwise it never reaches None). Detecting cycles needs a separate strategy.',
+      ],
+      example: {
+        code: 'def chain_values(nodes, head):\n    values = []\n    current = head\n    while current is not None:\n        value, current = nodes[current]\n        values.append(value)\n    return values\n\nnodes = {"a": (1, "b"), "b": (2, None), "c": (3, "a")}\nprint(chain_values(nodes, None))\nprint(chain_values(nodes, "c"))\nprint(chain_values(nodes, "b"))',
+        output: '[]\n[3, 1, 2]\n[2]',
+        explanation:
+          'A None head yields an empty list. From c the walk covers the whole chain; from b only its last node.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def chain_values(nodes, head):\n    values = []\n    current = head\n    while current is not None:\n        value, current = nodes[current]\n        values.append(value)\n    return values\n\nnodes = {"a": (1, "b"), "b": (2, None), "c": (3, "a")}\nprint(chain_values(nodes, "a"))',
+          ['[1, 2, 3]', '[3, 1, 2]', '[1]', '[1, 2]'],
+          3,
+          'From a the chain is a → b; node c links into a but is not reachable from it.',
+        ),
+        choose(
+          'A record is ("q", "zz"), but no node "zz" exists. What happens when the traversal reaches that record?',
+          [
+            'The loop treats "zz" as the end of the chain',
+            'The traversal jumps to the next stored key',
+            'The next lookup, nodes["zz"], raises KeyError',
+            'The value "q" is silently dropped',
+          ],
+          2,
+          'The loop looks up every next ID it receives; a missing ID breaks the precondition.',
+        ),
+        choose(
+          'k nodes are reachable from the head. What does collecting their values cost?',
+          [
+            'O(k) time and O(k) space for the list',
+            'O(1) time, since each lookup is O(1)',
+            'O(k²) time because of the dictionary',
+            'O(k log k) time to keep them in order',
+          ],
+          0,
+          'One expected O(1) lookup and one append per visited node.',
+        ),
+        choose(
+          'Which precondition guarantees that the while loop terminates?',
+          [
+            'Every stored value is a positive integer',
+            'The IDs were inserted in link order',
+            'The dictionary has fewer than 10⁶ keys',
+            'The reachable chain is acyclic and ends at None',
+          ],
+          3,
+          'Termination needs the walk to reach None, which a cycle prevents.',
+        ),
+      ],
+    },
+  ],
+  'cp-text-alphabet': [
+    {
+      title: 'Range comparisons define the ASCII letters',
+      explanation: [
+        'Characters compare by their code points, and the ASCII letters form two unbroken runs: "A" to "Z" and "a" to "z". The test "A" <= ch <= "Z" or "a" <= ch <= "z" is True for exactly those 52 characters, and False for digits, spaces, punctuation and every letter outside ASCII.',
+      ],
+      example: {
+        code: 'for ch in ["Q", "q", "5", "[", "ñ"]:\n    print("A" <= ch <= "Z" or "a" <= ch <= "z")',
+        output: 'True\nTrue\nFalse\nFalse\nFalse',
+        explanation:
+          'Q and q fall in the two letter runs. "5", the bracket that follows "Z" in ASCII, and the non-ASCII ñ do not.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'accepted = 0\nfor ch in ["H", "i", "!", "2", "u"]:\n    if "A" <= ch <= "Z" or "a" <= ch <= "z":\n        accepted = accepted + 1\nprint(accepted)',
+          ['3', '2', '5', '4'],
+          0,
+          'H, i and u are ASCII letters; the exclamation mark and the digit are not.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'ch = "_"\nprint("A" <= ch <= "Z" or "a" <= ch <= "z")',
+          ['True', '_', 'False', 'None'],
+          2,
+          'The underscore lies between "Z" and "a" in ASCII, outside both letter runs.',
+        ),
+        choose(
+          'Why is "A" <= ch <= "z" a wrong single test for ASCII letters?',
+          [
+            'It accepts symbols that sit between "Z" and "a"',
+            'It rejects every lowercase letter a–z',
+            'It rejects the end letters "A" and "z"',
+            'Strings cannot be compared using <=',
+          ],
+          0,
+          'The two letter runs are not adjacent; six punctuation characters sit between them.',
+        ),
+        choose(
+          'Which character passes "A" <= ch <= "Z" or "a" <= ch <= "z"?',
+          ['"é"', '"7"', '"k"', '" "'],
+          2,
+          'Only k lies in one of the two ASCII letter runs.',
+        ),
+      ],
+    },
+    {
+      title: 'The alphabet is part of the contract',
+      explanation: [
+        'ch.isalpha() answers a broader question: it is True for letters of any script, such as "é", "ß" or "Ж". When a task accepts only ASCII letters, use the explicit range test; when it accepts every letter, isalpha() is right. Decide membership from the problem statement before transforming any character.',
+      ],
+      example: {
+        code: 'for ch in ["é", "Ж", "b"]:\n    print(ch.isalpha())\n    print("A" <= ch <= "Z" or "a" <= ch <= "z")',
+        output: 'True\nFalse\nTrue\nFalse\nTrue\nTrue',
+        explanation:
+          'All three are letters to isalpha(), but only b is an ASCII letter.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'ch = "ß"\nprint(ch.isalpha())\nprint("a" <= ch <= "z")',
+          ['False\nFalse', 'True\nTrue', 'True\nFalse', 'False\nTrue'],
+          2,
+          'ß is a letter, so isalpha() is True, but it is not in the ASCII run a–z.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'by_isalpha = 0\nby_range = 0\nfor ch in ["A", "ñ", "o", "3"]:\n    if ch.isalpha():\n        by_isalpha = by_isalpha + 1\n    if "A" <= ch <= "Z" or "a" <= ch <= "z":\n        by_range = by_range + 1\nprint(by_isalpha)\nprint(by_range)',
+          ['2\n2', '3\n3', '3\n2', '4\n2'],
+          2,
+          'isalpha() accepts A, ñ and o; the ASCII range test rejects ñ. Neither accepts 3.',
+        ),
+        choose(
+          'A task says: count the ASCII letters a–z and A–Z. Why is ch.isalpha() the wrong test?',
+          [
+            'It rejects the uppercase letters A–Z',
+            'It accepts the digits 0–9 as letters',
+            'It also accepts letters outside ASCII, like "é"',
+            'It changes the character that it tests',
+          ],
+          2,
+          'isalpha() follows Unicode, which is broader than the alphabet the task defines.',
+        ),
+        choose(
+          'A task accepts letters from any language. Which test fits?',
+          [
+            '"a" <= ch <= "z"',
+            '"A" <= ch <= "Z" or "a" <= ch <= "z"',
+            'ch != " "',
+            'ch.isalpha()',
+          ],
+          3,
+          'Here the broader Unicode test is exactly the contract.',
+        ),
+      ],
+    },
+  ],
+  'cp-text-normalization': [
+    {
+      title: 'lower() returns a new string',
+      explanation: [
+        'Strings are immutable: ch.lower() returns a new lowercased string and leaves ch unchanged. Calling text.lower() without storing the result has no lasting effect. Characters that have no lowercase form, such as digits and punctuation, come back unchanged.',
+      ],
+      example: {
+        code: 'word = "MaP"\nlowered = word.lower()\nprint(lowered)\nprint(word)',
+        output: 'map\nMaP',
+        explanation:
+          'lowered holds the new string "map"; word still holds "MaP".',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'ch = "R"\nch.lower()\nprint(ch)',
+          ['r', 'None', "'R'", 'R'],
+          3,
+          'The lowercased result was discarded, and the string in ch cannot change.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'ch = "R"\nch = ch.lower()\nprint(ch)',
+          ['R', 'None', "'r'", 'r'],
+          3,
+          'Assigning the result back makes ch name the new lowercase string.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print("b".lower())\nprint("7".lower())\nprint("!".lower())',
+          ['b\n7\n!', 'B\n7\n!', 'b\nNone\nNone', 'None\n7\n!'],
+          0,
+          'Characters without a case come back unchanged; lowercase b stays b.',
+        ),
+        choose(
+          'After text = "ABC" and a call text.lower() whose result is discarded, what is text?',
+          ['"abc"', 'None', '""', '"ABC"'],
+          3,
+          'String methods return new strings; the original is never modified.',
+        ),
+      ],
+    },
+    {
+      title: 'Lowercase only ASCII uppercase letters',
+      explanation: [
+        'lower() knows about every script, and some characters change in surprising ways: "İ".lower() becomes two characters, and the Kelvin sign "\\u212a" lowercases to the ASCII letter "k". To merge only the cases the task allows, convert a character only when "A" <= ch <= "Z" and leave everything else unchanged.',
+      ],
+      example: {
+        code: 'for ch in ["Q", "é", "4"]:\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    print(ch)\nprint("K".lower() == "k")\nprint(len("İ".lower()))',
+        output: 'q\né\n4\nTrue\n2',
+        explanation:
+          'Only Q is converted. The last two lines show why an unrestricted lower() is risky: a non-ASCII character can turn into an ASCII letter, and one character can become two.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'ch = "K"\nprint(ch.lower() == "k")\nif "A" <= ch <= "Z":\n    ch = ch.lower()\nprint(ch == "k")',
+          ['True\nTrue', 'False\nFalse', 'True\nFalse', 'False\nTrue'],
+          2,
+          'An unrestricted lower() turns the Kelvin sign into an ASCII k, but the restricted rule leaves the non-ASCII character alone.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print(len("İ".lower()))',
+          ['2', '1', '0', '3'],
+          0,
+          'Lowercasing this dotted capital I produces i followed by a combining dot: two characters.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def normalize(ch):\n    if "A" <= ch <= "Z":\n        return ch.lower()\n    return ch\n\nprint(normalize("D"))\nprint(normalize("d"))\nprint(normalize("?"))',
+          ['d\nd\n?', 'd\nD\n?', 'D\nd\n?', 'd\nd\nNone'],
+          0,
+          'D is converted; d and ? are returned unchanged rather than dropped.',
+        ),
+        choose(
+          'Why restrict lowercasing to "A" <= ch <= "Z" in an ASCII-only task?',
+          [
+            'lower() raises an error on non-ASCII text',
+            'lower() is slower than a range comparison',
+            'Some non-ASCII characters lowercase into ASCII letters',
+            'lower() turns digits into letters',
+          ],
+          2,
+          'An unrestricted lower() could make a rejected character look like an accepted letter.',
+        ),
+      ],
+    },
+  ],
+  'cp-text-filter': [
+    {
+      title: 'Normalize first, then accept a–z',
+      explanation: [
+        'Process each character in two steps: first lowercase it if it is ASCII uppercase, then keep it only if it lies in "a" to "z". The order matters: testing a–z before normalizing would drop every uppercase letter.',
+      ],
+      example: {
+        code: 'accepted = []\nfor ch in "Hi, Bo!":\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        accepted.append(ch)\nprint(accepted)',
+        output: "['h', 'i', 'b', 'o']",
+        explanation:
+          'H and B are lowercased and kept; the comma, the space and the exclamation mark fail the a–z test.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'accepted = []\nfor ch in "Ax-7y":\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        accepted.append(ch)\nprint(accepted)',
+          [
+            "['x', 'y']",
+            "['A', 'x', 'y']",
+            "['a', 'x', 'y']",
+            "['a', 'x', '-', '7', 'y']",
+          ],
+          2,
+          'A is normalized to a before the test; the dash and the digit are rejected.',
+        ),
+        predictOutput(
+          'This loop tests before it normalizes. What does it print?',
+          'accepted = []\nfor ch in "Go Up":\n    if "a" <= ch <= "z":\n        accepted.append(ch)\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\nprint(accepted)',
+          [
+            "['g', 'o', 'u', 'p']",
+            "['o', 'p']",
+            "['G', 'o', 'U', 'p']",
+            "['g', 'u']",
+          ],
+          1,
+          'G and U fail the a–z test before they are lowercased, so they are lost.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'accepted = []\nfor ch in "ÉtÉ":\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        accepted.append(ch)\nprint(accepted)',
+          ["['t']", "['é', 't', 'é']", "['e', 't', 'e']", '[]'],
+          0,
+          'É is not ASCII, so it is neither lowercased by the restricted rule nor accepted.',
+        ),
+        choose(
+          'Why lowercase before testing "a" <= ch <= "z"?',
+          [
+            'Lowercasing removes punctuation from the text',
+            'The range test raises an error on uppercase letters',
+            'Otherwise uppercase letters fail the test and are lost',
+            'Lowercase letters are processed faster',
+          ],
+          2,
+          'Only normalized letters fall in the accepted range.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep order and repetitions',
+      explanation: [
+        'The accepted list is the text rewritten in the task’s alphabet: same order, every repetition kept, only rejected characters removed. After each input character, it holds exactly the accepted, normalized characters of the processed prefix. Counting or grouping them is a separate, later step.',
+      ],
+      example: {
+        code: 'accepted = []\nfor ch in "Noon!":\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        accepted.append(ch)\n    print(len(accepted))\nprint(accepted)',
+        output: "1\n2\n3\n4\n4\n['n', 'o', 'o', 'n']",
+        explanation:
+          'The length grows for N, o, o and n, then stays at 4 for the exclamation mark. Both o’s are kept.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'accepted = []\nfor ch in "AaAa":\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        accepted.append(ch)\nprint(accepted)',
+          [
+            "['a']",
+            "['a', 'a']",
+            "['a', 'a', 'a', 'a']",
+            "['A', 'a', 'A', 'a']",
+          ],
+          2,
+          'Every A becomes a, and repetitions are kept rather than merged.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'accepted = []\nfor ch in "1 2 3 go":\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        accepted.append(ch)\nprint(len(accepted))',
+          ['2', '8', '5', '0'],
+          0,
+          'Only g and o are letters; digits and spaces are rejected.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'accepted = []\nfor ch in "B?b":\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        accepted.append(ch)\n    print(accepted)',
+          [
+            "['b']\n['b']\n['b', 'b']",
+            "['b']\n['b', '?']\n['b', '?', 'b']",
+            "['B']\n['B']\n['B', 'b']",
+            "['b']\n[]\n['b']",
+          ],
+          0,
+          'The list is printed after each character: B adds b, ? adds nothing, and b adds a second b.',
+        ),
+        choose(
+          'For the text "Mississippi", how many characters does the accepted list hold?',
+          ['11', '4', '1', '10'],
+          0,
+          'All 11 characters are letters, and repetitions are kept.',
+        ),
+      ],
+    },
+  ],
+  'cp-strings': [
+    {
+      title: 'Count normalized letters with a map',
+      explanation: [
+        'A letter inventory combines the filter pipeline with a frequency map: for each character, lowercase it if it is ASCII uppercase, skip it unless it is in a–z, and otherwise increment counts[ch]. The map always records the accepted, normalized letters of the processed prefix.',
+      ],
+      example: {
+        code: 'counts = {}\nfor ch in "Abba, Bob!":\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        counts[ch] = counts.get(ch, 0) + 1\nprint(counts)',
+        output: "{'a': 2, 'b': 4, 'o': 1}",
+        explanation:
+          'A and a merge into a: 2. The four b’s (three lowercase, one uppercase) merge into b: 4. Punctuation and spaces are skipped.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'counts = {}\nfor ch in "Go, go!":\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        counts[ch] = counts.get(ch, 0) + 1\nprint(counts)',
+          [
+            "{'G': 1, 'o': 2, 'g': 1}",
+            "{'g': 2, 'o': 2}",
+            "{'g': 2, 'o': 2, ',': 1, '!': 1}",
+            "{'g': 1, 'o': 2}",
+          ],
+          1,
+          'G is normalized to g before counting, and punctuation never reaches the map.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'counts = {}\nfor ch in "Zoo":\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        counts[ch] = counts.get(ch, 0) + 1\nprint(counts["o"])\nprint(counts.get("z", 0))',
+          ['2\n0', '2\n1', '1\n1', '2\nNone'],
+          1,
+          'Z is counted as z, so the lookup finds 1 rather than the default.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'counts = {}\nfor ch in "Aa Bb!":\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        counts[ch] = counts.get(ch, 0) + 1\nprint(len(counts))',
+          ['4', '2', '6', '5'],
+          1,
+          'After normalization only the keys a and b exist.',
+        ),
+        choose(
+          'Why lowercase each letter before counting it?',
+          [
+            'So punctuation is counted as letters',
+            'So the map keeps its keys sorted',
+            'So the input text is changed in place',
+            'So "A" and "a" increment the same key',
+          ],
+          3,
+          'Normalization makes equivalent characters share one key.',
+        ),
+      ],
+    },
+    {
+      title: 'The specification decides what counts as equal',
+      explanation: [
+        'Normalization is part of the problem statement, not a free improvement. A case-insensitive task merges "A" with "a"; a case-sensitive task must keep them apart, and lowercasing would merge values the task treats as different. Two texts have the same inventory exactly when their count maps are equal, which is how an anagram check under these rules works.',
+      ],
+      example: {
+        code: 'def inventory(text):\n    counts = {}\n    for ch in text:\n        if "A" <= ch <= "Z":\n            ch = ch.lower()\n        if "a" <= ch <= "z":\n            counts[ch] = counts.get(ch, 0) + 1\n    return counts\n\nprint(inventory("Listen!") == inventory("Silent"))\nprint(inventory("Ab") == inventory("ab"))',
+        output: 'True\nTrue',
+        explanation:
+          'Both comparisons hold under the ASCII case-insensitive rule: the maps have the same keys with the same counts, and key order does not matter for ==.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def inventory(text):\n    counts = {}\n    for ch in text:\n        if "A" <= ch <= "Z":\n            ch = ch.lower()\n        if "a" <= ch <= "z":\n            counts[ch] = counts.get(ch, 0) + 1\n    return counts\n\nprint(inventory("Dusty") == inventory("study"))\nprint(inventory("aab") == inventory("abb"))',
+          ['True\nFalse', 'True\nTrue', 'False\nFalse', 'False\nTrue'],
+          0,
+          'Dusty and study use the same letters once each. aab and abb share letters but not counts.',
+        ),
+        predictOutput(
+          'This program counts without normalizing. What does it print?',
+          'counts = {}\nfor ch in "AaA":\n    counts[ch] = counts.get(ch, 0) + 1\nprint(counts)',
+          ["{'a': 3}", "{'A': 3}", "{'a': 1, 'A': 2}", "{'A': 2, 'a': 1}"],
+          3,
+          'Without normalization A and a are different keys; A appeared first.',
+        ),
+        choose(
+          'A password checker treats "Q" and "q" as different symbols. Should it lowercase before counting?',
+          [
+            'Yes, normalization is always harmless',
+            'No, that would merge symbols the task keeps apart',
+            'Yes, because dictionaries ignore case',
+            'Only when the password is long',
+          ],
+          1,
+          'The specification defines equality; this one is case-sensitive.',
+        ),
+        choose(
+          'Which pair has equal inventories under the ASCII case-insensitive rule?',
+          [
+            '"Pool" and "Polo!o"',
+            '"Abc" and "ab"',
+            '"Night" and "thing!"',
+            '"Café" and "face"',
+          ],
+          2,
+          'Night and thing use n, i, g, h, t once each; é is not an ASCII letter, so Café lacks the e.',
+        ),
+      ],
+    },
+    {
+      title: 'Cost and space with a fixed alphabet',
+      explanation: [
+        'One pass over L characters with constant work per character takes O(L) time. Because at most 26 keys can ever be stored, the map uses O(1) extra space for this fixed alphabet; counting arbitrary words instead would need O(u) space for u distinct words. The input string itself never changes, since strings are immutable.',
+      ],
+      example: {
+        code: 'text = "Banana bread, BANANA!"\ncounts = {}\nfor ch in text:\n    if "A" <= ch <= "Z":\n        ch = ch.lower()\n    if "a" <= ch <= "z":\n        counts[ch] = counts.get(ch, 0) + 1\nprint(len(text))\nprint(len(counts))\nprint(text)',
+        output: '21\n6\nBanana bread, BANANA!',
+        explanation:
+          'Twenty-one characters produce only six keys: b, a, n, r, e, d. The original text is printed unchanged.',
+      },
+      questions: [
+        choose(
+          'A text has 10⁶ characters. At most how many keys can its ASCII letter inventory hold?',
+          ['26', '52', '10⁶', '256'],
+          0,
+          'After normalization only a–z can be keys.',
+        ),
+        choose(
+          'How does the inventory’s extra space grow with the text length L?',
+          [
+            'O(L), one key per character',
+            'O(L²), for pairs of characters',
+            'O(log L), for the counts',
+            'O(1), since at most 26 keys exist',
+          ],
+          3,
+          'The number of keys is bounded by the alphabet, not by L.',
+        ),
+        choose(
+          'The task changes to counting whole words, with u distinct words. What space does the map need?',
+          ['O(u)', 'O(1)', 'O(26)', 'O(u²)'],
+          0,
+          'An unbounded vocabulary means one key per distinct word.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'text = "CAT"\ncounts = {}\nfor ch in text:\n    ch = ch.lower()\n    counts[ch] = counts.get(ch, 0) + 1\nprint(text)',
+          ['cat', 'CAT', 'Cat', "{'c': 1, 'a': 1, 't': 1}"],
+          1,
+          'Reassigning the loop variable ch never changes text.',
+        ),
+      ],
+    },
+  ],
 };
