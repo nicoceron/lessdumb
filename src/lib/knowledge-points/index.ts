@@ -1,6 +1,10 @@
 import type { KnowledgePoint, Skill } from '../curriculum';
 import type { KnowledgePointDraft, KnowledgePointModule } from './authoring';
+import { knowledgePoints as competitive1 } from './competitive-1.kp';
+import { knowledgePoints as competitive2 } from './competitive-2.kp';
+import { knowledgePoints as competitive3 } from './competitive-3.kp';
 import { knowledgePoints as cpp1 } from './cpp-1.kp';
+import { knowledgePoints as machineLearning } from './machine-learning.kp';
 import { knowledgePoints as pythonFoundations } from './python-foundations.kp';
 import { knowledgePoints as rust1 } from './rust-1.kp';
 import { knowledgePoints as rust2 } from './rust-2.kp';
@@ -10,7 +14,11 @@ export * from './authoring';
 // Each course keeps its knowledge points in its own `*.kp.ts` file. Register
 // every file here; a catalog test fails if a file in this folder is missing.
 const modules: Record<string, KnowledgePointModule> = {
+  'competitive-1.kp.ts': competitive1,
+  'competitive-2.kp.ts': competitive2,
+  'competitive-3.kp.ts': competitive3,
   'cpp-1.kp.ts': cpp1,
+  'machine-learning.kp.ts': machineLearning,
   'python-foundations.kp.ts': pythonFoundations,
   'rust-1.kp.ts': rust1,
   'rust-2.kp.ts': rust2,

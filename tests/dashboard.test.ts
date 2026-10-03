@@ -326,11 +326,12 @@ describe('course page', () => {
   });
 
   it('numbers ordinary skills by unit and position with their status', () => {
+    const started = master(fresh(), 'print-output');
     const progress = applyAttempt(
-      master(fresh(), 'print-output'),
+      started,
       {
         skillId: 'variables',
-        questionId: skillById['variables'].questions[0].id,
+        questionId: selectQuestion(started, skillById['variables'], 'learn').id,
         correct: true,
         mode: 'learn',
       },

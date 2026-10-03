@@ -7,7 +7,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-foundations',
     'Count algorithm work',
     'Estimate how time and memory grow before choosing an approach.',
-    ['cp-work-pairs', 'cp-work-doubling'],
+    ['cp-work-pairs', 'cp-work-doubling', 'multiple-returns'],
     [
       'Complexity describes how resource use grows with input size n. A scan that does constant work per element takes O(n) time; two complete nested scans take O(n²). Consecutive stages add their costs, and the fastest-growing term usually determines the asymptotic bound. These bounds compare growth, not exact seconds on a particular computer.',
       'A useful loop invariant explains the work already done. After i iterations of a scan, i elements have been processed; after i rows of an n-by-n pair scan, i × n pairs have been checked. A probe that doubles from 1 reaches n after about log₂(n) rounds. Doubling n roughly doubles a scan, quadruples a pair scan, and adds one doubling round.',
@@ -394,7 +394,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-collections',
     'Follow linked nodes',
     'Traverse next references rather than assuming contiguous storage.',
-    ['cp-link-count'],
+    ['cp-link-count', 'unpacking'],
     [
       'A linked list stores a value and a next reference in each node. Nodes need not occupy neighboring positions. In this lesson a dictionary maps a node ID to a tuple (value, next_id); None marks the end. The head is the first node ID, and following references determines the list order, regardless of dictionary insertion order.',
       'Before each iteration, current identifies the next unvisited node, and the output contains the values already visited in link order. Read its value and next reference, append the value, then continue from the next ID. Use current is not None rather than a truthiness test: the valid node ID 0 must still be visited.',
