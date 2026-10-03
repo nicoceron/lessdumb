@@ -136,10 +136,10 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         predictOutput(
           'What does this program print?',
-          'import numpy as np\nprices = np.array([5, 6, 7], dtype=float)\nfirst = prices.tolist()[0]\nprint(first + 1)',
-          ['6', '[6.0]', '6.0', '51'],
+          'import numpy as np\nprices = np.array([5, 6, 7], dtype=float)\nprint(prices.dtype)',
+          ['int64', 'object', 'float64', 'float'],
           2,
-          'tolist gives the Python float 5.0, and 5.0 + 1 is the float 6.0.',
+          'dtype=float stores every entry as a 64-bit float, which NumPy names float64.',
         ),
       ],
     },

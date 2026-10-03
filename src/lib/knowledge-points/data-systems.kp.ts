@@ -1413,7 +1413,7 @@ export const knowledgePoints: KnowledgePointModule = {
         'On restart, the store rebuilds its map by replaying the log from the beginning. Later entries for a key overwrite earlier ones, so the replay ends with each key’s latest value.',
       ],
       example: {
-        code: 'keys = ["w-17", "w-18", "w-17"]\nvalues = ["draft", "open", "full"]\nstore = {}\nfor i in range(len(keys)):\n    store[keys[i]] = values[i]\nprint(store)',
+        code: 'log = [{"key": "w-17", "value": "draft"}, {"key": "w-18", "value": "open"}, {"key": "w-17", "value": "full"}]\nstore = {}\nfor entry in log:\n    store[entry["key"]] = entry["value"]\nprint(store)',
         output: "{'w-17': 'full', 'w-18': 'open'}",
         explanation:
           'The log holds three writes in order. Replaying them leaves w-17 with its last value, full.',
@@ -1421,14 +1421,14 @@ export const knowledgePoints: KnowledgePointModule = {
       questions: [
         predictOutput(
           'This program replays a log of writes. What does it print?',
-          'keys = ["a", "b", "a", "c"]\nvalues = [1, 2, 3, 4]\nstore = {}\nfor i in range(len(keys)):\n    store[keys[i]] = values[i]\nprint(store["a"])\nprint(len(store))',
+          'log = [{"key": "a", "value": 1}, {"key": "b", "value": 2}, {"key": "a", "value": 3}, {"key": "c", "value": 4}]\nstore = {}\nfor entry in log:\n    store[entry["key"]] = entry["value"]\nprint(store["a"])\nprint(len(store))',
           ['1\n4', '3\n4', '1\n3', '3\n3'],
           3,
           'a is written twice, and the later value 3 wins; there are three distinct keys.',
         ),
         predictOutput(
           'This program replays a log of writes. What does it print?',
-          'keys = ["x", "x", "x"]\nvalues = [5, 6, 7]\nstore = {}\nfor i in range(len(keys)):\n    store[keys[i]] = values[i]\nprint(store)',
+          'log = [{"key": "x", "value": 5}, {"key": "x", "value": 6}, {"key": "x", "value": 7}]\nstore = {}\nfor entry in log:\n    store[entry["key"]] = entry["value"]\nprint(store)',
           ["{'x': 5}", "{'x': [5, 6, 7]}", "{'x': 7}", "{'x': 18}"],
           2,
           'Each replayed write replaces the previous value, so only the last one remains.',
@@ -3391,7 +3391,7 @@ export const knowledgePoints: KnowledgePointModule = {
         'A key that groups too much can overload a shard. Partitioning by tenant (a customer organisation whose data is kept together) is convenient, but one huge tenant then lands entirely on one shard.',
       ],
       example: {
-        code: 'tenant_rows = [5000, 7000, 6000, 482000]\ntotal = 0\nfor rows in tenant_rows:\n    total = total + rows\nprint(tenant_rows[3] * 100 // total)',
+        code: 'largest = 482000\nothers = [5000, 7000, 6000]\ntotal = largest\nfor rows in others:\n    total = total + rows\nprint(largest * 100 // total)',
         output: '96',
         explanation:
           'One tenant holds 96% of all rows, so partitioning by tenant would put almost everything on one shard.',
@@ -3399,7 +3399,7 @@ export const knowledgePoints: KnowledgePointModule = {
       questions: [
         predictOutput(
           'What does this program print?',
-          'sizes = [100, 300, 600]\ntotal = 0\nfor rows in sizes:\n    total = total + rows\nprint(sizes[2] * 100 // total)',
+          'largest = 600\nothers = [100, 300]\ntotal = largest\nfor rows in others:\n    total = total + rows\nprint(largest * 100 // total)',
           ['600', '60', '33', '6'],
           1,
           'The largest group holds 600 of 1,000 rows: 60%.',
@@ -3616,25 +3616,25 @@ export const knowledgePoints: KnowledgePointModule = {
         'Measure requests, and bytes, per shard and per key to find where the work comes from.',
       ],
       example: {
-        code: 'requests = [120, 95, 4100, 110]\ntotal = 0\nfor r in requests:\n    total = total + r\nprint(total)\nprint(requests[2] * 100 // total)',
+        code: 'hot = 4100\nothers = [120, 95, 110]\ntotal = hot\nfor r in others:\n    total = total + r\nprint(total)\nprint(hot * 100 // total)',
         output: '4425\n92',
         explanation:
-          'Shard 2 serves 92% of all requests, although each shard owns the same number of keys.',
+          'The hot shard serves 92% of all requests, although each shard owns the same number of keys.',
       },
       questions: [
         predictOutput(
           'Each number is one shard’s requests per second. What does this program print?',
-          'requests = [50, 50, 300, 100]\ntotal = 0\nfor r in requests:\n    total = total + r\nprint(requests[2] * 100 // total)',
+          'hot = 300\nothers = [50, 50, 100]\ntotal = hot\nfor r in others:\n    total = total + r\nprint(hot * 100 // total)',
           ['300', '25', '75', '60'],
           3,
-          'Shard 2 handles 300 of 500 requests: 60%.',
+          'The hot shard handles 300 of 500 requests: 60%.',
         ),
         predictOutput(
           'What does this program print?',
-          'keys_per_shard = [250, 250, 250, 250]\nrequests_per_shard = [10, 10, 970, 10]\nprint(keys_per_shard[2] == keys_per_shard[0])\nprint(requests_per_shard[2] // requests_per_shard[0])',
+          'keys_hot_shard = 250\nkeys_other_shard = 250\nrequests_hot_shard = 970\nrequests_other_shard = 10\nprint(keys_hot_shard == keys_other_shard)\nprint(requests_hot_shard // requests_other_shard)',
           ['True\n97', 'False\n97', 'True\n1', 'False\n1'],
           0,
-          'The shards own equal numbers of keys, yet shard 2 gets 97 times the traffic.',
+          'The shards own equal numbers of keys, yet the hot shard gets 97 times the traffic.',
         ),
         choose(
           'Shards own equal numbers of keys, but shard 3 runs at 95% CPU while the others sit at 10%. What is the most likely cause?',
@@ -3721,18 +3721,23 @@ export const knowledgePoints: KnowledgePointModule = {
         'Writes then spread k ways, but every read must combine k values, and rules about the total, such as never dropping below zero, need extra coordination because no sub-key sees the others.',
       ],
       example: {
-        code: 'parts = [0, 0, 0, 0]\nwrites = 10\nfor i in range(writes):\n    parts[i % 4] = parts[i % 4] + 1\nprint(parts)\ntotal = 0\nfor p in parts:\n    total = total + p\nprint(total)',
-        output: '[3, 3, 2, 2]\n10',
+        code: 'parts = {0: 0, 1: 0, 2: 0, 3: 0}\nfor write in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]:\n    parts[write % 4] = parts[write % 4] + 1\nprint(parts)\nprint(parts[0] + parts[1] + parts[2] + parts[3])',
+        output: '{0: 3, 1: 3, 2: 2, 3: 2}\n10',
         explanation:
-          'Ten writes rotate across four sub-keys. Reading the total means adding all four parts.',
+          'Ten numbered writes rotate across four sub-keys by write % 4. Reading the total means adding all four parts.',
       },
       questions: [
         predictOutput(
           'What does this program print?',
-          'parts = [0, 0, 0]\nfor i in range(7):\n    parts[i % 3] = parts[i % 3] + 1\nprint(parts)',
-          ['[2, 2, 3]', '[3, 2, 2]', '[7, 0, 0]', '[2, 3, 2]'],
+          'parts = {0: 0, 1: 0, 2: 0}\nfor write in [0, 1, 2, 3, 4, 5, 6]:\n    parts[write % 3] = parts[write % 3] + 1\nprint(parts)',
+          [
+            '{0: 2, 1: 2, 2: 3}',
+            '{0: 3, 1: 2, 2: 2}',
+            '{0: 7, 1: 0, 2: 0}',
+            '{0: 2, 1: 3, 2: 2}',
+          ],
           1,
-          'Writes 0, 3 and 6 go to the first part; the others get two each.',
+          'Writes 0, 3 and 6 go to sub-key 0; the others get two each.',
         ),
         predictOutput(
           'What does this program print?',
@@ -3775,25 +3780,25 @@ export const knowledgePoints: KnowledgePointModule = {
         'Rebalancing should move only what balance requires: when a fifth equal node joins, about one fifth of the data.',
       ],
       example: {
-        code: 'moved = 0\nfor key in range(100):\n    if key % 4 != key % 5:\n        moved = moved + 1\nprint(moved)',
-        output: '80',
+        code: 'keys = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]\nmoved = 0\nfor key in keys:\n    if key % 4 != key % 5:\n        moved = moved + 1\nprint(moved)',
+        output: '16',
         explanation:
-          'Only 20 of 100 keys keep the same owner when N changes from 4 to 5; the rest must move.',
+          'Only keys 0 to 3 keep the same owner when N changes from 4 to 5; 16 of 20 keys, 80%, must move.',
       },
       questions: [
         predictOutput(
           'What does this program print?',
-          'moved = 0\nfor key in range(12):\n    if key % 2 != key % 3:\n        moved = moved + 1\nprint(moved)',
+          'keys = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]\nmoved = 0\nfor key in keys:\n    if key % 2 != key % 3:\n        moved = moved + 1\nprint(moved)',
           ['4', '6', '12', '8'],
           3,
           'Only keys whose remainders match for 2 and 3 stay put; 8 of 12 move.',
         ),
         predictOutput(
           'What does this program print?',
-          'moved = 0\nfor key in range(30):\n    if key % 3 != key % 5:\n        moved = moved + 1\nprint(moved)',
-          ['6', '24', '10', '30'],
+          'keys = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]\nmoved = 0\nfor key in keys:\n    if key % 3 != key % 5:\n        moved = moved + 1\nprint(moved)',
+          ['3', '12', '5', '15'],
           1,
-          'Just 6 of 30 keys keep their node when going from 3 to 5 nodes.',
+          'Only keys 0, 1 and 2 keep their node when going from 3 to 5 nodes, so 12 of 15 move.',
         ),
         choose(
           'Going from 9 to 10 nodes with key % N placement moves about what share of keys?',
