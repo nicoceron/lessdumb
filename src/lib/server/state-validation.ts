@@ -1,4 +1,4 @@
-import { courses } from '../curriculum';
+import { courses } from '../catalog-index';
 import { migrateState, type LearnerState } from '../state';
 import { MAX_SAVED_QUIZZES } from '../quiz';
 import { activityTotals, type ActivityState } from '../activity';

@@ -12,16 +12,15 @@ import {
   Zap,
 } from 'lucide-react';
 import { InlineText } from './inline-text';
-import {
-  courses,
-  skills,
-  skillById,
-  units,
-  type CodeLanguage,
-  type LessonExample,
-  type Question,
-  type Skill,
+import type {
+  CodeLanguage,
+  LessonExample,
+  Question,
+  SkillOutline,
 } from '../lib/curriculum';
+import { courses, skills, skillById, units } from '../lib/catalog-index';
+import { loadedSkill } from '../lib/content';
+import { useCourseContent } from './use-content';
 import {
   getSkillState,
   isMastered,
@@ -49,7 +48,7 @@ import {
   editorLanguage,
 } from '../lib/code-language';
 import { recordLearningAnswer, type LearnerState } from '../lib/state';
-import { Btn } from './shared';
+import { Btn, ContentLoading } from './shared';
 import LessonPlayer from './lesson-player';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -74,7 +73,7 @@ type Stage = 'intro' | 'question' | 'failed';
 /** The page a learn or review task opens on. */
 function initialStage(
   progress: Progress,
-  skill: Skill,
+  skill: SkillOutline,
   mode: 'learn' | 'review',
 ): Stage {
   if (mode === 'review' || isMastered(progress, skill.id)) return 'question';
@@ -216,7 +215,9 @@ export default function LearningSession({
   useEffect(() => {
     gradingGeneration.current++;
   }, [skillId, questionId]);
-  const skill = skillById[skillId];
+  // The outline schedules; the lesson itself waits for its course's content.
+  const content = useCourseContent([skillById[skillId]?.courseId]);
+  const skill = content.ready ? loadedSkill(skillId) : undefined;
   const courseLanguage = codeLanguage(
     courses.find((course) => course.id === skill?.courseId)?.language,
   );
@@ -238,7 +239,9 @@ export default function LearningSession({
     : undefined;
 
   function chooseQuestion(id = skillId, nextMode = mode) {
-    const s = skillById[id];
+    const s = loadedSkill(id);
+    // Not loaded yet: the effect below chooses once the content arrives.
+    if (!s) return;
     const q = selectQuestion(state.progress, s, nextMode);
     const answers = lessonState(state.progress, s).attempt?.steps[
       evidenceIdFor(s, q.id) ?? ''
@@ -259,7 +262,7 @@ export default function LearningSession({
   useEffect(() => {
     if (skill && available && stage === 'question' && !questionId)
       chooseQuestion();
-  }, [skillId, stage]);
+  }, [skillId, stage, skill]);
   function startLesson() {
     if (!progress?.lessonSeen && mode === 'learn')
       update((s) => ({ ...s, progress: recordLesson(s.progress, skillId) }));
@@ -379,6 +382,8 @@ export default function LearningSession({
         </Button>
       </div>
     );
+  if (skillById[skillId] && !content.ready)
+    return <ContentLoading error={content.error} retry={content.retry} />;
   if (!skill || !available)
     return (
       <div className="empty-state">

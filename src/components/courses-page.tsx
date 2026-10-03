@@ -7,7 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { courses } from '../lib/curriculum';
+import { courses } from '../lib/catalog-index';
 import {
   courseMastery,
   courseOutline,

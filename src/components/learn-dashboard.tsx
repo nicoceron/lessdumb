@@ -7,7 +7,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { courses, skillById, type Course } from '../lib/curriculum';
+import type { Course } from '../lib/curriculum';
+import { courses, skillById } from '../lib/catalog-index';
 import {
   courseMastery,
   estimateCompletion,

@@ -55,6 +55,22 @@ export function catalogIndexPlugin() {
   return {
     name: 'lessdumb:catalog-index',
     enforce: 'pre',
+    config: () => ({
+      build: {
+        rollupOptions: {
+          // The server bundles the whole curriculum statically, so its
+          // per-course dynamic imports stay in place there, as intended.
+          onLog(level, log, handler) {
+            if (
+              log.code === 'INEFFECTIVE_DYNAMIC_IMPORT' &&
+              log.message.includes('src/lib/content/')
+            )
+              return;
+            handler(level, log);
+          },
+        },
+      },
+    }),
     async load(id, options) {
       if (!isClient(this, options)) return null;
       const path = strip(id);

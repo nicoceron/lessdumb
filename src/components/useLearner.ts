@@ -7,7 +7,14 @@ import {
   StateConflictError,
   type AccountSessionState,
 } from '../lib/account';
-import { createState, mergeStates, type LearnerState } from '../lib/state';
+import {
+  createState,
+  mergeStates,
+  missingMasteryCards,
+  queueMasteryCards,
+  type LearnerState,
+} from '../lib/state';
+import { loadSkills } from '../lib/content';
 import {
   MAX_STATE_BODY_BYTES,
   parseStateUpdate,
@@ -73,6 +80,8 @@ export function useLearner(): Learner {
   }));
   const [sync, setSync] = useState('Loading your learning space…');
   const [retry, setRetry] = useState(0);
+  // Counts merges with account progress; each may complete mastery cards.
+  const [merges, setMerges] = useState(0);
   const generation = useRef(0);
   const sessionOwner = useRef<string | null | undefined>(undefined);
   const latest = useRef(snapshot);
@@ -149,6 +158,7 @@ export function useLearner(): Learner {
                 : current.guestMigrationRaw,
           };
         });
+        setMerges((count) => count + 1);
         setSync('Account connected');
       })
       .catch((error) => {
@@ -293,6 +303,7 @@ export function useLearner(): Learner {
                   needsSave: true,
                 },
           );
+          setMerges((count) => count + 1);
           setSync('Combining progress from your devices…');
         } else {
           if (error instanceof AccountRequestError && error.status === 401) {
@@ -322,6 +333,25 @@ export function useLearner(): Learner {
     snapshot.needsSave,
     retry,
   ]);
+
+  // Merging can complete a skill's mastery, which earns its cards. Card text
+  // is lesson content: load the courses it belongs to, then queue the cards.
+  useEffect(() => {
+    if (!ready || !merges) return;
+    const missing = missingMasteryCards(latest.current.value);
+    if (!missing.length) return;
+    let current = true;
+    loadSkills(missing).then(
+      () => {
+        if (current) update((state) => queueMasteryCards(state));
+      },
+      // Offline: the next merge tries again.
+      () => {},
+    );
+    return () => {
+      current = false;
+    };
+  }, [ready, merges]);
 
   function retrySync() {
     setSnapshot((value) => ({ ...value, revision: null }));

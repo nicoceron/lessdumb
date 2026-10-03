@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import {
   courses,
+  knowledgePointFiles,
   skills,
   validateCurriculum,
   validateKnowledgePointRegistry,
@@ -15,7 +16,7 @@ import {
   type Skill,
 } from '../src/lib/curriculum';
 import type { PythonResult } from '../src/lib/python';
-import { knowledgePointFiles } from '../src/lib/knowledge-points';
+
 
 // Every worked example and every "what does this print?" question is run, and
 // its published output must be exactly what the program prints.
