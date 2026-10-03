@@ -20,6 +20,10 @@ import { WorkspaceHeader } from './workspace-header';
 import { Dashboard } from './learn-dashboard';
 import { Courses } from './courses-page';
 const LearningSession = lazy(() => import('./learning-session'));
+const QuizSession = lazy(() => import('./quiz-session'));
+/** /learn?quiz=… opens a quiz instead of a lesson or review. */
+const isQuizRoute = (routeKey: string) =>
+  new URLSearchParams(routeKey.split('?')[1] ?? '').has('quiz');
 const Cards = lazy(() =>
   import('./secondary-pages').then((m) => ({ default: m.Cards })),
 );
@@ -279,7 +283,14 @@ export default function App({
               }
             >
               {page === 'today' && <Dashboard state={state} />}
-              {page === 'learn' && (
+              {page === 'learn' && isQuizRoute(routeKey) && (
+                <QuizSession
+                  key={`${routeKey}:${session.data?.user.id ?? 'guest'}`}
+                  state={state}
+                  update={update}
+                />
+              )}
+              {page === 'learn' && !isQuizRoute(routeKey) && (
                 <LearningSession
                   key={`${routeKey}:${session.data?.user.id ?? 'guest'}`}
                   state={state}

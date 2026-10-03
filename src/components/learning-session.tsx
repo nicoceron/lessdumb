@@ -152,7 +152,12 @@ export default function LearningSession({
     skillById[params.get('skill') ?? '']?.courseId ??
     courses.find((c) => c.id === state.activeCourseId)?.id ??
     courses[0].id;
-  const suggested = nextTask(state.progress, new Date(), goal);
+  // /learn?mode=review is a review session: it never switches to a lesson.
+  // Elsewhere reviews interleave with lessons, as on Learn.
+  const reviewSession = params.get('mode') === 'review' && !params.get('skill');
+  const suggested = nextTask(state.progress, new Date(), goal, undefined, {
+    reviewsOnly: reviewSession,
+  });
   const [skillId, setSkillId] = useState(
     params.get('skill') ?? suggested?.skillId ?? skills[0].id,
   );
@@ -321,11 +326,10 @@ export default function LearningSession({
             p.dueAt &&
             p.dueAt > Date.now())))
     ) {
-      const task = nextTask(state.progress, new Date(), goal);
-      if (
-        task &&
-        !(params.get('mode') === 'review' && task.mode !== 'review')
-      ) {
+      const task = nextTask(state.progress, new Date(), goal, undefined, {
+        reviewsOnly: reviewSession,
+      });
+      if (task && !(reviewSession && task.mode !== 'review')) {
         const nextStage = initialStage(
           state.progress,
           skillById[task.skillId],

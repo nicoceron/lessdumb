@@ -231,6 +231,18 @@ export function startQuiz(
   };
 }
 
+/** The catalog question a quiz slot asks. */
+export function quizQuestion(
+  slot: Pick<QuizQuestion, 'skillId' | 'questionId'>,
+  catalog: CurriculumCatalog = defaultCatalog,
+): { skill: Skill; question: ChoiceQuestion } | undefined {
+  const skill = catalog.skills.find((item) => item.id === slot.skillId);
+  const question = skill?.knowledgePoints
+    ?.flatMap((point) => point.questions)
+    .find((item) => item.id === slot.questionId);
+  return skill && question?.type === 'choice' ? { skill, question } : undefined;
+}
+
 /** A missed skill's review becomes due now; nothing is unlearned yet. */
 function remediate(state: SkillProgress, at: number): SkillProgress {
   return {
