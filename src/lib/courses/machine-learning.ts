@@ -717,7 +717,7 @@ const curriculum = [
     ['ml-logistic-regression'],
     [
       'For a chosen positive class, a true positive is correctly predicted positive. A false positive is predicted positive but actually negative. A false negative is actually positive but missed. Precision = TP/(TP+FP) asks how many positive predictions were correct. Recall = TP/(TP+FN) asks how many actual positives were found.',
-      'Accuracy counts correct predictions across both classes. It can hide failure on a rare class: always predicting negative yields 99% accuracy when only 1% are positive. Report metrics that reflect the decision costs, inspect a confusion matrix, and consider multiple thresholds. The F1 score is the harmonic mean of precision and recall; it does not encode every possible business cost.',
+      'Accuracy counts correct predictions across both classes. It can hide failure on a rare class: always predicting negative yields 99% accuracy when only 1% are positive. Report metrics that reflect the decision costs, inspect a confusion matrix (the table of TP, FP, FN, and TN counts), and consider multiple thresholds. The F1 score is the harmonic mean of precision and recall; it does not encode every possible business cost.',
     ],
     {
       code: 'tp, fp, fn = 6, 2, 4\nprint(round(tp / (tp + fp), 2))\nprint(round(tp / (tp + fn), 2))',
@@ -847,7 +847,7 @@ const curriculum = [
     'Separate learned parameters from choices about the learning algorithm.',
     ['ml-cross-validation', 'ml-decision-trees'],
     [
-      'Parameters such as regression weights are learned during fitting. Hyperparameters such as penalty strength, tree depth, or number of neighbors configure the fitting process. Grid search evaluates a predefined combination set; randomized search samples configurations from chosen distributions or lists.',
+      'Parameters such as regression weights are learned during fitting. Hyperparameters such as penalty strength, tree depth, or learning rate configure the fitting process. Grid search evaluates a predefined combination set; randomized search samples configurations from chosen distributions or lists.',
       'Compare configurations using the same appropriate validation strategy and metric. Searching more settings gives more opportunities to overfit validation results; the best observed score is not a guarantee of future performance. After selection, refit the chosen configuration on the available training data and evaluate once on the untouched test set. Nested cross-validation adds an outer evaluation loop when estimating the full selection procedure.',
     ],
     {

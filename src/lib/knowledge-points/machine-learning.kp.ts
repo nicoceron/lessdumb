@@ -1711,4 +1711,655 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'ml-classification-metrics': [
+    {
+      title: 'Count the four outcomes in a confusion matrix',
+      explanation: [
+        'Pick one class as positive. Each prediction then lands in one of four cells: a true positive (actual 1, predicted 1), a false positive (actual 0, predicted 1), a false negative (actual 1, predicted 0), or a true negative (actual 0, predicted 0).',
+        'scikit-learn’s confusion_matrix(actual, predicted) returns these counts as a table with one row per actual class and one column per predicted class. For labels 0 and 1 the layout is [[TN, FP], [FN, TP]].',
+      ],
+      example: {
+        code: 'actual = [1, 0, 1, 1, 0, 0]\npredicted = [1, 1, 0, 1, 0, 0]\nrows = range(len(actual))\ntp = sum([1 for i in rows if actual[i] == 1 and predicted[i] == 1])\nfp = sum([1 for i in rows if actual[i] == 0 and predicted[i] == 1])\nfn = sum([1 for i in rows if actual[i] == 1 and predicted[i] == 0])\ntn = sum([1 for i in rows if actual[i] == 0 and predicted[i] == 0])\nprint(tp, fp, fn, tn)',
+        output: '2 1 1 2',
+        explanation:
+          'Rows 0 and 3 are caught positives, row 1 is a false alarm, row 2 is a missed positive, and rows 4 and 5 are correctly rejected.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.metrics import confusion_matrix\nactual = [0, 1, 1, 0, 1]\npredicted = [0, 1, 0, 1, 1]\nprint(confusion_matrix(actual, predicted).tolist())',
+          [
+            '[[2, 1], [1, 1]]',
+            '[[1, 1], [1, 2]]',
+            '[[2, 1], [1, 1], [0, 0]]',
+            '[[1, 2], [1, 1]]',
+          ],
+          1,
+          'Actual 0: one predicted 0 and one predicted 1. Actual 1: one predicted 0 and two predicted 1. The layout is [[TN, FP], [FN, TP]].',
+        ),
+        choose(
+          'With fraud as the positive class, a model flags a legitimate purchase as fraud. Which cell does it count in?',
+          [
+            'True positive',
+            'False negative',
+            'True negative',
+            'False positive',
+          ],
+          3,
+          'The prediction was positive but the actual class was negative, which is a false positive.',
+        ),
+        choose(
+          'A cancer screen treats "cancer" as positive. Which outcome is a false negative?',
+          [
+            'A patient with cancer who is told the result is clear',
+            'A healthy patient flagged for a follow-up test',
+            'A healthy patient told the result is clear',
+            'A patient with cancer who is flagged for follow-up',
+          ],
+          0,
+          'The actual class is positive and the prediction is negative: the screen missed the cancer.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'actual = [1, 1, 0, 0, 1, 0]\npredicted = [1, 0, 0, 1, 1, 1]\nrows = range(len(actual))\nfp = sum([1 for i in rows if actual[i] == 0 and predicted[i] == 1])\nfn = sum([1 for i in rows if actual[i] == 1 and predicted[i] == 0])\nprint(fp, fn)',
+          ['1 2', '2 2', '2 1', '3 1'],
+          2,
+          'Rows 3 and 5 are predicted 1 but are actually 0 (two false positives); row 1 is a missed positive.',
+        ),
+      ],
+    },
+    {
+      title: 'Compute precision and recall',
+      explanation: [
+        'Precision = TP / (TP + FP) asks: of the rows the model flagged, how many were truly positive? Recall = TP / (TP + FN) asks: of the truly positive rows, how many did the model flag?',
+        'They have different denominators and answer different questions. Precision matters when false alarms are costly; recall matters when misses are costly. scikit-learn provides precision_score and recall_score.',
+      ],
+      example: {
+        code: 'tp, fp, fn = 8, 2, 8\nprecision = tp / (tp + fp)\nrecall = tp / (tp + fn)\nprint(precision, recall)',
+        output: '0.8 0.5',
+        explanation:
+          'Eight of the ten flagged rows were positive, so precision is 0.8. The model found eight of the sixteen actual positives, so recall is 0.5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.metrics import precision_score, recall_score\nactual = [1, 1, 1, 1, 0, 0, 0, 0]\npredicted = [1, 1, 0, 0, 1, 0, 0, 0]\np = precision_score(actual, predicted)\nr = recall_score(actual, predicted)\nprint(round(float(p), 3), round(float(r), 3))',
+          ['0.5 0.667', '0.667 0.667', '0.667 0.5', '0.75 0.5'],
+          2,
+          'TP = 2, FP = 1, FN = 2. Precision is 2 / 3 and recall is 2 / 4.',
+        ),
+        choose(
+          'A spam filter has precision 0.95 and recall 0.40. What does that mean?',
+          [
+            'It catches most spam but also flags many real messages',
+            'Messages it flags are almost always spam, but it misses most spam',
+            'It is right on 95% of all messages',
+            'It flags 40% of all messages as spam',
+          ],
+          1,
+          'High precision means few false alarms among flagged messages; low recall means most actual spam goes unflagged.',
+        ),
+        choose(
+          'Every missed fraudulent transaction is very costly, while reviewing a false alarm is cheap. Which metric should the team watch most closely?',
+          ['Precision', 'Recall', 'The number of features', 'Training error'],
+          1,
+          'Recall counts how many actual frauds were caught, so it directly measures the costly misses.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'tp, fp, fn = 9, 1, 21\nprint(tp / (tp + fp), tp / (tp + fn))',
+          ['0.3 0.9', '0.9 0.9', '0.45 0.3', '0.9 0.3'],
+          3,
+          'Nine of ten flags were right (precision 0.9), but only nine of thirty positives were found (recall 0.3).',
+        ),
+      ],
+    },
+    {
+      title: 'See through accuracy with rare classes; combine with F1',
+      explanation: [
+        'Accuracy is (TP + TN) divided by all rows. When positives are rare, a model that always predicts negative scores high accuracy while finding none of them, so its recall is 0.',
+        'The F1 score, 2 * precision * recall / (precision + recall), is the harmonic mean of the two. It is high only when both are high, so it exposes a model that buys one at the expense of the other.',
+      ],
+      example: {
+        code: 'tp, fp, fn, tn = 0, 0, 10, 990\naccuracy = (tp + tn) / (tp + fp + fn + tn)\nrecall = tp / (tp + fn)\nprint(accuracy, recall)',
+        output: '0.99 0.0',
+        explanation:
+          'Predicting negative for all 1,000 rows is right 99% of the time, yet it catches none of the 10 positives.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'precision, recall = 0.5, 1.0\nf1 = 2 * precision * recall / (precision + recall)\nprint(round(f1, 3))',
+          ['0.75', '0.667', '0.5', '1.0'],
+          1,
+          'The harmonic mean is 2 * 0.5 * 1.0 / 1.5 ≈ 0.667, below the ordinary average 0.75.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.metrics import accuracy_score, f1_score\nactual = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1]\npredicted = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]\nprint(accuracy_score(actual, predicted), round(float(f1_score(actual, predicted)), 3))',
+          ['0.9 0.667', '0.9 0.9', '0.5 0.667', '0.9 0.5'],
+          0,
+          'Nine of ten rows are correct. Precision is 1.0 and recall 0.5, so F1 = 2 * 0.5 / 1.5 ≈ 0.667.',
+        ),
+        choose(
+          'Only 1% of rows are positive. Why can a 99% accuracy be meaningless?',
+          [
+            'Accuracy cannot be computed on rare classes',
+            'Accuracy is always lower than recall',
+            'Predicting negative for every row already achieves 99%',
+            'A rare class makes accuracy exceed 100%',
+          ],
+          2,
+          'The majority-class baseline reaches the same accuracy while catching no positives.',
+        ),
+        choose(
+          'Model A has precision 0.9 and recall 0.1. Model B has precision 0.5 and recall 0.5. Which has the higher F1?',
+          [
+            'Model A',
+            'They tie, since both average 0.5',
+            'F1 cannot compare them',
+            'Model B',
+          ],
+          3,
+          'A’s F1 is 2 * 0.09 / 1.0 = 0.18; B’s is 0.5. The harmonic mean punishes A’s very low recall.',
+        ),
+      ],
+    },
+    {
+      title: 'Trade precision against recall with the threshold',
+      explanation: [
+        'A classifier’s threshold decides how many rows it flags. Raising it flags fewer rows, which usually removes false positives (precision rises) but adds misses (recall falls). Lowering it does the reverse.',
+        'No threshold is best in general. Compute precision and recall at several thresholds on validation data and choose the one whose trade-off matches the costs of each kind of error.',
+      ],
+      example: {
+        code: 'probs = [0.95, 0.8, 0.7, 0.6, 0.4, 0.3, 0.2, 0.1]\nactual = [1, 1, 0, 1, 1, 0, 0, 0]\nfor threshold in [0.5, 0.75]:\n    pred = [int(p >= threshold) for p in probs]\n    tp = sum([1 for i in range(8) if pred[i] == 1 and actual[i] == 1])\n    fp = sum([1 for i in range(8) if pred[i] == 1 and actual[i] == 0])\n    fn = sum([1 for i in range(8) if pred[i] == 0 and actual[i] == 1])\n    print(threshold, tp / (tp + fp), tp / (tp + fn))',
+        output: '0.5 0.75 0.75\n0.75 1.0 0.5',
+        explanation:
+          'At 0.75, the false alarm at 0.7 disappears, so precision reaches 1.0, but the positive at 0.6 is now missed, so recall falls to 0.5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'probs = [0.9, 0.6, 0.45, 0.35, 0.2]\nactual = [1, 0, 1, 1, 0]\npred = [int(p >= 0.3) for p in probs]\ntp = sum([1 for i in range(5) if pred[i] == 1 and actual[i] == 1])\nfp = sum([1 for i in range(5) if pred[i] == 1 and actual[i] == 0])\nfn = sum([1 for i in range(5) if pred[i] == 0 and actual[i] == 1])\nprint(tp / (tp + fp), tp / (tp + fn))',
+          ['0.75 1.0', '1.0 0.75', '0.5 1.0', '0.75 0.75'],
+          0,
+          'At 0.3, four rows are flagged: three positives and one negative. Every actual positive is caught, so recall is 1.0.',
+        ),
+        choose(
+          'What does raising the decision threshold usually do?',
+          [
+            'Raises recall and lowers precision',
+            'Raises both precision and recall',
+            'Changes the predicted probabilities',
+            'Raises precision and lowers recall',
+          ],
+          3,
+          'Fewer rows are flagged, so fewer false alarms remain but more positives are missed.',
+        ),
+        choose(
+          'A bank can manually review only 50 alerts a day. How should it set the fraud threshold?',
+          [
+            'Keep 0.5, the default',
+            'Set it so about 50 rows a day are flagged, then check precision and recall at that level',
+            'Lower it to catch every fraud regardless of volume',
+            'Pick it from the test set until recall reaches 1.0',
+          ],
+          1,
+          'The review capacity fixes how many flags are useful; the threshold is chosen to produce that volume.',
+        ),
+        choose(
+          'Lowering the threshold raised recall from 0.6 to 0.9 and dropped precision from 0.8 to 0.3. When is that a good trade?',
+          [
+            'When each missed positive costs far more than a false alarm',
+            'When false alarms are very expensive',
+            'Never, because precision fell',
+            'Always, because recall rose',
+          ],
+          0,
+          'The change buys more caught positives with many more false alarms, which pays off only if misses are the costlier error.',
+        ),
+      ],
+    },
+  ],
+  'ml-cross-validation': [
+    {
+      title: 'Rotate the validation fold through k folds',
+      explanation: [
+        'K-fold cross-validation cuts the training data into k folds. In each of k rounds, one fold is held out for validation and a fresh model is fitted on the other k - 1 folds, so every row is used for validation exactly once.',
+        'KFold(n_splits=k).split(X) yields, for each round, a pair of index arrays: the training rows and the validation rows. Without shuffling, the folds are consecutive blocks of rows.',
+      ],
+      example: {
+        code: 'from sklearn.model_selection import KFold\nX = [[0], [1], [2], [3], [4], [5]]\nfor train_idx, val_idx in KFold(n_splits=3).split(X):\n    print(train_idx.tolist(), val_idx.tolist())',
+        output: '[2, 3, 4, 5] [0, 1]\n[0, 1, 4, 5] [2, 3]\n[0, 1, 2, 3] [4, 5]',
+        explanation:
+          'Six rows make three folds of two. Each round validates on one fold and trains on the four remaining rows.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.model_selection import KFold\nX = [[0], [1], [2], [3], [4], [5], [6], [7]]\nfor train_idx, val_idx in KFold(n_splits=4).split(X):\n    print(val_idx.tolist())',
+          [
+            '[0, 1]\n[2, 3]\n[4, 5]\n[6, 7]',
+            '[0, 1, 2, 3]\n[4, 5, 6, 7]',
+            '[2, 3, 4, 5, 6, 7]\n[0, 1, 4, 5, 6, 7]\n[0, 1, 2, 3, 6, 7]\n[0, 1, 2, 3, 4, 5]',
+            '[0]\n[1]\n[2]\n[3]',
+          ],
+          0,
+          'Four folds of eight rows hold two consecutive rows each, and each fold is validated once.',
+        ),
+        choose(
+          'In 5-fold cross-validation, how many times is each training row used for validation?',
+          ['Five times', 'Four times', 'Exactly once', 'Never'],
+          2,
+          'The folds partition the rows, and each fold is the validation fold in exactly one round.',
+        ),
+        choose(
+          'Why is a fresh model fitted in every round instead of reusing one model?',
+          [
+            'Reusing a model would make the folds overlap',
+            'A model already fitted on the validation fold would be scored on rows it has seen',
+            'scikit-learn models can be fitted only once',
+            'Fresh models always score higher',
+          ],
+          1,
+          'Each round’s score is honest only if that round’s model never trained on its validation rows.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.model_selection import KFold\nX = [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]]\nsizes = []\nfor train_idx, val_idx in KFold(n_splits=5).split(X):\n    sizes.append(len(train_idx))\nprint(sizes)',
+          [
+            '[2, 2, 2, 2, 2]',
+            '[10, 10, 10, 10, 10]',
+            '[8, 6, 4, 2, 0]',
+            '[8, 8, 8, 8, 8]',
+          ],
+          3,
+          'Each round holds out one fold of two rows and trains on the other eight.',
+        ),
+      ],
+    },
+    {
+      title: 'Read cross_val_score, including negated losses',
+      explanation: [
+        'cross_val_score(model, X, y, cv=k, scoring=...) runs the k rounds and returns one validation score per fold. Their mean estimates performance; their spread shows how much it depends on which rows were held out.',
+        'scikit-learn scorers treat larger as better, so losses are reported negated: scoring="neg_mean_squared_error" returns minus the MSE. Negate the scores before reading them as errors.',
+      ],
+      example: {
+        code: 'from sklearn.linear_model import LinearRegression\nfrom sklearn.model_selection import cross_val_score\nX = [[0], [1], [2], [3], [4], [5]]\ny = [1.0, 2.9, 5.2, 7.0, 8.8, 11.1]\nscores = cross_val_score(LinearRegression(), X, y, cv=3, scoring="neg_mean_squared_error")\nmse = -scores\nprint(mse.round(3).tolist())\nprint(round(float(mse.mean()), 3))',
+        output: '[0.051, 0.033, 0.045]\n0.043',
+        explanation:
+          'The three fold errors are close to each other, and their mean, 0.043, is the cross-validated MSE.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nscores = np.array([-4.0, -9.0, -2.0])\nprint(float(-scores.mean()))',
+          ['-5.0', '5.0', '15.0', '3.0'],
+          1,
+          'The scores are negated MSEs, so the mean MSE is -(-15 / 3) = 5.0.',
+        ),
+        predictOutput(
+          'DummyRegressor predicts the training mean. What does this program print?',
+          'from sklearn.dummy import DummyRegressor\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.model_selection import cross_val_score\nX = [[0], [1], [2], [3], [4], [5]]\ny = [1.0, 2.9, 5.2, 7.0, 8.8, 11.1]\nfor model in [DummyRegressor(), LinearRegression()]:\n    scores = cross_val_score(model, X, y, cv=3, scoring="neg_mean_squared_error")\n    print(round(float(-scores.mean()), 3))',
+          [
+            '-25.023\n-0.043',
+            '0.043\n25.023',
+            '25.023\n0.043',
+            '25.023\n25.023',
+          ],
+          2,
+          'Both models face the same folds and metric; the mean baseline’s error is far larger than the line’s.',
+        ),
+        choose(
+          'cross_val_score with neg_mean_squared_error returns [-3.1, -2.8, -9.7]. What does this tell you?',
+          [
+            'The mean MSE is about 5.2, and one fold is much harder than the others',
+            'The model improved from fold to fold',
+            'The MSE is negative, so the model is better than perfect',
+            'The third fold is the most accurate',
+          ],
+          0,
+          'Negated, the errors are 3.1, 2.8, and 9.7; their mean is 5.2, and the large third error shows strong dependence on the fold.',
+        ),
+        choose(
+          'Why does scikit-learn report neg_mean_squared_error instead of the MSE itself?',
+          [
+            'Negative numbers are cheaper to store',
+            'Its scorers treat larger values as better, so losses are negated',
+            'MSE is undefined for cross-validation',
+            'The minus sign marks validation scores',
+          ],
+          1,
+          'Negating a loss lets every scorer follow the same "larger is better" rule.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose a splitter that matches the data',
+      explanation: [
+        'Plain KFold cuts consecutive blocks, which misleads if rows are sorted; KFold(shuffle=True, random_state=0) shuffles reproducibly first. For classification, StratifiedKFold keeps class shares in every fold.',
+        'GroupKFold keeps all rows of a group, such as one patient, in the same fold. TimeSeriesSplit always trains on earlier rows and validates on the rows right after them, so no fold uses the future.',
+      ],
+      example: {
+        code: 'from sklearn.model_selection import TimeSeriesSplit\nX = [[0], [1], [2], [3], [4], [5]]\nfor train_idx, val_idx in TimeSeriesSplit(n_splits=3).split(X):\n    print(train_idx.tolist(), val_idx.tolist())',
+        output: '[0, 1, 2] [3]\n[0, 1, 2, 3] [4]\n[0, 1, 2, 3, 4] [5]',
+        explanation:
+          'Each round validates on the next row in time and trains on everything before it, so the training window grows.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.model_selection import StratifiedKFold\ny = [0, 0, 0, 0, 1, 1]\nX = [[0], [1], [2], [3], [4], [5]]\nfor train_idx, val_idx in StratifiedKFold(n_splits=2).split(X, y):\n    print([y[i] for i in val_idx])',
+          [
+            '[0, 0, 0]\n[0, 1, 1]',
+            '[0, 0, 1]\n[0, 0, 1]',
+            '[0, 0, 0, 0]\n[1, 1]',
+            '[0, 1]\n[0, 1]',
+          ],
+          1,
+          'Two thirds of the labels are 0, and stratification keeps that share in both validation folds.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.model_selection import GroupKFold\nX = [[0], [1], [2], [3], [4], [5]]\ngroups = ["a", "a", "b", "b", "b", "c"]\nfor train_idx, val_idx in GroupKFold(n_splits=3).split(X, groups=groups):\n    print([groups[i] for i in val_idx])',
+          [
+            "['a', 'a']\n['b', 'b']\n['b', 'c']",
+            "['a', 'b']\n['a', 'b']\n['b', 'c']",
+            "['b', 'b', 'b']\n['a', 'a']\n['c']",
+            "['a']\n['b']\n['c']",
+          ],
+          2,
+          'Every validation fold holds whole groups, so no group is split between training and validation.',
+        ),
+        choose(
+          'Rows are daily sensor readings, and the model will forecast the next day. Which splitter fits?',
+          [
+            'StratifiedKFold',
+            'TimeSeriesSplit',
+            'KFold with shuffle=True',
+            'GroupKFold by weekday',
+          ],
+          1,
+          'Only a time-ordered splitter keeps every validation row later than its training rows.',
+        ),
+        choose(
+          'A clinic has ten visits per patient, and the model will serve new patients. Which splitter fits?',
+          [
+            'KFold with shuffle=True',
+            'StratifiedKFold on the diagnosis',
+            'TimeSeriesSplit on visit order',
+            'GroupKFold with the patient ID as the group',
+          ],
+          3,
+          'Grouping by patient keeps each patient’s visits together, so validation always uses unseen patients.',
+        ),
+      ],
+    },
+    {
+      title: 'Refit preprocessing inside every fold; keep the test set out',
+      explanation: [
+        'Pass a pipeline, not a pre-scaled table, to cross-validation. Each round then fits the scaler and the model on that round’s training folds only, so the validation fold never shapes the preprocessing. cross_validate(..., return_estimator=True) returns each round’s fitted pipeline.',
+        'Cross-validation guides choices, so it runs on the training data only. The final test set stays outside the whole process and is scored once at the end.',
+      ],
+      example: {
+        code: 'from sklearn.model_selection import cross_validate\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LinearRegression\nX = [[0.0], [2.0], [4.0], [6.0]]\ny = [1.0, 2.0, 3.0, 4.0]\npipe = make_pipeline(StandardScaler(), LinearRegression())\nresult = cross_validate(pipe, X, y, cv=2, return_estimator=True)\nfor fitted in result["estimator"]:\n    print(fitted.named_steps["standardscaler"].mean_.tolist())',
+        output: '[5.0]\n[1.0]',
+        explanation:
+          'Round one trains on 4 and 6, so its scaler mean is 5; round two trains on 0 and 2, so its mean is 1. Neither saw its validation rows.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.model_selection import cross_validate\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LinearRegression\nX = [[1.0], [2.0], [3.0], [10.0], [11.0], [12.0]]\ny = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]\npipe = make_pipeline(StandardScaler(), LinearRegression())\nresult = cross_validate(pipe, X, y, cv=3, return_estimator=True)\nfor fitted in result["estimator"]:\n    print(fitted.named_steps["standardscaler"].mean_.tolist())',
+          [
+            '[6.5]\n[6.5]\n[6.5]',
+            '[1.5]\n[6.5]\n[11.5]',
+            '[9.0]\n[6.5]\n[4.0]',
+            '[4.0]\n[6.5]\n[9.0]',
+          ],
+          2,
+          'Each round’s scaler sees only that round’s four training rows; the first round leaves out 1 and 2, so its mean is 36 / 4 = 9.',
+        ),
+        choose(
+          'You standardize all 1,000 rows, then run 5-fold cross-validation on the scaled table. What is wrong?',
+          [
+            'Each validation fold helped set the scaling statistics its model trained with',
+            'Standardized data cannot be cross-validated',
+            'Five folds are too many for 1,000 rows',
+            'Nothing; scaling never leaks',
+          ],
+          0,
+          'The scaler learned from every row, including each round’s validation fold, so the scores are slightly optimistic.',
+        ),
+        choose(
+          'Where does the final test set fit into cross-validation?',
+          [
+            'It is one of the k folds',
+            'It is added to every training fold',
+            'It replaces the validation fold in the last round',
+            'It stays outside the process and is scored once at the end',
+          ],
+          3,
+          'Cross-validation is used to make choices, so the test set must remain untouched until those choices are final.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.model_selection import cross_validate\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LinearRegression\nX = [[0.0], [2.0], [4.0], [6.0], [8.0]]\ny = [1.0, 2.0, 3.0, 4.0, 5.0]\nresult = cross_validate(make_pipeline(StandardScaler(), LinearRegression()), X, y, cv=5, scoring="neg_mean_squared_error", return_estimator=True)\nprint(len(result["estimator"]))',
+          ['1', '4', '5', '6'],
+          2,
+          'Five rounds fit five separate pipelines, one per held-out fold.',
+        ),
+      ],
+    },
+  ],
+  'ml-hyperparameter-search': [
+    {
+      title: 'Separate learned parameters from chosen hyperparameters',
+      explanation: [
+        'Parameters are learned by fit from the training data: coefficients, intercepts, and the split thresholds of a tree. Hyperparameters are set before fitting and control how fitting behaves: Ridge’s alpha, a tree’s max_depth, a learning rate.',
+        'fit cannot choose hyperparameters, because training error always prefers the most flexible setting. They are chosen by comparing validation scores of candidate values.',
+      ],
+      example: {
+        code: 'from sklearn.tree import DecisionTreeClassifier\nX = [[1], [2], [3], [7], [8], [9]]\ny = [0, 0, 0, 1, 1, 1]\ntree = DecisionTreeClassifier(max_depth=1, random_state=0).fit(X, y)\nprint(tree.get_params()["max_depth"])\nprint(tree.tree_.threshold[0])',
+        output: '1\n5.0',
+        explanation:
+          'max_depth = 1 is a hyperparameter you supplied. The split threshold 5.0, halfway between 3 and 7, is a parameter the tree learned.',
+      },
+      questions: [
+        choose(
+          'Which of these is a hyperparameter?',
+          [
+            'A fitted linear-regression coefficient',
+            'The intercept learned by fit',
+            'The learning rate of gradient descent',
+            'A split threshold chosen during tree fitting',
+          ],
+          2,
+          'The learning rate is set before training and controls how fitting proceeds; the others are outputs of fit.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.linear_model import Ridge\nmodel = Ridge(alpha=2.0).fit([[-1.0], [0.0], [1.0]], [-2.0, 0.0, 2.0])\nprint(model.alpha)\nprint(round(float(model.coef_[0]), 3))',
+          ['2.0\n2.0', '1.0\n2.0', '2.0\n1.0', '2.0\n0.5'],
+          2,
+          'alpha stays exactly as supplied; the coefficient is learned, and the penalty shrinks it from 2 to 1.',
+        ),
+        choose(
+          'Where should a value for max_depth come from?',
+          [
+            'Comparing validation scores for several candidate depths',
+            'The fit method, which learns it with the splits',
+            'The depth with the best test score',
+            'The deepest tree the data allow',
+          ],
+          0,
+          'Hyperparameters are chosen by validation; training error alone always favours the deepest tree.',
+        ),
+        choose(
+          'Which of these is learned from the training data rather than chosen beforehand?',
+          [
+            'Ridge’s alpha',
+            'The number of folds in cross-validation',
+            'A tree’s max_depth',
+            'The weights of a linear regression',
+          ],
+          3,
+          'Weights are outputs of fit; the other three are settings you pick before fitting.',
+        ),
+      ],
+    },
+    {
+      title: 'Search a grid of combinations with cross-validation',
+      explanation: [
+        'GridSearchCV(model, grid, cv=k) tries every combination of the listed hyperparameter values, scores each with k-fold cross-validation, and records the results in cv_results_. A grid of 3 depths and 2 leaf sizes has 3 * 2 = 6 combinations, so it fits 6 * k models.',
+        'best_params_ is the combination with the highest mean validation score, and best_score_ is that mean. For classifiers, the default score is the fraction of correct predictions; for regression you can pass scoring="neg_mean_squared_error".',
+      ],
+      example: {
+        code: 'from sklearn.model_selection import GridSearchCV\nfrom sklearn.tree import DecisionTreeClassifier\nX = [[1], [2], [3], [4], [5], [6], [7], [8]]\ny = [0, 0, 1, 0, 1, 1, 1, 1]\ngrid = {"max_depth": [1, 2, 3], "min_samples_leaf": [1, 2]}\nsearch = GridSearchCV(DecisionTreeClassifier(random_state=0), grid, cv=2)\nsearch.fit(X, y)\nprint(len(search.cv_results_["params"]))\nprint(search.best_params_)',
+        output: "6\n{'max_depth': 1, 'min_samples_leaf': 1}",
+        explanation:
+          'Six combinations were scored. Deeper trees did no better on the held-out folds, so the simplest tree wins.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'grid = {"max_depth": [2, 4, 6, 8], "min_samples_leaf": [1, 5, 10]}\ncombos = len(grid["max_depth"]) * len(grid["min_samples_leaf"])\nfolds = 5\nprint(combos, combos * folds)',
+          ['7 35', '12 12', '12 60', '12 61'],
+          2,
+          'Four depths times three leaf sizes make 12 combinations, each fitted once per fold.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.model_selection import GridSearchCV\nfrom sklearn.linear_model import Ridge\nX = [[0.0], [1.0], [2.0], [3.0], [4.0], [5.0]]\ny = [0.2, 1.9, 4.1, 6.2, 7.8, 10.1]\nsearch = GridSearchCV(Ridge(), {"alpha": [0.01, 1.0, 100.0]}, cv=3, scoring="neg_mean_squared_error")\nsearch.fit(X, y)\nprint(search.best_params_)\nprint(round(float(-search.best_score_), 3))',
+          [
+            "{'alpha': 100.0}\n0.04",
+            "{'alpha': 0.01}\n-0.04",
+            "{'alpha': 1.0}\n0.04",
+            "{'alpha': 0.01}\n0.04",
+          ],
+          3,
+          'The data are almost exactly linear, so the weakest penalty validates best. best_score_ is a negated MSE, so negating it gives 0.04.',
+        ),
+        choose(
+          'A grid has 5 alphas, 4 depths, and 3 leaf sizes, scored with 5-fold cross-validation. How many models are fitted before the final refit?',
+          ['12', '60', '17', '300'],
+          3,
+          '5 * 4 * 3 = 60 combinations, each fitted once per fold: 60 * 5 = 300.',
+        ),
+        choose(
+          'What does search.best_score_ report after GridSearchCV?',
+          [
+            'The best combination’s mean score across the validation folds',
+            'The best combination’s score on the test set',
+            'The best combination’s training score',
+            'The highest single-fold score of any combination',
+          ],
+          0,
+          'Each combination is ranked by its average validation score; best_score_ is the winner’s average.',
+        ),
+      ],
+    },
+    {
+      title: 'Sample at random, and expect the winner to be optimistic',
+      explanation: [
+        'RandomizedSearchCV samples n_iter combinations from the listed values instead of trying them all. With many hyperparameters, a fixed budget of random combinations often finds good settings far more cheaply than a full grid.',
+        'Validation scores contain chance variation. The more combinations you try, the more likely the top score benefited from luck, so the best validation score is an optimistic estimate of how the chosen settings will do on new data.',
+      ],
+      example: {
+        code: 'import numpy as np\nrng = np.random.default_rng(0)\nscores = 0.80 + rng.normal(0, 0.02, size=50)\nprint(round(float(scores.mean()), 3), round(float(scores.max()), 3))',
+        output: '0.803 0.839',
+        explanation:
+          'Here 50 equally good settings get a true score of 0.80 plus seeded random noise. Picking the maximum reports 0.839, an advantage that comes entirely from luck.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.model_selection import RandomizedSearchCV\nfrom sklearn.tree import DecisionTreeClassifier\nX = [[1], [2], [3], [4], [5], [6], [7], [8]]\ny = [0, 0, 1, 0, 1, 1, 1, 1]\nspace = {"max_depth": [1, 2, 3, 4, 5], "min_samples_leaf": [1, 2, 3]}\nsearch = RandomizedSearchCV(DecisionTreeClassifier(random_state=0), space, n_iter=4, cv=2, random_state=0)\nsearch.fit(X, y)\nprint(len(search.cv_results_["params"]))',
+          ['15', '8', '4', '2'],
+          2,
+          'Randomized search evaluates only n_iter = 4 of the 15 possible combinations.',
+        ),
+        choose(
+          'You tried 500 configurations. The best validation score is 0.91 and the median is 0.86. What should you expect on fresh data?',
+          [
+            'Exactly 0.91',
+            'Probably somewhat below 0.91, because the maximum partly reflects luck',
+            'Above 0.91, because the model will keep improving',
+            'Exactly 0.86, the median',
+          ],
+          1,
+          'Selecting the maximum of many noisy scores favours lucky ones, so the winner’s score overstates its true performance.',
+        ),
+        choose(
+          'When is randomized search usually preferable to a full grid?',
+          [
+            'When there are many hyperparameters and a limited budget of fits',
+            'When there is a single hyperparameter with two values',
+            'When every combination must be tried',
+            'When no validation data are available',
+          ],
+          0,
+          'A grid grows multiplicatively with each hyperparameter; random sampling keeps the cost fixed.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'validation = [0.84, 0.86, 0.91, 0.85]\ntest = [0.83, 0.85, 0.84, 0.84]\nbest = 0\nfor i in range(len(validation)):\n    if validation[i] > validation[best]:\n        best = i\nprint(validation[best], test[best])',
+          ['0.91 0.84', '0.91 0.91', '0.86 0.85', '0.84 0.83'],
+          0,
+          'The configuration chosen for its 0.91 validation score scores only 0.84 on new data, a typical drop for a selected winner.',
+        ),
+      ],
+    },
+    {
+      title: 'Refit the winner, test once, and nest to judge the search',
+      explanation: [
+        'After the search, refit the chosen settings on all of the training data. GridSearchCV does this by default and stores the result in best_estimator_. Then score that model once on the untouched test set; tuning again after seeing the test score turns the test set into validation data.',
+        'Nested cross-validation estimates how well the whole selection procedure works: an outer loop of folds holds out data for evaluation, and inside each outer training part an inner cross-validation picks the hyperparameters.',
+      ],
+      example: {
+        code: 'from sklearn.model_selection import GridSearchCV\nfrom sklearn.tree import DecisionTreeClassifier\nX_train = [[1], [2], [3], [4], [5], [6], [7], [8]]\ny_train = [0, 0, 0, 0, 1, 1, 1, 1]\nX_test = [[2.5], [6.5]]\ny_test = [0, 1]\nsearch = GridSearchCV(DecisionTreeClassifier(random_state=0), {"max_depth": [1, 2, 3]}, cv=2)\nsearch.fit(X_train, y_train)\nprint(search.best_params_)\nprint(search.best_estimator_.predict(X_test).tolist(), y_test)',
+        output: "{'max_depth': 1}\n[0, 1] [0, 1]",
+        explanation:
+          'The search picks depth 1 on the training data, refits it there, and the test rows are used once, only to check that final model.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.model_selection import GridSearchCV\nfrom sklearn.tree import DecisionTreeClassifier\nX_train = [[1], [2], [3], [4], [5], [6], [7], [8]]\ny_train = [0, 0, 0, 0, 1, 1, 1, 1]\nsearch = GridSearchCV(DecisionTreeClassifier(random_state=0), {"max_depth": [1, 2, 3]}, cv=2)\nsearch.fit(X_train, y_train)\nprint(int(search.best_estimator_.tree_.n_node_samples[0]))',
+          ['4', '2', '10', '8'],
+          3,
+          'The root node counts the rows the final tree was fitted on: all eight training rows, not one fold’s four.',
+        ),
+        choose(
+          'What is nested cross-validation for?',
+          [
+            'Training on the test labels safely',
+            'Estimating how well the whole tuning procedure performs on held-out data',
+            'Making grid search run faster',
+            'Guaranteeing that every configuration wins once',
+          ],
+          1,
+          'Inner folds choose settings; outer folds score the result, so the estimate includes the effect of tuning.',
+        ),
+        choose(
+          'After tuning, the test score disappoints, so the team adjusts the grid and searches again. What is the problem?',
+          [
+            'Grid search cannot be run twice',
+            'The new search will be slower',
+            'The test set is now guiding choices, so its score is no longer an unbiased final estimate',
+            'Nothing; the test set exists to guide tuning',
+          ],
+          2,
+          'Once its score influences decisions, the test set is effectively validation data.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'outer_folds = 5\ncombinations = 4\ninner_folds = 3\ninner_fits = outer_folds * combinations * inner_folds\nprint(inner_fits, inner_fits + outer_folds)',
+          ['60 65', '12 17', '60 60', '20 25'],
+          0,
+          'Each of the 5 outer rounds scores 4 combinations with 3 inner folds, then refits its winner once.',
+        ),
+      ],
+    },
+  ],
 };
