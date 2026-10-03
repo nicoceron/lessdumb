@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { skillById } from '../src/lib/curriculum';
+import { courses, skillById } from '../src/lib/curriculum';
 import {
   applyAttempt,
   dateKey,
@@ -9,6 +9,8 @@ import {
   selectQuestion,
 } from '../src/lib/learning';
 import {
+  courseMastery,
+  courseOutline,
   courseSequence,
   estimateCompletion,
   formatDayHeading,
@@ -204,10 +206,18 @@ test('Courses shows the course sequence and numbered skills that open the graph'
   ).toHaveAttribute('aria-current', 'true');
 
   const main = page.getByRole('region', { name: 'Machine Learning' });
-  await expect(main).toContainText('0 of 28 skills mastered');
-  const firstUnit = main.getByRole('button', { name: /^1\s*Frame an ML/ });
+  // Counts come from the catalog, which grows as skills are added.
+  const fresh = createState().progress;
+  const ml = courses.find((course) => course.id === 'machine-learning')!;
+  const outline = courseOutline(fresh, ml.id);
+  await expect(main).toContainText(
+    `0 of ${courseMastery(fresh, ml).total} skills mastered · ${outline.length} units`,
+  );
+  const firstUnit = main.getByRole('button', {
+    name: new RegExp(`^1\\s*${outline[0].unit.title}`),
+  });
   await expect(firstUnit).toHaveAttribute('aria-expanded', 'true');
-  await expect(firstUnit).toContainText('4 skills');
+  await expect(firstUnit).toContainText(`${outline[0].total} skills`);
   const row = main.getByRole('link', { name: /^Locked\s*1\.1\s*[A-Z]/ });
   await expect(row).toHaveAttribute('href', /^\/graph\?skill=/);
   await row.click();

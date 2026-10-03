@@ -7,6 +7,7 @@ import { replaceCode } from './helpers/editor';
 import {
   answerChoice,
   answerShown,
+  completeLesson,
   continueLesson,
   feedback,
 } from './helpers/lesson';
@@ -164,27 +165,27 @@ test('data-systems scenarios teach and earn cards without a code exercise', asyn
 }) => {
   const skill = skillById['ds-workloads'];
   await page.goto(`/learn?skill=${skill.id}`);
-  const next = page.getByRole('button', { name: 'Next slide', exact: true });
-  for (
-    let index = 0;
-    index < 8 && !(await page.getByText('Design scenario').isVisible());
-    index++
-  )
-    await next.click();
+  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
+  // Each point's worked example is a design scenario with a decision, shown
+  // as text rather than as a program.
+  const point = skill.knowledgePoints![0];
+  expect(point.example.kind).toBe('text');
+  const teaching = page.locator('.lesson-point');
   await expect(
-    page.getByText('Design scenario', { exact: true }),
+    teaching.getByText(point.example.label ?? 'SCENARIO', { exact: true }),
   ).toBeVisible();
-  for (let index = 0; index < 8 && (await next.isVisible()); index++)
-    await next.click();
-  await expect(page.getByText('Decision', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Let’s try it' }).click();
-  for (const question of skill.questions) {
-    if (question.type !== 'choice')
-      throw new Error('Scenario course unexpectedly requires Python');
-    await answerChoice(page, question);
-    if (question !== skill.questions.at(-1)) await continueLesson(page);
-  }
+  await expect(teaching.getByText('Decision', { exact: true })).toBeVisible();
+  await expect(
+    teaching.getByText(point.example.output, { exact: true }),
+  ).toBeVisible();
+  expect(
+    skill.knowledgePoints!.every((item) =>
+      item.questions.every((question) => question.type === 'choice'),
+    ),
+  ).toBe(true);
+  await completeLesson(page, skill, { started: true });
   await expect(feedback(page)).toContainText('Lesson complete');
+  await expect(page.locator('.cm-content')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Run & check' })).toHaveCount(
     0,
   );
