@@ -2026,3 +2026,54 @@ code {
     padding: 24px 20px;
   }
 }
+
+/* Quiz: a score card, then each question's result with its explanation. */
+.lesson-page .quiz-score {
+  gap: 10px;
+  padding: 24px 30px;
+}
+.quiz-score h2 {
+  font-size: 22px;
+  font-weight: 650;
+}
+.quiz-results {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lesson-page .quiz-result {
+  gap: 10px;
+  margin-bottom: 0;
+  padding: 20px 26px;
+  border-left-width: 4px;
+}
+.quiz-result.is-correct {
+  border-left-color: #22634c;
+}
+.quiz-result.is-incorrect {
+  border-left-color: var(--destructive);
+}
+.quiz-result h3 {
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.quiz-result-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.quiz-result p {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .lesson-page .quiz-score,
+  .lesson-page .quiz-result {
+    padding: 18px 20px;
+  }
+}

@@ -243,10 +243,14 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
     let current = (await cloud(reviewPage)).state!;
     const visited: string[] = [];
     for (let index = 0; index < 4; index += 1) {
+      // /learn?mode=review is a review-only session, so lessons never
+      // take a turn here even after two reviews in a row.
       const task = nextTask(
         current.progress,
         reviewTime,
         'data-systems-foundations',
+        undefined,
+        { reviewsOnly: true },
       );
       expect(task?.mode).toBe('review');
       expect(dueSkills).toContain(task?.skillId);

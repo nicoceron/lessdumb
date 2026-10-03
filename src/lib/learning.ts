@@ -19,6 +19,7 @@ import {
   type LessonStep,
 } from './lesson-plan';
 import { earnedXp, lessonXp, REVIEW_XP } from './xp';
+import type { Quiz } from './quiz';
 import {
   acquisitionMemory,
   legacyMemory,
@@ -35,6 +36,12 @@ export const DAY_MS = 86_400_000;
  * this delay, whichever comes first.
  */
 export const LESSON_RETRY_DELAY_MS = 4 * 3_600_000;
+/**
+ * Due reviews come first, but never more than this many in a row while a
+ * lesson is ready: then a lesson goes next, so reviews interleave with new
+ * learning instead of blocking it.
+ */
+export const MAX_CONSECUTIVE_REVIEWS = 2;
 /** Keep recent diagnostics bounded; durable evidence and counters live on skills. */
 export const MAX_RECENT_ATTEMPTS = 2000;
 export interface EvidenceUpdate {
@@ -100,7 +107,8 @@ export interface Attempt {
   skillId: string;
   questionId: string;
   correct: boolean;
-  mode: 'learn' | 'review';
+  /** Quiz answers are retrieval checks; they never add or remove lesson evidence. */
+  mode: 'learn' | 'review' | 'quiz';
   usedHint: boolean;
   at: string;
   xp: number;
@@ -108,10 +116,12 @@ export interface Attempt {
   reviewDueAt?: number;
   /** Set on the answer that completed or failed a task; task XP rides on it. */
   outcome?: AttemptOutcome;
+  /** The quiz a quiz answer belongs to. */
+  quizId?: string;
 }
 
 export interface Progress {
-  version: 2;
+  version: 3;
   skills: Record<string, SkillProgress>;
   totalXp: number;
   dailyXp: Record<string, number>;
@@ -119,6 +129,8 @@ export interface Progress {
   streak: number;
   attempts: Attempt[];
   timeZone: string;
+  /** Recent quizzes, oldest first; quiz XP is recorded on them. */
+  quizzes?: Quiz[];
 }
 
 export interface AttemptInput {
@@ -179,6 +191,21 @@ function previousDate(key: string): string {
     .slice(0, 10);
 }
 
+/** The learner's calendar day and streak after activity at `time`. */
+export function activityDay(progress: Progress, time: number) {
+  const today = dateKey(time, progress.timeZone || 'UTC');
+  const previous = progress.lastActivityDate;
+  return {
+    today,
+    streak:
+      previous === today
+        ? progress.streak
+        : previous === previousDate(today)
+          ? progress.streak + 1
+          : 1,
+  };
+}
+
 export function emptyProgress(
   _now: Now = new Date(),
   timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
@@ -186,7 +213,7 @@ export function emptyProgress(
   // Validate the zone at creation rather than failing only after the first answer.
   dateKey(_now, timeZone);
   return {
-    version: 2,
+    version: 3,
     skills: {},
     totalXp: 0,
     dailyXp: {},
@@ -301,6 +328,12 @@ export function lessonCoolingDown(
   const failedAt = state?.lessonFailedAt;
   if (failedAt === undefined || currentLessonAttempt(state)) return false;
   if (timestamp(now) >= failedAt + LESSON_RETRY_DELAY_MS) return false;
+  if (
+    (progress.quizzes ?? []).some(
+      (quiz) => quiz.completedAt !== undefined && quiz.completedAt > failedAt,
+    )
+  )
+    return false;
   return !progress.attempts.some(
     (attempt) =>
       attempt.skillId !== skillId &&
@@ -371,7 +404,7 @@ export function coursePath(
 }
 
 /** How often each question of a skill has been answered, in any mode. */
-function seenCounts(progress: Progress, skillId: string) {
+export function seenCounts(progress: Progress, skillId: string) {
   const counts = new Map<string, number>();
   for (const attempt of progress.attempts)
     if (attempt.skillId === skillId)
@@ -491,11 +524,32 @@ export function selectQuestion(
 }
 
 /** Prioritize due retrieval, then remediation, then the prerequisite-ready frontier. */
+/**
+ * Review tasks finished since the learner last worked on a lesson: passed
+ * cycles and missed due-review answers (which end their cycle).
+ */
+export function reviewsSinceLesson(progress: Progress): number {
+  let count = 0;
+  for (let index = progress.attempts.length - 1; index >= 0; index--) {
+    const attempt = progress.attempts[index];
+    if (attempt.mode === 'learn') break;
+    if (
+      attempt.mode === 'review' &&
+      attempt.reviewDueAt !== undefined &&
+      (attempt.outcome === 'review-passed' || !attempt.correct)
+    )
+      count++;
+  }
+  return count;
+}
+
 export function nextTask(
   progress: Progress,
   now: Now = new Date(),
   courseId?: string,
   catalog: CurriculumCatalog = defaultCatalog,
+  /** A review session asks only for reviews, so it never switches to a lesson. */
+  options: { reviewsOnly?: boolean } = {},
 ): NextTask | null {
   const time = timestamp(now);
   const registry = coursePath(courseId, catalog);
@@ -525,7 +579,21 @@ export function nextTask(
       left.dueAt! - right.dueAt!
     );
   });
-  if (due.length) {
+  const available = registry.filter(
+    (item) => !isMastered(progress, item.id, catalog) && unlocked(item.id),
+  );
+  // A lesson failed moments ago waits behind any other available work.
+  const coolingDown = available.filter((item) =>
+    lessonCoolingDown(progress, item.id, time),
+  );
+  const fresh = available.filter((item) => !coolingDown.includes(item));
+  // Reviews come first, up to MAX_CONSECUTIVE_REVIEWS in a row while a
+  // lesson is ready; then a lesson takes its turn.
+  const lessonTurn =
+    !options.reviewsOnly &&
+    fresh.length > 0 &&
+    reviewsSinceLesson(progress) >= MAX_CONSECUTIVE_REVIEWS;
+  if (due.length && !lessonTurn) {
     const item = due[0];
     return {
       skillId: item.id,
@@ -535,14 +603,6 @@ export function nextTask(
         'This skill is due for spaced retrieval. Recall it before looking back at the lesson.',
     };
   }
-  const available = registry.filter(
-    (item) => !isMastered(progress, item.id, catalog) && unlocked(item.id),
-  );
-  // A lesson failed moments ago waits behind any other available work.
-  const coolingDown = available.filter((item) =>
-    lessonCoolingDown(progress, item.id, time),
-  );
-  const fresh = available.filter((item) => !coolingDown.includes(item));
   const ready = fresh.length ? fresh : coolingDown;
   const remediation = ready
     .filter((item) => getSkillState(progress, item.id).learnedAt !== null)
@@ -579,13 +639,15 @@ export function nextTask(
     questionId: selectQuestion(progress, item, 'learn').id,
     reason: !fresh.length
       ? 'Try this lesson again from its first point.'
-      : remediation.length
-        ? 'Restore the missing evidence for this skill before building on it.'
-        : active.length
-          ? 'Finish this skill with distinct, independent answers.'
-          : courseId && item.courseId !== courseId
-            ? 'Build this prerequisite from another course to advance your selected learning goal.'
-            : 'You have the prerequisite evidence to learn this skill.',
+      : due.length
+        ? 'You have done a few reviews in a row; learn something new before the next one.'
+        : remediation.length
+          ? 'Restore the missing evidence for this skill before building on it.'
+          : active.length
+            ? 'Finish this skill with distinct, independent answers.'
+            : courseId && item.courseId !== courseId
+              ? 'Build this prerequisite from another course to advance your selected learning goal.'
+              : 'You have the prerequisite evidence to learn this skill.',
   };
 }
 

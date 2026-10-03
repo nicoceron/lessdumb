@@ -225,7 +225,7 @@ describe('documented Better Auth account backend', () => {
   });
 });
 
-function progressFixture(version = 2) {
+function progressFixture(version = 3) {
   return {
     version,
     progress: {
@@ -570,18 +570,20 @@ describe('versioned per-account progress', () => {
     });
   });
 
-  it('migrates an account saved before knowledge-point lessons', async () => {
-    const { backend } = await freshBackend();
-    const cookie = await register(backend);
-    const legacy = progressFixture(1);
-    expect(
-      (await stateRequest(backend, cookie, { state: legacy, revision: 0 }))
-        .status,
-    ).toBe(200);
-    expect(await (await stateRequest(backend, cookie)).json()).toEqual({
-      state: progressFixture(2),
-      revision: 1,
-    });
+  it('migrates accounts saved before knowledge-point lessons and before quizzes', async () => {
+    for (const version of [1, 2]) {
+      const { backend } = await freshBackend();
+      const cookie = await register(backend);
+      const legacy = progressFixture(version);
+      expect(
+        (await stateRequest(backend, cookie, { state: legacy, revision: 0 }))
+          .status,
+      ).toBe(200);
+      expect(await (await stateRequest(backend, cookie)).json()).toEqual({
+        state: progressFixture(3),
+        revision: 1,
+      });
+    }
   });
 
   it('rejects invalid shapes, extra secrets, and cross-origin state writes', async () => {
@@ -589,7 +591,7 @@ describe('versioned per-account progress', () => {
     const cookie = await register(backend);
     const state = progressFixture();
     const invalid = await stateRequest(backend, cookie, {
-      state: { ...state, version: 3 },
+      state: { ...state, version: 4 },
       revision: 0,
     });
     expect(invalid.status).toBe(400);

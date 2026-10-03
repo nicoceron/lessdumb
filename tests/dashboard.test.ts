@@ -281,7 +281,7 @@ describe('task history', () => {
     );
     const days = groupByDay(taskHistory(progress), ZONE);
     expect(days.map((day) => day.key)).toEqual(['2026-10-02', '2026-10-01']);
-    expect(days[1].entries.map((entry) => entry.skill.id)).toEqual([
+    expect(days[1].entries.map((entry) => entry.skill!.id)).toEqual([
       'variables',
       'print-output',
     ]);
