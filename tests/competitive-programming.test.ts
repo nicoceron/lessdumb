@@ -18,7 +18,7 @@ import {
 import { createState, recordLearningAnswer } from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
 import { competitiveTopicStages } from '../src/lib/courses/competitive-programming';
-import { masterSkill } from './helpers/mastery';
+import { masterSkill, masterSkillState } from './helpers/mastery';
 
 const courseId = 'competitive-programming';
 const NOW = Date.parse('2026-10-02T15:00:00Z');

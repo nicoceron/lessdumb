@@ -1,10 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
-import { skillById, type CodeQuestion } from '../src/lib/curriculum';
+import { skillById, type Question } from '../src/lib/curriculum';
 import { coursePath } from '../src/lib/learning';
 import { createState, type LearnerState } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
-import { replaceCode as writeCode } from './helpers/editor';
-import { answerChoice } from './helpers/lesson';
+import { answerShown, continueLesson, feedback } from './helpers/lesson';
 import { masterSkill } from './helpers/mastery';
 import { chooseCourse, expectActiveCourse } from './helpers/navigation';
 
@@ -107,38 +106,36 @@ for (const id of ['cp-prefix-sums', 'cp-fenwick']) {
     await account(page, id);
     const skill = skillById[id];
     await page.goto(`/learn?skill=${id}`);
-    await page.getByRole('button', { name: 'Let’s try it' }).click();
-    for (const question of skill.questions) {
-      if (question.type === 'choice') await answerChoice(page, question);
-      else {
-        if (id === 'cp-prefix-sums') {
-          await writeCode(page, 'pass');
-          await page
-            .getByRole('button', { name: 'Run & check', exact: true })
-            .click();
-          await expect(
-            page.locator('.question-paper [data-slot="alert"][role="status"]'),
-          ).toContainText('Incorrect', { timeout: 60000 });
-          await page
-            .getByRole('button', { name: 'Continue', exact: true })
-            .click();
-        }
-        await writeCode(page, (question as CodeQuestion).solution);
-        await page
-          .getByRole('button', { name: 'Run & check', exact: true })
-          .click();
+    // A skill with knowledge points is taught point by point (two answers
+    // each) before its code exercise; other skills still use their questions.
+    const steps: Question[][] = skill.knowledgePoints
+      ? [
+          ...skill.knowledgePoints.flatMap((point) => [
+            point.questions,
+            point.questions,
+          ]),
+          skill.questions.filter((question) => question.type === 'code'),
+        ]
+      : skill.questions.map((question) => [question]);
+    await page
+      .getByRole('button', {
+        name: skill.knowledgePoints ? 'Start lesson' : 'Let’s try it',
+      })
+      .click();
+    for (const [index, candidates] of steps.entries()) {
+      const last = index === steps.length - 1;
+      if (candidates[0].type === 'code' && id === 'cp-prefix-sums') {
+        await answerShown(page, candidates, false);
+        await expect(feedback(page)).toContainText('Incorrect', {
+          timeout: 60000,
+        });
+        await continueLesson(page);
       }
-      const feedback = page.locator(
-        '.question-paper [data-slot="alert"][role="status"]',
+      await answerShown(page, candidates);
+      await expect(feedback(page)).toContainText(
+        last ? 'Lesson complete' : 'Correct',
       );
-      await expect(feedback).toBeVisible({ timeout: 60000 });
-      await expect(feedback).toContainText(
-        question === skill.questions.at(-1) ? 'Lesson complete' : 'Correct',
-      );
-      if (question !== skill.questions.at(-1))
-        await page
-          .getByRole('button', { name: 'Continue', exact: true })
-          .click();
+      if (!last) await continueLesson(page);
     }
     await expect
       .poll(
