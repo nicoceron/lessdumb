@@ -9,6 +9,7 @@ import {
 } from '../src/lib/card-text';
 import { isUnlocked } from '../src/lib/learning';
 import { mathSpans, plainProse } from '../src/lib/math-text';
+import { acceptedAnswer } from '../src/lib/typed-answer';
 import { createState, recordLearningAnswer } from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
 import { masterWithPrerequisites } from './helpers/mastery';
@@ -20,16 +21,19 @@ const questions = curriculum.skills.flatMap((skill) =>
   ].map((question) => ({ skill, question })),
 );
 
-/** The plain text mistake cards carried before CEN-128. */
+/** The plain text mistake cards carried before CEN-128, plus a typed unit. */
 function legacyText(question: Question) {
+  const unit = question.type === 'numeric' && question.unit;
   return {
-    front: `${plainProse(question.prompt)}${question.type === 'choice' && question.code ? `\n\n${question.code}` : ''}`,
+    front: `${plainProse(question.prompt)}${question.type !== 'code' && question.code ? `\n\n${question.code}` : ''}`,
     back: `${
       question.type === 'code'
         ? question.solution
-        : question.checksOutput
-          ? question.choices[question.answer]
-          : plainProse(question.choices[question.answer])
+        : question.type !== 'choice'
+          ? `${acceptedAnswer(question)}${unit ? ` ${unit}` : ''}`
+          : question.checksOutput
+            ? question.choices[question.answer]
+            : plainProse(question.choices[question.answer])
     }\n\n${plainProse(question.explanation)}`,
   };
 }
@@ -67,13 +71,12 @@ describe('card text with prose and code (CEN-128)', () => {
         kind: 'prose',
         text: question.prompt,
       });
-      if (question.type === 'choice' && question.code)
-        expect(front[1]).toEqual({ kind: 'code', text: question.code });
-      expect(front).toHaveLength(
-        question.type === 'choice' && question.code ? 2 : 1,
-      );
+      const program = question.type !== 'code' && question.code;
+      if (program) expect(front[1]).toEqual({ kind: 'code', text: program });
+      expect(front).toHaveLength(program ? 2 : 1);
+      // Code, program output, and typed answers are literal; choices are prose.
       expect(back[0].kind).toBe(
-        question.type === 'code' || question.checksOutput ? 'code' : 'prose',
+        question.type === 'choice' && !question.checksOutput ? 'prose' : 'code',
       );
       // Read as plain text, the card says what it said before CEN-128.
       const legacy = legacyText(question);
@@ -96,6 +99,37 @@ describe('card text with prose and code (CEN-128)', () => {
       front: question.prompt,
       back: `$60$\n\n${question.explanation}`,
     });
+  });
+
+  it('shows a typed answer as written, with its unit, never as math', () => {
+    const numeric: Question = {
+      id: 'n',
+      type: 'numeric',
+      prompt: 'A loop runs $n = 4$ times at $3$ ms each. How long in total?',
+      answer: 12,
+      tolerance: 0.5,
+      unit: 'ms',
+      explanation: '$4 \\times 3 = 12$.',
+    };
+    expect(cardBlocks(mistakeCardText(numeric).back)).toEqual([
+      { kind: 'code', text: '12 (± 0.5) ms' },
+      { kind: 'prose', text: numeric.explanation },
+    ]);
+    const text: Question = {
+      id: 't',
+      type: 'text',
+      prompt: 'What does this print?',
+      code: 'print("$5")',
+      answers: ['$5'],
+      checksOutput: true,
+      explanation: 'The string holds a literal dollar sign.',
+    };
+    const card = mistakeCardText(text);
+    expect(cardBlocks(card.front)).toEqual([
+      { kind: 'prose', text: text.prompt },
+      { kind: 'code', text: 'print("$5")' },
+    ]);
+    expect(cardBlocks(card.back)[0]).toEqual({ kind: 'code', text: '$5' });
   });
 
   it('records a wrong answer on a math question as a prose card the server accepts', () => {

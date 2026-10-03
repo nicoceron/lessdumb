@@ -1,4 +1,9 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 export const knowledgePoints: KnowledgePointModule = {
   'da-arrays': [
@@ -15,18 +20,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The flat list has one axis of length 3. The nested list has two inner lists (rows) of four values (columns), so its shape is (2, 4).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\npoints = np.array([[3, 1], [4, 1], [5, 9]])\nprint(points.shape)',
-          ['(2, 3)', '(3, 2)', '(6,)', '(3,)'],
-          1,
+          '(3, 2)',
           'Three inner lists become three rows, and each has two values, so the shape is (3, 2).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nrolls = np.array([7, 1, 7, 2, 9])\nprint(rolls.shape)',
-          ['(1, 5)', '5', '(5, 1)', '(5,)'],
-          3,
+          '(5,)',
           'A flat list makes a one-dimensional array; its only axis has length 5.',
         ),
         choose(
@@ -35,11 +38,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Each inner list becomes a row: 12 rows of 3 columns.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nrow = np.array([[10, 20, 30]])\nprint(row.shape)',
-          ['(1, 3)', '(3,)', '(3, 1)', '(1,)'],
-          0,
+          '(1, 3)',
           'The outer list contains one inner list of three values: one row, three columns.',
         ),
       ],
@@ -57,25 +59,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The shape is (2, 3), so size is $2 \\times 3 = 6$ and there are 2 axes. len counts the 2 rows.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nflags = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [1, 1, 0, 0]])\nprint(flags.size)',
-          ['3', '4', '12', '7'],
-          2,
+          '12',
           'The shape is (3, 4), and size multiplies the axis lengths: $3 \\times 4 = 12$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nlevels = np.array([5, 6, 7, 8])\nprint(levels.ndim)\nprint(levels.size)',
-          ['4\n1', '1\n4', '4\n4', '0\n4'],
-          1,
+          '1\n4',
           'A flat array has one axis, and that axis holds four entries.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nboard = np.array([[9, 8, 7], [6, 5, 4]])\nprint(len(board))\nprint(board.size)',
-          ['3\n6', '6\n6', '2\n3', '2\n6'],
-          3,
+          '2\n6',
           'len counts the first axis (2 rows), while size counts all 6 entries.',
         ),
         choose(
@@ -104,23 +103,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'One decimal entry makes the whole array float64, and dtype=float makes whole numbers floats as well.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nweights = np.array([1, 2.5, 4])\nprint(weights.tolist())',
-          ['[1, 2.5, 4]', '[1.0, 2.5, 4.0]', '[1, 2, 4]', '[1.0, 2.0, 4.0]'],
-          1,
+          '[1.0, 2.5, 4.0]',
           'A single decimal entry makes every entry a float; nothing is rounded.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\ngrid = np.array([[1, 2], [3, 4]], dtype=float)\nprint(grid.tolist())',
-          [
-            '[[1, 2], [3, 4]]',
-            '[1.0, 2.0, 3.0, 4.0]',
-            '[[1.0, 2], [3.0, 4]]',
-            '[[1.0, 2.0], [3.0, 4.0]]',
-          ],
-          3,
+          '[[1.0, 2.0], [3.0, 4.0]]',
           'dtype=float converts every entry, and tolist keeps the nested row structure.',
         ),
         choose(
@@ -134,11 +126,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Only an explicit dtype=float turns whole-number input into floats.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nprices = np.array([5, 6, 7], dtype=float)\nprint(prices.dtype)',
-          ['int64', 'object', 'float64', 'float'],
-          2,
+          'float64',
           'dtype=float stores every entry as a 64-bit float, which NumPy names float64.',
         ),
       ],
@@ -159,32 +150,28 @@ export const knowledgePoints: KnowledgePointModule = {
           'The array doubles each entry and adds matching positions; the list is repeated instead.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nstock = np.array([4, 7, 1])\nprint((stock - 1).tolist())',
-          ['[4, 7, 1, -1]', '[3, 7, 1]', '[3, 6, 0]', '[4, 7, 0]'],
-          2,
+          '[3, 6, 0]',
           'Subtracting a number from an array subtracts it from every entry.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nunits = np.array([2, 3])\nprice = np.array([10, 20])\nprint((units * price).tolist())',
-          ['[20, 60]', '[12, 23]', '80', '[2, 3, 10, 20]'],
-          0,
+          '[20, 60]',
           'Equal shapes combine position by position: $2 \\times 10$ and $3 \\times 20$. Nothing is summed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [1, 2, 3]\nprint(values * 2)',
-          ['[2, 4, 6]', '[1, 1, 2, 2, 3, 3]', '12', '[1, 2, 3, 1, 2, 3]'],
-          3,
+          '[1, 2, 3, 1, 2, 3]',
           'values is a plain list, and multiplying a list by 2 repeats it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nlevels = np.array([5, 9])\ndoubled = levels * 2\nprint(levels.tolist())',
-          ['[10, 18]', '[5, 9]', '[5, 9, 5, 9]', '[10, 18, 5, 9]'],
-          1,
+          '[5, 9]',
           'levels * 2 builds a new array stored in doubled; levels itself is unchanged.',
         ),
       ],
@@ -202,25 +189,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'All four entries are added (20) and the mean divides that by 4 entries, giving the float 5.0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nscores = np.array([3, 5, 10])\nprint(scores.sum())\nprint(scores.mean())',
-          ['18\n6', '18\n6.0', '3\n6.0', '18\n9.0'],
-          1,
+          '18\n6.0',
           '$3 + 5 + 10 = 18$, and $18 / 3 = 6.0$; a mean is always a float.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\ngrid = np.array([[1, 2, 3], [4, 5, 6]])\nprint(grid.sum())',
-          ['[5, 7, 9]', '[6, 15]', '6', '21'],
-          3,
+          '21',
           'With no axis, sum adds all six entries into one number: 21.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\ngrid = np.array([[2, 2], [4, 8]])\nprint(grid.mean())',
-          ['4.0', '[3.0, 5.0]', '16', '[2.0, 6.0]'],
-          0,
+          '4.0',
           'The four entries add to 16, and $16 / 4 = 4.0$. The lists are per-column and per-row means.',
         ),
         choose(
@@ -249,25 +233,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'axis=0 adds each column (1 + 10, 2 + 20, 3 + 30); axis=1 adds each row. Removing the column axis from (2, 3) leaves (2,).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([[5, 1], [2, 7], [3, 3]])\nprint(a.sum(axis=0).tolist())',
-          ['[6, 9, 6]', '21', '[10, 11]', '[5, 1, 2, 7, 3, 3]'],
-          2,
+          '[10, 11]',
           'axis=0 adds down each column: 5 + 2 + 3 and 1 + 7 + 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([[4, 6], [1, 3]])\nprint(a.mean(axis=1).tolist())',
-          ['[5.0, 2.0]', '[2.5, 4.5]', '3.5', '[5, 2]'],
-          0,
+          '[5.0, 2.0]',
           'axis=1 averages across each row: (4 + 6) / 2 and (1 + 3) / 2, as floats.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])\nprint(a.sum(axis=1).shape)',
-          ['(4,)', '(3, 4)', '(1,)', '(3,)'],
-          3,
+          '(3,)',
           'The shape is (3, 4); reducing axis 1 removes the 4 columns and leaves one total per row.',
         ),
         choose(
@@ -313,11 +294,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'axis=0 removes the patient axis, leaving one mean for each of the 24 hours.',
         ),
-        predictOutput(
+        typeOutput(
           'Rows are classrooms and columns are exams. What does this program print?',
           'import numpy as np\nscores = np.array([[70, 90], [80, 60], [60, 75]])\nprint(scores.mean(axis=0).tolist())',
-          ['[80.0, 70.0, 67.5]', '72.5', '[70.0, 75.0]', '[210, 225]'],
-          2,
+          '[70.0, 75.0]',
           'axis=0 averages down the classrooms, giving one mean per exam.',
         ),
         choose(
@@ -344,30 +324,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Row 1, column 2 holds 12. The colon takes column 0 from every row. The slice keeps rows 0–1 and columns 1 onward.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([[7, 1, 4], [2, 9, 6]])\nprint(a[1, 0])',
-          ['1', '7', '2', '9'],
-          2,
+          '2',
           'The row comes first: row 1 is [2, 9, 6], and column 0 of it is 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([[7, 1, 4], [2, 9, 6]])\nprint(a[:, 2].tolist())',
-          ['[4, 6]', '[2, 9, 6]', '[1, 9]', '[7, 1, 4]'],
-          0,
+          '[4, 6]',
           'The colon spans both rows, and position 2 is the third column.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])\nprint(a[1:, :2].tolist())',
-          [
-            '[[5, 6, 7], [9, 10, 11]]',
-            '[[1, 2], [5, 6]]',
-            '[[6, 7], [10, 11]]',
-            '[[5, 6], [9, 10]]',
-          ],
-          3,
+          '[[5, 6], [9, 10]]',
           'Rows from 1 to the end, and columns 0 and 1 (stopping before 2).',
         ),
         choose(
@@ -391,37 +363,28 @@ export const knowledgePoints: KnowledgePointModule = {
           'The mask marks entries above 20, and indexing keeps them in source order. The row mask comes from column 1 and keeps two complete rows.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nv = np.array([4, 11, 7, 15, 2])\nprint(v[v >= 7].tolist())',
-          [
-            '[7, 11, 15]',
-            '[4, 2]',
-            '[11, 7, 15]',
-            '[False, True, True, True, False]',
-          ],
-          2,
+          '[11, 7, 15]',
           'The mask keeps entries at least 7 in their original order; it does not sort them.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nv = np.array([3, 8, 5])\nprint((v < 6).tolist())',
-          ['[True, False, True]', '[3, 5]', '[False, True, False]', '2'],
-          0,
+          '[True, False, True]',
           'A comparison alone gives the mask, one True or False per entry, not the selected values.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nm = np.array([[10, 1], [20, 0], [30, 1]])\nprint(m[m[:, 1] == 1].tolist())',
-          ['[10, 30]', '[1, 1]', '[[20, 0]]', '[[10, 1], [30, 1]]'],
-          3,
+          '[[10, 1], [30, 1]]',
           'The mask has one value per row, so whole rows whose second column is 1 are kept.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nv = np.array([6, 2, 9])\nprint(len(v[v > 10]))',
-          ['3', '0', '[]', 'False'],
-          1,
+          '0',
           'No entry exceeds 10, so the selection is an empty array of length 0.',
         ),
       ],
@@ -439,30 +402,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Writing into the view changed raw. Writing into the copy did not, so raw is the same on the second line.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([5, 6, 7])\npart = a[:2]\npart[1] = 0\nprint(a.tolist())',
-          ['[5, 6, 7]', '[5, 0]', '[0, 6, 7]', '[5, 0, 7]'],
-          3,
+          '[5, 0, 7]',
           'part is a view of the first two entries, so setting part[1] changes a[1].',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([5, 6, 7])\npart = a[:2].copy()\npart[1] = 0\nprint(a.tolist())',
-          ['[5, 0, 7]', '[5, 6, 7]', '[5, 0]', '[0, 6, 7]'],
-          1,
+          '[5, 6, 7]',
           'copy() gives part its own storage, so a is unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([1, 8, 3, 9])\nbig = a[a > 5]\nbig[0] = -1\nprint(a.tolist())\nprint(big.tolist())',
-          [
-            '[1, 8, 3, 9]\n[-1, 9]',
-            '[1, -1, 3, 9]\n[-1, 9]',
-            '[1, 8, 3, 9]\n[8, 9]',
-            '[-1, 8, 3, 9]\n[-1, 9]',
-          ],
-          0,
+          '[1, 8, 3, 9]\n[-1, 9]',
           'A mask selection is a new array: big changes, a does not.',
         ),
         choose(
@@ -549,23 +504,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'bonus has one value per row. As a (3, 1) column, each value is added across its own row.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nv = np.array([4, 5])\nprint(v[:, None].shape)',
-          ['(1, 2)', '(2,)', '(2, 2)', '(2, 1)'],
-          3,
+          '(2, 1)',
           'None adds a new axis of length 1 after the existing axis of length 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nm = np.array([[1, 2, 3], [4, 5, 6]])\ns = np.array([10, 20])\nprint((m * s[:, None]).tolist())',
-          [
-            '[[10, 20, 30], [80, 100, 120]]',
-            '[[10, 40, 3], [40, 100, 6]]',
-            '[[11, 12, 13], [24, 25, 26]]',
-            '[[10, 20, 30], [40, 50, 60]]',
-          ],
-          0,
+          '[[10, 20, 30], [80, 100, 120]]',
           'Row 0 is multiplied by 10 and row 1 by 20.',
         ),
         choose(
@@ -579,16 +527,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'tax[:, None] has shape (4, 1), so each rate stretches across its store’s 3 products.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nm = np.array([[0, 0], [0, 0], [0, 0]])\nr = np.array([1, 2, 3])\nprint((m + r[:, None]).tolist())',
-          [
-            '[[1, 2], [1, 2], [1, 2]]',
-            '[[1, 1], [2, 2], [3, 3]]',
-            '[[1, 2, 3], [1, 2, 3]]',
-            '[1, 2, 3]',
-          ],
-          1,
+          '[[1, 1], [2, 2], [3, 3]]',
           'As a column, r supplies one value per row, repeated across both columns.',
         ),
       ],
@@ -612,28 +554,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Aligned at the right, 1 pairs with 5 and 4 pairs with a missing length, so both stretch to (4, 5).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([[1], [2]])\nb = np.array([10, 20, 30])\nprint((a * b).tolist())',
-          [
-            '[[10], [40]]',
-            '[[10, 20, 30], [20, 40, 60]]',
-            '[10, 40, 90]',
-            '[[10, 20], [20, 40]]',
-          ],
-          1,
+          '[[10, 20, 30], [20, 40, 60]]',
           'Shapes (2, 1) and (3,) broadcast to (2, 3): each row value multiplies the whole of b.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([[0, 0, 0], [0, 0, 0]])\nb = np.array([[5], [7]])\nprint((a + b).tolist())',
-          [
-            '[[5, 5, 5], [7, 7, 7]]',
-            '[[5, 7, 0], [5, 7, 0]]',
-            '[[5, 7], [5, 7], [5, 7]]',
-            '[[5], [7]]',
-          ],
-          0,
+          '[[5, 5, 5], [7, 7, 7]]',
           'b has shape (2, 1), so each of its values fills its row of the (2, 3) result.',
         ),
         choose(
@@ -665,25 +595,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The dictionary keys become the labels and its values the data. The list version gets default labels 0 and 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([3, 8], index=["mon", "tue"])\nprint(s.index.tolist())',
-          ['[3, 8]', "['mon', 'tue']", '[0, 1]', "[('mon', 3), ('tue', 8)]"],
-          1,
+          "['mon', 'tue']",
           'index holds the labels supplied with index=, not the values.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series({"x": 1, "y": 4, "z": 9})\nprint(s.tolist())',
-          ["['x', 'y', 'z']", '[0, 1, 2]', '14', '[1, 4, 9]'],
-          3,
+          '[1, 4, 9]',
           'Dictionary values become the Series values; tolist returns them in order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([5, 6, 7])\nprint(s.index.tolist())',
-          ['[5, 6, 7]', '[1, 2, 3]', '[0, 1, 2]', '[]'],
-          2,
+          '[0, 1, 2]',
           'With no index given, labels default to positions starting at 0.',
         ),
         choose(
@@ -712,25 +639,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The label 102 holds 25. Position 0 is the first value, 18, whatever its label is.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([40, 50, 60], index=[2, 1, 0])\nprint(s.loc[0])',
-          ['40', '50', '60', 'KeyError'],
-          2,
+          '60',
           'loc looks for the label 0, which is attached to the last value.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([40, 50, 60], index=[2, 1, 0])\nprint(s.iloc[0])',
-          ['40', '60', '2', '50'],
-          0,
+          '40',
           'iloc counts positions, so position 0 is the first value regardless of its label.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series({"red": 3, "green": 7, "blue": 1})\nprint(s.iloc[2])\nprint(s.loc["red"])',
-          ['7\n3', '3\n1', '1\n7', '1\n3'],
-          3,
+          '1\n3',
           'Position 2 is the third value (blue, 1); the label red holds 3.',
         ),
         choose(
@@ -754,30 +678,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Multiplying keeps each label with its new value; sum adds the values, and idxmax names the label holding the largest one.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series({"a": 2, "b": 5})\nprint((s + 1).to_dict())',
-          [
-            "{'a': 2, 'b': 5}",
-            '[3, 6]',
-            "{'a': 3, 'b': 6}",
-            "{'a': 3, 'b': 5}",
-          ],
-          2,
+          "{'a': 3, 'b': 6}",
           'Adding 1 changes every value and keeps the labels.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series({"x": 4, "y": 10, "z": 1})\nprint(s.mean())',
-          ['15', '5.0', '10', '4.0'],
-          1,
+          '5.0',
           'The values add to 15, and $15 / 3 = 5.0$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series({"north": 12, "south": 30, "east": 18})\nprint(s.idxmax())\nprint(s.max())',
-          ['south\n30', '30\nsouth', '1\n30', 'north\n30'],
-          0,
+          'south\n30',
           'idxmax gives the label of the largest value; max gives the value itself.',
         ),
         choose(
@@ -804,30 +720,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Three positions in each list make three rows, and two keys make two columns. head(2) keeps two rows.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"a": [1, 2, 3, 4], "b": [5, 6, 7, 8], "c": [0, 0, 0, 0]})\nprint(t.shape)',
-          ['(3, 4)', '(12,)', '(4, 3)', '(4,)'],
-          2,
+          '(4, 3)',
           'Each list has 4 values (rows), and there are 3 keys (columns).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"city": ["Lima", "Oslo"], "temp": [19, 4]})\nprint(t.columns.tolist())\nprint(len(t))',
-          [
-            "['Lima', 'Oslo']\n2",
-            "['city', 'temp']\n2",
-            "['city', 'temp']\n4",
-            '[0, 1]\n2',
-          ],
-          1,
+          "['city', 'temp']\n2",
           'The dictionary keys name the columns, and len counts the two rows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"n": [9, 8, 7, 6, 5]})\nprint(t.head(3).shape)',
-          ['(5, 1)', '(1, 3)', '(3,)', '(3, 1)'],
-          3,
+          '(3, 1)',
           'head(3) keeps the first three rows and every column.',
         ),
         choose(
@@ -856,25 +764,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'A single name gives a Series of values; a list of names gives a table in the requested order, even when the list has one name.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"a": [1, 2], "b": [3, 4]})\nprint(t[["a"]].shape)\nprint(t["a"].shape)',
-          ['(2,)\n(2, 1)', '(2, 1)\n(2, 1)', '(2, 1)\n(2,)', '(1, 2)\n(2,)'],
-          2,
+          '(2, 1)\n(2,)',
           'A list of names returns a table (2 rows, 1 column); a single name returns a one-dimensional Series.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"x": [1, 2], "y": [3, 4], "z": [5, 6]})\nprint(t[["z", "x"]].columns.tolist())',
-          ["['x', 'z']", "['x', 'y', 'z']", "['z']", "['z', 'x']"],
-          3,
+          "['z', 'x']",
           'The selected columns follow the order of the list you pass.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"name": ["Ana", "Bo"], "age": [31, 27]})\nprint(t["age"].sum())',
-          ['58', '[31, 27]', '2', '3127'],
-          0,
+          '58',
           'The column is a Series of numbers, and sum adds them.',
         ),
         choose(
@@ -903,30 +808,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'cost is computed per row ($3 \\times 4$, $2 \\times 7$) and added as a fourth column. Reassigning qty replaces that column without adding another.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"w": [2, 5], "h": [3, 4]})\nt["area"] = t["w"] * t["h"]\nprint(t["area"].tolist())',
-          ['26', '[10, 12]', '[2, 5, 3, 4]', '[6, 20]'],
-          3,
+          '[6, 20]',
           'Each row multiplies its own w and h: $2 \\times 3$ and $5 \\times 4$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"a": [1, 2]})\nt["b"] = 0\nt["a"] = t["a"] * 10\nprint(t.shape)\nprint(t["a"].tolist())',
-          [
-            '(2, 2)\n[10, 20]',
-            '(2, 3)\n[10, 20]',
-            '(2, 2)\n[1, 2]',
-            '(3, 2)\n[10, 20]',
-          ],
-          0,
+          '(2, 2)\n[10, 20]',
           'b is a new column; assigning to a replaces the existing column, so there are still only two.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"km": [10, 4]})\nt["half"] = t["km"] * 0.5\nprint(t["half"].tolist())',
-          ['[5, 2]', '[5.0, 2.0]', '7.0', '[10, 4, 5.0, 2.0]'],
-          1,
+          '[5.0, 2.0]',
           'Multiplying by 0.5 gives one float per row.',
         ),
         choose(
@@ -958,18 +855,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'tea pairs 10 with 1 and cake pairs 20 with 5, even though cake comes first in feb.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\na = pd.Series([1, 2], index=["x", "y"])\nb = pd.Series([10, 20], index=["y", "x"])\nprint((a + b).loc["x"])',
-          ['11', '12', '21', '3'],
-          2,
+          '21',
           'x is 1 in a and 20 in b, so the aligned sum is 21.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\na = pd.Series([5, 6], index=["p", "q"])\nb = pd.Series([2, 3], index=["q", "p"])\nprint((a * b).loc["q"])',
-          ['12', '18', '10', '15'],
-          0,
+          '12',
           'q is 6 in a and 2 in b, so the product is 12. Pairing by position would give 18.',
         ),
         choose(
@@ -983,11 +878,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Index labels carry identity, so each store’s values are paired with each other.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\na = pd.Series([1, 2, 3], index=["a", "b", "c"])\nb = pd.Series([100, 200, 300], index=["c", "b", "a"])\nprint((a + b).loc["a"])\nprint(a.tolist()[0] + b.tolist()[0])',
-          ['101\n101', '301\n101', '101\n301', '301\n301'],
-          1,
+          '301\n101',
           'The Series sum pairs label a (1 + 300). The plain lists have no labels, so they pair first with first (1 + 100).',
         ),
       ],
@@ -1005,18 +899,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'ink exists only in shop. Plain addition leaves it missing; fill_value=0 counts the absent web sales as zero.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\na = pd.Series([1, 2], index=["x", "y"])\nb = pd.Series([5], index=["x"])\nprint((a + b).tolist())',
-          ['[6, 2]', '[6.0, 2.0]', '[6.0, nan]', '[6]'],
-          2,
+          '[6.0, nan]',
           'y has no partner in b, so its sum is missing, and the values become floats.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\na = pd.Series([1, 2], index=["x", "y"])\nb = pd.Series([5], index=["x"])\nprint(a.add(b, fill_value=0).tolist())',
-          ['[6.0, nan]', '[6, 7]', '[6.0, 0.0]', '[6.0, 2.0]'],
-          3,
+          '[6.0, 2.0]',
           'The absent y in b counts as 0, so y keeps its own value 2.',
         ),
         choose(
@@ -1056,25 +948,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each value travels with its label into the requested order. d was not present, so it is missing, and b and a were left out.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([1, 2, 3], index=["x", "y", "z"])\nprint(s.reindex(["z", "x"]).tolist())',
-          ['[1, 3]', '[3, 1]', '[1, 2]', '[3, 2, 1]'],
-          1,
+          '[3, 1]',
           'The result has only z then x, with their own values; y is dropped.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([10, 20], index=["mon", "tue"])\nprint(s.reindex(["mon", "tue", "wed"]).tolist())',
-          ['[10, 20]', '[10, 20, 0]', '[10.0, 20.0, 0.0]', '[10.0, 20.0, nan]'],
-          3,
+          '[10.0, 20.0, nan]',
           'wed is requested but absent, so it is missing, which also makes the values floats.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([5, 1, 3], index=["q", "r", "p"])\nprint(s.reindex(["p", "q", "r"]).tolist())',
-          ['[3, 5, 1]', '[1, 3, 5]', '[5, 1, 3]', '[3, 1, 5]'],
-          0,
+          '[3, 5, 1]',
           'p holds 3, q holds 5 and r holds 1; reindex reorders labels without sorting values.',
         ),
         choose(
@@ -1106,18 +995,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only rows 1 and 2 have more than 6 km, and they keep their labels 1 and 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"name": ["a", "b", "c"], "qty": [0, 4, 9]})\nprint(t.loc[t["qty"] > 0, "name"].tolist())',
-          ["['a']", '[4, 9]', "['b', 'c']", '[False, True, True]'],
-          2,
+          "['b', 'c']",
           'The mask keeps rows with positive qty, and the column selector returns their names.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"v": [8, 3, 9, 1]})\nprint(t.loc[t["v"] < 5].index.tolist())',
-          ['[0, 1]', '[3, 1]', '[0, 2]', '[1, 3]'],
-          3,
+          '[1, 3]',
           'Rows 1 and 3 hold values below 5, and they keep their original labels in order.',
         ),
         predictOutput(
@@ -1158,30 +1045,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'B has seats but no screen and A has a screen but too few seats, so only C and D satisfy both. ~ flips the screen column, leaving B.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"x": [1, 5, 8, 3], "y": [9, 2, 7, 4]})\nprint(t.loc[(t["x"] > 2) & (t["y"] > 3)].index.tolist())',
-          ['[0, 1, 2, 3]', '[1, 2, 3]', '[2]', '[2, 3]'],
-          3,
+          '[2, 3]',
           'x > 2 holds for rows 1, 2 and 3; y > 3 holds for rows 0, 2 and 3. Both hold for 2 and 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"x": [1, 5, 8, 3], "y": [9, 2, 7, 4]})\nprint(t.loc[(t["x"] > 6) | (t["y"] > 8)].index.tolist())',
-          ['[]', '[2]', '[0, 2]', '[0, 1, 2]'],
-          2,
+          '[0, 2]',
           'Row 2 has x above 6 and row 0 has y above 8; either is enough.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"item": ["cup", "pot", "pan"], "sold_out": [False, True, False]})\nprint(t.loc[~t["sold_out"], "item"].tolist())',
-          [
-            "['cup', 'pan']",
-            "['pot']",
-            "['cup', 'pot', 'pan']",
-            '[True, False, True]',
-          ],
-          0,
+          "['cup', 'pan']",
           '~ turns the sold_out mask around, keeping items that are still available.',
         ),
         choose(
@@ -1210,23 +1089,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Every row starts as on time, then the single .loc assignment changes only the rows with more than 4 days.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"score": [55, 72, 90]})\nt["grade"] = "pass"\nt.loc[t["score"] < 60, "grade"] = "fail"\nprint(t["grade"].tolist())',
-          [
-            "['pass', 'pass', 'pass']",
-            "['fail', 'pass', 'pass']",
-            "['fail']",
-            "['pass', 'fail', 'fail']",
-          ],
-          1,
+          "['fail', 'pass', 'pass']",
           'Only the first score is below 60, so only that row becomes fail.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"qty": [3, 0, 7]})\nt.loc[t["qty"] == 0, "qty"] = 1\nprint(t["qty"].tolist())',
-          ['[3, 0, 7]', '[1, 1, 1]', '[1]', '[3, 1, 7]'],
-          3,
+          '[3, 1, 7]',
           'The mask selects only the zero, and the assignment replaces it in t.',
         ),
         choose(
@@ -1269,30 +1141,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The header names two columns and two lines follow, so the shape is (2, 2). The quoted comma stays inside the first city.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from io import StringIO\nimport pandas as pd\ntext = "id,score\\n1,80\\n2,95\\n3,70\\n"\nt = pd.read_csv(StringIO(text))\nprint(t.shape)',
-          ['(4, 2)', '(2, 3)', '(3, 2)', '(3, 1)'],
-          2,
+          '(3, 2)',
           'The header line names the columns and is not a row, leaving three rows of two values.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from io import StringIO\nimport pandas as pd\ntext = "name,city\\n\\"Ng, Kim\\",Rome\\nAli,Oslo\\n"\nt = pd.read_csv(StringIO(text))\nprint(t["name"].tolist())',
-          [
-            "['Ng', 'Ali']",
-            "['Ng, Kim', 'Ali']",
-            "['Ng', 'Kim', 'Ali']",
-            "['Rome', 'Oslo']",
-          ],
-          1,
+          "['Ng, Kim', 'Ali']",
           'The quotes mark "Ng, Kim" as one field, so its comma does not split it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from io import StringIO\nimport pandas as pd\ntext = "item,qty\\npen,4\\npad,6\\n"\nt = pd.read_csv(StringIO(text))\nprint(t["qty"].sum())',
-          ['46', "['4', '6']", '2', '10'],
-          3,
+          '10',
           'read_csv recognises the qty values as numbers, so sum adds them rather than joining text.',
         ),
         choose(
@@ -1321,25 +1185,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Read with commas, each line is one field, giving one column. With sep=";" the two columns appear.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from io import StringIO\nimport pandas as pd\ntext = "a|b\\n1|2\\n3|4\\n"\nt = pd.read_csv(StringIO(text), sep="|")\nprint(t.columns.tolist())',
-          ["['a|b']", "['1', '2']", "['a', 'b', '1', '2']", "['a', 'b']"],
-          3,
+          "['a', 'b']",
           'With the pipe declared as the separator, the header splits into two column names.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from io import StringIO\nimport pandas as pd\ntext = "x;y\\n1;2\\n"\nt = pd.read_csv(StringIO(text))\nprint(t.columns.tolist())',
-          ["['x;y']", "['x', 'y']", "['1;2']", '[]'],
-          0,
+          "['x;y']",
           'The default separator is a comma, and the header has none, so it is one column name.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from io import StringIO\nimport pandas as pd\ntext = "day\\ttemp\\nmon\\t12\\ntue\\t15\\n"\nt = pd.read_csv(StringIO(text), sep="\\t")\nprint(t["temp"].mean())',
-          ['27', '13.5', '12', 'nan'],
-          1,
+          '13.5',
           'The tab separator splits day from temp, and the mean of 12 and 15 is 13.5.',
         ),
         choose(
@@ -1368,40 +1229,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Without a dtype the codes lose their zeros. With na_values, the - becomes missing, so temp is numeric (floats because of the missing value).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from io import StringIO\nimport pandas as pd\ntext = "zip,pop\\n02134,9\\n10001,21\\n"\nt = pd.read_csv(StringIO(text))\nprint(t["zip"].tolist())',
-          [
-            "['02134', '10001']",
-            '[2134, 10001]',
-            '[2134.0, 10001.0]',
-            '[2, 1]',
-          ],
-          1,
+          '[2134, 10001]',
           'The zip codes look like integers, so they are parsed as numbers and the leading zero disappears.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from io import StringIO\nimport pandas as pd\ntext = "zip,pop\\n02134,9\\n10001,21\\n"\nt = pd.read_csv(StringIO(text), dtype={"zip": "string"})\nprint(t["zip"].tolist())',
-          [
-            '[2134, 10001]',
-            "['2134', '10001']",
-            '[2134.0, 10001.0]',
-            "['02134', '10001']",
-          ],
-          3,
+          "['02134', '10001']",
           'Declaring the column as text keeps every character, including the leading zero.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from io import StringIO\nimport pandas as pd\ntext = "id,score\\n1,88\\n2,?\\n3,75\\n"\nt = pd.read_csv(StringIO(text), na_values=["?"])\nprint(t["score"].tolist())',
-          [
-            '[88.0, nan, 75.0]',
-            "[88, '?', 75]",
-            '[88, 75]',
-            '[88.0, 0.0, 75.0]',
-          ],
-          0,
+          '[88.0, nan, 75.0]',
           'The ? marker becomes missing, so the column is numeric with one NaN, stored as floats.',
         ),
         choose(
@@ -1433,30 +1276,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'isna flags the two None entries, and summing the flags counts them. The == test finds nothing because NaN never equals NaN.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([4, None, 7])\nprint(s.notna().tolist())',
-          ['[False, True, False]', '[4.0, 7.0]', '[True, False, True]', '2'],
-          2,
+          '[True, False, True]',
           'notna is True where a value is present, so only the middle entry is False.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"a": [1, None, 3], "b": [None, None, 6]})\nprint(t["b"].isna().sum())\nprint(t.isna().sum().tolist())',
-          ['2\n3', '2\n[1, 2]', '1\n[1, 2]', '2\n[2, 1]'],
-          1,
+          '2\n[1, 2]',
           'Column b has two missing entries; on the table, the counts are 1 for a and 2 for b.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([1.0, None, 3.0])\nprint((s == s).tolist())',
-          [
-            '[True, True, True]',
-            '[False, True, False]',
-            '[True, None, True]',
-            '[True, False, True]',
-          ],
-          3,
+          '[True, False, True]',
           'Every present value equals itself, but NaN is not equal even to itself.',
         ),
         choose(
@@ -1485,25 +1320,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only Ben lacks a score. Plain dropna removes all three rows, because each misses either score or note. The fill is assigned back to the note column.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([2.0, None, 5.0])\ns.fillna(0)\nprint(s.tolist())',
-          ['[2.0, 0.0, 5.0]', '[2.0, 5.0]', '[2.0, nan, 5.0]', '[2, 0, 5]'],
-          2,
+          '[2.0, nan, 5.0]',
           'fillna returns a new Series; the result was never assigned, so s still has its NaN.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"a": [1, None, 3], "b": [4, 5, None]})\nprint(len(t.dropna()))\nprint(len(t.dropna(subset=["a"])))',
-          ['2\n1', '1\n2', '3\n2', '1\n1'],
-          1,
+          '1\n2',
           'Two rows miss something, leaving 1. Only one row misses a, leaving 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"city": ["Rome", None, "Oslo"], "pop": [3, 2, None]})\nclean = t.dropna(subset=["city"])\nprint(clean["pop"].tolist())',
-          ['[3.0, nan]', '[3.0]', '[3.0, 2.0]', '[3.0, 2.0, nan]'],
-          0,
+          '[3.0, nan]',
           'Only the row with no city is dropped; the missing pop in Oslo’s row stays.',
         ),
         choose(
@@ -1532,18 +1364,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The mean skips the two blanks: (30 + 50) / 2. After filling, it divides 80 by 4 instead.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([10.0, None, 20.0])\nprint(s.mean())\nprint(s.fillna(0).mean())',
-          ['10.0\n10.0', '15.0\n15.0', '15.0\n10.0', 'nan\n10.0'],
-          2,
+          '15.0\n10.0',
           'The first mean uses the two observed values; the filled version divides 30 by 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([4.0, None, 6.0, None])\nprint(s.mean())',
-          ['2.5', '5.0', 'nan', '10.0'],
-          1,
+          '5.0',
           'Missing entries are skipped, so the mean is (4 + 6) / 2.',
         ),
         choose(
@@ -1586,18 +1416,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The two valid tokens become numbers and oops becomes NaN, which the sum skips.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nraw = pd.Series(["3", "x", "4"])\nprint(pd.to_numeric(raw, errors="coerce").tolist())',
-          ['[3, 0, 4]', "['3', nan, '4']", '[3.0, nan, 4.0]', '[3.0, 4.0]'],
-          2,
+          '[3.0, nan, 4.0]',
           'x cannot be a number, so it becomes NaN; the column becomes float to hold it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nraw = pd.Series(["10", "20", "30"])\nprint(pd.to_numeric(raw).sum())',
-          ['102030', '60', "['10', '20', '30']", '60.0'],
-          1,
+          '60',
           'Every token is a valid whole number, so the result is integers and the sum is 60.',
         ),
         choose(
@@ -1637,18 +1465,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two converted values are missing, but one was already missing in raw. Only abc was rejected.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nraw = pd.Series(["1", None, "2", "?"])\nconv = pd.to_numeric(raw, errors="coerce")\nprint(conv.isna().sum())\nprint((raw.notna() & conv.isna()).sum())',
-          ['1\n2', '2\n2', '2\n1', '1\n1'],
-          2,
+          '2\n1',
           'Two converted values are missing; only ? was present before conversion.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nraw = pd.Series(["7", "seven", "7.0", "-"])\nconv = pd.to_numeric(raw, errors="coerce")\nprint(raw.loc[raw.notna() & conv.isna()].tolist())',
-          ["['seven']", "['7', '7.0']", "['-']", "['seven', '-']"],
-          3,
+          "['seven', '-']",
           '7 and 7.0 are valid numbers; seven and - were present but rejected.',
         ),
         choose(
@@ -1683,18 +1509,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Coercion leaves floats because of the NaN. Int64 stores the counts as whole numbers and keeps the gap as <NA>.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([3.0, None, 5.0])\nprint(s.astype("Int64").tolist())',
-          ['[3.0, nan, 5.0]', '[3, 0, 5]', '[3, 5]', '[3, <NA>, 5]'],
-          3,
+          '[3, <NA>, 5]',
           'Int64 keeps the whole values as integers and the missing entry as <NA>.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([1.0, 2.0])\nprint(s.astype("Int64").sum())',
-          ['3.0', '3', '[1, 2]', '12'],
-          1,
+          '3',
           'After conversion the values are integers, so their sum is the integer 3.',
         ),
         choose(
@@ -1738,23 +1562,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only row 2 repeats a whole earlier row. By key, rows 2 and 4 both repeat order 1, even though row 4 has a different qty.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"id": [7, 8, 7, 7]})\nprint(t.duplicated().tolist())',
-          [
-            '[True, False, True, True]',
-            '[False, False, True, False]',
-            '[False, False, True, True]',
-            '[False, True, False, True]',
-          ],
-          2,
+          '[False, False, True, True]',
           'The first 7 is an original; both later 7s repeat it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"id": [1, 1, 2], "v": [10, 11, 12]})\nprint(t.duplicated().sum())\nprint(t.duplicated(subset=["id"]).sum())',
-          ['1\n1', '0\n0', '1\n0', '0\n1'],
-          3,
+          '0\n1',
           'No whole row repeats, but id 1 appears twice.',
         ),
         choose(
@@ -1768,11 +1585,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The rows differ in amount, so only a key-based check sees them as the same event.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"user": ["a", "b", "a", "c", "b"], "day": [1, 1, 2, 2, 1]})\nprint(t.duplicated(subset=["user", "day"]).sum())',
-          ['2', '0', '1', '3'],
-          2,
+          '1',
           'Only the pair (b, 1) occurs twice; a appears twice but on different days.',
         ),
       ],
@@ -1790,25 +1606,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'After sorting by version, the last row for id 1 is version 3 (Bergen) and for id 2 is version 4 (Pisa). Without sorting, keep="first" just takes whichever row came first.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"id": [5, 5, 6], "val": ["a", "b", "c"]})\nprint(t.drop_duplicates(subset=["id"], keep="last")["val"].tolist())',
-          ["['a', 'c']", "['c']", "['b', 'c']", "['a', 'b', 'c']"],
-          2,
+          "['b', 'c']",
           'For id 5 the last row is b; id 6 appears once.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"id": [1, 1, 1], "ver": [3, 1, 2], "v": ["x", "y", "z"]})\nprint(t.sort_values("ver").drop_duplicates(subset=["id"], keep="last")["v"].tolist())',
-          ["['x']", "['z']", "['y']", "['x', 'y', 'z']"],
-          0,
+          "['x']",
           'Sorted by ver the rows are y, z, x, so the last is x, the highest version.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"id": [1, 1, 1], "ver": [3, 1, 2], "v": ["x", "y", "z"]})\nprint(t.sort_values("ver").drop_duplicates(subset=["id"])["v"].tolist())',
-          ["['x']", "['z']", "['y', 'z', 'x']", "['y']"],
-          3,
+          "['y']",
           'keep="first" is the default, and after sorting the first row is the lowest version, y.',
         ),
         choose(
@@ -1837,18 +1650,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Ids 2 and 3 repeat, so the key is not unique until three rows are removed. One of them (amount 9) disagreed with the kept row and deserves a look.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"code": ["a", "b", "a"]})\nprint(t["code"].is_unique)\nprint(t.drop_duplicates()["code"].is_unique)',
-          ['True\nTrue', 'False\nFalse', 'True\nFalse', 'False\nTrue'],
-          3,
+          'False\nTrue',
           'a repeats at first; after dropping the repeat, every code appears once.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"id": [4, 4, 4, 5], "x": [1, 1, 2, 3]})\nprint(len(t) - len(t.drop_duplicates()))\nprint(len(t) - len(t.drop_duplicates(subset=["id"])))',
-          ['1\n2', '2\n1', '1\n1', '2\n2'],
-          0,
+          '1\n2',
           'Only one whole row repeats exactly; by id alone, two rows repeat id 4.',
         ),
         choose(
@@ -1891,35 +1702,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'All three spellings become north, and the missing entry stays missing until fillna labels it. The spaces count toward the first length.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(["  Ada", "Lin  "])\nprint(s.str.strip().tolist())',
-          [
-            "['  Ada', 'Lin  ']",
-            "['ada', 'lin']",
-            "['Ada', 'Lin']",
-            "['Ada  ', '  Lin']",
-          ],
-          2,
+          "['Ada', 'Lin']",
           'strip removes spaces at both ends and does not change case.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(["Paris", " paris", "PARIS "])\nprint(s.str.strip().str.lower().tolist())',
-          [
-            "['paris', 'paris', 'paris']",
-            "['paris', ' paris', 'paris ']",
-            "['Paris', 'paris', 'PARIS']",
-            "['PARIS', 'PARIS', 'PARIS']",
-          ],
-          0,
+          "['paris', 'paris', 'paris']",
           'Stripping then lowercasing makes all three spellings identical.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(["ok", None])\nprint(s.str.upper().fillna("?").tolist())',
-          ["['OK', 'NONE']", "['OK']", "['ok', '?']", "['OK', '?']"],
-          3,
+          "['OK', '?']",
           'upper changes the present text and leaves the missing entry missing, which fillna then labels.',
         ),
         choose(
@@ -1948,18 +1746,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Four distinct spellings collapse to two cities, so three raw values were merged into oslo.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nraw = pd.Series(["A1", "a1", " A1", "B2"])\nprint(raw.nunique())\nprint(raw.str.strip().str.lower().nunique())',
-          ['2\n2', '4\n4', '4\n2', '3\n2'],
-          2,
+          '4\n2',
           'All four raw strings differ; after cleaning only a1 and b2 remain.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nraw = pd.Series(["x ", "x", "y", None])\nprint(raw.nunique())\nprint(raw.str.strip().nunique())',
-          ['4\n3', '3\n3', '4\n2', '3\n2'],
-          3,
+          '3\n2',
           'nunique ignores the missing entry; stripping merges "x " with "x".',
         ),
         choose(
@@ -2000,40 +1796,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Literally, only A.1 contains a dot. As a regular expression the dot matches any character, so AX1 matches too. Without na=False, the missing code gives <NA>.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(["v1.2", "v12", "v1-2"])\nprint(s.str.contains("1.2", regex=False).tolist())',
-          [
-            '[True, True, True]',
-            '[True, False, True]',
-            '[True, False, False]',
-            '[False, False, False]',
-          ],
-          2,
+          '[True, False, False]',
           'Only v1.2 contains the literal characters 1.2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(["v1.2", "v12", "v1-2"])\nprint(s.str.contains("1.2").tolist())',
-          [
-            '[True, False, True]',
-            '[True, False, False]',
-            '[True, True, True]',
-            '[False, False, True]',
-          ],
-          0,
+          '[True, False, True]',
           'As a regular expression the dot matches any character, so 1-2 matches. v12 has no character between 1 and 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(["red apple", None, "green pear"], dtype="string")\nprint(s.str.contains("apple", regex=False, na=False).tolist())',
-          [
-            '[True, <NA>, False]',
-            '[True, True, False]',
-            '[True, False]',
-            '[True, False, False]',
-          ],
-          3,
+          '[True, False, False]',
           'na=False decides that the missing entry does not match, so every result is True or False.',
         ),
         choose(
@@ -2066,40 +1844,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Plain text sorts alphabetically, which puts high first. The ordered categorical follows low, medium, high, and compares by that rank.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nsizes = pd.Series(["M", "S", "L"])\nprint(sizes.sort_values().tolist())',
-          [
-            "['S', 'M', 'L']",
-            "['M', 'S', 'L']",
-            "['L', 'M', 'S']",
-            "['L', 'S', 'M']",
-          ],
-          2,
+          "['L', 'M', 'S']",
           'Plain text sorts alphabetically: L, M, S.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nsizes = pd.Series(pd.Categorical(["M", "S", "L"], categories=["S", "M", "L"], ordered=True))\nprint(sizes.sort_values().tolist())',
-          [
-            "['S', 'M', 'L']",
-            "['L', 'M', 'S']",
-            "['M', 'S', 'L']",
-            "['L', 'S', 'M']",
-          ],
-          0,
+          "['S', 'M', 'L']",
           'The declared order S, M, L controls sorting.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ngrade = pd.Series(pd.Categorical(["B", "A", "C"], categories=["C", "B", "A"], ordered=True))\nprint((grade >= "B").tolist())',
-          [
-            '[True, False, True]',
-            '[True, False, False]',
-            '[False, True, True]',
-            '[True, True, False]',
-          ],
-          3,
+          '[True, True, False]',
           'The scale runs C, B, A, so A ranks above B and C ranks below it.',
         ),
         choose(
@@ -2128,23 +1888,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The typo and the capitalised Low are not in the allowed list. Converting now would turn both into missing values.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nraw = pd.Series(["red", "blue", "Red", "green"])\nprint(raw.isin(["red", "green", "blue"]).tolist())',
-          [
-            '[True, True, True, True]',
-            '[True, False, False, True]',
-            '[False, False, True, False]',
-            '[True, True, False, True]',
-          ],
-          3,
+          '[True, True, False, True]',
           'isin compares exact text, so Red with a capital letter is not in the list.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nraw = pd.Series(["S", "M", "XL", "M"])\nprint(len(raw) - raw.isin(["S", "M", "L"]).sum())',
-          ['1', '3', '0', '2'],
-          0,
+          '1',
           'Three entries are allowed; only XL is not.',
         ),
         choose(
@@ -2184,35 +1937,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two distinct colours give two indicator columns. The red column is 1 in the rows that are red.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(["cat", "dog", "cat", "fish"])\nd = pd.get_dummies(s, dtype=int)\nprint(d.shape)\nprint(d["cat"].tolist())',
-          [
-            '(3, 4)\n[1, 0, 1, 0]',
-            '(4, 3)\n[0, 1, 0, 1]',
-            '(4, 3)\n[1, 0, 1, 0]',
-            '(4, 1)\n[2]',
-          ],
-          2,
+          '(4, 3)\n[1, 0, 1, 0]',
           'Four rows and three distinct animals; the cat column marks rows 0 and 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(pd.Categorical(["mid", "low"], categories=["low", "mid", "high"]))\nprint(pd.get_dummies(s, dtype=int).columns.tolist())',
-          [
-            "['mid', 'low']",
-            "['low', 'mid']",
-            "['high', 'low', 'mid']",
-            "['low', 'mid', 'high']",
-          ],
-          3,
+          "['low', 'mid', 'high']",
           'A Categorical gets a column for every declared category, in declared order, even high, which never occurs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(pd.Categorical(["b", "c", "a"], categories=["c", "b", "a"]))\nprint(s.cat.codes.tolist())',
-          ['[1, 2, 0]', '[1, 0, 2]', '[0, 1, 2]', '[2, 1, 0]'],
-          1,
+          '[1, 0, 2]',
           'Codes are positions in the declared list c, b, a: b is 1, c is 0 and a is 2.',
         ),
         choose(
@@ -2244,23 +1984,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'B has no price, so the inner join drops it while the left join keeps it with a missing price.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\na = pd.DataFrame({"id": [1, 2, 3, 4]})\nb = pd.DataFrame({"id": [2, 4, 6], "x": [9, 8, 7]})\nprint(len(a.merge(b, on="id", how="inner")))\nprint(len(a.merge(b, on="id", how="left")))',
-          ['4\n4', '2\n5', '3\n4', '2\n4'],
-          3,
+          '2\n4',
           'Only ids 2 and 4 are in both; the left join keeps all four left rows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\na = pd.DataFrame({"id": [1, 2, 3, 4]})\nb = pd.DataFrame({"id": [2, 4, 6], "x": [9, 8, 7]})\nprint(a.merge(b, on="id", how="left")["x"].tolist())',
-          [
-            '[9, 8]',
-            '[nan, 9.0, nan, 8.0]',
-            '[9.0, 8.0, 7.0, nan]',
-            '[0, 9, 0, 8]',
-          ],
-          1,
+          '[nan, 9.0, nan, 8.0]',
           'Each left id gets its own match or NaN; id 6 exists only on the right and is not kept.',
         ),
         choose(
@@ -2300,18 +2033,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Store N appears twice in regions, so both N sales are copied twice: 5 rows, and the total of 60 becomes 100. validate="many_to_one" would have raised an error.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nleft = pd.DataFrame({"k": ["a", "b"]})\nright = pd.DataFrame({"k": ["a", "a", "a", "b"], "v": [1, 2, 3, 4]})\nprint(len(left.merge(right, on="k", how="left")))',
-          ['2', '3', '4', '6'],
-          2,
+          '4',
           'a matches three right rows and b matches one, so there are four result rows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\norders = pd.DataFrame({"cust": [1, 1, 2], "total": [5, 7, 9]})\ncust = pd.DataFrame({"cust": [1, 2, 2], "tier": ["gold", "std", "vip"]})\nprint(orders.merge(cust, on="cust", how="left")["total"].sum())',
-          ['21', '39', '18', '30'],
-          3,
+          '30',
           'Customer 2 appears twice in cust, so the 9 is counted twice: 5 + 7 + 9 + 9.',
         ),
         choose(
@@ -2346,23 +2077,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Sites C and D are not in the site table, so two event rows are left_only.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\na = pd.DataFrame({"k": [1, 2, 3]})\nb = pd.DataFrame({"k": [3, 1]})\nj = a.merge(b, on="k", how="left", indicator=True)\nprint(j["_merge"].tolist())',
-          [
-            "['both', 'both', 'left_only']",
-            "['both', 'left_only', 'both']",
-            "['left_only', 'both', 'left_only']",
-            "['both', 'both', 'both']",
-          ],
-          1,
+          "['both', 'left_only', 'both']",
           'Keys 1 and 3 appear in b; key 2 does not. The result keeps the left order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\na = pd.DataFrame({"code": ["x", "y", "z", "y"]})\nb = pd.DataFrame({"code": ["y"], "name": ["Yew"]})\nj = a.merge(b, on="code", how="left", indicator=True)\nprint((j["_merge"] == "left_only").sum())',
-          ['1', '3', '0', '2'],
-          3,
+          '2',
           'x and z have no partner; both y rows match.',
         ),
         choose(
@@ -2400,23 +2124,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two sites times two month columns give four rows of site, month and sales. All jan rows come first.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nw = pd.DataFrame({"id": [1, 2, 3], "q1": [5, 6, 7], "q2": [1, 2, 3]})\nprint(w.melt(id_vars=["id"]).shape)',
-          ['(3, 3)', '(6, 2)', '(3, 6)', '(6, 3)'],
-          3,
+          '(6, 3)',
           'Three ids times two melted columns give 6 rows: id, a variable column and a value column.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nw = pd.DataFrame({"team": ["x", "y"], "home": [2, 0], "away": [1, 3]})\nl = w.melt(id_vars=["team"], var_name="venue", value_name="goals")\nprint(l["team"].tolist())',
-          [
-            "['x', 'x', 'y', 'y']",
-            "['x', 'y']",
-            "['x', 'y', 'x', 'y']",
-            "['home', 'home', 'away', 'away']",
-          ],
-          2,
+          "['x', 'y', 'x', 'y']",
           'All home rows come first (x, y), then all away rows (x, y).',
         ),
         choose(
@@ -2451,25 +2168,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two sites and two months give a $2 \\times 2$ table. B has no feb row, so that cell is missing and the feb column holds floats.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nl = pd.DataFrame({"day": ["mon", "mon", "tue", "tue"], "shift": ["am", "pm", "am", "pm"], "staff": [3, 5, 4, 6]})\nw = l.pivot(index="day", columns="shift", values="staff")\nprint(w.loc["tue", "am"])',
-          ['5', '3', '6', '4'],
-          3,
+          '4',
           'The cell for tue and am comes from the long row with staff 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nl = pd.DataFrame({"day": ["mon", "mon", "tue", "tue"], "shift": ["am", "pm", "am", "pm"], "staff": [3, 5, 4, 6]})\nw = l.pivot(index="day", columns="shift", values="staff")\nprint(w.shape)',
-          ['(4, 3)', '(2, 2)', '(2, 4)', '(4, 2)'],
-          1,
+          '(2, 2)',
           'Two days become rows and two shifts become columns.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nl = pd.DataFrame({"k": ["a", "b"], "m": ["x", "y"], "v": [1, 2]})\nw = l.pivot(index="k", columns="m", values="v")\nprint(w.loc["a", "y"])',
-          ['nan', '0', '1', '2'],
-          0,
+          'nan',
           'No long row has k = a and m = y, so that cell is missing.',
         ),
         choose(
@@ -2498,11 +2212,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'A and jan appears twice, but both rows agree, so dropping the exact repeat is safe and pivot succeeds.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nl = pd.DataFrame({"r": [1, 1, 2, 2], "c": ["x", "y", "x", "x"], "v": [5, 6, 7, 8]})\nprint(l.duplicated(subset=["r", "c"]).sum())',
-          ['0', '2', '1', '3'],
-          2,
+          '1',
           'Only the pair (2, x) appears twice, so pivot would fail on that cell.',
         ),
         choose(
@@ -2527,11 +2240,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Conflicting measurements need a decision based on evidence, not an automatic average.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nw = pd.DataFrame({"id": ["p", "q"], "a": [1, 2], "b": [3, 4]})\nl = w.melt(id_vars=["id"], var_name="col", value_name="val")\nback = l.pivot(index="id", columns="col", values="val")\nprint(back.loc["q", "b"])',
-          ['2', '3', 'nan', '4'],
-          3,
+          '4',
           'Melting and pivoting reorganise values without changing them, so q and b still hold 4.',
         ),
       ],
@@ -2552,30 +2264,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'A’s rows hold 4 and 2; B’s hold 3, 5 and 1. The result lists A before B, sorted by key, not by first appearance.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"team": ["x", "y", "x"], "pts": [4, 7, 6]})\nprint(df.groupby("team")["pts"].sum().to_dict())',
-          ["{'x': 4, 'y': 7}", '17', "{'x': 6, 'y': 7}", "{'x': 10, 'y': 7}"],
-          3,
+          "{'x': 10, 'y': 7}",
           'Team x’s two rows add to 10; team y has one row of 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"day": ["sat", "sun", "sat", "sun"], "temp": [20, 14, 24, 18]})\nprint(df.groupby("day")["temp"].max().to_dict())',
-          [
-            "{'sat': 24, 'sun': 18}",
-            "{'sat': 44, 'sun': 32}",
-            "{'sat': 20, 'sun': 14}",
-            '24',
-          ],
-          0,
+          "{'sat': 24, 'sun': 18}",
           'max is taken within each day’s rows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"c": ["b", "a", "b"], "v": [1, 2, 3]})\nprint(df.groupby("c")["v"].sum().index.tolist())',
-          ["['b', 'a']", "['b', 'a', 'b']", "['a', 'b']", '[0, 1]'],
-          2,
+          "['a', 'b']",
           'Each distinct key appears once, and the keys are sorted.',
         ),
         choose(
@@ -2604,23 +2308,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Shop A has three rows but only two ratings, and its mean uses those two: (4 + 5) / 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "x", "y"], "v": [None, 2.0, None]})\nprint(df.groupby("g").size().to_dict())\nprint(df.groupby("g")["v"].count().to_dict())',
-          [
-            "{'x': 1, 'y': 0}\n{'x': 2, 'y': 1}",
-            "{'x': 2, 'y': 1}\n{'x': 2, 'y': 1}",
-            "{'x': 2, 'y': 1}\n{'x': 1, 'y': 0}",
-            "{'x': 1, 'y': 1}\n{'x': 1, 'y': 0}",
-          ],
-          2,
+          "{'x': 2, 'y': 1}\n{'x': 1, 'y': 0}",
           'size counts rows (2 and 1); count counts present values (1 and 0).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"k": ["a", "a", "a"], "v": [6.0, None, 0.0]})\nprint(df.groupby("k")["v"].mean().to_dict())',
-          ["{'a': 2.0}", "{'a': nan}", "{'a': 6.0}", "{'a': 3.0}"],
-          3,
+          "{'a': 3.0}",
           'The missing value is skipped, so the mean is (6 + 0) / 2. The 0 is a real value and counts.',
         ),
         choose(
@@ -2660,25 +2357,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The row without a site (count 4) is missing from the grouped total of 10. With dropna=False it forms its own group after A and B.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"k": ["x", None, "x"], "v": [1, 5, 2]})\nprint(df.groupby("k")["v"].sum().to_dict())',
-          ["{'x': 3, None: 5}", "{'x': 3}", "{'x': 8}", "{'x': 3, 'nan': 5}"],
-          1,
+          "{'x': 3}",
           'By default the row with a missing key belongs to no group.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"k": ["x", None, "x"], "v": [1, 5, 2]})\nprint(len(df.groupby("k", dropna=False)["v"].sum()))',
-          ['1', '3', '0', '2'],
-          3,
+          '2',
           'dropna=False adds a group for the missing key next to x.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"team": ["r", None, None, "b"], "pts": [2, 3, 4, 1]})\nprint(df["pts"].sum() - df.groupby("team")["pts"].sum().sum())',
-          ['7', '0', '3', '10'],
-          0,
+          '7',
           'The overall total is 10 and the grouped totals add to 3, so 7 points sit in rows without a team.',
         ),
         choose(
@@ -2710,23 +2404,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The keywords become the column names. Shop A’s amounts are 10 and 30: total 40, biggest 30, from 2 orders.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "x", "y"], "v": [1, 5, 4]})\nr = df.groupby("g").agg(low=("v", "min"), high=("v", "max"))\nprint(r.loc["x"].tolist())',
-          ['[1, 4]', '[5, 1]', '[6, 4]', '[1, 5]'],
-          3,
+          '[1, 5]',
           'Group x holds 1 and 5, and the columns are in the order low, high.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "x", "y"], "v": [1, 5, 4]})\nr = df.groupby("g").agg(n=("v", "size"), avg=("v", "mean"))\nprint(r.columns.tolist())\nprint(r["avg"].tolist())',
-          [
-            "['v', 'v']\n[3.0, 4.0]",
-            "['n', 'avg']\n[3.0, 4.0]",
-            "['size', 'mean']\n[3.0, 4.0]",
-            "['n', 'avg']\n[2.0, 4.0]",
-          ],
-          1,
+          "['n', 'avg']\n[3.0, 4.0]",
           'The keywords name the columns. x averages (1 + 5) / 2 and y is 4.',
         ),
         choose(
@@ -2761,25 +2448,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Shop A’s 98 pulls its mean to 40, while its median stays at the middle value 12. B has no extreme value, so both agree.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([2, 4, 99])\nprint(s.median())\nprint(s.mean())',
-          ['35.0\n4.0', '4.0\n4.0', '4.0\n35.0', '2.0\n35.0'],
-          2,
+          '4.0\n35.0',
           'The middle of 2, 4, 99 is 4; the mean is $105 / 3 = 35$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nprint(pd.Series([9, 1, 5, 3]).median())',
-          ['4.5', '3.0', '5.0', '4.0'],
-          3,
+          '4.0',
           'Sorted, the values are 1, 3, 5, 9, so the median averages the middle two: 4.0. The mean would be 4.5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"g": ["a", "a", "a", "b"], "v": [1, 2, 30, 5]})\nr = df.groupby("g").agg(med=("v", "median"), n=("v", "size"))\nprint(r["med"].tolist())',
-          ['[2.0, 5.0]', '[11.0, 5.0]', '[1.0, 5.0]', '[30.0, 5.0]'],
-          0,
+          '[2.0, 5.0]',
           'Group a sorted is 1, 2, 30, so its median is 2; b has the single value 5.',
         ),
         choose(
@@ -2808,40 +2492,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'shop stays a column next to total. Sorting by total, descending, puts B (11) before C (9) and A (5).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"k": ["p", "q", "p"], "v": [1, 2, 3]})\nr = df.groupby("k", as_index=False).agg(s=("v", "sum"))\nprint(r.to_dict("list"))',
-          [
-            "{'s': [4, 2]}",
-            "{'k': ['p', 'q'], 's': [4, 2]}",
-            "{'k': ['p', 'q', 'p'], 's': [1, 2, 3]}",
-            "{'k': ['p', 'q'], 's': [1, 2]}",
-          ],
-          1,
+          "{'k': ['p', 'q'], 's': [4, 2]}",
           'as_index=False keeps k as a column beside the summary.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"k": ["p", "q", "p"], "v": [1, 2, 3]})\nr = df.groupby("k").agg(s=("v", "sum"))\nprint(r.columns.tolist())\nprint(r.index.tolist())',
-          [
-            "['k', 's']\n[0, 1]",
-            "['s']\n[0, 1]",
-            "['k', 's']\n['p', 'q']",
-            "['s']\n['p', 'q']",
-          ],
-          3,
+          "['s']\n['p', 'q']",
           'By default the keys move into the index, leaving s as the only column.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"city": ["x", "y", "z", "x"], "n": [1, 8, 3, 1]})\nr = df.groupby("city", as_index=False).agg(total=("n", "sum"))\nprint(r.sort_values("total", ascending=False)["city"].tolist())',
-          [
-            "['x', 'y', 'z']",
-            "['x', 'z', 'y']",
-            "['y', 'z', 'x']",
-            "['z', 'y', 'x']",
-          ],
-          2,
+          "['y', 'z', 'x']",
           'Totals are x 2, y 8 and z 3, so descending order is y, z, x.',
         ),
         choose(
@@ -2868,25 +2534,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'mean gives one value per team; transform repeats each team’s value on that team’s rows, in the original row order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "y", "x"], "v": [1, 10, 3]})\nprint(df.groupby("g")["v"].transform("sum").tolist())',
-          ['[4, 10]', '[1, 10, 3]', '[14, 14, 14]', '[4, 10, 4]'],
-          3,
+          '[4, 10, 4]',
           'Each row receives its own group’s total: x rows get 4, the y row gets 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "y", "x"], "v": [1, 10, 3]})\nprint(len(df.groupby("g")["v"].sum()))\nprint(len(df.groupby("g")["v"].transform("sum")))',
-          ['3\n2', '2\n3', '2\n2', '3\n3'],
-          1,
+          '2\n3',
           'The reduction has one value per group; transform has one per row.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"k": ["a", "a", "b"], "v": [5, 1, 7]})\ndf["top"] = df.groupby("k")["v"].transform("max")\nprint(df["top"].tolist())',
-          ['[5, 7]', '[5, 1, 7]', '[5, 5, 7]', '[7, 7, 7]'],
-          2,
+          '[5, 5, 7]',
           'Both a rows get a’s maximum 5, and the b row gets 7.',
         ),
         choose(
@@ -2915,16 +2578,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Class means are 70 and 90. The 85 is below its class mean but above the overall mean of 80.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "x", "y", "y"], "v": [2, 4, 10, 30]})\nprint((df["v"] - df.groupby("g")["v"].transform("mean")).tolist())',
-          [
-            '[-9.5, -7.5, -1.5, 18.5]',
-            '[3.0, 3.0, 20.0, 20.0]',
-            '[-1.0, 1.0, -10.0, 10.0]',
-            '[-1.0, 1.0]',
-          ],
-          2,
+          '[-1.0, 1.0, -10.0, 10.0]',
           'Group means are 3 and 20, so each row differs from its own mean by 1 or 10.',
         ),
         choose(
@@ -2938,11 +2595,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The reference point is the student’s own class mean.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"store": ["s1", "s2", "s1"], "sales": [100, 40, 60]})\ndf["gap"] = df["sales"] - df.groupby("store")["sales"].transform("max")\nprint(df["gap"].tolist())',
-          ['[0, -60, -40]', '[0, 0, -40]', '[-100, -40, -60]', '[0, 60, 40]'],
-          1,
+          '[0, 0, -40]',
           's1’s best is 100 and s2’s is 40, so only the 60 falls short of its store’s maximum.',
         ),
         choose(
@@ -2971,23 +2627,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Region N’s total is 40, so its rows hold 75% and 25%. Region S sold nothing, so its shares are undefined.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"g": ["a", "a", "b"], "v": [1, 3, 5]})\nprint((df["v"] / df.groupby("g")["v"].transform("sum")).tolist())',
-          [
-            '[1.0, 3.0, 5.0]',
-            '[0.25, 0.75]',
-            '[0.5, 0.5, 1.0]',
-            '[0.25, 0.75, 1.0]',
-          ],
-          3,
+          '[0.25, 0.75, 1.0]',
           'Group a totals 4, so its rows are $1/4$ and $3/4$; group b’s only row is all of its total.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ndf = pd.DataFrame({"team": ["x", "x", "x"], "goals": [2, 2, 4]})\nshare = df["goals"] / df.groupby("team")["goals"].transform("sum")\nprint(share.sum())',
-          ['8', '3.0', '1.0', '0.5'],
-          2,
+          '1.0',
           'Shares within one group always add up to 1.',
         ),
         choose(
@@ -3030,35 +2679,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Row 2 averages 10, 12, 17; row 3 averages 12, 17, 13; row 4 averages 17, 13, 18.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([2, 4, 6, 8])\nprint(s.rolling(2).mean().tolist())',
-          [
-            '[3.0, 5.0, 7.0]',
-            '[3.0, 5.0, 7.0, nan]',
-            '[2.0, 3.0, 5.0, 7.0]',
-            '[nan, 3.0, 5.0, 7.0]',
-          ],
-          3,
+          '[nan, 3.0, 5.0, 7.0]',
           'Each result uses the row and the one before; row 0 has no earlier row, so it is missing.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([1, 5, 2, 8, 3])\nprint(s.rolling(3).max().tolist())',
-          [
-            '[nan, nan, 5.0, 8.0, 8.0]',
-            '[5.0, 8.0, 8.0]',
-            '[nan, nan, 8.0, 8.0, 8.0]',
-            '[1.0, 5.0, 5.0, 8.0, 8.0]',
-          ],
-          0,
+          '[nan, nan, 5.0, 8.0, 8.0]',
           'The windows are (1, 5, 2), (5, 2, 8) and (2, 8, 3), and the result keeps one entry per row.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([3, 3, 9, 0])\nprint(s.rolling(3).sum().iloc[3])',
-          ['15.0', '9.0', '12.0', 'nan'],
-          2,
+          '12.0',
           'Row 3’s window holds rows 1 to 3: 3 + 9 + 0.',
         ),
         choose(
@@ -3088,35 +2724,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The full windows give 6 and 9. min_periods=1 also accepts one and two rows; min_periods=2 accepts two rows but not one. The -1 only makes missing entries visible.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([10, 20, 30])\nprint(s.rolling(2, min_periods=1).mean().tolist())',
-          [
-            '[nan, 15.0, 25.0]',
-            '[15.0, 25.0]',
-            '[10.0, 15.0, 25.0]',
-            '[5.0, 15.0, 25.0]',
-          ],
-          2,
+          '[10.0, 15.0, 25.0]',
           'The first window holds only 10, and min_periods=1 accepts it; its mean is 10, not $10 / 2$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([1, 2, 3, 4, 5])\nprint(s.rolling(4).sum().isna().sum())',
-          ['4', '1', '0', '3'],
-          3,
+          '3',
           'A full window of 4 first exists at row 3, so rows 0, 1 and 2 are missing.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([6, 2, 4])\nprint(s.rolling(3, min_periods=2).mean().fillna(0).tolist())',
-          [
-            '[6.0, 4.0, 4.0]',
-            '[0.0, 4.0, 4.0]',
-            '[0.0, 0.0, 4.0]',
-            '[0.0, 2.0, 4.0]',
-          ],
-          1,
+          '[0.0, 4.0, 4.0]',
           'Row 0 has one value, fewer than 2, so it is missing; row 1 averages 6 and 2.',
         ),
         choose(
@@ -3145,28 +2768,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Unsorted, the second sum pairs day 3 with day 1. After sorting, each window pairs consecutive days: 1 + 5, 5 + 9, 9 + 7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"week": [2, 1, 3], "n": [4, 10, 6]})\nprint(t.sort_values("week")["n"].rolling(2).mean().tolist())',
-          [
-            '[nan, 7.0, 8.0]',
-            '[nan, 7.0, 5.0]',
-            '[nan, 5.0, 7.0]',
-            '[7.0, 5.0]',
-          ],
-          1,
+          '[nan, 7.0, 5.0]',
           'In week order the values are 10, 4, 6, so the means are 7 and 5.',
         ),
-        predictOutput(
+        typeOutput(
           'The rows are not sorted by day. What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"day": [2, 3, 1], "v": [5, 0, 10]})\nprint(t["v"].rolling(2).sum().tolist())',
-          [
-            '[nan, 15.0, 5.0]',
-            '[5.0, 10.0]',
-            '[nan, 10.0, 15.0]',
-            '[nan, 5.0, 10.0]',
-          ],
-          3,
+          '[nan, 5.0, 10.0]',
           'rolling uses row order as given: 5 + 0, then 0 + 10. Sorting by day first would give 15 and 5.',
         ),
         choose(
@@ -3209,23 +2820,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The declared format reads the first number as the day, so 03/04 is in April.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nd = pd.to_datetime(pd.Series(["05/06/2024"]), format="%m/%d/%Y")\nprint(d.dt.month.tolist())\nprint(d.dt.day.tolist())',
-          ['[6]\n[5]', '[5]\n[5]', '[2024]\n[6]', '[5]\n[6]'],
-          3,
+          '[5]\n[6]',
           'With %m first, 05 is the month and 06 the day.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nd = pd.to_datetime(pd.Series(["2024-02-29", "2023-11-05"]), format="%Y-%m-%d")\nprint(d.dt.strftime("%d/%m/%Y").tolist())',
-          [
-            "['29/02/2024', '05/11/2023']",
-            "['02/29/2024', '11/05/2023']",
-            "['2024-02-29', '2023-11-05']",
-            "['29/02/2024', '11/05/2023']",
-          ],
-          0,
+          "['29/02/2024', '05/11/2023']",
           'strftime writes the day, then the month, then the year, as its format string says.',
         ),
         choose(
@@ -3260,30 +2864,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first text shows a later date, but in UTC it happened an hour before the second.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.to_datetime(pd.Series(["2024-05-01T09:00:00+03:00"]), utc=True)\nprint(t.dt.hour.tolist())',
-          ['[9]', '[12]', '[6]', '[3]'],
-          2,
+          '[6]',
           '09:00 at UTC+3 is 3 hours ahead of UTC, so the UTC hour is 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.to_datetime(pd.Series(["2024-05-01T01:00:00+05:00"]), utc=True)\nprint(t.dt.strftime("%Y-%m-%d %H:%M").tolist())',
-          [
-            "['2024-05-01 06:00']",
-            "['2024-05-01 01:00']",
-            "['2024-05-01 20:00']",
-            "['2024-04-30 20:00']",
-          ],
-          3,
+          "['2024-04-30 20:00']",
           'Subtracting 5 hours from 01:00 crosses midnight into the previous day.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nraw = pd.Series(["2024-03-01T10:00:00-05:00", "2024-03-01T12:00:00+00:00"])\nt = pd.to_datetime(raw, utc=True)\nprint(t.dt.hour.tolist())',
-          ['[15, 12]', '[10, 12]', '[5, 12]', '[12, 15]'],
-          0,
+          '[15, 12]',
           'A negative offset means behind UTC, so 10:00−05:00 is 15:00 UTC.',
         ),
         choose(
@@ -3312,23 +2908,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The naive value keeps its clock reading and is simply labelled UTC. The value with an offset is converted, moving 9 hours earlier.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.to_datetime(pd.Series(["2024-06-01 08:00"]), utc=True)\nprint(t.dt.hour.tolist())',
-          ['[6]', '[10]', '[8]', '[0]'],
-          2,
+          '[8]',
           'Without an offset, the clock reading is taken as UTC unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.to_datetime(pd.Series(["2024-12-31T22:00:00-03:00"]), utc=True)\nprint(t.dt.strftime("%Y-%m-%d").tolist())',
-          [
-            "['2024-12-31']",
-            "['2024-12-30']",
-            "['2025-12-31']",
-            "['2025-01-01']",
-          ],
-          3,
+          "['2025-01-01']",
           '22:00 at UTC−3 is 01:00 UTC the next day, which is in a new year.',
         ),
         choose(
@@ -3371,30 +2960,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The two January 1 readings share a bin and add to 7; January 2 has one reading. Each bin is labelled by its day.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ntimes = pd.to_datetime(["2024-03-01 01:00", "2024-03-01 23:00", "2024-03-02 12:00", "2024-03-02 13:00"])\ns = pd.Series([1, 2, 3, 4], index=times)\nprint(s.resample("D").sum().tolist())',
-          ['[1, 2, 3, 4]', '[10]', '[3, 3, 4]', '[3, 7]'],
-          3,
+          '[3, 7]',
           'Both March 1 readings fall in one day (1 + 2) and both March 2 readings in the next (3 + 4).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ntimes = pd.to_datetime(["2024-01-01 09:15", "2024-01-01 09:45", "2024-01-01 10:05"])\ns = pd.Series([5, 1, 2], index=times)\nprint(s.resample("h").sum().tolist())',
-          ['[5, 1, 2]', '[6, 2]', '[8]', '[5, 3]'],
-          1,
+          '[6, 2]',
           'The 9 o’clock hour holds 5 and 1; the 10 o’clock hour holds 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nt = pd.DataFrame({"time": pd.to_datetime(["2024-05-01 10:00", "2024-05-01 11:00", "2024-05-02 10:00"]), "n": [1, 1, 5]})\nprint(t.resample("D", on="time")["n"].mean().tolist())',
-          [
-            '[1.0, 5.0]',
-            '[2.0, 5.0]',
-            '[1.0, 1.0, 5.0]',
-            '[2.3333333333333335]',
-          ],
-          0,
+          '[1.0, 5.0]',
           'May 1 averages its two readings of 1; May 2 has the single reading 5.',
         ),
         choose(
@@ -3423,30 +3004,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'January 2 has no rows. Plain sum reports 0, min_count=1 reports it as missing, and count shows it had no observations.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ntimes = pd.to_datetime(["2024-02-01", "2024-02-04"])\nv = pd.Series([3, 6], index=times)\nprint(len(v.resample("D").sum()))',
-          ['2', '3', '1', '4'],
-          3,
+          '4',
           'Bins run from February 1 to February 4, including the two empty days between.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ntimes = pd.to_datetime(["2024-02-01", "2024-02-04"])\nv = pd.Series([3, 6], index=times)\nprint(v.resample("D").sum(min_count=1).isna().sum())',
-          ['0', '1', '2', '4'],
-          2,
+          '2',
           'February 2 and 3 have no values, so with min_count=1 both are missing.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ntimes = pd.to_datetime(["2024-02-01 10:00", "2024-02-03 10:00"])\nv = pd.Series([5, 1], index=times)\nprint(v.resample("D").mean().tolist())',
-          [
-            '[5.0, nan, 1.0]',
-            '[5.0, 0.0, 1.0]',
-            '[5.0, 1.0]',
-            '[3.0, 3.0, 3.0]',
-          ],
-          0,
+          '[5.0, nan, 1.0]',
           'An empty day has no values to average, so its mean is missing.',
         ),
         choose(
@@ -3475,18 +3048,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'In local time, two sales are on March 1 and one on March 2. In UTC, all three are on March 2, because 20:00−05:00 is already 01:00 UTC.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nraw = ["2024-07-01T23:00:00+00:00", "2024-07-02T01:00:00+00:00"]\nv = pd.Series([4, 6], index=pd.to_datetime(raw))\nprint(v.resample("D").sum().tolist())',
-          ['[10]', '[4, 6]', '[6, 4]', '[4, 0, 6]'],
-          1,
+          '[4, 6]',
           'In UTC the readings are on July 1 and July 2, one per day.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nraw = ["2024-07-01T23:00:00+00:00", "2024-07-02T01:00:00+00:00"]\nv = pd.Series([4, 6], index=pd.to_datetime(raw))\nlocal = pd.Series([4, 6], index=pd.to_datetime(["2024-07-02T08:00:00+09:00", "2024-07-02T10:00:00+09:00"]))\nprint(local.resample("D").sum().tolist())',
-          ['[4, 6]', '[6, 4]', '[10]', '[4, 0, 6]'],
-          2,
+          '[10]',
           'At UTC+9 the same two instants are 08:00 and 10:00 on July 2, so they share one day.',
         ),
         choose(
@@ -3525,35 +3096,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'free appears 5 times out of 8, so it comes first with a proportion of 0.625.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(["b", "a", "b", "c", "b", "a"])\nprint(s.value_counts().to_dict())',
-          [
-            "{'a': 2, 'b': 3, 'c': 1}",
-            "{'b': 3, 'a': 2, 'c': 1}",
-            "{'b': 1, 'a': 1, 'c': 1}",
-            "{'c': 1, 'a': 2, 'b': 3}",
-          ],
-          1,
+          "{'b': 3, 'a': 2, 'c': 1}",
           'Values are counted and listed from most to least frequent, not alphabetically.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(["y", "n", "y", "y"])\nprint(s.value_counts(normalize=True).to_dict())',
-          [
-            "{'y': 3, 'n': 1}",
-            "{'n': 0.25, 'y': 0.75}",
-            "{'y': 75, 'n': 25}",
-            "{'y': 0.75, 'n': 0.25}",
-          ],
-          3,
+          "{'y': 0.75, 'n': 0.25}",
           'normalize=True divides each count by 4 and keeps the most frequent first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series(["x", None, "x", None, None])\nprint(s.value_counts().to_dict())',
-          ["{'x': 2}", "{None: 3, 'x': 2}", "{'x': 2, None: 3}", "{'x': 5}"],
-          0,
+          "{'x': 2}",
           'Missing values are excluded by default, even when they are the most common entry.',
         ),
         choose(
@@ -3582,25 +3140,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The single 51 lifts the mean to 15, while the median stays between 3 and 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([1, 2, 3, 4, 90])\nprint(s.mean())\nprint(s.median())',
-          ['3.0\n20.0', '20.0\n3.0', '20.0\n20.0', '22.5\n3.0'],
-          1,
+          '20.0\n3.0',
           'The mean is $100 / 5 = 20$; the middle value of the sorted five is 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ns = pd.Series([5, 1, 9])\nprint(s.describe()["50%"])',
-          ['1.0', '9.0', '15.0', '5.0'],
-          3,
+          '5.0',
           'Sorted, the values are 1, 5, 9, so the 50% value (the median) is 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nd = pd.Series([3.0, None, 7.0]).describe()\nprint(d["count"])\nprint(d["max"])',
-          ['3.0\n7.0', '2.0\nnan', '2.0\n7.0', '3.0\nnan'],
-          2,
+          '2.0\n7.0',
           'count includes only the two present values, and max ignores the missing one.',
         ),
         choose(
@@ -3629,18 +3184,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Score rises by exactly 8 per hour and fatigue falls by exactly 2, so both lie on straight lines, one rising and one falling.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nx = pd.Series([1, 2, 3])\ny = pd.Series([30, 20, 10])\nprint(x.corr(y))',
-          ['1.0', '-10.0', '-1.0', '0.0'],
-          2,
+          '-1.0',
           'y falls by the same amount at each step, a perfect falling line.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nx = pd.Series([2, 4, 6, 8])\ny = pd.Series([5, 9, 13, 17])\nprint(x.corr(y))',
-          ['2.0', '0.5', '-1.0', '1.0'],
-          3,
+          '1.0',
           'Correlation measures how straight the pattern is, not its slope; any exact rising line gives 1.0.',
         ),
         choose(
@@ -3683,18 +3236,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each call parses its own text. The first and third calls receive the same input, so they return the same result.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from io import StringIO\nimport pandas as pd\n\ndef shops(text):\n    data = pd.read_csv(StringIO(text))\n    return len(data)\n\nprint(shops("shop\\nA\\nB\\nC\\n"))\nprint(shops("shop\\nD\\n"))',
-          ['4\n2', '3\n4', '3\n1', '1\n3'],
-          2,
+          '3\n1',
           'Each call counts the data rows of its own input; the header is not a row.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'calls = []\n\ndef report(value):\n    calls.append(value)\n    return len(calls)\n\nprint(report("a"))\nprint(report("a"))',
-          ['1\n1', 'a\na', '2\n2', '1\n2'],
-          3,
+          '1\n2',
           'The function depends on the list outside it, so the same input gives a different result the second time.',
         ),
         choose(
@@ -3734,30 +3285,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first table passes the check. The second repeats id 1, so the assertion raises and the caller prints its message.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def validate(units):\n    assert units >= 0, "negative units"\n    return units * 2\n\ntry:\n    print(validate(4))\n    print(validate(-1))\nexcept AssertionError as error:\n    print(error)',
-          ['8\n-2', 'negative units', '8\nnegative units', '8'],
-          2,
+          '8\nnegative units',
           '4 passes and prints 8; −1 fails the assertion, so its message is printed instead of a result.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from io import StringIO\nimport pandas as pd\n\ndef load(text):\n    data = pd.read_csv(StringIO(text))\n    assert "qty" in data.columns, "missing qty column"\n    return int(data["qty"].sum())\n\nfor text in ["qty\\n2\\n5\\n", "amount\\n9\\n"]:\n    try:\n        print(load(text))\n    except AssertionError as error:\n        print("error:", error)',
-          [
-            '7\n9',
-            'error: missing qty column',
-            '7\nKeyError',
-            '7\nerror: missing qty column',
-          ],
-          3,
+          '7\nerror: missing qty column',
           'The first source has qty and sums to 7. The second lacks the column, so the check fails before any sum.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\n\ndef parse(values):\n    return pd.to_numeric(pd.Series(values), errors="raise").sum()\n\ntry:\n    print(parse(["3", "4"]))\n    print(parse(["3", "four"]))\nexcept ValueError:\n    print("bad quantity")',
-          ['7\nbad quantity', '7\n3', '7\nnan', 'bad quantity'],
-          0,
+          '7\nbad quantity',
           'The second call meets an invalid token, and errors="raise" stops it instead of skipping four.',
         ),
         choose(
@@ -3786,28 +3329,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Event 1 has two versions; only version 2 (5 units) survives, so west totals 5 rather than 7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version skips deduplication. What does it print?',
           'from io import StringIO\nimport pandas as pd\n\ntext = "event_id,version,shop,units\\n1,1,west,2\\n1,2,west,5\\n2,1,east,4\\n"\ndata = pd.read_csv(StringIO(text))\nprint(data.groupby("shop")["units"].sum().to_dict())',
-          [
-            "{'east': 4, 'west': 5}",
-            "{'east': 4, 'west': 7}",
-            "{'west': 7, 'east': 4}",
-            "{'east': 4, 'west': 2}",
-          ],
-          1,
+          "{'east': 4, 'west': 7}",
           'Both versions of event 1 are counted, so west double-counts to 7.',
         ),
-        predictOutput(
+        typeOutput(
           'This version keeps the last row without sorting by version. What does it print?',
           'from io import StringIO\nimport pandas as pd\n\ntext = "event_id,version,shop,units\\n1,2,west,5\\n1,1,west,2\\n2,1,east,4\\n"\ndata = pd.read_csv(StringIO(text))\nlatest = data.drop_duplicates("event_id", keep="last")\nprint(latest.groupby("shop")["units"].sum().to_dict())',
-          [
-            "{'east': 4, 'west': 5}",
-            "{'east': 4, 'west': 7}",
-            "{'east': 4, 'west': 2}",
-            "{'west': 2}",
-          ],
-          2,
+          "{'east': 4, 'west': 2}",
           'The last row for event 1 is the older version 1, so the outdated 2 units win.',
         ),
         choose(

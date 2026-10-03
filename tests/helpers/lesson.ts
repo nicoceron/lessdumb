@@ -1,5 +1,10 @@
 import { expect, type Locator, type Page } from '@playwright/test';
-import type { ChoiceQuestion, Question, Skill } from '../../src/lib/curriculum';
+import type {
+  ChoiceQuestion,
+  CodeQuestion,
+  Question,
+  Skill,
+} from '../../src/lib/curriculum';
 import { lessonSteps, POINT_PASS_CORRECT } from '../../src/lib/lesson-plan';
 import { plainProse } from '../../src/lib/math-text';
 import { replaceCode } from './editor';
@@ -137,7 +142,9 @@ export async function answerShown(
   const question = await shownQuestion(page, candidates);
   if (question.type === 'choice') await answerChoice(page, question, correct);
   else {
-    await replaceCode(page, code ?? (correct ? question.solution : 'pass'));
+    // Browser specs predate typed answers (CEN-111): they answer choices only.
+    const exercise = question as CodeQuestion;
+    await replaceCode(page, code ?? (correct ? exercise.solution : 'pass'));
     await page
       .getByRole('button', { name: 'Run & check', exact: true })
       .click();

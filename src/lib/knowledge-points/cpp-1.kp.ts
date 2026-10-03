@@ -1,4 +1,9 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 export const knowledgePoints: KnowledgePointModule = {
   'cpp-integer-values': [
@@ -15,18 +20,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'apples is initialized with 7 when it is declared, so reading it prints 7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int count = 12;\n  std::cout << count << "\\n";\n}',
-          ['12', '0', 'count', 'Compilation fails'],
-          0,
+          '12',
           'count holds the value it was initialized with.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int level = -3;\n  std::cout << level << "\\n";\n}',
-          ['3', '-3', '0', 'level'],
-          1,
+          '-3',
           'An int can hold negative whole numbers, and it prints with its sign.',
         ),
         choose(
@@ -61,25 +64,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'saved received a copy of 7. Assigning 9 to incoming afterwards leaves saved unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int a = 4;\n  int b = a;\n  a = 10;\n  std::cout << b << "\\n";\n}',
-          ['10', '4', '14', '0'],
-          1,
+          '4',
           'b copied 4 before a changed, and the copy does not follow a.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int x = 2;\n  int y = x;\n  y = y + 5;\n  std::cout << x << " " << y << "\\n";\n}',
-          ['7 7', '2 7', '2 2', '7 2'],
-          1,
+          '2 7',
           'Changing the copy y does not affect x.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int first = 5;\n  int second = first;\n  first = first * 3;\n  std::cout << first << " " << second << "\\n";\n}',
-          ['15 15', '5 5', '15 5', '5 15'],
-          2,
+          '15 5',
           'first becomes 15, while second still holds the 5 it copied.',
         ),
       ],
@@ -100,25 +100,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '17 / 5 is 3.4 in mathematics, so integer division keeps 3. 9 / 10 is 0.9, so it keeps 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int total = 22;\n  int teams = 4;\n  std::cout << total / teams << "\\n";\n}',
-          ['5.5', '5', '6', '4'],
-          1,
+          '5',
           '22 / 4 is 5.5 in mathematics; integer division discards the .5 and keeps 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  std::cout << 3 / 4 << "\\n";\n}',
-          ['0.75', '1', '3', '0'],
-          3,
+          '0',
           '3 / 4 is less than one, and integer division discards the whole fraction, leaving 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int pages = 50;\n  int per_sheet = 8;\n  std::cout << pages / per_sheet * per_sheet << "\\n";\n}',
-          ['50', '56', '48', '6'],
-          2,
+          '48',
           '50 / 8 is 6 after truncation, and 6 * 8 is 48: the discarded fraction does not come back.',
         ),
         choose(
@@ -153,18 +150,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both quotients are -3.5 in mathematics. Truncating toward zero drops the .5 and keeps -3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int change = -9;\n  std::cout << change / 4 << "\\n";\n}',
-          ['-2', '-3', '-2.25', '2'],
-          0,
+          '-2',
           '-9 / 4 is -2.25, and truncating toward zero gives -2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  std::cout << -1 / 3 << "\\n";\n}',
-          ['-1', '-0.333333', '0', '1'],
-          2,
+          '0',
           '-1 / 3 is about -0.33, and truncating toward zero gives 0.',
         ),
         choose(
@@ -178,11 +173,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'C++ integer division truncates toward zero for every sign combination.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = -15;\n  int b = 4;\n  std::cout << a / b << " " << -a / b << "\\n";\n}',
-          ['-4 3', '-3 3', '-3 4', '-4 4'],
-          1,
+          '-3 3',
           '-15 / 4 is -3.75, which truncates to -3; 15 / 4 is 3.75, which truncates to 3.',
         ),
       ],
@@ -200,18 +194,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '135 / 60 is 2 whole hours, and 135 - 2 * 60 leaves 15 minutes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  std::cout << 29 % 6 << "\\n";\n}',
-          ['4', '5', '1', '24'],
-          1,
+          '5',
           '29 / 6 is 4, and 29 - 4 * 6 leaves 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int eggs = 40;\n  std::cout << eggs / 12 << " " << eggs % 12 << "\\n";\n}',
-          ['4 3', '3 12', '3.33 4', '3 4'],
-          3,
+          '3 4',
           '40 eggs fill 3 boxes of 12, which hold 36, so 4 eggs are left over.',
         ),
         choose(
@@ -220,11 +212,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A multiple of 5 divides evenly, so nothing is left over and the remainder is 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  std::cout << 8 % 10 << "\\n";\n}',
-          ['0', '2', '8', '10'],
-          2,
+          '8',
           '8 / 10 is 0, so the whole 8 is left over as the remainder.',
         ),
       ],
@@ -243,18 +234,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '-7 / 3 is -2, and -7 - (-2 * 3) is -1. 7 / -3 is -2, and 7 - (-2 * -3) is 1. Each remainder has the sign of its left operand.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  std::cout << -10 % 4 << "\\n";\n}',
-          ['2', '-2', '-3', '6'],
-          1,
+          '-2',
           '-10 / 4 truncates to -2, and -10 - (-2 * 4) leaves -2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int n = -9;\n  std::cout << n % 2 << "\\n";\n}',
-          ['-1', '1', '0', '-4'],
-          0,
+          '-1',
           '-9 / 2 truncates to -4, and -9 - (-4 * 2) leaves -1: the remainder keeps the sign of -9.',
         ),
         choose(
@@ -268,11 +257,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The remainder takes the sign of the left operand, so -5 % 2 is -1, not 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  std::cout << 14 % -5 << " " << -14 % 5 << "\\n";\n}',
-          ['-4 4', '4 4', '4 -4', '-4 -4'],
-          2,
+          '4 -4',
           'Each remainder takes the sign of its left operand: 14 gives 4 and -14 gives -4.',
         ),
       ],
@@ -293,25 +281,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'total is converted to 7.0 first, so 7.0 / 2 is floating-point division and keeps the .5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int sum = 9;\n  int n = 4;\n  std::cout << static_cast<double>(sum) / n << "\\n";\n}',
-          ['2', '2.25', '2.0', '2.3'],
-          1,
+          '2.25',
           'sum becomes 9.0, and 9.0 / 4 is 2.25.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 5;\n  std::cout << a / 2 << " " << static_cast<double>(a) / 2 << "\\n";\n}',
-          ['2.5 2.5', '2 2', '2 2.5', '2.5 2'],
-          2,
+          '2 2.5',
           'a / 2 is integer division and gives 2; converting a to double first gives 2.5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  double share = static_cast<double>(6) / 3;\n  std::cout << share << "\\n";\n}',
-          ['2.0', '2', '2.00', '3'],
-          1,
+          '2',
           'The value is the double 2.0, and std::cout prints it without a trailing .0.',
         ),
         choose(
@@ -340,18 +325,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'In the first expression 7 / 2 is already 3 when the cast runs. In the second, 7.0 / 2 keeps the fraction.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int points = 11;\n  int games = 2;\n  double average = static_cast<double>(points / games);\n  std::cout << average << "\\n";\n}',
-          ['5.5', '5', '6', '5.0'],
-          1,
+          '5',
           'points / games is integer division and gives 5; converting 5 to double does not bring back the .5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 3;\n  int b = 4;\n  std::cout << static_cast<double>(a) / b << " " << static_cast<double>(a / b) << "\\n";\n}',
-          ['0.75 0.75', '0 0', '0.75 0', '0 0.75'],
-          2,
+          '0.75 0',
           'Casting a first gives 3.0 / 4 = 0.75; casting a / b converts the already truncated 0.',
         ),
         choose(
@@ -365,11 +348,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The parentheses make total / count an int division first; only its truncated result is converted.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int x = 10;\n  int y = 4;\n  double ratio = static_cast<double>(x) / y;\n  std::cout << ratio * 2 << "\\n";\n}',
-          ['4', '6', '5.0', '5'],
-          3,
+          '5',
           'ratio is 2.5, and 2.5 * 2 is the double 5, printed as 5.',
         ),
       ],
@@ -387,25 +369,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both conversions drop the fraction: 7.85 becomes 7, and -2.7 moves toward zero to -2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  std::cout << static_cast<int>(9.99) << "\\n";\n}',
-          ['10', '9', '9.99', '9.9'],
-          1,
+          '9',
           'The conversion discards .99 instead of rounding, leaving 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  double half = static_cast<double>(7) / 2;\n  std::cout << static_cast<int>(half * 3) << "\\n";\n}',
-          ['10', '11', '10.5', '9'],
-          0,
+          '10',
           'half is 3.5, half * 3 is 10.5, and converting to int drops the .5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  std::cout << static_cast<int>(-4.6) << "\\n";\n}',
-          ['-5', '-4.6', '4', '-4'],
-          3,
+          '-4',
           'The fraction is discarded toward zero, so -4.6 becomes -4, not -5.',
         ),
       ],
@@ -426,18 +405,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'a and b are equal, so a == b is true (printed 1) and a != b is false (printed 0).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int x = 3;\n  std::cout << (x == 5) << "\\n";\n}',
-          ['false', '0', '1', '5'],
-          1,
+          '0',
           '3 is not equal to 5, so the comparison is false, which std::cout prints as 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 7;\n  int b = 2;\n  std::cout << (a != b) << " " << (a == b + 5) << "\\n";\n}',
-          ['1 0', '0 1', '1 1', 'true true'],
-          2,
+          '1 1',
           '7 differs from 2, and b + 5 is 7, so both comparisons are true and print 1.',
         ),
         choose(
@@ -451,11 +428,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Without parentheses the expression is (std::cout << a) == b, which compares a stream with an int and does not compile.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int count = 0;\n  std::cout << (count == 0) << (count != 0) << "\\n";\n}',
-          ['01', '1 0', 'truefalse', '10'],
-          3,
+          '10',
           'count == 0 is true and prints 1; count != 0 is false and prints 0, with no space between them.',
         ),
       ],
@@ -473,18 +449,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '70 >= 70 includes equality and is true; 70 > 70 is strict and is false.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int a = -3;\n  int b = 2;\n  std::cout << (a < b) << "\\n";\n}',
-          ['1', '0', '-1', 'true'],
-          0,
+          '1',
           '-3 is less than 2, so the comparison is true and prints 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int limit = 10;\n  int used = 10;\n  std::cout << (used < limit) << " " << (used <= limit) << "\\n";\n}',
-          ['1 1', '0 0', '0 1', '1 0'],
-          2,
+          '0 1',
           'used equals limit, so the strict < is false and <= is true.',
         ),
         choose(
@@ -508,18 +482,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '20 >= 18 is true, so adult holds true and prints 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int level = 3;\n  bool high = level > 5;\n  std::cout << high << "\\n";\n}',
-          ['1', '0', '3', 'false'],
-          1,
+          '0',
           '3 > 5 is false, and a false bool prints as 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 2;\n  int b = 9;\n  a = b;\n  std::cout << (a == b) << " " << a << "\\n";\n}',
-          ['0 2', '1 9', '1 2', '0 9'],
-          1,
+          '1 9',
           'a = b copies 9 into a, so the comparison is true and a prints 9.',
         ),
         choose(
@@ -533,11 +505,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A single = is assignment: it changes x and yields the assigned value.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int t = 8;\n  bool same = t == 8;\n  t = 9;\n  std::cout << same << "\\n";\n}',
-          ['0', '9', '1', '8'],
-          2,
+          '1',
           'same was computed while t was 8; changing t afterwards does not recompute it.',
         ),
       ],
@@ -576,11 +547,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Signed integer overflow has no defined result, so a correct program checks before adding.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <limits>\nint main() {\n  int low = std::numeric_limits<int>::min();\n  std::cout << (low < 0) << " " << (low + 1 < 0) << "\\n";\n}',
-          ['1 0', '0 1', '1 1', '0 0'],
-          2,
+          '1 1',
           'The minimum is negative, and adding 1 to it stays in range and is still negative.',
         ),
       ],
@@ -598,18 +568,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'max - b is 2147482647, and a is larger, so a + b would pass the maximum. The guard rejects it without adding.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <limits>\nint main() {\n  int a = 100;\n  int b = 50;\n  if (b > 0 && a > std::numeric_limits<int>::max() - b) std::cout << "reject\\n";\n  else std::cout << a + b << "\\n";\n}',
-          ['reject', '150', '100', '50'],
-          1,
+          '150',
           '100 is far below max - 50, so the guard passes and the sum 150 is printed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <limits>\nint main() {\n  int a = std::numeric_limits<int>::max() - 5;\n  int b = 6;\n  bool fits = !(b > 0 && a > std::numeric_limits<int>::max() - b);\n  std::cout << fits << "\\n";\n}',
-          ['1', '-1', '6', '0'],
-          3,
+          '0',
           'a is max - 5, which is greater than max - 6, so the sum would overflow and fits is false.',
         ),
         choose(
@@ -623,11 +591,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'No int can be greater than max, and an overflowing a + b is undefined, so the check must avoid evaluating it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <limits>\nint main() {\n  int a = std::numeric_limits<int>::max() - 6;\n  int b = 6;\n  if (a > std::numeric_limits<int>::max() - b) std::cout << "reject\\n";\n  else std::cout << (a + b == std::numeric_limits<int>::max()) << "\\n";\n}',
-          ['reject', '0', '1', '2147483647'],
-          2,
+          '1',
           'a equals max - 6, which is not greater than max - 6, so the sum is allowed and equals max exactly.',
         ),
       ],
@@ -646,11 +613,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'min - b is min + 5, and a is only min + 3, so adding -5 would go below the minimum.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <limits>\nint main() {\n  int a = -20;\n  int b = -7;\n  if (b < 0 && a < std::numeric_limits<int>::min() - b) std::cout << "underflow\\n";\n  else std::cout << a + b << "\\n";\n}',
-          ['underflow', '-13', '-27', '27'],
-          2,
+          '-27',
           '-20 is far above min + 7, so the guard passes and the sum is -27.',
         ),
         choose(
@@ -659,11 +625,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'min - b is safe to compute when b is negative. a + b < min would evaluate the overflowing sum, and min + b itself overflows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <limits>\nint main() {\n  int a = std::numeric_limits<int>::min() + 2;\n  int b = -3;\n  bool safe = !(b > 0 && a > std::numeric_limits<int>::max() - b) &&\n              !(b < 0 && a < std::numeric_limits<int>::min() - b);\n  std::cout << safe << "\\n";\n}',
-          ['1', '-1', '0', '2'],
-          2,
+          '0',
           'a is min + 2, which is below min + 3, so adding -3 would underflow and safe is false.',
         ),
       ],
@@ -683,18 +648,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'One past the maximum wraps around to 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <limits>\nint main() {\n  unsigned int zero = 0u;\n  unsigned int below = zero - 1u;\n  std::cout << (below == std::numeric_limits<unsigned int>::max()) << "\\n";\n}',
-          ['0', '1', '-1', '4294967296'],
-          1,
+          '1',
           'Subtracting 1 from 0 wraps to the maximum, so the comparison is true.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <limits>\nint main() {\n  unsigned int top = std::numeric_limits<unsigned int>::max();\n  std::cout << top + 3u << "\\n";\n}',
-          ['2', '3', '4294967298', '-2'],
-          0,
+          '2',
           'One step past the maximum is 0, so three steps past it is 2.',
         ),
         choose(
@@ -708,11 +671,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Unsigned arithmetic always wraps modulo 2 to the number of bits.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned int a = 3u;\n  unsigned int b = 5u;\n  std::cout << (a - b > a) << "\\n";\n}',
-          ['0', '4294967294', '1', '-2'],
-          2,
+          '1',
           '3u - 5u wraps to a huge value, which is greater than 3, so the comparison prints 1.',
         ),
       ],
@@ -730,11 +692,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'order is larger, so the program subtracts in the safe direction: 6 - 4 is 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  unsigned int have = 10u;\n  unsigned int need = 3u;\n  if (need > have) std::cout << "short\\n";\n  else std::cout << have - need << "\\n";\n}',
-          ['short', '-7', '13', '7'],
-          3,
+          '7',
           'need is not larger than have, so the program prints 10 - 3.',
         ),
         choose(
@@ -748,11 +709,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Unsigned values have no negative range, so the difference wraps around instead of going below zero.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned int a = 2u;\n  unsigned int b = 5u;\n  unsigned int gap = a - b;\n  std::cout << (gap > 1000u) << "\\n";\n}',
-          ['0', '-3', '1', '3'],
-          2,
+          '1',
           '2u - 5u wraps to 4294967293, which is greater than 1000.',
         ),
       ],
@@ -770,18 +730,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only 2 more fit below the maximum, and extra is 5, so the program rejects before the sum wraps.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <limits>\nint main() {\n  unsigned int used = 10u;\n  unsigned int extra = 5u;\n  if (extra > std::numeric_limits<unsigned int>::max() - used) std::cout << "rejected\\n";\n  else std::cout << used + extra << "\\n";\n}',
-          ['rejected', '15', '5', '10'],
-          1,
+          '15',
           'There is plenty of room above 10, so the program adds and prints 15.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <limits>\nint main() {\n  unsigned int used = std::numeric_limits<unsigned int>::max() - 2u;\n  unsigned int total = used + 5u;\n  std::cout << total << "\\n";\n}',
-          ['4294967298', '3', '2', 'rejected'],
-          2,
+          '2',
           'Two steps reach the maximum, one more wraps to 0, and two more reach 2.',
         ),
         choose(
@@ -812,11 +770,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'now holds Light::Green, so the first comparison is true and the second is false.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nenum class Door { Open, Closed };\nint main() {\n  Door d = Door::Closed;\n  std::cout << (d == Door::Open) << "\\n";\n}',
-          ['1', 'Closed', '0', 'Door::Closed'],
-          2,
+          '0',
           'd holds Door::Closed, which is not Door::Open, so the comparison prints 0.',
         ),
         choose(
@@ -830,11 +787,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Scoped enumerators need the Side:: prefix, and they neither come from nor convert to int implicitly.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nenum class Mode { Fast, Safe };\nint main() {\n  Mode a = Mode::Safe;\n  Mode b = a;\n  std::cout << (a == b) << (b != Mode::Fast) << "\\n";\n}',
-          ['10', '01', '11', '00'],
-          2,
+          '11',
           'b copies Mode::Safe from a, so the values are equal and b is not Fast: both print 1.',
         ),
       ],
@@ -864,18 +820,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'std::cout has no way to print a scoped enumeration, because it does not convert implicitly to int.',
           '#include <iostream>\nenum class Level { Low, High };\nint main() {\n  Level level = Level::High;\n  std::cout << level << "\\n";\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nenum class Side { Buy, Sell };\nint main() {\n  Side s = Side::Buy;\n  int qty = 7;\n  std::cout << (s == Side::Buy ? qty : -qty) << "\\n";\n}',
-          ['-7', '1', '7', '0'],
-          2,
+          '7',
           's is Buy, so the conditional yields qty, which is 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nenum class Fee { None, Flat };\nint main() {\n  Fee fee = Fee::Flat;\n  int cost = 100 + (fee == Fee::Flat ? 5 : 0);\n  std::cout << cost << "\\n";\n}',
-          ['105', '100', '5', '101'],
-          0,
+          '105',
           'fee is Flat, so 5 is added to 100.',
         ),
         choose(
@@ -904,18 +858,16 @@ export const knowledgePoints: KnowledgePointModule = {
           's is not Stop, so the second test runs; s is Slow, so speed is 30.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nenum class Signal { Stop, Slow, Go };\nint main() {\n  Signal s = Signal::Go;\n  int speed = s == Signal::Stop ? 0 : s == Signal::Slow ? 30 : 60;\n  std::cout << speed << "\\n";\n}',
-          ['0', '30', '60', '2'],
-          2,
+          '60',
           'Go fails both tests, so the final branch gives 60.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nenum class Tier { Basic, Plus, Pro };\nint main() {\n  Tier t = Tier::Basic;\n  int seats = t == Tier::Pro ? 10 : t == Tier::Plus ? 5 : 1;\n  std::cout << seats << "\\n";\n}',
-          ['10', '1', '5', '0'],
-          1,
+          '1',
           'Basic is neither Pro nor Plus, so the last branch gives 1 seat.',
         ),
         choose(
@@ -946,11 +898,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'doubled is an int initialized to 8; changing it to 9 does not affect a.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  auto x = 7;\n  auto y = x;\n  y = y * 3;\n  std::cout << x << " " << y << "\\n";\n}',
-          ['21 21', '7 21', '7 7', '21 7'],
-          1,
+          '7 21',
           'y is a separate int copied from x, so only y becomes 21.',
         ),
         choose(
@@ -985,18 +936,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'copy is an independent int, so adding 10 leaves balance alone. alias refers to balance, so adding 1 changes it to 51.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int stock = 8;\n  auto& ref = stock;\n  ref -= 3;\n  std::cout << stock << "\\n";\n}',
-          ['8', '3', '5', '11'],
-          2,
+          '5',
           'ref is another name for stock, so subtracting through it changes stock to 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int level = 2;\n  int& r = level;\n  auto c = r;\n  c = 9;\n  std::cout << level << "\\n";\n}',
-          ['9', '2', '11', '0'],
-          1,
+          '2',
           'Plain auto drops the reference, so c is a copy of 2; assigning 9 to it leaves level unchanged.',
         ),
         choose(
@@ -1025,25 +974,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'v copied 3 before r changed x. r += 4 makes x 7, and v += 1 makes v 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int a = 1;\n  auto& b = a;\n  auto c = b;\n  b = 5;\n  std::cout << a << c << "\\n";\n}',
-          ['55', '15', '51', '11'],
-          2,
+          '51',
           'b changes a to 5, while c kept the copy 1 it was initialized with.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int score = 10;\n  auto saved = score;\n  auto& live = score;\n  live = live * 2;\n  std::cout << saved + live << "\\n";\n}',
-          ['30', '20', '40', '10'],
-          0,
+          '30',
           'saved is 10, and live refers to score, which becomes 20, so the sum is 30.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int n = 6;\n  auto& first = n;\n  auto& second = first;\n  second -= 2;\n  std::cout << n << " " << first << "\\n";\n}',
-          ['6 6', '4 6', '6 4', '4 4'],
-          3,
+          '4 4',
           'first and second both refer to n, so subtracting through second makes every name read 4.',
         ),
       ],
@@ -1063,11 +1009,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'grade holds the character B, and printing a char shows the character.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  char c = \'x\';\n  std::cout << c << c << "\\n";\n}',
-          ["'x''x'", 'xx', 'x', '120120'],
-          1,
+          'xx',
           'Each << prints the character x, with nothing between them.',
         ),
         choose(
@@ -1076,11 +1021,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Single quotes with exactly one character make a char literal. "A" is a string literal, and A alone is a name.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           "#include <iostream>\nint main() {\n  char first = 'q';\n  char second = first;\n  first = 'r';\n  std::cout << first << second << \"\\n\";\n}",
-          ['rr', 'qq', 'qr', 'rq'],
-          3,
+          'rq',
           'second copied q before first changed to r.',
         ),
       ],
@@ -1098,25 +1042,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'code holds the int 65. letter + 1 is 66, and storing it in a char makes the character B.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  char c = \'a\';\n  std::cout << c + 1 << "\\n";\n}',
-          ['b', 'a1', '98', '97'],
-          2,
+          '98',
           'c + 1 is int arithmetic on the code 97, so the program prints the int 98, not a character.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  char c = \'a\';\n  char d = c + 2;\n  std::cout << d << "\\n";\n}',
-          ['99', 'c', 'a2', 'b'],
-          1,
+          'c',
           'Storing 97 + 2 in a char gives the character with code 99, which is c.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           "#include <iostream>\nint main() {\n  char c = 'C';\n  int gap = c - 'A';\n  std::cout << gap << \"\\n\";\n}",
-          ['2', '3', 'C', '67'],
-          0,
+          '2',
           "The letter codes are consecutive, so 'C' - 'A' is 2.",
         ),
       ],
@@ -1133,25 +1074,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: "'7' - '0' is 7, so value * 2 is 14.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           "#include <iostream>\nint main() {\n  char d = '4';\n  std::cout << (d - '0') + 1 << \"\\n\";\n}",
-          ['53', '5', '41', '4'],
-          1,
+          '5',
           "d - '0' is the value 4, and adding 1 gives 5. Adding 1 to the character code itself would give 53.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           "#include <iostream>\nint main() {\n  char tens = '3';\n  char ones = '8';\n  int number = (tens - '0') * 10 + (ones - '0');\n  std::cout << number << \"\\n\";\n}",
-          ['11', '83', '3858', '38'],
-          3,
+          '38',
           'The digits convert to 3 and 8, and 3 * 10 + 8 is 38.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int value = 6;\n  char digit = \'0\' + value;\n  std::cout << digit << "\\n";\n}',
-          ['54', '06', '6', '0'],
-          2,
+          '6',
           "'0' + 6 is the code of the character 6, and printing a char shows the character.",
         ),
         choose(
@@ -1183,11 +1121,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'A char is always 1 byte; on this compiler an int is 4 bytes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  std::cout << sizeof(char) * 10 << "\\n";\n}',
-          ['10', '80', '1', '40'],
-          0,
+          '10',
           'sizeof(char) is 1, so the product is 10.',
         ),
         choose(
@@ -1201,11 +1138,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Only sizeof(char) == 1 is fixed by the standard; the other sizes vary between platforms.',
         ),
-        predictOutput(
+        typeOutput(
           'This compiler uses a 4-byte int. What does this program print?',
           '#include <iostream>\nint main() {\n  std::cout << sizeof(int) * 3 << "\\n";\n}',
-          ['3', '12', '96', '24'],
-          1,
+          '12',
           'Three 4-byte ints take 12 bytes. sizeof counts bytes, not bits.',
         ),
       ],
@@ -1223,11 +1159,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'initial is a char (1 byte) and big is an int (4 bytes here), whatever values they hold.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print on a compiler with a 4-byte int?',
           '#include <iostream>\nint main() {\n  int tiny = 1;\n  int huge = 2000000000;\n  std::cout << sizeof(tiny) << " " << sizeof(huge) << "\\n";\n}',
-          ['1 4', '1 10', '4 8', '4 4'],
-          3,
+          '4 4',
           'Both are ints, so both occupy the same 4 bytes regardless of their values.',
         ),
         choose(
@@ -1241,11 +1176,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'sizeof depends only on the type of its operand.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           "#include <iostream>\nint main() {\n  char a = 'x';\n  char b = 'y';\n  std::cout << sizeof(a) + sizeof(b) << \"\\n\";\n}",
-          ['xy', '2', '241', '16'],
-          1,
+          '2',
           'Each char is 1 byte, so the sum is 2.',
         ),
       ],
@@ -1262,11 +1196,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '25 ints of 4 bytes each need 100 bytes on this compiler.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int items = 8;\n  std::cout << items * sizeof(char) << "\\n";\n}',
-          ['64', '1', '8', '32'],
-          2,
+          '8',
           'Each char is 1 byte, so 8 chars need 8 bytes.',
         ),
         choose(
@@ -1280,11 +1213,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The size of int is implementation-defined; n * sizeof(int) adapts to it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print with a 4-byte int?',
           '#include <iostream>\nint main() {\n  int rows = 3;\n  int cols = 5;\n  std::cout << rows * cols * sizeof(int) << "\\n";\n}',
-          ['15', '60', '480', '120'],
-          1,
+          '60',
           '3 * 5 is 15 ints, and 15 * 4 is 60 bytes.',
         ),
       ],
@@ -1305,18 +1237,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'A 16-bit type is 2 bytes and a 64-bit type is 8 bytes, on every platform that provides them.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::cout << sizeof(std::int32_t) * 8 << "\\n";\n}',
-          ['4', '32', '8', '64'],
-          1,
+          '32',
           'std::int32_t is 4 bytes, and 4 bytes of 8 bits each are 32 bits.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstdint>\n#include <limits>\nint main() {\n  std::cout << std::numeric_limits<std::uint16_t>::max() << "\\n";\n}',
-          ['65536', '32767', '65535', '255'],
-          2,
+          '65535',
           'Sixteen unsigned bits hold up to 2 to the 16th minus 1, which is 65535.',
         ),
         choose(
@@ -1340,25 +1270,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'level + 10 is the int 260; stored back into 8 bits it wraps to 260 - 256 = 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint8_t a = 200;\n  std::uint8_t b = 100;\n  std::uint8_t sum = static_cast<std::uint8_t>(a + b);\n  std::cout << static_cast<int>(sum) << "\\n";\n}',
-          ['300', '255', '44', '0'],
-          2,
+          '44',
           '200 + 100 is 300 as an int, and 300 - 256 leaves 44 when it is stored in 8 bits.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint8_t a = 200;\n  std::uint8_t b = 100;\n  std::cout << a + b << "\\n";\n}',
-          ['300', '44', '255', '0'],
-          0,
+          '300',
           'Both operands are promoted to int before adding, and the int sum 300 is printed without being stored back in 8 bits.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint16_t count = 65535;\n  count = static_cast<std::uint16_t>(count + 1);\n  std::cout << count << "\\n";\n}',
-          ['65536', '1', '65535', '0'],
-          3,
+          '0',
           'One past the 16-bit maximum wraps to 0 when stored back in std::uint16_t.',
         ),
       ],
@@ -1376,18 +1303,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Printed directly, 65 shows as the character A; converted to int, it shows as 65.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint8_t v = 66;\n  std::cout << v << "\\n";\n}',
-          ['66', 'B', '0x42', 'b'],
-          1,
+          'B',
           'std::uint8_t prints as a character, and code 66 is B.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint8_t v = 55;\n  std::cout << static_cast<int>(v) + 1 << "\\n";\n}',
-          ['8', '7', '56', '551'],
-          2,
+          '56',
           'Converted to int, v is 55, and adding 1 gives the int 56.',
         ),
         choose(
@@ -1418,18 +1343,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'int is the same type as itself; int and long are always distinct types.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <type_traits>\nint main() {\n  std::cout << std::is_same_v<unsigned, unsigned int> << "\\n";\n}',
-          ['0', 'true', '1', 'unsigned'],
-          2,
+          '1',
           'unsigned is another spelling of unsigned int, so the trait is true.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <type_traits>\nint main() {\n  std::cout << std::is_same_v<char, signed char> << std::is_same_v<int, signed int> << "\\n";\n}',
-          ['11', '10', '00', '01'],
-          3,
+          '01',
           'char and signed char are always three distinct character types, while signed int is just int.',
         ),
         choose(
@@ -1458,18 +1381,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'std::int8_t is signed, std::uint32_t is unsigned, and double is not an integer type.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <type_traits>\nint main() {\n  std::cout << std::is_integral_v<char> << " " << std::is_floating_point_v<int> << "\\n";\n}',
-          ['0 0', '1 1', '0 1', '1 0'],
-          3,
+          '1 0',
           'char counts as an integer type, and int is not a floating-point type.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstddef>\n#include <type_traits>\nint main() {\n  std::cout << std::is_unsigned_v<std::size_t> << std::is_signed_v<double> << "\\n";\n}',
-          ['11', '10', '01', '00'],
-          0,
+          '11',
           'std::size_t is an unsigned integer type, and double can hold negative values, so it counts as signed.',
         ),
         choose(
@@ -1498,18 +1419,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'std::uint16_t is exactly 2 bytes and unsigned, so both parts are true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstdint>\n#include <type_traits>\nint main() {\n  bool ok = sizeof(std::int16_t) == 2 && std::is_unsigned_v<std::int16_t>;\n  std::cout << ok << "\\n";\n}',
-          ['1', '0', '2', 'false'],
-          1,
+          '0',
           'The size matches, but std::int16_t is signed, so the combined requirement is false.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstdint>\n#include <type_traits>\nint main() {\n  bool same = std::is_same_v<std::uint8_t, std::int8_t>;\n  bool equal_size = sizeof(std::uint8_t) == sizeof(std::int8_t);\n  std::cout << same << equal_size << "\\n";\n}',
-          ['11', '00', '01', '10'],
-          2,
+          '01',
           'The types differ in signedness, yet both are 1 byte: equal size does not make types the same.',
         ),
         choose(
@@ -1541,32 +1460,28 @@ export const knowledgePoints: KnowledgePointModule = {
           '1 shifted left 4 places is 16 (2 to the 4th), and 3 shifted left 2 places is 3 * 4 = 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  unsigned x = 5u;\n  std::cout << (x << 3) << "\\n";\n}',
-          ['15', '40', '5000', '8'],
-          1,
+          '40',
           'Shifting left 3 places multiplies by 8, and 5 * 8 is 40.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  std::cout << (1u << 10) << "\\n";\n}',
-          ['10', '20', '1024', '10000000000'],
-          2,
+          '1024',
           '1u << 10 is 2 to the 10th power, 1024; the zeros are binary, not decimal.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  std::cout << 1u << 3u << "\\n";\n}',
-          ['8', '13', '1', '3'],
-          1,
+          '13',
           'Without parentheses both << are stream insertions, so the program prints 1 and then 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned flags = 1u;\n  flags = flags << 2;\n  flags = flags << 1;\n  std::cout << flags << "\\n";\n}',
-          ['3', '6', '4', '8'],
-          3,
+          '8',
           'Shifting by 2 and then by 1 is a shift by 3 in total: 1 * 8 is 8.',
         ),
       ],
@@ -1584,25 +1499,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '40 / 8 is 5. 13 / 4 is 3.25, and the shift discards the remainder, leaving 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  unsigned bytes = 5000u;\n  std::cout << (bytes >> 10) << "\\n";\n}',
-          ['4', '5', '4.88', '500'],
-          0,
+          '4',
           'Shifting right by 10 divides by 1024: 5000 / 1024 is 4 after discarding the remainder.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned v = 7u;\n  std::cout << (v >> 1) << " " << (v >> 3) << "\\n";\n}',
-          ['3.5 0.875', '3 0', '4 1', '3 1'],
-          1,
+          '3 0',
           '7 / 2 is 3 and 7 / 8 is 0 once the fractions are discarded.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned v = 13u;\n  std::cout << ((v >> 2) << 2) << "\\n";\n}',
-          ['13', '52', '3', '12'],
-          3,
+          '12',
           'Shifting right then left clears the two lowest bits: 13 >> 2 is 3, and 3 << 2 is 12.',
         ),
       ],
@@ -1638,11 +1550,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A shift count equal to or larger than the number of bits has no defined result.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned mask = 1u << 31;\n  std::cout << (mask >> 31) << "\\n";\n}',
-          ['0', '1', '31', '2147483648'],
-          1,
+          '1',
           'The top bit shifted right 31 places lands in bit 0, giving 1.',
         ),
       ],
@@ -1662,18 +1573,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '0xFF is 15 * 16 + 15, 0b1010 is 8 + 2, and 0x10 is one sixteen.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  std::cout << 0x20 << "\\n";\n}',
-          ['20', '32', '0x20', '2'],
-          1,
+          '32',
           'Hex 20 means 2 sixteens, which is 32 in decimal.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  std::cout << 0b111 << "\\n";\n}',
-          ['111', '3', '7', '0b111'],
-          2,
+          '7',
           'Binary 111 is 4 + 2 + 1, which prints as 7.',
         ),
         choose(
@@ -1698,32 +1607,28 @@ export const knowledgePoints: KnowledgePointModule = {
           'value & 0xFF keeps 0x34, which is 52; value & 0xF0 keeps only 0x30, which is 48.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  unsigned v = 0b1101u;\n  std::cout << (v & 0b0110u) << "\\n";\n}',
-          ['4', '6', '13', '15'],
-          0,
+          '4',
           'Only bit 2 (value 4) is set in both 1101 and 0110.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned v = 300u;\n  std::cout << (v & 0xFFu) << "\\n";\n}',
-          ['255', '300', '44', '0'],
-          2,
+          '44',
           '300 is 256 + 44, and masking with 0xFF removes the 256 bit, leaving 44.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned flags = 0b1010u;\n  bool has_bit1 = (flags & 0b0010u) != 0u;\n  std::cout << has_bit1 << "\\n";\n}',
-          ['0', '2', '10', '1'],
-          3,
+          '1',
           'Bit 1 is set in 1010, so the masked value is 2, which is nonzero.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned a = 0b0100u;\n  unsigned b = 0b0011u;\n  std::cout << (a & b) << " " << (a && b) << "\\n";\n}',
-          ['1 1', '0 1', '0 0', '7 1'],
-          1,
+          '0 1',
           'a and b share no set bits, so a & b is 0; both are nonzero, so a && b is true.',
         ),
       ],
@@ -1741,25 +1646,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Bit 2 is turned on next to bit 0, giving 0b0101, which is 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  unsigned v = 0b1000u;\n  std::cout << (v | 0b0011u) << "\\n";\n}',
-          ['8', '11', '3', '1011'],
-          1,
+          '11',
           'The result has bits 3, 1, and 0 set: 8 + 2 + 1 is 11.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned v = 0b0101u;\n  std::cout << (v | 0b0100u) << "\\n";\n}',
-          ['9', '4', '1', '5'],
-          3,
+          '5',
           'Bit 2 is already set, so OR-ing it in again leaves 5 unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned high = 0x12u;\n  unsigned low = 0x34u;\n  std::cout << ((high * 256u) | low) << "\\n";\n}',
-          ['70', '4608', '4660', '52'],
-          2,
+          '4660',
           'high * 256 is 0x1200, and OR-ing in 0x34 gives 0x1234, which is 4660.',
         ),
         choose(
@@ -1785,25 +1687,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The flags are 1 and 8, and combining them with | gives 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  unsigned bit5 = 1u << 5;\n  std::cout << bit5 << "\\n";\n}',
-          ['5', '10', '32', '16'],
-          2,
+          '32',
           'Only bit 5 is set, which is worth 2 to the 5th, 32.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned flags = (1u << 0) | (1u << 2);\n  std::cout << flags << "\\n";\n}',
-          ['5', '3', '2', '4'],
-          0,
+          '5',
           'Bits 0 and 2 are worth 1 and 4, so the combined flags are 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned flags = 0b1010u;\n  std::cout << ((flags & (1u << 1)) != 0u) << ((flags & (1u << 2)) != 0u) << "\\n";\n}',
-          ['01', '11', '20', '10'],
-          3,
+          '10',
           'In 1010, bit 1 is set and bit 2 is clear.',
         ),
       ],
@@ -1822,25 +1721,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Bit 1 was on and turns off; bit 0 was off and turns on. 0110 becomes 0101, which is 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  std::cout << (2 ^ 3) << "\\n";\n}',
-          ['8', '5', '1', '6'],
-          2,
+          '1',
           '^ is exclusive or: 10 ^ 11 is 01 in binary, so the result is 1, not 2 cubed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned v = 0b1100u;\n  v = v ^ (1u << 2);\n  std::cout << v << "\\n";\n}',
-          ['8', '12', '16', '4'],
-          0,
+          '8',
           'Bit 2 was set, so toggling it turns it off: 1100 becomes 1000, which is 8.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned v = 9u;\n  v ^= 4u;\n  v ^= 4u;\n  std::cout << v << "\\n";\n}',
-          ['13', '1', '17', '9'],
-          3,
+          '9',
           'Toggling the same bit twice undoes the first toggle, so v is 9 again.',
         ),
       ],
@@ -1857,25 +1753,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Clearing bit 1 turns 1111 into 1101, which is 13.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  unsigned v = 0b0111u;\n  std::cout << (v & ~0b0100u) << "\\n";\n}',
-          ['3', '4', '7', '11'],
-          0,
+          '3',
           'Bit 2 is cleared, so 0111 becomes 0011, which is 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned v = 0b1010u;\n  std::cout << (v & ~(1u << 0)) << "\\n";\n}',
-          ['11', '8', '10', '0'],
-          2,
+          '10',
           'Bit 0 is already clear, so clearing it again leaves 10 unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  unsigned v = 0b1010u;\n  std::cout << (v & (1u << 3)) << "\\n";\n}',
-          ['2', '10', '0', '8'],
-          3,
+          '8',
           'Without ~, the mask keeps only bit 3, so the result is 8 rather than v with bit 3 cleared.',
         ),
         choose(
@@ -1906,18 +1799,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Shifting right 8 places drops byte 0 (0x34) and leaves 0x12, which is 18.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint32_t word = 0xAB00u;\n  std::cout << (word >> 8) << "\\n";\n}',
-          ['43776', '171', '11', '0'],
-          1,
+          '171',
           'Byte 1 is 0xAB, and shifting it down gives 171.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint32_t w = 0x05000000u;\n  std::cout << (w >> 24) << "\\n";\n}',
-          ['0', '24', '83886080', '5'],
-          3,
+          '5',
           'The top byte is 0x05, and shifting right 24 places brings it to the bottom.',
         ),
         choose(
@@ -1940,25 +1831,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'word >> 8 is 0x1234; masking keeps 0x34, which is 52.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint32_t word = 0x123456u;\n  std::cout << (word >> 8) << "\\n";\n}',
-          ['52', '18', '86', '4660'],
-          3,
+          '4660',
           'Without a mask, byte 2 is still present above byte 1: the result is 0x1234, 4660.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint32_t word = 0x123456u;\n  std::cout << ((word & 0xFFu) >> 8) << "\\n";\n}',
-          ['52', '0', '86', '18'],
-          1,
+          '0',
           'Masking first keeps only 0x56, and shifting that right 8 places leaves 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint32_t word = 0x0000FF01u;\n  std::cout << ((word >> 8) & 0xFFu) << " " << (word & 0xFFu) << "\\n";\n}',
-          ['255 1', '1 255', '65281 1', '255 0'],
-          0,
+          '255 1',
           'Byte 1 is 0xFF (255) and byte 0 is 0x01 (1).',
         ),
       ],
@@ -1975,25 +1863,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Byte 1 of 0x11223344 is 0x33, which is 51.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint32_t word = 0x11223344u;\n  std::uint8_t top = static_cast<std::uint8_t>((word >> 24) & 0xFFu);\n  std::cout << static_cast<int>(top) << "\\n";\n}',
-          ['68', '17', '11', '287454020'],
-          1,
+          '17',
           'The top byte is 0x11, which is 17.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint32_t word = 0x4142u;\n  std::uint8_t high = static_cast<std::uint8_t>((word >> 8) & 0xFFu);\n  std::cout << high << "\\n";\n}',
-          ['65', '41', 'A', 'B'],
-          2,
+          'A',
           'Byte 1 is 0x41, which is 65, and a std::uint8_t prints as the character with that code: A.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstdint>\nint main() {\n  std::uint32_t word = 0x01020304u;\n  int sum = static_cast<int>(word & 0xFFu) + static_cast<int>((word >> 24) & 0xFFu);\n  std::cout << sum << "\\n";\n}',
-          ['10', '7', '4', '5'],
-          3,
+          '5',
           'Byte 0 is 4 and byte 3 is 1, so the sum is 5.',
         ),
       ],
@@ -2013,25 +1898,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '31 > 30 is true, so hot is printed; done is printed in every case.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int stock = 0;\n  if (stock == 0) std::cout << "reorder\\n";\n  std::cout << "checked\\n";\n}',
-          ['checked', 'reorder\nchecked', 'reorder', 'checked\nreorder'],
-          1,
+          'reorder\nchecked',
           'The condition is true, so reorder prints first, followed by the unconditional checked.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int x = 4;\n  if (x > 10) std::cout << "big\\n";\n  std::cout << x << "\\n";\n}',
-          ['big\n4', 'big', '4', '10'],
-          2,
+          '4',
           '4 > 10 is false, so only the statement after the if runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int points = 5;\n  if (points >= 5) points = points * 2;\n  std::cout << points << "\\n";\n}',
-          ['5', '25', '7', '10'],
-          3,
+          '10',
           '5 >= 5 is true, so points is doubled before it is printed.',
         ),
       ],
@@ -2049,18 +1931,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The condition is true, so the first branch runs and the else branch is skipped.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int n = 7;\n  if (n == 7) std::cout << "lucky\\n";\n  else std::cout << "plain\\n";\n}',
-          ['plain', 'lucky\nplain', 'lucky', '7'],
-          2,
+          'lucky',
           'n == 7 is true, so only the first branch runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 3;\n  int b = 3;\n  if (a > b) std::cout << a << "\\n";\n  else std::cout << b + 1 << "\\n";\n}',
-          ['4', '3', '6', '3\n4'],
-          0,
+          '4',
           'a > b is false when they are equal, so the else branch prints b + 1.',
         ),
         choose(
@@ -2074,11 +1954,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The condition selects one branch; the other is skipped.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int total = 0;\n  int qty = 3;\n  if (qty > 2) {\n    total = qty * 10;\n    std::cout << "bulk ";\n  } else {\n    total = qty * 12;\n  }\n  std::cout << total << "\\n";\n}',
-          ['36', 'bulk 36', 'bulk 30', '30'],
-          2,
+          'bulk 30',
           'qty > 2 is true, so both statements in the first block run: bulk is printed and total becomes 30.',
         ),
       ],
@@ -2096,25 +1975,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first test is already true, so -1 is printed and the other branches are skipped.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int score = 85;\n  if (score >= 90) std::cout << "A\\n";\n  else if (score >= 80) std::cout << "B\\n";\n  else std::cout << "C\\n";\n}',
-          ['A', 'B', 'C', 'B\nC'],
-          1,
+          'B',
           '85 fails the first test and passes the second, so B is printed and the chain stops.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int score = 95;\n  if (score >= 80) std::cout << "B\\n";\n  else if (score >= 90) std::cout << "A\\n";\n  else std::cout << "C\\n";\n}',
-          ['A', 'A\nB', 'B', 'C'],
-          2,
+          'B',
           'The first true test wins: 95 >= 80 is checked first, so B is printed even though 95 >= 90.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int t = 15;\n  if (t < 0) std::cout << "ice\\n";\n  else if (t < 20) std::cout << "cool\\n";\n  else if (t < 10) std::cout << "cold\\n";\n  else std::cout << "warm\\n";\n}',
-          ['cool', 'cold', 'warm', 'cool\ncold'],
-          0,
+          'cool',
           't < 20 is the first true test, so cool is printed and no later test runs.',
         ),
         choose(
@@ -2140,18 +2016,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both age >= 18 and member are true, so the result is true and prints 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int hour = 20;\n  std::cout << (hour >= 9 && hour < 17) << "\\n";\n}',
-          ['1', '0', '20', 'false'],
-          1,
+          '0',
           'hour >= 9 is true but hour < 17 is false, so && gives false, printed as 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 5;\n  int b = 5;\n  std::cout << (a == b && a > 0) << (a == b && b > 9) << "\\n";\n}',
-          ['11', '01', '10', '00'],
-          2,
+          '10',
           'Both parts of the first test are true; the second test fails because b > 9 is false.',
         ),
         choose(
@@ -2179,25 +2053,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'day == 6 is true, which is enough for || to be true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int code = 404;\n  std::cout << (code == 200 || code == 204) << "\\n";\n}',
-          ['0', '1', '404', '2'],
-          0,
+          '0',
           'Neither comparison is true, so || is false.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  bool rain = true;\n  bool snow = true;\n  std::cout << (rain || snow) << "\\n";\n}',
-          ['0', '2', '1', 'true'],
-          2,
+          '1',
           '|| is true when at least one operand is true, and that includes both being true.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int x = -3;\n  std::cout << (x < 0 || x > 100) << (x > 0 || x == -3) << "\\n";\n}',
-          ['10', '01', '00', '11'],
-          3,
+          '11',
           'x < 0 makes the first test true, and x == -3 makes the second true.',
         ),
       ],
@@ -2215,18 +2086,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'open is false, so !open is true; that alone makes the || expression true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  bool a = true;\n  bool b = false;\n  bool c = false;\n  std::cout << (a || b && c) << " " << ((a || b) && c) << "\\n";\n}',
-          ['1 0', '0 0', '0 1', '1 1'],
-          0,
+          '1 0',
           'The first groups as a || (b && c), which is true; the second requires c, which is false.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int n = 4;\n  std::cout << !(n > 2) << "\\n";\n}',
-          ['1', '-4', '0', '4'],
-          2,
+          '0',
           'n > 2 is true, and ! inverts it to false, printed as 0.',
         ),
         choose(
@@ -2240,11 +2109,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           '&& binds more tightly than ||, so b && c is grouped first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  bool done = false;\n  bool failed = true;\n  std::cout << (!done && !failed) << "\\n";\n}',
-          ['10', '1', '01', '0'],
-          3,
+          '0',
           '!done is true but !failed is false, so && gives false.',
         ),
       ],
@@ -2264,25 +2132,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'a > b is false, so the expression takes the value after the colon, b.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int stock = 0;\n  int shown = stock > 0 ? stock : -1;\n  std::cout << shown << "\\n";\n}',
-          ['0', '-1', '1', '-0'],
-          1,
+          '-1',
           'stock > 0 is false, so shown takes the second value, -1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int score = 75;\n  std::cout << (score >= 60 ? 1 : 0) << "\\n";\n}',
-          ['75', '0', '60', '1'],
-          3,
+          '1',
           '75 >= 60 is true, so the expression is 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int x = -4;\n  int magnitude = x < 0 ? -x : x;\n  std::cout << magnitude << "\\n";\n}',
-          ['-4', '16', '4', '0'],
-          2,
+          '4',
           'x is negative, so the expression takes -x, which is 4.',
         ),
       ],
@@ -2300,18 +2165,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The condition is true, so ++count never runs and count stays 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int calls = 0;\n  int x = 2;\n  int y = x > 5 ? ++calls : calls + 100;\n  std::cout << y << " " << calls << "\\n";\n}',
-          ['100 1', '1 1', '100 0', '101 1'],
-          2,
+          '100 0',
           'x > 5 is false, so only calls + 100 is evaluated; the increment never happens.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 0;\n  int b = 0;\n  int pick = 1;\n  int r = pick == 1 ? ++a : ++b;\n  std::cout << a << b << r << "\\n";\n}',
-          ['111', '101', '011', '100'],
-          1,
+          '101',
           'Only ++a runs, so a and r are 1 while b stays 0.',
         ),
         choose(
@@ -2341,18 +2204,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The parentheses make the conditional a single operand of +, so 10 + 5 is printed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int base = 10;\n  bool vip = false;\n  int total = base + vip ? 5 : 0;\n  std::cout << total << "\\n";\n}',
-          ['10', '15', '5', '0'],
-          2,
+          '5',
           'Without parentheses the condition is base + vip, which is 10 and therefore true, so total is 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int n = 3;\n  int m = 2 * (n > 2 ? n : 2);\n  std::cout << m << "\\n";\n}',
-          ['6', '4', '3', '2'],
-          0,
+          '6',
           'n > 2 is true, so the parenthesized conditional is 3, and 2 * 3 is 6.',
         ),
         choose(
@@ -2383,25 +2244,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The body runs for i = 0, 1, and 2; when i reaches 3 the check fails.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  for (int i = 1; i <= 4; ++i) std::cout << i;\n  std::cout << "\\n";\n}',
-          ['123', '1234', '01234', '234'],
-          1,
+          '1234',
           'i starts at 1 and the body runs while i <= 4, so 1 through 4 are printed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int total = 0;\n  for (int i = 0; i < 5; ++i) total += i;\n  std::cout << total << "\\n";\n}',
-          ['15', '5', '10', '4'],
-          2,
+          '10',
           'The loop adds 0 + 1 + 2 + 3 + 4, which is 10; 5 itself is never added.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  for (int i = 10; i > 7; --i) std::cout << i << ",";\n  std::cout << "\\n";\n}',
-          ['10,9,8,', '10,9,8,7,', '9,8,7,', '10,9,'],
-          0,
+          '10,9,8,',
           'i counts down from 10 while i > 7, so 10, 9, and 8 are printed.',
         ),
       ],
@@ -2419,18 +2277,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'i < 4 visits 0 through 3, four values; i <= 4 also visits 4, five values.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int n = 0;\n  for (int i = 3; i < 8; ++i) ++n;\n  std::cout << n << "\\n";\n}',
-          ['5', '6', '8', '4'],
-          0,
+          '5',
           'The loop visits 3, 4, 5, 6, and 7: end - start is 8 - 3 = 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int n = 0;\n  for (int i = 2; i <= 6; ++i) ++n;\n  std::cout << n << "\\n";\n}',
-          ['4', '6', '5', '7'],
-          2,
+          '5',
           'With <= the end value is included: 2, 3, 4, 5, and 6 make five passes.',
         ),
         choose(
@@ -2444,11 +2300,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Starting at 0 and stopping before size covers every valid position and never size itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int last = -1;\n  for (int i = 0; i < 6; ++i) last = i;\n  std::cout << last << "\\n";\n}',
-          ['6', '5', '0', '-1'],
-          1,
+          '5',
           'The last pass has i = 5; i = 6 fails the check before the body runs.',
         ),
       ],
@@ -2465,25 +2320,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '5 < 5 is false from the start, so the body never runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int total = 100;\n  for (int i = 0; i < 0; ++i) total = 0;\n  std::cout << total << "\\n";\n}',
-          ['0', '100', '1', '99'],
-          1,
+          '100',
           '0 < 0 is false, so the assignment never runs and total keeps 100.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int n = 0;\n  for (int i = 10; i < 3; ++i) ++n;\n  std::cout << n << "\\n";\n}',
-          ['7', '-7', '0', '3'],
-          2,
+          '0',
           'The loop would need i < 3, but i starts at 10, so it never runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int sum = 0;\n  for (int i = 1; i < 6; i += 2) sum += i;\n  std::cout << sum << "\\n";\n}',
-          ['15', '6', '4', '9'],
-          3,
+          '9',
           'i takes the values 1, 3, and 5, and their sum is 9.',
         ),
       ],
@@ -2503,25 +2355,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'n goes 1, 3, 9, 27, 81. At 81 the check n < 50 fails and the loop ends.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int n = 20;\n  int steps = 0;\n  while (n > 0) {\n    n -= 6;\n    ++steps;\n  }\n  std::cout << steps << " " << n << "\\n";\n}',
-          ['3 2', '4 -4', '4 2', '3 -4'],
-          1,
+          '4 -4',
           'n goes 20, 14, 8, 2, -4. Four passes run, and the loop stops once n is no longer positive.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int value = 1000;\n  int halvings = 0;\n  while (value >= 100) {\n    value /= 2;\n    ++halvings;\n  }\n  std::cout << halvings << "\\n";\n}',
-          ['3', '5', '10', '4'],
-          3,
+          '4',
           'value goes 1000, 500, 250, 125, 62, so four halvings run.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int n = 45;\n  int sum = 0;\n  while (n > 0) {\n    sum += n % 10;\n    n /= 10;\n  }\n  std::cout << sum << "\\n";\n}',
-          ['45', '54', '9', '5'],
-          2,
+          '9',
           'Each pass adds the last digit and removes it: 5 + 4 is 9.',
         ),
       ],
@@ -2539,18 +2388,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '1 > 1 is false, so the body never runs and count stays 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int x = 2;\n  while (x < 2) x = x * 10;\n  std::cout << x << "\\n";\n}',
-          ['20', '2', '200', '0'],
-          1,
+          '2',
           '2 < 2 is false at the start, so x is never multiplied.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int digits = 0;\n  int n = 0;\n  while (n != 0) {\n    n /= 10;\n    ++digits;\n  }\n  std::cout << digits << "\\n";\n}',
-          ['1', '10', '-1', '0'],
-          3,
+          '0',
           'n is 0, so n != 0 is false immediately and the loop counts nothing.',
         ),
         choose(
@@ -2597,11 +2444,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Dividing by 10 removes a digit each pass and reaches 0; the others never reach 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int n = 1234;\n  int digits = 0;\n  while (n != 0) {\n    n /= 10;\n    ++digits;\n  }\n  std::cout << digits << "\\n";\n}',
-          ['3', '4', '1234', '10'],
-          1,
+          '4',
           'Four divisions by 10 bring 1234 down to 0, one per digit.',
         ),
       ],
@@ -2621,25 +2467,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'twice(6) runs the body with x = 6 and returns 12, which main prints.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint square(int n) {\n  return n * n;\n}\nint main() {\n  std::cout << square(5) + 1 << "\\n";\n}',
-          ['36', '26', '25', '11'],
-          1,
+          '26',
           'square(5) is 25, and adding 1 gives 26.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint area(int width, int height) {\n  return width * height;\n}\nint main() {\n  std::cout << area(3, 4) << " " << area(4, 3) << "\\n";\n}',
-          ['7 7', '34 43', '12 12', '12 0'],
-          2,
+          '12 12',
           'Arguments are matched to parameters in order, and both products are 12.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint next(int n) {\n  return n + 1;\n}\nint main() {\n  std::cout << next(next(next(0))) << "\\n";\n}',
-          ['1', '0', '2', '3'],
-          3,
+          '3',
           'The innermost call runs first: 0 becomes 1, then 2, then 3.',
         ),
       ],
@@ -2657,18 +2500,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'bump changed its own copy to 15 and returned it; x in main is still 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint reset(int n) {\n  n = 0;\n  return n;\n}\nint main() {\n  int count = 7;\n  reset(count);\n  std::cout << count << "\\n";\n}',
-          ['0', '7', '70', '-7'],
-          1,
+          '7',
           'reset changed only its copy, and its returned 0 was not stored, so count is still 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint triple(int n) {\n  n *= 3;\n  return n;\n}\nint main() {\n  int a = 2;\n  int b = triple(a);\n  std::cout << a + b << "\\n";\n}',
-          ['12', '6', '8', '4'],
-          2,
+          '8',
           'a stays 2 and b receives 6, so the sum is 8.',
         ),
         choose(
@@ -2697,25 +2538,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'score(4, 2) is 10 and score(1, 0) is 3, and the two results add to 13.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint span(int start, int end) {\n  return end - start;\n}\nint main() {\n  std::cout << span(3, 10) * 2 << "\\n";\n}',
-          ['14', '7', '26', '-14'],
-          0,
+          '14',
           'span(3, 10) is 7, and the call can be used in the larger expression 7 * 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint first(int a, int b) {\n  return a;\n  return b;\n}\nint main() {\n  std::cout << first(1, 2) << "\\n";\n}',
-          ['2', '12', '1', '3'],
-          2,
+          '1',
           'The first return ends the function, so the second never runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint doubled(int n) {\n  return n * 2;\n}\nint main() {\n  int x = 4;\n  doubled(x);\n  std::cout << x << "\\n";\n}',
-          ['8', '0', '16', '4'],
-          3,
+          '4',
           'The returned 8 is discarded, and x was passed by value, so x is still 4.',
         ),
       ],
@@ -2735,18 +2573,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'cost reads the members through the reference: 12 * 3 is 36.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Box {\n  int w;\n  int h;\n  int d;\n};\nint volume(const Box& box) {\n  return box.w * box.h * box.d;\n}\nint main() {\n  Box box{2, 3, 4};\n  std::cout << volume(box) << "\\n";\n}',
-          ['9', '24', '234', '20'],
-          1,
+          '24',
           'The function multiplies the three members: 2 * 3 * 4 is 24.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Point {\n  int x;\n  int y;\n};\nint sum(const Point& p) {\n  return p.x + p.y;\n}\nint main() {\n  Point a{3, -1};\n  Point b{10, 5};\n  std::cout << sum(a) + sum(b) << "\\n";\n}',
-          ['15', '2', '17', '19'],
-          2,
+          '17',
           'sum(a) is 2 and sum(b) is 15, so the total is 17.',
         ),
         choose(
@@ -2787,11 +2623,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Assigning to a member through a const reference is rejected by the compiler.',
           '#include <iostream>\nstruct Account {\n  int balance;\n};\nint drain(const Account& account) {\n  account.balance = 0;\n  return account.balance;\n}\nint main() {\n  Account a{50};\n  std::cout << drain(a) << "\\n";\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Tank {\n  int level;\n};\nint read(const Tank& tank) {\n  return tank.level;\n}\nint main() {\n  Tank tank{40};\n  tank.level += 5;\n  std::cout << read(tank) << "\\n";\n}',
-          ['40', '5', '0', '45'],
-          3,
+          '45',
           'main may change its own tank; read then sees the current level, 45.',
         ),
         choose(
@@ -2820,18 +2655,16 @@ export const knowledgePoints: KnowledgePointModule = {
           "add takes Score& and changes the caller's score; total only reads it through const Score&.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Wallet {\n  int cash;\n};\nvoid spend(Wallet& wallet, int amount) {\n  wallet.cash -= amount;\n}\nint left(const Wallet& wallet) {\n  return wallet.cash;\n}\nint main() {\n  Wallet wallet{50};\n  spend(wallet, 20);\n  spend(wallet, 5);\n  std::cout << left(wallet) << "\\n";\n}',
-          ['50', '30', '25', '45'],
-          2,
+          '25',
           'Both calls change the same wallet: 50 - 20 - 5 is 25.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Pair {\n  int a;\n  int b;\n};\nint copy_sum(Pair p) {\n  p.a = 100;\n  return p.a + p.b;\n}\nint main() {\n  Pair p{1, 2};\n  int s = copy_sum(p);\n  std::cout << s << " " << p.a << "\\n";\n}',
-          ['102 1', '102 100', '3 1', '3 100'],
-          0,
+          '102 1',
           'The by-value parameter is a copy: the function sees 100 + 2, while the caller keeps a = 1.',
         ),
         choose(
@@ -2862,18 +2695,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The loop reaches -2 at position 1 and returns immediately, never looking at -9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint first_negative(const std::vector<int>& values) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] < 0) return i;\n  return -1;\n}\nint main() {\n  std::cout << first_negative({5, 3, -1}) << "\\n";\n}',
-          ['2', '3', '-1', '0'],
-          0,
+          '2',
           'The first negative value is at position 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint count_until_zero(const std::vector<int>& values) {\n  int count = 0;\n  for (int i = 0; i < static_cast<int>(values.size()); ++i) {\n    if (values[i] == 0) return count;\n    ++count;\n  }\n  return count;\n}\nint main() {\n  std::cout << count_until_zero({3, 8, 0, 4}) << "\\n";\n}',
-          ['3', '2', '4', '1'],
-          1,
+          '2',
           'Two values are counted before the 0 returns from the function; the 4 is never reached.',
         ),
         choose(
@@ -2902,18 +2733,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '7 is found at position 0, a real answer; 9 is missing, so the loop ends and -1 is returned.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint find(const std::vector<int>& values, int target) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) return i;\n  return -1;\n}\nint main() {\n  std::cout << find({4, 4, 4}, 4) << "\\n";\n}',
-          ['-1', '2', '0', '3'],
-          2,
+          '0',
           'The search returns at the first match, position 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint find(const std::vector<int>& values, int target) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) return i;\n  return -1;\n}\nint main() {\n  std::cout << find({}, 1) << "\\n";\n}',
-          ['0', '-1', '1', '-2'],
-          1,
+          '-1',
           'An empty vector gives the loop nothing to check, so the sentinel -1 is returned.',
         ),
         choose(
@@ -2942,25 +2771,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '9 is at position 2, which is not the sentinel, so the program reports it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint find(const std::vector<int>& values, int target) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) return i;\n  return -1;\n}\nint main() {\n  int pos = find({3, 6, 9}, 5);\n  if (pos != -1) std::cout << "at " << pos << "\\n";\n  else std::cout << "missing\\n";\n}',
-          ['at -1', 'at 0', 'missing', 'at 3'],
-          2,
+          'missing',
           '5 is not present, so find returns -1 and the else branch runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint find(const std::vector<int>& values, int target) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) return i;\n  return -1;\n}\nint main() {\n  std::vector<int> v{10, 20, 30, 20};\n  int pos = find(v, 20);\n  if (pos != -1) std::cout << pos << " " << v[pos] << "\\n";\n}',
-          ['3 20', '2 30', '1 10', '1 20'],
-          3,
+          '1 20',
           'The first 20 is at position 1, and v[1] is 20.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint find_last(const std::vector<int>& values, int target) {\n  int last = -1;\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) last = i;\n  return last;\n}\nint main() {\n  std::cout << find_last({2, 5, 2, 7}, 2) << "\\n";\n}',
-          ['0', '2', '-1', '1'],
-          1,
+          '2',
           'Without an early return the loop keeps going, and last ends as the final match, position 2.',
         ),
       ],
@@ -2980,18 +2806,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '2 > 5 is false, so ++checks never runs and checks stays 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int checks = 0;\n  bool ok = 7 > 1 && ++checks > 0;\n  std::cout << ok << " " << checks << "\\n";\n}',
-          ['1 0', '0 1', '0 0', '1 1'],
-          3,
+          '1 1',
           'The left side is true, so the right side runs: checks becomes 1 and the result is true.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int n = 0;\n  bool r = n != 0 && ++n > 0;\n  std::cout << r << n << "\\n";\n}',
-          ['00', '11', '01', '10'],
-          0,
+          '00',
           'n != 0 is false, so the increment is skipped and both values print as 0.',
         ),
         choose(
@@ -3019,18 +2843,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '3 > 1 is true, so ++calls is skipped and calls stays 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int n = 0;\n  bool r = 2 > 5 || ++n == 1;\n  std::cout << r << n << "\\n";\n}',
-          ['01', '10', '11', '00'],
-          2,
+          '11',
           'The left side is false, so ++n runs; n becomes 1 and the comparison is true.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int n = 0;\n  bool r = n == 0 || ++n == 1;\n  std::cout << r << n << "\\n";\n}',
-          ['11', '10', '01', '00'],
-          1,
+          '10',
           'n == 0 is already true, so ++n is skipped and n stays 0.',
         ),
         choose(
@@ -3059,11 +2881,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'count != 0 is false, so the division by zero is never evaluated and the result is false.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int count = 5;\n  int total = 50;\n  std::cout << (count != 0 && total / count >= 10) << "\\n";\n}',
-          ['0', '10', '1', '5'],
-          2,
+          '1',
           'The guard passes, and 50 / 5 is 10, which is at least 10.',
         ),
         choose(
@@ -3077,11 +2898,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Only with the check on the left is the division skipped when d is 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int d = 0;\n  int n = 9;\n  bool skip = d == 0 || n / d > 1;\n  std::cout << skip << "\\n";\n}',
-          ['0', '9', '2', '1'],
-          3,
+          '1',
           'd == 0 is true, so || stops there and the division never runs.',
         ),
         choose(
@@ -3111,18 +2931,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Both 1 <= 7 and 7 <= 10 are true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int v = 10;\n  std::cout << (1 <= v && v <= 10) << (1 <= v && v < 10) << "\\n";\n}',
-          ['11', '01', '10', '00'],
-          2,
+          '10',
           '10 is inside the inclusive range, but v < 10 excludes it from the second.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int age = 0;\n  std::cout << (1 <= age && age <= 120) << "\\n";\n}',
-          ['1', '120', '-1', '0'],
-          3,
+          '0',
           '0 fails the lower bound, so the range test is false.',
         ),
         choose(
@@ -3151,18 +2969,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Written with the grouping C++ uses, the first test compares true, which is 1, with 10 and says 1. The correct test says 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This program spells out how C++ groups 0 <= v <= 3. What does it print?',
           '#include <iostream>\nint main() {\n  int v = -5;\n  std::cout << ((0 <= v) <= 3) << "\\n";\n}',
-          ['0', '1', '-5', '3'],
-          1,
+          '1',
           '0 <= -5 is false, which is 0, and 0 <= 3 is true, so the grouped test prints 1 even though -5 is out of range.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int v = 2;\n  std::cout << ((5 <= v) <= 9) << " " << (5 <= v && v <= 9) << "\\n";\n}',
-          ['1 0', '0 0', '1 1', '0 1'],
-          0,
+          '1 0',
           'The grouped form compares 0 with 9 and prints 1; the real range test fails the lower bound.',
         ),
         choose(
@@ -3190,11 +3006,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '120 is above 100, so one side of || is true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int v = 100;\n  std::cout << (v < 0 || v > 100) << "\\n";\n}',
-          ['1', '100', '0', '-1'],
-          2,
+          '0',
           '100 is the inclusive upper bound, so neither side is true.',
         ),
         choose(
@@ -3208,11 +3023,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'No value is both below 1 and above 10, so && never works; <= and >= would wrongly exclude 1 and 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int x = 15;\n  std::cout << !(1 <= x && x <= 10) << (x < 1 || x > 10) << "\\n";\n}',
-          ['10', '01', '11', '00'],
-          2,
+          '11',
           '15 is outside the range, and both forms of the outside test agree.',
         ),
       ],
@@ -3232,18 +3046,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'prices[0] is 4 and prices[2] is 2; the array always holds 3 elements.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{5, 6, 7, 8};\n  std::cout << a[1] << a[3] << "\\n";\n}',
-          ['57', '68', '14', '56'],
-          1,
+          '68',
           'Index 1 is the second element, 6, and index 3 is the fourth, 8.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 5> a{1, 2, 3, 4, 5};\n  std::cout << a[a.size() - 1] << "\\n";\n}',
-          ['4', '6', '1', '5'],
-          3,
+          '5',
           'size() is 5, so the last element is at index 4 and holds 5.',
         ),
         choose(
@@ -3278,25 +3090,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only the first element was given; the remaining three start at 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> counts{};\n  counts[1] += 2;\n  std::cout << counts[0] << counts[1] << counts[2] << "\\n";\n}',
-          ['020', '222', '2', '002'],
-          0,
+          '020',
           'All three counts start at 0, and only counts[1] becomes 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\n#include <cstddef>\nint main() {\n  std::array<int, 5> a{1, 2};\n  int sum = 0;\n  for (std::size_t i = 0; i < a.size(); ++i) sum += a[i];\n  std::cout << sum << "\\n";\n}',
-          ['15', '5', '3', '2'],
-          2,
+          '3',
           'The array holds 1, 2, 0, 0, 0, so the sum is 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 2> a{4, 9};\n  std::array<int, 2> b = a;\n  b[0] = 0;\n  std::cout << a[0] << b[0] << "\\n";\n}',
-          ['00', '44', '40', '04'],
-          2,
+          '40',
           'b is an independent copy, so changing b[0] leaves a[0] at 4.',
         ),
       ],
@@ -3313,18 +3122,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'i takes 0, 1, 2, and 3, so all four scores are added.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\n#include <cstddef>\nint main() {\n  std::array<int, 4> a{2, 4, 6, 8};\n  for (std::size_t i = 0; i < a.size(); i += 2) std::cout << a[i];\n  std::cout << "\\n";\n}',
-          ['48', '2468', '26', '246'],
-          2,
+          '26',
           'Stepping by 2 visits indices 0 and 2, which hold 2 and 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\n#include <cstddef>\nint main() {\n  std::array<int, 3> a{1, 2, 3};\n  for (std::size_t i = 0; i < a.size(); ++i) a[i] = a[i] * 10;\n  std::cout << a[0] + a[2] << "\\n";\n}',
-          ['40', '4', '30', '60'],
-          0,
+          '40',
           'Every element is multiplied by 10, so a[0] + a[2] is 10 + 30.',
         ),
         choose(
@@ -3355,25 +3162,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The loop visits the four elements in order and prints each one.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{2, 5, 7};\n  int sum = 0;\n  for (int x : a) sum += x;\n  std::cout << sum << "\\n";\n}',
-          ['14', '7', '3', '257'],
-          0,
+          '14',
           'Each element is added once: 2 + 5 + 7 is 14.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{1, 2, 3, 4};\n  int product = 1;\n  for (int x : a) product *= x;\n  std::cout << product << "\\n";\n}',
-          ['10', '1', '24', '4'],
-          2,
+          '24',
           'Multiplying all four elements gives 24.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{};\n  int visits = 0;\n  for (int x : a) visits += 1 + x;\n  std::cout << visits << "\\n";\n}',
-          ['0', '1', '4', '3'],
-          3,
+          '3',
           'The elements are all 0, but the body still runs once per element: three times.',
         ),
         choose(
@@ -3397,11 +3201,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each x was multiplied, but x is a copy, so the array still holds 1, 2, 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 2> a{5, 6};\n  for (int x : a) x += 100;\n  std::cout << a[0] + a[1] << "\\n";\n}',
-          ['211', '11', '111', '200'],
-          1,
+          '11',
           'The additions changed only the copies, so the elements still add to 11.',
         ),
         choose(
@@ -3415,11 +3218,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'x is an independent int; assigning to it never reaches the array.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{4, 4, 4};\n  int changed = 0;\n  for (int x : a) {\n    x = 9;\n    changed += x;\n  }\n  std::cout << changed << " " << a[0] << "\\n";\n}',
-          ['27 9', '12 4', '27 4', '12 9'],
-          2,
+          '27 4',
           'Each copy becomes 9 and is added, giving 27, while a[0] stays 4.',
         ),
       ],
@@ -3438,25 +3240,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The negative values skip the addition; 4 + 3 + 5 is 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{1, 2, 3, 4};\n  for (int x : a) {\n    if (x == 2) continue;\n    std::cout << x;\n  }\n  std::cout << "\\n";\n}',
-          ['1', '134', '1234', '34'],
-          1,
+          '134',
           'Only the pass for 2 is skipped; the loop carries on with 3 and 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 5> a{0, 7, 0, 7, 0};\n  int count = 0;\n  for (int x : a) {\n    if (x == 0) continue;\n    ++count;\n  }\n  std::cout << count << "\\n";\n}',
-          ['3', '0', '5', '2'],
-          3,
+          '2',
           'The three zeros are skipped, so only the two 7s are counted.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  for (int i = 1; i <= 5; ++i) {\n    if (i == 3) continue;\n    std::cout << i;\n  }\n  std::cout << "\\n";\n}',
-          ['1245', '12', '12345', '45'],
-          0,
+          '1245',
           'In a counting loop, continue still runs ++i, so only 3 is skipped.',
         ),
       ],
@@ -3474,18 +3273,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The loop adds 6 and 2 and stops at the 0, so 9 and 4 are never visited.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  for (int i = 1; i <= 10; ++i) {\n    if (i * i > 20) break;\n    std::cout << i;\n  }\n  std::cout << "\\n";\n}',
-          ['12345', '4', '1234', '5'],
-          2,
+          '1234',
           '5 * 5 is the first square above 20, so the loop stops before printing 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{3, 3, 9, 3};\n  int seen = 0;\n  for (int x : a) {\n    ++seen;\n    if (x == 9) break;\n  }\n  std::cout << seen << "\\n";\n}',
-          ['2', '4', '1', '3'],
-          3,
+          '3',
           'The 9 is counted before break runs, so three elements are seen.',
         ),
         choose(
@@ -3514,18 +3311,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Negative readings are skipped, the 0 ends the loop, and the 9 after it is never reached: 2 + 6 is 8.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 6> readings{-2, -2, 5, 0, 5, 5};\n  int total = 0;\n  for (int x : readings) {\n    if (x < 0) continue;\n    if (x == 0) break;\n    total += x;\n  }\n  std::cout << total << "\\n";\n}',
-          ['15', '5', '1', '11'],
-          1,
+          '5',
           'Only the first 5 is added before the 0 stops the loop.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{3, -4, 0, 2};\n  int total = 0;\n  for (int x : a) {\n    if (x == 0) break;\n    if (x < 0) continue;\n    total += x;\n  }\n  std::cout << total << "\\n";\n}',
-          ['5', '-1', '1', '3'],
-          3,
+          '3',
           '3 is added, -4 is skipped, and 0 stops the loop before 2.',
         ),
         choose(
@@ -3556,18 +3351,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'x refers to each element, so every element is multiplied by 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{1, 1, 1, 1};\n  for (int& x : a) x += 2;\n  int sum = 0;\n  for (int x : a) sum += x;\n  std::cout << sum << "\\n";\n}',
-          ['4', '8', '6', '12'],
-          3,
+          '12',
           'Each element becomes 3, so the four elements add to 12.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{5, 6, 7};\n  for (int x : a) x = 0;\n  for (int& y : a) y -= 1;\n  std::cout << a[0] << a[1] << a[2] << "\\n";\n}',
-          ['-1-1-1', '456', '000', '567'],
-          1,
+          '456',
           'The first loop changes only copies; the second subtracts 1 from each real element.',
         ),
         choose(
@@ -3596,18 +3389,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The auto& loop changes each element; the auto loop then reads the new values.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{1, 2, 3};\n  for (auto x : a) x *= 5;\n  std::cout << a[1] << "\\n";\n}',
-          ['10', '5', '2', '15'],
-          2,
+          '2',
           'Plain auto copies each element, so the array is unchanged and a[1] is 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{4, 3, 2, 1};\n  int i = 0;\n  for (auto& x : a) {\n    x = i;\n    ++i;\n  }\n  std::cout << a[0] << a[3] << "\\n";\n}',
-          ['41', '14', '03', '30'],
-          2,
+          '03',
           'Each element is overwritten with its position, so a[0] is 0 and a[3] is 3.',
         ),
         choose(
@@ -3636,25 +3427,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each element is replaced by the total so far: 1, 1 + 2, 1 + 2 + 3, and 1 + 2 + 3 + 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{5, 5, 5};\n  int running = 0;\n  for (int& x : a) {\n    running += x;\n    x = running;\n  }\n  std::cout << a[2] << "\\n";\n}',
-          ['5', '10', '15', '25'],
-          2,
+          '15',
           'The last element becomes the full running total, 15.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{5, 5, 5};\n  int running = 0;\n  for (int x : a) {\n    running += x;\n    x = running;\n  }\n  std::cout << a[2] << "\\n";\n}',
-          ['5', '15', '10', '0'],
-          0,
+          '5',
           'The loop variable is a copy, so the totals are written only to copies and a[2] stays 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{3, 1, 2};\n  for (auto& x : a) x = x * x;\n  int sum = 0;\n  for (auto x : a) sum += x;\n  std::cout << sum << "\\n";\n}',
-          ['6', '36', '12', '14'],
-          3,
+          '14',
           'The elements become 9, 1, and 4, which add to 14.',
         ),
       ],
@@ -3674,18 +3462,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '6 is an int, so the first overload doubles it; 6.0 is a double, so the second halves it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint scale(int x) {\n  return x * 10;\n}\ndouble scale(double x) {\n  return x * 100;\n}\nint main() {\n  std::cout << scale(2) << " " << scale(0.5) << "\\n";\n}',
-          ['200 5', '20 50', '20 5', '200 50'],
-          1,
+          '20 50',
           'scale(2) uses the int version (20) and scale(0.5) the double version (50).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint kind(int) {\n  return 1;\n}\nint kind(double) {\n  return 2;\n}\nint main() {\n  std::cout << kind(3) << kind(3.0) << kind(7 / 2) << "\\n";\n}',
-          ['122', '111', '212', '121'],
-          3,
+          '121',
           '7 / 2 is integer division, so its type is int and it selects the first overload.',
         ),
         choose(
@@ -3714,18 +3500,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The int version uses integer division; the cast selects the double version, which keeps the .5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint half(int x) {\n  return x / 2;\n}\ndouble half(double x) {\n  return x / 2;\n}\nint main() {\n  std::cout << half(9) << " " << half(9.0) << "\\n";\n}',
-          ['4.5 4.5', '4 4', '4 4.5', '4.5 4'],
-          2,
+          '4 4.5',
           '9 selects the int overload (4) and 9.0 the double overload (4.5).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\ndouble area(double radius) {\n  return 3 * radius * radius;\n}\nint area(int side) {\n  return side * side;\n}\nint main() {\n  std::cout << area(2) + area(1.0) << "\\n";\n}',
-          ['15', '7.0', '7', '6'],
-          2,
+          '7',
           'area(2) is the int version, 4; area(1.0) is the double version, 3.0; the sum prints as 7.',
         ),
         choose(
@@ -3754,25 +3538,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two arguments select the two-parameter version, and three select the other.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint count(int) {\n  return 1;\n}\nint count(int, int) {\n  return 2;\n}\nint main() {\n  std::cout << count(5) + count(5, 6) << "\\n";\n}',
-          ['2', '4', '11', '3'],
-          3,
+          '3',
           'One argument calls the version returning 1, two arguments the version returning 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\ndouble average(int a, int b) {\n  return (a + b) / 2.0;\n}\nint average(int a) {\n  return a;\n}\nint main() {\n  std::cout << average(3, 4) << " " << average(3) << "\\n";\n}',
-          ['3 3', '3.5 3', '3.5 3.5', '7 3'],
-          1,
+          '3.5 3',
           'The two-argument version divides by 2.0 and returns 3.5; the one-argument version returns 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint g(int) {\n  return 1;\n}\nint g(double) {\n  return 2;\n}\nint main() {\n  std::cout << g(2) * g(2.5) << "\\n";\n}',
-          ['4', '1', '2', '5'],
-          2,
+          '2',
           'g(2) picks the int version (1) and g(2.5) the double version (2), and 1 * 2 is 2.',
         ),
       ],
@@ -3792,25 +3573,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'price(10) uses the default fee of 3; price(10, 0) supplies 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint seats(int people, int extra = 1) {\n  return people + extra;\n}\nint main() {\n  std::cout << seats(4) << "\\n";\n}',
-          ['4', '5', '1', '41'],
-          1,
+          '5',
           'extra is omitted, so its default 1 is added to 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint grow(int n, int step = 2) {\n  return n * step;\n}\nint main() {\n  std::cout << grow(5, 3) + grow(5) << "\\n";\n}',
-          ['30', '20', '25', '15'],
-          2,
+          '25',
           'grow(5, 3) is 15 and grow(5) uses step 2 for 10, so the sum is 25.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint f(int a, int b = 10) {\n  return a - b;\n}\nint main() {\n  std::cout << f(4, 0) << " " << f(4) << "\\n";\n}',
-          ['-6 4', '4 4', '-6 -6', '4 -6'],
-          3,
+          '4 -6',
           'f(4, 0) is 4 - 0; f(4) uses b = 10, giving -6.',
         ),
       ],
@@ -3839,11 +3617,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Only the last one gives defaults to trailing parameters alone.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint box(int w, int h = 2, int d = 3) {\n  return w * h * d;\n}\nint main() {\n  std::cout << box(2, 1) << "\\n";\n}',
-          ['2', '6', '12', '4'],
-          1,
+          '6',
           'w = 2 and h = 1 are supplied, and d keeps its default 3: 2 * 1 * 3 is 6.',
         ),
         choose(
@@ -3872,18 +3649,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The empty call uses 30; the second call supplies 5, which replaces the default.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint level(int n = 1) {\n  return n * n;\n}\nint main() {\n  std::cout << level() + level(3) << "\\n";\n}',
-          ['2', '10', '18', '4'],
-          1,
+          '10',
           'level() uses 1 and returns 1; level(3) returns 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint add(int a, int b = 5) {\n  return a + b;\n}\nint main() {\n  int b = 100;\n  std::cout << add(1) << "\\n";\n}',
-          ['101', '1', '6', '105'],
-          2,
+          '6',
           "The default is the 5 in the declaration; the caller's variable named b plays no part.",
         ),
         choose(
@@ -3914,25 +3689,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'points and score name the same int, so adding through points changes score.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int a = 3;\n  int& r = a;\n  r = 8;\n  std::cout << a << "\\n";\n}',
-          ['3', '8', '11', '0'],
-          1,
+          '8',
           'Assigning to r assigns to a, because r is another name for a.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 3;\n  int& r = a;\n  a = a * 4;\n  std::cout << r << "\\n";\n}',
-          ['3', '4', '12', '7'],
-          2,
+          '12',
           'Changes made through a are visible through r, since both name one object.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int x = 1;\n  int& y = x;\n  int& z = y;\n  z += 9;\n  std::cout << x << y << "\\n";\n}',
-          ['110', '101', '1', '1010'],
-          3,
+          '1010',
           'z is bound to the object y names, which is x, so x and y both read 10.',
         ),
       ],
@@ -3950,11 +3722,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'copy kept the 4 it started with; ref names total, so it reads the new 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int a = 2;\n  int b = a;\n  int& c = a;\n  b += 10;\n  c += 100;\n  std::cout << a << " " << b << "\\n";\n}',
-          ['102 12', '112 12', '2 12', '102 112'],
-          0,
+          '102 12',
           'b is a separate copy that becomes 12; c names a, so a becomes 102.',
         ),
         choose(
@@ -3968,11 +3739,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A reference is bound to an existing object; it is not a new object with a copied value.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int n = 5;\n  int m = n;\n  int& k = m;\n  k = 0;\n  std::cout << n << m << "\\n";\n}',
-          ['00', '55', '50', '05'],
-          2,
+          '50',
           'k names the copy m, so only m becomes 0; n keeps 5.',
         ),
       ],
@@ -4000,11 +3770,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'There is no such thing as an unbound reference, so the initializer is required.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int stock = 10;\n  int& shelf = stock;\n  --shelf;\n  --stock;\n  std::cout << shelf << " " << stock << "\\n";\n}',
-          ['9 9', '9 8', '8 8', '10 8'],
-          2,
+          '8 8',
           'Both decrements change the same object, which ends at 8.',
         ),
         choose(
@@ -4030,25 +3799,22 @@ export const knowledgePoints: KnowledgePointModule = {
           "The parameter is another name for main's score, so adding 10 changes it.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nvoid reset(int& n) {\n  n = 0;\n}\nint main() {\n  int count = 7;\n  reset(count);\n  std::cout << count << "\\n";\n}',
-          ['7', '0', '70', '-7'],
-          1,
+          '0',
           "n refers to count, so assigning 0 changes the caller's variable.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nvoid twice(int& n) {\n  n *= 2;\n}\nint main() {\n  int a = 3;\n  twice(a);\n  twice(a);\n  std::cout << a << "\\n";\n}',
-          ['6', '3', '9', '12'],
-          3,
+          '12',
           'Each call doubles the same a: 3 becomes 6, then 12.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nvoid copy_change(int n) {\n  n = 50;\n}\nvoid ref_change(int& n) {\n  n = 60;\n}\nint main() {\n  int a = 1;\n  int b = 2;\n  copy_change(a);\n  ref_change(b);\n  std::cout << a << " " << b << "\\n";\n}',
-          ['50 60', '1 2', '1 60', '50 2'],
-          2,
+          '1 60',
           'Only the reference parameter reaches the caller; the by-value parameter changes a copy.',
         ),
       ],
@@ -4066,18 +3832,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'temp keeps the old x while x receives y, and then y receives the saved value.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nvoid bad_swap(int& a, int& b) {\n  a = b;\n  b = a;\n}\nint main() {\n  int x = 1;\n  int y = 2;\n  bad_swap(x, y);\n  std::cout << x << y << "\\n";\n}',
-          ['21', '22', '12', '11'],
-          1,
+          '22',
           'a = b overwrites x with 2 before it is saved, so b = a copies 2 back.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nvoid swap_copies(int a, int b) {\n  int t = a;\n  a = b;\n  b = t;\n}\nint main() {\n  int x = 4;\n  int y = 9;\n  swap_copies(x, y);\n  std::cout << x << y << "\\n";\n}',
-          ['94', '99', '44', '49'],
-          3,
+          '49',
           'The parameters are copies, so the swap happens only inside the function.',
         ),
         choose(
@@ -4106,11 +3870,10 @@ export const knowledgePoints: KnowledgePointModule = {
           "take lowers the caller's stock to 6 and returns the cost, 12.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint next_ticket(int& counter) {\n  counter += 1;\n  return counter * 100;\n}\nint main() {\n  int c = 0;\n  next_ticket(c);\n  int t = next_ticket(c);\n  std::cout << c << " " << t << "\\n";\n}',
-          ['1 100', '2 100', '2 200', '1 200'],
-          2,
+          '2 200',
           'Both calls increment c, and the second returns 2 * 100.',
         ),
         choose(
@@ -4124,11 +3887,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Nothing in the call shows the mutation, so it should be part of the stated contract or avoided.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nvoid bump(int& a, int b) {\n  a += b;\n  b += a;\n}\nint main() {\n  int a = 1;\n  int b = 2;\n  bump(a, b);\n  std::cout << a << b << "\\n";\n}',
-          ['35', '15', '12', '32'],
-          3,
+          '32',
           "a is a reference and becomes 3; b is a copy, so the caller's b stays 2.",
         ),
       ],
@@ -4148,18 +3910,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The assignment wrote 4 into first. second is unchanged and still 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int a = 10;\n  int b = 20;\n  int& r = a;\n  r = b;\n  b = 30;\n  std::cout << a << " " << r << "\\n";\n}',
-          ['30 30', '20 20', '10 30', '20 30'],
-          1,
+          '20 20',
           'r = b copied 20 into a. r still names a, so the later change to b does not show.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 1;\n  int b = 2;\n  int& r = a;\n  r = b;\n  r = 7;\n  std::cout << a << b << "\\n";\n}',
-          ['17', '77', '72', '12'],
-          2,
+          '72',
           'Both assignments go to a, which ends at 7; b is never changed.',
         ),
         choose(
@@ -4188,18 +3948,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'r = y copied 8 into x. r still names x, so it reads 8 even after y becomes 100.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int left = 3;\n  int right = 9;\n  int& r = left;\n  r = right;\n  r += 1;\n  std::cout << left << " " << right << "\\n";\n}',
-          ['3 10', '10 10', '10 9', '9 10'],
-          2,
+          '10 9',
           'r stays bound to left: it receives 9 and then becomes 10, while right stays 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 0;\n  int b = 5;\n  int& r = a;\n  r = b;\n  b = r + 1;\n  std::cout << a << b << "\\n";\n}',
-          ['55', '56', '06', '66'],
-          1,
+          '56',
           'a becomes 5 through r, and then b becomes a + 1, which is 6.',
         ),
         choose(
@@ -4230,18 +3988,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'p holds the address of value, and *p reads the int stored there.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int stock = 12;\n  int* p = &stock;\n  std::cout << *p + 1 << "\\n";\n}',
-          ['12', '13', '14', '1'],
-          1,
+          '13',
           '*p reads 12, and adding 1 gives 13; the pointer itself is not changed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 3;\n  int b = 9;\n  int* p = &b;\n  std::cout << *p << "\\n";\n}',
-          ['3', '12', '9', '0'],
-          2,
+          '9',
           'p holds the address of b, so *p reads 9.',
         ),
         choose(
@@ -4269,25 +4025,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '*p is count, so adding 4 through it makes count 7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int a = 1;\n  int* p = &a;\n  *p = 50;\n  std::cout << a << "\\n";\n}',
-          ['1', '51', '50', '0'],
-          2,
+          '50',
           'Assigning to *p assigns to a.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 2;\n  int* p = &a;\n  int b = *p;\n  *p = 8;\n  std::cout << a << " " << b << "\\n";\n}',
-          ['8 8', '2 2', '2 8', '8 2'],
-          3,
+          '8 2',
           'b copied 2 before the write; the write through p changes only a.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int n = 5;\n  int* p = &n;\n  n = 6;\n  std::cout << *p * 2 << "\\n";\n}',
-          ['12', '10', '6', '5'],
-          0,
+          '12',
           'p points to n, so *p reads its current value 6.',
         ),
       ],
@@ -4305,18 +4058,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'bump receives the address of hits and increments the int at that address.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nvoid triple(int* p) {\n  *p = *p * 3;\n}\nint main() {\n  int v = 4;\n  triple(&v);\n  triple(&v);\n  std::cout << v << "\\n";\n}',
-          ['12', '24', '4', '36'],
-          3,
+          '36',
           'Each call triples the same v: 4, 12, 36.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint read(const int* p) {\n  return *p;\n}\nint main() {\n  int a = 7;\n  int b = 3;\n  std::cout << read(&a) - read(&b) << "\\n";\n}',
-          ['4', '10', '-4', '73'],
-          0,
+          '4',
           'read returns the pointed-to values, 7 and 3.',
         ),
         choose(
@@ -4347,25 +4098,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'self(score) names score itself, so adding 3 to the call changes score.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint& alias_of(int& v) {\n  return v;\n}\nint main() {\n  int a = 1;\n  int& r = alias_of(a);\n  r = 20;\n  std::cout << a << "\\n";\n}',
-          ['1', '20', '21', '0'],
-          1,
+          '20',
           'The returned reference names a, so r is another name for a.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint copy_of(int& v) {\n  return v;\n}\nint main() {\n  int a = 1;\n  int r = copy_of(a);\n  r = 20;\n  std::cout << a << "\\n";\n}',
-          ['20', '21', '1', '0'],
-          2,
+          '1',
           'copy_of returns int, a copy of the value, so changing r leaves a alone.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint& alias_of(int& v) {\n  return v;\n}\nint main() {\n  int a = 5;\n  alias_of(alias_of(a)) *= 2;\n  std::cout << a << "\\n";\n}',
-          ['5', '20', '25', '10'],
-          3,
+          '10',
           'Each call passes the same reference through, so the multiplication changes a once.',
         ),
       ],
@@ -4383,11 +4131,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'live is a reference and sees the new 9; saved copied 2 before the change.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint& slot(int& v) {\n  return v;\n}\nint main() {\n  int x = 3;\n  int copy = slot(x);\n  int& ref = slot(x);\n  ref += 1;\n  copy += 10;\n  std::cout << x << " " << copy << "\\n";\n}',
-          ['14 13', '3 13', '4 4', '4 13'],
-          3,
+          '4 13',
           'ref changes x to 4; copy is independent and becomes 13.',
         ),
         choose(
@@ -4401,11 +4148,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Initializing a plain int from a reference copies the referred value.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint& slot(int& v) {\n  return v;\n}\nint main() {\n  int a = 6;\n  slot(a) = 0;\n  std::cout << a << "\\n";\n}',
-          ['6', '60', '0', '-6'],
-          2,
+          '0',
           'slot(a) names a, so assigning 0 to the call assigns to a.',
         ),
       ],
@@ -4446,11 +4192,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Only the reference parameter names an object owned by the caller; the others refer to locals or a copy.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint& counter(int& storage) {\n  storage += 1;\n  return storage;\n}\nint main() {\n  int calls = 5;\n  int& r = counter(calls);\n  r *= 2;\n  std::cout << calls << "\\n";\n}',
-          ['6', '10', '11', '12'],
-          3,
+          '12',
           'counter makes calls 6 and returns a reference to it; doubling through r gives 12.',
         ),
       ],
@@ -4470,11 +4215,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'missing holds nullptr; present holds the address of value.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int* p = nullptr;\n  int x = 3;\n  p = &x;\n  std::cout << (p != nullptr) << "\\n";\n}',
-          ['0', '1', '3', 'nullptr'],
-          1,
+          '1',
           'p was given the address of x, so it is no longer null.',
         ),
         choose(
@@ -4488,11 +4232,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'There is no object to access, so the language gives the program no meaning.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int* p = nullptr;\n  std::cout << (p == nullptr ? 1 : 2) << "\\n";\n}',
-          ['2', '0', '1', 'nullptr'],
-          2,
+          '1',
           'p is null, so the comparison is true and the first value is chosen.',
         ),
       ],
@@ -4510,18 +4253,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first call has a real address and reads 9; the second gets nullptr and returns the fallback.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint read_or(const int* p, int fallback) {\n  return p != nullptr ? *p : fallback;\n}\nint main() {\n  int stock = 0;\n  std::cout << read_or(&stock, 50) << "\\n";\n}',
-          ['50', '0', '-1', '1'],
-          1,
+          '0',
           'The pointer is not null, so the stored 0 is read; the fallback is only for a missing object.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint read_or(const int* p, int fallback) {\n  return p != nullptr ? *p : fallback;\n}\nint main() {\n  std::cout << read_or(nullptr, 7) + read_or(nullptr, 3) << "\\n";\n}',
-          ['0', '7', '3', '10'],
-          3,
+          '10',
           'Both calls receive nullptr and return their fallbacks, 7 and 3.',
         ),
         choose(
@@ -4549,25 +4290,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'p is non-null, so the condition is true and *p is read.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int* p = nullptr;\n  std::cout << (p ? *p : -1) << "\\n";\n}',
-          ['0', '-1', '1', '6'],
-          1,
+          '-1',
           'A null pointer converts to false, so the fallback -1 is chosen.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 0;\n  int* p = &a;\n  std::cout << (p ? 10 : 20) << "\\n";\n}',
-          ['20', '0', '10', '30'],
-          2,
+          '10',
           'The pointer is non-null, so the condition is true even though the int it points to is 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 5;\n  int* p = &a;\n  p = nullptr;\n  std::cout << (p ? *p : 0) << " " << a << "\\n";\n}',
-          ['5 5', '0 0', '5 0', '0 5'],
-          3,
+          '0 5',
           'Setting p to nullptr changes the pointer only; a is still 5.',
         ),
       ],
@@ -4586,18 +4324,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'After the assignment p holds the address of second.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int a = 3;\n  int b = 4;\n  int* p = &a;\n  *p = 10;\n  p = &b;\n  *p = 20;\n  std::cout << a << " " << b << "\\n";\n}',
-          ['20 20', '10 4', '10 20', '3 20'],
-          2,
+          '10 20',
           'The first write goes to a; after reseating, the second write goes to b.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 1;\n  int b = 2;\n  int* p = &a;\n  int* q = p;\n  p = &b;\n  std::cout << *q << *p << "\\n";\n}',
-          ['22', '21', '11', '12'],
-          3,
+          '12',
           'q copied the old address of a; only p was moved to b.',
         ),
         choose(
@@ -4625,18 +4361,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'x keeps 5 after p moves away; only y is incremented.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int a = 1;\n  int b = 1;\n  int* p = &a;\n  *p += 1;\n  p = &b;\n  *p += 5;\n  std::cout << a << b << "\\n";\n}',
-          ['66', '76', '26', '27'],
-          2,
+          '26',
           'a received the first increment and keeps 2; b received the second and becomes 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint main() {\n  int a = 4;\n  int b = 6;\n  int* p = &a;\n  int* q = &b;\n  p = q;\n  *p = 0;\n  std::cout << a << " " << b << "\\n";\n}',
-          ['0 6', '4 0', '0 0', '4 6'],
-          1,
+          '4 0',
           'p = q copies the address of b, so the write goes to b and a is untouched.',
         ),
         choose(
@@ -4677,18 +4411,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Through a pointer to const the pointed-to int can be read but not assigned.',
           '#include <iostream>\nint main() {\n  int a = 2;\n  const int* p = &a;\n  *p = 5;\n  std::cout << a << "\\n";\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint main() {\n  int a = 2;\n  const int* p = &a;\n  a = 9;\n  std::cout << *p << "\\n";\n}',
-          ['2', '11', '0', '9'],
-          3,
+          '9',
           'const restricts writes through p, not through a; p reads the new value 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint total(const int* x, const int* y) {\n  return *x + *y;\n}\nint main() {\n  int a = 4;\n  int b = 6;\n  const int* p = &a;\n  std::cout << total(p, &b);\n  p = &b;\n  std::cout << " " << total(p, &b) << "\\n";\n}',
-          ['10 10', '10 12', '12 12', '4 6'],
-          1,
+          '10 12',
           'First p points to a (4 + 6); after reseating it points to b (6 + 6).',
         ),
       ],
@@ -4708,18 +4440,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'p points to element 0, and p + 2 points two elements later, to 30.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{5, 6, 7, 8};\n  const int* p = a.data();\n  ++p;\n  std::cout << *p << "\\n";\n}',
-          ['5', '6', '7', '9'],
-          1,
+          '6',
           '++p moves one element forward, from 5 to 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{5, 6, 7, 8};\n  const int* p = a.data() + 3;\n  std::cout << *(p - 1) << "\\n";\n}',
-          ['8', '6', '7', '5'],
-          2,
+          '7',
           'p points to the last element, index 3; one element back is index 2, which holds 7.',
         ),
         choose(
@@ -4748,18 +4478,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'p visits the three elements and stops when it reaches end, which is never read.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{2, 2, 2, 2};\n  const int* end = a.data() + a.size();\n  int product = 1;\n  for (const int* p = a.data(); p != end; ++p) product *= *p;\n  std::cout << product << "\\n";\n}',
-          ['8', '16', '2', '32'],
-          1,
+          '16',
           'The loop multiplies all four elements: 2 * 2 * 2 * 2 is 16.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 5> a{};\n  const int* end = a.data() + a.size();\n  int steps = 0;\n  for (const int* p = a.data(); p != end; ++p) ++steps;\n  std::cout << steps << "\\n";\n}',
-          ['4', '6', '0', '5'],
-          3,
+          '5',
           'The pointer visits each of the 5 elements once before it equals end.',
         ),
         choose(
@@ -4793,11 +4521,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'a.data() + 4 is the one-past-the-end position; anything further out is undefined.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 5> a{1, 2, 3, 4, 5};\n  const int* p = a.data() + a.size();\n  --p;\n  --p;\n  std::cout << *p << "\\n";\n}',
-          ['5', '3', '4', '2'],
-          2,
+          '4',
           'p starts one past the end; two steps back reach index 3, which holds 4.',
         ),
         choose(
@@ -4828,18 +4555,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The span covers all four elements of a, and view[1] is the second one, 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 3> a{7, 8, 9};\n  std::span<const int> s = a;\n  std::cout << s[0] + s[2] << "\\n";\n}',
-          ['16', '15', '24', '17'],
-          0,
+          '16',
           'The span sees the array elements 7 and 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 3> a{1, 2, 3};\n  std::span<int> s = a;\n  s[0] = 50;\n  std::cout << a[0] << "\\n";\n}',
-          ['1', '51', '0', '50'],
-          3,
+          '50',
           "A span of non-const int refers to the array's elements, so writing through it changes a.",
         ),
         choose(
@@ -4868,25 +4593,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'One function serves both arrays, because each converts to a span of its own length.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\n#include <cstddef>\n#include <span>\nstd::size_t count(std::span<const int> values) {\n  return values.size();\n}\nint main() {\n  std::array<int, 6> a{};\n  std::cout << count(a) << "\\n";\n}',
-          ['0', '6', '5', '24'],
-          1,
+          '6',
           'The span covers all six elements; their values being 0 does not matter.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\n#include <span>\nint sum(std::span<const int> values) {\n  int total = 0;\n  for (int x : values) total += x;\n  return total;\n}\nint main() {\n  std::array<int, 3> a{4, 5, 6};\n  std::cout << sum(a) << " " << sum({}) << "\\n";\n}',
-          ['15 15', '0 0', '456 0', '15 0'],
-          3,
+          '15 0',
           'The second call passes an empty span, so the loop adds nothing.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\n#include <span>\nint first(std::span<const int> values) {\n  return values[0];\n}\nint main() {\n  std::array<int, 3> a{9, 8, 7};\n  a[0] = 1;\n  std::cout << first(a) << "\\n";\n}',
-          ['9', '7', '1', '0'],
-          2,
+          '1',
           'The span reads the array as it is at the call, after a[0] became 1.',
         ),
       ],
@@ -4903,11 +4625,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The span reads the current elements 1, 2, and 30.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 2> a{5, 5};\n  std::span<const int> v = a;\n  a[0] = 0;\n  std::cout << v[0] + v[1] << "\\n";\n}',
-          ['10', '0', '5', '55'],
-          2,
+          '5',
           'v views a, so it sees the 0 written into a[0].',
         ),
         choose(
@@ -4949,18 +4670,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Skipping two elements leaves 3, 4, 5: three elements starting with 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 4> a{10, 20, 30, 40};\n  std::span<const int> s = a;\n  std::span<const int> t = s.subspan(1);\n  std::cout << t[0] << " " << t.size() << "\\n";\n}',
-          ['10 4', '20 4', '20 3', '30 3'],
-          2,
+          '20 3',
           'The tail starts at 20 and has 4 - 1 = 3 elements.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 3> a{1, 2, 3};\n  std::span<const int> s = a;\n  std::cout << s.subspan(3).size() << "\\n";\n}',
-          ['0', '1', '3', '-1'],
-          0,
+          '0',
           'An offset equal to the size is allowed and leaves no elements.',
         ),
         choose(
@@ -4983,18 +4702,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The window holds 3, 4, and 5, which add to 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 4> a{9, 8, 7, 6};\n  std::span<const int> s = a;\n  std::span<const int> w = s.subspan(1, 2);\n  std::cout << w[0] << " " << w[1] << "\\n";\n}',
-          ['9 8', '8 6', '7 6', '8 7'],
-          3,
+          '8 7',
           'Two elements starting at index 1 are 8 and 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 4> a{1, 1, 1, 1};\n  std::span<int> s = a;\n  std::span<int> mid = s.subspan(1, 2);\n  mid[0] = 5;\n  std::cout << a[1] << "\\n";\n}',
-          ['1', '0', '5', '2'],
-          2,
+          '5',
           'mid[0] is the same int as a[1], so the write changes the array.',
         ),
         choose(
@@ -5023,11 +4740,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '5 is larger than the size 3, so the program reports it instead of calling subspan.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\n#include <cstddef>\n#include <span>\nint main() {\n  std::array<int, 3> a{4, 5, 6};\n  std::span<const int> s = a;\n  std::size_t offset = 1;\n  if (offset > s.size()) std::cout << "bad offset\\n";\n  else std::cout << s.subspan(offset).size() << "\\n";\n}',
-          ['bad offset', '3', '2', '1'],
-          2,
+          '2',
           'The offset is valid, and 3 - 1 elements remain.',
         ),
         choose(
@@ -5041,11 +4757,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'subspan does not check its argument, so the caller must.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstddef>\n#include <span>\nint main() {\n  std::span<const int> empty;\n  std::size_t offset = 0;\n  if (offset > empty.size()) std::cout << "bad offset\\n";\n  else std::cout << empty.subspan(offset).size() << "\\n";\n}',
-          ['0', 'bad offset', '1', '-1'],
-          0,
+          '0',
           'An offset of 0 is valid even for an empty span, and the result is also empty.',
         ),
       ],
@@ -5065,18 +4780,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The view covers the six characters of the literal, starting with l.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view s = "C++20";\n  std::cout << s.size() << "\\n";\n}',
-          ['4', '6', '5', '2'],
-          2,
+          '5',
           "C, +, +, 2, and 0 are five characters; the literal's terminating null is not counted.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string>\n#include <string_view>\nint main() {\n  std::string text = "hello";\n  std::string_view v = text;\n  std::cout << v[1] << v[4] << "\\n";\n}',
-          ['ho', 'el', 'eo', 'lo'],
-          2,
+          'eo',
           'Index 1 is e and index 4 is o.',
         ),
         choose(
@@ -5105,11 +4818,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The view was given length 3, so the embedded \\0 counts as one of its characters.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view full = "abcdef";\n  std::string_view part(full.data(), 3);\n  std::cout << part << " " << part.size() << "\\n";\n}',
-          ['abcdef 3', 'abc 6', 'abcdef 6', 'abc 3'],
-          3,
+          'abc 3',
           'part covers only the first 3 characters, and printing a view prints exactly those.',
         ),
         choose(
@@ -5123,11 +4835,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           "strlen searches for a terminator, but the view's length is stored separately.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view v("x\\0yz", 4);\n  std::cout << v.size() << "\\n";\n}',
-          ['1', '3', '4', '2'],
-          2,
+          '4',
           'The view has the length it was given, 4, including the \\0.',
         ),
       ],
@@ -5145,25 +4856,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'year covers characters 0 through 3, and day covers everything from position 8.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view s = "monday";\n  std::cout << s.substr(0, 3) << "\\n";\n}',
-          ['mon', 'mond', 'day', 'onda'],
-          0,
+          'mon',
           'Three characters starting at position 0 are m, o, n.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view s = "lesson";\n  std::cout << s.substr(3) << " " << s.substr(3).size() << "\\n";\n}',
-          ['sson 4', 'les 3', 'son 3', 'son 6'],
-          2,
+          'son 3',
           'From position 3 to the end is son, three characters.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view s = "abcdef";\n  std::string_view mid = s.substr(2, 2);\n  std::cout << mid << mid.size() << "\\n";\n}',
-          ['bc2', 'cde3', 'cd4', 'cd2'],
-          3,
+          'cd2',
           'Two characters starting at position 2 are c and d.',
         ),
       ],
@@ -5182,18 +4890,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'owned holds its own copy of the five characters.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string>\n#include <string_view>\nint main() {\n  std::string original = "alpha";\n  std::string_view v = original;\n  std::string copy(v);\n  original = "beta";\n  std::cout << copy << "\\n";\n}',
-          ['beta', 'alphabeta', 'alpha', 'al'],
-          2,
+          'alpha',
           'copy took its own characters while original still said alpha.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string>\n#include <string_view>\nint main() {\n  std::string_view v = "abcdef";\n  std::string part(v.substr(1, 3));\n  std::cout << part << part.size() << "\\n";\n}',
-          ['bcd3', 'abc3', 'bcd6', 'bcde4'],
-          0,
+          'bcd3',
           'The view b, c, d is copied into a three-character string.',
         ),
         choose(
@@ -5245,11 +4951,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Only a returned std::string owns its characters; the others would dangle once the local is destroyed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string>\n#include <string_view>\nstd::string keep(std::string_view v) {\n  return std::string(v);\n}\nint main() {\n  std::string a = keep("one");\n  std::string b = keep(a);\n  a = "two";\n  std::cout << b << "\\n";\n}',
-          ['two', 'one', 'onetwo', 'o'],
-          1,
+          'one',
           'b owns its own copy made while a said one.',
         ),
       ],
@@ -5268,18 +4973,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'wait holds 250 ticks of one millisecond each.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::seconds s{90};\n  std::cout << s.count() << "\\n";\n}',
-          ['1', '90', '1.5', '90000'],
-          1,
+          '90',
           "count() returns the ticks in the duration's own unit, seconds.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::minutes m{3};\n  std::chrono::minutes more = m + std::chrono::minutes{2};\n  std::cout << more.count() << "\\n";\n}',
-          ['300', '32', '5', '2'],
-          2,
+          '5',
           'Adding two minute durations gives 5 minutes.',
         ),
         choose(
@@ -5307,18 +5010,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '2 seconds are 2000 milliseconds, plus 300.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds t = std::chrono::seconds{1} + std::chrono::milliseconds{1};\n  std::cout << t.count() << "\\n";\n}',
-          ['2', '1.001', '11', '1001'],
-          3,
+          '1001',
           '1 second is 1000 milliseconds; adding 1 gives 1001.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::seconds s = std::chrono::minutes{2};\n  std::cout << s.count() << "\\n";\n}',
-          ['2', '0', '120', '7200'],
-          2,
+          '120',
           'Two minutes convert exactly to 120 seconds.',
         ),
         choose(
@@ -5346,18 +5047,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'One day converted to milliseconds is 86,400,000 ticks.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::hours h{2};\n  std::chrono::seconds s = h;\n  long long n = s.count();\n  std::cout << n << "\\n";\n}',
-          ['120', '2', '7200', '720'],
-          2,
+          '7200',
           'Two hours are 7200 seconds.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds a{400};\n  std::chrono::milliseconds b{-150};\n  std::cout << (a + b).count() << "\\n";\n}',
-          ['550', '-250', '400', '250'],
-          3,
+          '250',
           'A negative duration subtracts: 400 + (-150) is 250.',
         ),
         choose(
@@ -5388,18 +5087,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '2700 milliseconds are 2.7 seconds, and the cast keeps the whole 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds ms{5999};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(ms).count() << "\\n";\n}',
-          ['6', '5', '5.999', '5999'],
-          1,
+          '5',
           'The cast does not round: 5.999 seconds become 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::seconds s{150};\n  std::cout << std::chrono::duration_cast<std::chrono::minutes>(s).count() << "\\n";\n}',
-          ['2', '3', '2.5', '150'],
-          0,
+          '2',
           '150 seconds are 2.5 minutes, and the cast keeps 2.',
         ),
         choose(
@@ -5428,18 +5125,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '-1.5 seconds truncate toward zero to -1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds d{-2999};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(d).count() << "\\n";\n}',
-          ['-3', '-2.999', '-2', '2'],
-          2,
+          '-2',
           '-2.999 seconds truncate toward zero to -2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::seconds s{-90};\n  std::cout << std::chrono::duration_cast<std::chrono::minutes>(s).count() << "\\n";\n}',
-          ['-1', '-2', '-1.5', '1'],
-          0,
+          '-1',
           '-1.5 minutes truncate toward zero to -1.',
         ),
         choose(
@@ -5467,18 +5162,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '7 whole seconds are 7000 milliseconds, leaving 250.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds total{3999};\n  std::chrono::seconds whole = std::chrono::duration_cast<std::chrono::seconds>(total);\n  std::chrono::milliseconds rest = total - whole;\n  std::cout << whole.count() << " s " << rest.count() << " ms\\n";\n}',
-          ['4 s 0 ms', '3 s 1 ms', '3 s 3999 ms', '3 s 999 ms'],
-          3,
+          '3 s 999 ms',
           'The cast keeps 3 seconds, and 3999 - 3000 leaves 999 milliseconds.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::seconds total{125};\n  std::chrono::minutes m = std::chrono::duration_cast<std::chrono::minutes>(total);\n  std::chrono::seconds rest = total - m;\n  std::cout << m.count() << ":" << rest.count() << "\\n";\n}',
-          ['2:05', '2:5', '2:125', '3:5'],
-          1,
+          '2:5',
           'Two whole minutes leave 5 seconds, and count() prints 5 without a leading zero.',
         ),
         choose(
@@ -5509,18 +5202,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The two instants are 45 milliseconds apart; the cast expresses the difference in milliseconds.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::seconds{2}};\n  std::chrono::steady_clock::time_point end{std::chrono::seconds{5}};\n  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "\\n";\n}',
-          ['3', '3000', '5000', '7000'],
-          1,
+          '3000',
           'The instants are 3 seconds apart, which is 3000 milliseconds.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::milliseconds{500}};\n  std::chrono::steady_clock::time_point end{std::chrono::milliseconds{200}};\n  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "\\n";\n}',
-          ['300', '700', '0', '-300'],
-          3,
+          '-300',
           'end is earlier than start, so the difference is a negative duration.',
         ),
         choose(
@@ -5549,11 +5240,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The deadline lies 5 seconds after an instant 10 seconds past the epoch.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::milliseconds{1000}};\n  std::chrono::steady_clock::time_point later = start + std::chrono::milliseconds{250};\n  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(later.time_since_epoch()).count() << "\\n";\n}',
-          ['250', '750', '1250', '1000'],
-          2,
+          '1250',
           'Moving 250 milliseconds past an instant at 1000 milliseconds gives 1250.',
         ),
         choose(
@@ -5562,11 +5252,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'An instant plus a duration is meaningful; an instant plus an instant is not.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::seconds{20}};\n  std::chrono::steady_clock::time_point later = start + std::chrono::minutes{1};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(later - start).count() << "\\n";\n}',
-          ['60', '1', '80', '21'],
-          0,
+          '60',
           'The two points are one minute apart, which is 60 seconds.',
         ),
       ],
@@ -5584,11 +5273,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The difference is 2250 milliseconds, which is 2 whole seconds.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point a{std::chrono::milliseconds{3000}};\n  std::chrono::steady_clock::time_point b = a + std::chrono::milliseconds{999};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(b - a).count() << " " << std::chrono::duration_cast<std::chrono::milliseconds>(b - a).count() << "\\n";\n}',
-          ['1 999', '3 999', '0 3999', '0 999'],
-          3,
+          '0 999',
           'The difference is 999 milliseconds, which is 0 whole seconds.',
         ),
         choose(
@@ -5602,11 +5290,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A difference is meaningful only when both instants are measured from the same origin; C++ does not even let the types mix.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point a{std::chrono::seconds{1}};\n  std::chrono::steady_clock::time_point b{std::chrono::milliseconds{1}};\n  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(a - b).count() << "\\n";\n}',
-          ['0', '999', '1001', '-999'],
-          1,
+          '999',
           'a is 1000 milliseconds past the epoch and b is 1, so they are 999 milliseconds apart.',
         ),
       ],
@@ -5626,11 +5313,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The second reading is taken later on a clock that never goes backward, so it is not earlier.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point a = std::chrono::steady_clock::now();\n  std::chrono::steady_clock::time_point b = std::chrono::steady_clock::now();\n  std::cout << (b - a >= std::chrono::nanoseconds{0}) << "\\n";\n}',
-          ['0', '1', '-1', 'It varies'],
-          1,
+          '1',
           'A later steady_clock reading minus an earlier one is never negative.',
         ),
         choose(
@@ -5644,11 +5330,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Only relationships between readings, such as their order or difference, are reproducible.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::cout << std::chrono::steady_clock::is_steady << "\\n";\n}',
-          ['0', 'true', 'steady', '1'],
-          3,
+          '1',
           'is_steady is a bool constant, and a true bool prints as 1.',
         ),
       ],
@@ -5688,11 +5373,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Monotonic readings are exactly what interval measurement needs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point a = std::chrono::steady_clock::now();\n  std::chrono::steady_clock::time_point b = a + std::chrono::seconds{2};\n  std::cout << (b > a) << (b - a == std::chrono::seconds{2}) << "\\n";\n}',
-          ['10', '01', '11', '00'],
-          2,
+          '11',
           'Whatever a is, b lies exactly 2 seconds after it.',
         ),
       ],
@@ -5710,18 +5394,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The interval is 3750 microseconds, which is 3 whole milliseconds.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::microseconds{2000}};\n  std::chrono::steady_clock::time_point end{std::chrono::microseconds{5750}};\n  std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us\\n";\n}',
-          ['3 us', '3750 us', '3.75 us', '5750 us'],
-          1,
+          '3750 us',
           'In microseconds the full interval, 3750, is kept.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::seconds{10}};\n  std::chrono::steady_clock::time_point end = start + std::chrono::milliseconds{1500};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " s\\n";\n}',
-          ['2 s', '1.5 s', '1500 s', '1 s'],
-          3,
+          '1 s',
           'Casting 1.5 seconds to whole seconds truncates to 1.',
         ),
         choose(
@@ -5752,18 +5434,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'price is declared first, so it receives 10; size receives 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Point {\n  int x;\n  int y;\n};\nint main() {\n  Point p{4, -2};\n  std::cout << p.y << " " << p.x << "\\n";\n}',
-          ['4 -2', '-2 4', '-2 -2', '4 4'],
-          1,
+          '-2 4',
           'x is 4 and y is -2; the program prints y first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Size {\n  int width;\n  int height;\n};\nint main() {\n  Size s{3, 5};\n  std::cout << s.width * s.height << "\\n";\n}',
-          ['8', '35', '53', '15'],
-          3,
+          '15',
           'The members are 3 and 5, and their product is 15.',
         ),
         choose(
@@ -5791,18 +5471,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Only hits was given a value; misses starts at 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Totals {\n  int a;\n  int b;\n  int c;\n};\nint main() {\n  Totals t{1, 2};\n  std::cout << t.a + t.b + t.c << "\\n";\n}',
-          ['3', '6', '2', '0'],
-          0,
+          '3',
           'c was not given a value, so it is 0, and the sum is 1 + 2 + 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Stats {\n  int count;\n  int sum;\n};\nint main() {\n  Stats s{};\n  s.count += 1;\n  std::cout << s.count << s.sum << "\\n";\n}',
-          ['11', '00', '10', '1'],
-          2,
+          '10',
           'Empty braces zero both members; then count becomes 1.',
         ),
         choose(
@@ -5831,25 +5509,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'copy starts with the same members, but changing its size leaves q unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct P {\n  int x;\n  int y;\n};\nint main() {\n  P a{1, 2};\n  P b = a;\n  b.x = 9;\n  std::cout << a.x << b.x << "\\n";\n}',
-          ['99', '11', '19', '91'],
-          2,
+          '19',
           'b is an independent copy, so only b.x becomes 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Range {\n  int low;\n  int high;\n};\nRange make(int a, int b) {\n  return Range{a, b};\n}\nint width(Range r) {\n  return r.high - r.low;\n}\nint main() {\n  std::cout << width(make(3, 10)) << "\\n";\n}',
-          ['7', '13', '-7', '30'],
-          0,
+          '7',
           'make builds the struct {3, 10}, and width returns 10 - 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Box {\n  int v;\n};\nint bump(Box b) {\n  b.v += 1;\n  return b.v;\n}\nint main() {\n  Box box{4};\n  int r = bump(box);\n  std::cout << r << box.v << "\\n";\n}',
-          ['55', '44', '45', '54'],
-          3,
+          '54',
           "bump changes its own copy and returns 5; the caller's box keeps 4.",
         ),
       ],
@@ -5869,18 +5544,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Creating h runs the constructor with x = 11, which initializes value.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Temp {\n  int celsius;\n  explicit Temp(int c) : celsius(c) {}\n};\nint main() {\n  Temp t(-4);\n  std::cout << t.celsius + 4 << "\\n";\n}',
-          ['-4', '0', '4', '-8'],
-          1,
+          '0',
           'celsius is initialized to -4, and adding 4 gives 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Scaled {\n  int value;\n  explicit Scaled(int x) : value(x * 10) {}\n};\nint main() {\n  Scaled s(3);\n  std::cout << s.value << "\\n";\n}',
-          ['3', '10', '13', '30'],
-          3,
+          '30',
           'The initializer may be any expression: value starts as 3 * 10.',
         ),
         choose(
@@ -5908,18 +5581,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'value is already 7 when the body prints it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Account {\n  int balance;\n  explicit Account(int start) : balance(start) {\n    balance += 100;\n  }\n};\nint main() {\n  Account a(5);\n  std::cout << a.balance << "\\n";\n}',
-          ['5', '100', '105', '0'],
-          2,
+          '105',
           'balance starts at 5 from the initializer, and the body adds 100.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Doubler {\n  int v;\n  explicit Doubler(int x) : v(x) {\n    v = v * 2;\n  }\n};\nint main() {\n  Doubler d(6);\n  std::cout << d.v << "\\n";\n}',
-          ['12', '6', '24', '0'],
-          0,
+          '12',
           'v is 6 when the body starts, and the body doubles it.',
         ),
         choose(
@@ -5960,11 +5631,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Declaration order wins: end is initialized first and reads an uninitialized length.',
           'struct Bad {\n  int end;\n  int length;\n  Bad(int start, int len) : length(len), end(start + length) {}\n};',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Area {\n  int w;\n  int h;\n  int area;\n  Area(int a, int b) : w(a), h(b), area(w * h) {}\n};\nint main() {\n  Area x(3, 4);\n  std::cout << x.area << "\\n";\n}',
-          ['7', '0', '12', '34'],
-          2,
+          '12',
           'w and h are declared before area, so they hold 3 and 4 when area is computed.',
         ),
         choose(
@@ -5995,23 +5665,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'n is destroyed at the closing brace of its block, before after is printed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Bell {\n  ~Bell() { std::cout << "ring\\n"; }\n};\nint main() {\n  std::cout << "start\\n";\n  {\n    Bell b;\n  }\n  std::cout << "end\\n";\n}',
-          [
-            'start\nend\nring',
-            'start\nring\nend',
-            'ring\nstart\nend',
-            'start\nend',
-          ],
-          1,
+          'start\nring\nend',
           'b lives only inside the inner block, so ring appears before end.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Bell {\n  ~Bell() { std::cout << "ring\\n"; }\n};\nint main() {\n  Bell a;\n  std::cout << "body\\n";\n}',
-          ['ring\nbody', 'body', 'body\nring', 'ring'],
-          2,
+          'body\nring',
           "a is destroyed when main's body ends, after body is printed.",
         ),
         choose(
@@ -6040,25 +5703,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Inside the block the guard is still alive; leaving the block runs its destructor.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Counter {\n  int& count;\n  ~Counter() { count += 10; }\n};\nint main() {\n  int total = 1;\n  {\n    Counter c{total};\n    total += 1;\n  }\n  std::cout << total << "\\n";\n}',
-          ['2', '11', '1', '12'],
-          3,
+          '12',
           'total becomes 2 inside the block, and the destructor adds 10 at its end.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Guard {\n  int& released;\n  ~Guard() { ++released; }\n};\nint main() {\n  int n = 0;\n  {\n    Guard a{n};\n  }\n  {\n    Guard b{n};\n  }\n  std::cout << n << "\\n";\n}',
-          ['1', '2', '0', '3'],
-          1,
+          '2',
           'Each guard is destroyed at the end of its own block, so n is incremented twice.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Guard {\n  int& released;\n  ~Guard() { ++released; }\n};\nint main() {\n  int n = 0;\n  {\n    Guard a{n};\n    std::cout << n;\n  }\n  std::cout << n << "\\n";\n}',
-          ['11', '00', '01', '10'],
-          2,
+          '01',
           'n is still 0 while the guard lives and becomes 1 when the block ends.',
         ),
       ],
@@ -6099,16 +5759,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'c and b end with their blocks, innermost first; a lasts until main ends.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << "end " << id << "\\n"; }\n};\nint main() {\n  Tag outer{5};\n  {\n    Tag inner{6};\n    std::cout << "in\\n";\n  }\n}',
-          [
-            'in\nend 6\nend 5',
-            'in\nend 5\nend 6',
-            'end 6\nin\nend 5',
-            'in\nend 6',
-          ],
-          0,
+          'in\nend 6\nend 5',
           'in is printed while both live; the inner block ends first, then main.',
         ),
       ],
@@ -6127,11 +5781,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Construction went 1, 2, 3, so destruction goes 3, 2, 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nint main() {\n  {\n    Tag x{7};\n    Tag y{8};\n  }\n  std::cout << "\\n";\n}',
-          ['78', '87', '7', '8'],
-          1,
+          '87',
           'y was constructed last, so it is destroyed first.',
         ),
         choose(
@@ -6145,11 +5798,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Reverse order guarantees that anything an object was built on still exists when it is destroyed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Tracker {\n  int& log;\n  int digit;\n  ~Tracker() { log = log * 10 + digit; }\n};\nint main() {\n  int log = 0;\n  {\n    Tracker first{log, 1};\n    Tracker second{log, 2};\n  }\n  std::cout << log << "\\n";\n}',
-          ['12', '3', '0', '21'],
-          3,
+          '21',
           'second is destroyed first and records 2; then first appends 1.',
         ),
       ],
@@ -6167,18 +5819,16 @@ export const knowledgePoints: KnowledgePointModule = {
           "b ends with the inner block. At the outer block's end, c (declared last) goes before a.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nint main() {\n  {\n    {\n      Tag a{1};\n    }\n    Tag b{2};\n    Tag c{3};\n  }\n  std::cout << "\\n";\n}',
-          ['132', '321', '123', '312'],
-          0,
+          '132',
           'a ends with its own block first; then c and b go in reverse order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Tracker {\n  int& log;\n  int digit;\n  ~Tracker() { log = log * 10 + digit; }\n};\nint main() {\n  int log = 0;\n  {\n    Tracker a{log, 4};\n    {\n      Tracker b{log, 5};\n    }\n    Tracker c{log, 6};\n  }\n  std::cout << log << "\\n";\n}',
-          ['456', '654', '564', '546'],
-          2,
+          '564',
           'b is recorded first, then c, then a.',
         ),
         choose(
@@ -6213,11 +5863,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The Log must be destroyed after the Writer, so it is declared before it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Log {\n  int lines;\n};\nstruct Writer {\n  Log& log;\n  int n;\n  ~Writer() { log.lines += n; }\n};\nint main() {\n  Log log{0};\n  {\n    Writer a{log, 1};\n    Writer b{log, 10};\n  }\n  std::cout << log.lines << "\\n";\n}',
-          ['1', '10', '11', '0'],
-          2,
+          '11',
           'Both writers record their amounts when the block ends: 10 + 1.',
         ),
         choose(
@@ -6247,18 +5896,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: "Each call adds to c's own count: 0 + 5 + 2.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Wallet {\n  int cash;\n  void spend(int amount) { cash -= amount; }\n};\nint main() {\n  Wallet w{20};\n  w.spend(5);\n  w.spend(5);\n  std::cout << w.cash << "\\n";\n}',
-          ['15', '10', '20', '5'],
-          1,
+          '10',
           "Two calls each subtract 5 from w's cash.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Rect {\n  int w;\n  int h;\n  int area() { return w * h; }\n};\nint main() {\n  Rect r{3, 4};\n  std::cout << r.area() << "\\n";\n}',
-          ['7', '34', '0', '12'],
-          3,
+          '12',
           "area uses r's members w and h.",
         ),
         choose(
@@ -6286,18 +5933,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Each call updates the object it was made on.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Counter {\n  int count;\n  void add(int amount) { count += amount; }\n};\nint main() {\n  Counter a{5};\n  Counter b = a;\n  b.add(10);\n  std::cout << a.count << " " << b.count << "\\n";\n}',
-          ['15 15', '5 5', '15 5', '5 15'],
-          3,
+          '5 15',
           'b is a separate copy, so adding to it leaves a at 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Counter {\n  int count;\n  void add(int amount) { count += amount; }\n};\nint main() {\n  Counter a{0};\n  Counter b{0};\n  a.add(3);\n  a.add(3);\n  b.add(1);\n  std::cout << a.count - b.count << "\\n";\n}',
-          ['5', '6', '1', '7'],
-          0,
+          '5',
           'a reaches 6 and b reaches 1.',
         ),
         choose(
@@ -6325,25 +5970,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'd stores the returned 8 before reset sets points to 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Tank {\n  int level;\n  void fill(int amount) { level += amount; }\n  int remaining(int capacity) { return capacity - level; }\n};\nint main() {\n  Tank t{30};\n  t.fill(20);\n  std::cout << t.remaining(100) << "\\n";\n}',
-          ['70', '80', '150', '50'],
-          3,
+          '50',
           'level becomes 50, and 100 - 50 leaves 50.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Acc {\n  int total;\n  int add(int x) {\n    total += x;\n    return total;\n  }\n};\nint main() {\n  Acc a{0};\n  a.add(2);\n  std::cout << a.add(3) << "\\n";\n}',
-          ['3', '5', '2', '0'],
-          1,
+          '5',
           'The first call makes total 2, and the second returns 2 + 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Score {\n  int points;\n  int doubled() { return points * 2; }\n};\nint main() {\n  Score s{3};\n  std::cout << s.doubled() + s.doubled() << " " << s.points << "\\n";\n}',
-          ['12 12', '12 3', '6 3', '12 6'],
-          1,
+          '12 3',
           'doubled only reads points, so both calls return 6 and points stays 3.',
         ),
       ],
@@ -6363,11 +6005,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'r is const, and area is a const member function, so the call is allowed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Temp {\n  int c;\n  int doubled() const { return c * 2; }\n};\nint main() {\n  const Temp t{21};\n  std::cout << t.doubled() << "\\n";\n}',
-          ['21', '23', '0', '42'],
-          3,
+          '42',
           'The const member function reads c and returns 42.',
         ),
         choose(
@@ -6382,11 +6023,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Without const, the compiler must assume read might modify the object.',
           'struct Box {\n  int v;\n  int read() { return v; }\n};\nint main() {\n  const Box b{1};\n  b.read();\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Pair {\n  int a;\n  int b;\n  int sum() const { return a + b; }\n};\nint main() {\n  const Pair p{2, 5};\n  Pair q{1, 1};\n  std::cout << p.sum() << q.sum() << "\\n";\n}',
-          ['72', '7', '2', '27'],
-          0,
+          '72',
           'A const member function can be called on const and non-const objects alike.',
         ),
       ],
@@ -6416,11 +6056,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Members are read-only inside a const member function.',
           'struct Meter {\n  int reading;\n  int peek() const {\n    reading += 1;\n    return reading;\n  }\n};',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Meter {\n  int reading;\n  int peek() const { return reading; }\n  void tick() { reading += 1; }\n};\nint main() {\n  Meter m{0};\n  m.tick();\n  m.tick();\n  int a = m.peek();\n  m.tick();\n  std::cout << a << m.peek() << "\\n";\n}',
-          ['33', '22', '23', '13'],
-          2,
+          '23',
           'a saved 2; one more tick makes the reading 3.',
         ),
         choose(
@@ -6448,11 +6087,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'fixed can be read but not set; g copies its level.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Gauge {\n  int level;\n  int read() const { return level; }\n  void set(int v) { level = v; }\n};\nint main() {\n  Gauge a{2};\n  const Gauge b{5};\n  a.set(a.read() + b.read());\n  std::cout << a.read() << "\\n";\n}',
-          ['5', '2', '7', '10'],
-          2,
+          '7',
           'a is set to 2 + 5.',
         ),
         choose(
@@ -6461,11 +6099,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'set is not const, so it cannot be called on the const object b.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Gauge {\n  int level;\n  int read() const { return level; }\n  void set(int v) { level = v; }\n};\nint main() {\n  Gauge a{4};\n  const Gauge snapshot = a;\n  a.set(9);\n  std::cout << snapshot.read() << a.read() << "\\n";\n}',
-          ['99', '44', '49', '94'],
-          2,
+          '49',
           'snapshot is an independent const copy made while the level was 4.',
         ),
       ],
@@ -6496,11 +6133,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Through const Tally& only const member functions are allowed, and add modifies the object.',
           'int reset(const Tally& t) {\n  t.add(-t.value());\n  return t.value();\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Tally {\n  int total;\n  void add(int x) { total += x; }\n  int value() const { return total; }\n};\nint twice(const Tally& t) {\n  return t.value() * 2;\n}\nint main() {\n  Tally t{5};\n  t.add(1);\n  std::cout << twice(t) << "\\n";\n}',
-          ['10', '11', '6', '12'],
-          3,
+          '12',
           'The tally is 6 when twice reads it.',
         ),
         choose(
@@ -6529,11 +6165,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'record needs to change the tally, so it takes Tally&; read only looks, so it takes const Tally&.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Tally {\n  int total;\n  void add(int x) { total += x; }\n  int value() const { return total; }\n};\nvoid record(Tally& t, int x) {\n  t.add(x);\n}\nvoid copy_record(Tally t, int x) {\n  t.add(x);\n}\nint main() {\n  Tally t{1};\n  record(t, 2);\n  copy_record(t, 100);\n  std::cout << t.value() << "\\n";\n}',
-          ['103', '1', '3', '101'],
-          2,
+          '3',
           "Only record reaches the caller's tally; copy_record changes a copy.",
         ),
         choose(
@@ -6547,11 +6182,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'const Tally& avoids the copy and states that the function only reads.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Tally {\n  int total;\n  void add(int x) { total += x; }\n  int value() const { return total; }\n};\nbool reached(const Tally& t, int goal) {\n  return t.value() >= goal;\n}\nint main() {\n  Tally t{0};\n  t.add(4);\n  std::cout << reached(t, 4) << reached(t, 5) << "\\n";\n}',
-          ['11', '01', '00', '10'],
-          3,
+          '10',
           'The tally is 4, which reaches a goal of 4 but not 5.',
         ),
       ],
@@ -6569,11 +6203,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'combined reads both wallets through const references using the const accessor.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Stock {\n  int units;\n  int count() const { return units; }\n  void sell() { units -= 1; }\n};\nint total(const Stock& a, const Stock& b) {\n  return a.count() + b.count();\n}\nint main() {\n  Stock s{3};\n  Stock t{4};\n  s.sell();\n  std::cout << total(s, t) << "\\n";\n}',
-          ['7', '5', '6', '8'],
-          2,
+          '6',
           's has 2 units after the sale, and t has 4.',
         ),
         choose(
@@ -6587,11 +6220,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Through const T& only const member functions are callable.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Stock {\n  int units;\n  int count() const { return units; }\n  void sell() { units -= 1; }\n};\nint total(const Stock& a, const Stock& b) {\n  return a.count() + b.count();\n}\nint main() {\n  const Stock fixed{10};\n  Stock live{10};\n  live.sell();\n  std::cout << total(fixed, live) << "\\n";\n}',
-          ['20', '18', '10', '19'],
-          3,
+          '19',
           'Both const and non-const objects bind to const Stock&; the total is 10 + 9.',
         ),
       ],
@@ -6622,11 +6254,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           "Only Gauge's own member functions can access its private members.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(10);\n  g.add(8);\n  g.add(5);\n  std::cout << g.level() << "\\n";\n}',
-          ['13', '8', '5', '10'],
-          3,
+          '10',
           '8 + 5 would be 13, but add caps the level at 10.',
         ),
         choose(
@@ -6654,18 +6285,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '-3 is raised to 0, and 9 is lowered to the cap of 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This uses the Gauge class from the example. What does the program print?',
           '#include <iostream>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n    if (level_ < 0) level_ = 0;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(5);\n  g.add(2);\n  g.add(-10);\n  g.add(1);\n  std::cout << g.level() << "\\n";\n}',
-          ['-7', '0', '1', '3'],
-          2,
+          '1',
           'The level goes 2, then is raised from -8 to 0, then becomes 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n    if (level_ < 0) level_ = 0;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(100);\n  g.add(60);\n  g.add(60);\n  g.add(-30);\n  std::cout << g.level() << "\\n";\n}',
-          ['90', '100', '70', '120'],
-          2,
+          '70',
           '60, then capped at 100, then 100 - 30.',
         ),
         choose(
@@ -6693,11 +6322,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The withdrawal is refused, so the balance is unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nclass Account {\n public:\n  explicit Account(int start) : balance_(start) {}\n  bool withdraw(int amount) {\n    if (amount > balance_) return false;\n    balance_ -= amount;\n    return true;\n  }\n  int balance() const { return balance_; }\n\n private:\n  int balance_;\n};\nint main() {\n  Account a(50);\n  bool first = a.withdraw(30);\n  bool second = a.withdraw(30);\n  std::cout << first << second << " " << a.balance() << "\\n";\n}',
-          ['11 -10', '01 20', '10 20', '11 20'],
-          2,
+          '10 20',
           'The first withdrawal leaves 20; the second asks for more than 20 and is refused.',
         ),
         choose(
@@ -6711,11 +6339,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Read access is safe to share; write access is kept behind the checking function.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nclass Account {\n public:\n  explicit Account(int start) : balance_(start) {}\n  bool withdraw(int amount) {\n    if (amount > balance_) return false;\n    balance_ -= amount;\n    return true;\n  }\n  int balance() const { return balance_; }\n\n private:\n  int balance_;\n};\nint main() {\n  Account a(10);\n  Account b = a;\n  b.withdraw(4);\n  std::cout << a.balance() << " " << b.balance() << "\\n";\n}',
-          ['6 6', '10 10', '6 10', '10 6'],
-          3,
+          '10 6',
           'b is an independent copy, so only b loses 4.',
         ),
       ],
@@ -6735,18 +6362,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The lease counts as active while it lives and releases itself at the end of the block.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint main() {\n  int active = 0;\n  {\n    Lease a(active);\n    Lease b(active);\n    std::cout << active;\n  }\n  std::cout << active << "\\n";\n}',
-          ['20', '21', '10', '22'],
-          0,
+          '20',
           'Two leases are held inside the block, and both are released when it ends.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint main() {\n  int active = 0;\n  {\n    Lease a(active);\n    {\n      Lease b(active);\n      std::cout << active;\n    }\n    std::cout << active;\n  }\n  std::cout << active << "\\n";\n}',
-          ['221', '211', '210', '200'],
-          2,
+          '210',
           'Each lease is released at the end of its own block: 2, then 1, then 0.',
         ),
         choose(
@@ -6775,11 +6400,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The early return still destroys lock, which sets state back to 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Lock {\n  int& held;\n  explicit Lock(int& h) : held(h) { held = 1; }\n  ~Lock() { held = 0; }\n};\nint work(int& state, int input) {\n  Lock lock(state);\n  if (input < 0) return -1;\n  return input * 2;\n}\nint main() {\n  int state = 0;\n  int r = work(state, 4);\n  std::cout << r << " " << state << "\\n";\n}',
-          ['8 1', '8 0', '-1 0', '4 0'],
-          1,
+          '8 0',
           'The normal return also destroys lock, so state is 0 again.',
         ),
         choose(
@@ -6793,11 +6417,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Every way out of the scope destroys the owner.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint measure(int& active) {\n  Lease lease(active);\n  return active * 10;\n}\nint main() {\n  int a = 0;\n  int r = measure(a);\n  std::cout << r << " " << a << "\\n";\n}',
-          ['10 1', '0 0', '10 0', '0 1'],
-          2,
+          '10 0',
           'The return value is computed while the lease is held; the lease is released afterwards.',
         ),
       ],
@@ -6826,11 +6449,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Two owners mean two releases of one resource.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Counter {\n  int& releases;\n  ~Counter() { ++releases; }\n};\nint main() {\n  int releases = 0;\n  {\n    Counter a{releases};\n    Counter b = a;\n  }\n  std::cout << releases << "\\n";\n}',
-          ['1', '0', '2', '3'],
-          2,
+          '2',
           'The copy b also runs the destructor, so the release is counted twice.',
         ),
         choose(
@@ -6861,18 +6483,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'n is destroyed as the exception leaves the try block, before the handler runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <stdexcept>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nint main() {\n  try {\n    Tag a{1};\n    Tag b{2};\n    throw std::runtime_error("x");\n  } catch (const std::runtime_error&) {\n    std::cout << "!";\n  }\n  std::cout << "\\n";\n}',
-          ['12!', '!21', '21!', '!'],
-          2,
+          '21!',
           'Unwinding destroys b and then a before the handler prints !.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <stdexcept>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint main() {\n  int active = 0;\n  try {\n    Lease lease(active);\n    throw std::runtime_error("fail");\n  } catch (const std::runtime_error&) {\n    std::cout << active << "\\n";\n  }\n}',
-          ['1', '-1', '2', '0'],
-          3,
+          '0',
           'The lease is released during unwinding, before the handler reads active.',
         ),
         choose(
@@ -6900,18 +6520,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'b is never constructed, so only a is destroyed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <stdexcept>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nint main() {\n  try {\n    Tag a{5};\n    Tag b{6};\n    throw std::runtime_error("x");\n    Tag c{7};\n  } catch (const std::runtime_error&) {\n    std::cout << "!";\n  }\n  std::cout << "\\n";\n}',
-          ['765!', '65!', '56!', '!65'],
-          1,
+          '65!',
           'c was never created; b and a are destroyed in reverse order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <stdexcept>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nvoid step() {\n  Tag t{3};\n  throw std::runtime_error("x");\n}\nint main() {\n  try {\n    Tag outer{9};\n    step();\n  } catch (const std::runtime_error&) {\n    std::cout << "!";\n  }\n  std::cout << "\\n";\n}',
-          ['93!', '3!9', '!39', '39!'],
-          3,
+          '39!',
           'The exception leaves step first, destroying t, then the try block, destroying outer.',
         ),
         choose(
@@ -6962,11 +6580,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Destructors are exactly the code that runs while an exception is in flight.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <stdexcept>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint main() {\n  int active = 0;\n  try {\n    Lease a(active);\n    {\n      Lease b(active);\n      std::cout << active;\n      throw std::runtime_error("x");\n    }\n  } catch (const std::runtime_error&) {\n    std::cout << active << "\\n";\n  }\n}',
-          ['22', '21', '20', '02'],
-          2,
+          '20',
           'Two leases are held when the exception is thrown; both are released before the handler prints.',
         ),
       ],
@@ -6997,18 +6614,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Copying needs the copy constructor, which no longer exists.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <type_traits>\nstruct Plain {\n  int v;\n};\nstruct Owner {\n  Owner() = default;\n  Owner(const Owner&) = delete;\n  Owner& operator=(const Owner&) = delete;\n};\nint main() {\n  std::cout << std::is_copy_constructible_v<Plain> << std::is_copy_constructible_v<Owner> << "\\n";\n}',
-          ['11', '01', '00', '10'],
-          3,
+          '10',
           'Plain keeps its default copy constructor; Owner deleted its own.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <type_traits>\nstruct Owner {\n  Owner() = default;\n  Owner(const Owner&) = delete;\n  Owner& operator=(const Owner&) = delete;\n};\nint main() {\n  std::cout << (!std::is_copy_constructible_v<Owner> && !std::is_copy_assignable_v<Owner>) << "\\n";\n}',
-          ['0', '1', '2', '-1'],
-          1,
+          '1',
           'Both copy operations are deleted, so both traits are false and both negations true.',
         ),
       ],
@@ -7026,11 +6641,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'One resource, two destructors: the release happens twice.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Handle {\n  int& releases;\n  ~Handle() { ++releases; }\n};\nint main() {\n  int releases = 0;\n  {\n    Handle a{releases};\n    Handle b = a;\n    Handle c = b;\n  }\n  std::cout << releases << "\\n";\n}',
-          ['1', '2', '3', '0'],
-          2,
+          '3',
           'Every copy runs the destructor, so the one resource is released three times.',
         ),
         choose(
@@ -7044,11 +6658,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The default copy duplicates the handle value, not the file.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Handle {\n  int& releases;\n  ~Handle() { ++releases; }\n};\nint main() {\n  int releases = 0;\n  Handle a{releases};\n  {\n    Handle b = a;\n  }\n  std::cout << releases << "\\n";\n}',
-          ['0', '1', '2', '3'],
-          1,
+          '1',
           'The copy b is destroyed at the end of its block; a is still alive when the count is printed.',
         ),
       ],
@@ -7077,11 +6690,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Binding a reference does not copy the owner.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Owner {\n  int& active;\n  explicit Owner(int& a) : active(a) { ++active; }\n  ~Owner() { --active; }\n  Owner(const Owner&) = delete;\n  Owner& operator=(const Owner&) = delete;\n};\nint main() {\n  int active = 0;\n  {\n    Owner a(active);\n    Owner b(active);\n    std::cout << active;\n  }\n  std::cout << active << "\\n";\n}',
-          ['20', '10', '22', '21'],
-          0,
+          '20',
           'Two separate owners each acquire and release their own share.',
         ),
         choose(
@@ -7112,18 +6724,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'mode is 7 inside the block; the guard restores the saved 1 when the block ends.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int level = 3;\n  {\n    Restore g{level, level};\n    level = 99;\n  }\n  std::cout << level << "\\n";\n}',
-          ['99', '0', '3', '102'],
-          2,
+          '3',
           'The guard saved 3 and writes it back at the end of the block.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int x = 5;\n  {\n    Restore g{x, x};\n    x += 10;\n    x *= 2;\n    std::cout << x << " ";\n  }\n  std::cout << x << "\\n";\n}',
-          ['30 30', '15 5', '5 5', '30 5'],
-          3,
+          '30 5',
           'Inside the block x becomes 30; afterwards it is restored to 5.',
         ),
         choose(
@@ -7151,18 +6761,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The guard restores the 4 it saved, not some default.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct ResetToZero {\n  int& target;\n  ~ResetToZero() { target = 0; }\n};\nint main() {\n  int volume = 4;\n  {\n    ResetToZero g{volume};\n    volume = 9;\n  }\n  std::cout << volume << "\\n";\n}',
-          ['4', '9', '13', '0'],
-          3,
+          '0',
           'This guard writes 0 instead of the saved 4, so the old setting is lost.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int v = 1;\n  {\n    Restore a{v, v};\n    v = 2;\n    {\n      Restore b{v, v};\n      v = 3;\n    }\n    std::cout << v;\n  }\n  std::cout << v << "\\n";\n}',
-          ['31', '11', '21', '23'],
-          2,
+          '21',
           'The inner guard restores 2 when its block ends; the outer one restores 1.',
         ),
         choose(
@@ -7191,18 +6799,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both settings are changed inside the block and both are restored when it ends.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int v = 1;\n  {\n    Restore a{v, v};\n    v = 5;\n    Restore b{v, v};\n    v = 9;\n  }\n  std::cout << v << "\\n";\n}',
-          ['5', '9', '1', '0'],
-          2,
+          '1',
           'b restores 5 first; then a, destroyed last, restores 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int v = 1;\n  {\n    Restore a{v, v};\n    v = 5;\n    Restore b{v, v};\n    v = 9;\n    std::cout << v;\n  }\n  std::cout << v << "\\n";\n}',
-          ['95', '99', '11', '91'],
-          3,
+          '91',
           'Inside the block v is 9; after both guards run it is back to 1.',
         ),
         choose(
@@ -7233,18 +6839,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'owner owns a new int initialized to 12, and *owner reads it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto p = std::make_unique<int>(5);\n  *p += 3;\n  std::cout << *p << "\\n";\n}',
-          ['5', '3', '53', '8'],
-          3,
+          '8',
           'Writing through *p changes the owned int from 5 to 8.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_unique<int>(2);\n  auto b = std::make_unique<int>(2);\n  *a = 10;\n  std::cout << *a + *b << "\\n";\n}',
-          ['20', '4', '12', '10'],
-          2,
+          '12',
           'Each call creates its own int, so changing *a leaves *b at 2.',
         ),
         choose(
@@ -7273,23 +6877,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'p is destroyed at the end of its block, and it destroys the Noisy it owns.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\nstruct Noisy {\n  int id;\n  explicit Noisy(int i) : id(i) {}\n  ~Noisy() { std::cout << "free " << id << "\\n"; }\n};\nint main() {\n  {\n    auto a = std::make_unique<Noisy>(1);\n    auto b = std::make_unique<Noisy>(2);\n  }\n  std::cout << "done\\n";\n}',
-          [
-            'free 1\nfree 2\ndone',
-            'done\nfree 2\nfree 1',
-            'free 2\nfree 1\ndone',
-            'done',
-          ],
-          2,
+          'free 2\nfree 1\ndone',
           'The owners are destroyed in reverse order, and each frees its object.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\nstruct Noisy {\n  int id;\n  explicit Noisy(int i) : id(i) {}\n  ~Noisy() { std::cout << "free " << id << "\\n"; }\n};\nint main() {\n  auto p = std::make_unique<Noisy>(4);\n  std::cout << (*p).id + p->id << "\\n";\n}',
-          ['8', 'free 4\n8', '4\nfree 4', '8\nfree 4'],
-          3,
+          '8\nfree 4',
           '(*p).id and p->id are the same member. The object is freed when p is destroyed at the end of main.',
         ),
         choose(
@@ -7329,18 +6926,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A raw pointer does not own anything; only an explicit delete would free the int.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\nstruct Noisy {\n  int id;\n  explicit Noisy(int i) : id(i) {}\n  ~Noisy() { std::cout << "free " << id << "\\n"; }\n};\nint main() {\n  auto p = std::make_unique<Noisy>(5);\n  std::cout << "a\\n";\n  p.reset();\n  std::cout << "b\\n";\n}',
-          ['a\nb\nfree 5', 'a\nfree 5\nb', 'free 5\na\nb', 'a\nb'],
-          1,
+          'a\nfree 5\nb',
           'reset frees the object between the two prints; p is empty at the end, so nothing more is freed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  std::unique_ptr<int> p;\n  std::cout << (p == nullptr) << " ";\n  p = std::make_unique<int>(9);\n  std::cout << *p << "\\n";\n}',
-          ['0 9', '1 0', '1 9', '0 0'],
-          2,
+          '1 9',
           'A default-constructed unique_ptr is empty; afterwards it is given a new int holding 9.',
         ),
       ],
@@ -7360,18 +6955,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'value is a named object, so it picks int&; the literal 8 is a temporary, so it picks int&&.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint category(int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint main() {\n  int v = 3;\n  std::cout << category(v) << category(v + 1) << "\\n";\n}',
-          ['11', '22', '12', '21'],
-          2,
+          '12',
           'v names an object; v + 1 produces a temporary result.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint category(int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint main() {\n  int a = 1;\n  int& r = a;\n  std::cout << category(r) << category(10) << category(a * 2) << "\\n";\n}',
-          ['112', '121', '222', '122'],
-          3,
+          '122',
           'r names a, an lvalue; 10 and a * 2 are temporaries.',
         ),
         choose(
@@ -7400,11 +6993,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'temp is declared int&&, but the expression temp names a variable, so int& is chosen.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint category(int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint pass(int&& x) {\n  return category(x);\n}\nint main() {\n  std::cout << pass(3) << "\\n";\n}',
-          ['2', '3', '1', '12'],
-          2,
+          '1',
           'Inside pass, x has a name, so category(x) picks the int& overload.',
         ),
         choose(
@@ -7418,11 +7010,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Any named variable is an lvalue when used, whatever its declared reference type.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nint category(int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint main() {\n  int&& r = 5;\n  r += 1;\n  std::cout << r << category(r) << "\\n";\n}',
-          ['52', '62', '51', '61'],
-          3,
+          '61',
           'r refers to a temporary that lives as long as r, so it can be changed to 6; as a name it is an lvalue.',
         ),
       ],
@@ -7440,11 +7031,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'x and c are lvalues and go to const int&; 9 is a temporary and goes to int&&.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nint which(const int&) {\n  return 1;\n}\nint which(int&&) {\n  return 2;\n}\nint main() {\n  int x = 4;\n  std::cout << which(x * 3) << which(x) << "\\n";\n}',
-          ['21', '11', '22', '12'],
-          0,
+          '21',
           'x * 3 is a temporary; x is an lvalue.',
         ),
         choose(
@@ -7486,18 +7076,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Plain value is an lvalue; std::move(value) is an rvalue, so the int&& overload is chosen.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nint category(const int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint main() {\n  int x = 1;\n  std::cout << category(std::move(x)) << category(x) << "\\n";\n}',
-          ['21', '12', '22', '11'],
-          0,
+          '21',
           'Only the call that wraps x in std::move passes an rvalue.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  int x = 7;\n  int y = std::move(x);\n  std::cout << x << " " << y << "\\n";\n}',
-          ['0 7', '7 0', '0 0', '7 7'],
-          3,
+          '7 7',
           'Moving an int is just a copy, so x keeps its value.',
         ),
         choose(
@@ -7525,16 +7113,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The cast changes only which overload receives a.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nvoid receive(const int&) {\n  std::cout << "copy ";\n}\nvoid receive(int&&) {\n  std::cout << "move ";\n}\nint main() {\n  int a = 1;\n  receive(a);\n  receive(std::move(a));\n  receive(a + 1);\n  std::cout << "\\n";\n}',
-          [
-            'copy move copy',
-            'move move move',
-            'copy copy move',
-            'copy move move',
-          ],
-          3,
+          'copy move move',
           'a is an lvalue; std::move(a) and a + 1 are rvalues.',
         ),
         choose(
@@ -7548,11 +7130,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'There is nothing to transfer in an int, so the move is a copy.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nint total(int&& a, int&& b) {\n  return a + b;\n}\nint main() {\n  int x = 2;\n  int y = 3;\n  std::cout << total(std::move(x), std::move(y)) << x << "\\n";\n}',
-          ['50', '5', '52', '23'],
-          2,
+          '52',
           'std::move lets the named ints bind to int&&; the function only reads them, so x is still 2.',
         ),
       ],
@@ -7592,11 +7173,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The standard leaves the moved-from value unspecified for most operations.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  int x = 4;\n  int y = std::move(x);\n  x = 10;\n  std::cout << x << y << "\\n";\n}',
-          ['104', '44', '100', '410'],
-          0,
+          '104',
           'x is given 10 after the move; y holds the 4 it received.',
         ),
       ],
@@ -7615,11 +7195,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Ownership moved to second, and first is now null.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\n#include <utility>\nint main() {\n  auto a = std::make_unique<int>(3);\n  std::unique_ptr<int> b = std::move(a);\n  *b += 1;\n  std::cout << *b << (a == nullptr) << "\\n";\n}',
-          ['31', '40', '41', '30'],
-          2,
+          '41',
           'b owns the int, which becomes 4, and a is empty.',
         ),
         choose(
@@ -7633,11 +7212,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Copying is deleted for unique_ptr; ownership can only be moved.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\n#include <utility>\nint main() {\n  auto a = std::make_unique<int>(5);\n  auto b = std::move(a);\n  auto c = std::move(b);\n  std::cout << (a == nullptr) << (b == nullptr) << *c << "\\n";\n}',
-          ['115', '015', '105', '005'],
-          0,
+          '115',
           'The int passed from a to b to c, leaving both earlier owners empty.',
         ),
       ],
@@ -7655,11 +7233,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'first is empty, so the fallback is used; second owns the 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  std::unique_ptr<int> p;\n  std::cout << (p ? *p : 0) << "\\n";\n}',
-          ['-1', '1', '0', 'null'],
-          2,
+          '0',
           'A default unique_ptr is empty, so the condition is false.',
         ),
         choose(
@@ -7673,11 +7250,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'a no longer owns anything; there is no object to read.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\n#include <utility>\nint main() {\n  auto a = std::make_unique<int>(9);\n  auto b = std::move(a);\n  a = std::make_unique<int>(1);\n  std::cout << *a + *b << "\\n";\n}',
-          ['10', '9', '18', '1'],
-          0,
+          '10',
           'a was refilled with a new int 1, while b owns the 9.',
         ),
       ],
@@ -7695,11 +7271,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'make returns an owner of 10; consume takes it over and returns 11, leaving p empty.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\nstd::unique_ptr<int> make(int v) {\n  return std::make_unique<int>(v * 2);\n}\nint main() {\n  auto p = make(3);\n  std::cout << *p << "\\n";\n}',
-          ['3', '9', '5', '6'],
-          3,
+          '6',
           'make creates an int holding 6 and returns its owner.',
         ),
         choose(
@@ -7713,11 +7288,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Passing an lvalue by value copies it; consume(std::move(p)) transfers instead.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\n#include <utility>\nstd::unique_ptr<int> make(int v) {\n  return std::make_unique<int>(v * 2);\n}\nint peek(const std::unique_ptr<int>& p) {\n  return *p;\n}\nint consume(std::unique_ptr<int> p) {\n  return *p + 1;\n}\nint main() {\n  auto p = make(4);\n  int a = peek(p);\n  int b = consume(std::move(p));\n  std::cout << a << " " << b << " " << (p == nullptr) << "\\n";\n}',
-          ['8 9 0', '8 8 1', '4 9 1', '8 9 1'],
-          3,
+          '8 9 1',
           'peek only borrows; consume takes ownership, leaving p empty.',
         ),
       ],
@@ -7736,18 +7310,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'first and second own the same int, which becomes 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(1);\n  auto b = a;\n  *a = 50;\n  std::cout << *b << "\\n";\n}',
-          ['1', '51', '50', '0'],
-          2,
+          '50',
           'a and b share one int.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(1);\n  auto b = std::make_shared<int>(1);\n  *a = 50;\n  std::cout << *b << "\\n";\n}',
-          ['50', '1', '51', '0'],
-          1,
+          '1',
           'Two make_shared calls create two separate ints.',
         ),
         choose(
@@ -7776,25 +7348,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'b adds an owner inside the block and removes it when destroyed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(0);\n  auto b = a;\n  auto c = b;\n  std::cout << a.use_count() << "\\n";\n}',
-          ['3', '1', '2', '0'],
-          0,
+          '3',
           'a, b, and c all own the same int.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(0);\n  auto b = a;\n  b.reset();\n  std::cout << a.use_count() << (b == nullptr) << "\\n";\n}',
-          ['21', '10', '11', '01'],
-          2,
+          '11',
           'reset makes b give up ownership, so only a remains.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(0);\n  {\n    auto b = a;\n    auto c = a;\n  }\n  std::cout << a.use_count() << "\\n";\n}',
-          ['3', '2', '1', '0'],
-          2,
+          '1',
           'b and c stop owning when their block ends, leaving only a.',
         ),
       ],
@@ -7812,11 +7381,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'After a.reset(), b is the last owner; the object dies when b does.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\nstruct Noisy {\n  ~Noisy() { std::cout << "freed\\n"; }\n};\nint main() {\n  auto a = std::make_shared<Noisy>();\n  auto b = a;\n  a.reset();\n  b.reset();\n  std::cout << "x\\n";\n}',
-          ['x\nfreed', 'freed\nfreed\nx', 'freed\nx', 'x'],
-          2,
+          'freed\nx',
           'The object is destroyed once, when the second owner lets go.',
         ),
         choose(
@@ -7858,18 +7426,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The watcher is not an owner, and the object is still alive.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto owner = std::make_shared<int>(5);\n  std::weak_ptr<int> w = owner;\n  owner.reset();\n  std::cout << w.expired() << "\\n";\n}',
-          ['0', '5', '1', '2'],
-          2,
+          '1',
           'The only owner let go, so the object is gone and the weak_ptr has expired.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(1);\n  std::weak_ptr<int> w1 = a;\n  std::weak_ptr<int> w2 = a;\n  std::cout << a.use_count() << "\\n";\n}',
-          ['3', '2', '0', '1'],
-          3,
+          '1',
           'Weak pointers do not count as owners.',
         ),
         choose(
@@ -7898,18 +7464,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'lock produced a second owner, so the count is 2 while it is held.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto owner = std::make_shared<int>(3);\n  std::weak_ptr<int> w = owner;\n  owner.reset();\n  std::shared_ptr<int> p = w.lock();\n  std::cout << (p == nullptr) << "\\n";\n}',
-          ['0', '3', '1', '-1'],
-          2,
+          '1',
           'The object is already gone, so lock returns an empty shared_ptr.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto owner = std::make_shared<int>(3);\n  std::weak_ptr<int> w = owner;\n  std::shared_ptr<int> p = w.lock();\n  owner.reset();\n  std::cout << *p << " " << w.expired() << "\\n";\n}',
-          ['3 1', '0 1', '0 0', '3 0'],
-          3,
+          '3 0',
           'p became an owner before owner.reset(), so the object stays alive.',
         ),
         choose(
@@ -7938,25 +7502,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first lock finds the object; after the reset there is nothing left to lock.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(1);\n  auto b = a;\n  std::weak_ptr<int> w = a;\n  a.reset();\n  std::cout << static_cast<bool>(w.lock()) << "\\n";\n}',
-          ['0', '2', '1', '-1'],
-          2,
+          '1',
           'b still owns the object, so lock succeeds.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  std::weak_ptr<int> w;\n  std::cout << w.expired() << static_cast<bool>(w.lock()) << "\\n";\n}',
-          ['01', '11', '00', '10'],
-          3,
+          '10',
           'An empty weak_ptr observes nothing: it counts as expired and locks to an empty pointer.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(8);\n  std::weak_ptr<int> w = a;\n  std::shared_ptr<int> p = w.lock();\n  std::cout << (p && *p == 8) << p.use_count() << "\\n";\n}',
-          ['11', '02', '82', '12'],
-          3,
+          '12',
           'p owns the 8, and together with a there are two owners.',
         ),
       ],
@@ -7976,11 +7537,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The int now belongs to destination, and source.data is empty.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Box {\n  std::unique_ptr<int> data;\n  explicit Box(int x) : data(std::make_unique<int>(x)) {}\n  Box(Box&& other) : data(std::move(other.data)) {}\n};\nint main() {\n  Box a(4);\n  Box b(std::move(a));\n  std::cout << (a.data ? *a.data : -1) << " " << *b.data << "\\n";\n}',
-          ['4 4', '4 -1', '-1 -1', '-1 4'],
-          3,
+          '-1 4',
           "The move constructor took a's int, so a is empty and b holds 4.",
         ),
         choose(
@@ -7994,11 +7554,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           "Named members are lvalues; the cast lets unique_ptr's move constructor be chosen.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Box {\n  std::unique_ptr<int> data;\n  explicit Box(int x) : data(std::make_unique<int>(x)) {}\n  Box(Box&& other) : data(std::move(other.data)) {}\n};\nint main() {\n  Box a(2);\n  Box b(std::move(a));\n  Box c(std::move(b));\n  std::cout << (a.data == nullptr) + (b.data == nullptr) << *c.data << "\\n";\n}',
-          ['22', '12', '02', '21'],
-          0,
+          '22',
           'Both earlier boxes are empty (1 + 1 = 2), and c holds the 2.',
         ),
       ],
@@ -8016,16 +7575,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both holders are destroyed, but only b owns the resource, so it is released once.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Res {\n  int id;\n  explicit Res(int i) : id(i) {}\n  ~Res() { std::cout << "release " << id << "\\n"; }\n};\nstruct Holder {\n  std::unique_ptr<Res> res;\n  explicit Holder(int id) : res(std::make_unique<Res>(id)) {}\n  Holder(Holder&& other) : res(std::move(other.res)) {}\n};\nint main() {\n  Holder a(1);\n  Holder b(2);\n  Holder c(std::move(a));\n}',
-          [
-            'release 2\nrelease 1',
-            'release 1\nrelease 2\nrelease 1',
-            'release 1\nrelease 2',
-            'release 2',
-          ],
-          2,
+          'release 1\nrelease 2',
           'Destruction runs c, b, a: c releases 1, b releases 2, and the empty a releases nothing.',
         ),
         choose(
@@ -8039,11 +7592,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Two owners of one allocation mean a double delete when both are destroyed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Res {\n  int id;\n  explicit Res(int i) : id(i) {}\n  ~Res() { std::cout << "release " << id << "\\n"; }\n};\nstruct Holder {\n  std::unique_ptr<Res> res;\n  explicit Holder(int id) : res(std::make_unique<Res>(id)) {}\n  Holder(Holder&& other) : res(std::move(other.res)) {}\n};\nint main() {\n  Holder a(7);\n  Holder b(std::move(a));\n  std::cout << (a.res == nullptr) << "\\n";\n}',
-          ['0\nrelease 7', '1', '1\nrelease 7\nrelease 7', '1\nrelease 7'],
-          3,
+          '1\nrelease 7',
           'a is empty after the move; the resource is released once, when b is destroyed.',
         ),
       ],
@@ -8061,11 +7613,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The generated move constructor moved the unique_ptr member.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Pack {\n  std::unique_ptr<int> item;\n};\nint main() {\n  Pack a{std::make_unique<int>(3)};\n  Pack b{std::make_unique<int>(4)};\n  b = std::move(a);\n  std::cout << *b.item << (a.item == nullptr) << "\\n";\n}',
-          ['41', '30', '31', '40'],
-          2,
+          '31',
           'Move assignment gives b the 3 (its old 4 is freed) and empties a.',
         ),
         choose(
@@ -8107,18 +7658,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Box declares a noexcept move constructor, so the trait is true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <type_traits>\nstruct Risky {\n  Risky() = default;\n  Risky(Risky&&) {}\n};\nint main() {\n  std::cout << std::is_nothrow_move_constructible_v<Risky> << "\\n";\n}',
-          ['1', '2', '0', '-1'],
-          2,
+          '0',
           'A hand-written move constructor without noexcept makes no promise.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <type_traits>\nstruct Safe {\n  Safe() = default;\n  Safe(Safe&&) noexcept {}\n};\nstruct Risky {\n  Risky() = default;\n  Risky(Risky&&) {}\n};\nint main() {\n  std::cout << std::is_nothrow_move_constructible_v<Safe> << std::is_nothrow_move_constructible_v<Risky> << "\\n";\n}',
-          ['11', '01', '00', '10'],
-          3,
+          '10',
           'Only Safe marks its move constructor noexcept.',
         ),
         choose(
@@ -8158,11 +7707,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The promise was broken, and the program cannot continue.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\nvoid quiet() noexcept {}\nvoid loud() {}\nint main() {\n  std::cout << noexcept(quiet()) << noexcept(loud()) << noexcept(1 + 1) << "\\n";\n}',
-          ['111', '100', '001', '101'],
-          3,
+          '101',
           'quiet promises not to throw, loud does not, and 1 + 1 cannot throw.',
         ),
         choose(
@@ -8190,11 +7738,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: "Safe's move cannot throw, so the move is chosen.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nstruct Risky {\n  Risky() = default;\n  Risky(const Risky&) { std::cout << "copy\\n"; }\n  Risky(Risky&&) { std::cout << "move\\n"; }\n};\nint main() {\n  Risky a;\n  Risky b = std::move_if_noexcept(a);\n}',
-          ['move', 'copy', 'move\ncopy', 'copy\nmove'],
-          1,
+          'copy',
           'The move might throw and a copy is available, so the safe copy is chosen.',
         ),
         choose(
@@ -8208,11 +7755,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Copying keeps the original elements intact if something throws.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nstruct Only {\n  Only() = default;\n  Only(Only&&) { std::cout << "move\\n"; }\n};\nint main() {\n  Only a;\n  Only b = std::move_if_noexcept(a);\n}',
-          ['copy', 'It does not compile', 'move', 'copy\nmove'],
-          2,
+          'move',
           'Only has no copy constructor, so the possibly throwing move is the only option.',
         ),
       ],
@@ -8232,18 +7778,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'second has its own copy of the elements, so only it changes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{5, 6};\n  auto b = a;\n  b[1] += 10;\n  std::cout << a[1] << " " << b[1] << "\\n";\n}',
-          ['16 16', '6 16', '6 6', '16 6'],
-          1,
+          '6 16',
           'auto b = a makes an independent vector; only b[1] changes.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1};\n  std::vector<int> b = a;\n  a[0] = 9;\n  std::cout << b[0] << "\\n";\n}',
-          ['9', '0', '10', '1'],
-          3,
+          '1',
           'b copied 1 before a changed.',
         ),
         choose(
@@ -8271,18 +7815,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'alias is v itself; copy kept the original 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2};\n  auto& r = v;\n  auto c = r;\n  r[1] = 7;\n  std::cout << v[1] << c[1] << "\\n";\n}',
-          ['77', '22', '27', '72'],
-          3,
+          '72',
           'r is v; c is a copy made before the change.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint bump_copy(std::vector<int> v) {\n  v[0] += 1;\n  return v[0];\n}\nint main() {\n  std::vector<int> v{3};\n  int r = bump_copy(v);\n  std::cout << r << v[0] << "\\n";\n}',
-          ['44', '33', '43', '34'],
-          2,
+          '43',
           "The function changed its own copy; the caller's vector still holds 3.",
         ),
         choose(
@@ -8311,11 +7853,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'copy has its own 1000 elements; changing one leaves big unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v(3, 2);\n  auto c = v;\n  c[0] = 5;\n  std::cout << v[0] + v[1] + v[2] << "\\n";\n}',
-          ['9', '11', '5', '6'],
-          3,
+          '6',
           'v holds three 2s, untouched by the change to the copy.',
         ),
         choose(
@@ -8329,11 +7870,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The reference avoids the copy, and const keeps the function read-only.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v(4, 1);\n  std::vector<int> w = v;\n  w[0] = 9;\n  std::cout << v.size() + w.size() << " " << v[0] << "\\n";\n}',
-          ['8 9', '4 1', '8 1', '5 1'],
-          2,
+          '8 1',
           'Each vector has 4 elements, and v[0] is still 1.',
         ),
       ],
@@ -8353,11 +7893,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Copying the record copied its vector, so first is unaffected.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nstruct Team {\n  std::vector<int> scores;\n  int bonus;\n};\nint main() {\n  Team a{{1, 2}, 5};\n  Team b = a;\n  b.scores[1] = 0;\n  b.bonus = 0;\n  std::cout << a.scores[1] + a.bonus << "\\n";\n}',
-          ['0', '5', '2', '7'],
-          3,
+          '7',
           'Every member was copied, so a still has scores[1] = 2 and bonus = 5.',
         ),
         choose(
@@ -8371,11 +7910,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           "The generated copy constructor copies each member using that member's own copy.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nstruct Bag {\n  std::vector<int> items;\n};\nint main() {\n  Bag a{{1, 2, 3}};\n  Bag b = a;\n  b.items[0] = 10;\n  std::cout << a.items.size() << " " << b.items[0] << "\\n";\n}',
-          ['3 1', '4 10', '3 10', '1 10'],
-          2,
+          '3 10',
           'b has its own three elements; only its first one changed.',
         ),
       ],
@@ -8415,11 +7953,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The members already know how to copy, move, and destroy themselves.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nstruct Grid {\n  std::vector<int> row;\n  std::vector<int> col;\n};\nint main() {\n  Grid a{{4}, {1, 2, 3}};\n  Grid b = a;\n  b.col[2] = 9;\n  std::cout << a.col[2] << b.row[0] << "\\n";\n}',
-          ['94', '34', '39', '43'],
-          1,
+          '34',
           'a keeps its own col, and b.row was copied as 4.',
         ),
       ],
@@ -8439,18 +7976,16 @@ export const knowledgePoints: KnowledgePointModule = {
           "b now has a copy of a's three elements; the later change to a does not reach it.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{4};\n  std::vector<int> b{5, 6, 7};\n  a = b;\n  std::cout << a.size() << a[2] << "\\n";\n}',
-          ['14', '34', '17', '37'],
-          3,
+          '37',
           'a now holds 5, 6, 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1};\n  std::vector<int> b{2};\n  a = b;\n  b[0] = 3;\n  std::cout << a[0] << b[0] << "\\n";\n}',
-          ['33', '13', '23', '22'],
-          2,
+          '23',
           'a copied 2; changing b afterwards does not affect it.',
         ),
         choose(
@@ -8479,11 +8014,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'alias is values itself, and assigning a vector to itself keeps its contents.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 4, 5};\n  auto& same = v;\n  v = same;\n  std::cout << v.size() << v[1] << "\\n";\n}',
-          ['00', '64', '34', '35'],
-          2,
+          '34',
           'Self-assignment leaves the three elements as they were.',
         ),
         choose(
@@ -8497,11 +8031,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'other is x itself, so the data is gone before it is read.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\nstruct Pair {\n  int a;\n  int b;\n};\nint main() {\n  Pair p{1, 2};\n  Pair& r = p;\n  p = r;\n  std::cout << p.a << p.b << "\\n";\n}',
-          ['12', '11', '22', '00'],
-          0,
+          '12',
           'Assigning p to itself leaves both members unchanged.',
         ),
       ],
@@ -8530,18 +8063,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Only the last one gives a new value to an object that already exists.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1, 2};\n  std::vector<int> b{3};\n  std::vector<int> c{4, 5, 6};\n  a = b = c;\n  std::cout << a.size() << b.size() << "\\n";\n}',
-          ['23', '13', '33', '21'],
-          2,
+          '33',
           'Assignment groups right to left: b = c first, then a = b.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nstruct Inventory {\n  std::vector<int> counts;\n};\nint main() {\n  Inventory a{{1}};\n  Inventory b{{2, 2}};\n  a = b;\n  b.counts[1] = 7;\n  std::cout << a.counts.size() << a.counts[1] << "\\n";\n}',
-          ['27', '12', '17', '22'],
-          3,
+          '22',
           "a copied both of b's counts before b changed.",
         ),
       ],
@@ -8560,18 +8091,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'left now holds 9, 8 and right holds 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1, 2, 3};\n  std::vector<int> b{4};\n  a.swap(b);\n  std::cout << a.size() << b.size() << "\\n";\n}',
-          ['31', '33', '11', '13'],
-          3,
+          '13',
           'The contents trade places, sizes included.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\n#include <vector>\nint main() {\n  std::vector<int> a{5};\n  std::vector<int> b{6};\n  std::swap(a, b);\n  std::cout << a[0] << b[0] << "\\n";\n}',
-          ['56', '66', '65', '55'],
-          2,
+          '65',
           'std::swap exchanges the two vectors.',
         ),
         choose(
@@ -8599,18 +8128,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The values of a and b are exchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nstruct Quote {\n  int price;\n  int size;\n};\nint main() {\n  Quote x{10, 1};\n  Quote y{20, 2};\n  std::swap(x, y);\n  std::cout << x.price << " " << x.size << "\\n";\n}',
-          ['10 1', '20 1', '10 2', '20 2'],
-          3,
+          '20 2',
           "Whole objects are exchanged, so x takes both of y's members.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  int a = 1;\n  int b = 2;\n  int c = 3;\n  std::swap(a, b);\n  std::swap(b, c);\n  std::cout << a << b << c << "\\n";\n}',
-          ['213', '321', '231', '132'],
-          2,
+          '231',
           'After the first swap a is 2 and b is 1; the second swap moves 3 into b and 1 into c.',
         ),
         choose(
@@ -8638,18 +8165,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'ref still names a, and a now holds the single element 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  int x = 4;\n  int y = 9;\n  int& r = x;\n  std::swap(x, y);\n  std::cout << r << "\\n";\n}',
-          ['4', '13', '9', '0'],
-          2,
+          '9',
           'r refers to x, and x now holds 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1};\n  std::vector<int> b{2, 3};\n  a.swap(b);\n  a.swap(b);\n  std::cout << a.size() << b.size() << "\\n";\n}',
-          ['21', '11', '22', '12'],
-          3,
+          '12',
           'Swapping twice puts everything back where it started.',
         ),
         choose(
@@ -8680,18 +8205,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Index 0 is the first price and index 2 the last of the three.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 6, 9, 12};\n  std::cout << v[1] + v[3] << "\\n";\n}',
-          ['15', '18', '9', '21'],
-          1,
+          '18',
           'Index 1 holds 6 and index 3 holds 12.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{5, 8};\n  std::cout << v[v.size() - 1] << "\\n";\n}',
-          ['5', '2', '0', '8'],
-          3,
+          '8',
           'size() is 2, so the last element is at index 1.',
         ),
         choose(
@@ -8714,18 +8237,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The second element is replaced by 20, and 1 + 20 is 21.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{0, 0, 0};\n  v[2] = 5;\n  v[0] = v[2] * 2;\n  std::cout << v[0] << v[1] << v[2] << "\\n";\n}',
-          ['1005', '505', '0510', '1050'],
-          0,
+          '1005',
           'v becomes 10, 0, 5, printed without separators.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{4, 4};\n  int x = v[0];\n  v[0] = 9;\n  std::cout << x << v[0] << "\\n";\n}',
-          ['99', '44', '49', '94'],
-          2,
+          '49',
           'x copied 4 before the element was replaced with 9.',
         ),
         choose(
@@ -8754,18 +8275,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '5 is not below the size 2, so the fallback is used and v[5] is never touched.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v{7, 4};\n  std::size_t i = 1;\n  std::cout << (i < v.size() ? v[i] : -1) << "\\n";\n}',
-          ['7', '4', '-1', '2'],
-          1,
+          '4',
           'Index 1 is valid and holds 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  std::size_t i = 0;\n  std::cout << (i < v.size() ? v[i] : -1) << " " << v.size() << "\\n";\n}',
-          ['0 0', '-1 1', '0 1', '-1 0'],
-          3,
+          '-1 0',
           'An empty vector has no index 0, so the fallback is chosen.',
         ),
         choose(
@@ -8795,18 +8314,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The string holds five characters.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "C++ 20";\n  std::cout << s.size() << "\\n";\n}',
-          ['5', '6', '4', '7'],
-          1,
+          '6',
           'C, +, +, space, 2, 0: the space counts too.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string empty = "";\n  std::string space = " ";\n  std::cout << empty.size() << space.size() << "\\n";\n}',
-          ['00', '11', '10', '01'],
-          3,
+          '01',
           'The empty string holds nothing; the other holds one space.',
         ),
         choose(
@@ -8834,25 +8351,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Position 0 is A and the last position, 2, is a.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "stack";\n  std::cout << s[1] << s[4] << "\\n";\n}',
-          ['sa', 'ta', 'tk', 'sk'],
-          2,
+          'tk',
           'Position 1 is t and position 4 is k.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "abc";\n  std::string t = s;\n  t[0] = s[2];\n  std::cout << s << " " << t << "\\n";\n}',
-          ['cbc cbc', 'abc abc', 'cba cbc', 'abc cbc'],
-          3,
+          'abc cbc',
           't is a separate copy; only its first character becomes c.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "hello";\n  std::cout << static_cast<int>(s.size()) * 2 << "\\n";\n}',
-          ['10', '5', '52', '25'],
-          0,
+          '10',
           'size() is 5, converted to int and doubled.',
         ),
       ],
@@ -8870,11 +8384,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'full was given the length 3; cut stopped at the embedded \\0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s("x\\0\\0y", 4);\n  std::cout << s.size() << "\\n";\n}',
-          ['1', '2', '3', '4'],
-          3,
+          '4',
           'The string was built with an explicit length of 4.',
         ),
         choose(
@@ -8915,18 +8428,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'c is added after b, and the size grows from 2 to 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "go";\n  s.push_back(\'!\');\n  s.push_back(\'!\');\n  std::cout << s << "\\n";\n}',
-          ['go!', 'go!!', '!!go', 'go'],
-          1,
+          'go!!',
           'Each push_back adds one ! at the end.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s;\n  s.push_back(\'x\');\n  std::cout << s.size() << s << "\\n";\n}',
-          ['0x', 'x1', '1', '1x'],
-          3,
+          '1x',
           'An empty string gains one character.',
         ),
         choose(
@@ -8954,25 +8465,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'ing is added after jump.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string path = "dir";\n  path += \'/\';\n  path += "file";\n  std::cout << path << " " << path.size() << "\\n";\n}',
-          ['dir/file 8', 'dir/file 7', 'dirfile 7', '/dirfile 8'],
-          0,
+          'dir/file 8',
           'The slash and the four letters of file follow dir: 3 + 1 + 4 characters.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string a = "ab";\n  std::string b = a;\n  b += "cd";\n  std::cout << a << " " << b << "\\n";\n}',
-          ['abcd abcd', 'ab ab', 'ab abcd', 'abcd ab'],
-          2,
+          'ab abcd',
           'b is a copy, so appending to it leaves a as it was.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "1";\n  s += s;\n  s += s;\n  std::cout << s << "\\n";\n}',
-          ['111', '11', '4', '1111'],
-          3,
+          '1111',
           'Each += doubles the string: 1, 11, 1111.',
         ),
       ],
@@ -9001,11 +8509,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'After a reallocation the pointer refers to storage that was freed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "xy";\n  int index = 0;\n  s += "0123456789012345678901234567890123456789";\n  std::cout << s[index] << s[index + 1] << "\\n";\n}',
-          ['01', 'xy', 'x0', 'y0'],
-          1,
+          'xy',
           'The first two characters are still x and y after the append.',
         ),
         choose(
@@ -9035,18 +8542,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The first n, and the first na, both start at position 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "hello";\n  std::cout << s.find(\'l\') << "\\n";\n}',
-          ['3', '2', '1', '23'],
-          1,
+          '2',
           'The first l is at position 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "a,b,c";\n  std::cout << s.find(\',\') << " " << s.find("b,c") << "\\n";\n}',
-          ['2 3', '1 3', '2 2', '1 2'],
-          3,
+          '1 2',
           'The first comma is at 1, and b,c starts at 2.',
         ),
         choose(
@@ -9069,11 +8574,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'There is no z, so find returns npos.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "abc";\n  auto pos = s.find(\'c\');\n  std::cout << (pos == std::string::npos) << pos << "\\n";\n}',
-          ['12', '03', '02', '0-1'],
-          2,
+          '02',
           'c is found at position 2, so the result is not npos.',
         ),
         choose(
@@ -9107,25 +8611,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'e is found at position 1, so the index is 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "hello";\n  auto pos = s.find(\'q\');\n  int index = pos == std::string::npos ? -1 : static_cast<int>(pos);\n  std::cout << index << "\\n";\n}',
-          ['0', '5', '-1', 'npos'],
-          2,
+          '-1',
           'There is no q, so the sentinel -1 is chosen.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "level";\n  auto first = s.find(\'l\');\n  auto second = s.find(\'l\', first + 1);\n  std::cout << first << " " << second << "\\n";\n}',
-          ['0 4', '0 0', '4 0', '1 4'],
-          0,
+          '0 4',
           'The second search starts after the first l and finds the last one at 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "";\n  auto pos = s.find(\'a\');\n  std::cout << (pos == std::string::npos ? -1 : static_cast<int>(pos)) << "\\n";\n}',
-          ['0', '1', 'npos', '-1'],
-          3,
+          '-1',
           'An empty string contains nothing, so find returns npos.',
         ),
       ],
@@ -9145,18 +8646,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The two digits parse to 42, and the error code reports success.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = "-17";\n  int value = 0;\n  auto result = std::from_chars(text.data(), text.data() + text.size(), value);\n  std::cout << value << " " << (result.ec == std::errc{}) << "\\n";\n}',
-          ['17 1', '-17 0', '-17 1', '0 0'],
-          2,
+          '-17 1',
           'A leading minus sign is accepted, and parsing succeeds.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = "abc";\n  int value = 0;\n  auto result = std::from_chars(text.data(), text.data() + text.size(), value);\n  std::cout << value << " " << (result.ec == std::errc{}) << "\\n";\n}',
-          ['0 1', 'abc 0', '-1 0', '0 0'],
-          3,
+          '0 0',
           'No digits are found, so ec reports an error and value keeps its 0.',
         ),
         choose(
@@ -9185,18 +8684,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The prefix 12 parses, but ptr stops at x, before the end.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <charconv>\n#include <string_view>\nint main() {\n  std::string_view text = "77";\n  int value = 0;\n  auto result = std::from_chars(text.data(), text.data() + text.size(), value);\n  std::cout << value << " " << (result.ptr == text.data() + text.size()) << "\\n";\n}',
-          ['77 0', '77 1', '0 1', '7 1'],
-          1,
+          '77 1',
           'Both digits are used, so ptr reaches the end.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <charconv>\n#include <string_view>\nint main() {\n  std::string_view text = "3.5";\n  int value = 0;\n  auto result = std::from_chars(text.data(), text.data() + text.size(), value);\n  std::cout << value << " " << (result.ptr == text.data() + text.size()) << "\\n";\n}',
-          ['3.5 1', '3 1', '0 0', '3 0'],
-          3,
+          '3 0',
           'Parsing an int stops at the dot, so value is 3 and input is left over.',
         ),
         choose(
@@ -9225,25 +8722,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The whole input is a valid number, so it is accepted and doubled.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = "";\n  int value = 0;\n  auto r = std::from_chars(text.data(), text.data() + text.size(), value);\n  if (r.ec != std::errc{} || r.ptr != text.data() + text.size()) std::cout << "invalid\\n";\n  else std::cout << value * 2 << "\\n";\n}',
-          ['0', 'invalid', '500', '-999'],
-          1,
+          'invalid',
           'There are no digits at all, so ec reports an error.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = " 5";\n  int value = 0;\n  auto r = std::from_chars(text.data(), text.data() + text.size(), value);\n  if (r.ec != std::errc{} || r.ptr != text.data() + text.size()) std::cout << "invalid\\n";\n  else std::cout << value * 2 << "\\n";\n}',
-          ['5', '10', 'invalid', '0'],
-          2,
+          'invalid',
           'from_chars does not skip leading spaces, so it finds no number.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = "007";\n  int value = 0;\n  auto r = std::from_chars(text.data(), text.data() + text.size(), value);\n  if (r.ec != std::errc{} || r.ptr != text.data() + text.size()) std::cout << "invalid\\n";\n  else std::cout << value * 2 << "\\n";\n}',
-          ['14', 'invalid', '7', '0'],
-          0,
+          '14',
           'Leading zeros are ordinary digits, so 007 parses to 7.',
         ),
       ],
@@ -9262,18 +8756,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '4 becomes the third element, at index 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.push_back(5);\n  v.push_back(6);\n  std::cout << v[0] << v[1] << v.size() << "\\n";\n}',
-          ['652', '562', '56', '5620'],
-          1,
+          '562',
           'Elements are appended in order: 5, then 6, for a size of 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{9};\n  v.push_back(v[0] + 1);\n  std::cout << v.back() << "\\n";\n}',
-          ['9', '1', '91', '10'],
-          3,
+          '10',
           'The new last element is 9 + 1.',
         ),
         choose(
@@ -9308,11 +8800,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Capacity is spare room; only the first size() positions hold elements.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.push_back(1);\n  v.push_back(2);\n  v.push_back(3);\n  std::cout << (v.capacity() >= 3) << v.size() << "\\n";\n}',
-          ['13', '03', '18', '14'],
-          0,
+          '13',
           'The capacity covers the 3 elements; their count is 3.',
         ),
         choose(
@@ -9335,25 +8826,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The vector stored its own copy of 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1};\n  int last = v[0];\n  v.push_back(last * 10);\n  last = 0;\n  std::cout << v[1] << last << "\\n";\n}',
-          ['00', '010', '100', '1010'],
-          2,
+          '100',
           'The element 10 was copied in before last became 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1};\n  std::vector<int> b;\n  b.push_back(a[0]);\n  a[0] = 7;\n  std::cout << b[0] << "\\n";\n}',
-          ['7', '0', '8', '1'],
-          3,
+          '1',
           'b received a copy of 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.push_back(3);\n  v.push_back(v[0]);\n  v[0] = 8;\n  std::cout << v[0] + v[1] << "\\n";\n}',
-          ['16', '6', '11', '8'],
-          2,
+          '11',
           'v[1] copied 3 before v[0] became 8.',
         ),
       ],
@@ -9372,11 +8860,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'There is room for 20, but still no elements.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2};\n  v.reserve(100);\n  std::cout << v.size() << v[1] << "\\n";\n}',
-          ['1002', '100', '22', '02'],
-          2,
+          '22',
           'reserve keeps the two elements and the size of 2.',
         ),
         choose(
@@ -9390,11 +8877,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'reserve affects room, not contents.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3};\n  v.reserve(1);\n  std::cout << v.size() << (v.capacity() >= 3) << "\\n";\n}',
-          ['11', '30', '31', '13'],
-          2,
+          '31',
           'Reserving less than is already available changes nothing.',
         ),
       ],
@@ -9423,11 +8909,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'size() is still 0, so there is no element 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.reserve(2);\n  v.resize(2);\n  v[1] = 4;\n  std::cout << v[0] << v[1] << v.size() << "\\n";\n}',
-          ['042', '402', '44', '04'],
-          0,
+          '042',
           'resize adds two zeros, and then the second one is replaced with 4.',
         ),
         choose(
@@ -9462,18 +8947,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'One allocation up front replaces several as the vector grows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.reserve(2);\n  std::size_t cap = v.capacity();\n  v.push_back(5);\n  std::cout << (v.capacity() == cap) << v.size() << "\\n";\n}',
-          ['01', '12', '11', '10'],
-          2,
+          '11',
           'One element fits in the reserved room, so the capacity is unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.reserve(4);\n  v.push_back(7);\n  v.push_back(8);\n  std::cout << v.size() << (v.capacity() >= 4) << "\\n";\n}',
-          ['41', '21', '20', '42'],
-          1,
+          '21',
           'Two elements were added, and the reserved room is still at least 4.',
         ),
       ],
@@ -9493,18 +8976,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The iterator visits each element in order and stops when it reaches end().',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{2, 4, 6};\n  int sum = 0;\n  for (auto it = v.begin(); it != v.end(); ++it) sum += *it;\n  std::cout << sum << "\\n";\n}',
-          ['12', '6', '246', '10'],
-          0,
+          '12',
           'All three elements are added.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3};\n  auto it = v.begin();\n  ++it;\n  std::cout << *it << "\\n";\n}',
-          ['1', '3', '0', '2'],
-          3,
+          '2',
           'One step from the first element reaches the second, 2.',
         ),
         choose(
@@ -9532,11 +9013,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'With no elements, the range starts where it ends.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{8};\n  auto it = v.begin();\n  ++it;\n  std::cout << (it == v.end()) << "\\n";\n}',
-          ['0', '8', '1', '2'],
-          2,
+          '1',
           'Moving past the only element reaches end().',
         ),
         choose(
@@ -9545,11 +9025,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'end() is one past the last element, so one step back is the last one.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  int count = 0;\n  for (auto it = v.begin(); it != v.end(); ++it) ++count;\n  std::cout << count << "\\n";\n}',
-          ['1', '-1', '2', '0'],
-          3,
+          '0',
           'begin() already equals end(), so the loop body never runs.',
         ),
       ],
@@ -9566,18 +9045,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Each element is multiplied in place.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{5, 5};\n  auto it = v.begin();\n  *it = 0;\n  std::cout << v[0] << v[1] << "\\n";\n}',
-          ['55', '05', '00', '50'],
-          1,
+          '05',
           'Only the first element is changed through the iterator.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 1, 2};\n  auto it = v.end();\n  --it;\n  *it += 7;\n  std::cout << v[2] << "\\n";\n}',
-          ['2', '10', '9', '3'],
-          2,
+          '9',
           'One step back from end() is the last element, which becomes 9.',
         ),
         choose(
@@ -9607,18 +9084,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '7 is removed, and 9 moves down to index 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3, 4};\n  v.erase(v.begin());\n  for (int x : v) std::cout << x;\n  std::cout << "\\n";\n}',
-          ['134', '234', '123', '1234'],
-          1,
+          '234',
           'The first element is removed and the rest keep their order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{5, 6, 7};\n  v.erase(v.begin() + 2);\n  std::cout << v.size() << v[v.size() - 1] << "\\n";\n}',
-          ['37', '27', '36', '26'],
-          3,
+          '26',
           'Removing the last element leaves 5, 6.',
         ),
         choose(
@@ -9647,11 +9122,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Index 5 is out of range, so the program reports it instead of erasing.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 7, 9};\n  std::size_t index = 0;\n  if (index >= v.size()) std::cout << "no such element\\n";\n  else {\n    v.erase(v.begin() + static_cast<std::ptrdiff_t>(index));\n    int sum = 0;\n    for (int x : v) sum += x;\n    std::cout << sum << "\\n";\n  }\n}',
-          ['19', '16', '12', '10'],
-          1,
+          '16',
           'The 3 is removed, and 7 + 9 is 16.',
         ),
         choose(
@@ -9665,11 +9139,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'erase does not check its argument.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  std::size_t index = 0;\n  std::cout << (index >= v.size() ? "empty" : "ok") << "\\n";\n}',
-          ['ok', '0', 'empty', '-1'],
-          2,
+          'empty',
           'An empty vector has no element at index 0.',
         ),
       ],
@@ -9686,11 +9159,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'After 2 is erased, the returned iterator points at 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{10, 20, 30};\n  auto it = v.erase(v.begin());\n  std::cout << *it << "\\n";\n}',
-          ['10', '30', '20', '0'],
-          2,
+          '20',
           'The element after the erased 10 is 20.',
         ),
         choose(
@@ -9704,11 +9176,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Elements after the erased one moved, so iterators to them are invalidated.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{4, 5, 6};\n  auto it = v.erase(v.begin() + 2);\n  std::cout << (it == v.end()) << v.size() << "\\n";\n}',
-          ['02', '13', '03', '12'],
-          3,
+          '12',
           'Erasing the last element returns end().',
         ),
       ],
@@ -9728,18 +9199,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Four steps lead from the first element to one past the last.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3, 4, 5};\n  auto it = v.begin() + 3;\n  std::cout << std::distance(v.begin(), it) << "\\n";\n}',
-          ['4', '3', '2', '5'],
-          1,
+          '3',
           'it is three steps after begin().',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  std::cout << std::distance(v.begin(), v.end()) << "\\n";\n}',
-          ['1', '-1', '0', '2'],
-          2,
+          '0',
           'An empty range has no steps.',
         ),
         choose(
@@ -9768,18 +9237,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The iterator is two steps from begin(), so it refers to index 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{9, 8, 7};\n  auto it = v.end() - 1;\n  std::cout << std::distance(v.begin(), it) << "\\n";\n}',
-          ['3', '7', '1', '2'],
-          3,
+          '2',
           'The last element of three is at index 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3, 4};\n  auto a = v.begin() + 1;\n  auto b = v.begin() + 3;\n  std::cout << std::distance(a, b) << " " << b - a << "\\n";\n}',
-          ['2 2', '3 3', '2 3', '1 1'],
-          0,
+          '2 2',
           'Both ways count the two steps from index 1 to index 3.',
         ),
         choose(
@@ -9807,11 +9274,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'From end() back to begin() is three steps backward.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3, 4};\n  auto a = v.begin() + 2;\n  std::cout << std::distance(a, v.begin()) << "\\n";\n}',
-          ['2', '0', '-2', '4'],
-          2,
+          '-2',
           'Going from index 2 back to index 0 is two steps backward.',
         ),
         choose(
@@ -9825,11 +9291,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'It must be able to represent backward distances.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{5, 6, 7, 8};\n  int middle = static_cast<int>(std::distance(v.begin(), v.end())) / 2;\n  std::cout << v[middle] << "\\n";\n}',
-          ['6', '2', '8', '7'],
-          3,
+          '7',
           'There are 4 elements, so middle is 2, and v[2] is 7.',
         ),
       ],
@@ -9871,11 +9336,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'That is why anything pointing into the old block becomes invalid.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.reserve(3);\n  std::size_t cap = v.capacity();\n  v.push_back(1);\n  v.push_back(2);\n  std::cout << (v.capacity() == cap) << "\\n";\n}',
-          ['0', '3', '2', '1'],
-          3,
+          '1',
           'Two elements fit in the reserved room, so no reallocation occurs.',
         ),
       ],
@@ -9905,11 +9369,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The reference was taken before the growth that moved the elements.',
           'std::vector<int> v{7};\nint& first = v[0];\nfor (int i = 0; i < 100; ++i) v.push_back(i);\nstd::cout << first;',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 4};\n  std::size_t i = 1;\n  for (int k = 0; k < 50; ++k) v.push_back(k);\n  std::cout << v[i] << v.size() << "\\n";\n}',
-          ['452', '42', '352', '050'],
-          0,
+          '452',
           'Index 1 still holds 4, and the vector now has 52 elements.',
         ),
         choose(
@@ -9938,11 +9401,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The reference is taken after the growth, so it refers to the current storage.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1};\n  v.reserve(10);\n  int& r = v[0];\n  v.push_back(2);\n  r = 9;\n  std::cout << v[0] << "\\n";\n}',
-          ['1', '2', '9', '0'],
-          2,
+          '9',
           'The reserve made room for the push_back, so no reallocation invalidated r.',
         ),
         choose(
@@ -9956,11 +9418,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Pointers, references, and iterators may be invalidated by any push that reallocates.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{2, 4};\n  for (int i = 0; i < 30; ++i) v.push_back(i);\n  auto it = v.begin() + 1;\n  std::cout << *it << "\\n";\n}',
-          ['2', '1', '4', '29'],
-          2,
+          '4',
           'The iterator is created after the growth and points at index 1.',
         ),
       ],
@@ -9980,18 +9441,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both negative values are removed, including the second of two in a row.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{-1, -1, 5};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it < 0) it = v.erase(it);\n    else ++it;\n  }\n  std::cout << v.size() << "\\n";\n}',
-          ['1', '2', '3', '0'],
-          0,
+          '1',
           'Both negatives are removed, leaving only 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 0, 0, 7};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it == 0) it = v.erase(it);\n    else ++it;\n  }\n  for (int x : v) std::cout << x;\n  std::cout << "\\n";\n}',
-          ['307', '3007', '37', '7'],
-          2,
+          '37',
           'Both zeros are erased and 3, 7 remain.',
         ),
         choose(
@@ -10031,18 +9490,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The erased iterator must be replaced by the one erase returns.',
           'for (auto it = v.begin(); it != v.end(); ++it)\n  if (*it < 0) v.erase(it);',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 1, 1};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it == 1) it = v.erase(it);\n    else ++it;\n  }\n  std::cout << v.size() << (v.begin() == v.end()) << "\\n";\n}',
-          ['31', '00', '11', '01'],
-          3,
+          '01',
           'Every element is erased, so the vector ends empty.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{5, -5, 5, -5};\n  int seen = 0;\n  for (auto it = v.begin(); it != v.end();) {\n    ++seen;\n    if (*it < 0) it = v.erase(it);\n    else ++it;\n  }\n  std::cout << seen << v.size() << "\\n";\n}',
-          ['22', '44', '24', '42'],
-          3,
+          '42',
           'Each original element is examined once, and the two negatives are erased.',
         ),
       ],
@@ -10060,18 +9517,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The small values are removed, and 9, 8, 7 stay in their original order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{4, 3, 2, 1};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it % 2 != 0) it = v.erase(it);\n    else ++it;\n  }\n  for (int x : v) std::cout << x;\n  std::cout << "\\n";\n}',
-          ['24', '42', '31', '4321'],
-          1,
+          '42',
           'The odd values are erased, and 4, 2 keep their order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it > 1) it = v.erase(it);\n    else ++it;\n  }\n  for (int x : v) std::cout << x;\n  std::cout << "\\n";\n}',
-          ['23', '123', '3', '1'],
-          3,
+          '1',
           'Only 1 is kept.',
         ),
         choose(
@@ -10102,18 +9557,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first value given goes into first, the second into second.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{10, 4};\n  std::cout << p.first - p.second << "\\n";\n}',
-          ['-6', '6', '14', '104'],
-          1,
+          '6',
           'first is 10 and second is 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{1, 2};\n  p.second = p.first + 5;\n  std::cout << p.first << p.second << "\\n";\n}',
-          ['12', '62', '66', '16'],
-          3,
+          '16',
           'second is replaced with 1 + 5.',
         ),
         choose(
@@ -10136,18 +9589,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'b is a copy, so changing it leaves a alone.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a = std::make_pair(4, 5);\n  std::pair<int, int> b = a;\n  a.second = 0;\n  std::cout << b.second << a.second << "\\n";\n}',
-          ['00', '55', '50', '05'],
-          2,
+          '50',
           'b copied 5 before a.second became 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{7, 1};\n  std::pair<int, int> q{p.second, p.first};\n  std::cout << q.first << q.second << "\\n";\n}',
-          ['71', '11', '77', '17'],
-          3,
+          '17',
           'q is built with the members of p in swapped order.',
         ),
         choose(
@@ -10175,25 +9626,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '17 / 5 is 3, with 2 left over.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> result{23 / 4, 23 % 4};\n  std::cout << result.first << " " << result.second << "\\n";\n}',
-          ['5 3', '3 5', '5.75 3', '6 1'],
-          0,
+          '5 3',
           '23 / 4 is 5, and 23 - 20 leaves 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> r{-7 / 2, -7 % 2};\n  std::cout << r.first << " " << r.second << "\\n";\n}',
-          ['-4 1', '-3 1', '-4 -1', '-3 -1'],
-          3,
+          '-3 -1',
           'The quotient truncates toward zero, and the remainder takes the sign of -7.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  int minutes = 135;\n  std::pair<int, int> hm{minutes / 60, minutes % 60};\n  std::cout << hm.first * 100 + hm.second << "\\n";\n}',
-          ['2015', '215', '135', '275'],
-          1,
+          '215',
           'The pair holds 2 hours and 15 minutes, combined as 215.',
         ),
       ],
@@ -10212,18 +9660,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '1 < 2 decides it; the second members are never compared.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{2, 1};\n  std::pair<int, int> b{2, 5};\n  std::cout << (a < b) << (b < a) << "\\n";\n}',
-          ['01', '10', '00', '11'],
-          1,
+          '10',
           'The firsts tie, so the seconds decide: 1 < 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{3, 0};\n  std::pair<int, int> b{2, 9};\n  std::cout << (a < b) << "\\n";\n}',
-          ['1', '9', '3', '0'],
-          3,
+          '0',
           '3 is not less than 2, so a is not less than b, whatever the seconds are.',
         ),
         choose(
@@ -10251,18 +9697,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The firsts match but the seconds differ.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{1, 1};\n  std::pair<int, int> b = a;\n  std::cout << (a == b) << (a < b) << "\\n";\n}',
-          ['11', '01', '00', '10'],
-          3,
+          '10',
           'Equal pairs are not less than each other.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{2, 7};\n  std::pair<int, int> b{2, 7};\n  std::cout << (a <= b) << (a > b) << "\\n";\n}',
-          ['10', '11', '01', '00'],
-          0,
+          '10',
           'Equal pairs satisfy <= but not >.',
         ),
         choose(
@@ -10290,11 +9734,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Both forms see equal firsts and compare the seconds.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{6, 0};\n  std::pair<int, int> b{5, 9};\n  bool manual = a.first < b.first || (a.first == b.first && a.second < b.second);\n  std::cout << manual << (a < b) << "\\n";\n}',
-          ['11', '01', '10', '00'],
-          3,
+          '00',
           '6 is not less than 5 and not equal to it, so both forms say false.',
         ),
         choose(
@@ -10335,18 +9778,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'low gets 3 and high gets 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{4, 9};\n  auto [a, b] = p;\n  std::cout << b << a << "\\n";\n}',
-          ['49', '13', '94', '99'],
-          2,
+          '94',
           'a is 4 and b is 9; the program prints b first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{1, 2};\n  auto [x, y] = p;\n  x = 50;\n  std::cout << p.first << " " << x << "\\n";\n}',
-          ['50 50', '1 1', '50 1', '1 50'],
-          3,
+          '1 50',
           'x is a copy, so assigning to it leaves p.first at 1.',
         ),
         choose(
@@ -10375,18 +9816,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'first refers to p.first, so the assignment changes the pair.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{3, 4};\n  auto& [a, b] = p;\n  b += a;\n  std::cout << p.second << "\\n";\n}',
-          ['4', '3', '34', '7'],
-          3,
+          '7',
           'b refers to p.second, which becomes 4 + 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{3, 4};\n  auto [a, b] = p;\n  auto& [c, d] = p;\n  a = 0;\n  d = 0;\n  std::cout << p.first << p.second << "\\n";\n}',
-          ['00', '34', '30', '04'],
-          2,
+          '30',
           'a is a copy, so p.first stays 3; d refers to p.second, which becomes 0.',
         ),
         choose(
@@ -10414,25 +9853,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '100 * 2 + 101 * 5 + 99 * 1 is 200 + 505 + 99.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\n#include <utility>\nint main() {\n  std::array<std::pair<int, int>, 2> items{{{1, 10}, {2, 20}}};\n  int sum = 0;\n  for (auto [id, value] : items) sum += value;\n  std::cout << sum << "\\n";\n}',
-          ['3', '33', '10', '30'],
-          3,
+          '30',
           'Only the second members, 10 and 20, are added.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\n#include <utility>\nint main() {\n  std::array<std::pair<int, int>, 2> items{{{1, 10}, {2, 20}}};\n  for (auto& [id, value] : items) value += id;\n  std::cout << items[1].second << "\\n";\n}',
-          ['20', '2', '22', '21'],
-          2,
+          '22',
           'The reference bindings update each pair: 20 + 2 is 22.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\n#include <utility>\nint main() {\n  std::array<std::pair<int, int>, 2> items{{{1, 10}, {2, 20}}};\n  for (auto [id, value] : items) value = 0;\n  std::cout << items[0].second << "\\n";\n}',
-          ['0', '10', '1', '11'],
-          1,
+          '10',
           'Plain auto copies each pair, so the array keeps its values.',
         ),
       ],
@@ -10452,18 +9888,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'One pass finds both extremes, and the pair carries both back.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <array>\n#include <utility>\nstd::pair<int, int> min_max(std::array<int, 4> values) {\n  int low = values[0];\n  int high = values[0];\n  for (int x : values) {\n    if (x < low) low = x;\n    if (x > high) high = x;\n  }\n  return {low, high};\n}\nint main() {\n  std::pair<int, int> result = min_max({4, 4, 4, 4});\n  std::cout << result.first << " " << result.second << "\\n";\n}',
-          ['4 4', '0 4', '4 0', '16 4'],
-          0,
+          '4 4',
           'Every value is 4, so it is both the smallest and the largest.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <array>\n#include <utility>\nstd::pair<int, int> min_max(std::array<int, 4> values) {\n  int low = values[0];\n  int high = values[0];\n  for (int x : values) {\n    if (x < low) low = x;\n    if (x > high) high = x;\n  }\n  return {low, high};\n}\nint main() {\n  std::pair<int, int> result = min_max({0, -1, 7, 2});\n  std::cout << result.second - result.first << "\\n";\n}',
-          ['7', '6', '-8', '8'],
-          3,
+          '8',
           'The range runs from -1 to 7, a spread of 8.',
         ),
         choose(
@@ -10491,11 +9925,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'q receives the quotient and r the remainder.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  auto [r, q] = div_mod(17, 5);\n  std::cout << q << "\\n";\n}',
-          ['3', '17', '2', '5'],
-          2,
+          '2',
           'The names are swapped: q is bound to second, which holds the remainder 2.',
         ),
         choose(
@@ -10509,11 +9942,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Structured bindings follow positions, not names.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  auto [q, r] = div_mod(29, 6);\n  std::cout << q * 6 + r << "\\n";\n}',
-          ['4', '5', '35', '29'],
-          3,
+          '29',
           'Quotient times divisor plus remainder rebuilds the original 29.',
         ),
       ],
@@ -10530,26 +9962,593 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '10 / 3 is 3 with remainder 1, so both members match.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete C++20 program print?',
           '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  std::cout << (div_mod(9, 3) == std::pair<int, int>(3, 1)) << "\\n";\n}',
-          ['1', '3', '0', '30'],
-          2,
+          '0',
           '9 / 3 leaves remainder 0, so the seconds differ.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  std::cout << (div_mod(7, 2) < div_mod(8, 2)) << "\\n";\n}',
-          ['0', '3', '4', '1'],
-          3,
+          '1',
           '{3, 1} is less than {4, 0} because 3 < 4.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  std::pair<int, int> a = div_mod(11, 4);\n  std::pair<int, int> b = div_mod(10, 4);\n  std::cout << (a > b) << (a.first == b.first) << "\\n";\n}',
+          '11',
+          'Both quotients are 2, so the remainders 3 and 2 decide.',
+        ),
+      ],
+    },
+  ],
+  'cpp-abs-value': [
+    {
+      title: 'std::abs gives the magnitude of a number',
+      explanation: [
+        'std::abs(x) returns x without its sign: std::abs(-7) and std::abs(7) are both 7, and std::abs(0) is 0. The int and long long versions come from <cstdlib>; for a double include <cmath>, and the result is a double: std::abs(-2.5) is 2.5.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <cmath>
+#include <cstdlib>
+#include <iostream>
+int main() {
+  std::cout << std::abs(-7) << " " << std::abs(7) << " " << std::abs(-2.5) << "\\n";
+}`,
+        output: '7 7 2.5',
+        explanation:
+          'Both 7 and -7 have magnitude 7. The double overload keeps the fraction, giving 2.5.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <cstdlib>
+#include <iostream>
+int main() {
+  std::cout << std::abs(-12) + std::abs(5) << "\\n";
+}`,
+          '17',
+          'The magnitudes are 12 and 5, and their sum is 17.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <cmath>
+#include <iostream>
+int main() {
+  std::cout << std::abs(-0.75) * 4 << "\\n";
+}`,
+          '3',
+          'std::abs(-0.75) is the double 0.75, and 0.75 * 4 is 3.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <cstdlib>
+#include <iostream>
+int main() {
+  int a = -3;
+  int b = -8;
+  std::cout << std::abs(a) - std::abs(b) << "\\n";
+}`,
+          '-5',
+          'The magnitudes are 3 and 8, and 3 - 8 is -5: std::abs applies only to its own argument.',
+        ),
+        choose(
+          'Which expression is never negative for ints a and b whose difference fits in an int?',
+          ['a - b', 'std::abs(a) - std::abs(b)', 'std::abs(a - b)', '-(a - b)'],
+          2,
+          'Only the magnitude of the difference is guaranteed to be at least 0; the other expressions are negative for some inputs.',
+        ),
+      ],
+    },
+    {
+      title: 'Measure the distance between two values',
+      explanation: [
+        'The distance between a and b on the number line is std::abs(a - b), and it does not depend on the order: std::abs(3 - 10) and std::abs(10 - 3) are both 7. Two doubles count as close when std::abs(x - y) <= tolerance.',
+        'Subtract first, then take the magnitude. std::abs(a) - std::abs(b) compares sizes, not positions: for -4 and 4 it gives 0, although the values are 8 apart. One limit: the most negative int has no positive partner in int, so keep differences well inside the type’s range.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <cmath>
+#include <cstdlib>
+#include <iostream>
+int main() {
+  std::cout << std::abs(3 - 10) << " " << std::abs(10 - 3) << " " << std::abs(-4 - 4) << "\\n";
+  double x = 0.1 + 0.2;
+  std::cout << (std::abs(x - 0.3) <= 1e-9) << "\\n";
+}`,
+        output: '7 7 8\n1',
+        explanation:
+          'Both orders give the distance 7, and -4 and 4 are 8 apart. 0.1 + 0.2 is not exactly 0.3 as a double, but it is within the tolerance.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <cstdlib>
+#include <iostream>
+int main() {
+  int low = -6;
+  int high = 9;
+  std::cout << std::abs(low - high) << " " << std::abs(high - low) << "\\n";
+}`,
+          '15 15',
+          '-6 and 9 are 15 apart, and the distance is the same in either order.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <cstdlib>
+#include <iostream>
+int main() {
+  std::cout << std::abs(-4) - std::abs(4) << " " << std::abs(-4 - 4) << "\\n";
+}`,
+          '0 8',
+          'The magnitudes are equal, so their difference is 0, but the values themselves are 8 apart.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <cmath>
+#include <iostream>
+int main() {
+  double measured = 2.004;
+  double expected = 2.0;
+  std::cout << (std::abs(measured - expected) <= 0.01) << (std::abs(expected - measured) <= 0.001) << "\\n";
+}`,
+          '10',
+          'The values are 0.004 apart in either order: within 0.01, but not within 0.001.',
+        ),
+        choose(
+          'A test checks measured - expected <= tolerance without std::abs. Which result does it wrongly accept?',
+          [
+            'A measured value far below expected',
+            'A measured value exactly equal to expected',
+            'A measured value slightly above expected but within tolerance',
+            'A measured value far above expected',
+          ],
+          0,
+          'A large negative difference is still less than the tolerance, so values that are far too small pass.',
+        ),
+      ],
+    },
+  ],
+  'cpp-to-string': [
+    {
+      title: 'std::to_string writes a number’s digits',
+      explanation: [
+        'std::to_string(n), from <string>, returns a std::string holding the decimal digits of n, with a leading minus sign when n is negative: std::to_string(42) is "42" and std::to_string(-7) is "-7". The result is ordinary text, so size() counts its characters and += appends it to another string.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <string>
+int main() {
+  std::string digits = std::to_string(-305);
+  std::cout << digits << " " << digits.size() << "\\n";
+}`,
+        output: '-305 4',
+        explanation:
+          'The text holds the minus sign and three digits, so its size is 4.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+int main() {
+  std::string s = std::to_string(1000);
+  std::cout << s.size() << "\\n";
+}`,
+          '4',
+          '"1000" has four characters.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+int main() {
+  std::string id = "order-";
+  id += std::to_string(17);
+  std::cout << id << "\\n";
+}`,
+          'order-17',
+          'std::to_string(17) is the text "17", and += appends it after "order-".',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+int main() {
+  std::string s = std::to_string(-42);
+  std::cout << s[0] << s.size() << "\\n";
+}`,
+          '-3',
+          'The first character is the minus sign, and "-42" has three characters.',
+        ),
+        choose(
+          'Which expression produces the text "250"?',
+          [
+            'std::string(250)',
+            'std::to_string(250)',
+            'std::to_string("250")',
+            'std::string("2") + 50',
+          ],
+          1,
+          'std::to_string takes a number and returns its digits as a std::string.',
+        ),
+      ],
+    },
+    {
+      title: 'Convert before appending a number to text',
+      explanation: [
+        'std::string has no += that writes a number’s digits. text += 65 compiles, but it converts 65 to a char and appends the single character whose code is 65, the letter A. Convert first: text += std::to_string(65) appends the two characters 6 and 5.',
+        'For a double, std::to_string always writes six digits after the decimal point: std::to_string(2.5) is "2.500000". It is most useful for integers, whose text is exact and compact.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <string>
+int main() {
+  std::string wrong = "id=";
+  wrong += 65;
+  std::string right = "id=";
+  right += std::to_string(65);
+  std::cout << wrong << " " << right << "\\n";
+}`,
+        output: 'id=A id=65',
+        explanation:
+          'Appending the int 65 adds the character with code 65, A. Converting it first appends the digits 6 and 5.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+int main() {
+  std::string s = "v";
+  s += 66;
+  s += std::to_string(66);
+  std::cout << s << "\\n";
+}`,
+          'vB66',
+          'The first += appends the character with code 66, B; the second appends the digits 66.',
         ),
         predictOutput(
           'What does this program print?',
-          '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  std::pair<int, int> a = div_mod(11, 4);\n  std::pair<int, int> b = div_mod(10, 4);\n  std::cout << (a > b) << (a.first == b.first) << "\\n";\n}',
-          ['01', '10', '11', '00'],
+          `#include <iostream>
+#include <string>
+int main() {
+  std::cout << std::to_string(2.5) << "\\n";
+}`,
+          ['2.5', '2', '2.50', '2.500000'],
+          3,
+          'std::to_string writes a double with six digits after the decimal point.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+int main() {
+  std::string line = std::to_string(10);
+  line += std::to_string(20);
+  line += std::to_string(-3);
+  std::cout << line << " " << line.size() << "\\n";
+}`,
+          '1020-3 6',
+          'The pieces are joined without spaces: "10", "20", and "-3" make six characters.',
+        ),
+        choose(
+          'A log line built with text += count shows a strange symbol instead of the count 7. Why?',
+          [
+            'count was negative, so its digits were hidden',
+            'std::string cannot store digit characters',
+            '+= converted 7 to the char with code 7 and appended that one character',
+            '+= appended the address of count',
+          ],
           2,
-          'Both quotients are 2, so the remainders 3 and 2 decide.',
+          'An int appended with += becomes one char. std::to_string(count) gives the digit text.',
+        ),
+      ],
+    },
+  ],
+  'cpp-reverse-range': [
+    {
+      title: 'std::reverse flips a range in place',
+      explanation: [
+        'std::reverse(first, last), from <algorithm>, reverses the elements between two iterators. It works in place: it swaps the first and last elements, then the next pair inward, and returns nothing. std::reverse(v.begin(), v.end()) reverses a whole vector.',
+        'The original order is overwritten, so copy the vector first when you still need it: std::vector<int> original = values; and then reverse values.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> values{1, 2, 3, 4};
+  std::vector<int> original = values;
+  std::reverse(values.begin(), values.end());
+  std::cout << values[0] << values[1] << values[2] << values[3] << " " << original[0] << "\\n";
+}`,
+        output: '4321 1',
+        explanation:
+          'values is reversed in place. The copy made before the call still starts with 1.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{7, 8, 9};
+  std::reverse(v.begin(), v.end());
+  std::cout << v[0] << v[1] << v[2] << "\\n";
+}`,
+          '987',
+          'The first and last elements swap, and the middle one stays put.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 2, 3};
+  std::vector<int> keep = v;
+  std::reverse(v.begin(), v.end());
+  std::cout << v[0] << " " << keep[0] << "\\n";
+}`,
+          '3 1',
+          'Only v is reversed; keep is an independent copy made before the call.',
+        ),
+        choose(
+          'What does std::reverse(v.begin(), v.end()) return?',
+          [
+            'Nothing; it rearranges the elements of v itself',
+            'A reversed copy of v',
+            'An iterator to the new first element',
+            'The number of swaps it made',
+          ],
+          0,
+          'std::reverse returns void and changes the range it is given.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{5, 6, 7, 8, 9};
+  std::reverse(v.begin(), v.end());
+  std::cout << v[2] << " " << v[4] << "\\n";
+}`,
+          '7 5',
+          'The reversed vector is 9 8 7 6 5: the middle element stays at index 2, and 5 moves to the end.',
+        ),
+      ],
+    },
+    {
+      title: 'Reverse only part of a range',
+      explanation: [
+        'The iterators choose what is reversed. std::reverse(v.begin(), v.begin() + 3) reverses only the first three elements, and std::reverse(v.begin() + 2, v.end()) reverses everything from index 2 on. The range is half-open, so the element at the second iterator is not moved.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 2, 3, 4, 5};
+  std::reverse(v.begin(), v.begin() + 3);
+  std::cout << v[0] << v[1] << v[2] << v[3] << v[4] << "\\n";
+}`,
+        output: '32145',
+        explanation:
+          'Only indexes 0 to 2 are reversed; 4 and 5 stay where they were.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 2, 3, 4, 5};
+  std::reverse(v.begin() + 2, v.end());
+  std::cout << v[0] << v[1] << v[2] << v[3] << v[4] << "\\n";
+}`,
+          '12543',
+          'Indexes 2 to 4 hold 3, 4, 5 and become 5, 4, 3; the first two elements are untouched.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{4, 5, 6};
+  std::reverse(v.begin(), v.begin() + 1);
+  std::cout << v[0] << v[1] << v[2] << "\\n";
+}`,
+          '456',
+          'A one-element range reads the same reversed, so nothing moves.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{2, 4, 6, 8};
+  std::reverse(v.begin(), v.end());
+  std::reverse(v.begin(), v.begin() + 2);
+  std::cout << v[0] << v[1] << v[2] << v[3] << "\\n";
+}`,
+          '6842',
+          'The first call gives 8 6 4 2; the second swaps the first two elements, giving 6 8 4 2.',
+        ),
+        choose(
+          'v may have any size of at least 2. Which call reverses exactly its last two elements?',
+          [
+            'std::reverse(v.end() - 2, v.end())',
+            'std::reverse(v.begin(), v.begin() + 2)',
+            'std::reverse(v.end(), v.end() - 2)',
+            'std::reverse(v.begin() + 2, v.end())',
+          ],
+          0,
+          'v.end() - 2 is the second-to-last element and v.end() is one past the last, so the range holds the last two.',
+        ),
+      ],
+    },
+  ],
+  'cpp-digit-palindrome': [
+    {
+      title: 'Reverse a number’s digits as text',
+      explanation: [
+        'std::to_string turns a number into its digit characters, and a std::string is a range of characters, so std::reverse(s.begin(), s.end()) reverses those digits in place. Reverse a copy when you also need the original text, and compare two strings with ==, which is true when they hold the same characters in the same order.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <string>
+int main() {
+  std::string digits = std::to_string(1203);
+  std::string reversed = digits;
+  std::reverse(reversed.begin(), reversed.end());
+  std::cout << digits << " " << reversed << " " << (digits == reversed) << "\\n";
+}`,
+        output: '1203 3021 0',
+        explanation:
+          'The copy is reversed while digits keeps the original order, and the two texts differ.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <string>
+int main() {
+  std::string s = std::to_string(500);
+  std::reverse(s.begin(), s.end());
+  std::cout << s << "\\n";
+}`,
+          '005',
+          'Reversing text keeps every character, including the zeros, which now come first.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <string>
+int main() {
+  std::string s = std::to_string(-45);
+  std::reverse(s.begin(), s.end());
+  std::cout << s << "\\n";
+}`,
+          '54-',
+          'The minus sign is a character too, so it moves to the end.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <string>
+int main() {
+  std::string a = std::to_string(1221);
+  std::string b = a;
+  std::reverse(b.begin(), b.end());
+  std::cout << (a == b) << "\\n";
+}`,
+          '1',
+          '1221 reads the same backwards, so the reversed copy equals the original.',
+        ),
+      ],
+    },
+    {
+      title: 'Remove the sign, then compare',
+      explanation: [
+        'A sign is not a digit: reversing "-121" gives "121-", which never matches. Take std::abs first, so std::to_string(std::abs(-121)) is "121", whose reverse matches. Then compare the original text with its reversed copy using ==.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+bool is_palindrome(int value) {
+  std::string digits = std::to_string(std::abs(value));
+  std::string reversed = digits;
+  std::reverse(reversed.begin(), reversed.end());
+  return digits == reversed;
+}
+int main() {
+  std::cout << is_palindrome(-121) << is_palindrome(123) << is_palindrome(7) << "\\n";
+}`,
+        output: '101',
+        explanation:
+          '-121 becomes "121", a palindrome. "123" reversed is "321". A single digit always matches itself.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+bool is_palindrome(int value) {
+  std::string digits = std::to_string(std::abs(value));
+  std::string reversed = digits;
+  std::reverse(reversed.begin(), reversed.end());
+  return digits == reversed;
+}
+int main() {
+  std::cout << is_palindrome(10) << is_palindrome(0) << "\\n";
+}`,
+          '01',
+          '"10" reversed is "01", which differs. "0" is a single digit and matches itself.',
+        ),
+        typeOutput(
+          'This version forgets std::abs. What does it print?',
+          `#include <algorithm>
+#include <iostream>
+#include <string>
+int main() {
+  std::string s = std::to_string(-11);
+  std::string r = s;
+  std::reverse(r.begin(), r.end());
+  std::cout << (s == r) << " " << r << "\\n";
+}`,
+          '0 11-',
+          'The minus sign moves to the end, so "-11" and "11-" differ even though the digits form a palindrome.',
+        ),
+        choose(
+          'Why does is_palindrome reverse a copy rather than digits itself?',
+          [
+            'std::reverse cannot change a std::string',
+            'std::abs only works on a copy',
+            'Comparing a string with itself does not compile',
+            'Reversing digits in place would leave no unreversed text to compare against',
+          ],
+          3,
+          'After an in-place reverse, both sides of the comparison would be the same reversed text.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+bool is_palindrome(int value) {
+  std::string digits = std::to_string(std::abs(value));
+  std::string reversed = digits;
+  std::reverse(reversed.begin(), reversed.end());
+  return digits == reversed;
+}
+int main() {
+  std::cout << is_palindrome(1001) << is_palindrome(-1010) << "\\n";
+}`,
+          '10',
+          '"1001" reads the same backwards. -1010 becomes "1010", whose reverse is "0101".',
         ),
       ],
     },

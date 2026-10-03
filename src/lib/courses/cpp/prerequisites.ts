@@ -135,6 +135,14 @@ export const cppPrerequisites: Record<string, string[]> = {
   'cpp-iterator-distance': ['cpp-explicit-casts', 'cpp-iterator-range'],
   'cpp-reallocation-invalidation': ['cpp-vector-reserve', 'cpp-iterator-range'],
   'cpp-iterators': ['cpp-vectors', 'cpp-reallocation-invalidation'],
+  'cpp-abs-value': ['cpp-explicit-casts'],
+  'cpp-to-string': ['cpp-string-append'],
+  'cpp-reverse-range': ['cpp-iterator-range', 'cpp-independent-copy'],
+  'cpp-digit-palindrome': [
+    'cpp-abs-value',
+    'cpp-to-string',
+    'cpp-reverse-range',
+  ],
   'cpp-pair-members': ['cpp-arithmetic'],
   'cpp-pair-ordering': ['cpp-pair-members', 'cpp-logical-operators'],
   'cpp-structured-bindings': ['cpp-pair-members', 'cpp-types', 'cpp-range-for'],
@@ -164,6 +172,18 @@ export const cppPrerequisites: Record<string, string[]> = {
     'cpp-lambda-value-capture',
   ],
   'cpp-lambdas': ['cpp-unique-transfer', 'cpp-lambda-reference-capture'],
+  'cpp-auto-parameters': [
+    'cpp-lambda-value-capture',
+    'cpp-explicit-casts',
+    'cpp-vector-elements',
+  ],
+  'cpp-decltype-decay': ['cpp-auto-parameters', 'cpp-type-facts'],
+  'cpp-mutable-lambda': ['cpp-lambda-reference-capture', 'cpp-for-bounds'],
+  'cpp-generic-lambdas': [
+    'cpp-decltype-decay',
+    'cpp-mutable-lambda',
+    'cpp-range-for',
+  ],
   'cpp-function-template': [
     'cpp-function-overloads',
     'cpp-conditional-operator',
@@ -198,7 +218,7 @@ export const cppPrerequisites: Record<string, string[]> = {
     'cpp-conditional-operator',
   ],
   'cpp-optional': [
-    'cpp-lambda-value-capture',
+    'cpp-decltype-decay',
     'cpp-if-constexpr',
     'cpp-variant-alternatives',
   ],
@@ -223,13 +243,9 @@ export const cppPrerequisites: Record<string, string[]> = {
   'cpp-build': ['cpp-constexpr-function', 'cpp-internal-linkage'],
   'cpp-assert-contract': ['cpp-bool-values', 'cpp-return-values'],
   'cpp-boundary-case': ['cpp-vector-elements', 'cpp-assert-contract'],
-  'cpp-property-test': [
-    'cpp-independent-copy',
-    'cpp-iterator-range',
-    'cpp-assert-contract',
-  ],
+  'cpp-property-test': ['cpp-reverse-range', 'cpp-assert-contract'],
   'cpp-testing': [
-    'cpp-explicit-casts',
+    'cpp-abs-value',
     'cpp-assert-contract',
     'cpp-logical-operators',
   ],
@@ -300,7 +316,7 @@ export const cppPrerequisites: Record<string, string[]> = {
   'cpp-duration-cast': ['cpp-duration-count', 'cpp-arithmetic'],
   'cpp-time-points': ['cpp-duration-cast'],
   'cpp-chrono': ['cpp-time-points', 'cpp-bool-values'],
-  'cpp-elapsed-duration': ['cpp-arithmetic', 'cpp-conditional-operator'],
+  'cpp-elapsed-duration': ['cpp-chrono', 'cpp-if-branches'],
   'cpp-median-samples': ['cpp-explicit-casts', 'cpp-sort-order'],
   'cpp-nearest-rank-percentile': ['cpp-median-samples'],
   'cpp-measurement': [
@@ -337,7 +353,7 @@ export const cppPrerequisites: Record<string, string[]> = {
     'cpp-for-bounds',
     'cpp-while-progress',
     'cpp-string-view',
-    'cpp-string-append',
+    'cpp-to-string',
     'cpp-short-circuit',
   ],
   'cpp-book-imbalance': [
@@ -360,7 +376,7 @@ export const cppPrerequisites: Record<string, string[]> = {
     'cpp-std-function',
     'cpp-conditional-operator',
   ],
-  'cpp-callbacks': ['cpp-lambdas', 'cpp-std-function'],
+  'cpp-callbacks': ['cpp-lambdas', 'cpp-std-function', 'cpp-mutable-lambda'],
   'cpp-backpressure': ['cpp-deque'],
   'cpp-idempotent-message': [
     'cpp-map-insert',
@@ -377,6 +393,7 @@ export const cppPrerequisites: Record<string, string[]> = {
     'cpp-sort-order',
     'cpp-lambda-predicate',
     'cpp-pair-members',
+    'cpp-auto-parameters',
   ],
   'cpp-integer-money': ['cpp-notional-limit'],
   'cpp-seeded-engine': ['cpp-unsigned-wrap', 'cpp-for-bounds'],

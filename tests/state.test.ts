@@ -21,6 +21,7 @@ import {
 import { parseStateUpdate } from '../src/lib/server/state-validation';
 import { cardBlocks, plainText } from '../src/lib/card-text';
 import { earnedXp, lessonXp } from '../src/lib/xp';
+import { acceptedAnswer } from '../src/lib/typed-answer';
 import { lessonAnswerIds, masterSkill } from './helpers/mastery';
 
 const skill = skills.find((candidate) => candidate.prerequisites.length === 0)!;
@@ -172,12 +173,17 @@ describe('recording learning answers against current state', () => {
     const question = skill.knowledgePoints![0].questions[0];
     expect(question.id).toBe(input.questionId);
     expect(result.cards[0].front).toContain(question.prompt);
-    if (question.type === 'choice') {
-      expect(plainText(cardBlocks(result.cards[0].back))).toBe(
+    const back = plainText(cardBlocks(result.cards[0].back));
+    if (question.type === 'choice')
+      expect(back).toBe(
         `${question.choices[question.answer]}\n\n${question.explanation}`,
       );
-      if (question.code) expect(result.cards[0].front).toContain(question.code);
-    }
+    else if (question.type !== 'code')
+      expect(back).toBe(
+        `${acceptedAnswer(question)}${question.type === 'numeric' && question.unit ? ` ${question.unit}` : ''}\n\n${question.explanation}`,
+      );
+    if (question.type !== 'code' && question.code)
+      expect(result.cards[0].front).toContain(question.code);
   });
 
   it('replays a stable event identity as a no-op after unrelated new work', () => {
@@ -211,11 +217,11 @@ describe('recording learning answers against current state', () => {
     expect(replayed.cards).toHaveLength(1);
   });
 
-  it('adds the actual authored mastery cards when a choice-only systems skill becomes mastered', () => {
-    expect(systemsSkill.questions.every((q) => q.type === 'choice')).toBe(true);
+  it('adds the actual authored mastery cards when a systems skill without code becomes mastered', () => {
+    expect(systemsSkill.questions.every((q) => q.type !== 'code')).toBe(true);
     expect(
       systemsSkill.knowledgePoints!.every((point) =>
-        point.questions.every((q) => q.type === 'choice'),
+        point.questions.every((q) => q.type !== 'code'),
       ),
     ).toBe(true);
     let current = baseline();

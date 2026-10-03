@@ -44,27 +44,27 @@ Before CEN-126, the 207 KB `code-block` chunk was mostly CodeMirror: `src/lib/co
 
 | Course                   | Edges before → after → now | Longest in-course chain | Median ready |
 | ------------------------ | -------------------------: | ----------------------: | -----------: |
-| Python foundations       |               45 → 30 → 74 |             10 → 9 → 12 |    3 → 3 → 6 |
-| Quantitative foundations |                 7 → 8 → 49 |               3 → 2 → 8 |    2 → 2 → 4 |
+| Python foundations       |               45 → 30 → 77 |             10 → 9 → 13 |    3 → 3 → 6 |
+| Quantitative foundations |                 7 → 8 → 51 |               3 → 2 → 8 |    2 → 2 → 4 |
 | Python for Data Analysis |               48 → 39 → 44 |              15 → 8 → 8 |    2 → 3 → 3 |
-| Machine Learning         |               89 → 56 → 82 |              10 → 9 → 9 |    3 → 6 → 6 |
-| Data Systems             |               42 → 33 → 33 |               7 → 7 → 7 |    3 → 3 → 3 |
-| Competitive Programming  |            683 → 373 → 443 |              20 → 9 → 9 |  9 → 28 → 28 |
-| Rust                     |            145 → 227 → 261 |           124 → 15 → 18 |  1 → 17 → 17 |
-| C++                      |            200 → 296 → 383 |           116 → 12 → 12 |  3 → 30 → 32 |
-| **Catalog**              |  **1,259 → 1,062 → 1,369** |                         |              |
+| Machine Learning         |               89 → 56 → 84 |              10 → 9 → 9 |    3 → 6 → 6 |
+| Data Systems             |               42 → 33 → 34 |               7 → 7 → 7 |    3 → 3 → 3 |
+| Competitive Programming  |            683 → 373 → 444 |              20 → 9 → 9 |  9 → 28 → 27 |
+| Rust                     |            145 → 227 → 265 |           124 → 15 → 18 |  1 → 17 → 17 |
+| C++                      |            200 → 296 → 404 |           116 → 12 → 12 |  3 → 30 → 32 |
+| **Catalog**              |  **1,259 → 1,062 → 1,403** |                         |              |
 
-"Now" adds the nodes that teach what lessons used without teaching: Python idioms (CEN-81), the mathematics layer for ML (CEN-82, below), Rust basics (CEN-84), and C++ basics (CEN-85). The catalog now has 710 skills. For Python: 24 skills for constructs that lessons used without teaching, such as tuples, unpacking, built-ins, truthiness, sorting keys, sets, imports, heaps, and classes. Every skill whose lesson, example, questions, or solution uses one of them now names it directly, and prerequisites that became implied were removed. Writing knowledge points for every foundation skill also exposed three missing edges, now added: `strings` repeats text with `*` from `numbers`, `lists` relies on `==` from `comparisons` for membership and equality, and `parameters` uses the `is None` default idiom from `truthiness`.
+"Now" adds the nodes that teach what lessons used without teaching: Python idioms (CEN-81), the mathematics layer for ML (CEN-82, below), Rust basics (CEN-84), C++ basics (CEN-85), and the last constructs from the audit (CEN-114, below). The catalog now has 720 skills. For Python: 24 skills for constructs that lessons used without teaching, such as tuples, unpacking, built-ins, truthiness, sorting keys, sets, imports, heaps, and classes. Every skill whose lesson, example, questions, or solution uses one of them now names it directly, and prerequisites that became implied were removed. Writing knowledge points for every foundation skill also exposed three missing edges, now added: `strings` repeats text with `*` from `numbers`, `lists` relies on `==` from `comparisons` for membership and equality, and `parameters` uses the `is None` default idiom from `truthiness`.
 
 For Rust, 17 basics were added, and every lesson using them now depends on them. Redundant edges fell from 523 to 0. Rust and C++ gained edges because the old generators chained each skill to the previous one and omitted most real uses: 55% of Rust's and 52% of C++'s previous-skill edges were false, and dozens of skills used constructs taught only later. Competitive Programming no longer injects `parameters` into every node or chains every concept to its sibling; 231 of its removed edges named skills that are no longer ancestors at all.
 
 ## Mathematics for ML (CEN-82)
 
-Machine Learning and Data Analysis used mathematics that no skill taught. Quantitative foundations now has 36 single-idea skills in five units, and each ML or DA skill names the math it uses:
+Machine Learning and Data Analysis used mathematics that no skill taught. Quantitative foundations now has 37 single-idea skills in five units, and each ML or DA skill names the math it uses:
 
 - **Describe data:** means, variance, medians, percentiles and quartiles, covariance, correlation.
 - **Model uncertainty:** probability, random variables and expected value, variance of a random variable, Bernoulli and binomial distributions, the normal distribution, sampling, likelihood.
-- **Functions and growth:** functions and graphs, exponents and e, logarithms, the sigmoid, softmax.
+- **Functions and growth:** functions and graphs, exponents and e, logarithms, computing them with `math.exp` and `math.log` (CEN-114), the sigmoid, softmax.
 - **Derivatives and optimization:** rate of change, power rule, sum and product rules, chain rule, partial derivatives, the gradient vector, gradient descent steps, critical points, convexity.
 - **Vectors and matrices:** vectors and dot products, norms, distance, cosine similarity, matrices and transposes, matrix–vector and matrix–matrix products, identity and inverse, eigenvectors for PCA.
 
@@ -94,21 +94,47 @@ Machine Learning and Data Analysis used mathematics that no skill taught. Quanti
 
 Edges stay direct, so some uses arrive through another prerequisite: `ml-backpropagation` reaches the chain rule through `ml-gradient-descent` → `math-gradients` → `math-gradient-vector` → `math-partial-derivatives`; `ml-attention` and `ml-keras-workflow` reach softmax and matrix multiplication through `ml-neural-layers`; `ml-training-deep-networks` reaches norms through `ml-regularization`.
 
-Overfitting is now its own skill, `ml-overfitting`, which depends only on `ml-baselines`. `ml-decision-trees` depends on it instead of `ml-regularization`, so trees no longer reach calculus. Every quantitative skill has knowledge points: 116 points and 464 questions. The 61 output questions and 43 runnable worked examples execute in Pyodide; the other 73 worked examples are calculations shown as text. Ten skills keep a Python exercise where computing is the point (mean, variance, probability, gradient steps, dot products, norms, distance, cosine similarity, covariance, correlation); the other 26 are assessed with choices only.
+Overfitting is now its own skill, `ml-overfitting`, which depends only on `ml-baselines`. `ml-decision-trees` depends on it instead of `ml-regularization`, so trees no longer reach calculus. Every quantitative skill has knowledge points: 119 points and 476 questions. The 70 output questions and 45 runnable worked examples execute in Pyodide; the other 74 worked examples are calculations shown as text. Eleven skills keep a Python exercise where computing is the point (mean, variance, probability, gradient steps, dot products, norms, distance, cosine similarity, covariance, correlation, and `math.exp`/`math.log`); the other 26 are assessed with choices only.
 
 Since the audit, C++ gained seven four-skill topics for constructs it used without teaching (logical and conditional operators, fixed arrays and range-based loops, characters and type traits, bit operations, member functions and `const`, pairs and structured bindings, and `std::chrono`). Every dependent now names the skill it uses: C++ has 208 skills and 383 direct edges, its longest in-course chain is still 12, and the median ready count is 32.
+
+## Teaching the remaining constructs (CEN-114)
+
+The audit's last untaught constructs now have a skill, or the lesson stopped using them. Ten new skills each have knowledge points, an executable exercise, and two cards, and every skill that uses one names it directly unless another prerequisite already implies it:
+
+| New skill              | Course                   | Teaches                                                                      | Direct dependents                                                                                      |
+| ---------------------- | ------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `decorators`           | Python foundations       | `@deco` as `f = deco(f)`, `functools.cache`, caching a recursion             | `cp-memoization` (replaces `imports`)                                                                  |
+| `math-exp-log`         | Quantitative foundations | `math.exp`, `math.e`, `math.log` and its bases, `ValueError`, adding logs    | `ml-logistic-regression`                                                                               |
+| `cpp-abs-value`        | C++                      | `std::abs` and the distance `std::abs(a - b)`                                | `cpp-testing` (replaces `cpp-explicit-casts`), `cpp-digit-palindrome`                                  |
+| `cpp-to-string`        | C++                      | `std::to_string`, and why `text += 65` appends one character                 | `cpp-protocol` (replaces `cpp-string-append`), `cpp-digit-palindrome`                                  |
+| `cpp-reverse-range`    | C++                      | in-place `std::reverse` of whole and partial ranges                          | `cpp-property-test` (replaces `cpp-iterator-range` and `cpp-independent-copy`), `cpp-digit-palindrome` |
+| `cpp-digit-palindrome` | C++                      | the topic's application: a sign-free numeric palindrome check                | none                                                                                                   |
+| `cpp-auto-parameters`  | C++                      | generic lambdas with `auto` and `const auto&` parameters                     | `cpp-tie-break-order`, `cpp-decltype-decay`                                                            |
+| `cpp-decltype-decay`   | C++                      | `decltype`, `std::decay_t`, and branching on `std::is_same_v`                | `cpp-optional` (replaces `cpp-lambda-value-capture`), `cpp-generic-lambdas`                            |
+| `cpp-mutable-lambda`   | C++                      | `mutable` by-value captures, reference captures instead, and copied closures | `cpp-callbacks`, `cpp-generic-lambdas`                                                                 |
+| `cpp-generic-lambdas`  | C++                      | the topic's application: one stateful generic lambda across argument types   | none                                                                                                   |
+
+The C++ skills form two four-skill topics: "Magnitudes, digit text, and reversal" in the strings-and-vectors unit and "Generic and stateful lambdas" in the generic-code unit. C++ now has 216 skills in 54 topics and 404 edges; its longest in-course chain is still 12 and its median ready count 32. Python foundations' longest chain grows from 12 to 13, because `decorators` builds on recursion and sorting keys.
+
+The other gaps needed no new skill:
+
+- `ml-ensembles` averages each observation with an index loop, as its knowledge points already did, instead of transposing with `zip(*rows)`. `ml-deployment-monitoring` finds missing features with a list comprehension and `set()` instead of set operations on `dict.keys()`.
+- `sum()` and `round()` are taught by `number-builtins`, which every quantitative lesson that uses them reaches through `math-mean`. `ml-data-splits`, whose knowledge points compute class shares with `sum(labels) / len(labels)`, now depends on `number-builtins` directly.
+- `ml-svm`, `ml-backpropagation`, `ml-keras-workflow`, and `ml-generative-models` call `math.exp` or `math.log` and reach `math-exp-log` through `ml-logistic-regression`, so a direct edge would be redundant.
+- `std::count_if` is taught by the first knowledge point of `cpp-lambda-predicate`, its only user.
+- `cpp-elapsed-duration` subtracts `steady_clock` time points and reports with `duration_cast`. Its exercise takes time points, its knowledge points were rewritten to match, and it depends on `cpp-chrono` and `cpp-if-branches` instead of `cpp-arithmetic` and `cpp-conditional-operator`.
 
 ## Known gaps
 
 Edges cannot fix content. These items are the backlog for new concept nodes and lesson rewrites.
 
-**Constructs used but taught nowhere** (number of skills that first use them):
-
-- Python: decorators (`@cache` in `cp-memoization`, whose lesson describes `functools.cache` but not decorator syntax), argument unpacking with `zip(*rows)` (`ml-ensembles`), and set operations on `dict.keys()` (`ml-deployment-monitoring`).
-- Quantitative foundations: the original five lessons' examples and exercises use `sum()` and `round()`, which Python foundations does not teach; their knowledge points use loops instead. Several ML lessons call `math.exp` and `math.log` (imports, above).
-- C++: generic lambdas and `decltype`/`std::decay_t` (`cpp-optional`, `cpp-tie-break-order`), `mutable` lambdas (`cpp-callbacks`), and single uses of `std::count_if`, `std::reverse`, `std::abs`, and `std::to_string`. `cpp-elapsed-duration` still subtracts raw `long long` timestamps instead of using the `std::chrono` skills.
+**Constructs used but taught nowhere:** none known. Every construct the audit listed is now taught by a skill its users depend on, or no longer used (CEN-114, above). Record new findings here.
 
 **Closed since the audit:**
+
+- Python teaches decorators and `functools.cache` (`decorators`, required by `cp-memoization`). `ml-ensembles` no longer transposes with `zip(*rows)`, and `ml-deployment-monitoring` no longer subtracts `dict.keys()` from a set. Quantitative foundations teaches `math.exp` and `math.log` (`math-exp-log`, required by `ml-logistic-regression` and reached by every other ML lesson that calls them), and `ml-data-splits` depends on `number-builtins` for `sum()`.
+- C++ teaches generic lambdas, `decltype` and `std::decay_t`, `mutable` lambdas, `std::abs`, `std::to_string`, and `std::reverse` in two new topics, and `cpp-optional`, `cpp-tie-break-order`, `cpp-callbacks`, `cpp-testing`, `cpp-protocol`, and `cpp-property-test` depend on them. `std::count_if` is taught by `cpp-lambda-predicate`, its only user, and `cpp-elapsed-duration` now uses the `std::chrono` skills.
 
 - C++ teaches the basics lessons used without teaching: logical operators and `?:`, range-for with `std::array`, `break`/`continue`, `char`, `sizeof`, fixed-width integers, type traits, bit operations, member functions and `const`, pairs and structured bindings, and `std::chrono`. `cpp-arithmetic` teaches `%`, `cpp-while-progress` uses a real `while`, and `cpp-functions` no longer sums a vector before vectors are taught.
 - Machine Learning has a mathematics layer: 31 quantitative-foundations skills cover statistics, probability, exponentials and logarithms, sigmoid and softmax, derivatives and the chain rule, gradients, vectors, matrices, covariance and eigenvectors, and ML and Data Analysis skills depend on the ones they use. `ml-decision-trees` now depends on a separate `ml-overfitting` skill instead of reaching calculus through regularization.

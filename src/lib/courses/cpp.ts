@@ -1661,6 +1661,89 @@ const topics: Topic[] = [
     ],
   },
   {
+    key: 'digit-palindrome',
+    title: 'Magnitudes, digit text, and reversal',
+    unit: 'cpp-sequences',
+    atoms: [
+      {
+        key: 'abs-value',
+        title: 'Measure a distance with std::abs',
+        definition:
+          'std::abs returns the magnitude of a number, so std::abs(a - b) is the distance between a and b whichever of them is larger.',
+        rule: 'Subtract first and then take std::abs, including <cstdlib> for integers and <cmath> for floating-point values.',
+        violation:
+          'Subtract the magnitudes, std::abs(a) - std::abs(b), and report that as the distance.',
+        signature: 'int solve(int a, int b)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <cstdlib>\nint solve(int a, int b) {\n  return std::abs(a - b);\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <cstdlib>\nint solve(int a, int b) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <cstdlib>\nint main() {\n  assert(solve(3, 10) == 7);\n  assert(solve(10, 3) == 7);\n  assert(solve(-4, 4) == 8);\n  assert(solve(5, 5) == 0);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <cstdlib>\nint solve(int a, int b) {\n  return std::abs(a - b);\n}\nint main() { std::cout << solve(3, 10) << " " << solve(-4, 4) << "\\n"; }',
+        output: '7 8',
+      },
+      {
+        key: 'to-string',
+        title: 'Turn a number into text with std::to_string',
+        definition:
+          'std::to_string (from <string>) converts a number into a std::string of its decimal digits, with a leading minus sign for a negative value.',
+        rule: 'Convert a number with std::to_string before appending it to text; += with an int appends a single character code instead.',
+        violation:
+          'Append an int count to a std::string with += and expect its decimal digits.',
+        signature: 'std::string solve(const std::string& label, int count)',
+        solution:
+          "#include <iostream>\n#include <cassert>\n#include <string>\nstd::string solve(const std::string& label, int count) {\n  std::string text = label;\n  text += '=';\n  text += std::to_string(count);\n  return text;\n}",
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <string>\nstd::string solve(const std::string& label, int count) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <string>\nint main() {\n  assert(solve("bids", 12) == "bids=12");\n  assert(solve("gap", -3) == "gap=-3");\n  assert(solve("n", 65) == "n=65");\n  assert(solve("", 0) == "=0");\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <string>\nstd::string solve(const std::string& label, int count) {\n  std::string text = label;\n  text += \'=\';\n  text += std::to_string(count);\n  return text;\n}\nint main() { std::cout << solve("bids", 12) << "\\n"; }',
+        output: 'bids=12',
+      },
+      {
+        key: 'reverse-range',
+        title: 'Reverse a range in place with std::reverse',
+        definition:
+          'std::reverse(first, last) (from <algorithm>) reverses the elements of [first, last) in place, swapping pairs from both ends inward, and returns nothing.',
+        rule: 'Copy the container first when the original order is still needed, then reverse the copy.',
+        violation:
+          'Expect std::reverse to return a reversed copy and leave the original range unchanged.',
+        signature: 'std::vector<int> solve(std::vector<int> values)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <vector>\n#include <algorithm>\nstd::vector<int> solve(std::vector<int> values) {\n  std::reverse(values.begin(), values.end());\n  return values;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <vector>\n#include <algorithm>\nstd::vector<int> solve(std::vector<int> values) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <vector>\n#include <algorithm>\nint main() {\n  std::vector<int> three = solve({1, 2, 3});\n  assert(three.size() == 3 && three[0] == 3 && three[1] == 2 && three[2] == 1);\n  std::vector<int> two = solve({5, 6});\n  assert(two.size() == 2 && two[0] == 6 && two[1] == 5);\n  assert(solve({4}).size() == 1 && solve({4})[0] == 4);\n  assert(solve({}).empty());\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <vector>\n#include <algorithm>\nstd::vector<int> solve(std::vector<int> values) {\n  std::reverse(values.begin(), values.end());\n  return values;\n}\nint main() { std::vector<int> reversed = solve({1, 2, 3}); std::cout << reversed[0] << reversed[1] << reversed[2] << "\\n"; }',
+        output: '321',
+      },
+      {
+        key: 'digit-palindrome',
+        title: 'Check a numeric palindrome',
+        definition:
+          'An integer is a digit palindrome when the decimal text of its magnitude reads the same reversed: take std::abs, convert with std::to_string, reverse a copy, and compare.',
+        rule: 'Remove the sign with std::abs before converting, and reverse a copy so the original text is still there to compare against.',
+        violation:
+          'Reverse the text with its minus sign, so a negative palindrome such as -121 becomes "121-" and never matches.',
+        signature: 'bool solve(int value)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <string>\n#include <cstdlib>\n#include <algorithm>\nbool solve(int value) {\n  std::string digits = std::to_string(std::abs(value));\n  std::string reversed = digits;\n  std::reverse(reversed.begin(), reversed.end());\n  return digits == reversed;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <string>\n#include <cstdlib>\n#include <algorithm>\nbool solve(int value) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <string>\n#include <cstdlib>\n#include <algorithm>\nint main() {\n  assert(solve(121) == true);\n  assert(solve(-121) == true);\n  assert(solve(123) == false);\n  assert(solve(7) == true);\n  assert(solve(0) == true);\n  assert(solve(10) == false);\n  assert(solve(-1001) == true);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <string>\n#include <cstdlib>\n#include <algorithm>\nbool solve(int value) {\n  std::string digits = std::to_string(std::abs(value));\n  std::string reversed = digits;\n  std::reverse(reversed.begin(), reversed.end());\n  return digits == reversed;\n}\nint main() { std::cout << solve(-121) << " " << solve(123) << "\\n"; }',
+        output: '1 0',
+      },
+    ],
+  },
+  {
     key: 'pairs',
     title: 'Pairs and structured bindings',
     unit: 'cpp-sequences',
@@ -2064,6 +2147,90 @@ const topics: Topic[] = [
         example:
           '#include <iostream>\n#include <cassert>\n#include <memory>\n#include <utility>\nint solve(int value) {\n  auto owner = std::make_unique<int>(value);\n  auto read = [held = std::move(owner)] { return *held; };\n  return read();\n}\nint main() { std::cout << solve(12) << "\\n"; }',
         output: '12',
+      },
+    ],
+  },
+  {
+    key: 'generic-lambdas',
+    title: 'Generic and stateful lambdas',
+    unit: 'cpp-generic',
+    atoms: [
+      {
+        key: 'auto-parameters',
+        title: 'Write a lambda with auto parameters',
+        definition:
+          'A lambda whose parameter is declared auto is generic: each call with a new argument type compiles a separate version of its body for that type.',
+        rule: 'Let each argument keep its own type, and write const auto& for a read-only parameter that would be costly to copy.',
+        violation:
+          'Declare the parameter as int and silently truncate a double argument.',
+        signature: 'double solve(int whole, double fraction)',
+        solution:
+          '#include <iostream>\n#include <cassert>\ndouble solve(int whole, double fraction) {\n  auto half = [](auto value) { return value / 2; };\n  return half(whole) + half(fraction);\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\ndouble solve(int whole, double fraction) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(7, 7.0) == 6.5);\n  assert(solve(-3, 1.0) == -0.5);\n  assert(solve(8, 0.5) == 4.25);\n  assert(solve(0, 0.0) == 0.0);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\ndouble solve(int whole, double fraction) {\n  auto half = [](auto value) { return value / 2; };\n  return half(whole) + half(fraction);\n}\nint main() { std::cout << solve(7, 7.0) << "\\n"; }',
+        output: '6.5',
+      },
+      {
+        key: 'decltype-decay',
+        title: 'Name a deduced type with decltype and std::decay_t',
+        definition:
+          'decltype(x) names the declared type of x, references and const included; std::decay_t removes them, so std::decay_t<decltype(x)> is the plain type behind a const auto& parameter.',
+        rule: 'Compare std::decay_t<decltype(x)> with a plain type such as int, not decltype(x) itself.',
+        violation:
+          'Compare decltype(x) of a const auto& parameter directly with int, which is never true.',
+        signature: 'long long solve(int cents, double dollars)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <type_traits>\nlong long solve(int cents, double dollars) {\n  auto to_cents = [](const auto& amount) {\n    using T = std::decay_t<decltype(amount)>;\n    long long result = 0;\n    if (std::is_same_v<T, int>) {\n      result = amount;\n    } else {\n      result = static_cast<long long>(amount * 100 + 0.5);\n    }\n    return result;\n  };\n  return to_cents(cents) + to_cents(dollars);\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <type_traits>\nlong long solve(int cents, double dollars) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <type_traits>\nint main() {\n  assert(solve(250, 1.5) == 400LL);\n  assert(solve(99, 0.01) == 100LL);\n  assert(solve(5, 2.25) == 230LL);\n  assert(solve(0, 0.0) == 0LL);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <type_traits>\nlong long solve(int cents, double dollars) {\n  auto to_cents = [](const auto& amount) {\n    using T = std::decay_t<decltype(amount)>;\n    long long result = 0;\n    if (std::is_same_v<T, int>) {\n      result = amount;\n    } else {\n      result = static_cast<long long>(amount * 100 + 0.5);\n    }\n    return result;\n  };\n  return to_cents(cents) + to_cents(dollars);\n}\nint main() { std::cout << solve(250, 1.5) << "\\n"; }',
+        output: '400',
+      },
+      {
+        key: 'mutable-lambda',
+        title: 'Keep state in a mutable lambda',
+        definition:
+          'A lambda marked mutable may change its by-value captures: each call updates the closure’s own copy, which persists between calls while the original variable stays unchanged.',
+        rule: 'Use mutable for state the closure owns, and capture by reference when the caller must see the change.',
+        violation:
+          'Expect a mutable lambda’s changes to its captured copy to update the original variable.',
+        signature: 'int solve(int start, int calls)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nint solve(int start, int calls) {\n  int value = start;\n  auto next = [value]() mutable { return ++value; };\n  int last = start;\n  for (int i = 0; i < calls; ++i) last = next();\n  return last;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nint solve(int start, int calls) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(5, 3) == 8);\n  assert(solve(10, 2) == 12);\n  assert(solve(-2, 1) == -1);\n  assert(solve(0, 0) == 0);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nint solve(int start, int calls) {\n  int value = start;\n  auto next = [value]() mutable { return ++value; };\n  int last = start;\n  for (int i = 0; i < calls; ++i) last = next();\n  return last;\n}\nint main() { std::cout << solve(5, 3) << "\\n"; }',
+        output: '8',
+      },
+      {
+        key: 'generic-lambdas',
+        title: 'Total mixed amounts with one stateful generic lambda',
+        definition:
+          'A generic lambda is one closure: calls with int and double arguments run different compiled bodies but share the same mutable captures, so a running total accumulates across both.',
+        rule: 'Declare shared state once in the capture list, mark the lambda mutable, and branch on std::decay_t<decltype(x)> inside the body.',
+        violation:
+          'Assume each argument type gets its own separate copy of the captured total.',
+        signature:
+          'long long solve(const std::vector<int>& cents, const std::vector<double>& dollars)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <vector>\n#include <type_traits>\nlong long solve(const std::vector<int>& cents, const std::vector<double>& dollars) {\n  long long total = 0;\n  auto add = [total](const auto& amount) mutable {\n    using T = std::decay_t<decltype(amount)>;\n    if (std::is_same_v<T, int>) {\n      total += amount;\n    } else {\n      total += static_cast<long long>(amount * 100 + 0.5);\n    }\n    return total;\n  };\n  long long last = 0;\n  for (int c : cents) last = add(c);\n  for (double d : dollars) last = add(d);\n  return last;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <vector>\n#include <type_traits>\nlong long solve(const std::vector<int>& cents, const std::vector<double>& dollars) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <vector>\n#include <type_traits>\nint main() {\n  assert(solve({250, 99}, {1.5, 0.25}) == 524LL);\n  assert(solve({5}, {}) == 5LL);\n  assert(solve({}, {2.0, 0.1}) == 210LL);\n  assert(solve({}, {}) == 0LL);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <vector>\n#include <type_traits>\nlong long solve(const std::vector<int>& cents, const std::vector<double>& dollars) {\n  long long total = 0;\n  auto add = [total](const auto& amount) mutable {\n    using T = std::decay_t<decltype(amount)>;\n    if (std::is_same_v<T, int>) {\n      total += amount;\n    } else {\n      total += static_cast<long long>(amount * 100 + 0.5);\n    }\n    return total;\n  };\n  long long last = 0;\n  for (int c : cents) last = add(c);\n  for (double d : dollars) last = add(d);\n  return last;\n}\nint main() { std::cout << solve({250, 99}, {1.5, 0.25}) << "\\n"; }',
+        output: '524',
       },
     ],
   },
@@ -3564,19 +3731,20 @@ const topics: Topic[] = [
         key: 'elapsed-duration',
         title: 'Compute elapsed duration',
         definition:
-          'Elapsed time is the end reading minus the start reading from a suitable consistent clock.',
-        rule: 'Use a monotonic clock for intervals and keep units explicit.',
+          'Elapsed time is a later steady_clock time point minus an earlier one: a std::chrono duration whose unit travels with it until you convert it for reporting.',
+        rule: 'Subtract time points of one monotonic clock, reject an end before the start, and duration_cast the difference to the unit you report.',
         violation:
-          'Subtract unrelated clock epochs and label the result as nanoseconds.',
-        signature: 'long long solve(long long start_ns, long long end_ns)',
+          'Subtract raw integer timestamps whose units and clocks are unstated, and label the result as nanoseconds.',
+        signature:
+          'long long solve(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end)',
         solution:
-          '#include <iostream>\n#include <cassert>\nlong long solve(long long start_ns, long long end_ns) {\n  return end_ns >= start_ns ? end_ns - start_ns : -1;\n}',
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) {\n  if (end < start) return -1;\n  return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();\n}',
         starterCode:
-          '#include <iostream>\n#include <cassert>\nlong long solve(long long start_ns, long long end_ns) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
         tests:
-          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(100, 145) == 45LL);\n  assert(solve(10, 10) == 0LL);\n  assert(solve(20, 5) == -1LL);\n}\n',
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point t0{std::chrono::microseconds(100)};\n  assert(solve(t0, t0 + std::chrono::microseconds(45)) == 45LL);\n  assert(solve(t0, t0 + std::chrono::milliseconds(3)) == 3000LL);\n  assert(solve(t0, t0 + std::chrono::nanoseconds(1999)) == 1LL);\n  assert(solve(t0, t0) == 0LL);\n  assert(solve(t0 + std::chrono::milliseconds(2), t0) == -1LL);\n}\n',
         example:
-          '#include <iostream>\n#include <cassert>\nlong long solve(long long start_ns, long long end_ns) {\n  return end_ns >= start_ns ? end_ns - start_ns : -1;\n}\nint main() { std::cout << solve(100, 145) << "\\n"; }',
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) {\n  if (end < start) return -1;\n  return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();\n}\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::microseconds(100)};\n  std::cout << solve(start, start + std::chrono::microseconds(45)) << "\\n";\n}',
         output: '45',
       },
       {
@@ -4429,7 +4597,7 @@ export const cppCatalog: CurriculumCatalog = {
       id: 'cpp',
       title: 'C++: from values to systems',
       description:
-        '208 focused C++20 skills: lifetime and ownership, STL, generic code, compiler contracts, concurrency, architecture, and original quant-system applications.',
+        '216 focused C++20 skills: lifetime and ownership, STL, generic code, compiler contracts, concurrency, architecture, and original quant-system applications.',
       domain: 'programming',
       language: 'cpp',
       skillIds: cppSkills.map((skill) => skill.id),

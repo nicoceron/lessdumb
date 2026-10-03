@@ -1,6 +1,7 @@
 import type { AnkiCard } from './anki';
 import type { Question } from './curriculum';
 import { plainProse } from './math-text';
+import { acceptedAnswer } from './typed-answer';
 
 /**
  * A run of card text. `prose` is authored lesson prose: `$…$` inline math,
@@ -85,6 +86,22 @@ export function plainText(blocks: CardBlock[]): string {
     .join('\n\n');
 }
 
+/** The answer a card shows: what the lesson showed after the question. */
+function answerBlock(question: Question): CardBlock {
+  if (question.type === 'code')
+    return { kind: 'code', text: question.solution };
+  if (question.type === 'choice')
+    return question.checksOutput
+      ? { kind: 'code', text: question.choices[question.answer] }
+      : { kind: 'prose', text: question.choices[question.answer] };
+  // Typed answers are literal, never math, as the lesson shows them.
+  const unit = question.type === 'numeric' && question.unit;
+  return {
+    kind: 'code',
+    text: `${acceptedAnswer(question)}${unit ? ` ${unit}` : ''}`,
+  };
+}
+
 /**
  * The text of the card a wrong answer creates: the question on the front
  * (its prompt, then its program), the answer and its explanation on the back.
@@ -95,14 +112,10 @@ export function mistakeCardText(
   question: Question,
 ): Pick<AnkiCard, 'front' | 'back' | 'format'> {
   const front: CardBlock[] = [{ kind: 'prose', text: question.prompt }];
-  if (question.type === 'choice' && question.code)
+  if (question.type !== 'code' && question.code)
     front.push({ kind: 'code', text: question.code });
   const back: CardBlock[] = [
-    question.type === 'code'
-      ? { kind: 'code', text: question.solution }
-      : question.checksOutput
-        ? { kind: 'code', text: question.choices[question.answer] }
-        : { kind: 'prose', text: question.choices[question.answer] },
+    answerBlock(question),
     { kind: 'prose', text: question.explanation },
   ];
   const [frontText, backText] = [cardText(front), cardText(back)];

@@ -1,4 +1,5 @@
 import type {
+  AssessmentType,
   Course,
   CurriculumCatalog,
   GraphCatalog,
@@ -47,6 +48,14 @@ export function encompassedBy<S extends SkillOutline>(
 }
 
 /**
+ * The assessment a question gives: an executed `code` exercise, or `choice`
+ * for any question answered without running code, chosen or typed.
+ */
+export function assessmentType(type: Question['type']): AssessmentType {
+  return type === 'code' ? 'code' : 'choice';
+}
+
+/**
  * Defaults adapt to the available assessments, so choice-only subjects need no
  * code runtime. Knowledge-point questions meet a choice requirement; for those
  * skills `reviewAnswers` counts points reviewed, with code asked in addition.
@@ -62,7 +71,7 @@ export function assessmentPolicy(
           [
             ...item.questions,
             ...(item.knowledgePoints ?? []).flatMap((point) => point.questions),
-          ].map((question) => question.type),
+          ].map((question) => assessmentType(question.type)),
         ),
       ],
       reviewAnswers: Math.min(2, points || item.questions.length),
@@ -148,6 +157,8 @@ type EncodedSkill = Omit<
 
 const typeLetters: Record<Question['type'], string> = {
   choice: 'c',
+  numeric: 'n',
+  text: 't',
   code: 'x',
 };
 const letterTypes = Object.fromEntries(

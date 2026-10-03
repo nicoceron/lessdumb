@@ -14,16 +14,30 @@ import {
   type CodeLanguage,
   type CodeQuestion,
   type Skill,
+  type TextQuestion,
 } from '../src/lib/curriculum';
 import type { PythonResult } from '../src/lib/python';
+import { gradeText } from '../src/lib/typed-answer';
 
 // Every worked example and every "what does this print?" question is run, and
-// its published output must be exactly what the program prints.
+// its published output must be exactly what the program prints. A typed output
+// question's one accepted answer is that output, and the real output grades
+// as correct.
 interface Program {
   id: string;
   language: CodeLanguage;
   code: string;
   expected: string;
+  typed?: TextQuestion;
+}
+
+/** The program printed its published output, and a typed answer accepts it. */
+function expectPrinted(program: Program, printed: string | undefined) {
+  expect(printed, program.id).toBe(program.expected.trim());
+  if (program.typed)
+    expect(gradeText(program.typed, printed ?? ''), program.id).toEqual({
+      status: 'correct',
+    });
 }
 
 function languageOf(skill: Skill, declared?: CodeLanguage): CodeLanguage {
@@ -58,6 +72,14 @@ for (const skill of skills)
           language: languageOf(skill),
           code: question.code!,
           expected: question.choices[question.answer],
+        });
+      else if (question.type === 'text' && question.checksOutput)
+        programs.push({
+          id: question.id,
+          language: languageOf(skill),
+          code: question.code!,
+          expected: question.answers[0],
+          typed: question,
         });
       else if (question.type === 'code')
         exercises.push({
@@ -166,7 +188,7 @@ describe('Python knowledge points run as published', () => {
         error: null,
         infrastructure: false,
       });
-      expect(result.output.trim()).toBe(program.expected.trim());
+      expectPrinted(program, result.output.trim());
     }, 30_000);
 
   for (const { id, question } of pythonExercises)
@@ -220,9 +242,7 @@ describe('Rust knowledge points compile and print as published', () => {
         );
         const printed = outputs(run(binary));
         for (const program of rust)
-          expect(printed.get(program.id), program.id).toBe(
-            program.expected.trim(),
-          );
+          expectPrinted(program, printed.get(program.id));
       } finally {
         rmSync(directory, { recursive: true, force: true });
       }
@@ -320,9 +340,7 @@ describe('C++ knowledge points compile and print as published', () => {
         );
         const printed = outputs(run(binary));
         for (const program of cpp)
-          expect(printed.get(program.id), program.id).toBe(
-            program.expected.trim(),
-          );
+          expectPrinted(program, printed.get(program.id));
       } finally {
         rmSync(directory, { recursive: true, force: true });
       }

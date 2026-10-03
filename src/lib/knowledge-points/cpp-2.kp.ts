@@ -1,4 +1,9 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 // C++ units cpp-containers, cpp-generic, cpp-errors and cpp-tooling.
 export const knowledgePoints: KnowledgePointModule = {
@@ -25,7 +30,7 @@ int main() {
           'Key 7 is present, so hit refers to the entry {7, 15}. Key 5 is absent, so miss equals end() and the comparison prints 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Key 4 is in the map. What does this program print?',
           `#include <iostream>
 #include <map>
@@ -34,11 +39,10 @@ int main() {
   auto it = ages.find(4);
   std::cout << it->first << " " << it->second << "\\n";
 }`,
-          ['52 4', '1 52', '4 52', '1 30'],
-          2,
+          '4 52',
           'find(4) returns an iterator to the entry whose key is 4; first is that key and second is its value, 52.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -48,8 +52,7 @@ int main() {
   if (it == price.end()) std::cout << "none\\n";
   else std::cout << it->second << "\\n";
 }`,
-          ['45', 'none', '99', '0'],
-          1,
+          'none',
           'No key equals 15. find looks for an exact key, not the nearest one, so it returns end() and the first branch runs.',
         ),
         choose(
@@ -98,7 +101,7 @@ int main() {
           'find(2) misses and leaves one entry. Reading votes[3] inserts key 3 with value 0, so the size becomes 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -107,11 +110,10 @@ int main() {
   int count = seen[8];
   std::cout << count << " " << seen.size() << "\\n";
 }`,
-          ['0 1', '1 2', '0 2', '8 2'],
-          2,
+          '0 2',
           'seen[8] inserts key 8 with value 0 and returns that 0, so the map now has two entries.',
         ),
-        predictOutput(
+        typeOutput(
           'This version uses find. What does it print?',
           `#include <iostream>
 #include <map>
@@ -120,11 +122,10 @@ int main() {
   auto it = seen.find(8);
   std::cout << (it == seen.end()) << " " << seen.size() << "\\n";
 }`,
-          ['1 1', '1 2', '0 1', '0 2'],
-          0,
+          '1 1',
           'find misses, so the comparison prints 1, and it inserts nothing, so the size stays 1.',
         ),
-        predictOutput(
+        typeOutput(
           'The program only means to check for key 3. What does it print?',
           `#include <iostream>
 #include <map>
@@ -133,8 +134,7 @@ int main() {
   if (limits[3] == 0) std::cout << "missing ";
   std::cout << limits.size() << "\\n";
 }`,
-          ['missing 2', '2', 'missing 3', '3'],
-          2,
+          'missing 3',
           'The check itself inserts key 3 with value 0, so the condition is true and the map grows to three entries.',
         ),
         choose(
@@ -175,7 +175,7 @@ int main() {
           'Keys 3 and 1 hit and add 8 and 5. Key 2 misses and is skipped, and find never adds it, so the map still has 2 entries.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Key 2 is stored with the value 0. What does this program print?',
           `#include <iostream>
 #include <map>
@@ -188,11 +188,10 @@ int main() {
     if (stock.find(key) == stock.end()) ++missing;
   std::cout << missing << "\\n";
 }`,
-          ['3', '2', '1', '4'],
-          1,
+          '2',
           'Only keys 1 and 3 are absent. Key 2 is present even though its value is 0.',
         ),
-        predictOutput(
+        typeOutput(
           'This loop reads with [] instead of find. What does it print?',
           `#include <iostream>
 #include <map>
@@ -204,11 +203,10 @@ int main() {
   for (int key : queries) total += stock[key];
   std::cout << total << " " << stock.size() << "\\n";
 }`,
-          ['5 1', '5 2', '0 3', '5 3'],
-          3,
+          '5 3',
           'The total is 5, but reading keys 1 and 3 through [] inserts them, so the map ends with three entries.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -222,8 +220,7 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['3 -1 1', '1 -1 3', '3 0 1', '3 1'],
-          0,
+          '3 -1 1',
           'Queries are answered in query order, not key order, and the miss for 20 prints the fallback -1.',
         ),
         choose(
@@ -264,7 +261,7 @@ int main() {
           'The second emplace finds key 1 already present and changes nothing. Only the assignment through [] replaces 50 with 80.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -275,11 +272,10 @@ int main() {
   owner.emplace(8, 9);
   std::cout << owner.at(7) << " " << owner.size() << "\\n";
 }`,
-          ['9 2', '3 2', '3 3', '9 3'],
-          1,
+          '3 2',
           'Key 7 keeps its first value 3. Key 8 is new, so the map holds two entries.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -289,8 +285,7 @@ int main() {
   price.emplace(4, 15);
   std::cout << price.at(4) << "\\n";
 }`,
-          ['10', '15', '12', '27'],
-          2,
+          '12',
           'Assignment through [] replaced 10 with 12. The later emplace finds key 4 and changes nothing.',
         ),
         choose(
@@ -304,7 +299,7 @@ int main() {
           3,
           'emplace inserts only missing keys, so the first value stays. [] = overwrites, and at or find on a missing key throws or dereferences end().',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -318,8 +313,7 @@ int main() {
     std::cout << "absent\\n";
   }
 }`,
-          ['0', 'absent', '6', '3'],
-          1,
+          'absent',
           'at never inserts. Key 3 is missing, so at throws out_of_range and the handler prints absent.',
         ),
       ],
@@ -346,7 +340,7 @@ int main() {
           'The first emplace inserts, so its bool is true. The second is blocked; its iterator points at the existing entry, whose value is still 100.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -355,11 +349,10 @@ int main() {
   auto result = ids.emplace(4, 1);
   std::cout << result.second << " " << ids.size() << "\\n";
 }`,
-          ['0 1', '0 2', '1 2', '1 1'],
-          2,
+          '1 2',
           'Key 4 is new, so the insert succeeds. Equal mapped values do not matter; only keys are compared.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -368,11 +361,10 @@ int main() {
   auto result = ids.emplace(3, 9);
   std::cout << result.second << " " << result.first->second << "\\n";
 }`,
-          ['1 9', '0 9', '0 1', '1 1'],
-          2,
+          '0 1',
           'Key 3 already exists, so nothing is inserted and .second is false. .first refers to the existing entry, whose value is still 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -389,8 +381,7 @@ int main() {
   }
   std::cout << inserted << " " << first_seen.at(4) << "\\n";
 }`,
-          ['3 0', '5 3', '3 3', '2 0'],
-          0,
+          '3 0',
           'Three distinct keys were inserted. The later emplaces of 4 were blocked, so 4 keeps the index of its first arrival, 0.',
         ),
         choose(
@@ -430,7 +421,7 @@ int main() {
           '6 appears three times and 2 once. There are three distinct values, so the map holds three entries.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <unordered_map>
@@ -441,11 +432,10 @@ int main() {
   for (int code : codes) ++counts[code];
   std::cout << counts[7] << " " << counts[1] << "\\n";
 }`,
-          ['2 3', '1 1', '3 2', '3 5'],
-          2,
+          '3 2',
           '7 occurs three times and 1 occurs twice; each occurrence adds one to its own entry.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <unordered_map>
@@ -456,11 +446,10 @@ int main() {
   for (int code : codes) ++counts[code];
   std::cout << counts.size() << " " << codes.size() << "\\n";
 }`,
-          ['3 3', '2 3', '2 2', '3 2'],
-          1,
+          '2 3',
           'The map has one entry per distinct value (4 and 9), while the vector still holds all three inputs.',
         ),
-        predictOutput(
+        typeOutput(
           'The program reads a value that never occurred. What does it print?',
           `#include <iostream>
 #include <unordered_map>
@@ -472,8 +461,7 @@ int main() {
   int eights = counts[8];
   std::cout << eights << " " << counts.size() << "\\n";
 }`,
-          ['0 1', '1 2', '2 1', '0 2'],
-          3,
+          '0 2',
           'Reading counts[8] inserts 8 with count 0, so the map grows from one entry to two.',
         ),
         choose(
@@ -515,7 +503,7 @@ int main() {
           'The program prints in the order of queries, which it controls. 99 was never counted, so find returns end() and the fallback 0 is printed without inserting 99.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <unordered_map>
@@ -527,8 +515,7 @@ int main() {
   auto it = counts.find(5);
   std::cout << (it == counts.end() ? 0 : it->second) << " " << counts.size() << "\\n";
 }`,
-          ['0 3', '1 2', '0 2', '3 2'],
-          2,
+          '0 2',
           '5 was never counted, so find returns end() and 0 is printed. find inserts nothing, so only 3 and 8 are stored.',
         ),
         choose(
@@ -553,7 +540,7 @@ int main() {
           1,
           'Iteration order is unspecified, so only an order the program chooses, such as a query list, is predictable.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <unordered_map>
@@ -569,8 +556,7 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['2 1', '1 2', '1 1', '6 1'],
-          1,
+          '1 2',
           'The loop follows the query order: 1 occurred once, then 6 occurred twice.',
         ),
       ],
@@ -600,7 +586,7 @@ int main() {
           '4 and 9 both appear twice. During the scan, 9’s count is never strictly larger than 4’s, so the earlier value 4 stays the winner.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <unordered_map>
@@ -614,11 +600,10 @@ int main() {
     if (counts[vote] > counts[best]) best = vote;
   std::cout << best << " " << counts[best] << "\\n";
 }`,
-          ['3 2', '5 3', '5 2', '3 3'],
-          1,
+          '5 3',
           '5 occurs three times and 3 twice, so 5 replaces the starting value 3.',
         ),
-        predictOutput(
+        typeOutput(
           'Two values tie. What does this program print?',
           `#include <iostream>
 #include <unordered_map>
@@ -632,11 +617,10 @@ int main() {
     if (counts[vote] > counts[best]) best = vote;
   std::cout << best << " " << counts[best] << "\\n";
 }`,
-          ['8 2', '1 2', '8 4', '1 1'],
-          0,
+          '8 2',
           'Both values occur twice. A strictly larger count is required to replace the best, so the first value, 8, stays.',
         ),
-        predictOutput(
+        typeOutput(
           'This scan uses >= instead of >. What does it print?',
           `#include <iostream>
 #include <unordered_map>
@@ -650,8 +634,7 @@ int main() {
     if (counts[vote] >= counts[best]) best = vote;
   std::cout << best << " " << counts[best] << "\\n";
 }`,
-          ['8 2', '8 4', '1 4', '1 2'],
-          3,
+          '1 2',
           'With >=, every later value with an equal count takes over, so the last tied value scanned, 1, wins.',
         ),
         choose(
@@ -692,7 +675,7 @@ int main() {
           'The keys were inserted as 105, 101, 103, but a map keeps them sorted, so iteration prints them in ascending order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This loop prints mapped values, not keys. What does it print?',
           `#include <iostream>
 #include <map>
@@ -705,11 +688,10 @@ int main() {
     std::cout << it->second << " ";
   std::cout << "\\n";
 }`,
-          ['1 2 3', '2 3 1', '3 2 1', '1 3 2'],
-          1,
+          '2 3 1',
           'Entries are visited by ascending key, 10, 20, 30, so their values print as 2 3 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -722,8 +704,7 @@ int main() {
     std::cout << it->first << "=" << it->second << " ";
   std::cout << "\\n";
 }`,
-          ['4=1 2=7 4=9', '4=9 2=7', '2=7 4=9', '2=7 4=1'],
-          2,
+          '2=7 4=9',
           'Assigning to key 4 again replaces its value instead of adding a second entry, and the keys print in ascending order.',
         ),
         choose(
@@ -737,7 +718,7 @@ int main() {
           3,
           'A std::map is ordered by key with <, so iteration is always ascending.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -750,8 +731,7 @@ int main() {
     std::cout << it->first << ":" << it->second << " ";
   std::cout << "\\n";
 }`,
-          ['5:2 3:1 1:1', '3:1 5:2 1:1', '1:1 3:1 5:2', '1:1 3:1 5:1'],
-          2,
+          '1:1 3:1 5:2',
           'Each distinct roll gets one entry, 5 is counted twice, and the entries come out in ascending key order.',
         ),
       ],
@@ -778,7 +758,7 @@ int main() {
           'The smallest ask key is 101, stored with 2. bids is empty, so the check selects the fallback -1 instead of reading begin().',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -786,11 +766,10 @@ int main() {
   std::map<int, int> deadlines{{17, 3}, {9, 1}, {12, 4}};
   std::cout << deadlines.begin()->first << " " << deadlines.begin()->second << "\\n";
 }`,
-          ['17 3', '9 3', '12 4', '9 1'],
-          3,
+          '9 1',
           'begin() is the entry with the smallest key, 9, and that entry’s value is 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -800,11 +779,10 @@ int main() {
   book[-4] = 6;
   std::cout << book.begin()->first << "\\n";
 }`,
-          ['-4', '2', '6', '1'],
-          0,
+          '-4',
           'Keys are compared as numbers, so -4 sorts before 2, regardless of insertion order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -812,8 +790,7 @@ int main() {
   std::map<int, int> waiting;
   std::cout << (waiting.empty() ? -1 : waiting.begin()->first) << " " << waiting.size() << "\\n";
 }`,
-          ['0 0', '-1 1', '-1 0', '0 1'],
-          2,
+          '-1 0',
           'The map is empty, so the guard selects -1 and nothing is read from begin(). Its size is 0.',
         ),
         choose(
@@ -853,7 +830,7 @@ int main() {
           'The lower ask 101 becomes the new begin(). Updating 103 changes its quantity but adds no entry, so the best ask stays 101 and the size stays 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -863,11 +840,10 @@ int main() {
   asks[52] = 7;
   std::cout << asks.begin()->first << " " << asks.begin()->second << "\\n";
 }`,
-          ['52 7', '50 1', '48 3', '48 1'],
-          2,
+          '48 3',
           '48 is the lowest key after the inserts, and its quantity is 3.',
         ),
-        predictOutput(
+        typeOutput(
           'The program adds the quantities of the two best asks. What does it print?',
           `#include <iostream>
 #include <map>
@@ -879,11 +855,10 @@ int main() {
   size += it->second;
   std::cout << size << "\\n";
 }`,
-          ['7', '9', '6', '11'],
-          2,
+          '6',
           'The two smallest keys are 10 and 11, with quantities 2 and 4. Initializer order does not matter.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <map>
@@ -894,8 +869,7 @@ int main() {
   bids[3] = 1;
   std::cout << best << " " << bids.begin()->first << "\\n";
 }`,
-          ['3 3', '0 7', '0 3', '7 3'],
-          2,
+          '0 3',
           'best was computed while the map was empty, so it holds the fallback 0 and does not update. begin() now refers to key 3.',
         ),
         choose(
@@ -936,7 +910,7 @@ int main() {
           'The second insert of 8 changes nothing, so two values remain, and they print in ascending order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -948,11 +922,10 @@ int main() {
   seen.insert(5);
   std::cout << seen.size() << "\\n";
 }`,
-          ['2', '4', '3', '1'],
-          0,
+          '2',
           'Four inserts were made, but only the distinct values 1 and 5 are stored.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -964,8 +937,7 @@ int main() {
   for (auto it = ids.begin(); it != ids.end(); ++it) std::cout << *it << " ";
   std::cout << "\\n";
 }`,
-          ['30 -2 14', '30 14 -2', '-2 14 30', '14 30 -2'],
-          2,
+          '-2 14 30',
           'A set iterates in ascending order, not insertion order.',
         ),
         choose(
@@ -979,7 +951,7 @@ int main() {
           1,
           'Repeated IDs collapse into one element, so size() counts distinct users, not events.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -990,8 +962,7 @@ int main() {
   for (int event : events) users.insert(event);
   std::cout << events.size() << " " << users.size() << "\\n";
 }`,
-          ['5 5', '2 5', '5 3', '5 2'],
-          3,
+          '5 2',
           'The vector keeps all five events; the set keeps only the distinct values 4 and 9.',
         ),
       ],
@@ -1018,7 +989,7 @@ int main() {
           '7 is present and 5 is not. count(12) is 1, never more, and the duplicate 7 collapsed, so three values are stored.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -1028,11 +999,10 @@ int main() {
   std::set<int> lookup(blocked.begin(), blocked.end());
   std::cout << lookup.count(2) << " " << lookup.contains(4) << "\\n";
 }`,
-          ['1 0', '2 0', '0 1', '2 1'],
-          0,
+          '1 0',
           'The duplicate 2 collapsed, so count(2) is 1. 4 is absent, so contains prints 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -1045,8 +1015,7 @@ int main() {
     if (lookup.contains(query)) ++hits;
   std::cout << hits << " " << lookup.size() << "\\n";
 }`,
-          ['4 3', '2 5', '2 3', '1 3'],
-          2,
+          '2 3',
           '8 and 4 are present. contains never inserts, so the set still has three values.',
         ),
         choose(
@@ -1093,7 +1062,7 @@ int main() {
           'The scan reaches the second 2 before the second 6, so 2 is the first repeat. The set ends with the three distinct values 2, 6 and 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -1108,11 +1077,10 @@ int main() {
   }
   std::cout << first_repeat << " " << seen.size() << "\\n";
 }`,
-          ['4 3', '1 3', '1 5', '4 2'],
-          1,
+          '1 3',
           'The second 1 arrives before the second 4, so 1 is the first repeat; 1, 4 and 7 are distinct.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -1127,11 +1095,10 @@ int main() {
   }
   std::cout << first_repeat << " " << seen.size() << "\\n";
 }`,
-          ['-1 3', '3 3', '-1 0', '5 3'],
-          0,
+          '-1 3',
           'No value occurs twice, so first_repeat keeps its starting value -1, and all three values are stored.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -1145,8 +1112,7 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['1 3 8', '8 1', '3 8 1', '3 1 8'],
-          2,
+          '3 8 1',
           'Each value prints only the first time it is met, in stream order; the set’s sorted order does not affect what the loop prints.',
         ),
         choose(
@@ -1183,7 +1149,7 @@ int main() {
           '8 is present, so it is returned. 9 is absent and the next larger element is 12. Every element is at least 1, so the first one, 3, is returned. Each target here has a qualifying element.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -1191,11 +1157,10 @@ int main() {
   std::set<int> marks{10, 20, 30};
   std::cout << *marks.lower_bound(20) << "\\n";
 }`,
-          ['30', '10', '20', '1'],
-          2,
+          '20',
           '20 is present, and an equal element is not less than the target, so lower_bound returns 20 itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -1203,11 +1168,10 @@ int main() {
   std::set<int> marks{10, 20, 30};
   std::cout << *marks.lower_bound(21) << "\\n";
 }`,
-          ['20', '30', '21', '10'],
-          1,
+          '30',
           'No element equals 21, and the first element greater than it is 30.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -1215,8 +1179,7 @@ int main() {
   std::set<int> temps{-5, 0, 5};
   std::cout << *temps.lower_bound(-7) << "\\n";
 }`,
-          ['-5', '0', '-7', '5'],
-          0,
+          '-5',
           '-5 is the smallest element and it is not less than -7, so it qualifies first.',
         ),
         choose(
@@ -1253,7 +1216,7 @@ int main() {
           'All elements are below 13, so the first search returns end() and the fallback is printed. 12 qualifies for the second search.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -1262,11 +1225,10 @@ int main() {
   auto it = sizes.lower_bound(10);
   std::cout << (it == sizes.end() ? -1 : *it) << "\\n";
 }`,
-          ['9', '-1', '10', '4'],
-          1,
+          '-1',
           'Both elements are less than 10, so lower_bound returns end() and the fallback -1 prints. It does not fall back to the largest element.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -1275,8 +1237,7 @@ int main() {
   auto it = sizes.lower_bound(9);
   std::cout << (it == sizes.end() ? -1 : *it) << "\\n";
 }`,
-          ['-1', '4', '9', '10'],
-          2,
+          '9',
           '9 is the last element, and it is not less than 9, so lower_bound returns it rather than end().',
         ),
         predictOutput(
@@ -1328,7 +1289,7 @@ int main() {
           'Each arrival waits for the first departure at or after it: 540 is 10 after 530, 600 leaves exactly at 600, and nothing leaves at or after 700.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <set>
@@ -1342,8 +1303,7 @@ int main() {
     else std::cout << *it - t << "\\n";
   }
 }`,
-          ['10\n1', '0\nnone', '10\nnone', '10\n-1'],
-          2,
+          '10\nnone',
           '90 waits 10 for the 100 departure. 131 is after the last departure, so lower_bound returns end().',
         ),
         choose(
@@ -1403,7 +1363,7 @@ int main() {
           'The largest value, 9, is on top, and both copies of 9 are kept, so the heap holds four elements.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -1414,11 +1374,10 @@ int main() {
   heap.push(7);
   std::cout << heap.top() << "\\n";
 }`,
-          ['3', '7', '11', '21'],
-          2,
+          '11',
           'top() returns the maximum, 11, not the first or the last value pushed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -1428,11 +1387,10 @@ int main() {
   std::priority_queue<int> heap(changes.begin(), changes.end());
   std::cout << heap.top() << "\\n";
 }`,
-          ['-9', '-1', '-4', '9'],
-          1,
+          '-1',
           'Among negative numbers the largest is the one closest to zero, -1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -1443,8 +1401,7 @@ int main() {
   heap.push(2);
   std::cout << heap.top() << " " << heap.size() << "\\n";
 }`,
-          ['5 3', '5 2', '2 3', '2 2'],
-          0,
+          '5 3',
           'A priority_queue keeps duplicates, so all three values are stored and 5 is on top.',
         ),
         choose(
@@ -1487,7 +1444,7 @@ int main() {
           'Each pass prints and removes the current maximum. On the fourth pass the heap is empty, so the guard prints empty instead of calling top().',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -1498,11 +1455,10 @@ int main() {
   heap.pop();
   std::cout << heap.top() << "\\n";
 }`,
-          ['3', '8', '5', '16'],
-          2,
+          '5',
           'pop removes the maximum 8, and the next largest, 5, becomes the top.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -1516,11 +1472,10 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['30 20', '30 30', '10 30', '30 10'],
-          1,
+          '30 30',
           'Duplicates stay: after one 30 is popped, the other 30 is still the largest.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -1536,8 +1491,7 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['7 7', '-1 7', '7 0', '7 -1'],
-          3,
+          '7 -1',
           'The first pass reads and removes 7. The second pass finds the heap empty and prints the fallback.',
         ),
         choose(
@@ -1580,7 +1534,7 @@ int main() {
           'The three largest scores are 30, 25 and 18, which sum to 73. The two smaller scores remain in the heap.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The loop takes the two largest values. What does it print?',
           `#include <iostream>
 #include <queue>
@@ -1597,11 +1551,10 @@ int main() {
   }
   std::cout << total << "\\n";
 }`,
-          ['6', '14', '10', '18'],
-          1,
+          '14',
           'The two largest values are 9 and 5, not the first two in the vector.',
         ),
-        predictOutput(
+        typeOutput(
           'Only two values exist, but the loop asks for three. What does it print?',
           `#include <iostream>
 #include <queue>
@@ -1618,11 +1571,10 @@ int main() {
   }
   std::cout << total << " " << heap.size() << "\\n";
 }`,
-          ['10 0', '10 1', '16 0', '6 0'],
-          0,
+          '10 0',
           'Both values are taken; on the third pass the heap is empty and the guard skips the read.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -1636,8 +1588,7 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['8 5 2', '8 8 5', '2 5 8', '8 2 5'],
-          1,
+          '8 8 5',
           'Values come out largest first, and the duplicate 8 is popped twice before 5.',
         ),
         choose(
@@ -1678,7 +1629,7 @@ int main() {
           'With std::greater the heap is a min heap, so the smallest deadline, 9, is on top.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -1689,11 +1640,10 @@ int main() {
   std::priority_queue<int, std::vector<int>, std::greater<int>> heap(values.begin(), values.end());
   std::cout << heap.top() << "\\n";
 }`,
-          ['9', '2', '4', '7'],
-          1,
+          '2',
           'The std::greater comparator makes the smallest value, 2, the top.',
         ),
-        predictOutput(
+        typeOutput(
           'Both heaps receive the same values. What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -1705,11 +1655,10 @@ int main() {
   std::priority_queue<int, std::vector<int>, std::greater<int>> low(values.begin(), values.end());
   std::cout << high.top() << " " << low.top() << "\\n";
 }`,
-          ['11 -3', '-3 11', '6 6', '11 6'],
-          0,
+          '11 -3',
           'The default heap shows the maximum and the std::greater heap shows the minimum.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -1722,8 +1671,7 @@ int main() {
   heap.push(8);
   std::cout << heap.top() << " " << heap.size() << "\\n";
 }`,
-          ['8 3', '5 2', '5 3', '8 2'],
-          2,
+          '5 3',
           'The minimum, 5, is on top, and the duplicate is kept, so three elements are stored.',
         ),
         choose(
@@ -1764,7 +1712,7 @@ int main() {
           'Each pop removes the current minimum, so the values come out smallest first.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -1779,11 +1727,10 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['9 5', '1 9', '5 1', '1 5'],
-          3,
+          '1 5',
           'The two smallest values come out in ascending order: 1, then 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -1798,11 +1745,10 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['1 3', '3 3', '1 1', '3 1'],
-          0,
+          '1 3',
           '1 is the minimum and comes out first; then one of the two 3s is on top.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -1814,8 +1760,7 @@ int main() {
   heap.pop();
   std::cout << heap.top() << " " << heap.size() << "\\n";
 }`,
-          ['6 3', '8 3', '2 3', '2 4'],
-          2,
+          '2 3',
           'pop removes one 2. The other 2 is still the minimum, and three elements remain.',
         ),
       ],
@@ -1880,7 +1825,7 @@ int main() {
           0,
           'The default comparator keeps the maximum on top, which is the highest bid.',
         ),
-        predictOutput(
+        typeOutput(
           'A new deadline arrives after one has been served. What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -1896,8 +1841,7 @@ int main() {
   due.push(15);
   std::cout << due.top() << "\\n";
 }`,
-          ['12\n4', '12\n15', '12\n20', '20\n4'],
-          0,
+          '12\n4',
           '12 is served first. After 4 and 15 arrive, 4 is the smallest remaining deadline.',
         ),
       ],
@@ -1925,7 +1869,7 @@ int main() {
           '2 was inserted before 5, and 9 after it, so the deque is 2, 5, 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -1936,11 +1880,10 @@ int main() {
   d.push_front(3);
   std::cout << d.front() << " " << d.back() << "\\n";
 }`,
-          ['1 3', '3 1', '1 1', '3 3'],
-          1,
+          '3 1',
           'Each push_front goes before the current front, so the deque is 3, 2, 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -1951,11 +1894,10 @@ int main() {
   d.push_back(1);
   std::cout << d.front() << " " << d.back() << "\\n";
 }`,
-          ['4 1', '7 4', '7 1', '1 7'],
-          2,
+          '7 1',
           'The deque becomes 7, 4, 1: 7 went to the front and 1 to the back.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -1965,8 +1907,7 @@ int main() {
   d.push_back(5);
   std::cout << d.size() << " " << d.front() << "\\n";
 }`,
-          ['4 2', '4 3', '2 2', '4 5'],
-          0,
+          '4 2',
           'Both pushes add an element, giving 2, 3, 4, 5.',
         ),
         choose(
@@ -1998,7 +1939,7 @@ int main() {
           'Before the push, index 0 holds 10. After push_front(5), 5 is at index 0 and 10 has moved to index 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2007,11 +1948,10 @@ int main() {
   d.push_front(9);
   std::cout << d[1] << "\\n";
 }`,
-          ['6', '9', '4', '3'],
-          2,
+          '4',
           'The deque is now 9, 4, 6, so index 1 holds 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2022,8 +1962,7 @@ int main() {
   std::cout << d[0] << " " << d[1] << " " << d[2] << " " << d[3];
   std::cout << "\\n";
 }`,
-          ['2 3 1 4', '1 2 3 4', '4 3 2 1', '2 3 4 1'],
-          1,
+          '1 2 3 4',
           'Indexing runs from the current front, which is the 1 added by push_front.',
         ),
         choose(
@@ -2037,7 +1976,7 @@ int main() {
           1,
           'Pointer arithmetic is valid only inside one array. A deque’s elements can span several blocks, so use d[3] instead.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2047,8 +1986,7 @@ int main() {
   d.push_front(4);
   std::cout << d[2] << "\\n";
 }`,
-          ['4', '6', '2', '8'],
-          3,
+          '8',
           'The deque is 4, 6, 8. The original element has been pushed back to index 2.',
         ),
       ],
@@ -2078,7 +2016,7 @@ int main() {
           'Small values go to the front, so the later 3 ends up ahead of the earlier 1. Large values are appended in arrival order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2093,11 +2031,10 @@ int main() {
   for (int value : d) std::cout << value << " ";
   std::cout << "\\n";
 }`,
-          ['2 1 7 9', '1 2 7 9', '2 7 1 9', '9 7 2 1'],
-          1,
+          '1 2 7 9',
           '2 goes to the front, then 1 goes in front of it; 7 and 9 are appended in order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2111,8 +2048,7 @@ int main() {
   }
   std::cout << d.front() << " " << d.back() << "\\n";
 }`,
-          ['1 4', '3 2', '4 2', '4 1'],
-          2,
+          '4 2',
           'The deque grows as 1, then 1 2, then 3 1 2, then 4 3 1 2.',
         ),
         choose(
@@ -2126,7 +2062,7 @@ int main() {
           0,
           'Front insertion is the deque’s strength. A vector’s push at the front costs time proportional to its size.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2138,8 +2074,7 @@ int main() {
   for (int value : d) std::cout << value << " ";
   std::cout << "\\n";
 }`,
-          ['1 2 3', '3 2 1', '3 1 2', '1 3 2'],
-          1,
+          '3 2 1',
           'Pushing every value to the front reverses the arrival order.',
         ),
       ],
@@ -2167,7 +2102,7 @@ int main() {
           'first saved 8 before it was removed. Popping both ends leaves only 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2176,11 +2111,10 @@ int main() {
   d.pop_front();
   std::cout << d.front() << " " << d.back() << "\\n";
 }`,
-          ['7 1', '4 1', '4 7', '1 7'],
-          0,
+          '7 1',
           'pop_front removed 4, so the deque is 7, 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2190,11 +2124,10 @@ int main() {
   d.pop_back();
   std::cout << last << " " << d.size() << "\\n";
 }`,
-          ['2 1', '9 2', '9 1', '2 2'],
-          2,
+          '9 1',
           'last copied 9 before pop_back removed it, and one element remains.',
         ),
-        predictOutput(
+        typeOutput(
           'The code meant to save the item it removes. What does it print?',
           `#include <deque>
 #include <iostream>
@@ -2204,8 +2137,7 @@ int main() {
   int removed = d.front();
   std::cout << removed << "\\n";
 }`,
-          ['6', '1', '0', '7'],
-          1,
+          '1',
           'front() was read after the pop, so it returns the new front, 1. The removed 6 is gone.',
         ),
         choose(
@@ -2248,7 +2180,7 @@ int main() {
           'The first two calls take the two jobs. The third finds the deque empty and returns -1 instead of popping.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2260,11 +2192,10 @@ int main() {
   d.pop_front();
   std::cout << d.size() << " " << d.empty() << "\\n";
 }`,
-          ['1 0 0 1', '2 0 1 0', '1 1 0 0', '1 0 0 0'],
-          0,
+          '1 0 0 1',
           'Two pops leave one element; the third pop empties the deque, so empty() becomes true.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2281,11 +2212,10 @@ int main() {
   int c = take(d);
   std::cout << a << " " << b << " " << c << "\\n";
 }`,
-          ['5 6 6', '6 5 -1', '5 -1 -1', '5 6 -1'],
-          3,
+          '5 6 -1',
           'The first two calls take 5 and 6. The third finds the deque empty and returns -1 without popping.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2302,8 +2232,7 @@ int main() {
   total += take_last(d);
   std::cout << total << "\\n";
 }`,
-          ['8', '4', '7', '3'],
-          2,
+          '7',
           'The calls take 4, then 3, then find the deque empty and add the fallback 0.',
         ),
         choose(
@@ -2346,7 +2275,7 @@ int main() {
           'Each player moves from the front to the back after their turn, so play cycles back to 1 on the fourth call. The deque never becomes empty, because every popped player is pushed back.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2362,11 +2291,10 @@ int main() {
   std::cout << next_turn(turns) << " ";
   std::cout << next_turn(turns) << "\\n";
 }`,
-          ['7 8 7', '7 7 7', '7 8 8', '8 7 8'],
-          0,
+          '7 8 7',
           'The two players alternate: 7, then 8, then 7 again.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2382,11 +2310,10 @@ int main() {
   next_turn(turns);
   std::cout << turns.front() << " " << turns.back() << "\\n";
 }`,
-          ['1 3', '2 1', '3 2', '3 1'],
-          2,
+          '3 2',
           'After two rotations the deque is 3, 1, 2.',
         ),
-        predictOutput(
+        typeOutput(
           'Each number is the work left on a job. What does this program print?',
           `#include <deque>
 #include <iostream>
@@ -2404,8 +2331,7 @@ int main() {
   work_once(work);
   std::cout << work.size() << "\\n";
 }`,
-          ['1 0', '2 0', '2 1', '3 0'],
-          1,
+          '2 0',
           'The 2 runs once and returns to the back as 1, so two jobs wait. The next two calls finish both 1s.',
         ),
         choose(
@@ -2446,7 +2372,7 @@ int main() {
           '4 arrived first, so it is at the front, and 2 arrived last. pop removes 4, which makes 9 the front.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -2458,11 +2384,10 @@ int main() {
   q.pop();
   std::cout << q.front() << "\\n";
 }`,
-          ['3', '6', '1', '10'],
-          2,
+          '1',
           'pop removes the oldest element, 3, so 1 is now at the front.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -2474,8 +2399,7 @@ int main() {
   q.push(2);
   std::cout << q.front() << " " << q.back() << "\\n";
 }`,
-          ['5 2', '8 2', '2 8', '8 5'],
-          1,
+          '8 2',
           'After 5 is removed, 8 is the oldest and 2 the newest.',
         ),
         choose(
@@ -2484,7 +2408,7 @@ int main() {
           1,
           'A queue exposes only its two ends; there is no access by position.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -2496,8 +2420,7 @@ int main() {
   q.pop();
   std::cout << q.front() << " " << q.size() << "\\n";
 }`,
-          ['9 2', '3 2', '7 3', '3 3'],
-          1,
+          '3 2',
           'Values leave in the order they were pushed, so removing one exposes 3, with two elements left.',
         ),
       ],
@@ -2527,7 +2450,7 @@ int main() {
           'The orders come out exactly in arrival order. The larger 99 does not jump ahead of 30.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -2547,8 +2470,7 @@ int main() {
   int c = serve(q);
   std::cout << a << " " << b << " " << c << "\\n";
 }`,
-          ['8 5 2', '2 5 8', '2 8 5', '5 8 2'],
-          2,
+          '2 8 5',
           'A queue preserves arrival order and never sorts.',
         ),
         choose(
@@ -2573,7 +2495,7 @@ int main() {
           2,
           'front() is always the oldest element; severity plays no part.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -2585,8 +2507,7 @@ int main() {
   q.push(3);
   std::cout << q.front() << " " << q.back() << " " << q.size() << "\\n";
 }`,
-          ['2 3 2', '1 3 2', '3 2 2', '2 3 3'],
-          0,
+          '2 3 2',
           '1 left first, leaving 2 as the oldest and 3 as the newest of two elements.',
         ),
       ],
@@ -2626,7 +2547,7 @@ int main() {
           'Serving 3 adds a 2 behind the waiting 1. The 1 is served next, then the 2, which adds a final 1. On the fifth step nothing is left.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -2651,11 +2572,10 @@ int main() {
   step(work);
   std::cout << "\\n";
 }`,
-          ['2 1 2 1 done', '2 2 1 1 done', '2 1 1 2 done', '2 2 1 1 1'],
-          1,
+          '2 2 1 1 done',
           'Both original 2s are served before either follow-up 1, because the follow-ups join the back.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <queue>
@@ -2679,8 +2599,7 @@ int main() {
   step(work);
   std::cout << "\\n";
 }`,
-          ['3 2 1 1', '1 3 1 2', '1 2 3 1', '1 3 2 1'],
-          3,
+          '1 3 2 1',
           '1 is served first. The 3 then produces 2, and the 2 produces 1, each served in turn.',
         ),
         choose(
@@ -2754,7 +2673,7 @@ int main() {
           'The first three items fill the buffer. When 4 arrives, size() equals capacity, so 4 is rejected and the last accepted item is 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstddef>
 #include <deque>
@@ -2771,11 +2690,10 @@ int main() {
   }
   std::cout << buffer.size() << " " << rejected << "\\n";
 }`,
-          ['5 0', '2 3', '2 2', '3 2'],
-          1,
+          '2 3',
           'Two items fit; the other three each find the buffer full.',
         ),
-        predictOutput(
+        typeOutput(
           'A capacity is declared but never checked. What does this program print?',
           `#include <cstddef>
 #include <deque>
@@ -2788,11 +2706,10 @@ int main() {
   for (int item : incoming) buffer.push_back(item);
   std::cout << buffer.size() << " " << capacity << "\\n";
 }`,
-          ['2 2', '0 2', '3 2', '5 2'],
-          3,
+          '5 2',
           'A deque has no limit of its own, so all five items are stored. The capacity variable has no effect unless the code checks it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstddef>
 #include <deque>
@@ -2809,8 +2726,7 @@ int main() {
   }
   std::cout << buffer.size() << " " << rejected << "\\n";
 }`,
-          ['0 2', '1 1', '2 0', '0 0'],
-          0,
+          '0 2',
           'With capacity 0, the empty buffer is already full, so every item is rejected.',
         ),
         choose(
@@ -2853,7 +2769,7 @@ int main() {
           'strict stops at 2. loose still accepts when its size equals 2, so it ends with 3 items, one over the limit.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstddef>
 #include <deque>
@@ -2870,11 +2786,10 @@ int main() {
   }
   std::cout << buffer.size() << " " << dropped << "\\n";
 }`,
-          ['3 2', '4 1', '5 0', '3 1'],
-          1,
+          '4 1',
           'With >, a buffer holding exactly 3 still accepts, so it reaches 4 before anything is dropped.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstddef>
 #include <deque>
@@ -2891,8 +2806,7 @@ int main() {
   }
   std::cout << buffer.size() << " " << dropped << "\\n";
 }`,
-          ['3 2', '4 1', '2 3', '3 1'],
-          0,
+          '3 2',
           'With >=, a buffer holding 3 counts as full, so exactly 3 items are kept and 2 are dropped.',
         ),
         choose(
@@ -2906,7 +2820,7 @@ int main() {
           3,
           'The buffer is full when it already holds 4 items; > 4 would admit a fifth.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstddef>
 #include <deque>
@@ -2920,8 +2834,7 @@ int main() {
     if (buffer.size() < capacity) buffer.push_back(item);
   std::cout << buffer.front() << " " << buffer.size() << "\\n";
 }`,
-          ['8 1', '9 2', '9 1', '8 2'],
-          2,
+          '9 1',
           'The first item fills the single slot; 8 arrives when size() is no longer less than 1.',
         ),
       ],
@@ -2954,7 +2867,7 @@ int main() {
           '6 and 2 fill the buffer. The loop examines 9, finds the buffer full and breaks, so 4 is never examined.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstddef>
 #include <deque>
@@ -2972,11 +2885,10 @@ int main() {
   }
   std::cout << buffer.size() << " " << examined << "\\n";
 }`,
-          ['3 5', '3 4', '3 3', '4 4'],
-          1,
+          '3 4',
           'Three items fill the buffer; the fourth is examined, the check fails, and the loop ends before the fifth.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstddef>
 #include <deque>
@@ -2994,11 +2906,10 @@ int main() {
   }
   std::cout << buffer.size() << " " << examined << "\\n";
 }`,
-          ['2 2', '10 2', '2 10', '0 2'],
-          0,
+          '2 2',
           'The buffer never fills, so the loop simply runs out of input after two items.',
         ),
-        predictOutput(
+        typeOutput(
           'This version rejects instead of stopping. What does it print?',
           `#include <cstddef>
 #include <deque>
@@ -3017,8 +2928,7 @@ int main() {
   }
   std::cout << rejected << " " << examined << "\\n";
 }`,
-          ['1 4', '2 5', '0 5', '2 3'],
-          1,
+          '2 5',
           'Without break, every item is examined; the last two find the buffer full and are rejected.',
         ),
         choose(
@@ -3057,7 +2967,7 @@ int main() {
           'The same vector now holds its four values in ascending order; both copies of 2 are still there.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3067,11 +2977,10 @@ int main() {
   std::sort(v.begin(), v.end());
   std::cout << v.front() << " " << v.back() << "\\n";
 }`,
-          ['5 3', '-1 5', '5 -1', '-1 3'],
-          1,
+          '-1 5',
           'After sorting, the smallest value is at the front and the largest at the back.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3082,8 +2991,7 @@ int main() {
   for (int x : v) std::cout << x << " ";
   std::cout << "\\n";
 }`,
-          ['1 4', '4 4 1', '1 4 4', '4 1'],
-          2,
+          '1 4 4',
           'sort only reorders; it keeps every element, including the duplicate 4.',
         ),
         choose(
@@ -3097,7 +3005,7 @@ int main() {
           3,
           'sort works in place through the iterators and returns nothing; ascending order is the default.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3107,8 +3015,7 @@ int main() {
   std::sort(v.begin(), v.end());
   std::cout << v[1] << " " << v[2] << "\\n";
 }`,
-          ['10 20', '20 30', '10 10', '30 10'],
-          0,
+          '10 20',
           'The sorted vector is 10 10 20 30, so indexes 1 and 2 hold 10 and 20.',
         ),
       ],
@@ -3134,7 +3041,7 @@ int main() {
           'Only 8, 5 and 9 are inside the range, so they become 5 8 9. The 1 and 3 after it are untouched.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3145,11 +3052,10 @@ int main() {
   for (int x : v) std::cout << x << " ";
   std::cout << "\\n";
 }`,
-          ['1 2 6 7', '2 6 7 1', '2 6 1 7', '6 2 1 7'],
-          1,
+          '2 6 7 1',
           'The range covers only the first two elements, so 6 and 2 swap and 7, 1 stay as they were.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3160,8 +3066,7 @@ int main() {
   for (int x : v) std::cout << x << " ";
   std::cout << "\\n";
 }`,
-          ['3 4 8 9', '4 8 9 3', '9 8 4 3', '9 3 4 8'],
-          3,
+          '9 3 4 8',
           'The range starts at index 1, so 9 stays first and the other three are sorted.',
         ),
         choose(
@@ -3175,7 +3080,7 @@ int main() {
           1,
           'v.end() - 2 is the first of the last two elements, and v.end() ends the range. The other ranges cover three elements, run past the end, or cover the first two.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3186,8 +3091,7 @@ int main() {
   for (int x : v) std::cout << x << " ";
   std::cout << "\\n";
 }`,
-          ['1 2 3', '1 3 2', '3 1 2', '3 2 1'],
-          2,
+          '3 1 2',
           'A one-element range is already sorted, so nothing moves.',
         ),
       ],
@@ -3215,7 +3119,7 @@ int main() {
           'With std::greater, an element comes first when it is larger, so the result is descending.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <functional>
@@ -3227,11 +3131,10 @@ int main() {
   for (int x : v) std::cout << x << " ";
   std::cout << "\\n";
 }`,
-          ['2 5 8 8', '8 5 2', '8 8 5 2', '8 2 5 8'],
-          2,
+          '8 8 5 2',
           'Descending order keeps both 8s, which come first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <functional>
@@ -3242,8 +3145,7 @@ int main() {
   std::sort(v.begin(), v.end(), std::greater<int>());
   std::cout << v.front() << "\\n";
 }`,
-          ['-7', '0', '-3', '7'],
-          1,
+          '0',
           'The largest value comes first in descending order, and 0 is larger than any negative number.',
         ),
         choose(
@@ -3292,7 +3194,7 @@ int main() {
           'The vector is already sorted. 4 is present and 5 is not, and a bool prints as 1 or 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3301,11 +3203,10 @@ int main() {
   std::vector<int> v{1, 3, 5, 7};
   std::cout << std::binary_search(v.begin(), v.end(), 7) << " " << std::binary_search(v.begin(), v.end(), 0) << "\\n";
 }`,
-          ['1 0', '3 -1', '0 1', '1 1'],
-          0,
+          '1 0',
           '7 is present and 0 is not. binary_search returns a bool, not a position.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3315,8 +3216,7 @@ int main() {
   std::sort(v.begin(), v.end());
   std::cout << std::binary_search(v.begin(), v.end(), 9) << "\\n";
 }`,
-          ['0', '2', '1', '9'],
-          2,
+          '1',
           'After sorting, the range is 2 4 9, and 9 is found.',
         ),
         choose(
@@ -3382,7 +3282,7 @@ int main() {
           2,
           'binary_search never sorts or checks its input; on unsorted data it may skip the half that contains the value.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <functional>
@@ -3393,8 +3293,7 @@ int main() {
   std::sort(v.begin(), v.end(), std::greater<int>());
   std::cout << std::binary_search(v.begin(), v.end(), 7, std::greater<int>()) << " " << std::binary_search(v.begin(), v.end(), 5, std::greater<int>()) << "\\n";
 }`,
-          ['0 1', '1 1', '1 0', '7 0'],
-          2,
+          '1 0',
           'Sorting and searching use the same descending order, so 7 is found and 5 correctly is not.',
         ),
         choose(
@@ -3443,7 +3342,7 @@ int main() {
           'The list is sorted once to 3 7 19 42, then each request is answered with one binary search.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3455,8 +3354,7 @@ int main() {
   for (int r : requests) std::cout << std::binary_search(allowed.begin(), allowed.end(), r) << " ";
   std::cout << "\\n";
 }`,
-          ['1 0', '0 1', '1 1', '2 0'],
-          0,
+          '1 0',
           '9 is in the sorted list 1 5 9; 2 is not.',
         ),
         predictOutput(
@@ -3511,7 +3409,7 @@ int main() {
           'The elements add up to 12. Starting from 100 instead of 0 gives 112.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <numeric>
@@ -3520,11 +3418,10 @@ int main() {
   std::vector<int> v{2, 7, 1};
   std::cout << std::accumulate(v.begin(), v.end(), 5) << "\\n";
 }`,
-          ['10', '15', '5', '17'],
-          1,
+          '15',
           'The elements sum to 10, and the seed 5 is added to that total.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <numeric>
@@ -3533,11 +3430,10 @@ int main() {
   std::vector<int> empty;
   std::cout << std::accumulate(empty.begin(), empty.end(), 7) << "\\n";
 }`,
-          ['0', '-1', '7', '1'],
-          2,
+          '7',
           'With no elements to add, accumulate returns the seed unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <numeric>
@@ -3546,8 +3442,7 @@ int main() {
   std::vector<int> v{10, 20, 30};
   std::cout << std::accumulate(v.begin() + 1, v.end(), 0) << "\\n";
 }`,
-          ['60', '30', '40', '50'],
-          3,
+          '50',
           'The range starts at index 1, so only 20 and 30 are added.',
         ),
         choose(
@@ -3582,7 +3477,7 @@ int main() {
           'With seed 0, the total is an int: 0 + 1.5 becomes 1, then 1 + 2.5 becomes 3. With seed 0.0 the total stays a double and reaches 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <numeric>
@@ -3591,11 +3486,10 @@ int main() {
   std::vector<double> halves{0.5, 0.5, 0.5, 0.5};
   std::cout << std::accumulate(halves.begin(), halves.end(), 0) << "\\n";
 }`,
-          ['2', '0', '1', '4'],
-          1,
+          '0',
           'Each step computes 0 + 0.5 and stores it back in an int, which truncates to 0, so the total never grows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <numeric>
@@ -3604,11 +3498,10 @@ int main() {
   std::vector<double> parts{1.9, 1.9};
   std::cout << std::accumulate(parts.begin(), parts.end(), 0) << "\\n";
 }`,
-          ['3.8', '3', '2', '4'],
-          2,
+          '2',
           '0 + 1.9 truncates to 1, then 1 + 1.9 = 2.9 truncates to 2. Truncation happens at every step, not once at the end.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <numeric>
@@ -3617,8 +3510,7 @@ int main() {
   std::vector<double> parts{2.25, 0.75};
   std::cout << std::accumulate(parts.begin(), parts.end(), 0.0) << "\\n";
 }`,
-          ['2', '3.75', '3', '2.25'],
-          2,
+          '3',
           'A double seed keeps the fractions: 2.25 + 0.75 is exactly 3, which prints as 3.',
         ),
         choose(
@@ -3693,7 +3585,7 @@ int main() {
           1,
           'The double seed makes the total 5.0, so the division is floating-point: 5 / 3 prints as 1.66667.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <numeric>
@@ -3702,8 +3594,7 @@ int main() {
   std::vector<int> v{1, 2, 4};
   std::cout << std::accumulate(v.begin(), v.end(), 0LL) / 2 << "\\n";
 }`,
-          ['3.5', '4', '7', '3'],
-          3,
+          '3',
           'The total 7 is a long long, so dividing by 2 is integer division and gives 3.',
         ),
       ],
@@ -3733,7 +3624,7 @@ int main() {
           'The vector still has 4 elements, but only the first 2, 3 and 4, are kept values.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3743,11 +3634,10 @@ int main() {
   auto logical_end = std::remove(v.begin(), v.end(), 5);
   std::cout << v.size() << " " << (logical_end - v.begin()) << "\\n";
 }`,
-          ['2 2', '5 3', '5 2', '2 5'],
-          2,
+          '5 2',
           'remove does not shrink the vector, which still has 5 elements; only 1 and 2 are kept.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3758,8 +3648,7 @@ int main() {
   for (auto it = v.begin(); it != logical_end; ++it) std::cout << *it << " ";
   std::cout << "\\n";
 }`,
-          ['7 0 8 0 9', '9 8 7', '8 9', '7 8 9'],
-          3,
+          '7 8 9',
           'The kept values are moved to the front in their original order.',
         ),
         choose(
@@ -3773,7 +3662,7 @@ int main() {
           0,
           'Algorithms work on iterator ranges. Changing size needs the container itself, through erase.',
         ),
-        predictOutput(
+        typeOutput(
           'Nothing matches. What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3783,8 +3672,7 @@ int main() {
   auto logical_end = std::remove(v.begin(), v.end(), 9);
   std::cout << (logical_end == v.end()) << "\\n";
 }`,
-          ['0', '1', '2', '9'],
-          1,
+          '1',
           'Every element is kept, so the logical end is the real end.',
         ),
       ],
@@ -3811,7 +3699,7 @@ int main() {
           'remove compacts 3 and 4 to the front, and erase deletes the two leftovers, so the vector really has two elements.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3823,11 +3711,10 @@ int main() {
   for (int x : v) std::cout << " " << x;
   std::cout << "\\n";
 }`,
-          ['2: 9 9', '3: 1 1 1', '5: 9 9 1 9 1', '2: 9 1'],
-          0,
+          '2: 9 9',
           'All three 1s are removed and the tail erased, leaving the two 9s.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3837,11 +3724,10 @@ int main() {
   v.erase(std::remove(v.begin(), v.end(), 3), v.end());
   std::cout << v.size() << " " << v.empty() << "\\n";
 }`,
-          ['3 0', '1 0', '0 1', '0 0'],
-          2,
+          '0 1',
           'Every element matched, so the logical end is begin() and erase removes everything.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3851,8 +3737,7 @@ int main() {
   v.erase(std::remove(v.begin(), v.end(), 6), v.end());
   std::cout << v.size() << "\\n";
 }`,
-          ['1', '0', '6', '2'],
-          3,
+          '2',
           'Nothing matches 6, so remove returns end() and erasing the empty range [end, end) changes nothing.',
         ),
         choose(
@@ -3891,7 +3776,7 @@ int main() {
           'Three 2s were removed, but the one-argument erase deleted only one leftover, so v still has 4 elements. w is correct.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3901,11 +3786,10 @@ int main() {
   v.erase(std::remove(v.begin(), v.end(), 8));
   std::cout << v.size() << "\\n";
 }`,
-          ['1', '3', '2', '4'],
-          1,
+          '3',
           'Only 1 is kept, but erase with one iterator deletes a single leftover, leaving 3 elements.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3915,8 +3799,7 @@ int main() {
   v.erase(std::remove(v.begin(), v.end(), 8), v.end());
   std::cout << v.size() << "\\n";
 }`,
-          ['3', '0', '1', '4'],
-          2,
+          '1',
           'Erasing from the logical end to end() removes all three leftovers.',
         ),
         choose(
@@ -3930,7 +3813,7 @@ int main() {
           3,
           'remove returns end() when nothing matches, and erasing the element at end() is invalid because there is none.',
         ),
-        predictOutput(
+        typeOutput(
           'Exactly one element matches. What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -3941,8 +3824,7 @@ int main() {
   for (int x : v) std::cout << x << " ";
   std::cout << "\\n";
 }`,
-          ['5 7', '5 6', '5 7 7', '7'],
-          0,
+          '5 7',
           'With one match there is one leftover, so the one-argument erase happens to work. That is why this bug hides in tests with a single match.',
         ),
       ],
@@ -3967,26 +3849,24 @@ int main() {
           'twice holds the lambda. Each call runs its body with the given argument.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
   auto add = [](int a, int b) { return a + b; };
   std::cout << add(2, 5) * 3 << "\\n";
 }`,
-          ['17', '21', '10', '7'],
-          1,
+          '21',
           'add(2, 5) returns 7 first, and then the result is multiplied by 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
   auto inc = [](int x) { return x + 1; };
   std::cout << inc(inc(5)) << "\\n";
 }`,
-          ['6', '5', '7', '11'],
-          2,
+          '7',
           'The inner call returns 6, and the outer call adds one more.',
         ),
         choose(
@@ -4000,7 +3880,7 @@ int main() {
           3,
           'The lambda expression produces a callable object; nothing is computed until f is called.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4008,8 +3888,7 @@ int main() {
   auto bump = [](int x) { return x + 10; };
   std::cout << value << "\\n";
 }`,
-          ['3', '13', '10', '0'],
-          0,
+          '3',
           'Defining bump does not call it, and nothing passes value to it, so value is still 3.',
         ),
       ],
@@ -4034,7 +3913,7 @@ int main() {
           'saved copied 4 when it was created. Adding 10 to limit afterwards changes only the original.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4043,11 +3922,10 @@ int main() {
   rate = 5;
   std::cout << cost(2) << "\\n";
 }`,
-          ['10', '6', '15', '5'],
-          1,
+          '6',
           'cost captured rate when it was 3, so cost(2) is 2 * 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4056,8 +3934,7 @@ int main() {
   auto cost = [rate](int n) { return n * rate; };
   std::cout << cost(2) << "\\n";
 }`,
-          ['6', '15', '3', '10'],
-          3,
+          '10',
           'This time the lambda is created after the change, so its copy holds 5.',
         ),
         choose(
@@ -4071,7 +3948,7 @@ int main() {
           2,
           'A by-value capture is a snapshot taken at creation.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4082,8 +3959,7 @@ int main() {
   bonus = 5;
   std::cout << score(bonus) << "\\n";
 }`,
-          ['25', '21', '15', '11'],
-          2,
+          '15',
           'base was captured as 10, while bonus is passed as an argument at the call, when it is 5.',
         ),
       ],
@@ -4110,7 +3986,7 @@ int main() {
           'morning copied 100 and noon copied 120. The final change to 90 affects only price.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4121,11 +3997,10 @@ int main() {
   level = 3;
   std::cout << a() + b() << "\\n";
 }`,
-          ['30', '60', '40', '20'],
-          0,
+          '30',
           'a holds 1 and b holds 2, so the calls return 10 and 20.',
         ),
-        predictOutput(
+        typeOutput(
           'The lambda captures a reference variable by value. What does this program print?',
           `#include <iostream>
 int main() {
@@ -4135,8 +4010,7 @@ int main() {
   value = 8;
   std::cout << snap() << "\\n";
 }`,
-          ['8', '4', '0', '12'],
-          1,
+          '4',
           'Capturing alias by value copies the int it refers to, 4. The copy does not follow value afterwards.',
         ),
         choose(
@@ -4150,7 +4024,7 @@ int main() {
           3,
           'The captured copy is const inside an ordinary lambda.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4159,8 +4033,7 @@ int main() {
   x = f(3);
   std::cout << x << " " << f(3) << "\\n";
 }`,
-          ['6 18', '6 6', '2 6', '18 18'],
-          1,
+          '6 6',
           'Assigning f(3) to x changes the original to 6, but the lambda’s copy is still 2, so f(3) is 6 again.',
         ),
       ],
@@ -4185,7 +4058,7 @@ int main() {
         explanation: 'live reads value at the call, after it has become 7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4194,11 +4067,10 @@ int main() {
   rate = 5;
   std::cout << cost(2) << "\\n";
 }`,
-          ['6', '10', '15', '5'],
-          1,
+          '10',
           'The reference capture sees rate’s current value, 5.',
         ),
-        predictOutput(
+        typeOutput(
           'One variable is captured by value and one by reference. What does this program print?',
           `#include <iostream>
 int main() {
@@ -4209,11 +4081,10 @@ int main() {
   b = 2;
   std::cout << f() << "\\n";
 }`,
-          ['11', '21', '12', '22'],
-          2,
+          '12',
           'a was copied as 1; b is read live as 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4223,8 +4094,7 @@ int main() {
   level = 9;
   std::cout << before << " " << read() << "\\n";
 }`,
-          ['1 1', '9 9', '9 1', '1 9'],
-          3,
+          '1 9',
           'before stored the result of the first call. The second call reads the updated level.',
         ),
         choose(
@@ -4255,7 +4125,7 @@ int main() {
         explanation: 'Each call increments the same variable, count.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4265,11 +4135,10 @@ int main() {
   add(3);
   std::cout << total << "\\n";
 }`,
-          ['5', '8', '10', '7'],
-          2,
+          '10',
           'Both calls add to the original total: 5 + 2 + 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4279,11 +4148,10 @@ int main() {
   grow();
   std::cout << n << " " << snapshot() << "\\n";
 }`,
-          ['4 4', '1 1', '4 1', '1 4'],
-          2,
+          '4 1',
           'grow changes the original n to 4. snapshot copied n before that and still holds 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4296,8 +4164,7 @@ int main() {
   take(4);
   std::cout << left << " " << stock << "\\n";
 }`,
-          ['7 3', '3 3', '7 7', '10 3'],
-          0,
+          '7 3',
           'left saved the 7 returned by the first call. The second call reduces stock itself to 3.',
         ),
         choose(
@@ -4345,7 +4212,7 @@ int main() {
           2,
           'The reference outlives the object it names. Capturing local by value would fix it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 auto make_adder(int offset) {
@@ -4356,8 +4223,7 @@ int main() {
   auto add9 = make_adder(9);
   std::cout << add4(10) << " " << add9(10) << "\\n";
 }`,
-          ['14 19', '19 19', '14 14', '13 19'],
-          0,
+          '14 19',
           'Each call to make_adder creates a separate lambda with its own copy of offset.',
         ),
         choose(
@@ -4396,7 +4262,7 @@ int main() {
           'The predicate is true for -1 and -5 only; 0 is not less than 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -4405,11 +4271,10 @@ int main() {
   std::vector<int> v{2, 7, 4, 9, 6};
   std::cout << std::count_if(v.begin(), v.end(), [](int x) { return x > 5; }) << "\\n";
 }`,
-          ['2', '3', '5', '4'],
-          1,
+          '3',
           '7, 9 and 6 are greater than 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -4418,8 +4283,7 @@ int main() {
   std::vector<int> v{0, 1, 0, 0};
   std::cout << std::count_if(v.begin(), v.end(), [](int x) { return x == 0; }) << "\\n";
 }`,
-          ['1', '4', '0', '3'],
-          3,
+          '3',
           'Three elements are equal to 0.',
         ),
         choose(
@@ -4433,7 +4297,7 @@ int main() {
           0,
           'count_if adds one for every true result; the predicate only decides.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -4442,8 +4306,7 @@ int main() {
   std::vector<int> v{-1, -2, 3, -4};
   std::cout << std::count_if(v.begin() + 1, v.end(), [](int x) { return x < 0; }) << "\\n";
 }`,
-          ['3', '1', '2', '4'],
-          2,
+          '2',
           'The range starts at index 1, so -1 is not examined; -2 and -4 are counted.',
         ),
       ],
@@ -4469,7 +4332,7 @@ int main() {
           'Only 8 is strictly greater than 5. With >=, both 5s also count.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -4479,11 +4342,10 @@ int main() {
   int limit = 20;
   std::cout << std::count_if(v.begin(), v.end(), [limit](int x) { return x >= limit; }) << "\\n";
 }`,
-          ['1', '2', '3', '4'],
-          2,
+          '3',
           '20, 30 and the second 20 are at least 20.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -4493,11 +4355,10 @@ int main() {
   int limit = 20;
   std::cout << std::count_if(v.begin(), v.end(), [limit](int x) { return x > limit; }) << "\\n";
 }`,
-          ['1', '3', '2', '0'],
-          0,
+          '1',
           'Only 30 is strictly greater than 20.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -4509,8 +4370,7 @@ int main() {
   limit = 10;
   std::cout << std::count_if(v.begin(), v.end(), above) << "\\n";
 }`,
-          ['1', '2', '3', '0'],
-          1,
+          '2',
           'above captured limit when it was 2, so 5 and 12 count. The later change to 10 does not reach the copy.',
         ),
         choose(
@@ -4547,7 +4407,7 @@ int main() {
           '9 is the first element above 8, even though 11 also matches. Nothing is above 20, so huge equals end().',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -4557,11 +4417,10 @@ int main() {
   auto it = std::find_if(v.begin(), v.end(), [](int x) { return x > 5; });
   std::cout << (it == v.end() ? -1 : *it) << "\\n";
 }`,
-          ['8', '6', '2', '-1'],
-          1,
+          '6',
           'find_if stops at the first match, 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -4571,11 +4430,10 @@ int main() {
   auto it = std::find_if(v.begin(), v.end(), [](int x) { return x < 0; });
   std::cout << (it - v.begin()) << "\\n";
 }`,
-          ['2', '3', '-2', '1'],
-          0,
+          '2',
           'The first negative element, -2, is at index 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -4586,8 +4444,7 @@ int main() {
   auto it = std::find_if(v.begin(), v.end(), [limit](int x) { return x > limit; });
   std::cout << (it == v.end() ? -1 : *it) << "\\n";
 }`,
-          ['3', '0', '-1', '1'],
-          2,
+          '-1',
           'No element is greater than 3, so find_if returns end() and the fallback prints.',
         ),
         choose(
@@ -4625,7 +4482,7 @@ int main() {
           'sum was initialized once to 5 when the lambda was created; changing a afterwards has no effect.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4634,11 +4491,10 @@ int main() {
   width = 1;
   std::cout << area(3) << "\\n";
 }`,
-          ['12', '3', '24', '6'],
-          2,
+          '24',
           'w was computed as 8 when area was created, so area(3) is 24.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -4646,8 +4502,7 @@ int main() {
   auto next = [n = count] { return n + 1; };
   std::cout << next() << " " << count << "\\n";
 }`,
-          ['8 7', '8 8', '7 7', '7 8'],
-          0,
+          '8 7',
           'n is a copy of count, so the call returns 8 and count is unchanged.',
         ),
         choose(
@@ -4684,7 +4539,7 @@ int main() {
           'held now owns the int 12. The move left owner empty, so the comparison prints 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <memory>
@@ -4694,11 +4549,10 @@ int main() {
   auto doubled = [held = std::move(owner)] { return *held * 2; };
   std::cout << doubled() << " " << (owner == nullptr) << "\\n";
 }`,
-          ['10 0', '10 1', '5 1', '0 1'],
-          1,
+          '10 1',
           'The closure owns the 5 and returns 10; the moved-from owner is empty.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <memory>
@@ -4708,8 +4562,7 @@ int main() {
   auto task = [held = std::move(owner)] { return *held + 1; };
   std::cout << (owner ? *owner : -1) << " " << task() << "\\n";
 }`,
-          ['7 8', '-1 7', '-1 8', '0 8'],
-          2,
+          '-1 8',
           'owner was emptied by the move, so the guard prints -1. The closure still reads its 7 and adds 1.',
         ),
         choose(
@@ -4766,7 +4619,7 @@ int main() {
           'Inside the block the Probe is alive, so the count is 0. Leaving the block destroys task, whose member deletes the Probe exactly once; the empty owner deletes nothing.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <memory>
@@ -4785,11 +4638,10 @@ int main() {
   }
   std::cout << released << " " << (owner == nullptr) << "\\n";
 }`,
-          ['1 0 1', '1 1 0', '1 1 1', '0 0 1'],
-          2,
+          '1 1 1',
           'The closure owned the Probe and was destroyed at the end of the block, releasing it. owner, declared outside, is empty because it was moved from.',
         ),
-        predictOutput(
+        typeOutput(
           'Two closures each own a Probe. What does this program print?',
           `#include <iostream>
 #include <memory>
@@ -4807,8 +4659,7 @@ int main() {
   }
   std::cout << released << " " << first() << "\\n";
 }`,
-          ['0 2 2', '0 1 1', '0 0 0', '1 1 1'],
-          1,
+          '0 1 1',
           'Only second is destroyed at the end of the block, releasing its Probe. first still owns its Probe, which reads the shared count, 1.',
         ),
         choose(
@@ -4843,26 +4694,24 @@ int main() {
           'The compiler generates twice<int> for 3 and twice<double> for 1.25.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> T square(T x) { return x * x; }
 int main() {
   std::cout << square(5) << " " << square(0.5) << "\\n";
 }`,
-          ['25 0', '25 0.25', '25 0.5', '10 1'],
-          1,
+          '25 0.25',
           'square<int>(5) is 25 and square<double>(0.5) is 0.25; each call keeps its own type.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> T larger(T a, T b) { return a < b ? b : a; }
 int main() {
   std::cout << larger(3, 8) << " " << larger(2.5, -1.5) << "\\n";
 }`,
-          ['8 2.5', '3 2.5', '8 -1.5', '8 2'],
-          0,
+          '8 2.5',
           'Each instantiation compares two values of its own type and returns the larger.',
         ),
         choose(
@@ -4876,15 +4725,14 @@ int main() {
           3,
           'Each distinct T produces its own instantiation at compile time.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> T at_least(T x, T low) { return x < low ? low : x; }
 int main() {
   std::cout << at_least(-4, 0) << " " << at_least(2.5, 1.0) << "\\n";
 }`,
-          ['-4 2.5', '0 1', '0 2.5', '-4 1'],
-          2,
+          '0 2.5',
           '-4 is below 0, so 0 is returned. 2.5 is above 1.0, so it is returned unchanged.',
         ),
       ],
@@ -4907,37 +4755,34 @@ int main() {
           'average<int> divides 7 by 2 with integer division, giving 3. average<double> gives 3.5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> T half(T x) { return x / 2; }
 int main() {
   std::cout << half(7) << " " << half(7.0) << "\\n";
 }`,
-          ['3.5 3.5', '3 3', '4 3.5', '3 3.5'],
-          3,
+          '3 3.5',
           'half<int> truncates 3.5 to 3; half<double> keeps 3.5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> T half(T x) { return x / 2; }
 int main() {
   std::cout << half(-7) << "\\n";
 }`,
-          ['-4', '-3', '-3.5', '3'],
-          1,
+          '-3',
           'T is int, and integer division truncates toward zero, so -3.5 becomes -3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> T ratio(T a, T b) { return a / b; }
 int main() {
   std::cout << ratio(1, 4) * 4 << " " << ratio(1.0, 4.0) * 4 << "\\n";
 }`,
-          ['1 1', '0 0', '0 1', '0.25 1'],
-          2,
+          '0 1',
           'ratio<int>(1, 4) is 0, and 0 * 4 is 0. ratio<double> gives 0.25, and 0.25 * 4 is 1.',
         ),
         choose(
@@ -4974,7 +4819,7 @@ int main() {
           'mid(1.0, 2.0) deduces double and returns 1.5. mid(1, 2) deduces int and returns 1 before the result is converted to the double r.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> T mid(T a, T b) { return (a + b) / 2; }
@@ -4982,8 +4827,7 @@ int main() {
   double result = mid(4, 7);
   std::cout << result << "\\n";
 }`,
-          ['5.5', '5', '6', '5.0'],
-          1,
+          '5',
           'Both arguments are int, so T is int and the division truncates to 5. The double variable receives 5.',
         ),
         choose(
@@ -4997,7 +4841,7 @@ int main() {
           2,
           'Both arguments are int literals, so T is deduced as int.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> T mid(T a, T b) { return (a + b) / 2; }
@@ -5006,19 +4850,17 @@ int main() {
   int qty = 2;
   std::cout << mid(price, 4.5) << " " << mid(qty, 5) << "\\n";
 }`,
-          ['3.5 3.5', '3.5 3', '3 3', '7 7'],
-          1,
+          '3.5 3',
           'The first call deduces double and gives 3.5; the second deduces int and truncates 3.5 to 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> T scale(T x, T factor) { return x * factor; }
 int main() {
   std::cout << scale(3, 2) << " " << scale(0.5, 3.0) << "\\n";
 }`,
-          ['6 1', '6 1.5', '6.0 1.5', '5 3.5'],
-          1,
+          '6 1.5',
           'scale(3, 2) deduces int; scale(0.5, 3.0) deduces double, so the result keeps its fraction.',
         ),
       ],
@@ -5052,26 +4894,24 @@ int main() {
           1,
           'Each argument deduces T independently, and the two results must agree.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> T add(T a, T b) { return a + b; }
 int main() {
   std::cout << add<double>(1, 2.5) << "\\n";
 }`,
-          ['3', '3.5', '4', '2.5'],
-          1,
+          '3.5',
           'T is double, so 1 becomes 1.0 and the sum is 3.5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> T add(T a, T b) { return a + b; }
 int main() {
   std::cout << add<int>(1, 2.5) << "\\n";
 }`,
-          ['3.5', '4', '2', '3'],
-          3,
+          '3',
           'T is int, so 2.5 is converted to 2 before the addition.',
         ),
         choose(
@@ -5110,7 +4950,7 @@ int main() {
           'count.value is an int and weight.value a double; each member has the type chosen in the angle brackets.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> struct Pair {
@@ -5122,11 +4962,10 @@ int main() {
   Pair<double> q{0.5, 1.5};
   std::cout << p.first + p.second << " " << q.first + q.second << "\\n";
 }`,
-          ['7 2', '7 1', '7 2.0', '34 0.51.5'],
-          0,
+          '7 2',
           'Pair<int> holds two ints and Pair<double> two doubles; 0.5 + 1.5 is 2, which prints as 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> struct Slot {
@@ -5137,8 +4976,7 @@ int main() {
   Slot<double> b{9};
   std::cout << a.value / 2 << " " << b.value / 2 << "\\n";
 }`,
-          ['4.5 4.5', '4 4', '4 4.5', '5 4.5'],
-          2,
+          '4 4.5',
           'a.value is the int 9, so integer division gives 4. b.value is the double 9.0, so the result is 4.5.',
         ),
         choose(
@@ -5152,7 +4990,7 @@ int main() {
           3,
           'Each template argument produces a separate class type.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> struct Slot {
@@ -5162,8 +5000,7 @@ int main() {
   Slot<double> s{3};
   std::cout << s.value / 2 << "\\n";
 }`,
-          ['1', '1.5', '2', '0'],
-          1,
+          '1.5',
           'The member is a double, so the int 3 is stored as 3.0 and dividing by 2 gives 1.5.',
         ),
       ],
@@ -5190,7 +5027,7 @@ int main() {
         explanation: 'Each instantiation computes the width in its own type.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> struct Box {
@@ -5201,11 +5038,10 @@ int main() {
   Box<int> b{21};
   std::cout << b.doubled() << "\\n";
 }`,
-          ['21', '42', '2', '212'],
-          1,
+          '42',
           'doubled multiplies the member by 2 in the instantiated type.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> struct Scale {
@@ -5217,11 +5053,10 @@ int main() {
   Scale<double> d{0.5};
   std::cout << s.apply(4) << " " << d.apply(3) << "\\n";
 }`,
-          ['12 1', '7 3.5', '12 1.5', '12 3'],
-          2,
+          '12 1.5',
           'Scale<double>::apply takes a double, so 3 becomes 3.0 and the result is 1.5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> struct Range {
@@ -5234,8 +5069,7 @@ int main() {
   Range<double> b{1, 4};
   std::cout << a.width() / 2 << " " << b.width() / 2 << "\\n";
 }`,
-          ['1.5 1.5', '1 1', '2 1.5', '1 1.5'],
-          3,
+          '1 1.5',
           'Both widths are 3, but in Range<int> it is an int, so dividing by 2 gives 1.',
         ),
         choose(
@@ -5271,7 +5105,7 @@ int main() {
           'a and b each have their own count member, so their updates do not mix.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> struct Counter {
@@ -5286,11 +5120,10 @@ int main() {
   d.add(2);
   std::cout << c.count << " " << d.count << "\\n";
 }`,
-          ['1 3', '0.75 3', '1 2', '1.0 3'],
-          0,
+          '1 3',
           'c adds two quarters to 0.5, reaching 1, which prints as 1. d goes from 1 to 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> struct Counter {
@@ -5303,8 +5136,7 @@ int main() {
   b.add(4);
   std::cout << a.count << " " << b.count << "\\n";
 }`,
-          ['5 5', '1 1', '1 5', '5 1'],
-          2,
+          '1 5',
           'b is a copy, so it has its own count; changing it leaves a at 1.',
         ),
         choose(
@@ -5318,7 +5150,7 @@ int main() {
           1,
           'Per-object state must live in members; a shared variable makes distinct objects indistinguishable.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 template<class T> struct Counter {
@@ -5333,8 +5165,7 @@ int main() {
   whole.add(1);
   std::cout << whole.count << " " << part.count << "\\n";
 }`,
-          ['4 1.5', '4 1', '3 1.5', '4.5 1.5'],
-          0,
+          '4 1.5',
           'Each object accumulates only its own additions, in its own type.',
         ),
       ],
@@ -5362,7 +5193,7 @@ int main() {
           'relay accepts both x and the temporary 5, but inside relay the named parameter is an lvalue, so category(int&) runs both times.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int category(int&) { return 1; }
@@ -5372,8 +5203,7 @@ int main() {
   int x = 4;
   std::cout << category(x) << " " << category(5) << " " << relay(5) << "\\n";
 }`,
-          ['1 2 2', '1 1 1', '2 2 1', '1 2 1'],
-          3,
+          '1 2 1',
           'Called directly, the temporary 5 selects int&&. Through relay it arrives as a named parameter, an lvalue.',
         ),
         choose(
@@ -5417,7 +5247,7 @@ int main() {
           'For x, T is int& and forward yields an lvalue. For 5, T is int and forward yields an rvalue.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <utility>
@@ -5428,11 +5258,10 @@ int main() {
   int a = 1;
   std::cout << dispatch(a) << " " << dispatch(a + 1) << "\\n";
 }`,
-          ['1 1', '2 2', '1 2', '2 1'],
-          2,
+          '1 2',
           'a is an lvalue, but a + 1 produces a temporary, an rvalue, and forward preserves each.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <utility>
@@ -5443,8 +5272,7 @@ int main() {
   int a = 1;
   std::cout << dispatch(std::move(a)) << " " << dispatch(a) << "\\n";
 }`,
-          ['2 1', '2 2', '1 1', '1 2'],
-          0,
+          '2 1',
           'std::move(a) is an rvalue expression for that call only; naming a again later gives an lvalue.',
         ),
         choose(
@@ -5458,7 +5286,7 @@ int main() {
           3,
           'Only std::forward<T> uses the deduced T to choose between lvalue and rvalue.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <utility>
@@ -5470,8 +5298,7 @@ int main() {
   int total = dispatch(stored) + dispatch(7) + dispatch(stored);
   std::cout << total << "\\n";
 }`,
-          ['4', '5', '6', '3'],
-          0,
+          '4',
           'The two calls with stored return 1 each and the temporary 7 returns 2.',
         ),
       ],
@@ -5499,7 +5326,7 @@ int main() {
           'moving casts the caller’s lvalue x to an rvalue; forwarding keeps it an lvalue.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <utility>
@@ -5511,11 +5338,10 @@ int main() {
   int x = 4;
   std::cout << moving(x) << " " << moving(5) << " " << forwarding(5) << "\\n";
 }`,
-          ['1 2 2', '1 2 1', '2 2 2', '2 2 1'],
-          2,
+          '2 2 2',
           'moving makes everything an rvalue, and forwarding keeps the temporary 5 an rvalue.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <utility>
@@ -5529,13 +5355,7 @@ int main() {
   relay(std::move(a));
   std::cout << "\\n";
 }`,
-          [
-            'copy move copy',
-            'move move move',
-            'copy copy move',
-            'copy move move',
-          ],
-          3,
+          'copy move move',
           'a is forwarded as an lvalue and copied; the temporary and std::move(a) arrive as rvalues and select the moving overload.',
         ),
         choose(
@@ -5584,26 +5404,24 @@ int main() {
           'int and long long satisfy std::integral, so both calls compile; % gives the remainder after integer division. The concept is true for int and false for double.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <concepts>
 #include <iostream>
 int main() {
   std::cout << std::integral<long long> << " " << std::integral<double> << "\\n";
 }`,
-          ['1 0', '1 1', '0 0', '0 1'],
-          0,
+          '1 0',
           'long long is an integer type; double is a floating-point type.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <concepts>
 #include <iostream>
 int main() {
   std::cout << std::integral<bool> << " " << std::integral<char> << "\\n";
 }`,
-          ['0 0', '0 1', '1 0', '1 1'],
-          3,
+          '1 1',
           'bool and char are both integral types in C++, so both tests are true.',
         ),
         choose(
@@ -5612,7 +5430,7 @@ int main() {
           3,
           '9.0 is a double, which does not satisfy std::integral; the other arguments are integer types.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <concepts>
 #include <iostream>
@@ -5620,8 +5438,7 @@ template<std::integral T> T half(T value) { return value / 2; }
 int main() {
   std::cout << half(9) << " " << half(-9) << "\\n";
 }`,
-          ['4.5 -4.5', '4 -4', '4 -5', '5 -5'],
-          1,
+          '4 -4',
           'T is int in both calls, so the division truncates toward zero.',
         ),
       ],
@@ -5667,7 +5484,7 @@ int main() {
           2,
           '% needs integer operands, which std::integral guarantees. The unconstrained forms accept double and then fail inside the body.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <concepts>
 #include <iostream>
@@ -5675,11 +5492,10 @@ template<std::integral T> T tens(T value) { return value / 10; }
 int main() {
   std::cout << tens(507) << " " << tens(-38) << "\\n";
 }`,
-          ['50 -3', '50.7 -3.8', '51 -4', '50 -4'],
-          0,
+          '50 -3',
           'Integer division truncates toward zero for both signs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <concepts>
 #include <iostream>
@@ -5687,8 +5503,7 @@ template<std::integral T> int next(T value) { return static_cast<int>(value) + 1
 int main() {
   std::cout << next(true) << " " << next(41) << "\\n";
 }`,
-          ['1 42', '0 42', '2 42', 'true 42'],
-          2,
+          '2 42',
           'bool satisfies std::integral, and true converts to the int 1, so next(true) is 2.',
         ),
       ],
@@ -5714,7 +5529,7 @@ int main() {
           'vector<int> has a size() member and int does not. No size() is actually called.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <vector>
@@ -5722,11 +5537,10 @@ template<class T> concept HasFront = requires(const T& value) { value.front(); }
 int main() {
   std::cout << HasFront<std::vector<int>> << " " << HasFront<double> << "\\n";
 }`,
-          ['1 1', '0 0', '0 1', '1 0'],
-          3,
+          '1 0',
           'A vector has front(); a double has no members at all.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <vector>
@@ -5734,8 +5548,7 @@ template<class T> concept Addable = requires(T a, T b) { a + b; };
 int main() {
   std::cout << Addable<int> << " " << Addable<std::vector<int>> << "\\n";
 }`,
-          ['1 0', '1 1', '0 1', '0 0'],
-          0,
+          '1 0',
           'Two ints can be added; std::vector defines no + operator.',
         ),
         choose(
@@ -5784,7 +5597,7 @@ int main() {
           'Both vector types satisfy HasSize, so count accepts them and returns their sizes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <vector>
@@ -5795,8 +5608,7 @@ int main() {
   std::vector<double> b{0.5, 1.5, 2.5};
   std::cout << count(a) << " " << count(b) << "\\n";
 }`,
-          ['2 3', '3 2', '2 4.5', '1 2'],
-          0,
+          '2 3',
           'count returns the number of elements of each vector, whatever their element type.',
         ),
         choose(
@@ -5821,7 +5633,7 @@ int main() {
           2,
           'The concept should list exactly the expressions the body uses.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <vector>
@@ -5837,8 +5649,7 @@ int main() {
   std::vector<int> empty;
   std::cout << first_or(full, -1) << " " << first_or(empty, -1) << "\\n";
 }`,
-          ['7 0', '7 -1', '2 -1', '-1 -1'],
-          1,
+          '7 -1',
           'Both vectors satisfy Indexable. The empty one takes the fallback instead of reading c[0].',
         ),
       ],
@@ -5867,7 +5678,7 @@ int main() {
           'kind<int> keeps only the first branch and kind<double> only the second; nothing is tested at run time.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <type_traits>
@@ -5878,22 +5689,20 @@ template<class T> int sign_kind(T) {
 int main() {
   std::cout << sign_kind(3) << " " << sign_kind(3u) << "\\n";
 }`,
-          ['1 1', '-1 -1', '-1 1', '1 -1'],
-          2,
+          '-1 1',
           'int is signed and unsigned is not, whatever the values passed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <type_traits>
 int main() {
   std::cout << std::is_signed_v<double> << " " << std::is_integral_v<double> << "\\n";
 }`,
-          ['0 0', '1 0', '0 1', '1 1'],
-          1,
+          '1 0',
           'Floating-point types can hold negative values, so they count as signed, but they are not integral.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <type_traits>
@@ -5904,8 +5713,7 @@ template<class T> T step(T value) {
 int main() {
   std::cout << step(2) << " " << step(2.0) << "\\n";
 }`,
-          ['3 2.5', '3 3', '2.5 2.5', '3 3.0'],
-          0,
+          '3 2.5',
           'The int instantiation adds 1 and the double instantiation adds 0.5.',
         ),
         choose(
@@ -5954,7 +5762,7 @@ int main() {
           0,
           'The condition is false for double, but a plain if still compiles the unused branch.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <type_traits>
@@ -5965,8 +5773,7 @@ template<class T> T trim(T value) {
 int main() {
   std::cout << trim(1995) << " " << trim(19.95) << "\\n";
 }`,
-          ['1990 19.9', '1995 19.95', '1990 10', '1990 19.95'],
-          3,
+          '1990 19.95',
           'Only the int instantiation drops the last digit; the double passes through unchanged.',
         ),
         choose(
@@ -6022,7 +5829,7 @@ int main() {
           'The minimum int is -2147483648. Its magnitude does not fit in int but fits in long long, so widening first avoids overflow.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <type_traits>
@@ -6034,8 +5841,7 @@ template<class T> long long magnitude(T value) {
 int main() {
   std::cout << magnitude(-12) << " " << magnitude(12) << "\\n";
 }`,
-          ['-12 12', '12 -12', '12 12', '0 12'],
-          2,
+          '12 12',
           'Both calls use the signed branch; only the negative value is negated.',
         ),
         choose(
@@ -6049,7 +5855,7 @@ int main() {
           0,
           'int ranges from -2147483648 to 2147483647, so -(-2147483648) needs a wider type.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <type_traits>
@@ -6060,8 +5866,7 @@ template<class T> T flip(T value) {
 int main() {
   std::cout << flip(-3) << " " << flip(3u) << " " << flip(1.5) << "\\n";
 }`,
-          ['3 3 -1.5', '3 3 1.5', '-3 3 -1.5', '3 -3 -1.5'],
-          0,
+          '3 3 -1.5',
           'int and double are signed, so they are negated; unsigned is returned unchanged.',
         ),
       ],
@@ -6087,7 +5892,7 @@ int main() {
           'int satisfies std::integral, so the constrained overload is preferred. double satisfies only the unconstrained one.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <concepts>
 #include <iostream>
@@ -6096,11 +5901,10 @@ template<std::integral T> int describe(T) { return 1; }
 int main() {
   std::cout << describe(7LL) << " " << describe(7.0f) << " " << describe(true) << "\\n";
 }`,
-          ['1 0 0', '0 0 1', '1 1 1', '1 0 1'],
-          3,
+          '1 0 1',
           'long long and bool are integral, so they get the constrained overload; float does not.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <concepts>
 #include <iostream>
@@ -6109,8 +5913,7 @@ template<std::integral T> int classify(T) { return 2; }
 int main() {
   std::cout << classify(1) + classify(1.5) + classify(2) << "\\n";
 }`,
-          ['4', '5', '6', '3'],
-          1,
+          '5',
           'The two int calls return 2 each and the double call returns 1.',
         ),
         choose(
@@ -6155,7 +5958,7 @@ int main() {
         explanation: '3 and the char x are integral; 3.0 is floating-point.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <concepts>
 #include <iostream>
@@ -6164,8 +5967,7 @@ template<std::floating_point T> int bucket(T) { return 2; }
 int main() {
   std::cout << bucket(0.5f) << " " << bucket(10u) << " " << bucket(false) << "\\n";
 }`,
-          ['2 1 2', '2 1 1', '1 1 1', '2 2 1'],
-          1,
+          '2 1 1',
           'float is floating-point; unsigned and bool are integral.',
         ),
         choose(
@@ -6179,7 +5981,7 @@ int main() {
           0,
           'A struct satisfies neither concept, and there is no unconstrained fallback.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <concepts>
 #include <iostream>
@@ -6188,8 +5990,7 @@ template<std::floating_point T> int bucket(T) { return 2; }
 int main() {
   std::cout << bucket(1) + bucket(2.0) + bucket(3) * 10 << "\\n";
 }`,
-          ['13', '31', '40', '14'],
-          0,
+          '13',
           'bucket(1) is 1, bucket(2.0) is 2, and bucket(3) * 10 is 10.',
         ),
         choose(
@@ -6225,7 +6026,7 @@ int main() {
           'int satisfies both, and signed_integral is more specific. unsigned satisfies only std::integral.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <concepts>
 #include <iostream>
@@ -6234,8 +6035,7 @@ template<std::signed_integral T> int rank(T) { return 2; }
 int main() {
   std::cout << rank(5) << " " << rank(5u) << " " << rank(5LL) << "\\n";
 }`,
-          ['2 2 2', '1 1 1', '2 1 2', '2 1 1'],
-          2,
+          '2 1 2',
           'int and long long are signed integer types; unsigned is not signed.',
         ),
         choose(
@@ -6249,7 +6049,7 @@ int main() {
           1,
           'Subsumption makes signed_integral strictly more specific, so it wins whenever both match.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <concepts>
 #include <iostream>
@@ -6258,8 +6058,7 @@ template<std::signed_integral T> int rank(T) { return 2; }
 int main() {
   std::cout << rank(true) << " " << rank(-1LL) << "\\n";
 }`,
-          ['2 2', '1 1', '2 1', '1 2'],
-          3,
+          '1 2',
           'bool is integral but not signed, so it gets rank 1; long long is signed.',
         ),
       ],
@@ -6286,7 +6085,7 @@ int main() {
           'Both conditions are true, so the program compiles; the assertions produce no output of their own.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstdint>
 #include <iostream>
@@ -6294,8 +6093,7 @@ static_assert(sizeof(std::uint16_t) == 2);
 int main() {
   std::cout << sizeof(std::uint16_t) << "\\n";
 }`,
-          ['16', '2', '4', '1'],
-          1,
+          '2',
           'sizeof counts bytes, and a 16-bit type occupies 2 bytes; the static_assert passes silently.',
         ),
         choose(
@@ -6309,7 +6107,7 @@ int main() {
           2,
           'The check happens in the compiler, so a false condition means there is no program to run.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstdint>
 #include <iostream>
@@ -6318,8 +6116,7 @@ static_assert(sizeof(std::uint64_t) == 8);
 int main() {
   std::cout << sizeof(std::uint8_t) + sizeof(std::uint64_t) << "\\n";
 }`,
-          ['72', '16', '2', '9'],
-          3,
+          '9',
           'The sizes are 1 and 8 bytes; 72 would be the total in bits.',
         ),
         choose(
@@ -6366,7 +6163,7 @@ int main() {
           2,
           'Only sizeof(int) is known during compilation. index is a run-time parameter, and pick is not constexpr.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 constexpr int width = 6;
@@ -6375,8 +6172,7 @@ static_assert(width * height == 24);
 int main() {
   std::cout << width * height / 5 << "\\n";
 }`,
-          ['4.8', '24', '4', '5'],
-          2,
+          '4',
           'The assertion passes, and 24 / 5 is integer division, giving 4.',
         ),
         choose(
@@ -6390,7 +6186,7 @@ int main() {
           3,
           'The size exists only at run time, so only run-time code can check it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstdint>
 #include <iostream>
@@ -6398,8 +6194,7 @@ static_assert(sizeof(std::int64_t) == 8);
 int main() {
   std::cout << static_cast<int>(sizeof(std::int64_t)) * 8 << "\\n";
 }`,
-          ['64', '8', '512', '16'],
-          0,
+          '64',
           'An int64_t is 8 bytes, which is 64 bits.',
         ),
       ],
@@ -6445,15 +6240,14 @@ int main() {
           0,
           'Only static_assert stops the build on a platform where the layout differs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstdint>
 #include <iostream>
 int main() {
   std::cout << sizeof(std::uint8_t) * 8 << " " << sizeof(std::uint32_t) * 8 << "\\n";
 }`,
-          ['1 4', '8 32', '8 8', '64 256'],
-          1,
+          '8 32',
           'Multiplying the byte sizes by 8 gives the bit widths in the type names.',
         ),
       ],
@@ -6479,7 +6273,7 @@ int main() {
           'square(4) is evaluated by the compiler for the assertion, and square(6) initializes the constant area.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 constexpr int cube(int value) { return value * value * value; }
@@ -6488,11 +6282,10 @@ int main() {
   static_assert(c == 27);
   std::cout << c + 1 << "\\n";
 }`,
-          ['27', '10', '28', '9'],
-          2,
+          '28',
           'cube(3) is 27, computed during compilation, and the program prints 28.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 constexpr int add_tax(int cents) { return cents + cents / 10; }
@@ -6500,8 +6293,7 @@ static_assert(add_tax(100) == 110);
 int main() {
   std::cout << add_tax(55) << "\\n";
 }`,
-          ['60', '60.5', '61', '55'],
-          0,
+          '60',
           '55 / 10 is integer division, giving 5, so the result is 60.',
         ),
         choose(
@@ -6536,7 +6328,7 @@ int main() {
           'square(side) runs at run time with the parameter 5; square(2) may be folded by the compiler. Both give ordinary results: 25 + 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 constexpr int square(int value) { return value * value; }
@@ -6545,8 +6337,7 @@ int main() {
   int s = square(n);
   std::cout << s << "\\n";
 }`,
-          ['14', '7', '49', '0'],
-          2,
+          '49',
           'n is an ordinary variable, so the call runs at run time and returns 49.',
         ),
         choose(
@@ -6571,7 +6362,7 @@ int main() {
           3,
           'Calls with run-time arguments run normally; constant contexts such as static_assert force compile-time evaluation.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 constexpr int half(int value) { return value / 2; }
@@ -6580,8 +6371,7 @@ int main() {
   constexpr int fixed = half(9);
   std::cout << fixed + half(x) << "\\n";
 }`,
-          ['8', '9', '4', '10'],
-          0,
+          '8',
           'half(9) is 4 both as a compile-time constant and as a run-time call, so the sum is 8.',
         ),
       ],
@@ -6608,7 +6398,7 @@ int main() {
           'Both calls have constant arguments, so the compiler evaluates them: 2 to the power 4 and 2 to the power 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 consteval int kib(int n) { return n * 1024; }
@@ -6616,11 +6406,10 @@ int main() {
   constexpr int size = kib(4);
   std::cout << size << "\\n";
 }`,
-          ['4', '1028', '4096', '1024'],
-          2,
+          '4096',
           'kib(4) is computed during compilation as 4 * 1024.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 consteval int capacity(int exponent) { return 1 << exponent; }
@@ -6628,8 +6417,7 @@ int main() {
   constexpr int total = capacity(5) + capacity(0);
   std::cout << total << "\\n";
 }`,
-          ['32', '33', '5', '6'],
-          1,
+          '33',
           '1 << 5 is 32 and 1 << 0 is 1.',
         ),
         choose(
@@ -6643,7 +6431,7 @@ int main() {
           3,
           'Only the literal argument is a constant expression.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 consteval int capacity(int exponent) { return 1 << exponent; }
@@ -6652,8 +6440,7 @@ int main() {
   constexpr int cap = capacity(base);
   std::cout << cap << " " << base << "\\n";
 }`,
-          ['8 3', '6 3', '9 3', '3 8'],
-          0,
+          '8 3',
           'base is constexpr, so capacity(base) is a valid immediate call giving 8.',
         ),
       ],
@@ -6701,7 +6488,7 @@ int main() {
           0,
           'constexpr allows both compile-time and run-time calls; consteval allows only compile-time ones.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 constexpr int scale(int value) { return value * 10; }
@@ -6711,8 +6498,7 @@ int main() {
   int b = scale(3);
   std::cout << a + b << "\\n";
 }`,
-          ['23', '5', '60', '50'],
-          3,
+          '50',
           'a is 20 and b is 30.',
         ),
         choose(
@@ -6753,7 +6539,7 @@ int main() {
         explanation: 'The table holds 0, 1, 4 and 9, computed by the compiler.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <array>
 #include <iostream>
@@ -6766,11 +6552,10 @@ int main() {
   constexpr auto values = table();
   std::cout << values[4] << "\\n";
 }`,
-          ['50', '4', '40', '10'],
-          2,
+          '40',
           'Index 4 holds 4 * 10; indexes start at 0, so 50 is never stored.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <array>
 #include <iostream>
@@ -6783,8 +6568,7 @@ int main() {
   constexpr auto values = running();
   std::cout << values[4] << "\\n";
 }`,
-          ['10', '4', '15', '6'],
-          0,
+          '10',
           'The entries are 0, 1, 3, 6 and 10: each adds its index to the previous entry.',
         ),
         choose(
@@ -6798,7 +6582,7 @@ int main() {
           1,
           'A constexpr variable must be initialized by a constant expression, so table() runs in the compiler.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <array>
 #include <iostream>
@@ -6812,8 +6596,7 @@ int main() {
   static_assert(values[1] == 1);
   std::cout << values.size() << "\\n";
 }`,
-          ['3', '16', '5', '4'],
-          3,
+          '4',
           'size() is the N in std::array<int, 4>, whatever the entries contain.',
         ),
       ],
@@ -6846,7 +6629,7 @@ int main() {
           'Index 3 is the last valid one. Index 4 equals size(), so the guard returns -1 instead of reading past the end.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <array>
 #include <cstddef>
@@ -6863,11 +6646,10 @@ int lookup(std::size_t index) {
 int main() {
   std::cout << lookup(0) << " " << lookup(5) << "\\n";
 }`,
-          ['0 -1', '1 -1', '0 25', '-1 -1'],
-          0,
+          '0 -1',
           'Index 0 holds 0 * 0. Index 5 is out of range, so the fallback is returned.',
         ),
-        predictOutput(
+        typeOutput(
           'A negative index is converted to std::size_t. What does this program print?',
           `#include <array>
 #include <cstddef>
@@ -6884,8 +6666,7 @@ int lookup(std::size_t index) {
 int main() {
   std::cout << lookup(static_cast<std::size_t>(-1)) << "\\n";
 }`,
-          ['9', '0', '1', '-1'],
-          3,
+          '-1',
           '-1 wraps to the largest std::size_t value, which is not less than 4, so the guard rejects it.',
         ),
         choose(
@@ -6899,7 +6680,7 @@ int main() {
           2,
           'Valid indexes are 0 to 3. <= admits 4, and size() - 1 wrongly excludes 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <array>
 #include <cstddef>
@@ -6915,8 +6696,7 @@ int main() {
   for (std::size_t i = 0; i < values.size(); ++i) sum += values[i];
   std::cout << sum << "\\n";
 }`,
-          ['30', '14', '9', '6'],
-          1,
+          '14',
           '0 + 1 + 4 + 9 is 14; the half-open loop stops before index 4.',
         ),
       ],
@@ -6951,7 +6731,7 @@ int main() {
           'The table holds 1, 2, 4, 8 and 16, and the build checks the last entry. Index 5 is out of range at run time.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <array>
 #include <cstddef>
@@ -6971,8 +6751,7 @@ int lookup(std::size_t index) { return index < table.size() ? table[index] : -1;
 int main() {
   std::cout << lookup(0) + lookup(4) << "\\n";
 }`,
-          ['16', '17', '32', '33'],
-          1,
+          '17',
           'table[0] is 1 and table[4] is 16.',
         ),
         choose(
@@ -7024,7 +6803,7 @@ int main() {
           'Both objects run the same operator(), each with its own amount.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Multiply {
@@ -7035,11 +6814,10 @@ int main() {
   Multiply triple{3};
   std::cout << triple(4) + triple(1) << "\\n";
 }`,
-          ['12', '7', '15', '13'],
-          2,
+          '15',
           'triple(4) is 12 and triple(1) is 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Line {
@@ -7051,8 +6829,7 @@ int main() {
   Line f{2, 1};
   std::cout << f(3) << " " << f(0) << "\\n";
 }`,
-          ['7 1', '9 1', '7 0', '5 2'],
-          0,
+          '7 1',
           'f(x) computes 2 * x + 1 from the members set at initialization.',
         ),
         choose(
@@ -7066,7 +6843,7 @@ int main() {
           2,
           'Call syntax on an object invokes its operator().',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Offset {
@@ -7077,8 +6854,7 @@ int apply_twice(Offset step, int value) { return step(step(value)); }
 int main() {
   std::cout << apply_twice(Offset{4}, 1) << "\\n";
 }`,
-          ['5', '8', '6', '9'],
-          3,
+          '9',
           'The object is passed like any value and called twice: 1 + 4 + 4.',
         ),
       ],
@@ -7109,7 +6885,7 @@ int main() {
         explanation: 'a has been called three times; b once, starting from 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Counter {
@@ -7125,11 +6901,10 @@ int main() {
   c();
   std::cout << c.count << "\\n";
 }`,
-          ['5', '6', '2', '7'],
-          3,
+          '7',
           'Each call adds 1 to the member, starting from 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Counter {
@@ -7147,11 +6922,10 @@ int main() {
   b();
   std::cout << a.count << " " << b.count << "\\n";
 }`,
-          ['1 3', '3 3', '1 2', '3 1'],
-          0,
+          '1 3',
           'b copied a’s count of 1 and then counted on alone; a is unaffected.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Total {
@@ -7167,8 +6941,7 @@ int main() {
   t(6);
   std::cout << t(-3) << "\\n";
 }`,
-          ['-3', '7', '10', '13'],
-          1,
+          '7',
           'The running sum is 4, then 10, then 7.',
         ),
         choose(
@@ -7214,7 +6987,7 @@ int main() {
           'The same variable holds a lambda, then a function, then a function object, and each call uses the current one.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7222,11 +6995,10 @@ int main() {
   std::function<int(int, int)> combine = [](int a, int b) { return a * 10 + b; };
   std::cout << combine(4, 2) << "\\n";
 }`,
-          ['42', '24', '6', '8'],
-          0,
+          '42',
           'The stored lambda computes 4 * 10 + 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7240,8 +7012,7 @@ int main() {
   f = Offset{5};
   std::cout << first << " " << f(1) << "\\n";
 }`,
-          ['3 3', '2 6', '3 6', '3 2'],
-          2,
+          '3 6',
           'f(f(1)) uses the lambda twice to reach 3. After the reassignment, f(1) uses Offset and gives 6.',
         ),
         choose(
@@ -7288,7 +7059,7 @@ int main() {
           'The stored lambda copied bonus as 5; the later change does not reach it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7299,11 +7070,10 @@ int main() {
   f = [rate](int x) { return x * rate; };
   std::cout << f(5) << "\\n";
 }`,
-          ['10', '25', '15', '5'],
-          2,
+          '15',
           'The second lambda was created after rate became 3, and it replaced the first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7317,8 +7087,7 @@ int main() {
   off.amount = 100;
   std::cout << f(1) << "\\n";
 }`,
-          ['101', '1', '100', '2'],
-          3,
+          '2',
           'f holds its own copy of off, made when it was assigned, with amount 1.',
         ),
         choose(
@@ -7332,7 +7101,7 @@ int main() {
           1,
           'The lambda’s capture is a copy, and the std::function stores a copy of the lambda.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7344,8 +7113,7 @@ int main() {
   n = 9;
   std::cout << a(1) + b(1) << "\\n";
 }`,
-          ['10', '20', '15', '5'],
-          0,
+          '10',
           'Both copies hold the snapshot n = 4, so each call returns 5.',
         ),
       ],
@@ -7373,7 +7141,7 @@ int main() {
           'hook starts empty, so the first test is false. After the assignment it holds a lambda and can be called.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7383,11 +7151,10 @@ int main() {
   f = [] {};
   std::cout << (f ? "set" : "empty") << "\\n";
 }`,
-          ['set set', 'empty empty', 'set empty', 'empty set'],
-          3,
+          'empty set',
           'Default construction gives an empty function; any assigned callable, even one that does nothing, makes it non-empty.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7397,8 +7164,7 @@ int main() {
   f = nullptr;
   std::cout << (f ? f() : -1) << "\\n";
 }`,
-          ['4 -1', '4 4', '-1 -1', '4 0'],
-          0,
+          '4 -1',
           'Assigning nullptr removes the stored callable.',
         ),
         choose(
@@ -7412,7 +7178,7 @@ int main() {
           2,
           'The bool conversion reports presence, not anything about the callable’s result.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7424,8 +7190,7 @@ int outcome(bool configured, int value) {
 int main() {
   std::cout << outcome(true, 5) << " " << outcome(false, 5) << "\\n";
 }`,
-          ['7 7', '7 -1', '-1 7', '7 5'],
-          1,
+          '7 -1',
           'Only the configured call stores a lambda; the other keeps the empty function and returns the fallback.',
         ),
       ],
@@ -7464,7 +7229,7 @@ int main() {
           3,
           'Emptiness is a run-time state, and invoking it is reported with an exception.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7478,8 +7243,7 @@ int main() {
   if (third) value = third(value);
   std::cout << value << "\\n";
 }`,
-          ['3', '30', '12', '0'],
-          1,
+          '30',
           'The empty second stage is skipped, so 2 becomes 3 and then 30.',
         ),
         choose(
@@ -7493,7 +7257,7 @@ int main() {
           0,
           'An explicit check with a default keeps the logger working whether or not a callback was supplied.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7506,8 +7270,7 @@ int main() {
   hook = nullptr;
   std::cout << before << " " << call_or(hook, 5) << "\\n";
 }`,
-          ['7 7', '-1 -1', '7 -1', '7 5'],
-          2,
+          '7 -1',
           'The first call uses the lambda; after hook is emptied, the guard returns the fallback.',
         ),
       ],
@@ -7533,7 +7296,7 @@ int main() {
           'The closure’s copy goes from 2 to 3 to 4. start itself stays 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -7545,11 +7308,10 @@ int main() {
   tick();
   std::cout << tick() << "\\n";
 }`,
-          ['5', '0', '10', '15'],
-          3,
+          '15',
           'The closure keeps n between calls: 5, 10, 15.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -7559,8 +7321,7 @@ int main() {
   a();
   std::cout << a() << " " << b() << "\\n";
 }`,
-          ['3 1', '3 4', '1 1', '3 3'],
-          0,
+          '3 1',
           'a and b are separate closures, each with its own n.',
         ),
         choose(
@@ -7574,7 +7335,7 @@ int main() {
           1,
           'mutable lifts that restriction for the closure’s own copies.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -7586,8 +7347,7 @@ int main() {
   add(5);
   std::cout << add(5) << " " << total << "\\n";
 }`,
-          ['20 20', '15 10', '20 10', '15 15'],
-          2,
+          '20 10',
           'The closure’s copy reaches 20 over two calls; the outer total is never modified.',
         ),
       ],
@@ -7613,7 +7373,7 @@ int main() {
           'second copied value as 2 before either call, so each copy increments its own 2 to 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7625,11 +7385,10 @@ int main() {
   first();
   std::cout << first() << " " << second() << "\\n";
 }`,
-          ['4 3', '4 5', '4 1', '2 3'],
-          0,
+          '4 3',
           'second copied the state 2. first then reaches 4, and second’s first call takes its own copy to 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7640,8 +7399,7 @@ int main() {
   second();
   std::cout << second() << " " << first() << "\\n";
 }`,
-          ['2 3', '3 4', '2 2', '1 2'],
-          2,
+          '2 2',
           'Each copy has been called twice by the time its value is printed.',
         ),
         choose(
@@ -7680,7 +7438,7 @@ int main() {
           'Both callbacks hold the same address, so both updates land in total.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
@@ -7692,11 +7450,10 @@ int main() {
   b();
   std::cout << shared << "\\n";
 }`,
-          ['1', '2', '3', '0'],
-          2,
+          '3',
           'a and b copy the pointer, not the counter, so all three calls increment shared.',
         ),
-        predictOutput(
+        typeOutput(
           'One callback keeps a private count and also updates a shared one. What does this program print?',
           `#include <functional>
 #include <iostream>
@@ -7711,8 +7468,7 @@ int main() {
   f();
   std::cout << g() << " " << shared << "\\n";
 }`,
-          ['3 3', '1 3', '3 1', '1 1'],
-          1,
+          '1 3',
           'own is copied, so g’s count starts at 0 and returns 1. The pointer is shared, so all three calls increment shared.',
         ),
         choose(
@@ -7762,7 +7518,7 @@ int main() {
           'reading starts empty, so value_or returns the fallback. After the assignment it holds 7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <optional>
@@ -7770,11 +7526,10 @@ int main() {
   std::optional<int> price = 12;
   std::cout << price.has_value() << " " << price.value_or(0) << "\\n";
 }`,
-          ['1 0', '0 12', '1 12', '12 12'],
-          2,
+          '1 12',
           'price holds 12, so it has a value and value_or ignores the fallback.',
         ),
-        predictOutput(
+        typeOutput(
           'The optional holds 0. What does this program print?',
           `#include <iostream>
 #include <optional>
@@ -7782,11 +7537,10 @@ int main() {
   std::optional<int> count = 0;
   std::cout << count.has_value() << " " << count.value_or(5) << "\\n";
 }`,
-          ['0 5', '1 5', '0 0', '1 0'],
-          3,
+          '1 0',
           'Storing 0 is storing a value. Only an empty optional uses the fallback.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <optional>
@@ -7796,8 +7550,7 @@ int main() {
   if (available) result = 9;
   std::cout << result.value_or(-1) << "\\n";
 }`,
-          ['-1', '9', '0', '1'],
-          0,
+          '-1',
           'The assignment is skipped, so result stays empty and the fallback prints.',
         ),
         choose(
@@ -7830,7 +7583,7 @@ int main() {
           'The first check succeeds and *slot reads 4. After std::nullopt, the check fails and the else branch runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <optional>
@@ -7842,11 +7595,10 @@ int main() {
   if (b) total += *b;
   std::cout << total << "\\n";
 }`,
-          ['0', '3', '6', '4'],
-          1,
+          '3',
           'Only a holds a value; the guard skips reading the empty b.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <optional>
@@ -7855,8 +7607,7 @@ int main() {
   v.reset();
   std::cout << v.has_value() << " " << v.value_or(1) << "\\n";
 }`,
-          ['1 8', '0 8', '0 1', '1 1'],
-          2,
+          '0 1',
           'reset empties the optional, so the fallback 1 is returned.',
         ),
         choose(
@@ -7907,7 +7658,7 @@ int main() {
           '4 is found at index 0, which is a real answer. 5 is not found, so the second optional is empty.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <optional>
@@ -7921,11 +7672,10 @@ int main() {
   std::vector<int> ids{7, 3, 7};
   std::cout << find_index(ids, 7).value_or(-1) << "\\n";
 }`,
-          ['2', '0', '1', '-1'],
-          1,
+          '0',
           'The loop returns at the first match, index 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <optional>
@@ -7941,8 +7691,7 @@ int main() {
   if (result) std::cout << "at " << *result << "\\n";
   else std::cout << "missing\\n";
 }`,
-          ['at 3', 'missing', 'at 1', 'at 2'],
-          2,
+          'at 1',
           '3 is at index 1; the optional reports the index, not the value.',
         ),
         predictOutput(
@@ -8011,7 +7760,7 @@ int main() {
           'The sentinel version prints -1 both for the real reading -1 and for "nothing below -5". The optional version distinguishes them.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Index 0 holds a free item priced 0. What does this program print?',
           `#include <iostream>
 #include <vector>
@@ -8023,11 +7772,10 @@ int main() {
   std::vector<int> prices{0, 5};
   std::cout << price_at(prices, 0) << " " << price_at(prices, 7) << "\\n";
 }`,
-          ['0 0', '0 -1', '5 0', '0 5'],
-          0,
+          '0 0',
           'The real price 0 and the "no such item" marker 0 print identically, so the caller cannot tell them apart.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <optional>
@@ -8040,8 +7788,7 @@ int main() {
   std::vector<int> prices{0, 5};
   std::cout << price_at(prices, 0).has_value() << " " << price_at(prices, 7).has_value() << "\\n";
 }`,
-          ['0 0', '1 1', '0 1', '1 0'],
-          3,
+          '1 0',
           'The free item is a present value; the missing index is the empty optional.',
         ),
         choose(
@@ -8081,7 +7828,7 @@ int main() {
           'cell starts as the int 0. After the string is assigned, the active alternative is index 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <string>
@@ -8092,11 +7839,10 @@ int main() {
   v = 3;
   std::cout << v.index() << " " << std::get<int>(v) << "\\n";
 }`,
-          ['1 3', '0 8', '0 3', '1 8'],
-          2,
+          '0 3',
           'The last assignment makes the int alternative active again, holding 3.',
         ),
-        predictOutput(
+        typeOutput(
           'The int alternative is listed second here. What does this program print?',
           `#include <iostream>
 #include <variant>
@@ -8104,8 +7850,7 @@ int main() {
   std::variant<double, int> v = 4;
   std::cout << v.index() << "\\n";
 }`,
-          ['0', '4', '2', '1'],
-          3,
+          '1',
           '4 is an int, and int is the second listed alternative, index 1.',
         ),
         choose(
@@ -8157,7 +7902,7 @@ int main() {
           'a holds an int, which is returned directly. b holds a string, so its length is returned.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <string>
@@ -8171,11 +7916,10 @@ int main() {
   std::variant<int, std::string> b = 2;
   std::cout << measure(a) + measure(b) << "\\n";
 }`,
-          ['7', '2', '5', '3'],
-          0,
+          '7',
           'The string contributes its length 5 and the int contributes 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <string>
@@ -8185,8 +7929,7 @@ int main() {
   v = std::string("x");
   std::cout << std::holds_alternative<int>(v) << " " << std::holds_alternative<std::string>(v) << "\\n";
 }`,
-          ['1 0', '1 1', '0 1', '0 0'],
-          2,
+          '0 1',
           'After the assignment only the string alternative is active.',
         ),
         choose(
@@ -8200,7 +7943,7 @@ int main() {
           3,
           'get checks the active alternative and refuses a type that is not active.',
         ),
-        predictOutput(
+        typeOutput(
           'The variant holds the text 42. What does this program print?',
           `#include <iostream>
 #include <string>
@@ -8213,8 +7956,7 @@ int main() {
   std::variant<int, std::string> v = std::string("42");
   std::cout << measure(v) << "\\n";
 }`,
-          ['42', '2', '0', '4'],
-          1,
+          '2',
           'The active alternative is a two-character string, so measure returns its length, not a parsed number.',
         ),
       ],
@@ -8242,7 +7984,7 @@ int main() {
           'The first visit receives the int 3; the second receives the double 1.25. x * 2 is valid for both types.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <string>
@@ -8251,11 +7993,10 @@ int main() {
   std::variant<int, std::string> v = std::string("ok");
   std::visit([](const auto& x) { std::cout << x << "\\n"; }, v);
 }`,
-          ['0', '1', 'ok', '2'],
-          2,
+          'ok',
           'The visitor receives the active string and prints it; printing works for both alternatives.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <variant>
@@ -8264,8 +8005,7 @@ int main() {
   int doubled = std::visit([](const auto& x) { return static_cast<int>(x * 2); }, v);
   std::cout << doubled << "\\n";
 }`,
-          ['5', '6', '5.2', '4'],
-          0,
+          '5',
           'The double 2.6 is doubled to 5.2 and then converted to the int 5.',
         ),
         choose(
@@ -8320,7 +8060,7 @@ int main() {
           'For the int, the first branch returns it. For the string, the else branch returns its length.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <string>
@@ -8337,8 +8077,7 @@ int main() {
   value = 9;
   std::cout << a << " " << std::visit(measure, value) << "\\n";
 }`,
-          ['9 4', '4 9', '4 4', '0 9'],
-          1,
+          '4 9',
           'The string gives its length 4; then the int 9 is returned as is.',
         ),
         choose(
@@ -8352,7 +8091,7 @@ int main() {
           0,
           'Only if constexpr discards the branch that is invalid for the current alternative.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <string>
@@ -8372,8 +8111,7 @@ int main() {
   v = 7;
   std::cout << a << " " << b << " " << std::visit(code, v) << "\\n";
 }`,
-          ['1 2 3', '2 1 3', '3 2 1', '2 3 1'],
-          3,
+          '2 3 1',
           'The active alternatives are double, then string, then int.',
         ),
         choose(
@@ -8411,7 +8149,7 @@ int main() {
           'The throw skips the rest of the try block, the handler runs, and the program continues after the try/catch.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8425,11 +8163,10 @@ int main() {
   }
   std::cout << "end\\n";
 }`,
-          ['ok end', 'bad end', 'ok bad end', 'end'],
-          0,
+          'ok end',
           'Nothing is thrown, so the try block finishes and the handler is skipped.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8443,11 +8180,10 @@ int main() {
   }
   std::cout << "end\\n";
 }`,
-          ['ok end', 'ok bad end', 'bad end', 'bad'],
-          2,
+          'bad end',
           'The throw skips "ok", the handler prints "bad", and execution continues after the try/catch.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8466,8 +8202,7 @@ int main() {
   }
   std::cout << total << "\\n";
 }`,
-          ['116', '16', '106', '6'],
-          2,
+          '106',
           'checked(3) adds 6. checked(-1) throws, so checked(5) never runs, and the handler adds 100.',
         ),
         choose(
@@ -8507,7 +8242,7 @@ int main() {
           'The invalid_argument handler does not match a runtime_error, so the second handler runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8520,16 +8255,10 @@ int main() {
     std::cout << "runtime: " << e.what() << "\\n";
   }
 }`,
-          [
-            'runtime: bad id',
-            'invalid: bad id',
-            'invalid: invalid_argument',
-            'bad id',
-          ],
-          1,
+          'invalid: bad id',
           'The first handler matches the thrown type and prints its message.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8540,8 +8269,7 @@ int main() {
     std::cout << e.what() << "\\n";
   }
 }`,
-          ['out_of_range', 'std::out_of_range: index 9', '9', 'index 9'],
-          3,
+          'index 9',
           'what() returns exactly the message passed to the constructor.',
         ),
         choose(
@@ -8598,7 +8326,7 @@ int main() {
           'The first deposit happens. The second throws before changing anything, so the third never runs, and main’s handler prints the message.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8617,11 +8345,10 @@ int main() {
   }
   std::cout << balance << "\\n";
 }`,
-          ['12', '10', '0', '11'],
-          1,
+          '10',
           'The two deposits before the throw stay applied; the last deposit is never reached.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8643,8 +8370,7 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['5 caught', '5 1 caught', 'caught', '5 3 caught'],
-          0,
+          '5 caught',
           'The second sum throws from checked and leaves sum without returning, so nothing more is printed before the handler.',
         ),
         choose(
@@ -8687,7 +8413,7 @@ int main() {
           'Index 1 is valid. Index 2 equals size(), so at() throws before anything is printed for it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8701,11 +8427,10 @@ int main() {
   }
   std::cout << value << "\\n";
 }`,
-          ['3', '0', '-1', '1'],
-          2,
+          '-1',
           'at(3) throws before the assignment, so value keeps -1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8720,8 +8445,7 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['7 stop', '7 0 stop', 'stop', '7 7 stop'],
-          0,
+          '7 stop',
           'Index 0 is valid. Index 1 throws, so the handler prints stop.',
         ),
         choose(
@@ -8768,7 +8492,7 @@ int main() {
           'size() - 1 is the last element. size() itself is one past the end.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cstddef>
 #include <iostream>
@@ -8785,11 +8509,10 @@ int main() {
   std::vector<int> v{8};
   std::cout << safe_get(v, 0) << " " << safe_get(v, 1) << "\\n";
 }`,
-          ['8 8', '8 0', '-1 -1', '8 -1'],
-          3,
+          '8 -1',
           'With one element, index 0 is the only valid index.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8802,8 +8525,7 @@ int main() {
     std::cout << "no last element\\n";
   }
 }`,
-          ['0', '-1', 'no last element', '1'],
-          2,
+          'no last element',
           'size() - 1 wraps to the largest size_t value on an empty vector, and at() rejects it.',
         ),
         choose(
@@ -8812,7 +8534,7 @@ int main() {
           2,
           'Valid indexes are 0 to 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8825,8 +8547,7 @@ int main() {
     std::cout << "empty\\n";
   }
 }`,
-          ['0', 'empty', '-1', 'garbage'],
-          1,
+          'empty',
           'An empty vector has no index 0, so at(0) throws.',
         ),
       ],
@@ -8860,7 +8581,7 @@ int main() {
           'The first call succeeds. The second throws before the assignment, so price keeps 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8876,11 +8597,10 @@ int main() {
   }
   std::cout << price << "\\n";
 }`,
-          ['-1', '0', '5', '4'],
-          2,
+          '5',
           'The check throws before anything is assigned.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8899,8 +8619,7 @@ int main() {
   }
   std::cout << low << " " << high << "\\n";
 }`,
-          ['9 3', '2 8', '1 5', '9 8'],
-          1,
+          '2 8',
           'The valid update is applied; the inverted one is rejected before either member changes.',
         ),
         choose(
@@ -8956,7 +8675,7 @@ int main() {
           'The update was rejected, yet low already changed to 9, leaving an inverted range 9..5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8973,11 +8692,10 @@ int main() {
   }
   std::cout << destination << "\\n";
 }`,
-          ['4', '0', '-2', '2'],
-          1,
+          '0',
           'The destination was cleared before the check failed, so the old value is lost.',
         ),
-        predictOutput(
+        typeOutput(
           'The same unsafe function gets valid input. What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -8992,8 +8710,7 @@ int main() {
   set_range_unsafe(low, high, 2, 8);
   std::cout << low << " " << high << "\\n";
 }`,
-          ['1 5', '2 5', '2 8', '8 2'],
-          2,
+          '2 8',
           'With valid input nothing throws, so the bug is invisible; tests must include a failing case.',
         ),
         choose(
@@ -9007,7 +8724,7 @@ int main() {
           3,
           'The subtraction happened before the throw and was never undone.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -9026,8 +8743,7 @@ int main() {
   }
   std::cout << count << " " << total << "\\n";
 }`,
-          ['1 5', '2 5', '2 4', '1 4'],
-          1,
+          '2 5',
           'count was incremented before the failed check, so it no longer matches the one amount recorded in total.',
         ),
       ],
@@ -9065,7 +8781,7 @@ int main() {
           'The first call fails at the second check, but only the local copy had changed. The second call passes both checks and commits 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -9085,11 +8801,10 @@ int main() {
   }
   std::cout << balance << "\\n";
 }`,
-          ['5', '-2', '8', '0'],
-          0,
+          '5',
           'The copy reached 8 and then -2, which throws; balance was never assigned.',
         ),
-        predictOutput(
+        typeOutput(
           'This version changes balance directly. What does it print?',
           `#include <iostream>
 #include <stdexcept>
@@ -9107,8 +8822,7 @@ int main() {
   }
   std::cout << balance << "\\n";
 }`,
-          ['5', '8', '-2', '0'],
-          2,
+          '-2',
           'Both changes were applied to the real balance before the second check threw.',
         ),
         choose(
@@ -9145,7 +8859,7 @@ int main() {
           'read_value is declared noexcept. may_fail cannot actually throw, but it makes no promise, so the operator reports false.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int a() noexcept { return 1; }
@@ -9153,19 +8867,17 @@ int b() { return 2; }
 int main() {
   std::cout << noexcept(a()) << " " << noexcept(b()) << " " << noexcept(a() + b()) << "\\n";
 }`,
-          ['1 0 1', '1 1 0', '1 0 0', '0 0 0'],
-          2,
+          '1 0 0',
           'An expression is non-throwing only if every call in it is; b() makes the sum potentially throwing.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
   int x = 3;
   std::cout << noexcept(x + 1) << " " << noexcept(x * 2) << "\\n";
 }`,
-          ['1 1', '0 0', '4 6', '1 0'],
-          0,
+          '1 1',
           'Built-in arithmetic on ints never throws, and noexcept yields a bool, not the value.',
         ),
         choose(
@@ -9179,7 +8891,7 @@ int main() {
           3,
           'The operator reads the declaration, not the body.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int c() noexcept(false) { return 0; }
@@ -9187,8 +8899,7 @@ int d() noexcept(true) { return 0; }
 int main() {
   std::cout << noexcept(c()) << " " << noexcept(d()) << "\\n";
 }`,
-          ['1 0', '0 1', '0 0', '1 1'],
-          1,
+          '0 1',
           'noexcept(false) declares a potentially throwing function; noexcept(true) is the same as plain noexcept.',
         ),
       ],
@@ -9211,7 +8922,7 @@ int main() {
           'Incrementing an int cannot throw, so the result is true, but the increment never executes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int touch(int& value) noexcept { return ++value; }
@@ -9220,11 +8931,10 @@ int main() {
   bool b = noexcept(touch(x));
   std::cout << b << " " << x << "\\n";
 }`,
-          ['1 6', '1 5', '0 5', '6 5'],
-          1,
+          '1 5',
           'touch is declared noexcept, but it is not called, so x stays 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int risky(int& value) { return ++value; }
@@ -9232,8 +8942,7 @@ int main() {
   int x = 5;
   std::cout << noexcept(risky(x)) << " " << x << "\\n";
 }`,
-          ['0 6', '1 5', '1 6', '0 5'],
-          3,
+          '0 5',
           'risky is not declared noexcept, and the call inside the operator never runs.',
         ),
         choose(
@@ -9286,7 +8995,7 @@ int main() {
           2,
           'The noexcept boundary stops propagation by ending the program.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <stdexcept>
@@ -9301,8 +9010,7 @@ int safe_parse(int value) noexcept {
 int main() {
   std::cout << safe_parse(-3) + safe_parse(4) << "\\n";
 }`,
-          ['1', '-3', '7', '4'],
-          3,
+          '4',
           'The negative input is handled inside the function and becomes 0.',
         ),
         choose(
@@ -9357,7 +9065,7 @@ int main() {
           'view has type const Shape&, but it refers to a Triangle, so the Triangle override runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'id is not virtual here. What does this program print?',
           `#include <iostream>
 struct Base {
@@ -9371,11 +9079,10 @@ int main() {
   const Base& b = d;
   std::cout << b.id() << " " << d.id() << "\\n";
 }`,
-          ['2 2', '1 2', '1 1', '2 1'],
-          1,
+          '1 2',
           'A non-virtual call is chosen from the static type: through Base& it runs Base::id.',
         ),
-        predictOutput(
+        typeOutput(
           'Now id is virtual. What does this program print?',
           `#include <iostream>
 struct Base {
@@ -9390,11 +9097,10 @@ int main() {
   const Base& b = d;
   std::cout << b.id() << " " << d.id() << "\\n";
 }`,
-          ['2 2', '1 2', '1 1', '2 1'],
-          0,
+          '2 2',
           'The virtual call through b dispatches to the Derived override.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Shape {
@@ -9413,8 +9119,7 @@ int main() {
   Square s;
   std::cout << count(t) << " " << count(s) << "\\n";
 }`,
-          ['0 0', '3 3', '3 4', '4 3'],
-          2,
+          '3 4',
           'One function written against Shape runs each object’s own override.',
         ),
         choose(
@@ -9456,7 +9161,7 @@ int main() {
           'Derived::read lacks const, so it does not override. The call through view still runs Base::read. Adding override would have turned this into a compile error.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The derived parameter type differs. What does this program print?',
           `#include <iostream>
 struct Base {
@@ -9471,8 +9176,7 @@ int main() {
   const Base& view = d;
   std::cout << view.scale(5) << "\\n";
 }`,
-          ['99', '5', '0', '10'],
-          1,
+          '5',
           'scale(long) is a different function, so the virtual scale(int) is not overridden.',
         ),
         choose(
@@ -9486,7 +9190,7 @@ int main() {
           3,
           'override turns a silent mismatch into a compile error.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Base {
@@ -9501,8 +9205,7 @@ int main() {
   const Base& view = d;
   std::cout << view.read() << " " << d.read() << "\\n";
 }`,
-          ['1 2', '1 1', '2 2', '2 1'],
-          2,
+          '2 2',
           'With the matching const signature, Derived::read overrides and both calls run it.',
         ),
         choose(
@@ -9552,7 +9255,7 @@ int main() {
           'quote knows only the Pricer interface; each object supplies its own price rule.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Pricer {
@@ -9575,8 +9278,7 @@ int main() {
   PerUnit per_unit(4);
   std::cout << quote(flat, 3) + quote(per_unit, 3) << "\\n";
 }`,
-          ['32', '72', '24', '60'],
-          0,
+          '32',
           'The flat fee ignores the units (20); per-unit pricing gives 4 * 3 = 12.',
         ),
         choose(
@@ -9590,7 +9292,7 @@ int main() {
           1,
           'An abstract class can only be used as the base of a concrete class.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Pricer {
@@ -9608,8 +9310,7 @@ int main() {
   PerUnit dear(5);
   std::cout << quote(cheap, 4) << " " << quote(dear, 4) << "\\n";
 }`,
-          ['20 20', '8 8', '8 20', '2 5'],
-          2,
+          '8 20',
           'Both objects use the same override with their own rate.',
         ),
         choose(
@@ -9654,7 +9355,7 @@ int main() {
           'Leaving the block destroys owner. The virtual destructor dispatches to ~Derived, which then runs ~Base.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <memory>
@@ -9673,11 +9374,10 @@ int main() {
   }
   std::cout << released << "\\n";
 }`,
-          ['0', '1', '2', '-1'],
-          1,
+          '1',
           'Destroying owner runs ~Derived through the virtual destructor, which increments the counter once.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <memory>
@@ -9696,8 +9396,7 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['A B C', 'C B A', 'C A', 'A'],
-          1,
+          'C B A',
           'Destruction runs from the most derived class back to the base.',
         ),
         choose(
@@ -9711,7 +9410,7 @@ int main() {
           3,
           'The delete must find the most derived destructor, which requires virtual dispatch.',
         ),
-        predictOutput(
+        typeOutput(
           'The owner is cleared early. What does this program print?',
           `#include <iostream>
 #include <memory>
@@ -9726,13 +9425,7 @@ int main() {
   owner = nullptr;
   std::cout << "after reset\\n";
 }`,
-          [
-            'after reset\n~Derived\n~Base',
-            '~Base\nafter reset',
-            '~Derived\n~Base\nafter reset',
-            'after reset',
-          ],
-          2,
+          '~Derived\n~Base\nafter reset',
           'Assigning nullptr deletes the owned object immediately, before the next line runs.',
         ),
       ],
@@ -9768,7 +9461,7 @@ int main() {
           'Each owner deletes its own Logger through Base*, and each ~Logger runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <memory>
@@ -9787,8 +9480,7 @@ int main() {
   a = nullptr;
   std::cout << closed << "\\n";
 }`,
-          ['0', '2', '1', '3'],
-          2,
+          '1',
           'Only a’s Logger has been deleted when the count is printed; b still owns its object.',
         ),
         choose(
@@ -9802,7 +9494,7 @@ int main() {
           3,
           'The destructor itself must be virtual; constructors cannot be virtual.',
         ),
-        predictOutput(
+        typeOutput(
           'The Derived object here is a local variable. What does this program print?',
           `#include <iostream>
 struct Base {
@@ -9817,8 +9509,7 @@ int main() {
   }
   std::cout << "\\n";
 }`,
-          ['~Base', '~Derived ~Base', '~Base ~Derived', '~Derived'],
-          1,
+          '~Derived ~Base',
           'The exact type is known, so both destructors run in order even without virtual.',
         ),
         choose(
@@ -9863,7 +9554,7 @@ int main() {
           'copy is a separate Base object; view still refers to the Derived.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Base {
@@ -9881,11 +9572,10 @@ int main() {
   const Base& ref = d;
   std::cout << copy.value() << " " << ref.value() << "\\n";
 }`,
-          ['5 5', '0 0', '5 0', '0 5'],
-          3,
+          '0 5',
           'The copy has no extra member and runs Base::value; the reference reaches the Derived.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Base {
@@ -9901,8 +9591,7 @@ int main() {
   b = d;
   std::cout << b.read() << "\\n";
 }`,
-          ['1', '2', '3', '0'],
-          0,
+          '1',
           'Assigning to an existing Base copies only the base part; b stays a Base.',
         ),
         choose(
@@ -9944,7 +9633,7 @@ int main() {
           'by_value receives a sliced Base copy; by_ref sees the Derived object.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Base {
@@ -9963,11 +9652,10 @@ int main() {
   Three b;
   std::cout << by_ref(a) << " " << by_ref(b) << "\\n";
 }`,
-          ['1 1', '2 3', '3 2', '2 2'],
-          1,
+          '2 3',
           'The reference parameter preserves each argument’s dynamic type.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Base {
@@ -9986,8 +9674,7 @@ int main() {
   Three b;
   std::cout << by_value(a) + by_value(b) << "\\n";
 }`,
-          ['5', '4', '2', '6'],
-          2,
+          '2',
           'Both arguments are sliced to Base, so each call returns 1.',
         ),
         choose(
@@ -10036,7 +9723,7 @@ int main() {
           'The inner braces build the Scale member with factor 3, and result asks it to scale 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Tax {
@@ -10052,11 +9739,10 @@ int main() {
   Invoice invoice{{20}, 50};
   std::cout << invoice.total() << "\\n";
 }`,
-          ['70', '60', '10', '50'],
-          1,
+          '60',
           'The Tax member computes 20% of 50, which is 10, added to the net 50.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Scale {
@@ -10072,8 +9758,7 @@ int main() {
   Processor b{{5}};
   std::cout << a.result() << " " << b.result() << "\\n";
 }`,
-          ['6 6', '3 5', '10 6', '6 10'],
-          3,
+          '6 10',
           'Each Processor owns its own Scale with its own factor.',
         ),
         choose(
@@ -10139,7 +9824,7 @@ int main() {
           0,
           'Inheritance is a promise of substitutability, not just a way to share code.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 struct Counter {
@@ -10160,8 +9845,7 @@ int main() {
   first.handle();
   std::cout << first.handled() << " " << second.handled() << "\\n";
 }`,
-          ['4 0', '3 1', '1 3', '4 4'],
-          1,
+          '3 1',
           'Each Session has its own Counter member.',
         ),
         choose(
@@ -10198,7 +9882,7 @@ int twice(int value) { return value * 2; }`,
           'The declaration above main makes the call valid; the definition below main supplies the body.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The same function is declared twice. What does this program print?',
           `#include <iostream>
 int add(int a, int b);
@@ -10207,8 +9891,7 @@ int main() {
   std::cout << add(2, 3) << "\\n";
 }
 int add(int a, int b) { return a + b; }`,
-          ['5', '10', '23', '6'],
-          0,
+          '5',
           'Repeating a declaration is allowed; there is still exactly one definition.',
         ),
         choose(
@@ -10233,7 +9916,7 @@ int add(int a, int b) { return a + b; }`,
           2,
           'Each call compiles against the declaration; only the linker discovers that no definition exists.',
         ),
-        predictOutput(
+        typeOutput(
           'The declaration omits the parameter names. What does this program print?',
           `#include <iostream>
 int area(int, int);
@@ -10241,8 +9924,7 @@ int main() {
   std::cout << area(3, 4) << "\\n";
 }
 int area(int width, int height) { return width * height; }`,
-          ['7', '34', '0', '12'],
-          3,
+          '12',
           'Parameter names in a declaration are optional; only the types form the signature.',
         ),
       ],
@@ -10278,7 +9960,7 @@ int main() {
           3,
           'The caller sees only the declared int version; the double function is an unrelated overload.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int scale(int value);
@@ -10287,8 +9969,7 @@ int scale(int value) { return value * 2; }
 int main() {
   std::cout << scale(2) << " " << scale(2.5) << "\\n";
 }`,
-          ['4 7', '4 5', '6 7.5', '4 7.5'],
-          3,
+          '4 7.5',
           'scale(2) uses the int version; scale(2.5) uses the double version, which returns 7.5.',
         ),
         choose(
@@ -10338,7 +10019,7 @@ int main() {
         explanation: 'The qualifier picks which adjust runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 namespace pricing {
@@ -10350,11 +10031,10 @@ int adjust(int value) { return value * 2; }
 int main() {
   std::cout << shipping::adjust(pricing::adjust(1)) << "\\n";
 }`,
-          ['5', '8', '6', '4'],
-          1,
+          '8',
           'The inner call gives 1 + 3 = 4, and the outer call doubles it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 namespace config {
@@ -10364,8 +10044,7 @@ int limit = 3;
 int main() {
   std::cout << limit + config::limit << "\\n";
 }`,
-          ['20', '6', '13', '10'],
-          2,
+          '13',
           'The unqualified limit is the outer one, 3; config::limit is 10.',
         ),
         choose(
@@ -10414,7 +10093,7 @@ int main() {
           'Inside pricing, adjust means pricing::adjust: (2 + 3) * 10. In main, the plain adjust is the outer one.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int adjust(int value) { return value - 1; }
@@ -10425,11 +10104,10 @@ int final_price(int value) { return adjust(value) * 10; }
 int main() {
   std::cout << pricing::final_price(1) << " " << adjust(1) << "\\n";
 }`,
-          ['0 0', '40 0', '40 4', '0 4'],
-          1,
+          '40 0',
           'final_price uses pricing::adjust, giving 40; main’s plain adjust subtracts 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int adjust(int value) { return value - 1; }
@@ -10441,8 +10119,7 @@ int main() {
   using pricing::adjust;
   std::cout << adjust(2) << "\\n";
 }`,
-          ['5 5', '1 1', '1 5', '5 1'],
-          2,
+          '1 5',
           'Before the using-declaration the outer adjust is found; after it, pricing::adjust hides the outer one in main.',
         ),
         choose(
@@ -10492,15 +10169,14 @@ int main() {
           'public_price can be called from other files; private_adjust only from this one. Here they compute (5 + 4) * 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 static int square(int value) { return value * value; }
 int main() {
   std::cout << square(3) + square(4) << "\\n";
 }`,
-          ['49', '25', '14', '7'],
-          1,
+          '25',
           'static only limits square to this file; within it, square works normally: 9 + 16.',
         ),
         choose(
@@ -10525,7 +10201,7 @@ int main() {
           3,
           'Internal linkage hides a name from the linker’s view of other files.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 namespace {
@@ -10540,8 +10216,7 @@ int main() {
   track();
   std::cout << track() << "\\n";
 }`,
-          ['1', '0', '3', '2'],
-          2,
+          '3',
           'calls is a file-private variable that persists between calls.',
         ),
       ],
@@ -10603,7 +10278,7 @@ int main() {
           0,
           'The header promises an externally linked helper that no file provides.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 namespace {
@@ -10614,8 +10289,7 @@ int second(int value) { return helper(value) - 1; }
 int main() {
   std::cout << first(2) << " " << second(2) << "\\n";
 }`,
-          ['6 6', '7 5', '7 7', '5 7'],
-          1,
+          '7 5',
           'Both public functions in this file share the private helper.',
         ),
       ],
@@ -10643,7 +10317,7 @@ int main() {
           'Both definitions could live in a header shared by many files; inline makes that legal.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 namespace fees {
@@ -10653,8 +10327,7 @@ inline int total(int units) { return base + units * 3; }
 int main() {
   std::cout << fees::total(4) << "\\n";
 }`,
-          ['14', '20', '12', '9'],
-          0,
+          '14',
           'total computes 2 + 4 * 3, with multiplication first.',
         ),
         choose(
@@ -10735,7 +10408,7 @@ int main() {
           2,
           'One source of truth guarantees identical definitions.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 constexpr int fee(int units) { return units * 2 + 1; }
@@ -10745,8 +10418,7 @@ inline constexpr int base = fee(2);
 int main() {
   std::cout << pricing::base + fee(1) << "\\n";
 }`,
-          ['6', '8', '7', '5'],
-          1,
+          '8',
           'base is fee(2) = 5 and fee(1) is 3.',
         ),
         choose(
@@ -10787,7 +10459,7 @@ int main() {
           'The assertion holds, so it has no visible effect, and the result prints normally.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cassert>
 #include <iostream>
@@ -10796,8 +10468,7 @@ int main() {
   assert(a > 0);
   std::cout << a * 3 << "\\n";
 }`,
-          ['1', '12', '4', '112'],
-          1,
+          '12',
           'A passing assert prints nothing, and the program continues.',
         ),
         choose(
@@ -10822,7 +10493,7 @@ int main() {
           0,
           'assert documents a programmer’s assumption; failures that users can cause need real handling.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cassert>
 #include <iostream>
@@ -10831,8 +10502,7 @@ int main() {
   assert(is_positive(3));
   std::cout << is_positive(-1) << "\\n";
 }`,
-          ['1', 'false', '0', '-1'],
-          2,
+          '0',
           'The assertion passes; the printed call returns false, shown as 0.',
         ),
       ],
@@ -10880,7 +10550,7 @@ int main() {
           0,
           'Input validation must run in every build.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cassert>
 #include <iostream>
@@ -10890,8 +10560,7 @@ int main() {
   assert(items == 24);
   std::cout << items + total_items(1) << "\\n";
 }`,
-          ['24', '6', '25', '30'],
-          3,
+          '30',
           'The assertion holds and prints nothing; the output is 24 + 6.',
         ),
         choose(
@@ -10931,7 +10600,7 @@ int main() {
           'The empty case is answered before front() could be reached.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <vector>
@@ -10941,11 +10610,10 @@ int last_or(const std::vector<int>& values) {
 int main() {
   std::cout << last_or({3, 5, 7}) << " " << last_or({}) << "\\n";
 }`,
-          ['7 -1', '3 -1', '7 0', '7 7'],
-          0,
+          '7 -1',
           'back() is read only for the nonempty vector.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <vector>
@@ -10959,8 +10627,7 @@ int largest(const std::vector<int>& values) {
 int main() {
   std::cout << largest({4, 9, 2}) << " " << largest({}) << "\\n";
 }`,
-          ['9 0', '4 -1', '9 -1', '2 -1'],
-          2,
+          '9 -1',
           'The maximum starts from a real element, and the empty case returns the agreed -1.',
         ),
         choose(
@@ -10974,7 +10641,7 @@ int main() {
           3,
           'front() has a nonempty precondition and does not check it.',
         ),
-        predictOutput(
+        typeOutput(
           'This version starts best at 0. What does it print?',
           `#include <iostream>
 #include <vector>
@@ -10987,8 +10654,7 @@ int largest(const std::vector<int>& values) {
 int main() {
   std::cout << largest({-4, -2}) << "\\n";
 }`,
-          ['-2', '-4', '0', '-1'],
-          2,
+          '0',
           'No element exceeds the starting 0, so the function reports a value that is not in the input.',
         ),
       ],
@@ -11039,7 +10705,7 @@ int main() {
           0,
           'The other bugs change the answer for this input; the empty case is never exercised.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <vector>
@@ -11049,8 +10715,7 @@ int second_or(const std::vector<int>& values) {
 int main() {
   std::cout << second_or({7}) << " " << second_or({7, 4}) << "\\n";
 }`,
-          ['7 4', '-1 7', '-1 -1', '-1 4'],
-          3,
+          '-1 4',
           'A one-element vector has no index 1, so the guard answers -1.',
         ),
         choose(
@@ -11086,7 +10751,7 @@ int main() {
           'After one reverse the order differs; after the second, the copy and the vector match again.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The input reads the same backwards. What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -11097,11 +10762,10 @@ int main() {
   std::reverse(values.begin(), values.end());
   std::cout << (values == original) << "\\n";
 }`,
-          ['0', '1', '3', '2'],
-          1,
+          '1',
           'Reversing a palindrome changes nothing, so this input cannot tell one reverse from two.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <vector>
@@ -11112,8 +10776,7 @@ int main() {
   for (int& v : values) v -= 3;
   std::cout << (values == original) << "\\n";
 }`,
-          ['0', '3', '1', '-1'],
-          2,
+          '1',
           'Subtracting 3 exactly undoes adding 3 for these ints.',
         ),
         choose(
@@ -11127,7 +10790,7 @@ int main() {
           0,
           'A vector copy is independent, so later changes to values do not affect it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <algorithm>
 #include <iostream>
@@ -11138,8 +10801,7 @@ int main() {
   for (int v : values) std::cout << v << " ";
   std::cout << "\\n";
 }`,
-          ['1 2 3', '3 1 2', '2 1 3', '3 2 1'],
-          3,
+          '3 2 1',
           'One reverse puts the elements in the opposite order.',
         ),
       ],
@@ -11166,7 +10828,7 @@ int main() {
           '7 becomes 6 and -3 becomes -2; the even inputs round-trip.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This test uses only even inputs. What does it print?',
           `#include <iostream>
 #include <vector>
@@ -11177,11 +10839,10 @@ int main() {
     if (x / 2 * 2 != x) ++failures;
   std::cout << failures << "\\n";
 }`,
-          ['0', '1', '3', '2'],
-          0,
+          '0',
           'Every even number survives the round trip, so this test finds no failure and wrongly suggests the property always holds.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 #include <vector>
@@ -11192,8 +10853,7 @@ int main() {
     if (x / 2 * 2 != x) ++failures;
   std::cout << failures << "\\n";
 }`,
-          ['2', '5', '3', '0'],
-          2,
+          '3',
           'The odd inputs 1, 3 and 5 lose their remainder.',
         ),
         choose(
@@ -11240,25 +10900,23 @@ int main() {
           'The sum prints as 0.3 but differs from 0.3 in its last bits, so the comparison is false.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
   double a = 0.1 * 3;
   std::cout << (a == 0.3) << "\\n";
 }`,
-          ['1', '0', '0.3', '3'],
-          1,
+          '0',
           'The rounding error in 0.1 is multiplied, so the product is not exactly the stored 0.3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
   std::cout << (0.5 + 0.25 == 0.75) << "\\n";
 }`,
-          ['0', '0.75', '1', '0.5'],
-          2,
+          '1',
           '0.5, 0.25 and 0.75 are exact binary fractions, so this sum is exact. The issue is representation, not == itself.',
         ),
         choose(
@@ -11272,14 +10930,13 @@ int main() {
           3,
           'Each literal and the sum are rounded to the nearest double.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <iostream>
 int main() {
   std::cout << 0.1 + 0.2 << " " << (0.1 + 0.2 > 0.3) << "\\n";
 }`,
-          ['0.3 1', '0.3 0', '0.30000000000000004 1', '0.3 0.3'],
-          0,
+          '0.3 1',
           'The default output rounds to six digits, while the comparison sees that the sum is slightly larger.',
         ),
       ],
@@ -11305,7 +10962,7 @@ int main() {
           'The rounding error is far below 1e-12; 1.0 and 1.1 differ by 0.1, more than 0.01.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cmath>
 #include <iostream>
@@ -11315,11 +10972,10 @@ bool within(double actual, double expected, double tolerance) {
 int main() {
   std::cout << within(2.0, 2.05, 0.1) << " " << within(2.0, 2.05, 0.01) << "\\n";
 }`,
-          ['1 1', '0 0', '0 1', '1 0'],
-          3,
+          '1 0',
           'The difference 0.05 fits within 0.1 but not within 0.01.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cmath>
 #include <iostream>
@@ -11329,8 +10985,7 @@ bool within(double actual, double expected, double tolerance) {
 int main() {
   std::cout << within(1.0, 1.0, -1.0) << "\\n";
 }`,
-          ['1', '0', '-1', '2'],
-          1,
+          '0',
           'Equal values still fail, because a negative tolerance is rejected as invalid.',
         ),
         choose(
@@ -11344,7 +10999,7 @@ int main() {
           2,
           'Only the absolute difference bounds the error in both directions.',
         ),
-        predictOutput(
+        typeOutput(
           'This version forgets std::abs. What does it print?',
           `#include <iostream>
 bool within_wrong(double actual, double expected, double tolerance) {
@@ -11353,8 +11008,7 @@ bool within_wrong(double actual, double expected, double tolerance) {
 int main() {
   std::cout << within_wrong(1.0, 5.0, 0.1) << "\\n";
 }`,
-          ['0', '1', '-4', '4'],
-          1,
+          '1',
           '1.0 - 5.0 is -4, which is below 0.1, so a result that is far off still passes.',
         ),
       ],
@@ -11381,7 +11035,7 @@ int main() {
           'The cast makes the division floating-point. The expected value has six decimals, so 1e-6 is a fitting tolerance, and the assertion passes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cmath>
 #include <iostream>
@@ -11389,11 +11043,10 @@ double average(int total, int count) { return static_cast<double>(total) / count
 int main() {
   std::cout << (std::abs(average(1, 3) - 0.333333) <= 1e-5) << "\\n";
 }`,
-          ['1', '0', '0.333333', '3'],
-          0,
+          '1',
           'The true value differs from 0.333333 by about 3e-7, well within 1e-5.',
         ),
-        predictOutput(
+        typeOutput(
           'The tolerance is now 1e-9. What does this program print?',
           `#include <cmath>
 #include <iostream>
@@ -11401,8 +11054,7 @@ double average(int total, int count) { return static_cast<double>(total) / count
 int main() {
   std::cout << (std::abs(average(1, 3) - 0.333333) <= 1e-9) << "\\n";
 }`,
-          ['1', '0.333333', '0', '1e-09'],
-          2,
+          '0',
           'The expected value itself is only accurate to about 3e-7, so a 1e-9 tolerance rejects a correct result.',
         ),
         choose(
@@ -11416,7 +11068,7 @@ int main() {
           1,
           'The tolerance should reflect how precisely the expected value is known.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `#include <cmath>
 #include <iostream>
@@ -11424,9 +11076,779 @@ int main() {
   double avg = 7 / 2;
   std::cout << (std::abs(avg - 3.5) <= 1e-9) << "\\n";
 }`,
-          ['1', '3.5', '3', '0'],
-          3,
+          '0',
           '7 / 2 is integer division, giving 3 before the conversion, so the test correctly fails.',
+        ),
+      ],
+    },
+  ],
+  'cpp-auto-parameters': [
+    {
+      title: 'An auto parameter accepts any argument type',
+      explanation: [
+        'Writing auto for a lambda parameter makes the lambda generic. The compiler handles each call separately: twice(3) builds a version of the body for int, and twice(1.25) builds another for double. Each version keeps its argument’s type, so the int call returns an int and the double call returns a double.',
+        'A parameter declared int instead converts every argument to int before the body runs, so a double argument loses its fraction.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  auto twice = [](auto value) { return value + value; };
+  std::cout << twice(3) << " " << twice(1.25) << "\\n";
+}`,
+        output: '6 2.5',
+        explanation:
+          'twice(3) runs the int version and returns 6; twice(1.25) runs the double version and returns 2.5.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto half = [](auto v) { return v / 2; };
+  std::cout << half(7) << " " << half(7.0) << "\\n";
+}`,
+          '3 3.5',
+          'half(7) divides two ints and truncates to 3; half(7.0) divides a double and gives 3.5.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto add = [](auto a, auto b) { return a + b; };
+  std::cout << add(2, 3) << " " << add(2, 0.5) << "\\n";
+}`,
+          '5 2.5',
+          'Each auto parameter takes its own argument’s type. 2 + 0.5 mixes int and double, so the result is the double 2.5.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto twice = [](int v) { return v + v; };
+  auto generic = [](auto v) { return v + v; };
+  std::cout << twice(2.5) << " " << generic(2.5) << "\\n";
+}`,
+          '4 5',
+          'The int parameter turns 2.5 into 2 before adding; the auto parameter keeps the double.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto same = [](auto a, auto b) { return a == b; };
+  std::cout << same(1, 1.0) << " " << same(3, 4) << "\\n";
+}`,
+          '1 0',
+          'Comparing int 1 with double 1.0 converts to a common type and finds them equal; 3 and 4 differ.',
+        ),
+      ],
+    },
+    {
+      title: 'Read arguments with const auto&',
+      explanation: [
+        'auto value copies each argument. For a large argument such as a std::vector, write const auto& instead: the parameter refers to the caller’s object without copying it, and const forbids changing it through that reference.',
+        'Generic lambdas often take two const auto& parameters, as a comparator does. The same lambda then works for ints, doubles, or the elements and vectors you pass to it, as long as the body’s operations exist for those types.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <vector>
+int main() {
+  auto first = [](const auto& items) { return items[0]; };
+  std::vector<int> counts{4, 8};
+  std::vector<double> prices{2.5, 1.0};
+  std::cout << first(counts) << " " << first(prices) << "\\n";
+}`,
+        output: '4 2.5',
+        explanation:
+          'The same lambda reads element 0 of a vector of ints and of a vector of doubles, without copying either vector.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <vector>
+int main() {
+  auto last = [](const auto& items) { return items[items.size() - 1]; };
+  std::vector<int> a{1, 2, 3};
+  std::vector<double> b{0.5, 0.25};
+  std::cout << last(a) << " " << last(b) << "\\n";
+}`,
+          '3 0.25',
+          'items.size() - 1 is the last index in each vector, whatever its element type.',
+        ),
+        choose(
+          'Which parameter lets a generic lambda read a large vector without copying it and without being able to change it?',
+          [
+            'auto items',
+            'const auto& items',
+            'auto& items',
+            'const auto items',
+          ],
+          1,
+          'auto and const auto copy the argument; auto& avoids the copy but allows changes.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto less = [](const auto& a, const auto& b) { return a < b; };
+  std::cout << less(2, 9) << " " << less(2.5, 0.5) << "\\n";
+}`,
+          '1 0',
+          '2 < 9 is true; 2.5 < 0.5 is false. One comparator handles both types.',
+        ),
+        choose(
+          'What happens when [](const auto& items) { items[0] = 0; } is called with a std::vector<int>?',
+          [
+            'It sets the caller’s first element to 0',
+            'It changes a private copy and leaves the caller’s vector alone',
+            'It does not compile, because items is a reference to const',
+            'It compiles only when the vector is empty',
+          ],
+          2,
+          'const forbids assigning through the reference, and the error appears when the body is compiled for std::vector<int>.',
+        ),
+      ],
+    },
+  ],
+  'cpp-decltype-decay': [
+    {
+      title: 'decltype names the declared type of a variable',
+      explanation: [
+        'decltype(x) is the type x was declared with. After int count = 3;, decltype(count) is int, so decltype(count) copy = count; declares another int. For a reference declared int& alias = count;, decltype(alias) is int&, reference included, and for const int limit = 5; it is const int.',
+        'std::is_same_v<A, B>, from <type_traits>, is true only when A and B are exactly the same type, so it shows what decltype produced.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <type_traits>
+int main() {
+  int count = 3;
+  int& alias = count;
+  decltype(count) copy = count;
+  copy += 1;
+  std::cout << std::is_same_v<decltype(count), int> << " "
+            << std::is_same_v<decltype(alias), int> << " "
+            << std::is_same_v<decltype(alias), int&> << " " << count << " " << copy << "\\n";
+}`,
+        output: '1 0 1 3 4',
+        explanation:
+          'decltype(count) is int, so copy is an independent int: it becomes 4 while count stays 3. decltype(alias) is int&, which is not the same type as int.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  double rate = 0.5;
+  decltype(rate) doubled = rate * 2;
+  std::cout << doubled / 4 << "\\n";
+}`,
+          '0.25',
+          'decltype(rate) is double, so doubled is 1.0 and 1.0 / 4 is 0.25. An int would have given 0.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  int total = 7;
+  int& ref = total;
+  std::cout << std::is_same_v<decltype(ref), int> << std::is_same_v<decltype(ref), int&> << "\\n";
+}`,
+          '01',
+          'ref was declared as int&, and decltype keeps the reference.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  const int limit = 5;
+  std::cout << std::is_same_v<decltype(limit), int> << " " << std::is_same_v<decltype(limit), const int> << "\\n";
+}`,
+          '0 1',
+          'decltype keeps const, so the declared type is const int, not int.',
+        ),
+        choose(
+          'alias is declared int& alias = count;. What does decltype(alias) other = count; declare?',
+          [
+            'Another reference to count',
+            'A new int initialized with a copy of count',
+            'A pointer to count',
+            'Nothing; decltype cannot declare variables',
+          ],
+          0,
+          'decltype(alias) is int&, so other is a second reference bound to count.',
+        ),
+      ],
+    },
+    {
+      title: 'std::decay_t strips const and references',
+      explanation: [
+        'std::decay_t<T>, from <type_traits>, is the plain type a by-value copy of T would have: it removes a reference and then a top-level const. std::decay_t<const int&> is int, and std::decay_t<int> stays int.',
+        'This matters in generic lambdas. Inside [](const auto& x) { ... }, decltype(x) for an int argument is const int&, which is not the same type as int. Compare std::decay_t<decltype(x)> with int instead, and give it a short name with using T = std::decay_t<decltype(x)>;.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <type_traits>
+int main() {
+  auto describe = [](const auto& x) {
+    std::cout << std::is_same_v<decltype(x), int> << " "
+              << std::is_same_v<std::decay_t<decltype(x)>, int> << "\\n";
+  };
+  describe(42);
+}`,
+        output: '0 1',
+        explanation:
+          'decltype(x) is const int&, so the first test fails. After decay_t removes const and &, the type is int.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  std::cout << std::is_same_v<std::decay_t<const double&>, double> << " "
+            << std::is_same_v<std::decay_t<int&>, int> << "\\n";
+}`,
+          '1 1',
+          'decay_t removes the reference and the const in both cases, leaving double and int.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  auto check = [](const auto& x) {
+    using T = std::decay_t<decltype(x)>;
+    std::cout << std::is_same_v<T, int> << std::is_same_v<T, double> << "\\n";
+  };
+  check(2.5);
+  check(7);
+}`,
+          '01\n10',
+          '2.5 is a double and 7 is an int; T names the plain type of each argument.',
+        ),
+        choose(
+          'Inside [](const auto& x) { ... } called with an int, why is std::is_same_v<decltype(x), int> false?',
+          [
+            'The int argument is converted to double inside a generic lambda',
+            'decltype(x) is const int&, which differs from int until decay_t strips const and &',
+            'is_same_v compares values, and x is not equal to int',
+            'decltype works only on variables declared outside the lambda',
+          ],
+          1,
+          'The parameter is a reference to const, and decltype reports that full type.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  using T = std::decay_t<const int&>;
+  T value = 5;
+  value += 1;
+  std::cout << value << "\\n";
+}`,
+          '6',
+          'T is plain int, without const, so value can be changed. A const int would reject +=.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose behavior by the deduced type',
+      explanation: [
+        'Combine the two: name the plain type with using T = std::decay_t<decltype(x)>; and branch on std::is_same_v<T, int>. An ordinary if works when every branch compiles for every argument type, as with arithmetic that works on both int and double.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <type_traits>
+int main() {
+  auto cents = [](const auto& amount) {
+    using T = std::decay_t<decltype(amount)>;
+    long long result = 0;
+    if (std::is_same_v<T, int>) {
+      result = amount;
+    } else {
+      result = static_cast<long long>(amount * 100 + 0.5);
+    }
+    return result;
+  };
+  std::cout << cents(250) << " " << cents(1.5) << "\\n";
+}`,
+        output: '250 150',
+        explanation:
+          'An int amount already counts cents. A double amount counts dollars, so it is scaled by 100 and rounded.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  auto cents = [](const auto& amount) {
+    using T = std::decay_t<decltype(amount)>;
+    long long result = 0;
+    if (std::is_same_v<T, int>) {
+      result = amount;
+    } else {
+      result = static_cast<long long>(amount * 100 + 0.5);
+    }
+    return result;
+  };
+  std::cout << cents(75) << " " << cents(0.25) << "\\n";
+}`,
+          '75 25',
+          '75 is an int and is kept; 0.25 is a double and becomes 25 cents.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  auto label = [](const auto& v) {
+    using T = std::decay_t<decltype(v)>;
+    if (std::is_same_v<T, double>) {
+      std::cout << "real ";
+    } else {
+      std::cout << "whole ";
+    }
+  };
+  label(3);
+  label(3.0);
+  label(-1);
+  std::cout << "\\n";
+}`,
+          'whole real whole',
+          '3 and -1 are ints, and 3.0 is a double, whatever their values.',
+        ),
+        choose(
+          'A generic lambda tests std::is_same_v<decltype(x), int> on a const auto& parameter and never takes the int branch. Which test fixes it?',
+          [
+            'std::is_same_v<decltype(x), int&>',
+            'std::is_same_v<x, int>',
+            'std::is_same_v<std::decay_t<decltype(x)>, int>',
+            'std::is_same_v<decltype(x), auto>',
+          ],
+          2,
+          'decltype(x) is const int&; only its decayed type equals int.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  auto is_int = [](const auto& v) { return std::is_same_v<std::decay_t<decltype(v)>, int>; };
+  std::cout << is_int(1) + is_int(2.0) + is_int(3) + is_int('a') << "\\n";
+}`,
+          '2',
+          '1 and 3 are ints. 2.0 is a double, and the character literal is a char, a different type from int.',
+        ),
+      ],
+    },
+  ],
+  'cpp-mutable-lambda': [
+    {
+      title: 'mutable lets a lambda change its own copy',
+      explanation: [
+        'A by-value capture is read-only inside the lambda, so [count] { ++count; } does not compile. Writing mutable after the parameter list lifts that restriction: [count]() mutable { return ++count; } changes the closure’s own copy.',
+        'That copy lives inside the closure object, so a change persists from one call to the next. The original variable is untouched, because the closure never refers to it.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int count = 0;
+  auto tick = [count]() mutable { return ++count; };
+  int first = tick();
+  int second = tick();
+  std::cout << first << " " << second << " " << count << "\\n";
+}`,
+        output: '1 2 0',
+        explanation:
+          'Each call increments the closure’s copy, so the results are 1 and then 2. The original count is still 0.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int total = 10;
+  auto add = [total](int x) mutable {
+    total += x;
+    return total;
+  };
+  add(5);
+  int result = add(1);
+  std::cout << result << " " << total << "\\n";
+}`,
+          '16 10',
+          'The closure’s copy grows to 15 and then 16; the original total stays 10.',
+        ),
+        choose(
+          'Why does [count] { ++count; } fail to compile?',
+          [
+            'count must be captured by reference to be read at all',
+            'Lambdas cannot use the ++ operator',
+            'count is copied only when the lambda is called',
+            'A by-value capture is read-only unless the lambda is mutable',
+          ],
+          3,
+          'Without mutable, the closure’s copies are const inside its body.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int start = 3;
+  auto next = [start]() mutable {
+    start *= 2;
+    return start;
+  };
+  next();
+  next();
+  int third = next();
+  std::cout << third << " " << start << "\\n";
+}`,
+          '24 3',
+          'The copy doubles on every call: 6, 12, then 24. The original start is still 3.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int n = 0;
+  auto step = [n]() mutable {
+    n += 5;
+    return n;
+  };
+  int last = 0;
+  for (int i = 0; i < 4; ++i) last = step();
+  std::cout << last << " " << n << "\\n";
+}`,
+          '20 0',
+          'Four calls add 5 each time to the closure’s copy. n in main never changes.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose a mutable copy or a reference capture',
+      explanation: [
+        'Decide by who should see the change. [&count] changes the caller’s variable and needs no mutable, because the lambda modifies the variable it refers to, not a copy it owns. [count]() mutable changes only the closure’s copy.',
+        'Use a reference capture when the caller needs the result afterwards; use mutable when the state belongs to the lambda, as in a generator that hands out the next ID.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int shared = 0;
+  int own = 0;
+  auto by_ref = [&shared] { ++shared; };
+  auto by_copy = [own]() mutable { return ++own; };
+  by_ref();
+  by_ref();
+  by_copy();
+  int seen = by_copy();
+  std::cout << shared << " " << own << " " << seen << "\\n";
+}`,
+        output: '2 0 2',
+        explanation:
+          'by_ref changed shared itself. by_copy counted to 2 in its own copy and left own at 0.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int a = 1;
+  auto ref = [&a] { a *= 3; };
+  auto copy = [a]() mutable {
+    a *= 3;
+    return a;
+  };
+  ref();
+  int c = copy();
+  std::cout << a << " " << c << "\\n";
+}`,
+          '3 3',
+          'copy took its snapshot, 1, when it was created, before ref() tripled a to 3. copy() returns 1 * 3.',
+        ),
+        choose(
+          'A lambda must count events so that main can print the total afterwards. Which lambda fits?',
+          [
+            '[events]() mutable { ++events; }',
+            '[&events] { ++events; }',
+            '[events] { return events + 1; }',
+            '[events] { ++events; }',
+          ],
+          1,
+          'Only the reference capture changes the variable main prints; the others change or read a copy.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int hits = 0;
+  auto record = [hits]() mutable { ++hits; };
+  record();
+  record();
+  std::cout << hits << "\\n";
+}`,
+          '0',
+          'record increments its own copy; main’s hits is never changed.',
+        ),
+        choose(
+          'Why does [&total] { total += 5; } compile without mutable?',
+          [
+            'mutable is implied for any lambda that uses +=',
+            'Reference captures are copied when the lambda is called',
+            'total becomes a global variable inside the lambda',
+            'It changes the variable it refers to, not a copy stored in the closure',
+          ],
+          3,
+          'mutable is about the closure’s own copies; a reference capture owns no copy.',
+        ),
+      ],
+    },
+    {
+      title: 'Each copy of a closure keeps its own state',
+      explanation: [
+        'A lambda object can be copied like any other value. auto backup = counter; copies the closure together with its current captured state, and from then on the two copies change independently.',
+        'This matters when code stores or passes the lambda by value: the copy that gets called advances, and the original does not.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int n = 0;
+  auto counter = [n]() mutable { return ++n; };
+  counter();
+  auto copy = counter;
+  copy();
+  copy();
+  int a = counter();
+  int b = copy();
+  std::cout << a << " " << b << "\\n";
+}`,
+        output: '2 4',
+        explanation:
+          'copy started from counter’s state after one call. Its two calls do not reach counter, whose next call returns 2; copy’s third call returns 4.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int n = 10;
+  auto a = [n]() mutable {
+    n -= 1;
+    return n;
+  };
+  auto b = a;
+  a();
+  a();
+  int x = a();
+  int y = b();
+  std::cout << x << " " << y << "\\n";
+}`,
+          '7 9',
+          'b was copied before any call, so its first call returns 9 while a has reached 7.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int n = 0;
+  auto gen = [n]() mutable {
+    n += 2;
+    return n;
+  };
+  auto saved = gen;
+  gen();
+  gen();
+  auto later = gen;
+  int x = saved();
+  int y = later();
+  std::cout << x << " " << y << "\\n";
+}`,
+          '2 6',
+          'saved copied the starting state, so it returns 2. later copied the state after two calls, so it returns 6.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int n = 0;
+  auto counter = [n]() mutable { return ++n; };
+  counter();
+  counter();
+  counter();
+  auto backup = counter;
+  counter();
+  counter();
+  std::cout << backup() << "\\n";
+}`,
+          '4',
+          'backup copied the state after three calls, so its next call returns 4; counter’s later calls do not reach it.',
+        ),
+      ],
+    },
+  ],
+  'cpp-generic-lambdas': [
+    {
+      title: 'One closure shares its captures across argument types',
+      explanation: [
+        'A generic lambda is a single closure object. Calling it with an int and then with a double runs two compiled versions of its body, but both versions read and write the same captured variables, so mutable state accumulates across every call, whatever the argument type. A parameter the body never reads can be left unnamed, as in (const auto&).',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int calls = 0;
+  auto count = [calls](const auto&) mutable {
+    calls += 1;
+    return calls;
+  };
+  int a = count(7);
+  int b = count(2.5);
+  int c = count(3);
+  std::cout << a << " " << b << " " << c << " " << calls << "\\n";
+}`,
+        output: '1 2 3 0',
+        explanation:
+          'The int and double calls share one captured counter, so it reaches 3. main’s calls is untouched because the lambda owns a copy.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  double sum = 0;
+  auto add = [sum](const auto& value) mutable {
+    sum += value;
+    return sum;
+  };
+  add(2);
+  add(0.5);
+  double total = add(1);
+  std::cout << total << " " << sum << "\\n";
+}`,
+          '3.5 0',
+          'All three calls add to the same captured sum, whatever the argument type; main’s sum stays 0.',
+        ),
+        choose(
+          'A mutable generic lambda is called with ints and with doubles. How many copies of its captured state exist?',
+          [
+            'One, shared by the versions of the body for every argument type',
+            'One per argument type, created by each compiled version',
+            'One per call, created when the call starts',
+            'None, because generic lambdas cannot capture',
+          ],
+          0,
+          'The closure object holds the captures once; each compiled body works on those same members.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int seen = 0;
+  auto note = [seen](const auto& value) mutable {
+    seen += 1;
+    return seen * 10 + value;
+  };
+  note(1);
+  note(1.5);
+  std::cout << note(2) << "\\n";
+}`,
+          '32',
+          'The third call is the closure’s third, so seen is 3 and the result is 3 * 10 + 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Combine type dispatch with a running total',
+      explanation: [
+        'Put the pieces together: keep the shared total in the capture list, mark the lambda mutable, name the argument’s plain type with using T = std::decay_t<decltype(x)>;, and branch on it. One lambda can then accept cents as ints and dollars as doubles and keep a single running total.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <type_traits>
+int main() {
+  long long total = 0;
+  auto add = [total](const auto& amount) mutable {
+    using T = std::decay_t<decltype(amount)>;
+    if (std::is_same_v<T, int>) {
+      total += amount;
+    } else {
+      total += static_cast<long long>(amount * 100 + 0.5);
+    }
+    return total;
+  };
+  add(250);
+  add(1.5);
+  std::cout << add(99) << "\\n";
+}`,
+        output: '499',
+        explanation:
+          '250 cents, then 1.5 dollars as 150 cents, then 99 cents: one total of 499.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  long long total = 0;
+  auto add = [total](const auto& amount) mutable {
+    using T = std::decay_t<decltype(amount)>;
+    if (std::is_same_v<T, int>) {
+      total += amount;
+    } else {
+      total += static_cast<long long>(amount * 100 + 0.5);
+    }
+    return total;
+  };
+  add(0.25);
+  std::cout << add(5) << "\\n";
+}`,
+          '30',
+          '0.25 dollars adds 25 cents, and the int 5 adds 5 more, all in one total.',
+        ),
+        typeOutput(
+          'This version tests decltype directly. What does it print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  long long total = 0;
+  auto add = [total](const auto& amount) mutable {
+    if (std::is_same_v<decltype(amount), int>) {
+      total += amount;
+    } else {
+      total += static_cast<long long>(amount * 100 + 0.5);
+    }
+    return total;
+  };
+  std::cout << add(3) << "\\n";
+}`,
+          '300',
+          'decltype(amount) is const int&, never int, so the int 3 is treated as dollars and becomes 300.',
+        ),
+        choose(
+          'Two generic lambdas each keep a captured total. One is called with ints, the other with doubles. How do you get one combined total?',
+          [
+            'Call one lambda for both kinds, so a single closure keeps the total',
+            'Mark both lambdas mutable, which makes them share captures',
+            'Capture the total by value in both lambdas',
+            'Use auto instead of const auto& for the parameters',
+          ],
+          0,
+          'Each closure owns its own captures; only one closure holds one total.',
         ),
       ],
     },

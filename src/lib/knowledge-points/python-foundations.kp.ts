@@ -1,4 +1,9 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 export const knowledgePoints: KnowledgePointModule = {
   'print-output': [
@@ -14,18 +19,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The string inside the quotes is Hello, Python!, so exactly that text appears, without quotes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print("Ready")',
-          ['"Ready"', 'Ready', 'print("Ready")', 'Nothing'],
-          1,
+          'Ready',
           'The quotes delimit the string; print() shows only its characters.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           "print('Good morning')",
-          ['Good morning', "'Good morning'", 'Good', 'Goodmorning'],
-          0,
+          'Good morning',
           'Single quotes also delimit a string, and the space inside it is kept.',
         ),
         choose(
@@ -34,11 +37,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The text must be a quoted string, and the function name is lowercase print.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print("3 + 4")',
-          ['7', '3 + 4', '"3 + 4"', '34'],
-          1,
+          '3 + 4',
           'Inside quotes, 3 + 4 is just text, so Python prints the characters instead of adding.',
         ),
       ],
@@ -55,25 +57,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first statement runs first and ends its line; the second statement prints on the next line.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print("first")\nprint("second")',
-          ['first\nsecond', 'second\nfirst', 'first second', 'firstsecond'],
-          0,
+          'first\nsecond',
           'Statements run in source order, and each print() ends with a new line.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print("C")\nprint("A")\nprint("B")',
-          ['A\nB\nC', 'C\nA\nB', 'CAB', 'B\nA\nC'],
-          1,
+          'C\nA\nB',
           'Python does not sort output; it prints in the order the statements appear.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print("Ready")\nprint("Set")\nprint("Go!")',
-          ['Ready Set Go!', 'Go!\nSet\nReady', 'Ready\nSet\nGo!', 'Ready\nGo!'],
-          2,
+          'Ready\nSet\nGo!',
           'Three print() calls produce three lines, top to bottom.',
         ),
         choose(
@@ -99,18 +98,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The bare name city is replaced by its value, Lima. The quoted "city" is ordinary text, so it prints as written.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fruit = "mango"\nprint(fruit)',
-          ['fruit', '"mango"', 'mango', 'fruit = mango'],
-          2,
+          'mango',
           'print(fruit) uses the value stored under fruit, and print() never shows the quotes of a string.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'total = 12\nprint("total")',
-          ['12', 'total', '"total"', 'total = 12'],
-          1,
+          'total',
           'The quotes make "total" plain text, so print() shows the word instead of the variable’s value.',
         ),
         choose(
@@ -119,16 +116,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The name goes on the left of = and the value on the right.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'greeting = "Hi there"\nplace = "home"\nprint(place)\nprint(greeting)',
-          [
-            'Hi there\nhome',
-            'place\ngreeting',
-            'home\ngreeting',
-            'home\nHi there',
-          ],
-          3,
+          'home\nHi there',
           'The prints run in order, place first, and each bare name is replaced by its value.',
         ),
       ],
@@ -174,11 +165,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Hyphens are not allowed in names; total_cost, with an underscore, is a valid two-word name.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'color = "red"\nColor = "blue"\nprint(color)',
-          ['blue', 'Color', 'red', 'red\nblue'],
-          2,
+          'red',
           'color and Color are different names, so the second assignment does not change color.',
         ),
       ],
@@ -196,18 +186,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first print runs while coins is 10. The update computes 10 + 5 and stores 15, which the second print shows.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'steps = 100\nsteps = steps + 50\nprint(steps)',
-          ['100', '150', 'steps + 50', '50'],
-          1,
+          '150',
           'The right side uses the old value: 100 + 50 is 150, which replaces 100.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'level = 1\nlevel = 5\nlevel = 3\nprint(level)',
-          ['1', '9', '5', '3'],
-          3,
+          '3',
           'Each assignment replaces the previous value; values are not added together, so the last one, 3, remains.',
         ),
         choose(
@@ -221,11 +209,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The right side is evaluated first with the current value; only then is the result assigned to points.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'total = 4\nprint(total)\ntotal = total + total\nprint(total)',
-          ['4\n8', '8\n8', '4\n4', '8\n16'],
-          0,
+          '4\n8',
           'The first print runs before the update, so it shows 4. Then 4 + 4 is stored, and the second print shows 8.',
         ),
       ],
@@ -243,25 +230,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'current starts with the value 20 from start. Updating current to 25 does not change start, which is still 20.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = 3\nb = a\na = 10\nprint(a)\nprint(b)',
-          ['10\n10', '3\n3', '10\n3', '3\n10'],
-          2,
+          '10\n3',
           'b received 3 when b = a ran. Reassigning a to 10 later does not change b.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'left = "L"\nright = "R"\ntemp = left\nleft = right\nright = temp\nprint(left)\nprint(right)',
-          ['R\nL', 'L\nR', 'R\nR', 'L\nL'],
-          0,
+          'R\nL',
           'temp keeps the old left value, L, so after left takes R, right can take L from temp: the values are swapped.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'x = 5\ny = x + 1\nx = y + 1\nprint(x)',
-          ['5', '6', '8', '7'],
-          3,
+          '7',
           'y becomes 5 + 1, which is 6. Then x becomes 6 + 1, which is 7.',
         ),
         choose(
@@ -292,18 +276,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Multiplying and subtracting two integers gives integers. Dividing with / gives the float 3.0, even though 6 divides evenly by 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(12 / 4)',
-          ['3', '8', '3.0', '48'],
-          2,
+          '3.0',
           '/ always produces a float, so an exact division still prints with .0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'apples = 7\npears = 3\nprint(apples - pears)\nprint(apples / 2)',
-          ['4\n3', '4\n3.5', '4.0\n3.5', '10\n3.5'],
-          1,
+          '4\n3.5',
           'Subtracting two integers gives the integer 4; 7 / 2 is the float 3.5, not a rounded whole number.',
         ),
         choose(
@@ -312,11 +294,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Only / always returns a float; +, -, and * on two integers give an integer.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'price = 2.5\ncount = 4\nprint(price * count)',
-          ['10.0', '10', '6.5', '8.0'],
-          0,
+          '10.0',
           'price is a float, so the product is a float: 10.0.',
         ),
       ],
@@ -334,25 +315,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Four full cartons hold 48 eggs, so 50 // 12 is 4 and the remaining 50 - 48 eggs give 50 % 12 = 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(38 // 5)',
-          ['7.6', '7', '8', '3'],
-          1,
+          '7',
           'Five fits into 38 seven complete times; // drops the fraction instead of rounding up.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(45 % 7)',
-          ['6', '4', '0', '3'],
-          3,
+          '3',
           'Six groups of 7 make 42, and 45 - 42 leaves a remainder of 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'people = 14\nper_car = 4\nprint(people // per_car)\nprint(people % per_car)',
-          ['3\n2', '3.5\n2', '4\n2', '2\n3'],
-          0,
+          '3\n2',
           'Three full cars carry 12 people, so // gives 3 and % gives the 2 people left over.',
         ),
         choose(
@@ -366,11 +344,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The remainder after dividing by 2 is 0 for even numbers and 1 for odd ones; n // 2 would count the groups.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(4 % 10)',
-          ['0', '4', '6', '2.5'],
-          1,
+          '4',
           'Ten fits into 4 zero times, so the whole 4 is left over as the remainder.',
         ),
       ],
@@ -388,25 +365,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '3 ** 2 is 9. Without parentheses, side * 4 happens first: 2 + 12 is 14. With parentheses, 2 + 3 happens first: 5 * 4 is 20.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(4 + 6 / 2)',
-          ['5.0', '7.0', '7', '5'],
-          1,
+          '7.0',
           'Division happens before addition: 6 / 2 is 3.0, and 4 + 3.0 is the float 7.0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(3 ** 2 + 1)',
-          ['10', '27', '7', '16'],
-          0,
+          '10',
           'The power is computed first: 3 ** 2 is 9, then 9 + 1 is 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'base = 5\nbonus = 3\nprint((base + bonus) * 2)\nprint(base + bonus * 2)',
-          ['16\n16', '11\n16', '11\n11', '16\n11'],
-          3,
+          '16\n11',
           'The parentheses make 5 + 3 happen first, giving 16. Without them, 3 * 2 happens first, giving 5 + 6 = 11.',
         ),
         choose(
@@ -432,25 +406,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first line joins three strings, including a one-space string. The second joins only the two names, so there is no space between them.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'word = "sun"\nprint(word + "flower")',
-          ['sun flower', 'word flower', 'sunflower', 'wordflower'],
-          2,
+          'sunflower',
           'word holds sun, and + joins the strings without adding a space.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'a = "12"\nb = "30"\nprint(a + b)',
-          ['1230', '42', '12 30', '3012'],
-          0,
+          '1230',
           'Both values are strings because of the quotes, so + joins their characters instead of adding numbers.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'line = "-" * 5\nprint(line + "|")',
-          ['-5|', '-----|', '-|-|-|-|-|', '-----'],
-          1,
+          '-----|',
           '"-" * 5 repeats the dash five times; then + adds one bar at the end.',
         ),
         choose(
@@ -478,25 +449,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'New York has seven letters plus one space, so its length is 8. The empty string has no characters.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(len("ice cream"))',
-          ['8', '2', '10', '9'],
-          3,
+          '9',
           'There are eight letters and one space, and the space counts as a character.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(len("12") + len("345"))',
-          ['357', '5', '12345', '2'],
-          1,
+          '5',
           'len() returns numbers, 2 and 3, and + adds them. The digits inside the strings are not used as numbers.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'word = "  hi  "\nprint(len(word))',
-          ['6', '2', '4', '3'],
-          0,
+          '6',
           'The two letters are surrounded by two spaces on each side, and every space counts.',
         ),
         choose(
@@ -527,23 +495,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'There is no f before the quote, so this is an ordinary string and the braces are printed as written.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'a = 7\nb = 5\nprint(f"{a} + {b} = {a + b}")',
-          ['7 + 5 = 12', '7 + 5 = 75', '7 + 5 = 7 + 5', '{a} + {b} = 12'],
-          0,
+          '7 + 5 = 12',
           'Each brace is evaluated: a is 7, b is 5, and a + b adds the two numbers to 12. The + outside the braces is plain text.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'name = "Olivia"\nprint(f"{name} has {len(name)} letters")',
-          [
-            'Olivia has 5 letters',
-            'name has 6 letters',
-            'Olivia has 6 letters',
-            'Olivia has len(name) letters',
-          ],
-          2,
+          'Olivia has 6 letters',
           'Any expression can go inside braces; len(name) is evaluated to 6.',
         ),
         choose(
@@ -586,18 +547,16 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Quotes make a str, even around the word True. Without quotes, True is a bool.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'count = "8"\nprint(count * 2)',
-          ['88', '16', '8 8', '"88"'],
-          0,
+          '88',
           'count is the text "8", so * 2 repeats the text instead of multiplying a number.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'a = 1.5\nb = 2\nprint(a + b)\nprint(b + b)',
-          ['3.5\n4.0', '3\n4', '1.52\n22', '3.5\n4'],
-          3,
+          '3.5\n4',
           'A float plus an int gives the float 3.5, while two ints add to the int 4.',
         ),
       ],
@@ -615,11 +574,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Joining the two strings gives 402. Converted to ints, they add to 42. float(b) is 2.0, and 2.0 / 4 is 0.5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'stock = "15"\nprint(int(stock) * 2)',
-          ['1515', '30', '17', '30.0'],
-          1,
+          '30',
           'int(stock) is the integer 15, so * 2 multiplies it to 30 instead of repeating text.',
         ),
         choose(
@@ -628,18 +586,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'int() needs text written as a whole number; "4.5" has a decimal point. float() accepts both "3" and "4.5".',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'height = "1.75"\nprint(float(height) + 1)',
-          ['2.75', '1.751', '2.0', '2'],
-          0,
+          '2.75',
           'float(height) is 1.75, and adding 1 gives 2.75.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = "6"\nb = "3"\nprint(int(a) / int(b))\nprint(float(b))',
-          ['2\n3', '63\n3.0', '2.0\n3.0', '2.0\n3'],
-          2,
+          '2.0\n3.0',
           '6 / 3 uses /, which always gives a float, 2.0. float("3") is also a float, 3.0.',
         ),
       ],
@@ -657,18 +613,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'str(laps) is the text "3", which can be joined to "Laps: ". Joining two copies of "3" gives 33, not 6.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = 2\nb = "2"\nprint(str(a) + b)\nprint(a + int(b))',
-          ['4\n22', '22\n4', '4\n4', '22\n22'],
-          1,
+          '22\n4',
           'The first line joins two strings into 22; the second adds two integers to get 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'text = "7"\ntotal = int(text) + 3\nprint(str(total) + " points")',
-          ['73 points', '10points', 'total points', '10 points'],
-          3,
+          '10 points',
           'int(text) + 3 is 10; str(total) turns it into text, which is joined to " points", including its leading space.',
         ),
         choose(
@@ -710,18 +664,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'code equals 1234, so == is True and != is False. The quoted "1234" is a string, which never equals the number.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = 10\nb = 5 + 5\nprint(a == b)\nprint(a != b)',
-          ['True\nTrue', 'False\nTrue', 'True\nFalse', '10\n10'],
-          2,
+          'True\nFalse',
           'b is 10, so the values are equal: == is True and != is False.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'answer = "yes"\nprint(answer == "Yes")\nprint(answer != "Yes")',
-          ['True\nFalse', 'False\nTrue', 'True\nTrue', 'False\nFalse'],
-          1,
+          'False\nTrue',
           'yes and Yes differ in their first letter, so they are not equal.',
         ),
         choose(
@@ -730,11 +682,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           '== compares; a single = would assign 100 to total instead of asking a question.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'x = 3\nprint(x * 2 == 6.0)\nprint(x * 2 == "6")',
-          ['True\nFalse', 'False\nFalse', 'True\nTrue', 'False\nTrue'],
-          0,
+          'True\nFalse',
           'The int 6 equals the float 6.0 because numbers compare by value, but it never equals the string "6".',
         ),
       ],
@@ -752,11 +703,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'At exactly the limit, the strict > is False while >= is True. limit + 1 is computed first, and 50 < 51 is True.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'temp = 0\nprint(temp < 0)\nprint(temp <= 0)',
-          ['True\nTrue', 'False\nFalse', 'True\nFalse', 'False\nTrue'],
-          3,
+          'False\nTrue',
           '0 is not less than 0, so < is False; <= includes the boundary, so it is True.',
         ),
         choose(
@@ -765,11 +715,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           '“At most 12” includes 12 itself, so the comparison needs <=.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(9 // 2 > 4)',
-          ['True', 'False', '4', '4.5'],
-          1,
+          'False',
           '9 // 2 is 4, and 4 > 4 is False because > excludes the boundary.',
         ),
         choose(
@@ -793,18 +742,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'score >= 60 is True, and that bool is stored in passed. Printing it, alone or in an f-string, shows True.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 15\nis_even = n % 2 == 0\nprint(is_even)',
-          ['True', '1', 'False', '0'],
-          2,
+          'False',
           '15 % 2 is 1, and 1 == 0 is False; the variable stores that bool, not the remainder.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'word = "planet"\nlong_word = len(word) > 6\nprint(f"{word}: {long_word}")',
-          ['planet: True', 'planet: 6', 'word: False', 'planet: False'],
-          3,
+          'planet: False',
           'planet has 6 letters, and 6 > 6 is False.',
         ),
         choose(
@@ -818,11 +765,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The comparison itself produces True or False. The other options are all strings because of quotes or str().',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'a = 4\nb = 9\nprint(a * 2 != b)\nprint(b - a > 5)',
-          ['False\nTrue', 'True\nFalse', 'True\nTrue', '8\n5'],
-          1,
+          'True\nFalse',
           '8 is not equal to 9, so != is True. 9 - 4 is 5, and 5 > 5 is False.',
         ),
       ],
@@ -842,11 +788,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'age >= 18 is False. With and, one False side makes the result False; with or, the True has_pass is enough.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'raining = False\ncold = True\nprint(raining and cold)\nprint(raining or cold)',
-          ['False\nTrue', 'True\nFalse', 'False\nFalse', 'True\nTrue'],
-          0,
+          'False\nTrue',
           'and needs both sides True, so it is False. or needs only one, and cold is True.',
         ),
         choose(
@@ -871,11 +816,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'or is True as soon as one side is True, so it can be False only when neither side is True.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'x = 6\nprint(x % 2 == 0 and x % 3 == 0)\nprint(x % 4 == 0 or x > 10)',
-          ['True\nTrue', 'True\nFalse', 'False\nFalse', 'False\nTrue'],
-          1,
+          'True\nFalse',
           '6 is divisible by both 2 and 3, so the and is True. 6 is not divisible by 4 and not over 10, so the or is False.',
         ),
       ],
@@ -893,18 +837,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'not done is True. done or urgent is True, so not of it is False. not done and urgent are both True, so the last line is True.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'age = 12\nprint(not age >= 13)\nprint(not age < 13)',
-          ['False\nTrue', 'True\nTrue', 'True\nFalse', 'False\nFalse'],
-          2,
+          'True\nFalse',
           'age >= 13 is False, so not makes it True. age < 13 is True, so not makes it False.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'a = True\nb = False\nprint(not (a or b))\nprint((not a) or b)',
-          ['False\nFalse', 'True\nFalse', 'False\nTrue', 'True\nTrue'],
-          0,
+          'False\nFalse',
           'a or b is True, so not of it is False. not a is False and b is False, so the or is False too.',
         ),
         choose(
@@ -939,11 +881,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '25 passes the lower limit 18 but not the upper limit 24, so the chain is False. It is inside 18 to 30, and it breaks the limit 24, so the or is True.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 20\nprint(10 <= n <= 20)\nprint(10 < n < 20)',
-          ['True\nTrue', 'True\nFalse', 'False\nFalse', 'False\nTrue'],
-          1,
+          'True\nFalse',
           'The first chain includes its limits, so 20 is inside. The second uses strict <, so n < 20 fails at 20.',
         ),
         choose(
@@ -968,11 +909,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A chain compares each neighboring pair and joins the comparisons with and; x is shared by both.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'score = 100\nprint(score < 0 or score > 100)\nprint(0 <= score <= 100)',
-          ['False\nTrue', 'True\nFalse', 'True\nTrue', 'False\nFalse'],
-          0,
+          'False\nTrue',
           '100 is not below 0 and not above 100, so the outside test is False. The inclusive chain accepts 100.',
         ),
       ],
@@ -992,18 +932,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '30 < 50 is True, so the indented print runs. print("Done") is not indented, so it runs whatever the condition was.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'items = 3\nif items > 5:\n    print("Big order")\nprint("Thanks")',
-          ['Big order\nThanks', 'Big order', 'Thanks', 'Thanks\nBig order'],
-          2,
+          'Thanks',
           '3 > 5 is False, so the indented line is skipped. The unindented print still runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'x = 8\nif x % 2 == 0:\n    print("even")\n    x = x + 1\nprint(x)',
-          ['even\n9', 'even\n8', '9', '8'],
-          0,
+          'even\n9',
           'The condition is True, so both indented lines run: even is printed and x becomes 9 before the last print.',
         ),
         choose(
@@ -1018,11 +956,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both indented lines belong to the if body. print("Saved") is not indented, so it always runs.',
           'if level >= 10:\n    print("Expert")\n    level = 10\nprint("Saved")',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'name = "Bo"\nif len(name) < 3:\n    name = name + "!"\nprint(name)',
-          ['Bo', '!Bo', 'Bo !', 'Bo!'],
-          3,
+          'Bo!',
           'Bo has 2 characters, so the condition is True and the body adds ! to the end of the name.',
         ),
       ],
@@ -1040,25 +977,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '0 > 0 is False, so the if body is skipped and the else body runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'guess = 7\nsecret = 7\nif guess == secret:\n    print("Correct")\nelse:\n    print("Try again")',
-          ['Try again', 'Correct\nTry again', 'Correct', 'Try again\nCorrect'],
-          2,
+          'Correct',
           'The condition is True, so only the if body runs; the else body is skipped.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'minutes = 45\nif minutes >= 60:\n    hours = minutes // 60\nelse:\n    hours = 0\nprint(hours)',
-          ['0', '0.75', '1', '45'],
-          0,
+          '0',
           '45 >= 60 is False, so the else body sets hours to 0; the division never runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'total = 120\nif total > 100:\n    total = total - 20\nelse:\n    total = total + 5\nprint(total)',
-          ['125', '100', '105', '120'],
-          1,
+          '100',
           '120 > 100 is True, so only the if body runs and subtracts 20. The else body is skipped, so 5 is never added.',
         ),
         choose(
@@ -1087,18 +1021,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '55 fails the first test and passes the second, so Strong is printed. wind >= 20 is also True, but the chain has already finished.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'temp = 35\nif temp > 20:\n    print("warm")\nelif temp > 30:\n    print("hot")\nelse:\n    print("cool")',
-          ['hot', 'cool', 'warm\nhot', 'warm'],
-          3,
+          'warm',
           '35 > 20 is True, so the first branch runs and the chain stops before temp > 30 is checked.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'level = 3\nif level > 5:\n    print("hard")\nelif level > 2:\n    print("medium")\nelif level > 0:\n    print("easy")',
-          ['medium\neasy', 'easy', 'medium', 'hard'],
-          2,
+          'medium',
           'level > 5 fails, level > 2 matches, and the remaining elif is skipped even though it is also True.',
         ),
         choose(
@@ -1107,11 +1039,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           '15 > 1 is already True, so the first branch runs and the elif is never checked. The higher threshold should come first.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'age = 13\nif age < 13:\n    price = 5\nelif age < 65:\n    price = 9\nelse:\n    price = 6\nprint(price)',
-          ['5', '9', '6', '14'],
-          1,
+          '9',
           '13 < 13 is False because < excludes the boundary, so the second condition, 13 < 65, picks a price of 9.',
         ),
       ],
@@ -1131,11 +1062,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '15 < 20 is True, so the expression produces the value written before if, and mode becomes "saver".',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'speed = 72\nstatus = "fine" if speed <= 70 else "ticket"\nprint(status)',
-          ['fine', 'ticket', 'False', 'fine\nticket'],
-          1,
+          'ticket',
           '72 <= 70 is False, so the expression produces the value after else. The condition itself is not printed.',
         ),
         choose(
@@ -1149,18 +1079,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The value for a True condition comes first, then if and the condition, then else and the other value.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'a = 4\nb = 9\nbigger = a if a > b else b\nprint(bigger)',
-          ['4', 'False', '9', '13'],
-          2,
+          '9',
           '4 > 9 is False, so bigger receives b, which is 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'points = 0\nmedal = "none" if points == 0 else "bronze"\nprint(medal)',
-          ['none', 'bronze', 'True', 'none\nbronze'],
-          0,
+          'none',
           'points == 0 is True, so medal gets the first value. Only one value is ever produced.',
         ),
       ],
@@ -1178,32 +1106,28 @@ export const knowledgePoints: KnowledgePointModule = {
           'text is empty, so only the else side, 0, is evaluated, and int("") never runs. Inside the f-string, lives == 1 picks the word life.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'raw = "abc"\nvalue = int(raw) if raw == "42" else -1\nprint(value)',
-          ['-1', '42', 'ValueError', 'abc'],
-          0,
+          '-1',
           'raw == "42" is False, so only -1 is evaluated. int(raw) never runs, so there is no ValueError.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'n = 7\nprint(n * 10 if n > 5 else n + 10)',
-          ['17', '70', 'True', '7'],
-          1,
+          '70',
           '7 > 5 is True, so print receives n * 10, which is 70; n + 10 is never evaluated.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'word = "hello"\nshout = word + "!" if len(word) < 3 else word\nprint(shout)',
-          ['hello!', 'hellohello', 'hello', 'False'],
-          2,
+          'hello',
           'The whole of word + "!" is the first value. len(word) < 3 is False, so the result is the second value, word, unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'base = 100\nmember = False\ntotal = base - (10 if member else 0)\nprint(total)',
-          ['90', '0', '10', '100'],
-          3,
+          '100',
           'member is False, so the parenthesized choice is 0, and 100 - 0 is 100.',
         ),
         choose(
@@ -1266,11 +1190,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'An expression must always produce a value, so the else value is required.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 12\nif n > 10:\n    size = "large" if n > 20 else "medium"\nelse:\n    size = "small"\nprint(size)',
-          ['medium', 'large', 'small', 'medium\nsmall'],
-          0,
+          'medium',
           '12 > 10 sends Python into the if body, where 12 > 20 is False, so size becomes "medium".',
         ),
       ],
@@ -1290,16 +1213,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each list prints in its original order. The strings appear with quotes, which Python writes as single quotes, and the empty list prints as [].',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'days = ["Mon", "Tue", "Wed"]\nprint(days)',
-          [
-            'Mon Tue Wed',
-            '["Mon", "Tue", "Wed"]',
-            "['Mon', 'Tue', 'Wed']",
-            'Mon, Tue, Wed',
-          ],
-          2,
+          "['Mon', 'Tue', 'Wed']",
           'Printing a whole list shows the brackets, commas, and quotes around strings, and Python writes those quotes as single quotes.',
         ),
         choose(
@@ -1313,18 +1230,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A list needs square brackets with commas between the items. Quotes would make one string instead.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'a = 7\nb = 2\nvalues = [a, b, a + b]\nprint(values)',
-          ['[a, b, a + b]', '[7, 2, a + b]', '[9]', '[7, 2, 9]'],
-          3,
+          '[7, 2, 9]',
           'Each item is evaluated when the list is built: a is 7, b is 2, and a + b is 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'mixed = ["3", 3, 3.0]\nprint(mixed)',
-          ["['3', 3, 3.0]", '[3, 3, 3.0]', "['3', '3', '3.0']", '[3, 3, 3]'],
-          0,
+          "['3', 3, 3.0]",
           'The list keeps each value with its own type: the string shows quotes, the int has no decimal point, and the float keeps .0.',
         ),
       ],
@@ -1341,25 +1256,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The list has two items. The string "there" on its own has five characters. The empty list has no items.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(len([10, 20, 30, 40]))',
-          ['100', '4', '40', '3'],
-          1,
+          '4',
           'len() counts the items, and there are four of them; it does not add them up.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'names = ["Christopher"]\nprint(len(names))',
-          ['11', '0', '1', '12'],
-          2,
+          '1',
           'The list holds a single item. The 11 characters belong to the string, not to the list.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'sentence = "a b c"\nletters = ["a", "b", "c"]\nprint(len(sentence))\nprint(len(letters))',
-          ['3\n3', '5\n5', '3\n5', '5\n3'],
-          3,
+          '5\n3',
           'The string has five characters, counting the two spaces. The list has three items.',
         ),
         choose(
@@ -1383,18 +1295,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '"dog" is one of the items. "Cat" with a capital C does not match "cat".',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'codes = [101, 202, 303]\nprint(202 in codes)\nprint(2 in codes)',
-          ['True\nTrue', 'True\nFalse', 'False\nFalse', 'False\nTrue'],
-          1,
+          'True\nFalse',
           '202 is an item of the list. 2 only appears as a digit inside items, which does not count.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'answers = ["1", "2", "3"]\nprint(2 in answers)\nprint("2" in answers)',
-          ['False\nTrue', 'True\nTrue', 'True\nFalse', 'False\nFalse'],
-          0,
+          'False\nTrue',
           'The items are strings, so the int 2 is not among them, while the string "2" is.',
         ),
         choose(
@@ -1408,16 +1318,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Only "green" matches a whole item exactly; case and partial words do not match.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'guests = ["Ana", "Ben", "Cy"]\nfound = "Ben" in guests\nprint(f"Ben invited: {found}")',
-          [
-            'Ben invited: 1',
-            'Ben invited: Ben',
-            'Ben invited: True',
-            'Ben invited: False',
-          ],
-          2,
+          'Ben invited: True',
           'in produces a bool, not the item or its position, and Ben is in the list.',
         ),
       ],
@@ -1437,11 +1341,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Zero is falsy, but any other number, even a negative one, is truthy. The empty string is falsy, while "0" is a one-character string, so it is truthy.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(bool([]))\nprint(bool([False]))',
-          ['False\nFalse', 'True\nTrue', 'False\nTrue', 'True\nFalse'],
-          2,
+          'False\nTrue',
           'An empty list is falsy. [False] has one item, so it is not empty and counts as true.',
         ),
         choose(
@@ -1450,11 +1353,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           '"False" is a nonempty string, so it is truthy; its letters do not matter.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'text = "  "\nprint(bool(text))\nprint(bool(len("")))',
-          ['True\nFalse', 'False\nFalse', 'False\nTrue', 'True\nTrue'],
-          0,
+          'True\nFalse',
           'Two spaces are two characters, so the string is truthy. len("") is 0, which is falsy.',
         ),
         choose(
@@ -1478,18 +1380,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'cart has an item, so it is truthy. coupon is empty, so it is falsy and not coupon is True.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'waitlist = []\nif waitlist:\n    print("Call next")\nelse:\n    print("No one waiting")',
-          ['Call next', 'No one waiting', 'Call next\nNo one waiting', '[]'],
-          1,
+          'No one waiting',
           'The empty list is falsy, so the else branch runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'nickname = "Jo"\nif not nickname:\n    nickname = "Guest"\nprint(nickname)',
-          ['Guest', 'Jo\nGuest', 'nickname', 'Jo'],
-          3,
+          'Jo',
           '"Jo" is not empty, so not nickname is False and the default is never assigned.',
         ),
         choose(
@@ -1498,11 +1398,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A list is truthy exactly when it has at least one item. if not tags: and if tags == []: test for the opposite.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'stock = 0\nif stock:\n    print("available")\nelse:\n    print("sold out")',
-          ['sold out', 'available', '0', 'available\nsold out'],
-          0,
+          'sold out',
           '0 is falsy, so the condition fails and the else branch runs.',
         ),
       ],
@@ -1520,23 +1419,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'not temperature is True because 0 is falsy, so that test wrongly reports a missing reading. temperature is None is False, so the else branch reports the real reading of 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'discount = 0\nif discount is None:\n    print("No discount set")\nelse:\n    print(f"Discount: {discount}")',
-          [
-            'No discount set',
-            'Discount: None',
-            'Discount: 0',
-            'No discount set\nDiscount: 0',
-          ],
-          2,
+          'Discount: 0',
           'discount is 0, not None, so is None is False and the else branch prints the real value.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'answer = None\nif not answer:\n    print("empty")\nif answer is None:\n    print("none")',
-          ['empty', 'none', 'none\nempty', 'empty\nnone'],
-          3,
+          'empty\nnone',
           'None is falsy, so the first test passes, and it is None, so the second passes too. They run in order.',
         ),
         choose(
@@ -1550,11 +1442,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'is not None is True for every picked level, including 0. if level: would treat level 0 as not picked.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'middle_name = ""\nprint(middle_name is None)\nprint(not middle_name)',
-          ['False\nTrue', 'True\nTrue', 'True\nFalse', 'False\nFalse'],
-          0,
+          'False\nTrue',
           'The empty string is not None, but it is falsy, so not middle_name is True.',
         ),
       ],
@@ -1572,25 +1463,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The comparisons give False, True, and True, which add up as 0 + 1 + 1. True * 5 is 1 * 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(True + True + True)',
-          ['True', 'TrueTrueTrue', '3', '1'],
-          2,
+          '3',
           'Each True counts as 1 in arithmetic, so the sum is 3. + does not join bools like strings.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'a = 4\nb = 9\nc = 2\nprint((a > 3) + (b > 3) + (c > 3))',
-          ['13', '2', '3', 'True'],
-          1,
+          '2',
           'Two of the three comparisons are True, so the total is 1 + 1 + 0. The values themselves are not added.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'late = False\nfee = 10 * late\nprint(fee)',
-          ['0', '10', 'False', '0.0'],
-          0,
+          '0',
           'False acts as 0, so 10 * False is the integer 0.',
         ),
         choose(
@@ -1616,18 +1504,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The three values add up to 18000. Dividing by the count, 3, gives the mean as the float 6000.0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'prices = [3, 8, 4]\nprint(sum(prices))\nprint(len(prices))',
-          ['3\n15', '15\n3', '15\n15', '3\n3'],
-          1,
+          '15\n3',
           'sum adds the values to 15, and len counts the three items.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'grades = [60, 90, 90, 80]\nprint(sum(grades) / len(grades))',
-          ['80', '75.0', '320', '80.0'],
-          3,
+          '80.0',
           'The total 320 divided by 4 items is 80.0; / always gives a float. 75.0 would be halfway between the smallest and largest.',
         ),
         choose(
@@ -1636,11 +1522,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Adding no numbers gives the integer 0, so sum works on an empty list without an error.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'ratings = [4, 5, 3, 4]\naverage = sum(ratings) / len(ratings)\nprint(f"Average: {average}")',
-          ['Average: 4', 'Average: 16', 'Average: 4.0', 'Average: 3.2'],
-          2,
+          'Average: 4.0',
           'The ratings total 16, and 16 / 4 is the float 4.0.',
         ),
       ],
@@ -1658,18 +1543,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'min and max scan the whole list, whatever the order. With two separate arguments, max returns the larger one, 11.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'times = [12.5, 9.8, 10.1]\nprint(min(times))\nprint(max(times))',
-          ['12.5\n9.8', '9.8\n12.5', '12.5\n10.1', '9.8\n10.1'],
-          1,
+          '9.8\n12.5',
           'min finds the smallest value, 9.8, and max the largest, 12.5, wherever they sit in the list.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'a = 14\nb = 6\nprint(max(a, b) - min(a, b))',
-          ['20', '-8', '6', '8'],
-          3,
+          '8',
           'max(a, b) is 14 and min(a, b) is 6, so the difference is 8.',
         ),
         choose(
@@ -1683,11 +1566,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'An empty list has no largest item, so max raises ValueError. Only sum([]) has a natural answer, 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'low = min([5, 2, 8])\nhigh = max(low, 4)\nprint(high)',
-          ['4', '8', '2', '5'],
-          0,
+          '4',
           'low is 2, and max(2, 4) compares just those two arguments, giving 4.',
         ),
       ],
@@ -1711,25 +1593,22 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'abs removes the sign of the difference, so the order of a and b no longer matters.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'target = 50\nguess = 64\nprint(abs(target - guess))',
-          ['-14', '114', '14', '50'],
-          2,
+          '14',
           '50 - 64 is -14, and abs turns it into the distance 14.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(round(7.86, 1))',
-          ['7.8', '8', '7.86', '7.9'],
-          3,
+          '7.9',
           'With one decimal place, 7.86 is closer to 7.9 than to 7.8; round does not just cut off digits.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'print(round(4.6), round(4.2))',
-          ['5 4', '5.0 4.0', '4 4', '5 5'],
-          0,
+          '5 4',
           'Without a second argument, round returns the nearest whole number as an int: 5 and 4.',
         ),
       ],
@@ -1747,18 +1626,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '48 replaces inf, 35 replaces 48, and 41 is not smaller than 35, so best stays 35.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'best = float("inf")\nprint(best)\nbest = min(best, 9)\nprint(best)',
-          ['inf\ninf', '0\n9', 'inf\n9', 'infinity\n9'],
-          2,
+          'inf\n9',
           'float("inf") prints as inf, and any real number, such as 9, is smaller than it.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'lowest = 0\nlowest = min(lowest, 12)\nlowest = min(lowest, 7)\nprint(lowest)',
-          ['7', '12', 'inf', '0'],
-          3,
+          '0',
           'The starting 0 is smaller than every value, so min keeps it and the real minimum, 7, is lost.',
         ),
         choose(
@@ -1772,11 +1649,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'inf can never win a min against real data, so it is replaced right away; 0 would win against every positive value.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'best = float("inf")\nbest = min(best, 61)\nbest = min(best, 58)\nbest = min(best, 64)\nprint(best, abs(best - 60))',
-          ['58 2', '64 4', '58 -2', '61 1'],
-          0,
+          '58 2',
           'The running minimum ends at 58, and its distance from 60 is abs(-2), which is 2.',
         ),
       ],
@@ -1796,25 +1672,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'strip() returned a new string without the outer spaces and stored it in clean. name itself still has its spaces, as the second line shows.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print("Good Morning".lower())',
-          ['Good morning', 'GOOD MORNING', 'goodmorning', 'good morning'],
-          3,
+          'good morning',
           'lower() changes every letter to lowercase and leaves the space alone.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'code = "ab12"\ncode.upper()\nprint(code)',
-          ['AB12', 'ab12', 'Ab12', 'AB12\nab12'],
-          1,
+          'ab12',
           'upper() returns a new string, but it is never assigned, so code still holds the original text.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'entry = "   yes   "\nprint(len(entry))\nprint(len(entry.strip()))',
-          ['3\n3', '9\n9', '9\n3', '3\n9'],
-          2,
+          '9\n3',
           'The original has three spaces on each side, 9 characters in all. strip() removes them, leaving 3.',
         ),
         choose(
@@ -1838,25 +1711,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both slashes are replaced each time: first by dashes, then by nothing, which removes them.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print("banana".replace("a", "o"))',
-          ['bonana', 'bonono', 'banano', 'bnn'],
-          1,
+          'bonono',
           'replace swaps every occurrence, not just the first, so all three a’s become o.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print("Cat cat CAT".replace("cat", "dog"))',
-          ['dog dog dog', 'dog cat CAT', 'Cat cat CAT', 'Cat dog CAT'],
-          3,
+          'Cat dog CAT',
           'The match is case-sensitive, so only the all-lowercase cat is replaced.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'phone = "555 123 4567"\ndigits = phone.replace(" ", "")\nprint(len(digits))',
-          ['12', '3', '10', '9'],
-          2,
+          '10',
           'Replacing each space with "" removes the two spaces, leaving 10 digits.',
         ),
         choose(
@@ -1885,40 +1755,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'split() treats the double space like a single one. Splitting at commas keeps the empty piece between the two commas. The word list has three items.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'sentence = "  learn python fast "\nprint(sentence.split())',
-          [
-            "['', 'learn', 'python', 'fast', '']",
-            "['learn python fast']",
-            "['learn', 'python', 'fast']",
-            "['  learn', 'python', 'fast ']",
-          ],
-          2,
+          "['learn', 'python', 'fast']",
           'split() with no argument splits at whitespace and ignores the spaces at both ends, so only the three words remain.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print("a, b,c".split(","))',
-          [
-            "['a', 'b', 'c']",
-            "['a', ' b', 'c']",
-            "['a, b,c']",
-            "['a', ',', 'b', ',', 'c']",
-          ],
-          1,
+          "['a', ' b', 'c']",
           'Splitting at "," cuts exactly at each comma, so the space after the first comma stays at the start of " b". The commas themselves are removed.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'csv = "4,8,15"\nparts = csv.split(",")\nprint(len(parts))\nprint(parts)',
-          [
-            '3\n[4, 8, 15]',
-            "6\n['4', '8', '15']",
-            "1\n['4,8,15']",
-            "3\n['4', '8', '15']",
-          ],
-          3,
+          "3\n['4', '8', '15']",
           'There are three pieces, and split always produces strings, so each number is shown in quotes.',
         ),
         choose(
@@ -1932,11 +1784,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'split is called on the text and given the separator. split() with no argument looks for whitespace, and replace returns a string, not a list.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(len("to be or not".split()))',
-          ['12', '4', '3', '9'],
-          1,
+          '4',
           'split() produces a list of four words, and len counts the items, not the characters.',
         ),
       ],
@@ -1954,23 +1805,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each separator goes only between items. In the second line, join builds make-it-work first, and upper() is called on that result.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print("+".join(["1", "2", "3"]))',
-          ['6', '1+2+3', '+1+2+3+', '123'],
-          1,
+          '1+2+3',
           'join places the separator between the strings and does no arithmetic; nothing is added at the ends.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'title = "the quick fox"\nprint("_".join(title.split()).upper())',
-          [
-            'the_quick_fox',
-            'THE QUICK FOX',
-            '_THE_QUICK_FOX_',
-            'THE_QUICK_FOX',
-          ],
-          3,
+          'THE_QUICK_FOX',
           'split makes three words, join links them with underscores, and upper() turns the joined result to capitals.',
         ),
         choose(
@@ -1984,11 +1828,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'join can glue only strings; the numbers would need str() first. Separators of any length are allowed.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'h = 9\nm = 5\nprint(":".join([str(h), str(m)]))',
-          ['9:5', '14', '9:05', ':9:5:'],
-          0,
+          '9:5',
           'str() turns each number into text, and join puts one colon between them without padding any digits.',
         ),
       ],
@@ -2008,25 +1851,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Index 0 is Mercury and index 2 is the third planet, Earth. In "python", index 3 is the fourth character, h.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'days = ["Mon", "Tue", "Wed", "Thu"]\nprint(days[1])',
-          ['Mon', 'Tue', 'Wed', "['Tue']"],
-          1,
+          'Tue',
           'Index 1 is the second item, Tue. Indexing returns the item, not a list.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'code = "LAMBDA"\nprint(code[0] + code[3])',
-          ['LM', 'AD', 'LB', 'L B'],
-          2,
+          'LB',
           'code[0] is L and code[3] is the fourth character, B; + joins them with no space.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'scores = [12, 30, 7, 25]\nprint(scores[1] + scores[2])',
-          ['37', '42', '32', '3'],
-          0,
+          '37',
           'scores[1] is 30 and scores[2] is 7, the second and third items, so the sum is 37.',
         ),
         choose(
@@ -2049,18 +1889,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '-1 is the last name, Dev. Counting back three from the end reaches Ben. In "river", -2 is the second-last character, e.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'steps = ["wash", "rinse", "dry", "fold"]\nprint(steps[-2])',
-          ['rinse', 'dry', 'fold', 'wash'],
-          1,
+          'dry',
           '-1 is fold, so -2 is the item just before it, dry.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'word = "planet"\nprint(word[-1] + word[0])',
-          ['tp', 'pt', 'et', 'te'],
-          0,
+          'tp',
           'word[-1] is the last character t and word[0] is p, joined in that order.',
         ),
         choose(
@@ -2069,11 +1907,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'log[9] is the last of 10 items, and -1 always selects the last item.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'temps = [18, 21, 19, 24, 22]\nprint(temps[-3] + temps[1])',
-          ['45', '42', '37', '40'],
-          3,
+          '40',
           'temps[-3] is third from the end, 19, and temps[1] is 21, so the sum is 40.',
         ),
       ],
@@ -2102,18 +1939,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The four items are at indices 0 to 3, so index 4 is out of range and raises IndexError.',
           'letters = ["x", "y", "z", "w"]\nprint(letters[4])',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'word = "orbit"\nprint(word[len(word) - 1])',
-          ['i', '5', 't', '4'],
-          2,
+          't',
           'len(word) is 5, so the index is 4, the last character t.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'nums = [3, 6, 9, 12, 15]\nprint(len(nums) - 1)\nprint(nums[len(nums) - 2])',
-          ['4\n12', '5\n15', '4\n15', '5\n12'],
-          0,
+          '4\n12',
           'Five items give a last index of 4. Index 5 - 2 = 3 holds 12.',
         ),
         choose(
@@ -2140,25 +1975,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Index 0 is the first item and -1 the last. The tuple holds three items, and printing it shows the whole group.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'size = (1920, 1080)\nprint(size[1])',
-          ['1920', '1080', '(1920, 1080)', '(1080,)'],
-          1,
+          '1080',
           'Index 1 is the second item, 1080, and indexing returns the item itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'rgb = (200, 50, 10)\nprint(rgb[0] + rgb[-1])',
-          ['250', '60', '210', '260'],
-          2,
+          '210',
           'rgb[0] is 200 and rgb[-1] is the last item, 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(len(("red", "green", "blue", "red")))',
-          ['4', '3', '15', '1'],
-          0,
+          '4',
           'len() counts items, including the repeated "red", so there are four.',
         ),
         choose(
@@ -2181,25 +2013,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'single is a tuple with one item. plain has no comma, so it is the string tea, whose length is its 3 characters.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'box = (7,)\nprint(box)',
-          ['7', '(7)', '(7,)', '[7]'],
-          2,
+          '(7,)',
           'The trailing comma makes a one-item tuple, and Python prints it with the comma.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = (4)\nprint(a * 3)',
-          ['(4, 4, 4)', '12', '(12,)', '444'],
-          1,
+          '12',
           'Without a comma, (4) is just the number 4, so a * 3 is 12.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'word = ("hello",)\nprint(len(word))',
-          ['1', '5', '2', '6'],
-          0,
+          '1',
           'The comma makes a tuple with one item, the string hello, so len() is 1.',
         ),
         choose(
@@ -2235,11 +2064,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Tuples cannot be changed, so assigning to size[1] raises TypeError before anything is printed.',
           'size = (3, 4)\nsize[1] = 10\nprint(size)',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'pos = (2, 8)\npos = (pos[0] + 1, pos[1])\nprint(pos)',
-          ['(3, 8)', '(2, 8)', '(3, 9)', '(2, 8, 3)'],
-          0,
+          '(3, 8)',
           'The right side builds a new tuple from the old values, and pos is reassigned to it.',
         ),
         choose(
@@ -2280,18 +2108,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The years tie, so 3 < 11 decides the first result; 15 and 2 are never compared. In the second, 7 ties and 5 > 9 is False.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print((1, 50) < (2, 0))\nprint((4, 2) < (4, 1))',
-          ['True\nFalse', 'False\nFalse', 'True\nTrue', 'False\nTrue'],
-          0,
+          'True\nFalse',
           '1 < 2 settles the first comparison. In the second the 4s tie, and 2 < 1 is False.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = (3, 9, 1)\nb = (3, 2, 8)\nprint(a > b)\nprint(a == b)',
-          ['False\nFalse', 'True\nFalse', 'False\nTrue', 'True\nTrue'],
-          1,
+          'True\nFalse',
           'The 3s tie, then 9 > 2 decides that a > b. The tuples differ, so == is False even though their sums match.',
         ),
         choose(
@@ -2328,18 +2154,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'city is Oslo on the first pass, Quito on the second, and Pune on the third. The body prints once per city.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for n in [3, 1, 2]:\n    print(n * 10)',
-          ['10\n20\n30', '60', '30\n10\n20', '30'],
-          2,
+          '30\n10\n20',
           'The loop keeps the list order and runs the body once per item, so each product gets its own line.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for word in ["up", "down"]:\n    print(word + "!")',
-          ['updown!', 'up!\ndown!', 'down!', 'up\ndown\n!'],
-          1,
+          'up!\ndown!',
           'The body runs for up and then for down, adding ! to each word on its own line.',
         ),
         choose(
@@ -2353,11 +2177,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The loop variable holds one item at a time, so on the second pass it is the second item.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for price in [4, 9]:\n    print(price, price * 2)',
-          ['8\n18', '4 9\n8 18', '4\n9\n8\n18', '4 8\n9 18'],
-          3,
+          '4 8\n9 18',
           'Each pass prints one line holding the price and its double.',
         ),
       ],
@@ -2375,16 +2198,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both indented lines run for mix, then both run for bake. Serve is not indented, so it prints once at the end.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for c in ["red", "blue"]:\n    print(c)\nprint("end")',
-          [
-            'red\nend\nblue\nend',
-            'red\nblue\nend',
-            'red\nblue',
-            'end\nred\nblue',
-          ],
-          1,
+          'red\nblue\nend',
           'print("end") is not indented, so it runs once, after the loop.',
         ),
         predictOutput(
@@ -2427,30 +2244,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'shouts starts empty. Each pass appends one new string to the end, so the results keep the order of names.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'squares = []\nfor n in [3, 1, 4]:\n    squares.append(n * n)\nprint(squares)',
-          ['[9, 1, 16]', '[1, 9, 16]', '[16, 1, 9]', '[3, 1, 4, 9, 1, 16]'],
-          0,
+          '[9, 1, 16]',
           'append adds each square to the end, so the results follow the loop order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'out = []\nfor w in ["hi", "yo"]:\n    out.append(w)\n    out.append(w)\nprint(out)',
-          [
-            "['hi', 'yo']",
-            "['hi', 'yo', 'hi', 'yo']",
-            "['hi', 'hi', 'yo', 'yo']",
-            "['hihi', 'yoyo']",
-          ],
-          2,
+          "['hi', 'hi', 'yo', 'yo']",
           'Both appends run for hi before the loop moves on to yo, and each adds a separate item.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for x in [5, 6]:\n    result = []\n    result.append(x)\nprint(result)',
-          ['[5, 6]', '[6]', '[5]', '[]'],
-          1,
+          '[6]',
           'result is reset to an empty list on every pass, so after the loop it holds only the last value.',
         ),
         choose(
@@ -2482,25 +2291,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first name gets the first item and the second name the second. 4, 5 is packed into a tuple and unpacked into w and h.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'size = (30, 12)\nwidth, height = size\nprint(height)',
-          ['30', '12', '(30, 12)', '(12,)'],
-          1,
+          '12',
           'The second name receives the second item, the number 12 itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'name, age, city = ["Rui", 41, "Porto"]\nprint(city, name)',
-          ['Porto Rui', 'Rui Porto', 'Rui 41', '41 Porto'],
-          0,
+          'Porto Rui',
           'The names take the items in order, so city is Porto and name is Rui; print() shows them in the order asked.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a, b = 3, 8\nprint(b - a)',
-          ['-5', '0', '5', '11'],
-          2,
+          '5',
           'a is 3 and b is 8, so b - a is 5.',
         ),
         choose(
@@ -2552,11 +2358,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Three names need three items, but (1, 2) has only two. The inner tuple in the third line counts as one item.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'left, right = [(1, 2), (3, 4)]\nprint(right)',
-          ['(1, 2)', '(3, 4)', '2', '4'],
-          1,
+          '(3, 4)',
           'The list has two items, each a tuple, so right receives the whole second tuple.',
         ),
         choose(
@@ -2586,25 +2391,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The right side becomes ("plate", "cup") before any name changes, and that tuple is unpacked into left and right.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x = 10\ny = 20\nx = y\ny = x\nprint(x, y)',
-          ['20 10', '20 20', '10 10', '10 20'],
-          1,
+          '20 20',
           'x = y makes x 20, and then y = x copies that 20 back; the old 10 is lost.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a, b = 3, 7\na, b = b, a + b\nprint(a, b)',
-          ['7 10', '7 14', '10 7', '3 10'],
-          0,
+          '7 10',
           'The right side uses the old values: b is 7 and a + b is 10, then both names are assigned.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'p, q, r = "x", "y", "z"\np, q, r = q, r, p\nprint(p, q, r)',
-          ['z x y', 'x y z', 'y z y', 'y z x'],
-          3,
+          'y z x',
           'The right side is built first as ("y", "z", "x"), so p gets y, q gets z, and r gets the old p, x.',
         ),
         choose(
@@ -2632,30 +2434,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'On the first pass item is pens and count is 12; on the second, pads and 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for w, h in [(2, 3), (4, 5)]:\n    print(w + h)',
-          ['5\n9', '6\n8', '14', '2\n3\n4\n5'],
-          0,
+          '5\n9',
           'Each tuple is unpacked separately: 2 + 3, then 4 + 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'moves = [("up", 2), ("left", 1)]\nfor direction, steps in moves:\n    print(steps, direction)',
-          [
-            'up 2\nleft 1',
-            '2 up\n1 left',
-            '2 1\nup left',
-            "('up', 2)\n('left', 1)",
-          ],
-          1,
+          '2 up\n1 left',
           'Each pair is split into direction and steps, and print() shows steps first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'pairs = [("a", 1), ("b", 2)]\nletters = []\nfor letter, number in pairs:\n    letters.append(letter)\nprint(letters)',
-          ["[('a', 1), ('b', 2)]", "['a', 1, 'b', 2]", '[1, 2]', "['a', 'b']"],
-          3,
+          "['a', 'b']",
           'Only the first part of each pair, letter, is appended.',
         ),
         choose(
@@ -2694,28 +2488,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'range(4) gives 0, 1, 2, 3, and each is doubled.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(list(range(6)))',
-          [
-            '[1, 2, 3, 4, 5, 6]',
-            '[0, 1, 2, 3, 4, 5, 6]',
-            '[0, 1, 2, 3, 4, 5]',
-            '[6]',
-          ],
-          2,
+          '[0, 1, 2, 3, 4, 5]',
           'The range starts at 0 and excludes 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'words = []\nfor i in range(3):\n    words.append("ha")\nprint(words)',
-          [
-            "['ha', 'ha']",
-            "['ha', 'ha', 'ha']",
-            "['ha', 'ha', 'ha', 'ha']",
-            '[0, 1, 2]',
-          ],
-          1,
+          "['ha', 'ha', 'ha']",
           'range(3) gives three numbers, so the body appends ha three times.',
         ),
         choose(
@@ -2738,11 +2520,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The start 2021 is included and the stop 2025 is not.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(list(range(5, 9)))',
-          ['[5, 6, 7, 8, 9]', '[6, 7, 8]', '[5, 6, 7, 8]', '[6, 7, 8, 9]'],
-          2,
+          '[5, 6, 7, 8]',
           'The start 5 is included and the stop 9 is excluded.',
         ),
         choose(
@@ -2751,18 +2532,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Start at 1, and use 11 as the stop so that 10 is the last number.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(list(range(4, 4)))',
-          ['[4]', '[]', '[0, 1, 2, 3]', '[4, 4]'],
-          1,
+          '[]',
           'The range must stop before 4 but starts at 4, so it is empty.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for n in range(3, 6):\n    print(n * n)',
-          ['9\n16\n25', '9\n16\n25\n36', '16\n25\n36', '0\n1\n4'],
-          0,
+          '9\n16\n25',
           'n takes 3, 4, and 5, and each is squared.',
         ),
       ],
@@ -2780,18 +2559,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Adding 5 from 0 stops before 20. Subtracting 3 from 10 gives 7, 4, 1, and the next value, -2, is past the stop 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(list(range(1, 10, 3)))',
-          ['[1, 4, 7, 10]', '[1, 4, 7]', '[3, 6, 9]', '[1, 3, 5, 7, 9]'],
-          1,
+          '[1, 4, 7]',
           'Start at 1 and add 3: 1, 4, 7. The next value, 10, is not below the stop.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for n in range(6, 0, -2):\n    print(n)',
-          ['6\n4\n2', '6\n4\n2\n0', '4\n2\n0', '6\n5\n4\n3\n2\n1'],
-          0,
+          '6\n4\n2',
           'Counting down by 2 from 6 gives 6, 4, 2, and the stop 0 is excluded.',
         ),
         choose(
@@ -2805,11 +2582,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Start at 5, step by -1, and stop before 0 so that 1 is included.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(list(range(5, 1)))',
-          ['[5, 4, 3, 2]', '[5, 4, 3, 2, 1]', '[]', '[1, 2, 3, 4]'],
-          2,
+          '[]',
           'The default step is +1, and counting up from 5 never gets below 1, so the range is empty.',
         ),
       ],
@@ -2830,35 +2606,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first pair is (0, "email"), so i is 0 and task is email; the positions then go up by one.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for i, name in enumerate(["Ola", "Pim"]):\n    print(name, i)',
-          [
-            'Ola 1\nPim 2',
-            'Ola 0\nPim 1',
-            '0 Ola\n1 Pim',
-            "(0, 'Ola')\n(1, 'Pim')",
-          ],
-          1,
+          'Ola 0\nPim 1',
           'Positions start at 0, and print() shows name first because it comes first in the call.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'pairs = list(enumerate([7, 8, 9]))\nprint(pairs[2])',
-          ['(2, 9)', '(9, 2)', '(3, 9)', '9'],
-          0,
+          '(2, 9)',
           'The pairs are (0, 7), (1, 8), (2, 9). Index 2 is the third pair, with the position first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'labels = []\nfor i, w in enumerate(["cat", "dog"]):\n    labels.append(f"{i}:{w}")\nprint(labels)',
-          [
-            "['1:cat', '2:dog']",
-            "['cat:0', 'dog:1']",
-            "['0:cat', '0:dog']",
-            "['0:cat', '1:dog']",
-          ],
-          3,
+          "['0:cat', '1:dog']",
           'i is 0 for cat and 1 for dog, and the f-string puts the position before the word.',
         ),
         choose(
@@ -2881,23 +2644,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Counting starts at 1, so the first runner is paired with 1, but no runner is skipped.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for n, c in enumerate(["red", "teal"], 1):\n    print(n, c)',
-          ['0 red\n1 teal', '1 red\n2 teal', '1 teal', '2 red\n3 teal'],
-          1,
+          '1 red\n2 teal',
           'The numbering starts at 1, and every item is still visited, starting with red.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(list(enumerate(["a", "b"], 10)))',
-          [
-            "[(0, 'a'), (1, 'b')]",
-            "[(10, 'a'), (20, 'b')]",
-            "[(11, 'a'), (12, 'b')]",
-            "[(10, 'a'), (11, 'b')]",
-          ],
-          3,
+          "[(10, 'a'), (11, 'b')]",
           'Counting starts at 10 and still goes up by one per item.',
         ),
         choose(
@@ -2911,11 +2667,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The list comes first and the starting number second, and the number is the first part of each pair.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for i, v in enumerate([40, 50], 5):\n    print(i + v)',
-          ['45\n56', '40\n51', '45\n55', '5\n6'],
-          0,
+          '45\n56',
           'The positions are 5 and 6, so the sums are 5 + 40 and 6 + 50.',
         ),
       ],
@@ -2933,30 +2688,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'zip pairs Rome with 24 and Kyiv with 17, the values at matching positions.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for a, b in zip([2, 3], [10, 100]):\n    print(a * b)',
-          ['20\n300', '200\n30', '20\n200\n30\n300', '320'],
-          0,
+          '20\n300',
           'zip pairs 2 with 10 and 3 with 100, one pair per position.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(list(zip(["x", "y"], [True, False])))',
-          [
-            "[('x', 'y'), (True, False)]",
-            "['x', True, 'y', False]",
-            "[('x', True), ('y', False)]",
-            "[('x', False), ('y', True)]",
-          ],
-          2,
+          "[('x', True), ('y', False)]",
           'Each pair takes one item from each list at the same position.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'totals = []\nfor a, b in zip([1, 2], [30, 40]):\n    totals.append(a + b)\nprint(totals)',
-          ['[3, 70]', '[31, 41, 32, 42]', '[73]', '[31, 42]'],
-          3,
+          '[31, 42]',
           'The pairs are (1, 30) and (2, 40), so the sums are 31 and 42.',
         ),
         choose(
@@ -2985,23 +2732,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'seats has only two items, so Kim gets no pair. In the loop, names is the shorter input, so only three numbers are used.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(list(zip([5, 6, 7], [8])))',
-          [
-            '[(5, 8), (6, None), (7, None)]',
-            '[(5, 8)]',
-            '[(5, 6, 7), (8,)]',
-            '[(5, 8), (6, 8), (7, 8)]',
-          ],
-          1,
+          '[(5, 8)]',
           'The second list has one item, so zip makes one pair and stops.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'pairs = list(zip(["a", "b", "c"], [1, 2]))\nprint(len(pairs))',
-          ['3', '5', '2', '6'],
-          2,
+          '2',
           'The shorter list has two items, so there are two pairs.',
         ),
         choose(
@@ -3010,16 +2750,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'zip stops when the shorter input, with 5 items, runs out.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for n, w in zip(range(1, 10), ["go", "stop"]):\n    print(n, w)',
-          [
-            '0 go\n1 stop',
-            '1 go\n2 stop\n3 None',
-            'go 1\nstop 2',
-            '1 go\n2 stop',
-          ],
-          3,
+          '1 go\n2 stop',
           'The range starts at 1, and the two-word list ends the pairing after two pairs.',
         ),
       ],
@@ -3040,18 +2774,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'total goes from 0 to 25, then 65, then 80. It is printed once, after the loop.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'total = 0\nfor x in [4, 6, 1]:\n    total += x\n    print(total)',
-          ['4\n10\n11', '11', '4\n6\n1', '11\n11\n11'],
-          0,
+          '4\n10\n11',
           'The print is inside the loop, so it shows the running total after each update.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for n in [3, 5, 2]:\n    total = 0\n    total += n\nprint(total)',
-          ['10', '2', '0', '3'],
-          1,
+          '2',
           'total is reset to 0 on every pass, so after the loop it holds only the last item, 2.',
         ),
         choose(
@@ -3065,11 +2797,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           '+= adds to the current value and stores the result back in the same name.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'letters = 0\nfor word in ["sun", "moon", "stars"]:\n    letters += len(word)\nprint(letters)',
-          ['3', '5', '12', '0'],
-          2,
+          '12',
           'Each pass adds the length of one word: 3 + 4 + 5 is 12.',
         ),
       ],
@@ -3087,25 +2818,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '27, 31, and 29 pass the test, so hot_days is increased three times. 18 and 22 change nothing.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'big = 0\nfor price in [12, 3, 40, 7]:\n    if price > 10:\n        big += price\nprint(big)',
-          ['2', '62', '52', '59'],
-          2,
+          '52',
           'Only 12 and 40 are above 10, and their values are added: 52.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'evens = 0\nfor n in [4, 7, 10, 13, 16]:\n    if n % 2 == 0:\n        evens += 1\nprint(evens)',
-          ['3', '2', '30', '5'],
-          0,
+          '3',
           '4, 10, and 16 are even, and each match adds 1, not its value.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'passed = 0\nfailed = 0\nfor s in [55, 70, 90, 40, 60]:\n    if s >= 60:\n        passed += 1\n    else:\n        failed += 1\nprint(passed, failed)',
-          ['2 3', '3 2', '220 95', '5 2'],
-          1,
+          '3 2',
           '70, 90, and 60 meet s >= 60, including the boundary 60; 55 and 40 go to the else branch.',
         ),
         choose(
@@ -3134,25 +2862,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'product goes 2, 6, 24. 4096 // 10 drops the last digit, giving 409, and 409 % 7 leaves the remainder 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'result = 0\nfor x in [5, 2, 3]:\n    result *= x\nprint(result)',
-          ['30', '0', '10', '1'],
-          1,
+          '0',
           'result starts at 0, and 0 times any number is still 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 7351\nn //= 10\nn //= 10\nprint(n)',
-          ['735', '73.51', '73', '51'],
-          2,
+          '73',
           'Each //= 10 drops the last digit: 7351 becomes 735, then 73.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'value = 50\nvalue %= 8\nprint(value)',
-          ['6', '6.25', '42', '2'],
-          3,
+          '2',
           'value %= 8 stores the remainder of 50 divided by 8, which is 2.',
         ),
         choose(
@@ -3184,18 +2909,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'n is 1, 3, then 9, and each passes n < 20. After the update to 27 the check fails, so the loop ends.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x = 10\nwhile x < 5:\n    print(x)\n    x = x + 1\nprint("done")',
-          ['10\ndone', 'done', '10\n11\n12\n13\n14\ndone', '5\ndone'],
-          1,
+          'done',
           '10 < 5 is False at the first check, so the body never runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'k = 2\nwhile k <= 8:\n    print(k)\n    k = k + 3',
-          ['2\n5', '5\n8\n11', '2\n5\n8', '2\n5\n8\n11'],
-          2,
+          '2\n5\n8',
           'k is printed before each update. At 11 the check k <= 8 fails, so 11 is never printed.',
         ),
         choose(
@@ -3204,11 +2927,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The condition is checked before the first pass, so a False condition skips the body entirely.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'word = "a"\nwhile len(word) < 4:\n    word = word + "b"\nprint(word)',
-          ['abbbb', 'abb', 'ab', 'abbb'],
-          3,
+          'abbb',
           'The loop adds b until the length reaches 4: ab, abb, abbb.',
         ),
       ],
@@ -3238,11 +2960,10 @@ export const knowledgePoints: KnowledgePointModule = {
           't starts above 0 and increases, so t > 0 never becomes False.',
           't = 5\nwhile t > 0:\n    print(t)\n    t += 1',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'level = 0\nwhile level < 10:\n    level += 4\nprint(level)',
-          ['8', '10', '16', '12'],
-          3,
+          '12',
           'level goes 4, 8, 12. At 8 the check still passes, so one more update makes it 12.',
         ),
         choose(
@@ -3256,11 +2977,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           '-= subtracts from the current value and stores the result in the same name.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 20\nwhile n > 3:\n    n -= 6\nprint(n)',
-          ['2', '8', '-4', '3'],
-          0,
+          '2',
           'n goes 14, 8, 2. At 2 the check n > 3 fails, so the loop stops there.',
         ),
       ],
@@ -3278,25 +2998,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'height doubles to 2, 4, 8, 16, 32, 64. That is six passes, and 64 is the first value not below 50.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 345\ndigits = 0\nwhile n > 0:\n    n = n // 10\n    digits += 1\nprint(digits)',
-          ['3', '345', '2', '4'],
-          0,
+          '3',
           'n goes 34, 3, 0, one pass per digit, so the counter reaches 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'total = 0\nn = 1\nwhile total < 10:\n    total += n\n    n += 1\nprint(n, total)',
-          ['4 10', '5 10', '5 15', '4 6'],
-          1,
+          '5 10',
           'total goes 1, 3, 6, 10 while n goes 2, 3, 4, 5. At 10 the loop stops.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'text = ""\ncount = 3\nwhile count > 0:\n    text = text + str(count)\n    count -= 1\nprint(text)',
-          ['123', '3210', '6', '321'],
-          3,
+          '321',
           'The digits are joined as text in the order 3, 2, 1, and the loop stops before adding 0.',
         ),
         choose(
@@ -3328,18 +3045,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'plan and build are printed. At STOP, break ends the loop, so test is never visited, and the line after the loop runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for n in [3, 8, 2, 9]:\n    if n > 5:\n        break\n    print(n)\nprint("end")',
-          ['3\n2\nend', '3\nend', '3', '3\n8\nend'],
-          1,
+          '3\nend',
           '8 triggers break before it is printed, so 2 and 9 are never visited; the line after the loop still runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'first_big = 0\nfor n in [4, 12, 7, 30]:\n    if n > 10:\n        first_big = n\n        break\nprint(first_big)',
-          ['30', '0', '12', '4'],
-          2,
+          '12',
           '12 is the first value above 10. break stops the loop there, so 30 is never checked.',
         ),
         choose(
@@ -3353,11 +3068,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'break leaves the loop completely; the program goes on after it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 0\nwhile n < 10:\n    n += 3\n    if n == 6:\n        break\nprint(n)',
-          ['9', '12', '3', '6'],
-          3,
+          '6',
           'n becomes 3, then 6, and break ends the loop while n is 6.',
         ),
       ],
@@ -3374,11 +3088,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'For each -1, continue skips the print. The loop still reaches 85 and 90.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for x in [1, 2, 3, 4, 5]:\n    if x % 2 == 0:\n        continue\n    print(x)',
-          ['1\n3\n5', '2\n4', '1', '1\n2\n3\n4\n5'],
-          0,
+          '1\n3\n5',
           'Even numbers hit continue and skip the print; the loop goes on to the next number.',
         ),
         predictOutput(
@@ -3422,11 +3135,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'n doubles to 2, 4, 8, 16, 32, 64. The check after each update first passes at 64, and break ends the loop.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'count = 0\nwhile True:\n    count += 1\n    if count == 4:\n        break\n    print(count)',
-          ['1\n2\n3\n4', '1\n2\n3', '0\n1\n2\n3', '4'],
-          1,
+          '1\n2\n3',
           'When count reaches 4, break runs before the print, so 4 is never printed.',
         ),
         choose(
@@ -3440,11 +3152,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The condition True never changes, so only break can end the loop.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'total = 100\nwhile True:\n    total -= 30\n    if total < 0:\n        break\nprint(total)',
-          ['-20', '10', '-50', '0'],
-          0,
+          '-20',
           'total goes 70, 40, 10, -20. The first value below 0 triggers break, and it is printed.',
         ),
         choose(
@@ -3474,18 +3185,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'break ends the seat loop at 2, but the row loop goes on: it prints next row and then starts again with B.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for a in [1, 2]:\n    for b in [10, 20, 30]:\n        if b == 20:\n            break\n        print(a, b)',
-          ['1 10', '1 10\n2 10', '1 10\n1 30\n2 10\n2 30', '1 10\n2 10\n2 20'],
-          1,
+          '1 10\n2 10',
           'break ends only the inner loop at 20; the outer loop still moves on to 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'for x in ["p", "q"]:\n    for y in [1, 2]:\n        if y == 1:\n            continue\n        print(x, y)',
-          ['p 2', 'p 1\nq 1', 'p 2\nq 2', 'q 2'],
-          2,
+          'p 2\nq 2',
           'continue skips y = 1 in the inner loop each time, and the outer loop runs for both p and q.',
         ),
         choose(
@@ -3529,23 +3238,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Dee replaces Ben at index 1 without changing the length; append then adds Eli as a fourth item.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'nums = [5, 10, 15]\nnums[0] = nums[2]\nprint(nums)',
-          ['[15, 10, 5]', '[15, 10, 15]', '[5, 10, 5]', '[15, 10]'],
-          1,
+          '[15, 10, 15]',
           'The value at index 2 is copied into index 0; index 2 itself does not change.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'letters = ["a", "b", "c"]\nletters[-1] = "z"\nletters.append("y")\nprint(letters)',
-          [
-            "['a', 'b', 'c', 'z', 'y']",
-            "['z', 'b', 'c', 'y']",
-            "['a', 'b', 'z', 'y']",
-            "['a', 'b', 'y', 'z']",
-          ],
-          2,
+          "['a', 'b', 'z', 'y']",
           'z replaces the last item c, and then y is added after it.',
         ),
         choose(
@@ -3586,18 +3288,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'pop() takes blue off the end and returns it into top; stack keeps the remaining two items.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'cards = [7, 2, 9]\nlast = cards.pop()\nprint(last, len(cards))',
-          ['9 2', '7 2', '9 3', '2 2'],
-          0,
+          '9 2',
           'pop() returns the last item, 9, and the list is left with two items.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'q = ["a", "b", "c"]\nq.pop()\nq.pop()\nprint(q)',
-          ["['c']", "['a']", "['a', 'b']", '[]'],
-          1,
+          "['a']",
           'Each pop() removes the current last item: first c, then b.',
         ),
         choose(
@@ -3611,16 +3311,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'pop() both shortens the list and returns the item it removed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'todo = ["wash", "cook"]\ndone = []\ndone.append(todo.pop())\nprint(todo, done)',
-          [
-            "['cook'] ['wash']",
-            "['wash', 'cook'] ['cook']",
-            "[] ['wash', 'cook']",
-            "['wash'] ['cook']",
-          ],
-          3,
+          "['wash'] ['cook']",
           'pop() removes cook from the end of todo, and append adds it to done.',
         ),
       ],
@@ -3638,23 +3332,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'same is the same list as original, so the append shows up in original. separate is its own list, so its change stays there.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = [1, 2]\nb = a\nb[0] = 5\nprint(a)',
-          ['[1, 2]', '[5, 2]', '[5, 1, 2]', '[1, 5]'],
-          1,
+          '[5, 2]',
           'a and b name the same list, so changing it through b also changes what a shows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = [3, 4]\nb = a.copy()\nb.append(5)\nprint(a, b)',
-          [
-            '[3, 4] [3, 4, 5]',
-            '[3, 4, 5] [3, 4, 5]',
-            '[3, 4] [5]',
-            '[3, 4, 5] [3, 4]',
-          ],
-          0,
+          '[3, 4] [3, 4, 5]',
           'copy() makes a separate list holding the same items, so only b gains 5.',
         ),
         choose(
@@ -3668,16 +3355,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'copy() creates a new list; plain assignment only adds another name for the same one.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x = [0]\ny = x\ny.append(1)\nz = y.copy()\nz.append(2)\nprint(x)\nprint(z)',
-          [
-            '[0]\n[0, 1, 2]',
-            '[0, 1, 2]\n[0, 1, 2]',
-            '[0, 1]\n[0, 1, 2]',
-            '[0]\n[0, 2]',
-          ],
-          2,
+          '[0, 1]\n[0, 1, 2]',
           'x and y share a list, so x gets the 1. z is a copy made after that, so only z gets the 2.',
         ),
       ],
@@ -3698,25 +3379,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each one-item list is repeated end to end, so the result has as many items as the number after *.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print([7] * 3)',
-          ['[21]', '[7, 7, 7]', '[7, 3]', '[777]'],
-          1,
+          '[7, 7, 7]',
           'Multiplying a list repeats its items; it does not multiply the number inside.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'slots = [None] * 2\nprint(slots)',
-          ['[None, None]', '[None]', '[]', '[0, 0]'],
-          0,
+          '[None, None]',
           'None is a value like any other, so the list holds two copies of it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(len([1, 2] * 3))',
-          ['3', '2', '6', '9'],
-          2,
+          '6',
           'The two-item list is repeated three times end to end, giving six items.',
         ),
         choose(
@@ -3741,30 +3419,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'deck is a new list with front’s items followed by back’s, and front is unchanged. The last line builds two zeros and three ones, then joins them.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = [1, 2]\nb = [3]\nprint(b + a)',
-          ['[1, 2, 3]', '[3, 1, 2]', '[4, 5]', '[6]'],
-          1,
+          '[3, 1, 2]',
           '+ joins the lists in the order written, so b’s item comes first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'row = ["#"] + ["."] * 3 + ["#"]\nprint(row)',
-          [
-            "['#', '.', '#', '.', '#', '.', '#']",
-            "['#', '...', '#']",
-            "['#', '.', '.', '.', '#']",
-            "['#', '.', '#']",
-          ],
-          2,
+          "['#', '.', '.', '.', '#']",
           'Repetition happens first, making three dots, and then the three lists are joined.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = [5]\nb = a + [6]\nprint(a, b)',
-          ['[5] [5, 6]', '[5, 6] [5, 6]', '[5] [6]', '[5] [11]'],
-          0,
+          '[5] [5, 6]',
           '+ builds a new list for b and leaves a unchanged.',
         ),
         choose(
@@ -3788,11 +3458,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only indexes 2 and 0 of seen change. Both updates to hits go to index 1, which reaches 7 while the others stay 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'marks = [0] * 3\nmarks[0] += 1\nmarks[2] += 4\nmarks[0] += 1\nprint(marks)',
-          ['[2, 0, 4]', '[1, 0, 4]', '[6, 6, 6]', '[2, 4, 0]'],
-          0,
+          '[2, 0, 4]',
           'Index 0 is increased twice and index 2 once; the slots change independently.',
         ),
         predictOutput(
@@ -3814,11 +3483,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Six slots have indexes 0 to 5, so the last slot is board[5].',
           'board = [0] * 6',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'bins = [0] * 2\nfor n in [3, 8, 5, 10, 1]:\n    if n % 2 == 0:\n        bins[0] += 1\n    else:\n        bins[1] += 1\nprint(bins)',
-          ['[3, 2]', '[18, 9]', '[5, 5]', '[2, 3]'],
-          3,
+          '[2, 3]',
           'Slot 0 counts the even numbers 8 and 10; slot 1 counts the odd numbers 3, 5, and 1.',
         ),
       ],
@@ -3854,23 +3522,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Five slots have indexes 0 to 4, so counts[5] does not exist and the list does not grow.',
           'counts = [0] * 5\nfor n in [1, 5, 2]:\n    counts[n] += 1',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'days = [1, 3, 3, 0, 3]\ntally = [0] * 4\nfor d in days:\n    tally[d] += 1\nprint(tally[3], tally[2])',
-          ['0 3', '3 1', '2 0', '3 0'],
-          3,
+          '3 0',
           'The value 3 appears three times, and no day has the value 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 6\nslots = [0] * (n + 1)\nslots[n] = 1\nprint(len(slots))\nprint(slots)',
-          [
-            '6\n[0, 0, 0, 0, 0, 1]',
-            '7\n[0, 0, 0, 0, 0, 1, 0]',
-            '7\n[0, 0, 0, 0, 0, 0, 1]',
-            '6\n[0, 0, 0, 0, 0, 0, 1]',
-          ],
-          2,
+          '7\n[0, 0, 0, 0, 0, 0, 1]',
           'n + 1 is 7 slots, so index 6 exists and is the last slot.',
         ),
       ],
@@ -3891,25 +3552,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'seats[1] is the second row. Index 2 of that row is B3, and -1 of the first row is its last cell, A3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'm = [[4, 7], [1, 9], [3, 5]]\nprint(m[1][0])',
-          ['7', '1', '9', '3'],
-          1,
+          '1',
           'm[1] is the row [1, 9], and index 0 of that row is 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [["a", "b"], ["c", "d"]]\nprint(grid[0])',
-          ["['a', 'c']", 'a', "['a', 'b']", "['a']"],
-          2,
+          "['a', 'b']",
           'One index selects a whole row, the first inner list.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           't = [[2, 4, 6], [8, 10, 12]]\nprint(t[-1][-1] + t[0][1])',
-          ['20', '14', '18', '16'],
-          3,
+          '16',
           't[-1][-1] is the last cell of the last row, 12, and t[0][1] is 4.',
         ),
         choose(
@@ -3938,18 +3596,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'week holds three rows. The second row has three items and the third has one.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'g = [[1, 2, 3, 4], [5, 6, 7, 8]]\nprint(len(g), len(g[1]))',
-          ['4 2', '2 4', '8 4', '2 2'],
-          1,
+          '2 4',
           'g has two rows, and row 1 holds four items.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'rows = [["x"], ["y", "z"], []]\nprint(len(rows))\nprint(len(rows[-1]))',
-          ['3\n2', '2\n0', '3\n0', '3\n1'],
-          2,
+          '3\n0',
           'An empty row still counts as a row, so there are three; that last row has 0 items.',
         ),
         choose(
@@ -3979,28 +3635,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'X goes to row 1, index 2, and O to row 0, index 0. Each assignment changes a single cell.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'g = [[0, 0], [0, 0]]\ng[0][1] = 5\nprint(g)',
-          [
-            '[[0, 0], [5, 0]]',
-            '[[0, 5], [0, 0]]',
-            '[[5, 5], [0, 0]]',
-            '[[0, 5], [0, 5]]',
-          ],
-          1,
+          '[[0, 5], [0, 0]]',
           'Row 0, index 1 is the second cell of the first row; nothing else changes.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'g = [[1, 2], [3, 4]]\ng[1] = [9]\nprint(g)',
-          [
-            '[[1, 2], [9, 4]]',
-            '[[1, 9], [3, 9]]',
-            '[[1, 2], [9]]',
-            '[[1, 2], [3, 9]]',
-          ],
-          2,
+          '[[1, 2], [9]]',
           'With one index, the whole second row is replaced by the new list [9].',
         ),
         choose(
@@ -4014,16 +3658,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The first row is index 0, and its third cell is index 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'g = [[1, 2], [3, 4]]\nrow = g[0]\nrow[1] = 7\nprint(g)',
-          [
-            '[[1, 7], [3, 4]]',
-            '[[1, 2], [3, 4]]',
-            '[[7, 2], [3, 4]]',
-            '[[1, 7], [3, 7]]',
-          ],
-          0,
+          '[[1, 7], [3, 4]]',
           'row and g[0] are the same list, so changing row changes the first row of g.',
         ),
       ],
@@ -4041,16 +3679,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The inner loop finishes the first row before the outer loop prints end of row and moves on to the second row.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'pairs = []\nfor a in ["x", "y"]:\n    for b in [1, 2]:\n        pairs.append(a + str(b))\nprint(pairs)',
-          [
-            "['x1', 'x2', 'y1', 'y2']",
-            "['x1', 'y1', 'x2', 'y2']",
-            "['x1', 'y2']",
-            "['x12', 'y12']",
-          ],
-          0,
+          "['x1', 'x2', 'y1', 'y2']",
           'For x the inner loop adds x1 and x2 before the outer loop moves on to y.',
         ),
         predictOutput(
@@ -4066,16 +3698,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The inner loop runs 4 times for each of the 3 rows: 3 × 4 = 12.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'rows = [[5], [6, 7], [8, 9, 10]]\nfor row in rows:\n    out = []\n    for v in row:\n        out.append(v * 2)\n    print(out)',
-          [
-            '[10, 12, 14, 16, 18, 20]',
-            '[16, 18, 20]',
-            '[10]\n[10, 12, 14]\n[10, 12, 14, 16, 18, 20]',
-            '[10]\n[12, 14]\n[16, 18, 20]',
-          ],
-          3,
+          '[10]\n[12, 14]\n[16, 18, 20]',
           'out is reset for each row and printed after that row’s inner loop, so each row gives one line.',
         ),
       ],
@@ -4095,23 +3721,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'days[1:4] takes positions 1, 2 and 3 and stops before 4. In keyboard, positions 3, 4 and 5 hold b, o and a.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'nums = [5, 10, 15, 20, 25, 30]\nprint(nums[2:5])',
-          [
-            '[10, 15, 20]',
-            '[15, 20, 25, 30]',
-            '[15, 20, 25]',
-            '[10, 15, 20, 25]',
-          ],
-          2,
+          '[15, 20, 25]',
           'Positions 2, 3 and 4 hold 15, 20 and 25; position 5 is the stop and is left out.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'city = "barcelona"\nprint(city[3:7])',
-          ['rcel', 'celo', 'celon', 'arce'],
-          1,
+          'celo',
           'Counting from 0, positions 3 to 6 are c, e, l and o. The character at the stop, n, is excluded.',
         ),
         choose(
@@ -4120,11 +3739,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The slice takes positions 2, 3, 4 and 5, which is stop - start = 4 items.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'letters = ["a", "b", "c", "d", "e"]\npart = letters[0:2]\nprint(len(part), part[1])',
-          ['3 c', '2 a', '3 b', '2 b'],
-          3,
+          '2 b',
           'part is ["a", "b"], so it has 2 items and its position 1 holds b.',
         ),
       ],
@@ -4142,25 +3760,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'code[:2] stops before position 2, code[3:] starts at the 1 and runs to the end, and code[-2:] starts two characters from the end.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'scores = [70, 82, 91, 64, 88]\nprint(scores[:2])',
-          ['[70, 82, 91]', '[70, 82]', '[91, 64, 88]', '[82, 91]'],
-          1,
+          '[70, 82]',
           'With no start, the slice begins at position 0 and stops before position 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'name = "Lovelace"\nprint(name[4:])',
-          ['elace', 'Love', 'lace', 'ace'],
-          2,
+          'lace',
           'Position 4 is the second l; with no stop, the slice runs to the end of the string.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'queue = ["ana", "ben", "cy", "dee"]\nprint(queue[-2:])',
-          ["['ana', 'ben']", "['dee']", "['ben', 'cy']", "['cy', 'dee']"],
-          3,
+          "['cy', 'dee']",
           'Position -2 is cy, and leaving out stop keeps everything from there to the end.',
         ),
         choose(
@@ -4184,30 +3799,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'A step of 3 keeps positions 0, 3 and 6. Starting at 1 with step 2 gives the odd positions. Step -1 reads the string backward.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [10, 20, 30, 40, 50, 60]\nprint(values[::2])',
-          ['[10, 30, 50]', '[20, 40, 60]', '[10, 40]', '[10, 20]'],
-          0,
+          '[10, 30, 50]',
           'The slice starts at position 0 and jumps by 2, so it keeps positions 0, 2 and 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'word = "monkey"\nprint(word[1::2])',
-          ['mne', 'oky', 'onk', 'okey'],
-          1,
+          'oky',
           'Starting at position 1 and jumping by 2 visits positions 1, 3 and 5: o, k and y.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'ranks = [3, 1, 4, 1, 5]\nprint(ranks[::-1])',
-          [
-            '[1, 1, 3, 4, 5]',
-            '[5, 4, 3, 1, 1]',
-            '[5, 1, 4, 1, 3]',
-            '[3, 1, 4, 1, 5]',
-          ],
-          2,
+          '[5, 1, 4, 1, 3]',
           'Step -1 only reverses the order of the items; it does not sort them.',
         ),
         choose(
@@ -4231,25 +3838,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'tags has only two items, so tags[:5] gives both and tags[3:] gives none. "hi"[1:10] is just "i", one character.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'top = [9, 7, 4]\nprint(top[1:10])',
-          ['[7, 4]', '[9, 7, 4]', '[7]', 'IndexError: list index out of range'],
-          0,
+          '[7, 4]',
           'The stop 10 is past the end, so the slice simply runs to the end from position 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'word = "cat"\nprint(len(word[1:8]), len(word[5:]))',
-          ['7 0', '2 3', '2 0', '3 3'],
-          2,
+          '2 0',
           'word[1:8] is cut down to "at", and word[5:] starts past the end, so it is empty.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'nums = [4, 8, 15, 16]\nprint(nums[3:1])',
-          ['[16, 15]', '[]', '[8, 15]', '[15, 16]'],
-          1,
+          '[]',
           'With the normal step, a slice cannot move backward from 3 to 1, so it is empty.',
         ),
         choose(
@@ -4280,18 +3884,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The key "Japan" is linked to "Tokyo". A variable holding a key works the same way, so capitals[country] looks up "Peru".',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'stock = {"apples": 12, "pears": 0, "plums": 7}\nprint(stock["plums"])',
-          ['plums', '7', '12', '"plums": 7'],
-          1,
+          '7',
           'stock["plums"] gives the value stored under the key plums, which is 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'codes = {200: "OK", 404: "Not Found", 500: "Error"}\nprint(codes[404])',
-          ['Not Found', '404', "'Not Found'", 'OK'],
-          0,
+          'Not Found',
           '404 is a key here, not a position, and print() shows the string value without quotes.',
         ),
         choose(
@@ -4327,35 +3929,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'tea already exists, so its value becomes 3. bread is new and is added at the end. del removes jam together with its value.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'points = {"red": 4, "blue": 6}\npoints["red"] = 9\nprint(points["red"] + points["blue"])',
-          ['10', '15', '19', '13'],
-          1,
+          '15',
           'Assigning to an existing key replaces its value, so red is 9 and 9 + 6 is 15.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'lives = {"p1": 3, "p2": 3}\nlives["p2"] += 1\nlives["p3"] = 3\nprint(lives)',
-          [
-            "{'p1': 3, 'p2': 4, 'p3': 3}",
-            "{'p1': 3, 'p2': 3, 'p3': 3}",
-            "{'p1': 3, 'p2': 4}",
-            "{'p3': 3, 'p1': 3, 'p2': 4}",
-          ],
-          0,
+          "{'p1': 3, 'p2': 4, 'p3': 3}",
           'p2 is updated in place to 4, and the new key p3 is added after the existing keys.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'seats = {"A1": "Kim", "A2": "Raj", "A3": "Sol"}\ndel seats["A2"]\nprint(seats)',
-          [
-            "{'A1': 'Kim', 'A2': 'Raj'}",
-            "{'A1': 'Kim', 'A2': 'Sol'}",
-            "{'A1': 'Kim', 'A3': 'Sol'}",
-            "{'A2': 'Raj'}",
-          ],
-          2,
+          "{'A1': 'Kim', 'A3': 'Sol'}",
           'del removes the key A2 and its value. The other keys keep their own values; nothing shifts the way list items do.',
         ),
         choose(
@@ -4385,11 +3974,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'tea exists, so get returns its value; juice does not, so get returns the default 0. 3 is a value, not a key, so 3 in prices is False.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'limits = {"daily": 50, "weekly": 200}\nprint(limits.get("monthly", 500))',
-          ['500', '0', '200', 'monthly'],
-          0,
+          '500',
           'monthly is not a key, so get returns the default supplied in the call, 500.',
         ),
         choose(
@@ -4403,18 +3991,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'get takes the key first and the default second, and never raises KeyError.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'team = {"lead": "Ana", "dev": "Raj"}\nprint("Ana" in team, "dev" in team)',
-          ['True True', 'True False', 'False True', 'False False'],
-          2,
+          'False True',
           'in checks keys only. Ana is a value, so the first test is False; dev is a key.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'counts = {"x": 1}\nvalue = counts.get("y", 7)\nprint(value, counts)',
-          ["7 {'x': 1, 'y': 7}", "1 {'x': 1}", "0 {'x': 1}", "7 {'x': 1}"],
-          3,
+          "7 {'x': 1}",
           'get returns the default 7 for the missing key y but does not store it, so counts is unchanged.',
         ),
       ],
@@ -4432,23 +4018,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first yes and the first no each start from the default 0. Each later yes adds 1 to the count already stored.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'letters = ["b", "a", "b", "c", "b"]\ncounts = {}\nfor ch in letters:\n    counts[ch] = counts.get(ch, 0) + 1\nprint(counts["b"], counts["c"])',
-          ['2 1', '3 1', '1 1', '3 0'],
-          1,
+          '3 1',
           'b appears three times and c once; each appearance adds 1 to what get returns.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'orders = ["tea", "cake", "tea"]\nprices = {"tea": 2, "cake": 4}\nbill = {}\nfor item in orders:\n    bill[item] = bill.get(item, 0) + prices[item]\nprint(bill)',
-          [
-            "{'tea': 2, 'cake': 1}",
-            "{'tea': 2, 'cake': 4}",
-            "{'tea': 4, 'cake': 4}",
-            "{'tea': 2, 'cake': 4, 'tea': 2}",
-          ],
-          2,
+          "{'tea': 4, 'cake': 4}",
           'Each order adds its price to that item’s total. tea is ordered twice, so its total is 2 + 2; a key is never stored twice.',
         ),
         choose(
@@ -4462,16 +4041,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'For a missing key get returns the default 0, so the assignment stores 0 + 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'words = ["hi", "yo", "hi"]\nseen = {}\nfor w in words:\n    if w in seen:\n        seen[w] += 1\n    else:\n        seen[w] = 1\nprint(seen)',
-          [
-            "{'hi': 2, 'yo': 1}",
-            "{'hi': 1, 'yo': 1}",
-            "{'hi': 1, 'yo': 1, 'hi': 1}",
-            "{'hi': 3, 'yo': 1}",
-          ],
-          0,
+          "{'hi': 2, 'yo': 1}",
           'The first hi and yo are stored as 1. The second hi is already a key, so its count goes up to 2.',
         ),
       ],
@@ -4491,25 +4064,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'item takes each key in turn, and stock[item] looks up the value that belongs to it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'ages = {"Kai": 7, "Mo": 9}\nfor x in ages:\n    print(x)',
-          ['7\n9', 'Kai\nMo', "('Kai', 7)\n('Mo', 9)", 'Kai 7\nMo 9'],
-          1,
+          'Kai\nMo',
           'Looping directly over a dictionary gives its keys only.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'rooms = {"A": 3, "B": 5, "C": 2}\ntotal = 0\nfor r in rooms:\n    total += rooms[r]\nprint(total)',
-          ['2', '3', '5', '10'],
-          3,
+          '10',
           'r is each key, and rooms[r] is its value, so the loop adds 3 + 5 + 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'temps = {"mon": 18, "tue": 25, "wed": 21}\nfor day in temps:\n    if temps[day] > 20:\n        print(day)',
-          ['tue\nwed', '25\n21', 'tue', 'mon\ntue\nwed'],
-          0,
+          'tue\nwed',
           'The test uses each day’s value, but the loop prints the key, day, for the two warm days.',
         ),
         choose(
@@ -4533,25 +4103,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'amount is 900, then 300, then 60, and the accumulator adds them to 1260.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'wins = {"red": 3, "blue": 5, "gold": 1}\nfor w in wins.values():\n    print(w)',
-          ['3\n5\n1', 'red\nblue\ngold', '1\n3\n5', '5\n3\n1'],
-          0,
+          '3\n5\n1',
           'values() gives the values in the order their keys were added; it does not sort them.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'grades = {"Ann": 72, "Bo": 91, "Cy": 85, "Di": 60}\nhigh = 0\nfor g in grades.values():\n    if g >= 85:\n        high += 1\nprint(high)',
-          ['176', '1', '2', '3'],
-          2,
+          '2',
           '91 and 85 pass the inclusive test, so the count is 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'heights = {"oak": 20, "elm": 34, "fir": 27}\ntallest = 0\nfor h in heights.values():\n    if h > tallest:\n        tallest = h\nprint(tallest)',
-          ['elm', '27', '20', '34'],
-          3,
+          '34',
           'tallest is replaced whenever a larger value appears, so it ends at 34. The loop never sees the key elm.',
         ),
         choose(
@@ -4580,18 +4147,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each pair is unpacked into fruit and price. The test uses price, and the message uses both.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'langs = {"py": 1991, "js": 1995}\nfor name, year in langs.items():\n    print(f"{name}-{year}")',
-          ['py-1991\njs-1995', 'py-py\njs-js', '1991-py\n1995-js', 'py\njs'],
-          0,
+          'py-1991\njs-1995',
           'The first name in the header receives the key and the second receives the value.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'sizes = {"S": 36, "M": 40}\nfor entry in sizes.items():\n    print(entry)',
-          ['S\nM', "('S', 36)\n('M', 40)", 'S 36\nM 40', '36\n40'],
-          1,
+          "('S', 36)\n('M', 40)",
           'Without unpacking, each item is a (key, value) tuple, and print() shows it with parentheses.',
         ),
         choose(
@@ -4605,11 +4170,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'items() supplies key-value pairs, which the header unpacks into name and score.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'stock = {"nails": 0, "bolts": 40, "nuts": 0, "pins": 15}\nempty = []\nfor part, qty in stock.items():\n    if qty == 0:\n        empty.append(part)\nprint(empty)',
-          ['[0, 0]', "['bolts', 'pins']", "['nails']", "['nails', 'nuts']"],
-          3,
+          "['nails', 'nuts']",
           'The test checks each quantity, and the key of every part with 0 is appended, in key order.',
         ),
       ],
@@ -4639,23 +4203,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Deleting a key while looping over the same dictionary changes its size, so Python raises RuntimeError.',
           'stock = {"a": 0, "b": 3}\nfor key in stock:\n    if stock[key] == 0:\n        del stock[key]',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'prices = {"tea": 2, "pie": 5}\nfor item in prices:\n    prices[item] *= 2\nprint(prices)',
-          [
-            "{'tea': 4, 'pie': 10}",
-            "{'tea': 2, 'pie': 5}",
-            "{'tea': 4, 'pie': 5}",
-            'RuntimeError: dictionary changed size during iteration',
-          ],
-          0,
+          "{'tea': 4, 'pie': 10}",
           'Replacing the values of existing keys does not add or remove keys, so the loop runs normally and doubles both.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'raw = {"a": 3, "b": 8, "c": 5}\nbig = {}\nfor k, v in raw.items():\n    if v > 4:\n        big[k] = v\nprint(big)',
-          ["{'b': 8}", "{'a': 3}", "{'b': 8, 'c': 5}", "['b', 'c']"],
-          2,
+          "{'b': 8, 'c': 5}",
           'The loop reads raw and stores each entry whose value is above 4 in the separate dictionary big.',
         ),
         choose(
@@ -4686,18 +4243,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The list has six rolls but only three different values. Order and repeats do not matter when sets are compared.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'emails = ["a@x.io", "b@x.io", "a@x.io", "c@x.io", "b@x.io"]\nprint(len(set(emails)))',
-          ['5', '2', '3', '1'],
-          2,
+          '3',
           'The set keeps a@x.io, b@x.io and c@x.io once each.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'a = {3, 1, 2}\nb = {1, 2, 3, 3}\nprint(a == b, len(b))',
-          ['False 3', 'True 3', 'False 4', 'True 4'],
-          1,
+          'True 3',
           'b stores 3 only once, so both sets hold exactly 1, 2 and 3; the written order does not matter.',
         ),
         choose(
@@ -4711,11 +4266,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Lists are not hashable, so they cannot be set members; Python raises TypeError.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'words = ["to", "be", "or", "not", "to", "be"]\nprint(len(words) - len(set(words)))',
-          ['2', '4', '0', '6'],
-          0,
+          '2',
           'There are 6 words but 4 distinct ones, so 2 words were repeats.',
         ),
       ],
@@ -4733,25 +4287,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each name is checked before it is added, so only the second kim and the second raj are reported. The set ends with three names.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           's = {5, 9}\ns.add(9)\ns.add(2)\nprint(len(s), 2 in s, 7 in s)',
-          ['4 True False', '3 True False', '3 False False', '2 True True'],
-          1,
+          '3 True False',
           'Adding 9 again changes nothing, adding 2 makes three members, and 7 was never added.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'codes = [7, 3, 9, 3, 7, 7]\nseen = set()\nrepeats = 0\nfor c in codes:\n    if c in seen:\n        repeats += 1\n    seen.add(c)\nprint(repeats, len(seen))',
-          ['3 3', '2 3', '3 6', '2 4'],
-          0,
+          '3 3',
           'The second 3, the second 7 and the third 7 are already in seen, so repeats is 3; seen holds 7, 3 and 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(set(), {})',
-          ['{} {}', 'set() set()', '{} set()', 'set() {}'],
-          3,
+          'set() {}',
           'An empty set prints as set(), and {} is an empty dictionary, which prints as {}.',
         ),
         choose(
@@ -4781,11 +4332,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Together the sets hold 1 to 5. Only 3 and 4 are shared; 1 and 2 are only in morning, and 5 is only in evening.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'club = {"ana", "ben", "cy"}\nteam = {"ben", "dee"}\nprint(len(club | team), len(club & team))',
-          ['5 1', '4 1', '4 2', '3 1'],
-          1,
+          '4 1',
           'The union holds ana, ben, cy and dee, with ben counted once; only ben is in both.',
         ),
         choose(
@@ -4794,18 +4344,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'a - b keeps the members of a that are not in b, which are 2 and 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'x = {5, 6, 7}\ny = {7, 8}\nprint((y - x) == {8}, (x - y) == {8})',
-          ['True True', 'False True', 'True False', 'False False'],
-          2,
+          'True False',
           'y - x keeps 8, but x - y keeps 5 and 6, so the order of the operands matters.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'owned = {"cat", "dog"}\nwanted = {"dog", "fish", "bird"}\nmissing = wanted - owned\nprint(len(missing), "dog" in missing, "fish" in missing)',
-          ['2 False True', '1 True False', '3 False True', '2 True True'],
-          0,
+          '2 False True',
           'Removing the owned animals from wanted leaves fish and bird, so dog is not in missing.',
         ),
       ],
@@ -4837,18 +4385,16 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Each call runs the whole body, ding then dong, before the next call starts.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def warn():\n    print("careful")\n\nprint("ready")',
-          ['ready', 'careful\nready', 'ready\ncareful', 'careful'],
-          0,
+          'ready',
           'warn is defined but never called, so its body never runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'print("A")\n\ndef step():\n    print("B")\n\nprint("C")\nstep()',
-          ['A\nB\nC', 'A\nC\nB', 'A\nC', 'B\nA\nC'],
-          1,
+          'A\nC\nB',
           'Defining step prints nothing. B appears only when step() is called, after C.',
         ),
         choose(
@@ -4878,23 +4424,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'In the first call name is "Ada" and role is "admin"; the second call fills them with new values.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def shout(word):\n    print(word + "!")\n\nshout("go")\nshout("stop")',
-          ['go!\nstop!', 'word!\nword!', 'go\nstop', 'go!'],
-          0,
+          'go!\nstop!',
           'Each call assigns its argument to word, and the body adds an exclamation mark.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def route(start, end):\n    print(f"{start} -> {end}")\n\nroute("Rome", "Oslo")\nroute("Oslo", "Rome")',
-          [
-            'start -> end\nstart -> end',
-            'Rome -> Oslo\nRome -> Oslo',
-            'Oslo -> Rome\nRome -> Oslo',
-            'Rome -> Oslo\nOslo -> Rome',
-          ],
-          3,
+          'Rome -> Oslo\nOslo -> Rome',
           'Arguments fill parameters by position, so swapping the arguments swaps start and end.',
         ),
         choose(
@@ -4908,11 +4447,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The name in the definition is the parameter; the value passed in the call is the argument.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def show(text):\n    print(f"{len(text)} {text}")\n\nfirst = "ab"\nshow(first + "cd")',
-          ['2 ab', '4 text', '4 abcd', '2 abcd'],
-          2,
+          '4 abcd',
           'The argument expression is evaluated first, so text receives "abcd", which has 4 characters.',
         ),
       ],
@@ -4930,16 +4468,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The assignment inside note creates a local message. The outside message is untouched and still holds "outside".',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'color = "red"\n\ndef paint():\n    color = "blue"\n    print("painted " + color)\n\npaint()\nprint(color)',
-          [
-            'painted blue\nblue',
-            'painted blue\nred',
-            'painted red\nred',
-            'painted red\nblue',
-          ],
-          1,
+          'painted blue\nred',
           'Inside paint, color is a local variable set to blue. The outside color stays red.',
         ),
         choose(
@@ -4954,11 +4486,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'result is local to build and disappears when the call ends, so the last line cannot find it.',
           'def build():\n    result = "done"\n\nbuild()\nprint(result)',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'name = "Zed"\n\ndef wave(name):\n    print("Hi " + name)\n\nwave("Amy")\nprint(name)',
-          ['Hi Amy\nZed', 'Hi Zed\nZed', 'Hi Amy\nAmy', 'Hi Zed\nAmy'],
-          0,
+          'Hi Amy\nZed',
           'The parameter name is local and receives "Amy"; the outside name still holds "Zed".',
         ),
         choose(
@@ -4990,25 +4521,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'area(4, 3) returns 12, which is stored in room. area(2, 2) returns 4, and 12 + 4 is 16.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def half(n):\n    return n / 2\n\nprint(half(9) + 1)',
-          ['5.5', '5', '4.5', '5.0'],
-          0,
+          '5.5',
           'half(9) returns 4.5, because / always gives a float, and the caller adds 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def add_fee(price):\n    return price + 2\n\nprint(add_fee(add_fee(10)))',
-          ['12', '24', '14', '10'],
-          2,
+          '14',
           'The inner call returns 12, which becomes the argument of the outer call, giving 14.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def full_name(first, last):\n    return first + " " + last\n\nname = full_name("Grace", "Hopper")\nprint(len(name))',
-          ['Grace Hopper', '11', '2', '12'],
-          3,
+          '12',
           'The function returns "Grace Hopper", whose 12 characters include the space.',
         ),
         choose(
@@ -5037,23 +4565,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Calling report prints its line. The function has no return, so result is None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def cheer(team):\n    print("Go, " + team)\n\nprint(cheer("Lions"))',
-          [
-            'Go, Lions',
-            'Go, Lions\nNone',
-            'None\nGo, Lions',
-            'Go, Lions\nGo, Lions',
-          ],
-          1,
+          'Go, Lions\nNone',
           'The call prints its line first; then the outer print shows the returned value, None.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def square(n):\n    n * n\n\nprint(square(4))',
-          ['16', '0', '4', 'None'],
-          3,
+          'None',
           'The body calculates n * n but never returns it, so the call gives None.',
         ),
         choose(
@@ -5062,11 +4583,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'log prints hi but returns nothing, so x receives None.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def next_age(age):\n    if age < 0:\n        return\n    return age + 1\n\nprint(next_age(-3))\nprint(next_age(4))',
-          ['-2\n5', '0\n5', 'None\n5', '-3\n5'],
-          2,
+          'None\n5',
           'For -3 the bare return runs, which returns None. For 4 the function returns 5.',
         ),
       ],
@@ -5084,30 +4604,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Age 3 returns at the first if. Age 70 passes the first test, then returns 6. Age 30 fails both tests and reaches the final return.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def sign(n):\n    if n > 0:\n        return "positive"\n    return "not positive"\n\nprint(sign(5))\nprint(sign(0))',
-          [
-            'positive\nnot positive',
-            'positive\npositive',
-            'not positive\nnot positive',
-            'not positive\npositive',
-          ],
-          0,
+          'positive\nnot positive',
           'For 5 the first return ends the call. For 0 the test fails, so the last line returns "not positive".',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def tally(n):\n    print("start")\n    return n * 3\n    print("end")\n\nprint(tally(2))',
-          ['start\nend\n6', 'start\n6', '6\nstart', 'start\n6\nend'],
-          1,
+          'start\n6',
           'The return ends the call, so print("end") never runs; the caller then prints 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def grade(score):\n    if score >= 90:\n        return "A"\n    if score >= 80:\n        return "B"\n    return "C"\n\nprint(grade(95) + grade(85) + grade(40))',
-          ['BBC', 'CCC', 'ABC', 'BCC'],
-          2,
+          'ABC',
           '95 returns "A" at the first test and never reaches the second. 85 returns "B", and 40 reaches "C".',
         ),
         choose(
@@ -5134,18 +4646,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The function returns a tuple of two characters. pair[1] reads the second part, the last letter of rocket.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def sizes(text):\n    return len(text), len(text + text)\n\nprint(sizes("abc"))',
-          ['3 6', '(3, 6)', '[3, 6]', '(3, 3)'],
-          1,
+          '(3, 6)',
           'The two values come back as one tuple, and print() shows a tuple with parentheses.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def corners(row):\n    return row[0], row[-1]\n\nresult = corners([4, 8, 15, 16])\nprint(result[1])',
-          ['4', '8', '16', '(4, 16)'],
-          2,
+          '16',
           'result is the tuple (4, 16), so result[1] is its second part, 16, not row[1].',
         ),
         choose(
@@ -5159,11 +4669,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The comma packs both values into one tuple. A second return would never run.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def combine(a, b):\n    return a + b, a - b, a * b\n\nprint(len(combine(5, 2)))',
-          ['1', '2', '13', '3'],
-          3,
+          '3',
           'The function returns a tuple of three values, (7, 3, 10), so its length is 3.',
         ),
       ],
@@ -5181,18 +4690,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '9 is not less than 4, so the function returns (4, 9). Unpacking puts 4 in small and 9 in big.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def rect(w, h):\n    return w * h, 2 * (w + h)\n\narea, perimeter = rect(3, 5)\nprint(perimeter)',
-          ['15', '16', '(15, 16)', '8'],
-          1,
+          '16',
           'The function returns (15, 16); the second name, perimeter, receives 16.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def swap(a, b):\n    return b, a\n\nx, y = swap("left", "right")\nprint(x)',
-          ['right', 'left', "('right', 'left')", 'x'],
-          0,
+          'right',
           'swap returns ("right", "left"), and x receives the first value.',
         ),
         choose(
@@ -5206,11 +4713,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Two names cannot unpack three values, so Python raises ValueError.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def ends(items):\n    return items[0], items[-1]\n\nfor group in [(1, 2, 3), (7, 8)]:\n    first, last = ends(group)\n    print(first + last)',
-          ['6\n15', '1\n7', '(1, 3)\n(7, 8)', '4\n15'],
-          3,
+          '4\n15',
           'Each call returns the first and last items; 1 + 3 is 4 and 7 + 8 is 15.',
         ),
       ],
@@ -5228,28 +4734,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both paths return two values, so the same unpacking works for both calls. The second call takes the early return.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def check_pin(pin):\n    if len(pin) != 4:\n        return False, "wrong length"\n    return True, "accepted"\n\nok, msg = check_pin("12345")\nprint(ok, msg)',
-          [
-            'True accepted',
-            'False wrong length',
-            'False accepted',
-            "(False, 'wrong length')",
-          ],
-          1,
+          'False wrong length',
           'The PIN has 5 characters, so the first return runs and both of its values are unpacked.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def first_even(nums):\n    for n in nums:\n        if n % 2 == 0:\n            return True, n\n    return False, 0\n\nfound, value = first_even([3, 7, 10, 4])\nprint(found, value)\nfound, value = first_even([1, 5])\nprint(found, value)',
-          [
-            'True 4\nFalse 0',
-            'True 10\nFalse 5',
-            'True 10\nFalse 0',
-            'True 10\nTrue 0',
-          ],
-          2,
+          'True 10\nFalse 0',
           'The first call returns as soon as it meets 10. The second list has no even number, so the loop ends and False, 0 is returned.',
         ),
         choose(
@@ -5263,11 +4757,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A single False is not a tuple of two values, so it cannot be unpacked into two names.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def parse_age(text):\n    if text == "":\n        return False, 0\n    return True, int(text)\n\nfor raw in ["31", ""]:\n    ok, age = parse_age(raw)\n    if ok:\n        print(age + 1)\n    else:\n        print("missing")',
-          ['32\nmissing', '32\n1', '31\nmissing', 'missing\n32'],
-          0,
+          '32\nmissing',
           '"31" converts to 31 and the flag is True, so 32 is printed. The empty string returns False, so the else branch runs.',
         ),
       ],
@@ -5287,18 +4780,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each call adds its own number in front of the result for n - 1. At n == 0 the base case returns "liftoff" without calling again.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def power(base, exp):\n    if exp == 0:\n        return 1\n    return base * power(base, exp - 1)\n\nprint(power(3, 4))',
-          ['12', '81', '27', '64'],
-          1,
+          '81',
           'Four recursive calls each multiply by 3 before the base case returns 1: 3 * 3 * 3 * 3 * 1 is 81.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def stars(n):\n    if n == 0:\n        return ""\n    return "*" + stars(n - 1)\n\nprint(stars(4) + "|")',
-          ['***|', '*|', '****|', '*****|'],
-          2,
+          '****|',
           'stars(4) adds one star for each of n = 4, 3, 2 and 1; the base case adds nothing.',
         ),
         choose(
@@ -5340,25 +4831,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'count_digits(4096) waits for 409, which waits for 40, which waits for 4. The base case returns 1, and the waiting calls return 2, 3 and finally 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def build(n):\n    if n == 0:\n        return "x"\n    return "(" + build(n - 1) + ")"\n\nprint(build(2))',
-          ['(x)', '((x', '(x)(x)', '((x))'],
-          3,
+          '((x))',
           'build(0) returns x, build(1) wraps it as (x), and build(2) wraps that again.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def mult(a, b):\n    if b == 0:\n        return 0\n    return a + mult(a, b - 1)\n\nprint(mult(6, 3))',
-          ['9', '18', '6', '24'],
-          1,
+          '18',
           'Three recursive steps each add 6 to the base value 0, giving 18.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def fib(n):\n    if n <= 1:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nprint(fib(6))',
-          ['5', '13', '8', '6'],
-          2,
+          '8',
           'Building up from fib(0) = 0 and fib(1) = 1 gives 1, 2, 3, 5, and then fib(6) = 8.',
         ),
         choose(
@@ -5382,18 +4870,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The down lines print before each call goes deeper. The up lines wait until the smaller call returns, so they come out in reverse order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def countdown(n):\n    if n == 0:\n        return\n    print(n)\n    countdown(n - 1)\n\ncountdown(3)',
-          ['1\n2\n3', '3', '3\n2\n1', '3\n2\n1\n0'],
-          2,
+          '3\n2\n1',
           'Each call prints before going deeper, so 3 prints first. The base case returns without printing 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def climb(n):\n    if n > 3:\n        return\n    climb(n + 1)\n    print(n)\n\nclimb(1)',
-          ['1\n2\n3', '4\n3\n2\n1', '1\n2\n3\n4', '3\n2\n1'],
-          3,
+          '3\n2\n1',
           'The print comes after the call, so climb(3) prints first once climb(4) returns without printing.',
         ),
         predictOutput(
@@ -5435,18 +4921,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'walk reads target and step from steps_to_reach. It moves 0, 3, 6, 9, then reaches 12, which is at least 10, so four steps were taken.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def repeat_text(text, times):\n    def build(n):\n        if n == 0:\n            return ""\n        return text + build(n - 1)\n    return build(times)\n\nprint(repeat_text("ab", 3))',
-          ['ab', 'abab', 'ababab', 'ab3'],
-          2,
+          'ababab',
           'build reads text from repeat_text and adds it once for each of n = 3, 2 and 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def countdown_from(start):\n    label = "T-"\n    def tick(n):\n        if n == 0:\n            return label + "0"\n        return label + str(n) + " " + tick(n - 1)\n    return tick(start)\n\nprint(countdown_from(2))',
-          ['T-2 T-1 T-0', 'T-2 T-1', '2 1 0', 'T-0 T-1 T-2'],
-          0,
+          'T-2 T-1 T-0',
           'tick reads label from the outer function and works down from 2 to the base case 0.',
         ),
         choose(
@@ -5485,18 +4969,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'In each call the first value fills item, the second fills count, and the third fills unit.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def subtract(a, b):\n    return a - b\n\nprint(subtract(3, 10))\nprint(subtract(10, 3))',
-          ['7\n7', '-7\n7', '7\n-7', '-7\n-7'],
-          1,
+          '-7\n7',
           'In the first call a is 3 and b is 10, so the result is -7; swapping the arguments gives 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def label(name, size, color):\n    return name + "-" + size + "-" + color\n\nprint(label("shirt", "red", "M"))',
-          ['shirt-red-M', 'shirt-M-red', 'name-size-color', 'red-M-shirt'],
-          0,
+          'shirt-red-M',
           'Arguments are matched by position, so size receives "red" and color receives "M", whatever they mean.',
         ),
         choose(
@@ -5510,11 +4992,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'speed has no default and no argument fills it, so Python raises TypeError for the missing argument.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def pick(items, position):\n    return items[position]\n\nprint(pick(["a", "b", "c"], -1), pick([9, 8, 7], 0))',
-          ['a 9', 'c 7', 'b 8', 'c 9'],
-          3,
+          'c 9',
           'The list fills items and the number fills position, so the calls return the last item c and the first item 9.',
         ),
       ],
@@ -5532,23 +5013,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first call names both parameters, so their order does not matter. The second fills part by position and whole by name.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def divide(top, bottom):\n    return top // bottom\n\nprint(divide(bottom=4, top=20))',
-          ['0', '5', '5.0', '4'],
-          1,
+          '5',
           'The keywords put 20 in top and 4 in bottom, whatever order they are written in; 20 // 4 is 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def card(name, rank, suit):\n    return f"{rank} of {suit} ({name})"\n\nprint(card("ace", suit="hearts", rank="A"))',
-          [
-            'ace of A (hearts)',
-            'hearts of A (ace)',
-            'A of hearts (ace)',
-            'A of ace (hearts)',
-          ],
-          2,
+          'A of hearts (ace)',
           '"ace" fills name by position; the keywords fill suit and rank by name.',
         ),
         choose(
@@ -5588,18 +5062,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first call uses both defaults. The second replaces prefix by position. The third keeps the default prefix and replaces only mark.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def interest(amount, rate=5):\n    return amount * rate // 100\n\nprint(interest(200))\nprint(interest(200, 10))',
-          ['10\n20', '10\n10', '0\n20', '20\n20'],
-          0,
+          '10\n20',
           'The first call uses the default rate 5; the second supplies 10, which replaces the default.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def box(width, height=2, depth=1):\n    return width * height * depth\n\nprint(box(3, depth=4))',
-          ['12', '24', '6', '3'],
-          1,
+          '24',
           'height keeps its default 2 and the keyword sets depth to 4, so the result is 3 * 2 * 4.',
         ),
         choose(
@@ -5613,11 +5085,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Every parameter without a default must come before the parameters that have one.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def tag(text, before="[", after="]"):\n    return before + text + after\n\nprint(tag("ok", after=">"), tag("hi", "<"))',
-          ['[ok] <hi]', '<ok> <hi>', '[ok> <hi>', '[ok> <hi]'],
-          3,
+          '[ok> <hi]',
           'The first call changes only after. The second changes before by position and keeps the default after.',
         ),
       ],
@@ -5635,11 +5106,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both calls leave out basket, so both append to the same default list, and the second call sees the egg from the first.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def log(event, history=[]):\n    history.append(event)\n    return len(history)\n\nprint(log("a"), log("b"), log("c"))',
-          ['1 2 3', '1 1 1', '3 3 3', '0 1 2'],
-          0,
+          '1 2 3',
           'All three calls append to the same default list, so its length grows by one each time.',
         ),
         choose(
@@ -5660,11 +5130,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The first two calls pass their own new lists. Only the last two use the shared default, so 3 and 4 end up together.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def add_tag(tag, tags=[]):\n    tags.append(tag)\n    return tags\n\nfirst = add_tag("x")\nsecond = add_tag("y")\nprint(first)',
-          ["['x']", "['y']", "['y', 'x']", "['x', 'y']"],
-          3,
+          "['x', 'y']",
           'Both calls return the same default list, so first and second name one list that now holds x and y.',
         ),
       ],
@@ -5684,30 +5153,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each price is multiplied by 1.5 in order, giving floats. prices itself is left as it was.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'temps = [0, 10, 25]\nprint([t + 273 for t in temps])',
-          ['[0, 10, 25]', '[273, 283, 298]', '[273, 10, 25]', '[298]'],
-          1,
+          '[273, 283, 298]',
           'The expression t + 273 is applied to every item, so each of the three values changes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'words = ["hi", "hello", "hey"]\nprint([len(w) for w in words])',
-          ['[2, 5, 3]', '3', '[2, 3, 5]', "['hi', 'hello', 'hey']"],
-          0,
+          '[2, 5, 3]',
           'The new list holds the length of each word, in the original order.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'names = ["ada", "lin"]\nprint([f"@{n}" for n in names])',
-          [
-            "['@n', '@n']",
-            "['ada', 'lin']",
-            "['@ada', '@lin']",
-            "['@ada@lin']",
-          ],
-          2,
+          "['@ada', '@lin']",
           'The f-string is evaluated for each name, giving one new string per item.',
         ),
         choose(
@@ -5737,23 +5198,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '12 and 17 fail the test and are left out. The others are kept in their original order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'nums = [3, 8, 11, 6, 7]\nprint([n for n in nums if n % 2 == 1])',
-          ['[8, 6]', '[3, 11, 7]', '[1, 1, 1]', '[3, 7, 11]'],
-          1,
+          '[3, 11, 7]',
           'The filter keeps the odd numbers, and the expression n keeps them unchanged and in order.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'words = ["cat", "horse", "ox", "zebra"]\nprint([w for w in words if len(w) > 3])',
-          [
-            "['horse', 'zebra']",
-            "['cat', 'ox']",
-            '[5, 5]',
-            "['cat', 'horse', 'zebra']",
-          ],
-          0,
+          "['horse', 'zebra']",
           'Only horse and zebra are longer than 3 letters; cat has exactly 3, which is not more than 3.',
         ),
         choose(
@@ -5767,11 +5221,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The test goes after the for part and is checked for each n; the expression n keeps the string itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'scores = [40, 55, 38]\npassed = [s for s in scores if s >= 60]\nprint(passed, len(passed))',
-          ['[40, 55, 38] 3', '[False, False, False] 3', '[0, 0, 0] 3', '[] 0'],
-          3,
+          '[] 0',
           'No score passes the test, and failing items are skipped, so the new list is empty.',
         ),
       ],
@@ -5789,30 +5242,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'oak and fir fail the length test on the original words and are skipped. Only maple and birch get an exclamation mark.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [1, 2, 4, 6]\nprint([v * v for v in values if v > 3])',
-          ['[16, 36]', '[4, 16, 36]', '[4, 6]', '[1, 4, 16, 36]'],
-          0,
+          '[16, 36]',
           'The test uses the original values, so only 4 and 6 are kept; their squares are 16 and 36.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'prices = [12, 3, 25, 8]\nprint([p - 5 for p in prices if p > 7])',
-          ['[20]', '[7, 20, 3]', '[12, 25, 8]', '[7, 20]'],
-          1,
+          '[7, 20, 3]',
           '12, 25 and 8 pass the test on the original prices, and each has 5 taken off.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'words = ["tea", "", "milk", "jam"]\nprint([w + "s" for w in words if len(w) > 0])',
-          [
-            "['teas', 's', 'milks', 'jams']",
-            "['tea', 'milk', 'jam']",
-            "['teas', 'milks', 'jams']",
-            "['teas', 'milks']",
-          ],
-          2,
+          "['teas', 'milks', 'jams']",
           'The empty string fails the test before the expression runs, so it never becomes "s".',
         ),
         choose(
@@ -5843,28 +5288,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Three passes make three separate rows of four dots. Changing a cell in row 2 leaves row 0 untouched.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [[0] * 2 for _ in range(3)]\nprint(grid)',
-          [
-            '[[0, 0, 0], [0, 0, 0]]',
-            '[[0, 0], [0, 0], [0, 0]]',
-            '[0, 0, 0, 0, 0, 0]',
-            '[[0, 0]]',
-          ],
-          1,
+          '[[0, 0], [0, 0], [0, 0]]',
           'range(3) gives three passes, and each pass makes a row of two zeros.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'marks = [[0] * 3 for _ in range(2)]\nmarks[1][2] = 5\nprint(marks)',
-          [
-            '[[0, 0, 0], [0, 0, 5]]',
-            '[[0, 0, 5], [0, 0, 5]]',
-            '[[0, 5, 0], [0, 0, 0]]',
-            '[[0, 0, 0], [0, 5, 0]]',
-          ],
-          0,
+          '[[0, 0, 0], [0, 0, 5]]',
           'The rows are separate lists, so only row 1, column 2 changes.',
         ),
         choose(
@@ -5878,16 +5311,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The comprehension runs 5 times and evaluates the row [0, 0] afresh on each pass.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'table = [[0] * 4 for _ in range(3)]\nfor row in table:\n    row[0] = 1\nprint(table[1], len(table))',
-          [
-            '[1, 1, 1, 1] 3',
-            '[1, 0, 0, 0] 4',
-            '[0, 0, 0, 0] 3',
-            '[1, 0, 0, 0] 3',
-          ],
-          3,
+          '[1, 0, 0, 0] 3',
           'row is each actual row of the grid, so setting row[0] marks the first cell of all 3 rows.',
         ),
       ],
@@ -5905,28 +5332,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Even numbers have remainder 0 and go into buckets[0]; odd numbers go into buckets[1].',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'lists = [[] for _ in range(3)]\nlists[0].append("x")\nlists[2].append("y")\nprint(lists)',
-          [
-            "[['x', 'y'], ['x', 'y'], ['x', 'y']]",
-            "[['x'], [], ['y']]",
-            "[['x'], ['y'], []]",
-            "['x', 'y']",
-          ],
-          1,
+          "[['x'], [], ['y']]",
           'Each inner list is separate, so x goes only into list 0 and y only into list 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'words = ["ox", "cat", "be", "dog", "a"]\nby_len = [[] for _ in range(4)]\nfor w in words:\n    by_len[len(w)].append(w)\nprint(by_len[2], by_len[0])',
-          [
-            "['ox', 'be'] []",
-            "['cat', 'dog'] ['a']",
-            "['ox', 'be'] ['a']",
-            "['be', 'ox'] []",
-          ],
-          0,
+          "['ox', 'be'] []",
           'Each word goes into the list whose index is its length. No word has length 0, so by_len[0] stays empty.',
         ),
         choose(
@@ -5940,16 +5355,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The row expression runs once per pass, so every pass produces a different list.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'rows = [[] for _ in range(2)]\nfor i in range(3):\n    rows[0].append(i)\n    rows[1].append(i * 10)\nprint(rows)',
-          [
-            '[[0, 10, 20], [0, 10, 20]]',
-            '[[0, 0], [1, 10], [2, 20]]',
-            '[[0, 1, 2], [0, 10, 20]]',
-            '[[0, 1, 2, 0, 10, 20]]',
-          ],
-          2,
+          '[[0, 1, 2], [0, 10, 20]]',
           'Row 0 collects each i and row 1 collects each i * 10; the two lists stay separate.',
         ),
       ],
@@ -5979,23 +5388,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Both rows are the same list, so changing g[1][1] also changes g[0][1].',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'seen = [False] * 3\nseen[1] = True\nprint(seen)',
-          [
-            '[True, True, True]',
-            '[True, False, False]',
-            '[False, True, False]',
-            '[False, False, True]',
-          ],
-          2,
+          '[False, True, False]',
           'Repeating a simple value is safe: the assignment replaces only slot 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'groups = [[]] * 3\ngroups[0].append(5)\nprint(len(groups[2]))',
-          ['1', '0', '3', '5'],
-          0,
+          '1',
           'groups holds the same empty list three times, so appending through groups[0] also fills groups[2].',
         ),
         choose(
@@ -6024,35 +5426,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Row 0 is built with r = 1, giving 1, 2 and 3. Row 2 is built with r = 3, giving 3, 6 and 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'rows = [[n] * n for n in range(1, 4)]\nprint(rows)',
-          [
-            '[[1], [2, 2], [3, 3, 3]]',
-            '[[1, 1, 1], [2, 2, 2], [3, 3, 3]]',
-            '[[0], [1, 1], [2, 2, 2]]',
-            '[[1], [2], [3]]',
-          ],
-          0,
+          '[[1], [2, 2], [3, 3, 3]]',
           'For each n from 1 to 3, the row holds n copies of n.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'grid = [[r + c for c in range(3)] for r in range(2)]\nprint(grid)',
-          [
-            '[[0, 1], [1, 2], [2, 3]]',
-            '[[0, 1, 2], [1, 2, 3]]',
-            '[[0, 1, 2], [0, 1, 2]]',
-            '[0, 1, 2, 1, 2, 3]',
-          ],
-          1,
+          '[[0, 1, 2], [1, 2, 3]]',
           'The outer range(2) makes two rows; each row has three cells, r + 0, r + 1 and r + 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'tri = [[c for c in range(r)] for r in range(4)]\nprint(tri[3], len(tri))',
-          ['[0, 1, 2, 3] 4', '[0, 1, 2] 3', '[0, 1, 2] 4', '[1, 2, 3] 4'],
-          2,
+          '[0, 1, 2] 4',
           'Row 3 is range(3), which is 0, 1 and 2. There are four rows, for r = 0, 1, 2 and 3.',
         ),
         choose(
@@ -6083,25 +5472,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The squares 9, 25 and 4 are added as they are produced. The lengths are 3, 5 and 5, and the largest is 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'costs = [2.5, 4, 1.5]\nprint(sum(c * 2 for c in costs))',
-          ['16.0', '8.0', '16', '[5.0, 8, 3.0]'],
-          0,
+          '16.0',
           'The doubled costs 5.0, 8 and 3.0 are added; mixing in floats makes the total a float.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'names = ["Eve", "Bartholomew", "Jo"]\nprint(min(len(n) for n in names))',
-          ['Jo', '2', '3', '11'],
-          1,
+          '2',
           'min receives the lengths 3, 11 and 2, so it returns the number 2, not a name.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'readings = [-4, 7, -9, 2]\nprint(max(abs(r) for r in readings))',
-          ['7', '-9', '9', '2'],
-          2,
+          '9',
           'max compares the distances from zero, 4, 7, 9 and 2, and returns 9.',
         ),
         choose(
@@ -6130,18 +5516,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Three temperatures are above 24, so three 1s are added. Among those three, the smallest is 25.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [4, -3, 10, -1, 5]\nprint(sum(v for v in values if v > 0))',
-          ['15', '19', '-4', '23'],
-          1,
+          '19',
           'Only 4, 10 and 5 pass the filter, and they add up to 19.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'words = ["sun", "sky", "moon", "star", "sea"]\nprint(sum(1 for w in words if len(w) == 3))',
-          ['3', '9', '5', '2'],
-          0,
+          '3',
           'Each of the three 3-letter words contributes 1, so the result is a count, not a total length.',
         ),
         choose(
@@ -6155,11 +5539,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Adding 1 for each even number counts them; adding n itself would total their values instead.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'ages = [34, 15, 22, 9, 41]\nprint(min(a for a in ages if a >= 18), max(a for a in ages if a < 18))',
-          ['9 41', '15 22', '18 17', '22 15'],
-          3,
+          '22 15',
           'The smallest age of at least 18 is 22, and the largest age under 18 is 15.',
         ),
       ],
@@ -6177,25 +5560,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'One count is 0, so any is True and all(s > 0) is False. Every count is below 20, so the last all is True.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'passwords = ["abc12345", "short", "longer123"]\nprint(all(len(p) >= 8 for p in passwords))',
-          ['True', 'False', '2', '[True, False, True]'],
-          1,
+          'False',
           'short has only 5 characters, and one failure makes all return False.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'scores = [55, 62, 48]\nprint(any(s >= 60 for s in scores), all(s >= 40 for s in scores))',
-          ['True True', 'False True', 'True False', 'False False'],
-          0,
+          'True True',
           '62 is at least 60, so any is True; every score is at least 40, so all is True.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'names = ["ana", "Ben", "cy"]\nprint(any(n == "ben" for n in names))',
-          ['True', 'Ben', 'False', '1'],
-          2,
+          'False',
           'String comparison is case-sensitive, so "Ben" does not equal "ben", and no item passes.',
         ),
         choose(
@@ -6224,11 +5604,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'No score is 90 or more. The sum of nothing is 0, any finds no passing item, and the last all receives no items at all, so nothing fails.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'orders = []\nprint(sum(o for o in orders), any(o > 0 for o in orders), all(o > 0 for o in orders))',
-          ['0 False False', '0 False True', '0 True True', '0 True False'],
-          1,
+          '0 False True',
           'With no orders, the sum is 0, any finds nothing that passes, and all finds nothing that fails.',
         ),
         choose(
@@ -6237,11 +5616,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'No item passes the filter, and max of nothing raises ValueError.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'items = [2, 4, 6]\nprint(all(n % 2 == 1 for n in items if n > 6))',
-          ['True', 'False', '0', '6'],
-          0,
+          'True',
           'No item is greater than 6, so all receives nothing; with no failures it returns True.',
         ),
         choose(
@@ -6304,11 +5682,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '% divides to find a remainder, so a divisor of 0 raises ZeroDivisionError, just as / and // do.',
           'groups = 0\nprint(17 % groups)',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def per_person(total, people):\n    if people == 0:\n        return 0\n    return total / people\n\nprint(per_person(12, 0))\nprint(per_person(12, 4))',
-          ['0\n3', 'ZeroDivisionError\n3.0', '0\n3.0', '0.0\n3.0'],
-          2,
+          '0\n3.0',
           'The early return handles 0 people before any division runs, so nothing fails. 12 / 4 is the float 3.0.',
         ),
       ],
@@ -6326,30 +5703,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'int(text) raises ValueError, so print("converted") is skipped and the except block sets count to 0. The last line runs after the try statement and prints 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'try:\n    n = int("40")\n    print(n + 2)\nexcept ValueError:\n    print("bad input")\nprint("done")',
-          ['bad input\ndone', '42\ndone', '42\nbad input\ndone', '42'],
-          1,
+          '42\ndone',
           'The conversion succeeds, so the except block is skipped and the program continues to print done.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'try:\n    print("start")\n    value = float("ten")\n    print("middle")\nexcept ValueError:\n    print("fallback")\nprint("end")',
-          [
-            'start\nmiddle\nfallback\nend',
-            'fallback\nend',
-            'start\nmiddle\nend',
-            'start\nfallback\nend',
-          ],
-          3,
+          'start\nfallback\nend',
           'start prints before the failure. float("ten") raises ValueError, so middle is skipped and fallback runs, then end.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def to_minutes(text):\n    try:\n        return int(text) * 60\n    except ValueError:\n        return -1\n\nprint(to_minutes("2"))\nprint(to_minutes("two"))',
-          ['120\n-1', '-1\n-1', '120\nNone', '2\n-1'],
-          0,
+          '120\n-1',
           '"2" converts and returns 120. "two" raises ValueError inside try, and the except block returns -1.',
         ),
         choose(
@@ -6390,18 +5759,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '30 gives 9. -2 raises ValueError inside the function, so the rest of the try block, including the call with 8, is skipped, and the except block runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def withdraw(balance, amount):\n    if amount > balance:\n        raise ValueError("insufficient funds")\n    return balance - amount\n\ntry:\n    print(withdraw(50, 20))\n    print(withdraw(50, 80))\nexcept ValueError:\n    print("declined")',
-          ['30\n-30', 'declined', '30\ndeclined', '30\ndeclined\n-30'],
-          2,
+          '30\ndeclined',
           'The first call returns 30. The second raises ValueError before subtracting, so declined is printed instead.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def check_score(score):\n    if score > 100:\n        raise ValueError("too high")\n    print("checking")\n    return score\n\ntry:\n    result = check_score(150)\nexcept ValueError:\n    result = 100\nprint(result)',
-          ['100', 'checking\n150', 'checking\n100', '150'],
-          0,
+          '100',
           'raise stops the function before print("checking") runs, so the except block sets result to 100.',
         ),
         choose(
@@ -6426,16 +5793,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'raise signals the failure and stops the function. Returning or printing a ValueError does not stop anything.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def parse_level(text):\n    level = int(text)\n    if level > 5:\n        raise ValueError("level must be 1 to 5")\n    return level\n\ntry:\n    print(parse_level("3"))\n    print(parse_level("9"))\nexcept ValueError:\n    print("bad level")\ntry:\n    print(parse_level("x"))\nexcept ValueError:\n    print("bad level")',
-          [
-            '3\n9\nbad level',
-            '3\nbad level\nbad level',
-            '3\nbad level',
-            '3\nbad level\nx',
-          ],
-          1,
+          '3\nbad level\nbad level',
           '"9" converts but is too high, so the function raises ValueError. "x" makes int() raise ValueError. except ValueError catches both.',
         ),
       ],
@@ -6466,16 +5827,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Each distinct word is a key and its value is how often it appears: ox twice, ant once.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def count_words(words):\n    counts = {}\n    for word in words:\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\nprint(count_words(["b", "a", "b", "c", "a", "b"]))',
-          [
-            "{'a': 2, 'b': 3, 'c': 1}",
-            "{'b': 3, 'a': 2, 'c': 1}",
-            "{'b': 1, 'a': 1, 'c': 1}",
-            "{'b': 2, 'a': 1, 'c': 0}",
-          ],
-          1,
+          "{'b': 3, 'a': 2, 'c': 1}",
           'Keys appear in the order the words are first seen, b, a, c, and the counts are 3, 2 and 1.',
         ),
         choose(
@@ -6515,23 +5870,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first pear and fig start from the default 0 and store 1. The second pear reads its stored 1 and stores 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'counts = {"a": 2}\ncounts["a"] = counts.get("a", 0) + 1\ncounts["b"] = counts.get("b", 0) + 1\nprint(counts["a"], counts["b"])',
-          ['1 1', '3 0', '2 1', '3 1'],
-          3,
+          '3 1',
           '"a" already holds 2, so it becomes 3. "b" is missing, so get returns 0 and it becomes 1.',
         ),
-        predictOutput(
+        typeOutput(
           'This version has a bug. What does it print?',
           'def count_words(words):\n    counts = {}\n    for word in words:\n        counts[word] = 1\n    return counts\n\nprint(count_words(["go", "stop", "go", "go"]))',
-          [
-            "{'go': 3, 'stop': 1}",
-            "{'go': 1, 'stop': 1}",
-            "{'stop': 1, 'go': 1}",
-            "{'go': 2, 'stop': 1}",
-          ],
-          1,
+          "{'go': 1, 'stop': 1}",
           'Each repeat assigns 1 again instead of adding to the old count. Updating a key keeps its original position.',
         ),
         choose(
@@ -6545,11 +5893,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           '+= reads counts[word] before adding, and a word that is not yet a key raises KeyError.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def count_words(words):\n    counts = {}\n    for word in words:\n        counts[word] = counts.get(word, 0) + 1\n        return counts\n\nprint(count_words(["up", "up", "down"]))',
-          ["{'up': 1}", "{'up': 2, 'down': 1}", "{'up': 1, 'down': 1}", '{}'],
-          0,
+          "{'up': 1}",
           'return is indented inside the loop, so the function returns after counting only the first word.',
         ),
       ],
@@ -6567,30 +5914,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The empty list never enters the loop. Three copies of ok make one key with count 3. Tea and tea are separate keys, and the comparison ignores key order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def count_words(words):\n    counts = {}\n    for word in words:\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\nprint(count_words(["Go", "go", "GO", "go"]))',
-          [
-            "{'go': 4}",
-            "{'Go': 4}",
-            "{'Go': 1, 'go': 2, 'GO': 1}",
-            "{'go': 2, 'Go': 1, 'GO': 1}",
-          ],
-          2,
+          "{'Go': 1, 'go': 2, 'GO': 1}",
           'Capital letters make different strings, so Go, go and GO are three keys, in the order first seen.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'def count_words(words):\n    counts = {}\n    for word in words:\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\nempty = count_words([])\nprint(empty == {}, "x" in empty)',
-          ['True False', 'False False', 'True True', 'None False'],
-          0,
+          'True False',
           'The loop never runs, so the function returns an empty dictionary, which has no keys at all.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def count_words(words):\n    counts = {}\n    for word in words:\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\nresult = count_words(["b", "a", "b"])\nprint(result == {"a": 1, "b": 2})\nprint(result == {"b": 1, "a": 2})',
-          ['False\nFalse', 'False\nTrue', 'True\nTrue', 'True\nFalse'],
-          3,
+          'True\nFalse',
           'Dictionary equality ignores key order but compares values: b must be 2 and a must be 1.',
         ),
         choose(
@@ -6604,16 +5943,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Only a test that mixes the two spellings and expects separate keys checks case sensitivity.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def count_words(words):\n    counts = {}\n    for word in words:\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\nwords = ["x", "y", "x"]\ncounts = count_words(words)\nprint(words)\nprint(counts)',
-          [
-            "['x', 'y']\n{'x': 2, 'y': 1}",
-            "[]\n{'x': 2, 'y': 1}",
-            "['x', 'y', 'x']\n{'x': 2, 'y': 1}",
-            "{'x': 2, 'y': 1}\n{'x': 2, 'y': 1}",
-          ],
-          2,
+          "['x', 'y', 'x']\n{'x': 2, 'y': 1}",
           'The function only reads the list and builds a separate dictionary, so words keeps all three items.',
         ),
       ],
@@ -6633,30 +5966,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'ordered is a new ascending list that keeps both 11s. temps is unchanged. In the sorted copy, index 0 is the smallest item and index -1 the largest.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'nums = [4, 9, 1, 7]\nresult = sorted(nums)\nprint(nums)',
-          ['[1, 4, 7, 9]', 'None', '[4, 9, 1, 7]', '[9, 7, 4, 1]'],
-          2,
+          '[4, 9, 1, 7]',
           'sorted returned a new list stored in result; nums itself was not changed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'prices = [12, 5, 8]\nlow = sorted(prices)[0]\nprint(low, prices[0])',
-          ['5 5', '12 12', '12 5', '5 12'],
-          3,
+          '5 12',
           'Index 0 of the sorted copy is the smallest price, 5, while prices still starts with 12.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(sorted([2.5, -1, 2, 0]))',
-          [
-            '[-1, 0, 2, 2.5]',
-            '[0, -1, 2, 2.5]',
-            '[2.5, 2, 0, -1]',
-            '[-1, 0, 2.5, 2]',
-          ],
-          0,
+          '[-1, 0, 2, 2.5]',
           'Ints and floats compare by value, so the order is -1, 0, 2, 2.5 from smallest to largest.',
         ),
         choose(
@@ -6697,16 +6022,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Uppercase K and L come before every lowercase letter; then apple comes before mango.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(sorted(["10", "9", "100"]))',
-          [
-            "['9', '10', '100']",
-            "['10', '100', '9']",
-            '[9, 10, 100]',
-            "['100', '10', '9']",
-          ],
-          1,
+          "['10', '100', '9']",
           'These are strings, so the first characters decide: "1" comes before "9". "10" is the start of "100", so it comes first.',
         ),
         choose(
@@ -6720,16 +6039,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The capitalized Banana comes first; then the lowercase words follow in letter order.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(sorted(["sun", "Sun", "sunny", "su"]))',
-          [
-            "['Sun', 'su', 'sun', 'sunny']",
-            "['su', 'sun', 'Sun', 'sunny']",
-            "['Sun', 'sun', 'su', 'sunny']",
-            "['su', 'Sun', 'sun', 'sunny']",
-          ],
-          0,
+          "['Sun', 'su', 'sun', 'sunny']",
           'Sun starts with a capital, so it is first. Among the rest, each word is the start of the next, so shorter comes first.',
         ),
         choose(
@@ -6758,25 +6071,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'sort reordered queue itself and returned None, which is what answer holds.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'a = [7, 3, 5]\nb = a\nb.sort()\nprint(a)',
-          ['[7, 3, 5]', 'None', '[7, 5, 3]', '[3, 5, 7]'],
-          3,
+          '[3, 5, 7]',
           'b = a makes both names refer to one list, so sorting it through b also shows through a.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'words = ["oak", "elm", "ash"]\nwords = words.sort()\nprint(words)',
-          ["['ash', 'elm', 'oak']", 'None', "['oak', 'elm', 'ash']", '[]'],
-          1,
+          'None',
           'The list is sorted, but then words is assigned the return value of sort, which is None.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'original = [30, 10, 20]\nworking = original.copy()\nworking.sort()\nprint(original[0], working[0])',
-          ['30 10', '10 10', '30 30', '10 30'],
-          0,
+          '30 10',
           'copy made a separate list, so sorting working leaves original in its old order.',
         ),
         choose(
@@ -6805,35 +6115,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'reverse=True ranks from largest to smallest. reversed only flips the existing order, so 50 comes first. After the in-place sort, laps[0] is the largest lap.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'print(list(reversed([4, 1, 3])))',
-          ['[4, 3, 1]', '[1, 3, 4]', '[3, 1, 4]', '[4, 1, 3]'],
-          2,
+          '[3, 1, 4]',
           'reversed flips the existing order without sorting, so the last item, 3, comes first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(sorted(["b", "C", "a"], reverse=True))',
-          [
-            "['b', 'a', 'C']",
-            "['C', 'b', 'a']",
-            "['a', 'b', 'C']",
-            "['a', 'C', 'b']",
-          ],
-          0,
+          "['b', 'a', 'C']",
           'Ascending order is C, a, b because capitals come first; reverse=True turns that into b, a, C.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'for step in reversed(["mix", "bake", "cool"]):\n    print(step)',
-          [
-            'mix\nbake\ncool',
-            'bake\ncool\nmix',
-            'cool\nmix\nbake',
-            'cool\nbake\nmix',
-          ],
-          3,
+          'cool\nbake\nmix',
           'The loop receives the items from last to first; no sorting happens.',
         ),
         choose(
@@ -6847,16 +6144,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Only sorted with reverse=True returns a descending list. reversed gives [42, 35, 40], and sort returns None.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'nums = [5, 8, 2]\nresult = nums.sort(reverse=True)\nprint(result, nums)',
-          [
-            '[8, 5, 2] [8, 5, 2]',
-            'None [5, 8, 2]',
-            'None [8, 5, 2]',
-            '[8, 5, 2] [5, 8, 2]',
-          ],
-          2,
+          'None [8, 5, 2]',
           'sort reorders nums from largest to smallest and returns None, even with reverse=True.',
         ),
       ],
@@ -6876,28 +6167,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The lengths are 4, 3, 4 and 7, so fig comes first and plum stays ahead of kiwi on the tie. The distances from zero are 4, 3, 1 and 2, and the original numbers, signs included, are returned.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(sorted(["bb", "a", "ccc", "dd"], key=len))',
-          [
-            "['a', 'bb', 'ccc', 'dd']",
-            "['a', 'bb', 'dd', 'ccc']",
-            '[1, 2, 2, 3]',
-            "['a', 'dd', 'bb', 'ccc']",
-          ],
-          1,
+          "['a', 'bb', 'dd', 'ccc']",
           'Items are ordered by length, and bb stays ahead of dd because equal keys keep their original order.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'def last_digit(n):\n    return n % 10\n\nprint(sorted([47, 12, 35, 21], key=last_digit))',
-          [
-            '[12, 21, 35, 47]',
-            '[1, 2, 5, 7]',
-            '[21, 12, 35, 47]',
-            '[47, 35, 12, 21]',
-          ],
-          2,
+          '[21, 12, 35, 47]',
           'The keys are 7, 2, 5 and 1, so the numbers are ordered by last digit: 21, 12, 35, 47.',
         ),
         choose(
@@ -6911,16 +6190,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Writing len() calls len immediately. key=len passes the function so sorted can call it on each item.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'print(sorted([3, -2, 2, -3, 1], key=abs))',
-          [
-            '[1, -2, 2, 3, -3]',
-            '[-3, -2, 1, 2, 3]',
-            '[1, 2, -2, -3, 3]',
-            '[1, 2, 2, 3, 3]',
-          ],
-          0,
+          '[1, -2, 2, 3, -3]',
           'Ordered by distance from zero, with ties kept in their original order: -2 before 2, and 3 before -3.',
         ),
       ],
@@ -6939,18 +6212,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first key is the price, so the pairs go 8, 30, 120. The second key is the last letter: a, e, then r.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'scores = [("Ivy", 88), ("Raj", 95), ("Lee", 72)]\nranked = sorted(scores, key=lambda s: s[1])\nprint(ranked[0][0])',
-          ['Ivy', 'Raj', 'Lee', '72'],
-          2,
+          'Lee',
           'Sorted by score, the first pair is ("Lee", 72), and index 0 of that pair is the name.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'square = lambda n: n * n\nprint(square(4) + square(3))',
-          ['49', '12', '7', '25'],
-          3,
+          '25',
           'square returns its argument times itself: 16 + 9 is 25.',
         ),
         choose(
@@ -6964,11 +6235,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The lambda receives each word and returns its last character. key=w[-1] is not a function at all.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'print(sorted([7, 9, 5, 4], key=lambda n: n % 3))',
-          ['[9, 7, 4, 5]', '[4, 5, 7, 9]', '[0, 1, 1, 2]', '[9, 4, 7, 5]'],
-          0,
+          '[9, 7, 4, 5]',
           'The keys are 1, 0, 2 and 1. 9 comes first, then 7 and 4 in their original order, then 5.',
         ),
       ],
@@ -6986,23 +6256,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The keys are (-7, "Rui"), (-9, "Ana"), (-7, "Bo") and (-9, "Cy"). -9 is smaller than -7, so the 9s come first, and names break the ties.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'words = ["bat", "ox", "ant", "be"]\nprint(sorted(words, key=lambda w: (len(w), w)))',
-          [
-            "['ox', 'be', 'bat', 'ant']",
-            "['ant', 'bat', 'be', 'ox']",
-            "['be', 'ox', 'ant', 'bat']",
-            "['bat', 'ant', 'ox', 'be']",
-          ],
-          2,
+          "['be', 'ox', 'ant', 'bat']",
           'Length decides first, so the two-letter words come first; within each length, the word itself breaks the tie.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'runs = [("Kim", 42), ("Ola", 38), ("Ben", 42)]\nprint(sorted(runs, key=lambda r: (-r[1], r[0]))[0])',
-          ["('Kim', 42)", "(-42, 'Ben')", "('Ola', 38)", "('Ben', 42)"],
-          3,
+          "('Ben', 42)",
           'The highest score sorts first, and Ben beats Kim on the name tie. sorted returns the items, not their keys.',
         ),
         choose(
@@ -7043,25 +6306,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Cairo and Quito tie at 22, and max returns the first one, Cairo. min returns the pair with 0, and [0] takes its name.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(max(["pear", "banana", "cherry"], key=len))',
-          ['cherry', '6', 'banana', 'pear'],
-          2,
+          'banana',
           'banana and cherry both have 6 letters; max returns the first item with the largest key.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(min([-7, 4, -2, 5], key=abs))',
-          ['-2', '2', '-7', '4'],
-          0,
+          '-2',
           '-2 is closest to zero. min returns the item itself, sign included, not its key.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'bids = [("Ann", 40), ("Raj", 55), ("Sue", 48)]\nbest = max(bids, key=lambda b: b[1])\nprint(best[0], best[1])',
-          ['Sue 48', 'Ann 40', '55 Raj', 'Raj 55'],
-          3,
+          'Raj 55',
           'The key compares the amounts, so the pair with 55 is returned whole. Without the key, max would compare names.',
         ),
         choose(
@@ -7075,16 +6335,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'max with key=len returns the longest word, and len then measures it. max(words) alone picks the last word alphabetically.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'players = [("Zia", 3), ("Abe", 3), ("Max", 5)]\nprint(min(players, key=lambda p: p[1]))\nprint(min(players, key=lambda p: (p[1], p[0])))',
-          [
-            "('Zia', 3)\n('Abe', 3)",
-            "('Abe', 3)\n('Abe', 3)",
-            "('Zia', 3)\n('Zia', 3)",
-            "3\n('Abe', 3)",
-          ],
-          0,
+          "('Zia', 3)\n('Abe', 3)",
           'With only the score as key, Zia and Abe tie and the first one, Zia, wins. The tuple key breaks the tie by name.',
         ),
       ],
@@ -7104,18 +6358,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '6 is 4 + 2, so bits 2 and 1 are set. 21 is 16 + 4 + 1. The literal 0b1001 has bits worth 8 and 1, so it is the integer 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(bin(10))',
-          ['0b0101', '0b1010', '0b1100', '10'],
-          1,
+          '0b1010',
           '10 is 8 + 2, so the bits worth 8 and 2 are set: 1010.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'print(0b10110)',
-          ['13', '10110', '22', '0b10110'],
-          2,
+          '22',
           'Reading from the right, the set bits are worth 2, 4 and 16, which add up to 22. print shows the integer in decimal.',
         ),
         choose(
@@ -7124,16 +6376,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The set bits are bit 4 (worth 16) and bit 1 (worth 2), counting from 0 on the right.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(bin(16), bin(15))',
-          [
-            '0b10000 0b1111',
-            '0b1111 0b10000',
-            '0b10000 0b11111',
-            '0b1000 0b111',
-          ],
-          0,
+          '0b10000 0b1111',
           '16 is a single bit worth 16, written 10000. 15 is 8 + 4 + 2 + 1, all four lower bits set.',
         ),
         choose(
@@ -7157,25 +6403,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '1011 & 0110 keeps only the shared bit, 0010 (2). | gives 1111 (15). ^ keeps the bits set in just one number, 1101 (13).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(9 & 12)',
-          ['13', '8', '5', '21'],
-          1,
+          '8',
           '9 is 1001 and 12 is 1100; only the bit worth 8 is set in both.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'print(5 | 9)',
-          ['1', '12', '14', '13'],
-          3,
+          '13',
           '0101 | 1001 is 1101: every bit set in either number, which is 13.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(14 ^ 9)',
-          ['7', '8', '15', '23'],
-          0,
+          '7',
           '1110 ^ 1001 is 0111: the bit worth 8 is set in both, so it drops out, leaving 4 + 2 + 1.',
         ),
         choose(
@@ -7184,11 +6427,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Every bit of x matches itself, and ^ keeps only bits that differ. The other three all equal x.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'x = 12\nprint(x & 7, x | 1)',
-          ['7 12', '4 12', '0 13', '4 13'],
-          3,
+          '4 13',
           '12 is 1100. & 7 (0111) keeps only the bit worth 4, and | 1 turns on the lowest bit, making 1101 (13).',
         ),
       ],
@@ -7206,25 +6448,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '5 << 3 is 5 * 8. 45 >> 2 is 45 // 4, which is 11. The addition runs before the shift, so 1 << 2 + 1 is 1 << 3, while the parentheses give 4 + 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'print(7 << 1)',
-          ['3', '14', '8', '15'],
-          1,
+          '14',
           'Shifting left by one place doubles the number: 111 becomes 1110, which is 14.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(100 >> 3)',
-          ['800', '12.5', '12', '13'],
-          2,
+          '12',
           '>> 3 is floor division by 8, and 100 // 8 is 12. A shift always gives an int.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'n = 2\nprint(1 << n + 2)',
-          ['6', '4', '8', '16'],
-          3,
+          '16',
           'n + 2 is evaluated first, so this is 1 << 4, which is 16.',
         ),
         choose(
@@ -7233,11 +6472,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           '8 is 2 ** 3, so dropping the lowest 3 bits divides by 8 and rounds down.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'print(1 >> 1, 6 >> 1)',
-          ['0.5 3', '2 12', '0 3', '1 3'],
-          2,
+          '0 3',
           'Shifting right drops the lowest bit: 1 becomes 0, and 110 becomes 11, which is 3.',
         ),
       ],
@@ -7255,25 +6493,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'flags is 10. Bit 1 is set, so the first test gives 2; bit 2 is not, so the second gives 0. Turning on bit 0 gives 11, clearing bit 3 leaves 2, and ~10 is -10 - 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x = 0b10110\nprint(x & (1 << 2), x & (1 << 3))',
-          ['1 0', '4 0', '0 8', '4 8'],
-          1,
+          '4 0',
           'Bit 2 of 10110 is set, so the mask keeps 4. Bit 3 is 0, so that test gives 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(~7, ~-3)',
-          ['-7 3', '8 -2', '-8 2', '-6 4'],
-          2,
+          '-8 2',
           '~x is -x - 1: -7 - 1 is -8, and 3 - 1 is 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'x = 13\nprint(x & ~(1 << 2), x | (1 << 1))',
-          ['13 15', '9 13', '17 15', '9 15'],
-          3,
+          '9 15',
           '13 is 1101. Clearing bit 2 (worth 4) leaves 9, and setting bit 1 (worth 2) gives 1111, which is 15.',
         ),
         choose(
@@ -7282,11 +6517,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Shifting moves bit 3 to position 0, and & 1 keeps only that bit. x & (1 << 3) gives 8, not 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x = 37\nprint((x >> 2) & 1, (x >> 4) & 1)',
-          ['0 1', '1 0', '4 0', '1 16'],
-          1,
+          '1 0',
           '37 is 100101. Bit 2 is set and bit 4 is not, and & 1 reports each as 1 or 0.',
         ),
       ],
@@ -7306,11 +6540,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'math.sqrt(81) is the float 9.0, so multiplying it gives the float 36.0. math.pi is a float constant, and doubling it gives the full float result.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'import math\nprint(math.sqrt(64) + 1)',
-          ['9', '9.0', '65', '8.0'],
-          1,
+          '9.0',
           'math.sqrt(64) is the float 8.0, and adding 1 keeps it a float.',
         ),
         choose(
@@ -7325,18 +6558,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'import math defines only the name math; sqrt is reached through it with a dot.',
           'import math\nprint(sqrt(36))',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'import math\nprint(math.sqrt(9) * math.sqrt(4))',
-          ['6', '36.0', '13.0', '6.0'],
-          3,
+          '6.0',
           'The square roots are 3.0 and 2.0, and multiplying two floats gives the float 6.0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\nprint(math.inf + 1000, -math.inf)',
-          ['inf -inf', 'inf inf', '1000 -inf', 'inf 0.0'],
-          0,
+          'inf -inf',
           'Adding a number to infinity still gives infinity, and negating it gives negative infinity, shown as -inf.',
         ),
         choose(
@@ -7365,25 +6596,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'floor drops to 9 and ceil climbs to 10, however close the value is. For -1.5, the whole number below is -2 and the one above is -1. 17 / 4 is 4.25, which needs 5 groups.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'import math\nprint(math.ceil(6.0), math.ceil(6.1))',
-          ['7 7', '6 7', '6.0 7', '6 6'],
-          1,
+          '6 7',
           '6.0 is already whole, so ceil leaves it at 6. Any part above 6, however small, rounds up to 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'import math\nprint(math.floor(-0.5))',
-          ['0', '-0.5', '1', '-1'],
-          3,
+          '-1',
           'floor goes toward smaller numbers, and the whole number below -0.5 is -1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\npeople = 50\nper_table = 8\nprint(math.ceil(people / per_table))',
-          ['6', '6.25', '7', '8'],
-          2,
+          '7',
           '50 / 8 is 6.25. Six tables seat only 48, so ceil rounds up to 7 tables.',
         ),
         choose(
@@ -7397,11 +6625,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A started block counts in full, so the division must round up. floor and // round down.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'import math\nprint(math.floor(7 / 2) + math.ceil(7 / 2))',
-          ['6', '7', '8', '7.0'],
-          1,
+          '7',
           '7 / 2 is 3.5: floor gives 3 and ceil gives 4, both ints, so the sum is 7.',
         ),
       ],
@@ -7419,11 +6646,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '12 is the largest number dividing both 24 and 36. sqrt was imported by name, so it needs no prefix, and floor is reached through the alias m.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'from math import gcd\nprint(gcd(15, 25), gcd(7, 5))',
-          ['5 1', '75 35', '5 0', '3 1'],
-          0,
+          '5 1',
           '5 divides both 15 and 25. 7 and 5 share no divisor larger than 1, so their gcd is 1.',
         ),
         choose(
@@ -7437,11 +6663,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'This form defines only sqrt. The name math was never assigned, so math.sqrt and math.pi fail.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math as m\nprint(m.ceil(2.1) * m.floor(2.9))',
-          ['4', '9', '6', '6.09'],
-          2,
+          '6',
           'm is the math module: ceil(2.1) is 3 and floor(2.9) is 2, so the product is 6.',
         ),
         choose(
@@ -7455,11 +6680,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'No module is named maths, so the import itself fails before any other line runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'from math import gcd\na = 84\nb = 36\nprint(gcd(a, b), a // gcd(a, b))',
-          ['6 14', '12 3', '4 21', '12 7'],
-          3,
+          '12 7',
           'The largest number dividing both 84 and 36 is 12, and 84 // 12 is 7.',
         ),
       ],
@@ -7479,18 +6703,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Cal joins at the back. popleft serves from the front, Ana and then Ben, leaving only Cal waiting.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'from collections import deque\njobs = deque()\njobs.append("print")\njobs.append("scan")\njobs.append("copy")\nprint(jobs.popleft(), len(jobs))',
-          ['copy 2', 'print 3', 'print 2', 'scan 2'],
-          2,
+          'print 2',
           'The first job added is the first removed, and two jobs are left after it leaves.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from collections import deque\nq = deque([10, 20, 30])\na = q.pop()\nb = q.popleft()\nprint(a, b)',
-          ['10 20', '10 30', '30 20', '30 10'],
-          3,
+          '30 10',
           'pop removes from the right end, 30, and popleft removes from the left end, 10.',
         ),
         choose(
@@ -7504,11 +6726,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Adding at the back and serving from the front keeps arrival order. pop would serve Mo, the newest, first.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'from collections import deque\nq = deque([1, 2])\nfor n in [3, 4]:\n    q.append(n)\n    q.popleft()\nprint(q.popleft(), len(q))',
-          ['1 3', '3 1', '3 2', '4 1'],
-          1,
+          '3 1',
           'Each loop pass adds one number at the back and removes one from the front, leaving 3 and 4. Then 3 is served, and one item remains.',
         ),
       ],
@@ -7526,18 +6747,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '6 was rolled three times and 2 once. 5 never appeared, so its count reads as 0, and it is still not a key. There are three distinct values: 6, 2 and 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'from collections import Counter\nletters = Counter(["m", "a", "m", "m", "a"])\nprint(letters["m"] - letters["a"])',
-          ['3', '1', '2', '-1'],
-          1,
+          '1',
           'm appears three times and a twice, so the difference is 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from collections import Counter\nseen = Counter(["red", "blue"])\nprint(seen["green"])\nprint("green" in seen)',
-          ['0\nTrue', 'None\nFalse', '0\nFalse', '1\nTrue'],
-          2,
+          '0\nFalse',
           'A missing key reads as 0, and reading it does not add green as a key.',
         ),
         choose(
@@ -7551,11 +6770,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Only a Counter treats missing keys as 0; a plain dictionary raises KeyError for brackets on a missing key.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'from collections import Counter\nwords = Counter(["hi", "yo", "hi", "ok"])\nprint(len(words), words["hi"] + words["bye"])',
-          ['3 2', '4 2', '3 3', '4 3'],
-          0,
+          '3 2',
           'len counts distinct items: hi, yo and ok. hi appears twice, and the missing bye adds 0.',
         ),
       ],
@@ -7573,11 +6791,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each += starts a new animal from 0. dog reaches 1 in the loop and then 6, and eel was never added, so it reads as 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'from collections import Counter\nhits = Counter()\nfor page in ["home", "about", "home", "home"]:\n    hits[page] += 1\nprint(hits["home"], hits["about"])',
-          ['1 1', '3 1', '4 4', '3 0'],
-          1,
+          '3 1',
           'Each visit adds 1 to its page, starting from 0, so home reaches 3 and about 1.',
         ),
         choose(
@@ -7591,25 +6808,22 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A missing word reads as 0, so += 1 counts its first appearance and every repeat. = 1 would reset repeats.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from collections import Counter\ngrades = Counter()\nfor score in [91, 78, 85, 62, 95]:\n    if score >= 80:\n        grades["pass"] += 1\n    else:\n        grades["retry"] += 1\nprint(grades["pass"], grades["retry"])',
-          ['2 3', '5 0', '3 2', '3 0'],
-          2,
+          '3 2',
           '91, 85 and 95 are at least 80; 78 and 62 go to retry.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'from collections import deque, Counter\norders = deque(["tea", "cake", "tea"])\nserved = Counter()\norders.append("cake")\nserved[orders.popleft()] += 1\nserved[orders.popleft()] += 1\nserved[orders.popleft()] += 1\nprint(served["tea"], served["cake"], len(orders))',
-          ['2 1 1', '2 2 0', '1 2 1', '2 1 0'],
-          0,
+          '2 1 1',
           'The queue is tea, cake, tea, cake. Three are served from the front, two teas and one cake, and the last cake still waits.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'from collections import Counter\nstock = Counter()\nstock["pens"] += 12\nstock["pens"] -= 5\nstock["pads"] += 3\nprint(stock["pens"], stock["pads"])',
-          ['12 3', '7 3', '-5 3', '17 3'],
-          1,
+          '7 3',
           'pens starts from 0, gains 12 and loses 5, leaving 7. pads gains 3.',
         ),
       ],
@@ -7629,18 +6843,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'heap[0] shows 2 without removing it. The first pop removes 2, the next removes 5, and only 7 is left.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import heapq\nh = []\nfor n in [40, 15, 30, 10]:\n    heapq.heappush(h, n)\nprint(heapq.heappop(h), heapq.heappop(h))',
-          ['40 15', '10 10', '10 15', '15 10'],
-          2,
+          '10 15',
           'Each pop removes the current smallest: 10, then 15. The push order does not matter.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'import heapq\nh = []\nheapq.heappush(h, 8)\nheapq.heappush(h, 3)\nprint(h[0], len(h))\nprint(heapq.heappop(h), len(h))',
-          ['8 2\n3 1', '3 2\n8 1', '3 1\n3 0', '3 2\n3 1'],
-          3,
+          '3 2\n3 1',
           'Reading h[0] leaves both items in place. heappop removes 3 before len runs, so one item is left.',
         ),
         choose(
@@ -7649,11 +6861,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The smallest item always sits at index 0. heappop would remove it, and the end of the list has no special meaning.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'import heapq\nnames = []\nfor name in ["Pia", "Ari", "Max"]:\n    heapq.heappush(names, name)\nheapq.heappush(names, "Bea")\nprint(heapq.heappop(names), heapq.heappop(names))',
-          ['Pia Ari', 'Ari Bea', 'Ari Max', 'Bea Ari'],
-          1,
+          'Ari Bea',
           'Strings compare alphabetically, so the two smallest names are Ari and Bea, even though Bea was pushed last.',
         ),
       ],
@@ -7671,11 +6882,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'After heapify, the smallest time is at index 0. Each pop then removes the current smallest, so the times come out in order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import heapq\ncosts = [12, 3, 25, 7]\nheapq.heapify(costs)\nheapq.heappush(costs, 5)\nprint(heapq.heappop(costs), heapq.heappop(costs), len(costs))',
-          ['3 7 3', '12 3 3', '3 5 5', '3 5 3'],
-          3,
+          '3 5 3',
           'The heap holds 3, 5, 7, 12 and 25. The two pops remove 3 and 5, leaving three items.',
         ),
         choose(
@@ -7689,11 +6899,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A correct heap needs only the smallest item at index 0; the rest is partly ordered, and 9 is not at the end.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'import heapq\ndata = [4, 1, 3]\nresult = heapq.heapify(data)\nprint(result, data[0])',
-          ['[1, 4, 3] 1', 'None 4', 'None 1', '[1, 3, 4] 1'],
-          2,
+          'None 1',
           'heapify changes data in place and returns None. Afterwards the smallest item, 1, is at index 0.',
         ),
         choose(
@@ -7722,18 +6931,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Priority 1 comes out first as a whole tuple. The two priority-2 tasks tie, so the names decide: bake before wash, which is left at index 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'import heapq\nq = [(5, "low"), (1, "urgent"), (3, "normal")]\nheapq.heapify(q)\nprint(heapq.heappop(q)[1])',
-          ['low', "(1, 'urgent')", 'urgent', '1'],
-          2,
+          'urgent',
           'The tuple with priority 1 is the smallest, and [1] selects its name.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import heapq\nh = []\nheapq.heappush(h, (4, "Zed"))\nheapq.heappush(h, (4, "Amy"))\nheapq.heappush(h, (6, "Bob"))\nfirst = heapq.heappop(h)\nprint(first[1], first[0])',
-          ['Zed 4', '4 Amy', 'Bob 6', 'Amy 4'],
-          3,
+          'Amy 4',
           'Zed and Amy tie on priority 4, so the names decide and Amy is smaller. The print shows the name, then the priority.',
         ),
         choose(
@@ -7747,11 +6954,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The heap comes first, then one tuple with the priority in front. With the name first, patients would be ordered alphabetically.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'import heapq\nh = []\nfor job in [(3, "c"), (1, "a"), (2, "b"), (1, "z")]:\n    heapq.heappush(h, job)\nprint(heapq.heappop(h)[1], heapq.heappop(h)[1], heapq.heappop(h)[1])',
-          ['a b c', 'a z b', 'c a b', 'z a b'],
-          1,
+          'a z b',
           'Both priority-1 jobs come out before priority 2, with a before z on the tie.',
         ),
       ],
@@ -7769,18 +6975,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The heap holds -70, -95 and -82. -95 is the smallest, so it pops first and is negated back to 95. The next largest, 82, is now at index 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'import heapq\nh = []\nfor n in [3, 11, 7]:\n    heapq.heappush(h, -n)\nprint(heapq.heappop(h))',
-          ['11', '-3', '-11', '3'],
-          2,
+          '-11',
           '-11 is the smallest stored value, so it pops first. Nothing negates it back, so -11 is printed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import heapq\nbids = []\nheapq.heappush(bids, (-40, "Ola"))\nheapq.heappush(bids, (-65, "Raj"))\nheapq.heappush(bids, (-65, "Eve"))\nbest = heapq.heappop(bids)\nprint(best[1], -best[0])',
-          ['Ola 40', 'Raj 65', 'Eve -65', 'Eve 65'],
-          3,
+          'Eve 65',
           'The two 65 bids tie at -65, and Eve comes before Raj. Negating the priority restores 65.',
         ),
         choose(
@@ -7789,11 +6993,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The most negative value, at index 0, belongs to the highest price; negating it restores the price.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'import heapq\nh = [-2, -9, -4]\nheapq.heapify(h)\na = -heapq.heappop(h)\nb = -heapq.heappop(h)\nprint(a, b)',
-          ['2 4', '9 4', '-9 -4', '4 9'],
-          1,
+          '9 4',
           'The pops return -9 and then -4, the smallest stored values, and negating them gives 9 and 4.',
         ),
       ],
@@ -7813,18 +7016,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '21 belongs after 12 and 19, at index 2. 5 goes before everything and 99 after everything. For 25, which is present, the left insertion point is its own index, 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'from bisect import bisect_left\nprint(bisect_left([3, 6, 9, 12, 15], 10))',
-          ['2', '4', '3', '12'],
-          2,
+          '3',
           '3, 6 and 9 are smaller than 10, so 10 would be inserted at index 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from bisect import bisect_left\nprint(bisect_left([1, 4, 4, 8], 4))',
-          ['2', '3', '0', '1'],
-          3,
+          '1',
           'bisect_left lands before the equal items. Only 1 is smaller than 4, so the index is 1.',
         ),
         choose(
@@ -7838,11 +7039,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Every item before the left insertion point is smaller than x, and indexes start at 0, so the index is the count.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'from bisect import bisect_left\ntemps = [30, 12, 25, 18]\ntemps.sort()\nprint(bisect_left(temps, 20))',
-          ['3', '2', '1', '4'],
-          1,
+          '2',
           'After sorting, temps is [12, 18, 25, 30]. Two temperatures are below 20, so the index is 2.',
         ),
         choose(
@@ -7871,25 +7071,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The 70s occupy indexes 1 to 3, so the left point is 1 and the right point is 4. The gap, 3, is the number of 70s, and only 88 lies beyond the right point.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'from bisect import bisect_right\nprint(bisect_right([2, 5, 5, 9], 5))',
-          ['1', '2', '3', '4'],
-          2,
+          '3',
           'The right insertion point comes after both 5s, at index 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from bisect import bisect_left, bisect_right\nvalues = [1, 3, 3, 3, 3, 7]\nprint(bisect_right(values, 3) - bisect_left(values, 3))',
-          ['3', '4', '5', '1'],
-          1,
+          '4',
           'The 3s start at index 1 and end before index 5, so there are 5 - 1 = 4 copies.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'from bisect import bisect_left, bisect_right\nprint(bisect_left([10, 20, 30], 25), bisect_right([10, 20, 30], 25))',
-          ['2 2', '2 3', '1 2', '3 3'],
-          0,
+          '2 2',
           '25 is not in the list, so there are no equal items to step past: both insertion points are 2.',
         ),
         choose(
@@ -7903,11 +7100,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'bisect_right lands after every item equal to x, so everything before it is less than or equal to x.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'from bisect import bisect_left, bisect_right\n\ndef count_between(values, low, high):\n    return bisect_right(values, high) - bisect_left(values, low)\n\nprint(count_between([1, 4, 4, 6, 9, 12], 4, 9))',
-          ['3', '2', '4', '5'],
-          2,
+          '4',
           'bisect_right for 9 is 5 and bisect_left for 4 is 1, so 4, 4, 6 and 9 are counted.',
         ),
       ],
@@ -7925,35 +7121,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '75 goes between 60 and 80, and the second 40 goes next to the first. The list stays sorted, so bisect_left still counts the three scores below 70.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from bisect import insort\nnums = [2, 7, 11]\ninsort(nums, 9)\nprint(nums)',
-          ['[2, 7, 11, 9]', '[9, 2, 7, 11]', '[2, 7, 9, 11]', '[2, 9, 7, 11]'],
-          2,
+          '[2, 7, 9, 11]',
           'insort places 9 at its sorted position, between 7 and 11, instead of at the end.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'from bisect import insort\nnames = ["Ana", "Joe"]\nresult = insort(names, "Eli")\nprint(result, names)',
-          [
-            "['Ana', 'Eli', 'Joe'] ['Ana', 'Eli', 'Joe']",
-            "None ['Ana', 'Joe', 'Eli']",
-            "1 ['Ana', 'Eli', 'Joe']",
-            "None ['Ana', 'Eli', 'Joe']",
-          ],
-          3,
+          "None ['Ana', 'Eli', 'Joe']",
           'insort changes names in place and returns None; it does not return the index it used.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'from bisect import insort, bisect_left\nseen = []\nfor t in [14, 3, 9, 3]:\n    insort(seen, t)\nprint(seen, bisect_left(seen, 9))',
-          [
-            '[3, 3, 9, 14] 2',
-            '[14, 3, 9, 3] 2',
-            '[3, 9, 14] 1',
-            '[3, 3, 9, 14] 3',
-          ],
-          0,
+          '[3, 3, 9, 14] 2',
           'Each value goes into its sorted place, duplicates included, and two values are smaller than 9.',
         ),
         choose(
@@ -7984,28 +7167,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Calling Dog runs __init__ with self as the new object, "Rex" as name and 3 as age. Both values are stored as attributes and read back with a dot.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'class Planet:\n    def __init__(self, name, moons):\n        self.name = name\n        self.moons = moons\n\nmars = Planet("Mars", 2)\nprint(f"{mars.name} has {mars.moons} moons")',
-          [
-            'mars has 2 moons',
-            'Mars has 2 moons',
-            'name has moons moons',
-            '{mars.name} has {mars.moons} moons',
-          ],
-          1,
+          'Mars has 2 moons',
           'mars.name holds the string "Mars" and mars.moons holds 2; the f-string inserts both values.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'class Ticket:\n    def __init__(self, seat):\n        print("issuing", seat)\n        self.seat = seat\n\na = Ticket("A1")\nb = Ticket("B4")\nprint(b.seat)',
-          [
-            'B4',
-            'issuing B4\nB4',
-            'issuing A1\nissuing B4\nB4',
-            'issuing A1\nB4',
-          ],
-          2,
+          'issuing A1\nissuing B4\nB4',
           '__init__ runs once for each object created, so it prints twice before b.seat is read.',
         ),
         choose(
@@ -8046,25 +7217,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each player starts with its own points of 0. Only ann gains 5. same is another name for bo’s object, so setting same.points sets bo.points.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'class Lamp:\n    def __init__(self, on):\n        self.on = on\n\ndesk = Lamp(False)\nporch = Lamp(False)\nporch.on = True\nprint(desk.on, porch.on)',
-          ['True True', 'False False', 'False True', 'True False'],
-          2,
+          'False True',
           'desk and porch are separate objects, so switching porch on leaves desk off.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'class Account:\n    def __init__(self, balance):\n        self.balance = balance\n\nmine = Account(50)\nyours = mine\nyours.balance = yours.balance - 20\nprint(mine.balance)',
-          ['50', '20', '-20', '30'],
-          3,
+          '30',
           'yours = mine makes a second name for the same object, so the withdrawal shows through mine.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'class Box:\n    def __init__(self, weight):\n        self.weight = weight\n\nboxes = [Box(4), Box(9)]\nboxes[1].weight = 1\nfor box in boxes:\n    print(box.weight)',
-          ['4\n1', '4\n9', '1\n1', '1\n9'],
-          0,
+          '4\n1',
           'boxes[1] is the second box, so only its weight changes to 1. The loop visits both objects in order.',
         ),
         choose(
@@ -8093,18 +7261,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'a uses both defaults. b names rush and keeps the default qty. c names both arguments, so their order in the call does not matter.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'class Room:\n    def __init__(self, name, beds=2):\n        self.name = name\n        self.beds = beds\n\nsuite = Room("Suite", 4)\nsingle = Room("Single", beds=1)\ntwin = Room("Twin")\nprint(suite.beds, single.beds, twin.beds)',
-          ['4 2 2', '2 1 2', '4 1 2', '4 1 0'],
-          2,
+          '4 1 2',
           'suite passes 4 by position and single passes 1 by name. twin passes nothing for beds, so it gets the default 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'class Timer:\n    def __init__(self, minutes=5, label="timer"):\n        self.minutes = minutes\n        self.label = label\n\nt = Timer(label="tea")\nprint(t.label, t.minutes)',
-          ['tea None', '5 tea', 'timer 5', 'tea 5'],
-          3,
+          'tea 5',
           'The keyword argument fills label, and minutes falls back to its default of 5.',
         ),
         choose(
@@ -8146,18 +7312,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'small.area() runs with self as small, and big.area() with self as big. scaled_area calls self.area() on the same object and multiplies the result by 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'class Circle:\n    def __init__(self, radius):\n        self.radius = radius\n\n    def diameter(self):\n        return self.radius * 2\n\nc = Circle(7)\nprint(c.diameter() + 1)',
-          ['8', '14', '15', '16'],
-          2,
+          '15',
           'diameter reads self.radius, 7, and returns 14; the caller then adds 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'class Wallet:\n    def __init__(self, cash):\n        self.cash = cash\n\n    def can_buy(self, price):\n        return self.cash >= price\n\nw = Wallet(20)\nprint(w.can_buy(15), w.can_buy(25))',
-          ['True True', 'False True', '5 -5', 'True False'],
-          3,
+          'True False',
           'price fills the parameter after self. 20 >= 15 is True and 20 >= 25 is False.',
         ),
         choose(
@@ -8177,11 +7341,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Calling through an object always passes that object first, so a method needs self.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'class Scores:\n    def __init__(self, values):\n        self.values = values\n\n    def best(self):\n        return max(self.values)\n\n    def spread(self):\n        return max(self.values) - min(self.values)\n\ns = Scores([62, 90, 75])\nprint(s.best(), s.spread())',
-          ['90 28', '90 62', '75 28', '90 15'],
-          0,
+          '90 28',
           'Both methods read the same list: the largest score is 90, and 90 - 62 is 28.',
         ),
       ],
@@ -8199,25 +7362,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each raise_by builds on the stored temperature: 18, 21, then 22. reset replaces it with 20.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'class Jar:\n    def __init__(self):\n        self.coins = 0\n\n    def add(self, n):\n        self.coins = self.coins + n\n\njar = Jar()\njar.add(5)\njar.add(2)\nprint(jar.coins)',
-          ['2', '7', '5', '0'],
-          1,
+          '7',
           'Each call adds to the stored value, so the jar goes from 0 to 5 to 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'class Battery:\n    def __init__(self, level):\n        self.level = level\n\n    def drain(self, amount):\n        self.level = max(0, self.level - amount)\n\nphone = Battery(30)\nresult = phone.drain(50)\nprint(result, phone.level)',
-          ['-20 -20', '0 0', 'None -20', 'None 0'],
-          3,
+          'None 0',
           'drain has no return, so result is None. max keeps the stored level from going below 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'class Tank:\n    def __init__(self, liters):\n        self.liters = liters\n\n    def fill(self, amount):\n        self.liters = self.liters + amount\n\na = Tank(10)\nb = Tank(10)\na.fill(5)\nb.fill(1)\na.fill(5)\nprint(a.liters, b.liters)',
-          ['21 21', '15 11', '20 11', '20 10'],
-          2,
+          '20 11',
           'Each call updates only the object it was called on: a gains 5 twice, and b gains 1.',
         ),
         choose(
@@ -8246,18 +7406,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each call returns the same Builder, so the next call in the chain updates the same text. msg ends up naming that object.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'class Stack:\n    def __init__(self):\n        self.items = []\n\n    def push(self, x):\n        self.items.append(x)\n        return self\n\ns = Stack().push(4).push(1).push(9)\nprint(s.items)',
-          ['[9]', '[9, 1, 4]', '[4, 1, 9]', '[4]'],
-          2,
+          '[4, 1, 9]',
           'Every push returns the same object, so all three appends go to one list, in call order.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'class Meter:\n    def __init__(self):\n        self.km = 0\n\n    def drive(self, km):\n        self.km = self.km + km\n        return self\n\nm = Meter()\nm.drive(10).drive(5)\nm.drive(1)\nprint(m.km)',
-          ['15', '16', '1', '10'],
-          1,
+          '16',
           'The chain and the later call all update m, so the total is 10 + 5 + 1.',
         ),
         choose(
@@ -8272,11 +7430,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'clear has no return, so box.clear() is None, and None has no add method. A call to clear at the end of a chain is fine.',
           'class Box:\n    def __init__(self):\n        self.items = []\n\n    def add(self, x):\n        self.items.append(x)\n        return self\n\n    def clear(self):\n        self.items = []\n\nbox = Box()',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'class Tally:\n    def __init__(self):\n        self.n = 0\n\n    def bump(self):\n        self.n = self.n + 1\n        return self\n\na = Tally()\nb = a.bump().bump()\nb.bump()\nprint(a.n, b.n)',
-          ['2 3', '2 1', '1 3', '3 3'],
-          3,
+          '3 3',
           'bump returns the same object, so b is another name for a, and all three bumps change it.',
         ),
       ],
@@ -8294,11 +7451,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'margin is a setting. fit learns the mean 20.0, adds the margin, stores 25.0 in cutoff_, and returns the model. predict compares against that learned cutoff.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'class Centerer:\n    def fit(self, values):\n        self.mean_ = sum(values) / len(values)\n        return self\n\n    def transform(self, x):\n        return x - self.mean_\n\nc = Centerer().fit([4, 8, 12])\nprint(c.transform(10), c.transform(5))',
-          ['2 -3', '2.0 -3.0', '-2.0 3.0', '10 5'],
-          1,
+          '2.0 -3.0',
           'fit learns the mean 8.0, a float because of /, and transform subtracts it: 10 - 8.0 and 5 - 8.0.',
         ),
         choose(
@@ -8319,19 +7475,148 @@ export const knowledgePoints: KnowledgePointModule = {
           'predict reads self.cutoff_, which only fit creates. b was fitted; a was not.',
           'class Threshold:\n    def __init__(self, margin=0):\n        self.margin = margin\n\n    def fit(self, values):\n        self.cutoff_ = sum(values) / len(values) + self.margin\n        return self\n\n    def predict(self, x):\n        return x > self.cutoff_\n\na = Threshold(margin=2)\nb = Threshold().fit([1, 3])\nprint(b.predict(4))\nprint(a.predict(4))',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'class Clipper:\n    def __init__(self, low=0):\n        self.low = low\n\n    def fit(self, values):\n        self.high_ = max(values)\n        return self\n\n    def transform(self, x):\n        return min(max(x, self.low), self.high_)\n\nclip = Clipper(low=2).fit([5, 9, 7])\nprint(clip.transform(1), clip.transform(6), clip.transform(12))',
-          ['1 6 12', '2 6 12', '0 6 9', '2 6 9'],
-          3,
+          '2 6 9',
           'low is the setting 2 and high_ is learned as 9, so values are clamped into the range 2 to 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'class MaxModel:\n    def fit(self, values):\n        self.max_ = max(values)\n        return self\n\nm = MaxModel()\nm.fit([3, 8])\nfirst = m.max_\nm.fit([1, 2])\nprint(first, m.max_)',
-          ['8 8', '2 2', '8 2', '8 3'],
-          2,
+          '8 2',
           'Fitting again replaces the learned attribute. first kept the earlier value, 8.',
+        ),
+      ],
+    },
+  ],
+  decorators: [
+    {
+      title: 'Read @ as passing the function to a decorator',
+      explanation: [
+        'Functions are values: sorted(words, key=len) hands the function len to sorted without calling it. A decorator is a function that receives a function and returns something to use in its place.',
+        'Writing @label on the line above def double(x): is shorthand for double = label(double). Python creates double, calls label with it once, while the def statement runs, and binds the name double to whatever label returns. A decorator that returns its argument unchanged leaves the function working as before.',
+      ],
+      example: {
+        code: 'def label(func):\n    print("decorating")\n    return func\n\n@label\ndef double(x):\n    return 2 * x\n\nprint("ready")\nprint(double(5))',
+        output: 'decorating\nready\n10',
+        explanation:
+          'label runs once, when the def statement runs, so decorating appears before ready. It returns double unchanged, so the call still returns 10.',
+      },
+      questions: [
+        typeOutput(
+          'What is printed?',
+          'def announce(func):\n    print("wrapping")\n    return func\n\n@announce\ndef greet():\n    return "hi"\n\nprint(greet())\nprint(greet())',
+          'wrapping\nhi\nhi',
+          'The decorator runs once, while def greet runs, so wrapping is printed before either call. Each call then just returns hi.',
+        ),
+        choose(
+          'Which line does the same as putting @log on the line above def save(data):?',
+          ['log = save(log)', 'save = log', 'save(log)', 'save = log(save)'],
+          3,
+          'The decorator receives the function, and whatever it returns is bound to the function’s name.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          'def replace(func):\n    return "gone"\n\n@replace\ndef hello():\n    return "hi"\n\nprint(hello)',
+          'gone',
+          'hello = replace(hello) binds hello to the string the decorator returned, so hello is no longer a function.',
+        ),
+        typeOutput(
+          'What is the output?',
+          'registered = []\n\ndef register(func):\n    registered.append(func)\n    return func\n\n@register\ndef first():\n    return 1\n\n@register\ndef second():\n    return 2\n\nprint(len(registered), registered[1]())',
+          '2 2',
+          'Each def runs its decorator once, so both functions are in the list. registered[1] is second, and calling it returns 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Cache results with @cache',
+      explanation: [
+        'from functools import cache imports a ready-made decorator. A function decorated with @cache remembers each argument it was called with together with the result. The first call with an argument runs the body and stores the result; every later call with the same argument returns the stored result without running the body at all.',
+        'Different arguments are different entries, so square(4) and square(5) each run once. Because repeated calls skip the body, a print or append inside a cached function happens only on the first call for each argument.',
+      ],
+      example: {
+        code: 'from functools import cache\n\n@cache\ndef square(n):\n    print("computing", n)\n    return n * n\n\nprint(square(4))\nprint(square(4))\nprint(square(5))',
+        output: 'computing 4\n16\n16\ncomputing 5\n25',
+        explanation:
+          'The first square(4) runs the body and stores 16. The second finds 4 already stored and returns 16 without printing. 5 is new, so the body runs again.',
+      },
+      questions: [
+        predictOutput(
+          'What is printed?',
+          'from functools import cache\n\n@cache\ndef slow_add(a, b):\n    print("adding")\n    return a + b\n\nprint(slow_add(2, 3))\nprint(slow_add(2, 3))\nprint(slow_add(3, 2))',
+          [
+            'adding\n5\nadding\n5\nadding\n5',
+            'adding\n5\n5\n5',
+            'adding\n5\n5\nadding\n5',
+            '5\n5\n5',
+          ],
+          2,
+          'The arguments (2, 3) run the body once and are then reused. (3, 2) is a different pair of arguments, so the body runs again even though the sum is the same.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          'from functools import cache\n\ncalls = []\n\n@cache\ndef double(n):\n    calls.append(n)\n    return 2 * n\n\nfor n in [3, 4, 3, 3, 4]:\n    double(n)\nprint(calls)',
+          '[3, 4]',
+          'Only the first call for each argument runs the body, so 3 and 4 are appended once each.',
+        ),
+        choose(
+          'Why is @cache a poor fit for a function that must print a receipt every time it is called?',
+          [
+            'A cached function cannot call print at all',
+            'The cache stores the printed text and prints it twice',
+            'Repeated calls with the same arguments skip the body, so the receipt prints only once',
+            '@cache works only for recursive functions',
+          ],
+          2,
+          'The cache returns the stored result without running the body, so side effects in the body happen only on the first call for each argument.',
+        ),
+        typeOutput(
+          'What is the output?',
+          'from functools import cache\n\n@cache\ndef echo(word):\n    print("work")\n    return word * 2\n\nprint(echo("hi"), echo("hi"), echo("yo"))',
+          'work\nwork\nhihi hihi yoyo',
+          'All three calls run before print shows their results. The first echo("hi") and echo("yo") each run the body once; the second echo("hi") is answered from the cache.',
+        ),
+      ],
+    },
+    {
+      title: 'Make a recursive function fast with @cache',
+      explanation: [
+        'A recursive function can ask for the same smaller answer many times. fib(n) = fib(n - 1) + fib(n - 2) computes fib(3) twice inside fib(5), and the repeats grow so fast that a plain fib(30) runs its body more than two million times.',
+        'Decorating the function with @cache also caches its recursive calls, because the name fib inside the body now refers to the cached function. Each fib(k) is computed once, so fib(n) runs its body only n + 1 times. A cached helper can also be defined inside another function, as in your recursion lessons.',
+      ],
+      example: {
+        code: 'from functools import cache\n\ncalls = []\n\n@cache\ndef fib(n):\n    calls.append(n)\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nprint(fib(10))\nprint(len(calls))',
+        output: '55\n11',
+        explanation:
+          'fib(10) needs fib(0) through fib(10), and each of those 11 states runs the body once. Without @cache the same call would run the body 177 times.',
+      },
+      questions: [
+        predictOutput(
+          'This fib has no cache. How many times does its body run?',
+          'calls = []\n\ndef fib(n):\n    calls.append(n)\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nfib(4)\nprint(len(calls))',
+          ['5', '4', '9', '8'],
+          2,
+          'fib(4) calls fib(3) and fib(2), and fib(3) calls fib(2) again, so smaller states repeat: 9 calls in all.',
+        ),
+        typeOutput(
+          'With @cache, what is printed?',
+          'from functools import cache\n\ncalls = []\n\n@cache\ndef fib(n):\n    calls.append(n)\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nprint(fib(4), len(calls))',
+          '3 5',
+          'fib(4) is 3, and each of the states 0 through 4 runs the body exactly once.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          'from functools import cache\n\ncalls = []\n\n@cache\ndef fib(n):\n    calls.append(n)\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nfib(6)\nfib(8)\nprint(len(calls))',
+          '9',
+          'fib(6) stores the states 0 through 6. fib(8) then needs only the two new states 7 and 8; everything below them is already cached.',
+        ),
+        typeOutput(
+          'What is printed?',
+          'from functools import cache\n\ndef stairs(n):\n    @cache\n    def ways(k):\n        if k <= 1:\n            return 1\n        return ways(k - 1) + ways(k - 2)\n    return ways(n)\n\nprint(stairs(5), stairs(30))',
+          '8 1346269',
+          'ways(k) adds the ways that end with a 1-step and with a 2-step. ways(5) is 8, and the cache makes ways(30) instant: 1346269.',
         ),
       ],
     },

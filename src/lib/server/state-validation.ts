@@ -2,6 +2,7 @@ import { courses } from '../catalog-index';
 import { migrateState, type LearnerState } from '../state';
 import { MAX_SAVED_QUIZZES } from '../quiz';
 import { activityTotals, type ActivityState } from '../activity';
+import { TYPED_RESPONSE_MAX_LENGTH } from '../typed-answer';
 
 /** The full current catalog plus every mastery/mistake card fits with headroom. */
 export const MAX_STATE_BODY_BYTES = 4 * 1024 * 1024;
@@ -72,6 +73,12 @@ function string(
       `a ${nonempty ? 'nonempty ' : ''}string with at most ${max} characters`,
     );
   return value;
+}
+/** A choice index, or the text typed for a typed question. */
+function answer(value: unknown, path: string): number | string {
+  return typeof value === 'string'
+    ? string(value, path, TYPED_RESPONSE_MAX_LENGTH)
+    : number(value, path, 0, 100);
 }
 function boolean(value: unknown, path: string): boolean {
   if (typeof value !== 'boolean') return fail(path, 'a boolean');
@@ -432,7 +439,7 @@ function validateDiagnosticQuestion(
   string(question.questionId, `${path}.questionId`);
   number(question.presentation, `${path}.presentation`);
   if (answered) {
-    number(question.answer, `${path}.answer`, 0, 100);
+    answer(question.answer, `${path}.answer`);
     boolean(question.correct, `${path}.correct`);
     timestamp(question.at, `${path}.at`);
     if (question.elapsedMs !== undefined)
@@ -508,7 +515,7 @@ function validateQuiz(value: unknown, path: string): string {
     string(question.questionId, `${at}.questionId`);
     number(question.presentation, `${at}.presentation`);
     if (question.answer !== undefined && question.answer !== null)
-      number(question.answer, `${at}.answer`, 0, 100);
+      answer(question.answer, `${at}.answer`);
     if (question.correct !== undefined)
       boolean(question.correct, `${at}.correct`);
     if ((question.answer === undefined) !== (question.correct === undefined))
@@ -540,6 +547,7 @@ function validateAttempt(value: unknown, path: string): string {
     'outcome',
     'quizId',
     'credited',
+    'response',
   ]);
   const id = string(attempt.id, `${path}.id`);
   string(attempt.skillId, `${path}.skillId`);
@@ -549,6 +557,8 @@ function validateAttempt(value: unknown, path: string): string {
   if (!['learn', 'review', 'quiz'].includes(attempt.mode as string))
     fail(`${path}.mode`, 'learn, review or quiz');
   if (attempt.quizId !== undefined) string(attempt.quizId, `${path}.quizId`);
+  if (attempt.response !== undefined)
+    string(attempt.response, `${path}.response`, TYPED_RESPONSE_MAX_LENGTH);
   if (attempt.credited !== undefined)
     strings(attempt.credited, `${path}.credited`, 100);
   isoTimestamp(attempt.at, `${path}.at`);
