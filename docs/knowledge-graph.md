@@ -24,11 +24,11 @@ Rust and C++ keep their edges in one explicit map each (`src/lib/courses/rust/pr
 | Machine Learning         |              89 → 56 |                  10 → 9 |        3 → 6 |
 | Data Systems             |              42 → 33 |                   7 → 7 |        3 → 3 |
 | Competitive Programming  |            683 → 373 |                  20 → 9 |       9 → 28 |
-| Rust                     |            145 → 227 |                124 → 15 |       1 → 17 |
+| Rust                     |            145 → 261 |                124 → 18 |       1 → 17 |
 | C++                      |            200 → 296 |                116 → 12 |       3 → 30 |
-| **Catalog**              |    **1,259 → 1,062** |                         |              |
+| **Catalog**              |    **1,259 → 1,096** |                         |              |
 
-Redundant edges fell from 523 to 0. Rust and C++ gained edges because the old generators chained each skill to the previous one and omitted most real uses: 55% of Rust's and 52% of C++'s previous-skill edges were false, and dozens of skills used constructs taught only later. Competitive Programming no longer injects `parameters` into every node or chains every concept to its sibling; 231 of its removed edges named skills that are no longer ancestors at all.
+Rust's figures include the 17 basics added afterwards (CEN-84), which every lesson using them now depends on. Redundant edges fell from 523 to 0. Rust and C++ gained edges because the old generators chained each skill to the previous one and omitted most real uses: 55% of Rust's and 52% of C++'s previous-skill edges were false, and dozens of skills used constructs taught only later. Competitive Programming no longer injects `parameters` into every node or chains every concept to its sibling; 231 of its removed edges named skills that are no longer ancestors at all.
 
 ## Known gaps
 
@@ -38,16 +38,15 @@ Edges cannot fix content. These items are the backlog for new concept nodes and 
 
 - Python: tuples (32), `min`/`max` (15), truthiness (12), `[x] * n` (11), conditional expressions (9), `zip`/`enumerate`/generator expressions (19 combined), sorting and `key=`/`lambda` (10), imports and standard-library modules (11), classes and objects (4), `break`/`continue` (4), sets, recursion, bitwise operators.
 - Mathematics for ML: exponentials and logarithms, softmax, derivative definition and rules, partial derivatives, expected value, correlation, percentiles.
-- Rust: `{:?}`, `assert!`/`assert_eq!`, `.unwrap()` (12), `.copied()` (10), `Option`/`Result` query methods (8), `?` on `Option` (6), turbofish (6), early `return` (5), `TryFrom`/`TryInto` (5), tuple structs (5), `while`/`while let`, `VecDeque`.
 - C++: `&&`/`||`/`!` (28), `?:` (26), range-for (13), `std::array` (8), const member functions, type traits, structured bindings, `break`/`continue`, bit shifts, fixed-width integers.
 
 **Content that contradicts its own edges:**
 
-- Rust: `rust-main`, `rust-format`, and `rust-returns` use typed parameters, `&str`, or `&'static str` before the nodes that teach them; `rust-future-ready` uses `pin!` before `rust-future-pin`. `rust-test-contract` and `rust-package-name` do not exercise their stated rules (`#[test]`, package names). Building maps and sets with `collect` puts every collection behind closures and iterators.
 - C++: `cpp-functions` sums a `std::vector` although vectors depend on it; `cpp-while-progress` teaches `while` with a `do-while` example; `cpp-arithmetic` never teaches `%`, which 12 later skills use.
 - Machine Learning: `ml-decision-trees` reaches calculus only through the overfitting idea in `ml-regularization`; a separate overfitting node would remove that dependency.
 
 **Closed since the audit:**
 
+- Rust now teaches every construct listed in the original audit before a lesson uses it: Debug formatting, `#[derive(Debug, Clone, PartialEq)]`, `const`, `while`, early `return`, tuple structs, turbofish, `From`/`Into`, `TryFrom`/`TryInto`, `.copied()`/`.cloned()`, `Option`/`Result` query methods, `.unwrap()`/`.expect()`, `?` on `Option`, `while let`, `VecDeque`, `assert!`/`assert_eq!`, and `#[test]`/`#[cfg(test)]`. `rust-main`, `rust-returns`, `rust-format`, and `rust-match` use only what precedes them; `rust-future-ready` polls through `Pin::new` and leaves pinning to `rust-future-pin`; `rust-cow` uses `to_mut`; `rust-test-contract` and `rust-package-name` exercise test modules and `Cargo.toml` names; maps and sets are built with `insert` loops, so they no longer depend on iterators.
 - Competitive Programming has no dead-end concepts. `cp-grids` now counts islands by flood-filling each undiscovered land cell (it requires `cp-grid-component`), and `cp-bitmasks` keeps a selection mask with set and clear changes and walks its submasks (it requires `cp-bit-submask-step`). The test exception for these two leaves is removed; every concept stage is an ancestor of its application.
 - Brute force no longer passes Competitive Programming assessments. 37 applications and 4 concept stages end with a hidden deterministic large case that must finish within 3 seconds, and six exercises disable the library shortcut they teach (bisect, itertools combinatorics, `math.gcd`/`lcm`, three-argument `pow`, `math.comb`/`perm`/`factorial`, and `**` for recursive powers). `tests/competitive-assessments.test.ts` runs 48 brute-force and shortcut solutions, mostly from the audit, and requires each to fail.

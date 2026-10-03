@@ -15,6 +15,7 @@ import {
   isUnlocked,
 } from '../src/lib/learning';
 import { createState, mergeStates } from '../src/lib/state';
+import { lessonSteps, POINT_PASS_CORRECT } from '../src/lib/lesson-plan';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
 const now = Date.parse('2026-10-02T15:00:00Z');
 describe('connected course paths', () => {
@@ -89,7 +90,13 @@ describe('connected course paths', () => {
       let progress = emptyProgress(now);
       const path = coursePath(course.id);
       const allowed = new Set(path.map((s) => s.id));
-      const answers = path.reduce((n, s) => n + s.questions.length, 0);
+      // Each knowledge point takes two correct answers; other steps take one.
+      const answers = path
+        .flatMap((s) => lessonSteps(s))
+        .reduce(
+          (n, step) => n + (step.kind === 'point' ? POINT_PASS_CORRECT : 1),
+          0,
+        );
       for (let i = 0; i < answers; i++) {
         const task = nextTask(progress, now, course.id);
         expect(task, `Path stalled after ${i} answers`).not.toBeNull();

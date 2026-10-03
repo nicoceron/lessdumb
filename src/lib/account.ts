@@ -1,5 +1,5 @@
 import { createAuthClient } from 'better-auth/react';
-import type { LearnerState } from './state';
+import { migrateState, type LearnerState } from './state';
 
 export interface AccountUser {
   id: string;
@@ -90,15 +90,22 @@ export class StateConflictError extends AccountRequestError {
   }
 }
 
+/** Accounts saved before a schema or catalog change load in the current shape. */
+function current(result: AccountState): AccountState {
+  return result.state
+    ? { ...result, state: migrateState(result.state) }
+    : result;
+}
+
 async function accountResponse(response: Response): Promise<AccountState> {
   const result = await response.json();
-  if (response.status === 409) throw new StateConflictError(result);
+  if (response.status === 409) throw new StateConflictError(current(result));
   if (!response.ok)
     throw new AccountRequestError(
       result.error ?? 'Your progress could not be synced.',
       response.status,
     );
-  return result as AccountState;
+  return current(result as AccountState);
 }
 
 export async function loadAccountState(
