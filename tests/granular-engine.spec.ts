@@ -17,8 +17,11 @@ import { signUp } from './helpers/accounts';
 import { replaceCode } from './helpers/editor';
 import {
   answerChoice as submitChoice,
+  answeredQuestions,
   answerShown,
   continueLesson,
+  feedback as currentFeedback,
+  prompt,
 } from './helpers/lesson';
 import { lessonSteps } from '../src/lib/lesson-plan';
 import { masterSkill } from './helpers/mastery';
@@ -64,7 +67,7 @@ async function answerCode(
   question: CodeQuestion,
   solution: string,
 ) {
-  await expect(page.locator('.question-paper h1')).toHaveText(question.prompt);
+  await expect(prompt(page)).toHaveText(question.prompt);
   await replaceCode(page, solution);
   await page.getByRole('button', { name: 'Run & check', exact: true }).click();
 }
@@ -120,10 +123,7 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
   ).toHaveAttribute('href', `/learn?skill=${atomic.id}`);
   await detail.getByRole('link', { name: 'Practice this skill' }).click();
   await expect(page.getByText('Step 1 of 4', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
-  const feedback = page.locator(
-    '.question-paper [data-slot="alert"][role="status"]',
-  );
+  const feedback = currentFeedback(page);
   const steps = lessonSteps(atomic);
   for (const point of atomic.knowledgePoints!)
     for (let index = 0; index < 2; index++) {
@@ -290,6 +290,8 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
       await reviewPage
         .getByRole('button', { name: 'Continue', exact: true })
         .click();
+      // Reviews stack on one page, across skills: answered ones stay.
+      await expect(answeredQuestions(reviewPage)).toHaveCount(index + 1);
     }
     await expect(
       reviewPage.getByRole('heading', {
