@@ -82,6 +82,23 @@ function outputs(stdout: string): Map<string, string> {
   return result;
 }
 
+/**
+ * The statements written directly in a C++ program's main, without nested
+ * blocks, lambda bodies, or the helper functions defined before main.
+ */
+function mainStatements(code: string): string {
+  let depth = 0;
+  let statements = '';
+  for (const char of code.slice(
+    code.indexOf('{', code.search(/\bint main\(\)/)),
+  )) {
+    if (char === '{') depth += 1;
+    else if (char === '}' && --depth === 0) break;
+    else if (depth === 1) statements += char;
+  }
+  return statements;
+}
+
 function run(binary: string) {
   const result = spawnSync(binary, [], {
     encoding: 'utf8',
@@ -111,8 +128,11 @@ describe('knowledge point registry', () => {
         expect(program.code, program.id).toMatch(/fn main\(\)/);
       if (program.language === 'cpp') {
         expect(program.code, program.id).toMatch(/int main\(\)/);
-        // Batched programs run as void functions, so main cannot return a value.
-        expect(program.code, program.id).not.toMatch(/return\s+[^;\s]/);
+        // Batched programs run main as a void function, so main cannot return
+        // a value. Helper functions and lambdas before or inside main may.
+        expect(mainStatements(program.code), program.id).not.toMatch(
+          /\breturn\s+[^;\s]/,
+        );
       }
     }
   });
