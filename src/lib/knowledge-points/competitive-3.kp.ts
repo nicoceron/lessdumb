@@ -7376,8 +7376,2508 @@ print(choose_mod(20, 10, 7), comb(20, 10) % 7)`,
   ],
 };
 
+// Python functions shared by several range-query programs below.
+const fenwickPrefix = `def fenwick_prefix(tree, end):
+    total = 0
+    while end > 0:
+        total += tree[end]
+        end -= end & -end
+    return total`;
+
+const fenwickAdd = `def fenwick_add(tree, index, delta):
+    result = tree[:]
+    internal = index + 1
+    while internal < len(result):
+        result[internal] += delta
+        internal += internal & -internal
+    return result`;
+
+const fenwickRangeSums = `def range_sums(values, operations):
+    n = len(values)
+    tree = [0] * (n + 1)
+    def add(index, delta):
+        index += 1
+        while index <= n:
+            tree[index] += delta
+            index += index & -index
+    def prefix(end):
+        total = 0
+        while end > 0:
+            total += tree[end]
+            end -= end & -end
+        return total
+    for index, value in enumerate(values):
+        add(index, value)
+    answers = []
+    for kind, left, right in operations:
+        if kind == "add":
+            add(left, right)
+        else:
+            answers.append(prefix(right) - prefix(left))
+    return answers`;
+
+const fenwickBuild = `def build_tree(values):
+    n = len(values)
+    tree = [0] * (n + 1)
+    for index, value in enumerate(values):
+        internal = index + 1
+        while internal <= n:
+            tree[internal] += value
+            internal += internal & -internal
+    return tree`;
+
+const leafSize = `def leaf_size(count):
+    size = 1
+    while size < count:
+        size *= 2
+    return size`;
+
+const leafLayout = `def minimum_leaf_layout(values):
+    size = 1
+    while size < len(values):
+        size *= 2
+    tree = [float("inf")] * (2 * size)
+    tree[size:size + len(values)] = values
+    return (size, tree)`;
+
+const buildParents = `def build_minimum_parents(tree, size):
+    result = tree[:]
+    for node in range(size - 1, 0, -1):
+        result[node] = min(result[2 * node], result[2 * node + 1])
+    return result`;
+
+const queryNodes = `def query_nodes(size, left, right):
+    left += size
+    right += size
+    nodes = []
+    while left < right:
+        if left % 2:
+            nodes.append(left)
+            left += 1
+        if right % 2:
+            right -= 1
+            nodes.append(right)
+        left //= 2
+        right //= 2
+    return nodes`;
+
+const queryMinimum = `def build(values):
+    size = 1
+    while size < len(values):
+        size *= 2
+    tree = [float("inf")] * (2 * size)
+    tree[size:size + len(values)] = values
+    for node in range(size - 1, 0, -1):
+        tree[node] = min(tree[2 * node], tree[2 * node + 1])
+    return size, tree
+
+def query_minimum(tree, size, left, right):
+    if left == right:
+        return None
+    left += size
+    right += size
+    best = float("inf")
+    while left < right:
+        if left % 2:
+            best = min(best, tree[left])
+            left += 1
+        if right % 2:
+            right -= 1
+            best = min(best, tree[right])
+        left //= 2
+        right //= 2
+    return best`;
+
+const rangeMinima = `def range_minima(values, operations):
+    size = 1
+    while size < len(values):
+        size *= 2
+    tree = [float("inf")] * (2 * size)
+    tree[size:size + len(values)] = values
+    for node in range(size - 1, 0, -1):
+        tree[node] = min(tree[2 * node], tree[2 * node + 1])
+    answers = []
+    for kind, left, right in operations:
+        if kind == "set":
+            node = size + left
+            tree[node] = right
+            node //= 2
+            while node:
+                tree[node] = min(tree[2 * node], tree[2 * node + 1])
+                node //= 2
+        elif left == right:
+            answers.append(None)
+        else:
+            left += size
+            right += size
+            best = float("inf")
+            while left < right:
+                if left % 2:
+                    best = min(best, tree[left])
+                    left += 1
+                if right % 2:
+                    right -= 1
+                    best = min(best, tree[right])
+                left //= 2
+                right //= 2
+            answers.append(best)
+    return answers`;
+
+const doubledJumps = `def doubled_jumps(previous):
+    return [-1 if ancestor == -1 else previous[ancestor] for ancestor in previous]`;
+
+const liftingTable = `def lifting_table(parents, rows):
+    table = [parents[:]]
+    for _ in range(rows - 1):
+        previous = table[-1]
+        table.append([-1 if a == -1 else previous[a] for a in previous])
+    return table
+
+def jump_ancestor(table, vertex, steps):
+    n = len(table[0])
+    if steps >= n:
+        return -1
+    bit = 0
+    while steps and vertex != -1:
+        if steps & 1:
+            vertex = table[bit][vertex]
+        steps >>= 1
+        bit += 1
+    return vertex`;
+
+const kthAncestors = `def kth_ancestors(parents, queries):
+    n = len(parents)
+    up = [parents[:]]
+    for _ in range(1, max(1, n.bit_length())):
+        previous = up[-1]
+        up.append([-1 if parent == -1 else previous[parent] for parent in previous])
+    answers = []
+    for vertex, steps in queries:
+        if steps >= n:
+            answers.append(-1)
+            continue
+        bit = 0
+        while steps and vertex != -1:
+            if steps & 1:
+                vertex = up[bit][vertex]
+            steps >>= 1
+            bit += 1
+        answers.append(vertex)
+    return answers`;
+
+const reversedAdjacency = `def reversed_adjacency(n, edges):
+    reverse = [[] for _ in range(n)]
+    for source, target in edges:
+        reverse[target].append(source)
+    return reverse`;
+
+const finishOrder = `def dfs_finish_order(graph):
+    seen = [False] * len(graph)
+    order = []
+    for root in range(len(graph)):
+        if seen[root]:
+            continue
+        seen[root] = True
+        stack = [(root, 0)]
+        while stack:
+            vertex, next_index = stack[-1]
+            if next_index == len(graph[vertex]):
+                order.append(vertex)
+                stack.pop()
+            else:
+                neighbor = graph[vertex][next_index]
+                stack[-1] = (vertex, next_index + 1)
+                if not seen[neighbor]:
+                    seen[neighbor] = True
+                    stack.append((neighbor, 0))
+    return order`;
+
+const collectComponents = `def collect_reverse_components(reverse, order):
+    seen = [False] * len(reverse)
+    groups = []
+    for root in reversed(order):
+        if seen[root]:
+            continue
+        seen[root] = True
+        stack = [root]
+        group = []
+        while stack:
+            vertex = stack.pop()
+            group.append(vertex)
+            for neighbor in reverse[vertex]:
+                if not seen[neighbor]:
+                    seen[neighbor] = True
+                    stack.append(neighbor)
+        groups.append(sorted(group))
+    return sorted(groups)`;
+
+const sccGroups = `def scc_groups(n, edges):
+    graph = [[] for _ in range(n)]
+    reverse = [[] for _ in range(n)]
+    for source, target in edges:
+        graph[source].append(target)
+        reverse[target].append(source)
+    seen = [False] * n
+    order = []
+    for root in range(n):
+        if seen[root]:
+            continue
+        seen[root] = True
+        stack = [(root, 0)]
+        while stack:
+            vertex, next_index = stack[-1]
+            if next_index == len(graph[vertex]):
+                order.append(vertex)
+                stack.pop()
+            else:
+                neighbor = graph[vertex][next_index]
+                stack[-1] = (vertex, next_index + 1)
+                if not seen[neighbor]:
+                    seen[neighbor] = True
+                    stack.append((neighbor, 0))
+    seen = [False] * n
+    groups = []
+    for root in reversed(order):
+        if seen[root]:
+            continue
+        seen[root] = True
+        stack = [root]
+        group = []
+        while stack:
+            vertex = stack.pop()
+            group.append(vertex)
+            for neighbor in reverse[vertex]:
+                if not seen[neighbor]:
+                    seen[neighbor] = True
+                    stack.append(neighbor)
+        groups.append(sorted(group))
+    return sorted(groups)`;
+
+const condense = `def condensed_edges(groups, n, edges):
+    component = [0] * n
+    index = 0
+    for group in groups:
+        for vertex in group:
+            component[vertex] = index
+        index += 1
+    result = []
+    for source, target in edges:
+        pair = (component[source], component[target])
+        if pair[0] != pair[1] and pair not in result:
+            result.append(pair)
+    return sorted(result)`;
+
+const range: KnowledgePointModule = {
+  'cp-fenwick-lowbit': [
+    {
+      title: 'Isolate the lowest set bit with i & -i',
+      explanation: [
+        'In binary, i & -i keeps only the lowest 1 bit of a positive integer i. For 12 (1100) it gives 4 (100); for any odd number it gives 1.',
+        'This value, called lowbit(i), is always a power of two, and it is the block size a Fenwick tree assigns to internal index i.',
+      ],
+      example: {
+        code: `print([i & -i for i in [3, 10, 16, 20, 7]])
+print(bin(20), bin(20 & -20))`,
+        output: '[1, 2, 16, 4, 1]\n0b10100 0b100',
+        explanation:
+          '20 is 10100 in binary, so its lowest set bit is 100, which is 4. Odd numbers end in a 1 bit.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `print(24 & -24, 9 & -9, 32 & -32)`,
+          ['8 1 32', '24 9 32', '16 1 32', '8 9 16'],
+          0,
+          '24 = 11000 keeps 1000 = 8; 9 is odd; 32 is already a single bit.',
+        ),
+        choose(
+          'What is lowbit(40)?',
+          ['40', '32', '8', '2'],
+          2,
+          '40 is 101000 in binary, and its lowest set bit is 1000 = 8.',
+        ),
+        choose(
+          'Which numbers all have lowbit 4?',
+          ['4, 8, 16', '4, 12, 20', '2, 4, 6', '4, 5, 6'],
+          1,
+          '4 = 100, 12 = 1100, and 20 = 10100 all end in exactly two zero bits.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `print([i & -i for i in range(1, 9)])`,
+          [
+            '[1, 2, 3, 4, 5, 6, 7, 8]',
+            '[1, 1, 1, 1, 1, 1, 1, 1]',
+            '[1, 2, 2, 4, 4, 4, 4, 8]',
+            '[1, 2, 1, 4, 1, 2, 1, 8]',
+          ],
+          3,
+          'Odd numbers give 1, numbers ending in 10 give 2, and the powers of two give themselves.',
+        ),
+      ],
+    },
+    {
+      title: 'Read lowbit(i) as the block that ends at i',
+      explanation: [
+        'A Fenwick tree uses internal indices starting at 1. tree[i] stores the sum of the lowbit(i) positions ending at i: positions i - lowbit(i) + 1 through i.',
+        'Index 0 has lowbit 0, so it covers nothing, and a walk that adds or subtracts lowbit from 0 never moves. That is why internal indexing starts at 1.',
+      ],
+      example: {
+        code: `for i in range(1, 9):
+    size = i & -i
+    print(i, list(range(i - size + 1, i + 1)))`,
+        output:
+          '1 [1]\n2 [1, 2]\n3 [3]\n4 [1, 2, 3, 4]\n5 [5]\n6 [5, 6]\n7 [7]\n8 [1, 2, 3, 4, 5, 6, 7, 8]',
+        explanation:
+          'Odd indices cover only themselves. Powers of two cover everything from 1 up to themselves.',
+      },
+      questions: [
+        choose(
+          'Which internal positions does tree[12] cover?',
+          ['1 through 12', '12 only', '9 through 12', '8 through 12'],
+          2,
+          'lowbit(12) = 4, so the block holds the four positions ending at 12.',
+        ),
+        choose(
+          'Values 3, 1, 4, 1, 5, 9 sit at internal positions 1 through 6. What does tree[6] store?',
+          ['9', '14', '23', '5'],
+          1,
+          'lowbit(6) = 2, so tree[6] sums positions 5 and 6: 5 + 9.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `index = 0
+for step in range(3):
+    index = index + (index & -index)
+print(index)`,
+          ['3', '1', '8', '0'],
+          3,
+          '0 & -0 is 0, so adding it never moves the index.',
+        ),
+        choose(
+          'Why does a Fenwick tree start internal indices at 1?',
+          [
+            'Python lists start at 1',
+            'lowbit(0) is 0, so index 0 has no block and walks from it never move',
+            'Index 0 stores the total sum',
+            '1 is the largest power of two',
+          ],
+          1,
+          'Every positive index has a nonzero lowbit, so walks always make progress.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-fenwick-prefix-walk': [
+    {
+      title: 'Subtract lowbit to collect disjoint blocks',
+      explanation: [
+        'To sum internal positions 1 through end, start at end, add tree[end], then subtract lowbit(end) to jump to the block just before it. Repeat until the index reaches 0.',
+        'The blocks visited are disjoint and together cover exactly 1 through end. Each step clears one set bit, so there are at most about log₂(n) steps.',
+      ],
+      example: {
+        code: `end = 13
+path = []
+while end > 0:
+    path.append(end)
+    end -= end & -end
+print(path)`,
+        output: '[13, 12, 8]',
+        explanation:
+          'tree[13] covers 13, tree[12] covers 9 through 12, and tree[8] covers 1 through 8.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `end = 7
+path = []
+while end > 0:
+    path.append(end)
+    end -= end & -end
+print(path)`,
+          ['[7, 6, 4]', '[7, 6, 5, 4, 3, 2, 1]', '[7, 8]', '[7, 3, 1]'],
+          0,
+          '7 = 111 in binary; clearing one low bit at a time gives 6 and then 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `end = 16
+path = []
+while end > 0:
+    path.append(end)
+    end -= end & -end
+print(path)`,
+          ['[16, 8, 4, 2, 1]', '[16, 15]', '[16]', '[]'],
+          2,
+          'tree[16] already covers positions 1 through 16, so one block is enough.',
+        ),
+        choose(
+          'A prefix walk from end = 11 visits 11, 10, and 8. Which positions does each block cover?',
+          [
+            '11: 1–11; 10: 1–10; 8: 1–8',
+            '11: 11; 10: 10; 8: 8',
+            '11: 9–11; 10: 9–10; 8: 1–8',
+            '11: 11; 10: 9–10; 8: 1–8',
+          ],
+          3,
+          'The lowbits are 1, 2, and 8, so the blocks are disjoint and cover 1 through 11.',
+        ),
+        choose(
+          'At most how many blocks does a prefix walk visit when n = 1,000,000?',
+          [
+            'About 1,000',
+            'About 500,000',
+            'About 20, one per set bit',
+            'Exactly 1',
+          ],
+          2,
+          'Each step clears one bit of end, and numbers below 2^20 have at most 20 bits.',
+        ),
+      ],
+    },
+    {
+      title: 'Map the public prefix [0, end) to internal end',
+      explanation: [
+        'The public array is zero-based, while internal positions start at 1, so public index p lives at internal position p + 1. The public prefix [0, end) is therefore internal positions 1 through end, and the walk starts at end itself.',
+        'An empty prefix, end = 0, reads no blocks and returns 0.',
+      ],
+      example: {
+        code: `${fenwickPrefix}
+
+tree = [0, 4, 5, 3, 10, 6, 11]
+print([fenwick_prefix(tree, end) for end in range(7)])`,
+        output: '[0, 4, 5, 8, 10, 16, 21]',
+        explanation:
+          'This tree stores the values 4, 1, 3, 2, 6, 5. Each entry is the sum of the first end values.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${fenwickPrefix}
+
+tree = [0, 4, 5, 3, 10, 6, 11]
+print(fenwick_prefix(tree, 3), fenwick_prefix(tree, 6))`,
+          ['3 11', '8 21', '8 11', '10 21'],
+          1,
+          'end = 3 adds tree[3] + tree[2] = 8; end = 6 adds tree[6] + tree[4] = 21.',
+        ),
+        choose(
+          'Which values does the public prefix [0, 4) cover?',
+          [
+            'values[0] through values[4]',
+            'values[1] through values[4]',
+            'Internal positions 0 through 3',
+            'values[0] through values[3], at internal positions 1–4',
+          ],
+          3,
+          'Half-open [0, 4) has four values, stored at internal positions 1 through 4.',
+        ),
+        predictOutput(
+          'The second function starts one position too far. What does this program print?',
+          `${fenwickPrefix}
+
+def shifted_prefix(tree, end):
+    return fenwick_prefix(tree, end + 1)
+
+tree = [0, 4, 5, 3, 10, 6, 11]
+print(fenwick_prefix(tree, 3), shifted_prefix(tree, 3))`,
+          ['8 8', '10 8', '8 10', '3 10'],
+          2,
+          'Starting at internal 4 includes public index 3, which [0, 3) excludes.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${fenwickPrefix}
+
+tree = [0, 5, 3, 0, 6]
+print(fenwick_prefix(tree, 4), fenwick_prefix(tree, 2), fenwick_prefix(tree, 0))`,
+          ['6 3 0', '14 8 5', '6 5 0', '6 3 5'],
+          0,
+          'tree[4] already holds the whole prefix of four values, tree[2] the first two, and end = 0 reads nothing.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-fenwick-update-walk': [
+    {
+      title: 'Add lowbit to climb to every containing block',
+      explanation: [
+        'Changing one position changes every block that contains it. Starting at that position’s internal index, adding lowbit jumps to the next larger block that also covers it. Repeat until the index passes n.',
+        'The prefix walk moves left through disjoint blocks; the update walk moves right through nested ones. Both take O(log n) steps.',
+      ],
+      example: {
+        code: `n = 8
+internal = 3
+path = []
+while internal <= n:
+    path.append(internal)
+    internal += internal & -internal
+print(path)`,
+        output: '[3, 4, 8]',
+        explanation:
+          'Position 3 lies in tree[3] (just 3), tree[4] (1 through 4), and tree[8] (1 through 8).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `n = 8
+internal = 5
+path = []
+while internal <= n:
+    path.append(internal)
+    internal += internal & -internal
+print(path)`,
+          ['[5, 4, 0]', '[5, 6, 7, 8]', '[5, 6, 8]', '[5, 8]'],
+          2,
+          '5 + 1 = 6, then 6 + 2 = 8; the next jump would pass n.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `n = 6
+internal = 1
+path = []
+while internal <= n:
+    path.append(internal)
+    internal += internal & -internal
+print(path)`,
+          ['[1, 2, 4]', '[1, 2, 4, 8]', '[1, 2, 3, 4, 5, 6]', '[1]'],
+          0,
+          'The jump from 4 lands on 8, past n = 6, so the walk stops.',
+        ),
+        choose(
+          'With n = 16, a point update at internal position 6 changes which blocks?',
+          ['6 only', '6, 4, and 0', '6, 7, and 8', '6, 8, and 16'],
+          3,
+          'lowbit(6) = 2 leads to 8, and lowbit(8) = 8 leads to 16.',
+        ),
+        choose(
+          'Why does the update walk add lowbit while the prefix walk subtracts it?',
+          [
+            'Both could use either direction',
+            'Updates climb to larger blocks containing the position; prefixes step left through disjoint earlier blocks',
+            'Adding is faster than subtracting',
+            'Subtracting would make the index negative',
+          ],
+          1,
+          'The two walks answer different questions: which blocks contain a position, and which blocks tile a prefix.',
+        ),
+      ],
+    },
+    {
+      title: 'Convert the public index and update a copy',
+      explanation: [
+        'A public, zero-based index p starts the update at internal p + 1. Forgetting the + 1 updates the wrong position, and for p = 0 it starts at 0, where the walk never moves.',
+        'The delta can be negative. Working on tree[:] leaves the caller’s tree unchanged, and the walk stops when the index reaches the list length.',
+      ],
+      example: {
+        code: `${fenwickAdd}
+
+tree = [0, 4, 5, 3, 10, 6, 11]
+print(fenwick_add(tree, 2, 5))`,
+        output: '[0, 4, 5, 8, 15, 6, 11]',
+        explanation:
+          'Public index 2 is internal 3. The walk updates tree[3] and tree[4]; the next index, 8, is past the end.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${fenwickAdd}
+
+tree = [0, 4, 5, 3, 10, 6, 11]
+print(fenwick_add(tree, 0, -4))`,
+          [
+            '[0, 0, 5, 3, 10, 6, 11]',
+            '[0, 0, 1, 3, 6, 6, 11]',
+            '[-4, 4, 5, 3, 10, 6, 11]',
+            '[0, 0, 1, -1, 6, 2, 7]',
+          ],
+          1,
+          'Public index 0 is internal 1, contained in tree[1], tree[2], and tree[4].',
+        ),
+        predictOutput(
+          'This version forgets the + 1. What does it print for public index 2?',
+          `def wrong_add(tree, index, delta):
+    result = tree[:]
+    internal = index
+    while internal < len(result):
+        result[internal] += delta
+        internal += internal & -internal
+    return result
+
+tree = [0, 4, 5, 3, 10, 6, 11]
+print(wrong_add(tree, 2, 5))`,
+          [
+            '[0, 4, 5, 8, 15, 6, 11]',
+            '[0, 4, 5, 3, 10, 6, 11]',
+            '[0, 9, 10, 3, 15, 6, 11]',
+            '[0, 4, 10, 3, 15, 6, 11]',
+          ],
+          3,
+          'Internal 2 is public index 1, so the change lands on the wrong value.',
+        ),
+        choose(
+          'An update for public index 0 forgets the + 1. What happens?',
+          [
+            'It updates internal 1 anyway',
+            'It raises IndexError',
+            'The index stays 0 forever, since 0 & -0 is 0',
+            'It updates every block once',
+          ],
+          2,
+          'The walk adds lowbit(0) = 0 each time, so the loop never ends.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${fenwickAdd}
+
+old = [0, 7]
+new = fenwick_add(old, 0, -2)
+print(old, new)`,
+          ['[0, 5] [0, 5]', '[0, 7] [0, 5]', '[0, 7] [0, 7]', '[0, 7] [-2, 7]'],
+          1,
+          'The function changes a copy, so old keeps its original value.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-fenwick': [
+    {
+      title: 'Build the tree with one point addition per value',
+      explanation: [
+        'Start from an all-zero tree of n + 1 entries and add each value at its own position. Afterwards tree[i] holds the sum of its block, and tree[n] for n a power of two holds the total.',
+        'n point additions cost O(n log n), and the tree uses O(n) storage.',
+      ],
+      example: {
+        code: `${fenwickBuild}
+
+print(build_tree([2, 1, 4, 3]))`,
+        output: '[0, 2, 3, 4, 10]',
+        explanation:
+          'tree[2] covers the first two values (3), tree[3] only the third (4), and tree[4] all four (10).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${fenwickBuild}
+
+print(build_tree([1, 2, 3, 4, 5]))`,
+          [
+            '[0, 1, 3, 6, 10, 15]',
+            '[0, 1, 2, 3, 4, 5]',
+            '[0, 1, 3, 3, 10, 5]',
+            '[0, 1, 3, 3, 10, 15]',
+          ],
+          2,
+          'Blocks: 1 → 1, 2 → 1 + 2, 3 → 3, 4 → 1 + 2 + 3 + 4, 5 → 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${fenwickBuild}
+
+print(build_tree([5, 5, 5, 5, 5, 5, 5, 5]))`,
+          [
+            '[0, 5, 10, 15, 20, 25, 30, 35, 40]',
+            '[0, 5, 10, 5, 20, 5, 10, 5, 40]',
+            '[0, 5, 5, 5, 5, 5, 5, 5, 5]',
+            '[0, 5, 10, 5, 20, 5, 10, 5, 20]',
+          ],
+          1,
+          'Each tree[i] holds lowbit(i) copies of 5.',
+        ),
+        choose(
+          'Building a Fenwick tree with n point additions costs...',
+          ['O(n²)', 'O(log n)', 'O(n³)', 'O(n log n)'],
+          3,
+          'Each of the n additions walks O(log n) blocks.',
+        ),
+        choose(
+          'After building a tree for 8 values, which entry holds the sum of all of them?',
+          ['tree[1]', 'tree[8]', 'tree[0]', 'tree[4]'],
+          1,
+          'lowbit(8) = 8, so tree[8] covers positions 1 through 8.',
+        ),
+      ],
+    },
+    {
+      title: 'Answer [left, right) as prefix(right) - prefix(left)',
+      explanation: [
+        'prefix(end) sums the public range [0, end). The values in [left, right) are those in [0, right) but not in [0, left), so the range sum is prefix(right) - prefix(left).',
+        'When left == right the two prefixes are equal and the sum is 0. Subtraction works because sums can be undone; a minimum, for example, cannot.',
+      ],
+      example: {
+        code: `${fenwickRangeSums}
+
+print(range_sums([3, 1, 5, 2, 4], [("sum", 1, 4), ("sum", 2, 2), ("sum", 0, 5)]))`,
+        output: '[8, 0, 15]',
+        explanation:
+          '[1, 4) holds 1, 5, 2. The empty range gives 0, and [0, 5) is the whole list.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${fenwickRangeSums}
+
+print(range_sums([4, -2, 7, 1], [("sum", 0, 2), ("sum", 1, 4)]))`,
+          ['[2, 6]', '[2, 5]', '[4, 6]', '[9, 6]'],
+          0,
+          '[0, 2) holds 4 and -2; [1, 4) holds -2, 7, and 1.',
+        ),
+        choose(
+          'Which expression sums values[2] through values[5], inclusive?',
+          [
+            'prefix(5) - prefix(2)',
+            'prefix(5) - prefix(1)',
+            'prefix(6) - prefix(2)',
+            'prefix(6) - prefix(3)',
+          ],
+          2,
+          'Inclusive 2 through 5 is the half-open range [2, 6).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${fenwickRangeSums}
+
+print(range_sums([9, 9], [("sum", 1, 1), ("sum", 0, 0)]))`,
+          ['[9, 9]', '[9, 0]', '[0, 9]', '[0, 0]'],
+          3,
+          'Both ranges are empty, so each is the difference of two equal prefixes.',
+        ),
+        choose(
+          'Why can a Fenwick tree answer range sums by subtraction while range minima cannot?',
+          [
+            'Minimums are always negative',
+            'Addition can be undone by subtraction; a minimum has no inverse',
+            'Fenwick trees store only positive values',
+            'Subtraction is faster than min',
+          ],
+          1,
+          'Knowing the minimum of [0, left) does not let you remove those values from the minimum of [0, right).',
+        ),
+      ],
+    },
+    {
+      title: 'Interleave updates and queries in O(log n)',
+      explanation: [
+        'Each ("add", index, delta) walks the containing blocks, and each ("sum", left, right) walks two prefixes. Both cost O(log n), so a mixed sequence of q operations costs O((n + q) log n) including the build.',
+        'A later sum sees every earlier addition inside its range, and none outside it.',
+      ],
+      example: {
+        code: `${fenwickRangeSums}
+
+operations = [("sum", 0, 4), ("add", 1, 5), ("sum", 0, 2), ("add", 3, -3), ("sum", 2, 4)]
+print(range_sums([2, 1, 4, 3], operations))`,
+        output: '[10, 8, 4]',
+        explanation:
+          'The total starts at 10. Index 1 becomes 6, so [0, 2) sums to 8. Index 3 becomes 0, so [2, 4) sums to 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${fenwickRangeSums}
+
+operations = [("add", 0, 4), ("sum", 0, 3), ("add", 2, -1), ("sum", 1, 3)]
+print(range_sums([1, 1, 1], operations))`,
+          ['[3, 2]', '[7, 2]', '[7, 1]', '[7, 6]'],
+          2,
+          'The values become 5, 1, 1, summing to 7; then index 2 drops to 0, leaving 1 in [1, 3).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${fenwickRangeSums}
+
+print(range_sums([7, 8], [("add", 1, 0)]))`,
+          ['[0]', '[15]', 'None', '[]'],
+          3,
+          'Only sum operations produce answers, and there are none.',
+        ),
+        choose(
+          'There are 10^5 values and 10^5 operations. How do rebuilt prefix sums compare with a Fenwick tree?',
+          [
+            'Rebuilding costs about 10^10 steps; the Fenwick tree about 3.4 × 10^6',
+            'Both cost about 10^5 steps',
+            'The Fenwick tree costs about 10^10 steps',
+            'Rebuilding is faster when there are updates',
+          ],
+          0,
+          'Each rebuild is O(n); each Fenwick operation is about 2 × 17 block visits.',
+        ),
+        choose(
+          'An operation ("add", 2, 5) runs. What does a later ("sum", 0, 2) see?',
+          [
+            'The sum grows by 5',
+            'No change, since [0, 2) excludes index 2',
+            'The sum grows by 10',
+            'An error, since index 2 changed',
+          ],
+          1,
+          'The half-open range covers indices 0 and 1 only.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-segment-leaf-layout': [
+    {
+      title: 'Pad the leaf count to a power of two',
+      explanation: [
+        'An iterative segment tree uses a leaf count size that is a power of two at least n. Double size from 1 until it reaches n; an empty input keeps size 1.',
+        'The tree list has 2 × size entries. Since size < 2n for n >= 1, that is fewer than 4n entries.',
+      ],
+      example: {
+        code: `${leafSize}
+
+for count in [1, 3, 4, 5, 9]:
+    print(count, leaf_size(count))`,
+        output: '1 1\n3 4\n4 4\n5 8\n9 16',
+        explanation:
+          'Exact powers of two are kept; any other count rounds up to the next power.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${leafSize}
+
+print(leaf_size(6), leaf_size(16), leaf_size(17))`,
+          ['6 16 17', '8 32 32', '8 16 32', '8 16 17'],
+          2,
+          '6 rounds up to 8, 16 is already a power of two, and 17 needs 32.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${leafSize}
+
+print(leaf_size(0), leaf_size(2))`,
+          ['1 2', '0 2', '1 4', '0 4'],
+          0,
+          'size starts at 1 and never drops below it; 2 is already a power of two.',
+        ),
+        choose(
+          'A tree with leaf size 8 stores how many list entries?',
+          ['8', '15', '16, with index 0 unused', '9'],
+          2,
+          'Leaves fill indices 8 through 15, internal nodes 1 through 7, and index 0 is spare.',
+        ),
+        choose(
+          'How much space does padding to a power of two use for n >= 1 values?',
+          [
+            'Exactly n entries',
+            'Fewer than 4n entries, since size < 2n',
+            'About n² entries',
+            'About n log n entries',
+          ],
+          1,
+          'size is at most double n, and the list holds 2 × size entries.',
+        ),
+      ],
+    },
+    {
+      title: 'Place the values at index size and pad with the identity',
+      explanation: [
+        'Real values occupy tree[size] through tree[size + n - 1]; every other entry starts as infinity. For minima, min(x, infinity) = x, so padding never changes an answer.',
+        'The padding must be the identity of the combine operation: infinity for minimum, 0 for sum.',
+      ],
+      example: {
+        code: `${leafLayout}
+
+size, tree = minimum_leaf_layout([5, 2, 9, 4, 7])
+print(size)
+print(tree[size:])`,
+        output: '8\n[5, 2, 9, 4, 7, inf, inf, inf]',
+        explanation:
+          'Five values need eight leaves; the three unused leaves hold infinity.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${leafLayout}
+
+size, tree = minimum_leaf_layout([6, 1])
+print(tree)`,
+          [
+            '[6, 1, inf, inf]',
+            '[inf, inf, 6, 1]',
+            '[inf, 6, 1, inf]',
+            '[inf, inf, inf, 6, 1]',
+          ],
+          1,
+          'size is 2, so the leaves start at index 2 in a list of four entries.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `print(min(3, float("inf")), min(float("inf"), float("inf")))`,
+          ['3 inf', 'inf inf', '3 3', '0 inf'],
+          0,
+          'Infinity never wins a minimum against a real value.',
+        ),
+        choose(
+          'Why would padding with 0 break a minimum tree over positive values?',
+          [
+            'Lists cannot hold 0',
+            '0 is larger than infinity',
+            '0 could become the minimum of a range that contains padding',
+            'It changes the leaf size',
+          ],
+          2,
+          'A node mixing real leaves and padding would report 0, a value not in the array.',
+        ),
+        choose(
+          'For a segment tree of sums, which padding value is neutral?',
+          ['Infinity', '1', '-1', '0'],
+          3,
+          'x + 0 = x, just as min(x, infinity) = x for minima.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-segment-parent-build': [
+    {
+      title: 'Find children at 2i and 2i + 1',
+      explanation: [
+        'With the root at index 1, node i has children 2i and 2i + 1, and its parent is i // 2. Leaves are indices size through 2 × size - 1, so public index p is leaf size + p.',
+        'Index 0 is unused; starting the root at 1 is what makes these formulas exact.',
+      ],
+      example: {
+        code: `for node in [1, 2, 3]:
+    print(node, 2 * node, 2 * node + 1)
+print(6 // 2, 7 // 2)`,
+        output: '1 2 3\n2 4 5\n3 6 7\n3 3',
+        explanation: 'Nodes 6 and 7 are siblings: both have parent 3.',
+      },
+      questions: [
+        choose(
+          'With size 8, which node is the parent of leaf 13?',
+          ['7', '12', '6', '5'],
+          2,
+          '13 // 2 = 6; node 6 has children 12 and 13.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `size = 8
+node = size + 3
+path = []
+while node:
+    path.append(node)
+    node //= 2
+print(path)`,
+          ['[11, 5, 2, 1]', '[3, 1]', '[11, 6, 3, 1]', '[11, 5, 2, 1, 0]'],
+          0,
+          'Public index 3 is leaf 11; halving climbs through its ancestors to the root.',
+        ),
+        choose(
+          'With size 4, which leaves lie under node 3?',
+          [
+            'Leaves 4 and 5',
+            'Leaves 3 and 4',
+            'All four leaves',
+            'Leaves 6 and 7, public indices 2 and 3',
+          ],
+          3,
+          'Node 3 has children 6 and 7, which are leaves when size = 4.',
+        ),
+        choose(
+          'Why is index 0 left unused?',
+          [
+            'Python cannot store index 0',
+            'With the root at 1, every node’s children are exactly 2i and 2i + 1',
+            'It holds the array length',
+            'It must stay infinity for padding',
+          ],
+          1,
+          'A root at 0 would have children 0 and 1, breaking the formula.',
+        ),
+      ],
+    },
+    {
+      title: 'Build parents from size - 1 down to 1',
+      explanation: [
+        'Each internal node stores the minimum of its two children. Processing nodes from size - 1 down to 1 guarantees both children are final before their parent reads them, because children always have larger indices.',
+        'After the build, every node holds the minimum of its interval, and node 1 holds the minimum of the whole array.',
+      ],
+      example: {
+        code: `${buildParents}
+
+inf = float("inf")
+print(build_minimum_parents([inf, inf, inf, inf, 6, 2, 8, 5], 4))`,
+        output: '[inf, 2, 2, 5, 6, 2, 8, 5]',
+        explanation:
+          'Node 3 = min(8, 5) and node 2 = min(6, 2) are built before the root min(2, 5).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${buildParents}
+
+inf = float("inf")
+print(build_minimum_parents([inf, inf, inf, inf, 7, 3, 9, inf], 4))`,
+          [
+            '[inf, 3, 3, 9, 7, 3, 9, inf]',
+            '[inf, 3, 7, 9, 7, 3, 9, inf]',
+            '[inf, 3, 3, inf, 7, 3, 9, inf]',
+            '[3, 3, 3, 9, 7, 3, 9, inf]',
+          ],
+          0,
+          'The padding leaf loses to 9, so node 3 holds 9.',
+        ),
+        predictOutput(
+          'This loop builds parents upward from node 1. What does it print?',
+          `inf = float("inf")
+tree = [inf, inf, inf, inf, 7, 3, 9, 4]
+for node in range(1, 4):
+    tree[node] = min(tree[2 * node], tree[2 * node + 1])
+print(tree[1])`,
+          ['3', '7', 'inf', '4'],
+          2,
+          'Node 1 is computed while nodes 2 and 3 still hold their starting infinity.',
+        ),
+        choose(
+          'After building a minimum tree on [4, 8, 1, 6, 3], what is tree[1]?',
+          ['4', '3', 'inf', '1'],
+          3,
+          'The root holds the minimum of every real value; padding is infinity.',
+        ),
+        predictOutput(
+          'This builds a sum tree the same way. What does it print?',
+          `tree = [0, 0, 0, 0, 1, 2, 3, 4]
+for node in range(3, 0, -1):
+    tree[node] = tree[2 * node] + tree[2 * node + 1]
+print(tree)`,
+          [
+            '[0, 1, 3, 7, 1, 2, 3, 4]',
+            '[0, 10, 3, 7, 1, 2, 3, 4]',
+            '[10, 3, 7, 1, 2, 3, 4]',
+            '[0, 10, 1, 2, 3, 4, 3, 7]',
+          ],
+          1,
+          'Nodes 3 and 2 sum their leaves to 7 and 3, then the root sums them to 10.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-segment-query-boundaries': [
+    {
+      title: 'Collect boundary nodes while climbing',
+      explanation: [
+        'Move [left, right) to leaf indices by adding size. If left is odd, it is a right child whose parent would also cover a position outside the range, so take it alone and move left one step right. If right is odd, the node just before it is a left child to take alone.',
+        'Then halve both boundaries and repeat while left < right. The collected nodes are disjoint, cover exactly the range, and number at most about 2 log₂ n.',
+      ],
+      example: {
+        code: `${queryNodes}
+
+print(query_nodes(8, 1, 7))`,
+        output: '[9, 14, 5, 6]',
+        explanation:
+          'Leaf 9 is position 1 and leaf 14 is position 6. Node 5 covers positions 2–3 and node 6 covers 4–5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${queryNodes}
+
+print(query_nodes(8, 0, 8))`,
+          ['[8, 9, 10, 11, 12, 13, 14, 15]', '[1]', '[2, 3]', '[]'],
+          1,
+          'The whole array is exactly node 1’s interval, so the boundaries meet at the root.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${queryNodes}
+
+print(query_nodes(8, 2, 5))`,
+          ['[10, 11, 12]', '[5, 12]', '[12, 5]', '[10, 6]'],
+          2,
+          'Right boundary 13 is odd, so leaf 12 (position 4) is taken; node 5 then covers positions 2 and 3.',
+        ),
+        choose(
+          'Why is an odd left boundary taken by itself before moving up?',
+          [
+            'Odd nodes are always leaves',
+            'Left boundaries are always odd',
+            'It holds the minimum',
+            'It is a right child, so its parent would also cover the position to its left',
+          ],
+          3,
+          'That extra position lies outside the range, so the parent cannot be used.',
+        ),
+        choose(
+          'At most how many nodes does one query collect?',
+          ['About n', 'Exactly 2', 'About 2 log₂ n', 'About n / 2'],
+          2,
+          'Each level contributes at most one node per boundary.',
+        ),
+      ],
+    },
+    {
+      title: 'Combine the collected minima and handle empty ranges',
+      explanation: [
+        'The range minimum is the minimum of the collected nodes’ summaries, starting from infinity. An empty range [left, left) has no values, so the query returns None instead of infinity.',
+        'Prefix minima cannot answer this by subtraction: the minimum of [0, left) can hide everything inside the range.',
+      ],
+      example: {
+        code: `${queryMinimum}
+
+size, tree = build([5, 3, 8, 6])
+print(query_minimum(tree, size, 0, 4))
+print(query_minimum(tree, size, 2, 4))
+print(query_minimum(tree, size, 1, 1))`,
+        output: '3\n6\nNone',
+        explanation:
+          'The whole range has minimum 3, positions 2 and 3 have minimum 6, and [1, 1) is empty.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${queryMinimum}
+
+size, tree = build([7, 2, 9, 4])
+print(query_minimum(tree, size, 2, 3), query_minimum(tree, size, 0, 1))`,
+          ['2 2', '9 7', '4 7', '9 2'],
+          1,
+          'Each range holds a single position: index 2 is 9 and index 0 is 7.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${queryMinimum}
+
+size, tree = build([7, 2, 9, 4])
+print(query_minimum(tree, size, 3, 3), query_minimum(tree, size, 0, 3))`,
+          ['inf 2', 'None 7', 'None 2', '4 2'],
+          2,
+          '[3, 3) is empty. [0, 3) holds 7, 2, and 9.',
+        ),
+        choose(
+          'The prefix minima of [1, 9, 8] are [1, 1, 1]. What do they say about the minimum of [1, 3)?',
+          [
+            'Nothing: the 1 at index 0 hides the values in the range',
+            'It is 1',
+            'It is 0, from 1 - 1',
+            'It is 8',
+          ],
+          0,
+          'The true answer is 8, but both prefixes report 1, and minima cannot be subtracted.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${queryMinimum}
+
+size, tree = build([5, 1, 4])
+print(query_minimum(tree, size, 2, 4))`,
+          ['inf', '1', 'None', '4'],
+          3,
+          'The range includes the padding leaf, but min(4, infinity) is 4.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-segment-tree': [
+    {
+      title: 'Assign a point and repair its ancestors',
+      explanation: [
+        'To set public index p, overwrite leaf size + p, then walk to the root with node //= 2, recomputing each node as the minimum of its children. Only those O(log n) nodes contain the changed position.',
+        'Assignment replaces the old value; it does not add to it.',
+      ],
+      example: {
+        code: `inf = float("inf")
+size = 4
+tree = [inf, 1, 4, 1, 4, 7, 1, 9]
+node = size + 2
+tree[node] = 8
+node //= 2
+while node:
+    tree[node] = min(tree[2 * node], tree[2 * node + 1])
+    node //= 2
+print(tree)`,
+        output: '[inf, 4, 4, 8, 4, 7, 8, 9]',
+        explanation:
+          'Leaf 6 changes from 1 to 8, so node 3 becomes min(8, 9) = 8 and the root becomes min(4, 8) = 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${rangeMinima}
+
+print(range_minima([6, 3, 5, 8], [("min", 0, 4), ("set", 1, 9), ("min", 0, 4)]))`,
+          ['[3, 3]', '[3, 9]', '[3, 5]', '[3, 6]'],
+          2,
+          'After index 1 becomes 9, the smallest value left is 5.',
+        ),
+        choose(
+          'With size 8, assigning public index 5 recomputes which internal nodes?',
+          ['6, 3, and 1', '13 only', '5, 2, and 1', 'Every node'],
+          0,
+          'Leaf 13 has ancestors 6, 3, and 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${rangeMinima}
+
+print(range_minima([5], [("set", 0, 7), ("min", 0, 1)]))`,
+          ['[12]', '[5]', '[None]', '[7]'],
+          3,
+          'set replaces the value 5 with 7; it does not add.',
+        ),
+        choose(
+          'What does one point assignment cost?',
+          ['O(n)', 'O(log n)', 'O(1)', 'O(n log n)'],
+          1,
+          'It updates one leaf and one node per level above it.',
+        ),
+      ],
+    },
+    {
+      title: 'Query half-open ranges between updates',
+      explanation: [
+        'A ("min", left, right) operation covers positions left through right - 1, collecting boundary nodes as before. An empty range returns None, even on an empty array.',
+        'Queries always see the latest assignments, because every assignment repairs all affected nodes immediately.',
+      ],
+      example: {
+        code: `${rangeMinima}
+
+print(range_minima([8, 3, 6, 1, 9], [("min", 3, 5), ("min", 4, 4), ("min", 0, 1)]))`,
+        output: '[1, None, 8]',
+        explanation:
+          '[3, 5) holds 1 and 9; [4, 4) is empty; [0, 1) holds only 8.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${rangeMinima}
+
+print(range_minima([2, 7, 5, 4, 6], [("min", 1, 3), ("min", 2, 5)]))`,
+          ['[5, 4]', '[2, 4]', '[5, 5]', '[7, 4]'],
+          0,
+          '[1, 3) holds 7 and 5; [2, 5) holds 5, 4, and 6.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${rangeMinima}
+
+print(range_minima([], [("min", 0, 0)]))`,
+          ['[]', '[inf]', '[None]', '[0]'],
+          2,
+          'The empty query is answered before the tree is ever read.',
+        ),
+        choose(
+          'Which positions does ("min", 1, 4) cover?',
+          ['1, 2, 3, and 4', '1, 2, and 3', '2, 3, and 4', '1 and 4'],
+          1,
+          'Half-open ranges include left and exclude right.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${rangeMinima}
+
+operations = [("min", 1, 1), ("set", 2, 1), ("min", 0, 2), ("min", 2, 3)]
+print(range_minima([5, 5, 5], operations))`,
+          ['[None, 1, 1]', '[5, 5, 1]', '[None, 5, 5]', '[None, 5, 1]'],
+          3,
+          'The update at index 2 is outside [0, 2) but inside [2, 3).',
+        ),
+      ],
+    },
+    {
+      title: 'Choose an associative combine and its identity',
+      explanation: [
+        'A segment tree works for any associative combine: min, max, or sum. Padding uses the combine’s identity, the value that changes nothing: infinity for min, -infinity for max, 0 for sum.',
+        'Associativity matters because a query combines node summaries in groupings that differ from a simple left-to-right scan. Building costs O(n), and each operation O(log n).',
+      ],
+      example: {
+        code: `def build(values, combine, identity):
+    size = 1
+    while size < len(values):
+        size *= 2
+    tree = [identity] * (2 * size)
+    tree[size:size + len(values)] = values
+    for node in range(size - 1, 0, -1):
+        tree[node] = combine(tree[2 * node], tree[2 * node + 1])
+    return tree
+
+print(build([3, 8, 2], min, float("inf"))[1])
+print(build([3, 8, 2], max, float("-inf"))[1])`,
+        output: '2\n8',
+        explanation:
+          'The same code builds a minimum tree or a maximum tree depending on the combine and identity passed in.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def build(values, combine, identity):
+    size = 1
+    while size < len(values):
+        size *= 2
+    tree = [identity] * (2 * size)
+    tree[size:size + len(values)] = values
+    for node in range(size - 1, 0, -1):
+        tree[node] = combine(tree[2 * node], tree[2 * node + 1])
+    return tree
+
+print(build([3, 8, 2], max, float("-inf")))`,
+          [
+            '[-inf, 8, 8, 2, 3, 8, 2, -inf]',
+            '[-inf, 8, 3, 2, 3, 8, 2, -inf]',
+            '[-inf, 2, 3, 2, 3, 8, 2, -inf]',
+            '[inf, 8, 8, 2, 3, 8, 2, inf]',
+          ],
+          0,
+          'The padding leaf is -infinity, so node 3 keeps 2 and the root keeps 8.',
+        ),
+        choose(
+          'Which combine and identity pair is wrong?',
+          [
+            'min with identity infinity',
+            'sum with identity 0',
+            'max with identity infinity',
+            'max with identity -infinity',
+          ],
+          2,
+          'max(x, infinity) is infinity, so that padding would swamp every real value.',
+        ),
+        choose(
+          'Why must the combine operation be associative?',
+          [
+            'Python requires it',
+            'A query combines node summaries in groupings that differ from left-to-right order',
+            'So padding can be skipped',
+            'So the tree stays sorted',
+          ],
+          1,
+          'Only an associative combine gives the same answer for every grouping of the same values.',
+        ),
+        choose(
+          'Building a segment tree for n values costs...',
+          ['O(n log n)', 'O(n²)', 'O(log n)', 'O(n)'],
+          3,
+          'Each of fewer than 2 × size nodes is computed once from its two children.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-lifting-parent-row': [
+    {
+      title: 'Store each vertex’s immediate parent in row 0',
+      explanation: [
+        'A parent-pointer forest stores parents[v], the vertex one edge above v, with -1 for a root. This list is row 0 of a binary-lifting table: the ancestor 2^0 = 1 step up.',
+        'Indices are labels, not depths. A parent may have a larger index than its child, and a forest may have several roots.',
+      ],
+      example: {
+        code: `parents = [2, 2, -1, 1]
+print(parents[3], parents[parents[3]])`,
+        output: '1 2',
+        explanation:
+          'Vertex 3’s parent is 1, and 1’s parent is 2, so two lookups find 3’s grandparent.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `parents = [-1, 0, 0, 2, 2]
+print(parents[4], parents[parents[4]])`,
+          ['2 0', '0 2', '2 2', '4 2'],
+          0,
+          'Vertex 4’s parent is 2, and 2’s parent is the root 0.',
+        ),
+        choose(
+          'parents = [3, -1, 1, -1]. Which vertices are roots?',
+          ['0 and 2', 'Only 1', 'Only 3', '1 and 3'],
+          3,
+          'Roots are exactly the vertices whose entry is -1.',
+        ),
+        choose(
+          'parents = [2, 2, -1]. Is it valid for vertex 0’s parent to have a larger index?',
+          [
+            'No, parents must come before children',
+            'Yes, because indices are labels, not depths',
+            'Only for roots',
+            'Only when there is a single root',
+          ],
+          1,
+          'Any acyclic assignment of parents is a valid forest, whatever the numbering.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `parents = [1, -1, 1, 0]
+print(parents[3], parents[parents[3]], parents[parents[parents[3]]])`,
+          ['0 1 1', '1 0 -1', '0 1 -1', '0 -1 -1'],
+          2,
+          'From 3 the chain goes to 0, then 1, then past the root to -1.',
+        ),
+      ],
+    },
+    {
+      title: 'Guard the -1 sentinel and copy the row',
+      explanation: [
+        '-1 means "no ancestor", but Python reads parents[-1] as the last entry without complaint. Always check for -1 before using a value as an index.',
+        'Build the table from parents[:], a copy, so constructing later rows never changes the caller’s forest.',
+      ],
+      example: {
+        code: `parents = [-1, 0, 1]
+root_parent = parents[0]
+print(root_parent)
+print(parents[root_parent])`,
+        output: '-1\n1',
+        explanation:
+          'The root has no parent, yet parents[-1] silently returns 1, a made-up "grandparent".',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `parents = [-1, 0, 0, 1]
+print(parents[parents[0]])`,
+          ['-1', '0', '1', 'An IndexError is raised'],
+          2,
+          'parents[0] is -1, and parents[-1] is the last entry, 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `parents = [-1, 0, 0, 1]
+v = 0
+above = parents[v]
+if above != -1:
+    above = parents[above]
+print(above)`,
+          ['-1', '1', '0', '3'],
+          0,
+          'The guard stops at the root, so the missing grandparent stays -1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `parents = [-1, 0, 1]
+row = parents[:]
+row[2] = -1
+print(parents, row)`,
+          [
+            '[-1, 0, -1] [-1, 0, -1]',
+            '[-1, 0, 1] [-1, 0, 1]',
+            '[-1, 0, -1] [-1, 0, 1]',
+            '[-1, 0, 1] [-1, 0, -1]',
+          ],
+          3,
+          'parents[:] makes a separate list, so only row changes.',
+        ),
+        choose(
+          'Why does the table start from a copy of the parent list?',
+          [
+            'Copies are faster to index',
+            'Later table construction must not change the caller’s forest',
+            'The copy removes the -1 entries',
+            'Python forbids reading the original',
+          ],
+          1,
+          'The caller may still need the original parent pointers after preprocessing.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-lifting-compose-jumps': [
+    {
+      title: 'Follow the previous row twice to double the distance',
+      explanation: [
+        'If previous[v] is the ancestor d steps above v, then previous[previous[v]] is 2d steps above. Row j + 1 is built from row j this way, so row j jumps 2^j edges.',
+        'Each new row is one list comprehension over the previous row.',
+      ],
+      example: {
+        code: `${doubledJumps}
+
+print(doubled_jumps([-1, 0, 1, 2, 3, 4]))`,
+        output: '[-1, -1, 0, 1, 2, 3]',
+        explanation:
+          'On a chain, each vertex’s two-step ancestor is the vertex two positions earlier.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${doubledJumps}
+
+print(doubled_jumps([-1, 0, 0, 1, 2]))`,
+          [
+            '[-1, -1, -1, 0, 0]',
+            '[-1, 0, 0, 1, 2]',
+            '[-1, -1, 0, 0, 1]',
+            '[0, 0, 0, 0, 0]',
+          ],
+          0,
+          'Vertices 3 and 4 have grandparent 0; vertices 1 and 2 have none.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${doubledJumps}
+
+chain = [-1, 0, 1, 2, 3, 4, 5]
+print(doubled_jumps(doubled_jumps(chain)))`,
+          [
+            '[-1, -1, 0, 1, 2, 3, 4]',
+            '[-1, -1, -1, -1, 0, 1, 2]',
+            '[-1, -1, -1, 0, 1, 2, 3]',
+            '[-1, -1, -1, -1, -1, 0, 1]',
+          ],
+          1,
+          'Doubling twice gives four-step ancestors: vertex 6 reaches 2.',
+        ),
+        choose(
+          'Row j jumps 2^j edges. How far does row 5 jump?',
+          ['5', '10', '32', '25'],
+          2,
+          'Each row doubles the previous distance: 1, 2, 4, 8, 16, 32.',
+        ),
+        choose(
+          'How is up[j + 1][v] computed from row j?',
+          [
+            'up[j][v] + up[j][v]',
+            'up[0][up[j][v]]',
+            '2 * up[j][v]',
+            'up[j][up[j][v]], or -1 if up[j][v] is -1',
+          ],
+          3,
+          'Jumping 2^j twice moves 2^(j + 1) edges; vertex labels are not distances, so they cannot be added.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep missing ancestors missing',
+      explanation: [
+        'If the first jump already leaves the tree (-1), there is no ancestor twice as far either. The comprehension checks for -1 before indexing, so the doubled entry stays -1.',
+        'Without the check, previous[-1] reads the last vertex’s entry and invents an ancestor for a root.',
+      ],
+      example: {
+        code: `previous = [-1, 0, 1]
+print([previous[a] for a in previous])
+print([-1 if a == -1 else previous[a] for a in previous])`,
+        output: '[1, -1, 0]\n[-1, -1, 0]',
+        explanation:
+          'The unguarded row claims the root 0 has a two-step ancestor 1; the guarded row keeps -1.',
+      },
+      questions: [
+        predictOutput(
+          'This version has no -1 check. What does it print?',
+          `previous = [-1, 0, 0, 2]
+print([previous[a] for a in previous])`,
+          [
+            '[-1, -1, -1, 0]',
+            '[-1, 0, 0, 2]',
+            '[2, -1, -1, 0]',
+            '[2, 2, 2, 0]',
+          ],
+          2,
+          'The root’s -1 reads previous[-1] = 2, inventing an ancestor.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${doubledJumps}
+
+print(doubled_jumps([-1, 0, 0, 2]))`,
+          [
+            '[2, -1, -1, 0]',
+            '[-1, -1, -1, 0]',
+            '[-1, 0, 0, 0]',
+            '[-1, -1, -1, -1]',
+          ],
+          1,
+          'Only vertex 3 has a grandparent, 0; every other entry stays missing.',
+        ),
+        choose(
+          'Vertex v has up[2][v] = -1. What is up[3][v]?',
+          ['-1', 'up[2][-1]', 'v', '0'],
+          0,
+          'If no ancestor exists 4 steps up, none exists 8 steps up.',
+        ),
+        predictOutput(
+          'This forest has two roots. What does the program print?',
+          `${doubledJumps}
+
+print(doubled_jumps([-1, 0, -1, 2, 3]))`,
+          [
+            '[-1, -1, -1, 2, 2]',
+            '[-1, -1, -1, -1, 3]',
+            '[-1, 0, -1, 2, 3]',
+            '[-1, -1, -1, -1, 2]',
+          ],
+          3,
+          'Only vertex 4 is two steps below anything: 4 → 3 → 2.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-lifting-query-bits': [
+    {
+      title: 'Use row j for each set bit j of the distance',
+      explanation: [
+        'Any distance k is a sum of distinct powers of two, one per set bit. For each set bit j, replace the current vertex with table[j][vertex]. After processing some bits, the vertex has moved exactly the distance those bits represent.',
+        'The jumps can be taken in any order, because they only add up distances along one path toward the root.',
+      ],
+      example: {
+        code: `${liftingTable}
+
+table = lifting_table([-1, 0, 1, 2, 3, 4, 5, 6], 3)
+print(jump_ancestor(table, 7, 5))`,
+        output: '2',
+        explanation:
+          '5 = 101 in binary: one step takes 7 to 6, then a four-step jump takes 6 to 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${liftingTable}
+
+table = lifting_table([-1, 0, 1, 2, 3, 4, 5, 6], 3)
+print(jump_ancestor(table, 7, 6))`,
+          ['1', '6', '0', '3'],
+          0,
+          '6 = 110: a two-step jump takes 7 to 5, then a four-step jump takes 5 to 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${liftingTable}
+
+table = lifting_table([-1, 0, 1, 2, 3, 4, 5, 6], 3)
+print(jump_ancestor(table, 7, 3), jump_ancestor(table, 5, 0))`,
+          ['4 -1', '4 5', '3 5', '5 4'],
+          1,
+          'Three steps from 7 reach 4; zero steps leave 5 where it is.',
+        ),
+        choose(
+          'Which rows answer a jump of 13?',
+          [
+            'Rows 1, 3, and 4',
+            'Row 13',
+            'Rows 0, 2, and 3',
+            'Rows 0 through 3',
+          ],
+          2,
+          '13 = 1101 in binary: 1 + 4 + 8.',
+        ),
+        choose(
+          'Does processing the bits from high to low instead of low to high change the answer?',
+          [
+            'Yes, only high to low works',
+            'Only for even distances',
+            'Yes, only low to high works',
+            'No, the jumps add up to the same distance either way',
+          ],
+          3,
+          'Every jump moves toward the root, so the order of the pieces does not matter.',
+        ),
+      ],
+    },
+    {
+      title: 'Reject distances of n or more and stop at -1',
+      explanation: [
+        'In a forest of n vertices, any upward path has at most n - 1 edges, so k >= n has no ancestor. Check this first: a huge k has set bits beyond the last table row.',
+        'If a jump lands on -1, stop; the ancestor does not exist, and reading table[j][-1] would return a wrong entry. Zero steps return the original vertex.',
+      ],
+      example: {
+        code: `${liftingTable}
+
+table = lifting_table([-1, 0, 1, 2, 3, 4, 5, 6], 3)
+print(jump_ancestor(table, 2, 5))
+print(jump_ancestor(table, 7, 100))`,
+        output: '-1\n-1',
+        explanation:
+          'Vertex 2 has only two ancestors, so the loop stops at -1. 100 >= 8 is rejected before any lookup.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${liftingTable}
+
+table = lifting_table([-1, 0, 1, 2, 3, 4, 5, 6], 3)
+print(jump_ancestor(table, 3, 3), jump_ancestor(table, 3, 4))`,
+          ['0 0', '0 -1', '-1 -1', '1 -1'],
+          1,
+          'Vertex 3 is exactly three steps below the root, so four steps go past it.',
+        ),
+        choose(
+          'Without the steps >= n check, what happens for steps = 2**40 on a table with 3 rows?',
+          [
+            'It returns -1 correctly',
+            'It returns the root',
+            'It reaches bit 40 and indexes a row that does not exist',
+            'It loops forever',
+          ],
+          2,
+          'Bits 0 through 39 are unset, so the vertex stays valid until table[40] is read.',
+        ),
+        choose(
+          'Why is k >= n always -1 in an n-vertex forest?',
+          [
+            'Roots have index n',
+            'The table has n rows',
+            'k is truncated to n',
+            'An upward path visits distinct vertices, so it has at most n - 1 edges',
+          ],
+          3,
+          'The forest is acyclic, so a path cannot revisit a vertex.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${liftingTable}
+
+table = lifting_table([-1, 0, 1, 2, 3, 4, 5, 6], 3)
+print(jump_ancestor(table, 6, 0), jump_ancestor(table, 0, 1))`,
+          ['6 -1', '5 -1', '6 0', '-1 -1'],
+          0,
+          'Zero steps return the vertex itself; the root has no parent.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-binary-lifting': [
+    {
+      title: 'Build max(1, n.bit_length()) doubling rows',
+      explanation: [
+        'Only distances below n need answers, and those fit in n.bit_length() bits, so that many rows suffice; max(1, ...) keeps at least the parent row. Row 0 is a copy of parents, and each later row doubles the previous one.',
+        'The table has O(log n) rows of n entries, so preprocessing costs O(n log n) time and space.',
+      ],
+      example: {
+        code: `parents = [-1, 0, 0, 1, 3]
+n = len(parents)
+up = [parents[:]]
+for _ in range(1, max(1, n.bit_length())):
+    previous = up[-1]
+    up.append([-1 if parent == -1 else previous[parent] for parent in previous])
+for row in up:
+    print(row)`,
+        output: '[-1, 0, 0, 1, 3]\n[-1, -1, -1, 0, 1]\n[-1, -1, -1, -1, -1]',
+        explanation:
+          '5 needs 3 bits, so there are rows for 1, 2, and 4 steps. No vertex here is 4 steps deep.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `print((5).bit_length(), (8).bit_length(), (1).bit_length())`,
+          ['3 4 1', '2 3 0', '3 3 1', '5 8 1'],
+          0,
+          '5 = 101 has 3 bits, 8 = 1000 has 4, and 1 has 1.',
+        ),
+        choose(
+          'A forest has 1,000 vertices. How many rows does the table need?',
+          ['1,000', '10', '500', '32'],
+          1,
+          'Distances up to 999 fit in 10 bits, since 2^10 = 1024.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `parents = [-1, 0, 1, 1, 2]
+previous = parents[:]
+print([-1 if parent == -1 else previous[parent] for parent in previous])`,
+          [
+            '[-1, -1, 0, 0, 1]',
+            '[-1, 0, 1, 1, 2]',
+            '[-1, -1, 1, 1, 2]',
+            '[0, 0, 0, 0, 1]',
+          ],
+          0,
+          'Row 1 holds two-step ancestors: 2 and 3 reach 0, and 4 reaches 1.',
+        ),
+        choose(
+          'What do preprocessing time and space grow like?',
+          ['O(n)', 'O(n²)', 'O(log n)', 'O(n log n)'],
+          3,
+          'There are about log₂ n rows, each with n entries.',
+        ),
+      ],
+    },
+    {
+      title: 'Answer each kth-ancestor query bit by bit',
+      explanation: [
+        'For a query (vertex, k), walk the bits of k from low to high and follow row j for each set bit j. Each query takes O(log n) jumps, however large the tree is.',
+        'Parents may have larger indices than their children, and the forest may have several roots; the table handles both without changes.',
+      ],
+      example: {
+        code: `${kthAncestors}
+
+print(kth_ancestors([-1, 0, 1, 2, 3, 4], [(5, 3), (5, 5), (4, 1), (2, 0)]))`,
+        output: '[2, 0, 3, 2]',
+        explanation:
+          'On the chain 5 → 4 → 3 → 2 → 1 → 0, three steps from 5 reach 2 and five steps reach the root.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${kthAncestors}
+
+print(kth_ancestors([2, 2, -1, 0, 3], [(4, 2), (4, 3), (1, 1)]))`,
+          ['[3, 0, 2]', '[0, 2, 2]', '[0, -1, 2]', '[2, 0, 2]'],
+          1,
+          'The chain is 4 → 3 → 0 → 2, and 1’s parent is 2.',
+        ),
+        predictOutput(
+          'This forest has two roots. What does the program print?',
+          `${kthAncestors}
+
+print(kth_ancestors([-1, 0, -1, 2, 3], [(4, 2), (4, 3), (1, 2)]))`,
+          ['[2, -1, -1]', '[2, 0, -1]', '[3, 2, 0]', '[2, -1, 0]'],
+          0,
+          '4 → 3 → 2 reaches root 2 in two steps; a third step leaves the tree. Vertex 1 is one step below its root.',
+        ),
+        choose(
+          'A query asks for the 6th ancestor. Which rows does it use?',
+          ['Rows 0 and 6', 'Row 6', 'Rows 1 and 2', 'Rows 0, 1, and 2'],
+          2,
+          '6 = 110 in binary: 2 + 4.',
+        ),
+        choose(
+          'How long does each query take?',
+          ['O(n)', 'O(k)', 'O(1)', 'O(log n)'],
+          3,
+          'k < n has at most about log₂ n bits, one jump per set bit.',
+        ),
+      ],
+    },
+    {
+      title: 'Handle k = 0, missing ancestors, and huge k',
+      explanation: [
+        'k = 0 returns the vertex itself. Any k >= n returns -1 immediately, even if k has a hundred digits. During a walk, reaching -1 stops the loop, so -1 is never used as an index.',
+        'An empty forest builds one empty row and accepts only an empty query list.',
+      ],
+      example: {
+        code: `${kthAncestors}
+
+print(kth_ancestors([-1], [(0, 0), (0, 1), (0, 10**30)]))`,
+        output: '[0, -1, -1]',
+        explanation:
+          'Zero steps stay at the root; one step or a huge number of steps leave the tree.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${kthAncestors}
+
+print(kth_ancestors([-1, 0, 1], [(2, 0), (2, 2), (2, 3), (2, 10**18)]))`,
+          [
+            '[2, 0, 0, -1]',
+            '[-1, 0, -1, -1]',
+            '[2, 0, -1, -1]',
+            '[2, 1, -1, -1]',
+          ],
+          2,
+          'Vertex 2 is two steps below the root, so 3 or more steps return -1.',
+        ),
+        predictOutput(
+          'This table is built without the -1 check. What does it print for the root’s two-step ancestor?',
+          `parents = [-1, 0, 1]
+previous = parents[:]
+row1 = [previous[parent] for parent in previous]
+print(row1[0])`,
+          ['-1', '1', '0', '2'],
+          1,
+          'previous[-1] is 1, so the root appears to have a two-step ancestor.',
+        ),
+        choose(
+          'Why check steps >= n before reading the table?',
+          [
+            'A large k has bits beyond the last row, and its answer is -1 anyway',
+            'To make k smaller',
+            'Because roots are stored at index n',
+            'To sort the queries',
+          ],
+          0,
+          'The check is both a shortcut and a guard against indexing missing rows.',
+        ),
+        choose(
+          'What does kth_ancestors([], []) return?',
+          ['[-1]', 'An IndexError', 'None', '[]'],
+          3,
+          'One empty row is built, and with no queries the answer list stays empty.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-scc-reverse-edges': [
+    {
+      title: 'Flip the direction of every edge',
+      explanation: [
+        'The reverse of a directed graph turns each edge source → target into target → source. In adjacency form, reverse[v] lists every vertex that had an edge into v.',
+        'Reversing twice restores the original graph, and a vertex that can reach v in the original is reachable from v in the reverse.',
+      ],
+      example: {
+        code: `${reversedAdjacency}
+
+print(reversed_adjacency(4, [(0, 1), (0, 2), (2, 3), (3, 0)]))`,
+        output: '[[3], [0], [0], [2]]',
+        explanation:
+          'Each target collects its original sources: 0 was entered from 3, and 1 and 2 from 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${reversedAdjacency}
+
+print(reversed_adjacency(3, [(1, 0), (2, 0), (0, 2)]))`,
+          [
+            '[[2], [0], [0]]',
+            '[[1, 2], [], [0]]',
+            '[[0], [0], [2]]',
+            '[[2], [], [0, 1]]',
+          ],
+          1,
+          'Vertex 0 had edges from 1 and 2, and vertex 2 had an edge from 0.',
+        ),
+        choose(
+          'What does reversing a directed graph twice give?',
+          [
+            'An undirected graph',
+            'A graph with no edges',
+            'The original graph',
+            'A graph with every edge doubled',
+          ],
+          2,
+          'Each edge is flipped and then flipped back.',
+        ),
+        choose(
+          'In the reversed graph, what does reverse[v] list?',
+          [
+            'Vertices that v points to in the original',
+            'Vertices with an original edge into v',
+            'All vertices reachable from v',
+            'Vertices with no edges',
+          ],
+          1,
+          'The original target v stores its sources as outgoing neighbors.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${reversedAdjacency}
+
+print(reversed_adjacency(3, [(2, 1), (1, 0)]))`,
+          [
+            '[[], [2], [1]]',
+            '[[1], [2], []]',
+            '[[0], [1], [2]]',
+            '[[1, 2], [], []]',
+          ],
+          1,
+          'The chain 2 → 1 → 0 becomes 0 → 1 → 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep isolated vertices, duplicates, and self-loops',
+      explanation: [
+        'Allocate one separate list per vertex, even for vertices no edge touches; each is still a vertex of the graph. [[] for _ in range(n)] creates n different lists, while [[]] * n repeats one shared list.',
+        'Duplicate edges reverse into duplicate entries, and a self-loop v → v stays a self-loop.',
+      ],
+      example: {
+        code: `${reversedAdjacency}
+
+print(reversed_adjacency(4, [(1, 1), (0, 1), (0, 1)]))`,
+        output: '[[], [1, 0, 0], [], []]',
+        explanation:
+          'Vertex 1 keeps its self-loop and both copies of the edge from 0. Vertices 2 and 3 keep empty lists.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${reversedAdjacency}
+
+print(reversed_adjacency(3, [(2, 2), (0, 2)]))`,
+          [
+            '[[2], [], [0]]',
+            '[[], [], [0]]',
+            '[[], [], [2, 0]]',
+            '[[0], [], [2]]',
+          ],
+          2,
+          'Both edges end at 2, so reverse[2] lists 2 itself and then 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `reverse = [[]] * 3
+reverse[1].append(0)
+print(reverse)`,
+          [
+            '[[0], [0], [0]]',
+            '[[], [0], []]',
+            '[[0], [], []]',
+            '[[], [], [0]]',
+          ],
+          0,
+          '[[]] * 3 repeats one list three times, so appending through any slot changes all of them.',
+        ),
+        choose(
+          'Why allocate a list for vertex 3 when no edge touches it?',
+          [
+            'To store its edge count',
+            'It is not needed',
+            'For a possible self-loop only',
+            'It is still a vertex and forms its own component',
+          ],
+          3,
+          'Later passes iterate over every vertex and index reverse[v] for each one.',
+        ),
+        choose(
+          'The edge 0 → 1 appears twice. What should reverse[1] contain?',
+          ['[0, 0]', '[0]', '[]', '[1, 1]'],
+          0,
+          'Each copy of the edge is reversed separately, preserving multiplicity.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-scc-finish-order': [
+    {
+      title: 'Record a vertex when all its neighbors are done',
+      explanation: [
+        'Depth-first search finishes a vertex only after every neighbor it can still discover has finished. Finishing order therefore lists a vertex after everything it discovered, unlike discovery order, which lists it first.',
+        'SCC algorithms need finishing order, not discovery order.',
+      ],
+      example: {
+        code: `${finishOrder}
+
+print(dfs_finish_order([[1, 2], [3], [], []]))`,
+        output: '[3, 1, 2, 0]',
+        explanation:
+          'Discovery order is 0, 1, 3, 2, but 3 finishes first, then 1, then 2, and the root 0 last.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${finishOrder}
+
+print(dfs_finish_order([[2], [0], []]))`,
+          ['[0, 2, 1]', '[2, 1, 0]', '[2, 0, 1]', '[1, 0, 2]'],
+          2,
+          'From root 0, vertex 2 finishes before 0. Root 1 starts later and finds 0 already seen.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${finishOrder}
+
+print(dfs_finish_order([[1], [2], [0]]))`,
+          ['[0, 1, 2]', '[2, 1, 0]', '[1, 2, 0]', '[2, 0, 1]'],
+          1,
+          'The search goes 0 → 1 → 2, finds 0 already seen, and finishes in reverse.',
+        ),
+        choose(
+          'Where does a vertex appear in finishing order relative to the vertices it discovered?',
+          ['Before them', 'In input order', 'After them', 'Always last'],
+          2,
+          'A vertex finishes only after every vertex it discovered has finished.',
+        ),
+        choose(
+          'Discovery order for [[1, 2], [], []] is 0, 1, 2. What is its finishing order?',
+          ['0, 1, 2', '2, 1, 0', '0, 2, 1', '1, 2, 0'],
+          3,
+          '1 and 2 have no neighbors and finish immediately; 0 finishes after both.',
+        ),
+      ],
+    },
+    {
+      title: 'Pause each vertex with a (vertex, next_index) frame',
+      explanation: [
+        'An explicit stack replaces recursion. Each frame (vertex, next_index) remembers which neighbor to try next, so the search can descend into a neighbor and later resume exactly where it left off.',
+        'A vertex is marked seen when it is pushed, so cycles, self-loops, and duplicate edges never push it twice. The stack is an ordinary list, so long chains do not hit Python’s recursion limit.',
+      ],
+      example: {
+        code: `${finishOrder}
+
+graph = [[i + 1] for i in range(2999)] + [[]]
+order = dfs_finish_order(graph)
+print(order[:3], len(order))`,
+        output: '[2999, 2998, 2997] 3000',
+        explanation:
+          'A 3000-vertex chain would exceed the default recursion limit, but the frame stack handles it.',
+      },
+      questions: [
+        choose(
+          'The top frame is (4, 2). What does it mean?',
+          [
+            'Vertex 4 has exactly 2 neighbors',
+            'Vertex 4 was discovered second',
+            'Vertex 2 is 4’s parent',
+            'Vertex 4 has handled neighbors 0 and 1 and will try neighbor index 2 next',
+          ],
+          3,
+          'next_index counts how many of the vertex’s neighbors have been examined.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${finishOrder}
+
+print(dfs_finish_order([[2, 2], [1], [0]]))`,
+          ['[2, 0, 1]', '[0, 2, 1]', '[2, 2, 0, 1]', '[2, 1, 0]'],
+          0,
+          'The duplicate edge to 2 and the self-loop at 1 find seen vertices, so nothing is pushed twice.',
+        ),
+        choose(
+          'Python raises RecursionError around depth 1,000. Why does the frame stack avoid it?',
+          [
+            'Frames are smaller than function calls',
+            'Frames live in an ordinary list, not on the call stack',
+            'It visits fewer vertices',
+            'Python allows deeper loops than calls',
+          ],
+          1,
+          'A list can grow as large as memory allows.',
+        ),
+        choose(
+          'Why mark a vertex seen when it is pushed rather than when it finishes?',
+          [
+            'Otherwise a cycle could push the same vertex again while it is still open',
+            'To record finishing order',
+            'It is faster to read',
+            'So isolated vertices are skipped',
+          ],
+          0,
+          'An open vertex reached again through a cycle must not get a second frame.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-scc-reverse-components': [
+    {
+      title: 'Search the reversed graph in decreasing finish order',
+      explanation: [
+        'Take the vertices in reversed finishing order. Each still-unseen vertex starts a traversal of the reversed graph, and everything that traversal reaches is one strongly connected component.',
+        'The vertex that finished last belongs to a component that no other remaining component can reach, so following reversed edges from it cannot escape into another component.',
+      ],
+      example: {
+        code: `${collectComponents}
+
+reverse = [[1], [0], [1, 3], [2]]
+print(collect_reverse_components(reverse, [3, 2, 1, 0]))`,
+        output: '[[0, 1], [2, 3]]',
+        explanation:
+          'The original edges are 0 ↔ 1, 1 → 2, and 2 ↔ 3. Starting from 0 collects {0, 1}; the next unseen root, 2, collects {2, 3}.',
+      },
+      questions: [
+        predictOutput(
+          'The original edges are 0 → 1, 1 → 0, and 2 → 0, with finishing order [1, 0, 2]. What does this print?',
+          `${collectComponents}
+
+print(collect_reverse_components([[1, 2], [0], []], [1, 0, 2]))`,
+          ['[[0, 1, 2]]', '[[0], [1], [2]]', '[[0, 1], [2]]', '[[1], [0, 2]]'],
+          2,
+          'Root 2 has no reversed edges, so it is alone; root 0 then collects 1.',
+        ),
+        predictOutput(
+          'This version walks the finishing order forward instead of reversed. What does it print?',
+          `def wrong_components(reverse, order):
+    seen = [False] * len(reverse)
+    groups = []
+    for root in order:
+        if seen[root]:
+            continue
+        seen[root] = True
+        stack = [root]
+        group = []
+        while stack:
+            vertex = stack.pop()
+            group.append(vertex)
+            for neighbor in reverse[vertex]:
+                if not seen[neighbor]:
+                    seen[neighbor] = True
+                    stack.append(neighbor)
+        groups.append(sorted(group))
+    return sorted(groups)
+
+print(wrong_components([[1, 2], [0], []], [1, 0, 2]))`,
+          ['[[0, 1], [2]]', '[[0, 1, 2]]', '[[0], [1], [2]]', '[[1], [0, 2]]'],
+          1,
+          'Starting from 1 reaches 0 and then 2, merging a vertex that cannot be reached back.',
+        ),
+        choose(
+          'Why does the second pass follow reversed edges?',
+          [
+            'Reversed edges are faster to follow',
+            'Original edges would miss isolated vertices',
+            'To sort the components',
+            'From the chosen root they reach only vertices that can reach it, staying inside its component',
+          ],
+          3,
+          'Combined with the finishing order, reversed reachability stops at the component boundary.',
+        ),
+        choose(
+          'Which vertex starts the second pass?',
+          [
+            'The vertex that finished last in the first pass',
+            'Vertex 0, always',
+            'The vertex that finished first',
+            'The vertex with the most edges',
+          ],
+          0,
+          'reversed(order) begins with the last vertex to finish.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep visited marks across roots and sort the groups',
+      explanation: [
+        'Visited marks are shared by the whole second pass. A vertex collected into one component is skipped when a later root reaches it, which keeps components separate.',
+        'A vertex with no cycle through it is still its own singleton component. Sorting each group and then the list of groups gives one deterministic answer.',
+      ],
+      example: {
+        code: `${collectComponents}
+
+print(collect_reverse_components([[], [], []], [0, 1, 2]))`,
+        output: '[[0], [1], [2]]',
+        explanation: 'With no edges, every vertex is its own component.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${collectComponents}
+
+print(collect_reverse_components([[0]], [0]))`,
+          ['[]', '[[0, 0]]', '[[0]]', '[0]'],
+          2,
+          'The self-loop leads back to a seen vertex, so the component is just [0].',
+        ),
+        choose(
+          'A vertex has no self-loop and lies on no cycle. Which SCC contains it?',
+          [
+            'No SCC',
+            'Its own singleton SCC',
+            'The SCC of its parent',
+            'Every SCC',
+          ],
+          1,
+          'Every vertex belongs to exactly one SCC, possibly of size one.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `groups = [[3, 2], [1]]
+print(sorted([sorted(group) for group in groups]))`,
+          ['[[3, 2], [1]]', '[[1], [3, 2]]', '[[2, 3], [1]]', '[[1], [2, 3]]'],
+          3,
+          'Each group is sorted first, then the groups are ordered by their first elements.',
+        ),
+        choose(
+          'If the visited marks were reset for each new root in the second pass, what would go wrong?',
+          [
+            'A traversal could collect vertices already placed in an earlier component',
+            'Nothing',
+            'Isolated vertices would vanish',
+            'The finishing order would reverse',
+          ],
+          0,
+          'Reversed edges can lead into components that were already collected; only the shared marks stop that.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-scc': [
+    {
+      title: 'Group vertices by mutual reachability',
+      explanation: [
+        'Two vertices are in the same strongly connected component when each can reach the other. Reaching in one direction is not enough. Every vertex belongs to exactly one SCC, possibly alone.',
+        'A component with two or more vertices contains a directed cycle; a singleton contains one only through a self-loop.',
+      ],
+      example: {
+        code: `${sccGroups}
+
+print(scc_groups(4, [(0, 1), (1, 2), (2, 1), (2, 3)]))`,
+        output: '[[0], [1, 2], [3]]',
+        explanation:
+          '1 and 2 reach each other. 0 reaches them but cannot be reached back, and 3 reaches nothing.',
+      },
+      questions: [
+        choose(
+          'The edges are 0 → 1, 1 → 2, 2 → 0, and 2 → 3. Which partition is correct?',
+          [
+            '[[0, 1, 2, 3]]',
+            '[[0], [1], [2], [3]]',
+            '[[0, 1], [2, 3]]',
+            '[[0, 1, 2], [3]]',
+          ],
+          3,
+          '0, 1, and 2 lie on one cycle; 3 cannot reach back.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${sccGroups}
+
+print(scc_groups(4, [(0, 1), (1, 2), (2, 3)]))`,
+          [
+            '[[0, 1, 2, 3]]',
+            '[[0], [1], [2], [3]]',
+            '[[0, 1], [2, 3]]',
+            '[[3], [2], [1], [0]]',
+          ],
+          1,
+          'A one-way chain has no cycle, so every vertex is its own component.',
+        ),
+        choose(
+          'u reaches v, but v cannot reach u. Are they in one SCC?',
+          [
+            'Yes, one direction is enough',
+            'Only if they are adjacent',
+            'No, both directions are required',
+            'Only if u < v',
+          ],
+          2,
+          'Strong connectivity requires paths both ways.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${sccGroups}
+
+print(scc_groups(5, [(0, 1), (1, 0), (3, 4), (4, 3), (1, 3)]))`,
+          [
+            '[[0, 1], [2], [3, 4]]',
+            '[[0, 1, 3, 4], [2]]',
+            '[[0, 1], [3, 4]]',
+            '[[0], [1], [2], [3], [4]]',
+          ],
+          0,
+          'The edge 1 → 3 joins the two cycles in one direction only; isolated 2 is its own group.',
+        ),
+      ],
+    },
+    {
+      title: 'Run Kosaraju’s two passes',
+      explanation: [
+        'Pass one runs DFS on the original graph and records finishing order. Pass two builds the reversed graph and traverses it in decreasing finishing order; each new traversal collects one whole SCC.',
+        'Both passes touch each vertex and edge a constant number of times, so the algorithm runs in O(V + E), plus sorting for deterministic output.',
+      ],
+      example: {
+        code: `${sccGroups}
+
+print(scc_groups(5, [(0, 1), (1, 2), (2, 0), (3, 2), (3, 4), (4, 3)]))`,
+        output: '[[0, 1, 2], [3, 4]]',
+        explanation:
+          '0, 1, 2 form one cycle and 3, 4 another; the edge 3 → 2 goes one way only.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `${sccGroups}
+
+print(scc_groups(6, [(0, 1), (1, 2), (2, 0), (2, 3), (3, 4), (4, 5), (5, 3)]))`,
+          [
+            '[[0, 1, 2, 3, 4, 5]]',
+            '[[0, 1, 2], [3], [4], [5]]',
+            '[[0, 1, 2], [3, 4, 5]]',
+            '[[0], [1], [2], [3, 4, 5]]',
+          ],
+          2,
+          'Two separate cycles are joined by the one-way edge 2 → 3.',
+        ),
+        choose(
+          'What does the first DFS pass give the second pass?',
+          [
+            'The components themselves',
+            'A finishing order that decides where each second-pass traversal starts',
+            'The reversed graph',
+            'The number of components',
+          ],
+          1,
+          'The order is what keeps each reversed traversal inside one component.',
+        ),
+        choose(
+          'What is the running time of the two passes?',
+          [
+            'O(V × E)',
+            'O(V²) always',
+            'O(E log E) only',
+            'O(V + E), plus sorting for the output',
+          ],
+          3,
+          'Each pass visits every vertex once and examines every edge once.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${sccGroups}
+
+print(scc_groups(3, [(0, 0), (0, 1), (0, 1), (1, 2)]))`,
+          [
+            '[[0], [1], [2]]',
+            '[[0, 1], [2]]',
+            '[[0, 1, 2]]',
+            '[[0, 0], [1], [2]]',
+          ],
+          0,
+          'A self-loop and duplicate edges create no path back from 1 to 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Contract the components into a DAG',
+      explanation: [
+        'Replace each SCC with a single vertex and keep one edge between different components when any original edge connects them. The result has no directed cycle: a cycle between two components would make them mutually reachable, so they would be one component.',
+        'The contracted graph can then be processed with DAG tools, such as a topological order of groups.',
+      ],
+      example: {
+        code: `${sccGroups}
+
+${condense}
+
+edges = [(0, 1), (1, 0), (1, 2), (2, 3), (3, 2), (3, 4)]
+groups = scc_groups(5, edges)
+print(groups)
+print(condensed_edges(groups, 5, edges))`,
+        output: '[[0, 1], [2, 3], [4]]\n[(0, 1), (1, 2)]',
+        explanation:
+          'Component 0 = {0, 1}, 1 = {2, 3}, and 2 = {4}. Edges inside a component disappear, leaving a chain of groups.',
+      },
+      questions: [
+        choose(
+          'After contraction, components A and B have edges A → B and B → A. What must be true?',
+          [
+            'The graph has a self-loop',
+            'A and B are both singletons',
+            'They were really one SCC, so the partition is wrong',
+            'Nothing unusual',
+          ],
+          2,
+          'Paths both ways mean every vertex of A and B is mutually reachable.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `${condense}
+
+edges = [(0, 1), (1, 0), (0, 2), (1, 2), (2, 3)]
+print(condensed_edges([[0, 1], [2], [3]], 4, edges))`,
+          [
+            '[(0, 1), (0, 1), (1, 2)]',
+            '[(0, 1), (1, 2)]',
+            '[(0, 0), (0, 1), (1, 2)]',
+            '[(0, 2), (1, 2), (2, 3)]',
+          ],
+          1,
+          'Edges inside {0, 1} vanish, and the two edges into vertex 2 become one group edge.',
+        ),
+        choose(
+          'Every SCC of a 7-vertex graph is a singleton. What does that say about the graph?',
+          [
+            'It has no edges',
+            'It is strongly connected',
+            'Every vertex has a self-loop',
+            'Apart from possible self-loops, it is a DAG',
+          ],
+          3,
+          'Any cycle through two or more vertices would form a larger component.',
+        ),
+        choose(
+          'Which question can be answered on the contracted DAG?',
+          [
+            'Ordering groups of mutually dependent tasks topologically',
+            'Finding the shortest edge',
+            'Counting self-loops',
+            'Sorting vertices by index',
+          ],
+          0,
+          'Within a group tasks depend on each other cyclically, but the groups themselves form a DAG.',
+        ),
+      ],
+    },
+  ],
+};
+
 export const knowledgePoints: KnowledgePointModule = {
   ...dynamic,
   ...strategy,
   ...numberTheory,
+  ...range,
 };
