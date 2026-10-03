@@ -108,20 +108,41 @@ for (const id of ['da-arrays', 'ml-linear-regression']) {
     const skill = skillById[id];
     await seedPrerequisites(page, id);
     await page.goto(`/learn?skill=${id}`);
-    await page.getByRole('button', { name: 'Let’s try it' }).click();
-    for (const question of skill.questions) {
-      if (question.type === 'choice') await answerChoice(page, question);
-      else {
-        await replaceCode(page, (question as CodeQuestion).solution);
-        await page
-          .getByRole('button', { name: 'Run & check', exact: true })
-          .click();
-      }
-      await expect(feedback(page)).toContainText(
-        question === skill.questions.at(-1) ? 'Lesson complete' : 'Correct',
-        { timeout: 60000 },
+    if (skill.knowledgePoints) {
+      // Points pass with two correct answers each; the scientific Python
+      // exercise then completes the lesson.
+      await page
+        .getByRole('button', { name: 'Start lesson', exact: true })
+        .click();
+      for (const point of skill.knowledgePoints)
+        for (let index = 0; index < 2; index++) {
+          await answerShown(page, point.questions);
+          await expect(feedback(page)).toContainText('Correct');
+          await continueLesson(page);
+        }
+      await answerShown(
+        page,
+        skill.questions.filter((question) => question.type === 'code'),
       );
-      if (question !== skill.questions.at(-1)) await continueLesson(page);
+      await expect(feedback(page)).toContainText('Lesson complete', {
+        timeout: 60000,
+      });
+    } else {
+      await page.getByRole('button', { name: 'Let’s try it' }).click();
+      for (const question of skill.questions) {
+        if (question.type === 'choice') await answerChoice(page, question);
+        else {
+          await replaceCode(page, (question as CodeQuestion).solution);
+          await page
+            .getByRole('button', { name: 'Run & check', exact: true })
+            .click();
+        }
+        await expect(feedback(page)).toContainText(
+          question === skill.questions.at(-1) ? 'Lesson complete' : 'Correct',
+          { timeout: 60000 },
+        );
+        if (question !== skill.questions.at(-1)) await continueLesson(page);
+      }
     }
     await openFromMenu(page, /Flashcards/);
     await expect(
