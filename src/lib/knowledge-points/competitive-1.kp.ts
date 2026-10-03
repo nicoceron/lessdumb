@@ -1,4 +1,4 @@
-import { choose, predictOutput, type KnowledgePointModule } from '.';
+import { choose, predictOutput, type KnowledgePointModule } from './authoring';
 
 // Competitive Programming, part 1: foundations, collections, linear scans and search.
 export const knowledgePoints: KnowledgePointModule = {
@@ -3491,6 +3491,1731 @@ export const knowledgePoints: KnowledgePointModule = {
           ['cat', 'CAT', 'Cat', "{'c': 1, 'a': 1, 't': 1}"],
           1,
           'Reassigning the loop variable ch never changes text.',
+        ),
+      ],
+    },
+  ],
+  'cp-prefix-boundaries': [
+    {
+      title: 'n values have n + 1 boundaries',
+      explanation: [
+        'Picture the gaps around a list’s values: one before the first value, one between each pair of neighbors, and one after the last. A list of n values has n + 1 such prefix boundaries, numbered 0 to n. Boundary i separates the first i values from the rest.',
+      ],
+      example: {
+        code: 'values = [10, 20, 30, 40]\nprint(len(values))\nprint(len(values) + 1)\nprint(list(range(len(values) + 1)))',
+        output: '4\n5\n[0, 1, 2, 3, 4]',
+        explanation:
+          'Four values have five boundaries: before 10, between each neighbor pair, and after 40.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [6, 6]\nprint(list(range(len(values) + 1)))',
+          ['[0, 1]', '[0, 1, 2]', '[1, 2]', '[0, 1, 2, 3]'],
+          1,
+          'Two values have three boundaries, numbered 0, 1 and 2.',
+        ),
+        choose(
+          'How many prefix boundaries does a list of 8 values have?',
+          ['8', '7', '9', '16'],
+          2,
+          'One boundary before each value plus one after the last: 8 + 1.',
+        ),
+        choose(
+          'Which values lie before boundary 3 of [5, 1, 8, 2]?',
+          ['5, 1 and 8', '5 and 1', '8 alone', '5, 1, 8 and 2'],
+          0,
+          'Boundary i separates the first i values from the rest.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = []\nprint(list(range(len(values) + 1)))',
+          ['[]', '[0, 1]', '[0]', 'None'],
+          2,
+          'Even an empty list has one boundary, boundary 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Boundary 0 is the empty prefix',
+      explanation: [
+        'Boundary i stands for the first i values, and its prefix total is their sum. Boundary 0 covers no values, so its total is 0; boundary n covers the whole list. Keeping boundary 0 means a range that starts at the very first value needs no special case.',
+      ],
+      example: {
+        code: 'values = [4, 7, -2]\ntotal = 0\nprint(total)\nfor value in values:\n    total = total + value\n    print(total)',
+        output: '0\n4\n11\n9',
+        explanation:
+          'The first line is the total at boundary 0. Each later line is the total at the next boundary, after one more value.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'total = 0\nprint(total)\nfor value in [5, -5, 2]:\n    total = total + value\n    print(total)',
+          ['0\n5\n0\n2', '5\n0\n2', '0\n5\n10\n12', '5\n0\n2\n2'],
+          0,
+          'Four boundaries give four totals: 0, then 5, 0 and 2 as each value is included.',
+        ),
+        choose(
+          'What is the prefix total at boundary 0?',
+          [
+            'The first value',
+            '0',
+            'The total of all values',
+            'It is undefined',
+          ],
+          1,
+          'Boundary 0 covers no values, and an empty sum is 0.',
+        ),
+        choose(
+          'values = [3, 9, 4]. What is the prefix total at boundary 2?',
+          ['16', '13', '4', '12'],
+          3,
+          'Boundary 2 covers the first two values, 3 and 9.',
+        ),
+        choose(
+          'Why keep boundary 0 even though no value lies before it?',
+          [
+            'It stores a second copy of the first value',
+            'It marks the position after the last value',
+            'Ranges that start at index 0 need no special case',
+            'It keeps the prefix totals increasing',
+          ],
+          2,
+          'Every range can then be expressed with two boundaries, including ones that start at the beginning.',
+        ),
+      ],
+    },
+  ],
+  'cp-prefix-build': [
+    {
+      title: 'Append the previous total plus the next value',
+      explanation: [
+        'Start with prefix = [0], the total at boundary 0. For each value, append prefix[-1] + value: the newest total extended by one more value. After processing i values, prefix has i + 1 entries and prefix[-1] is their total.',
+      ],
+      example: {
+        code: 'prefix = [0]\nfor value in [3, 5, 2]:\n    prefix.append(prefix[-1] + value)\n    print(prefix)',
+        output: '[0, 3]\n[0, 3, 8]\n[0, 3, 8, 10]',
+        explanation:
+          'Each new entry adds one value to the last entry: 0 + 3, 3 + 5, 8 + 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'prefix = [0]\nfor value in [2, 2, 2]:\n    prefix.append(prefix[-1] + value)\nprint(prefix)',
+          ['[2, 4, 6]', '[0, 2, 2, 2]', '[0, 2, 4]', '[0, 2, 4, 6]'],
+          3,
+          'The table keeps the starting 0 and gains one running total per value.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'prefix = [0]\nfor value in [10, 1]:\n    prefix.append(prefix[-1] + value)\nprint(len(prefix))\nprint(prefix[-1])',
+          ['3\n11', '2\n11', '3\n1', '2\n10'],
+          0,
+          'Two values give three boundaries, and the last entry is the total of both.',
+        ),
+        choose(
+          'prefix is [0, 6, 9] and the next value is 4. What is appended?',
+          ['4', '10', '13', '19'],
+          2,
+          'The newest total is prefix[-1] = 9, and 9 + 4 = 13.',
+        ),
+        predictOutput(
+          'This build uses the wrong entry. What does it print?',
+          'prefix = [0]\nfor value in [3, 5, 2]:\n    prefix.append(prefix[0] + value)\nprint(prefix)',
+          ['[0, 3, 5, 2]', '[0, 3, 8, 10]', '[3, 5, 2]', '[0, 3, 8]'],
+          0,
+          'prefix[0] is always 0, so nothing accumulates; the running total must come from prefix[-1].',
+        ),
+      ],
+    },
+    {
+      title: 'Totals can fall, and an empty list gives [0]',
+      explanation: [
+        'A prefix table records sums, not sorted values: a negative value makes the next total smaller than the one before it. With no values the loop never runs and the table is just [0]. Building visits each value once, so it takes O(n) time and O(n) extra space.',
+      ],
+      example: {
+        code: 'for values in [[4, -6, 9], []]:\n    prefix = [0]\n    for value in values:\n        prefix.append(prefix[-1] + value)\n    print(prefix)',
+        output: '[0, 4, -2, 7]\n[0]',
+        explanation:
+          'The -6 drops the total from 4 to -2. The empty list keeps only the boundary-0 total.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'prefix = [0]\nfor value in [-3, -3, 5]:\n    prefix.append(prefix[-1] + value)\nprint(prefix)',
+          [
+            '[0, 3, 6, 11]',
+            '[0, -3, -6, 5]',
+            '[-3, -6, -1]',
+            '[0, -3, -6, -1]',
+          ],
+          3,
+          'Each entry is the previous total plus the next value, signs included.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'prefix = [0]\nfor value in []:\n    prefix.append(prefix[-1] + value)\nprint(len(prefix))',
+          ['0', '1', 'None', '2'],
+          1,
+          'No value is appended, so only boundary 0 remains.',
+        ),
+        choose(
+          'Must the entries of a prefix table increase from left to right?',
+          [
+            'Yes, running totals only ever grow',
+            'No, a negative value makes the total fall',
+            'Only when the input list is sorted',
+            'Only after the first entry',
+          ],
+          1,
+          'The table stores sums; a negative value lowers the sum.',
+        ),
+        choose(
+          'Building a prefix table for n values takes how much time and extra space?',
+          [
+            'O(n²) time and O(n) space',
+            'O(n) time and O(n) space',
+            'O(n) time and O(1) space',
+            'O(log n) time and O(n) space',
+          ],
+          1,
+          'One append per value, and the table stores n + 1 numbers.',
+        ),
+      ],
+    },
+  ],
+  'cp-prefix-query': [
+    {
+      title: 'Subtract two boundaries',
+      explanation: [
+        'The sum of the half-open range [left, right) is prefix[right] - prefix[left]. prefix[right] totals everything before position right, and subtracting prefix[left] cancels exactly the values before left, leaving positions left through right - 1.',
+      ],
+      example: {
+        code: 'values = [4, -6, 9, 2]\nprefix = [0, 4, -2, 7, 9]\nprint(prefix[3] - prefix[1])\nprint(prefix[4] - prefix[0])',
+        output: '3\n9',
+        explanation:
+          'The first query covers positions 1 and 2 (-6 + 9 = 3). The second covers the whole list.',
+      },
+      questions: [
+        predictOutput(
+          'The values are [5, 2, 5, 1]. What does this program print?',
+          'prefix = [0, 5, 7, 12, 13]\nprint(prefix[3] - prefix[1])',
+          ['12', '7', '5', '8'],
+          1,
+          'The range [1, 3) holds positions 1 and 2, whose values 2 and 5 add to 7.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def range_sum(prefix, left, right):\n    return prefix[right] - prefix[left]\n\nprefix = [0, 2, 9, 6]\nprint(range_sum(prefix, 0, 2))',
+          ['7', '6', '9', '2'],
+          2,
+          'A range starting at 0 subtracts prefix[0] = 0, leaving the total of the first two values.',
+        ),
+        choose(
+          'Which expression gives the sum of values[left] through values[right - 1]?',
+          [
+            'prefix[right] - prefix[left]',
+            'prefix[left] - prefix[right]',
+            'prefix[right - 1] - prefix[left]',
+            'prefix[right] + prefix[left]',
+          ],
+          0,
+          'The later boundary minus the earlier one leaves exactly the half-open range.',
+        ),
+        choose(
+          'prefix = [0, 3, 8, 10]. Which range has sum 7?',
+          ['[0, 2)', '[2, 3)', '[1, 3)', '[0, 3)'],
+          2,
+          'prefix[3] - prefix[1] = 10 - 3 = 7.',
+        ),
+      ],
+    },
+    {
+      title: 'Empty ranges, the end boundary and inclusive queries',
+      explanation: [
+        'Valid queries satisfy 0 <= left <= right <= n. When left == right the range is empty and the difference is 0. right may equal n, the boundary after the last value, even though the last index is n - 1. An inclusive query [a, b] is the half-open range [a, b + 1), so its sum is prefix[b + 1] - prefix[a].',
+      ],
+      example: {
+        code: 'prefix = [0, 4, -2, 7]\nprint(prefix[2] - prefix[2])\nprint(prefix[3] - prefix[2])\na = 0\nb = 1\nprint(prefix[b + 1] - prefix[a])',
+        output: '0\n9\n-2',
+        explanation:
+          'Equal boundaries cancel to 0. right = 3 = n is valid. The inclusive range [0, 1] becomes [0, 2).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'prefix = [0, 6, 1, 5]\nprint(prefix[1] - prefix[1])',
+          ['6', '1', '0', '-6'],
+          2,
+          'left equals right, so the range is empty and its sum is 0.',
+        ),
+        predictOutput(
+          'The values are [6, -5, 4]. What does this program print?',
+          'prefix = [0, 6, 1, 5]\na = 1\nb = 2\nprint(prefix[b + 1] - prefix[a])',
+          ['-5', '-1', '5', '4'],
+          1,
+          'The inclusive range [1, 2] holds -5 and 4; it becomes the half-open [1, 3).',
+        ),
+        choose(
+          'A list has 5 values. Which query is invalid for its prefix table?',
+          ['[0, 5)', '[3, 6)', '[2, 2)', '[4, 5)'],
+          1,
+          'Boundaries run from 0 to 5; boundary 6 does not exist.',
+        ),
+        choose(
+          'To sum the inclusive range from index 2 to index 4, which subtraction is right?',
+          [
+            'prefix[4] - prefix[2]',
+            'prefix[5] - prefix[2]',
+            'prefix[4] - prefix[1]',
+            'prefix[5] - prefix[3]',
+          ],
+          1,
+          'Inclusive [2, 4] is half-open [2, 5).',
+        ),
+      ],
+    },
+  ],
+  'cp-prefix-sums': [
+    {
+      title: 'Build once, answer many queries',
+      explanation: [
+        'Range sums combine the two steps: build prefix with prefix[0] = 0 and prefix[i + 1] = prefix[i] + values[i], then answer each half-open query [left, right) with prefix[right] - prefix[left]. The table is built once and reused for every query.',
+      ],
+      example: {
+        code: 'values = [6, -2, 5, 1]\nprefix = [0]\nfor value in values:\n    prefix.append(prefix[-1] + value)\nfor left, right in [(1, 3), (0, 4), (2, 2)]:\n    print(prefix[right] - prefix[left])',
+        output: '3\n10\n0',
+        explanation:
+          'The table [0, 6, 4, 9, 10] answers all three queries with one subtraction each; the empty range gives 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [3, -2, 7]\nprefix = [0]\nfor value in values:\n    prefix.append(prefix[-1] + value)\nfor left, right in [(0, 2), (1, 3)]:\n    print(prefix[right] - prefix[left])',
+          ['8\n5', '1\n7', '-2\n5', '1\n5'],
+          3,
+          '[0, 2) holds 3 and -2; [1, 3) holds -2 and 7.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [4, 4, 4, 4]\nprefix = [0]\nfor value in values:\n    prefix.append(prefix[-1] + value)\nprint(prefix[4] - prefix[1])',
+          ['16', '8', '12', '4'],
+          2,
+          'The range [1, 4) covers three of the four values.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'prefix = [0]\nfor value in [-1, 5, -3, 2]:\n    prefix.append(prefix[-1] + value)\nprint(prefix)',
+          [
+            '[-1, 4, 1, 3]',
+            '[0, 1, 6, 9, 11]',
+            '[0, -1, 4, 1, 3]',
+            '[0, -1, 5, -3, 2]',
+          ],
+          2,
+          'Each entry is a running total, starting from the boundary-0 total 0.',
+        ),
+        choose(
+          'Queries are half-open (left, right) pairs. Which query returns the total of an entire list of n values?',
+          ['(0, n - 1)', '(1, n)', '(1, n + 1)', '(0, n)'],
+          3,
+          'Boundary 0 is before the first value and boundary n is after the last.',
+        ),
+      ],
+    },
+    {
+      title: 'Why the formula works for every range',
+      explanation: [
+        'The invariant prefix[i] = sum of the first i values makes every query one subtraction: the first right values minus the first left values leaves exactly positions left to right − 1. The identity needs no increasing totals, so negative values are fine, and the leading 0 lets ranges that start at index 0 follow the same rule.',
+      ],
+      example: {
+        code: 'values = [5, -8, 3, 6]\nprefix = [0]\nfor value in values:\n    prefix.append(prefix[-1] + value)\nleft = 1\nright = 4\ndirect = 0\nfor index in range(left, right):\n    direct += values[index]\nprint(prefix[right] - prefix[left])\nprint(direct)',
+        output: '1\n1',
+        explanation:
+          'Adding positions 1, 2 and 3 directly gives the same 1 as the single subtraction.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [7, -7, 2]\nprefix = [0]\nfor value in values:\n    prefix.append(prefix[-1] + value)\nprint(prefix[2] - prefix[0])',
+          ['7', '-7', '2', '0'],
+          3,
+          'The first two values cancel; the leading 0 makes this query an ordinary subtraction.',
+        ),
+        predictOutput(
+          'This table omits the leading 0 and tries to total the whole list. What does it print?',
+          'values = [4, 1, 3]\nprefix = []\ntotal = 0\nfor value in values:\n    total += value\n    prefix.append(total)\nprint(prefix[2] - prefix[0])',
+          ['8', '7', '3', '4'],
+          3,
+          'Without boundary 0, prefix[0] already includes the first value, so subtracting it drops the 4.',
+        ),
+        choose(
+          'prefix[5] - prefix[2] is the sum of which positions?',
+          ['2, 3, 4 and 5', '3, 4 and 5', '3 and 4', '2, 3 and 4'],
+          3,
+          'It is the half-open range [2, 5).',
+        ),
+        choose(
+          'Why do negative values not break prefix-sum queries?',
+          [
+            'Negative values are skipped while building',
+            'Queries take absolute values first',
+            'The subtraction identity holds for any integers',
+            'The table is sorted before querying',
+          ],
+          2,
+          'Cancelling the first left values works the same whatever their signs.',
+        ),
+      ],
+    },
+    {
+      title: 'When a prefix table pays off',
+      explanation: [
+        'Building the table costs O(n) time and O(n) space, and each query is then O(1), so q queries cost O(n + q). Summing every query directly costs up to O(n) each, O(n · q) in total. The table describes a fixed list: changing one value invalidates every later prefix entry, so tasks with frequent updates need a different structure.',
+      ],
+      example: {
+        code: 'values = [2, 7, 1, 8, 2, 8]\nprefix = [0]\nfor value in values:\n    prefix.append(prefix[-1] + value)\nfor left, right in [(0, 6), (1, 4), (3, 6)]:\n    print(prefix[right] - prefix[left])\nvalues[0] = 100\nprint(prefix[6] - prefix[0])',
+        output: '28\n16\n18\n28',
+        explanation:
+          'Three queries cost three subtractions. After values[0] changes, the old table still reports 28: it is stale.',
+      },
+      questions: [
+        choose(
+          'There are 10⁵ values and 10⁵ queries, each covering most of the list. About how many steps does summing each query directly take?',
+          ['About 2 × 10⁵', 'About 10⁵', 'About 1.7 × 10⁶', 'About 10¹⁰'],
+          3,
+          'Up to 10⁵ additions for each of 10⁵ queries.',
+        ),
+        choose(
+          'With a prefix table, about how many steps do the same 10⁵ values and 10⁵ queries take?',
+          ['About 10¹⁰', 'About 2 × 10⁵', 'About 10⁵', 'About 1.7 × 10⁶'],
+          1,
+          'One pass to build plus one subtraction per query: O(n + q).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [1, 2, 3]\nprefix = [0]\nfor value in values:\n    prefix.append(prefix[-1] + value)\nvalues[2] = 10\nprint(prefix[3] - prefix[0])',
+          ['6', '13', '3', '10'],
+          0,
+          'The table was built before the change, so it still describes [1, 2, 3].',
+        ),
+        choose(
+          'A task alternates 10⁵ times between changing one value and asking a range sum. Why is a plain prefix table a poor fit?',
+          [
+            'Prefix tables cannot hold negative values',
+            'Each change forces many prefix entries to be rebuilt',
+            'Range sums need the values sorted',
+            'Queries would read values from the wrong list',
+          ],
+          1,
+          'A change at position i alters every prefix entry after i.',
+        ),
+      ],
+    },
+  ],
+  'cp-difference-events': [
+    {
+      title: '+delta at left, −delta at right',
+      explanation: [
+        'To add delta to every position of the half-open range [left, right), record two boundary events: +delta at left, where the change starts, and −delta at right, where it stops. A running total over the positions then carries the change from left up to, but not including, right.',
+      ],
+      example: {
+        code: 'left = 1\nright = 3\ndelta = 5\nmarks = [0, 0, 0, 0, 0]\nmarks[left] = marks[left] + delta\nmarks[right] = marks[right] - delta\nprint(marks)\nrunning = 0\neffect = []\nfor change in marks:\n    running = running + change\n    effect.append(running)\nprint(effect)',
+        output: '[0, 5, 0, -5, 0]\n[0, 5, 5, 0, 0]',
+        explanation:
+          'The two marks encode the whole update. The running total switches the 5 on at position 1 and off again at position 3.',
+      },
+      questions: [
+        choose(
+          'Adding 6 to the half-open range [2, 7) needs which pair of events?',
+          [
+            '+6 at 2 and -6 at 6',
+            '+6 at 2 and -6 at 8',
+            '+6 at 2 and -6 at 7',
+            '-6 at 2 and +6 at 7',
+          ],
+          2,
+          'The change starts at left and is cancelled at the excluded boundary right.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def range_events(left, right, delta):\n    return [(left, delta), (right, -delta)]\n\nprint(range_events(0, 3, -2))',
+          [
+            '[(0, -2), (3, 2)]',
+            '[(0, -2), (3, -2)]',
+            '[(0, 2), (3, -2)]',
+            '[(0, -2), (2, 2)]',
+          ],
+          0,
+          'The start event carries delta itself; the cancellation is its negation, which here is +2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'running = 0\nfor change in [0, 3, 0, -3]:\n    running = running + change\n    print(running)',
+          ['0\n3\n0\n-3', '0\n3\n3\n-3', '0\n3\n3\n0', '3\n3\n0\n0'],
+          2,
+          'The +3 at position 1 stays in effect until the -3 at position 3 cancels it.',
+        ),
+        choose(
+          'Why is the cancellation placed at right and not at right - 1?',
+          [
+            'Position right - 1 cannot hold an event',
+            'right is excluded, so the change must be off there',
+            'At right - 1 the change would be applied twice',
+            'It keeps the list of events sorted',
+          ],
+          1,
+          'Position right - 1 is still inside the range and must keep the change.',
+        ),
+      ],
+    },
+    {
+      title: 'Empty ranges cancel and negative deltas work the same',
+      explanation: [
+        'If left equals right, both events land on the same boundary and cancel to nothing, which is correct for an empty range. A negative delta uses the identical rule: its cancellation −delta is positive. Encoding always costs exactly two events, however long the range is.',
+      ],
+      example: {
+        code: 'def mark(size, left, right, delta):\n    marks = []\n    for position in range(size):\n        marks.append(0)\n    marks[left] = marks[left] + delta\n    marks[right] = marks[right] - delta\n    return marks\n\nprint(mark(5, 2, 2, 7))\nprint(mark(5, 1, 4, -3))',
+        output: '[0, 0, 0, 0, 0]\n[0, -3, 0, 0, 3]',
+        explanation:
+          'The empty range [2, 2) leaves every mark at 0. The negative update starts with -3 and is cancelled by +3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def mark(size, left, right, delta):\n    marks = []\n    for position in range(size):\n        marks.append(0)\n    marks[left] = marks[left] + delta\n    marks[right] = marks[right] - delta\n    return marks\n\nprint(mark(4, 0, 3, -5))',
+          [
+            '[-5, 0, 0, -5]',
+            '[-5, 0, 0, 5]',
+            '[5, 0, 0, -5]',
+            '[-5, -5, -5, 0]',
+          ],
+          1,
+          'The start mark is the delta -5, and the cancellation at 3 is +5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def mark(size, left, right, delta):\n    marks = []\n    for position in range(size):\n        marks.append(0)\n    marks[left] = marks[left] + delta\n    marks[right] = marks[right] - delta\n    return marks\n\nprint(mark(3, 1, 1, 9))',
+          ['[0, 0, 0]', '[0, 9, 0]', '[0, 9, -9]', '[0, -9, 0]'],
+          0,
+          'Both events land on boundary 1 and cancel: the range [1, 1) is empty.',
+        ),
+        choose(
+          'How many events does adding 1 to the range [0, 1000000) need?',
+          ['1,000,000', '1,000,001', '1', '2'],
+          3,
+          'One start event and one cancellation, independent of the range length.',
+        ),
+        choose(
+          'An update adds -4 to [3, 8). What is the event at boundary 8?',
+          ['-4', '+4', '0', '-8'],
+          1,
+          'The cancellation is the negation of the delta.',
+        ),
+      ],
+    },
+  ],
+  'cp-difference-batch': [
+    {
+      title: 'One table of n + 1 entries collects every update',
+      explanation: [
+        'For n positions, start a difference table of n + 1 zeros. [0] * (n + 1) builds that list by repeating 0. For each update (left, right, delta), add delta at left and subtract delta at right. The extra entry at index n exists for updates whose right boundary is n, the end of the list.',
+      ],
+      example: {
+        code: 'n = 4\ndiff = [0] * (n + 1)\nfor left, right, delta in [(0, 2, 3), (1, 4, 5)]:\n    diff[left] += delta\n    diff[right] -= delta\nprint(diff)',
+        output: '[3, 5, -3, 0, -5]',
+        explanation:
+          'The second update ends at boundary 4 = n, so its cancellation needs the extra fifth entry.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'n = 3\ndiff = [0] * (n + 1)\nfor left, right, delta in [(0, 3, 2)]:\n    diff[left] += delta\n    diff[right] -= delta\nprint(diff)',
+          ['[2, 0, 0, -2]', '[2, 0, -2]', '[2, 2, 2, 0]', '[2, 0, 0, 2]'],
+          0,
+          'The update covers the whole list, so its cancellation lands in the extra entry at index 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'diff = [0] * 6\nfor left, right, delta in [(1, 3, 4), (3, 5, 1)]:\n    diff[left] += delta\n    diff[right] -= delta\nprint(diff)',
+          [
+            '[0, 4, 0, -4, 0, -1]',
+            '[0, 4, 0, -3, 0, -1]',
+            '[0, 4, 4, 1, 1, 0]',
+            '[0, 4, 0, 1, 0, -1]',
+          ],
+          1,
+          'At boundary 3 the first update’s -4 and the second update’s +1 combine to -3.',
+        ),
+        choose(
+          'Why does a difference table for n positions need n + 1 entries?',
+          [
+            'Entry 0 is reserved for the list length',
+            'Updates ending at n need a cancellation slot',
+            'Each update writes three separate entries',
+            'Entry n stores the sum of all the deltas',
+          ],
+          1,
+          'right may equal n, and diff[n] must exist to receive -delta.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print([0] * (2 + 1))',
+          ['[0, 0]', '[0, 0, 0]', '[0]', '0'],
+          1,
+          'Multiplying a one-item list by 3 repeats its item three times.',
+        ),
+      ],
+    },
+    {
+      title: 'Overlapping updates add at shared boundaries',
+      explanation: [
+        'Events at the same boundary simply add, so overlaps, repeated updates and one range ending where another starts all combine automatically. Each update costs two writes however long its range is, so u updates take O(u) time after the O(n) table is created.',
+      ],
+      example: {
+        code: 'diff = [0] * 6\nfor left, right, delta in [(0, 3, 2), (3, 5, 4), (0, 3, 2)]:\n    diff[left] += delta\n    diff[right] -= delta\nprint(diff)',
+        output: '[4, 0, 0, 0, 0, -4]',
+        explanation:
+          'Boundary 0 receives +2 twice. At boundary 3, -2, +4 and -2 cancel to 0: the effect is 4 on both sides of it, so no change is recorded there.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'diff = [0] * 4\nfor left, right, delta in [(1, 3, 5), (1, 3, 5)]:\n    diff[left] += delta\n    diff[right] -= delta\nprint(diff)',
+          [
+            '[0, 5, 0, -5]',
+            '[0, 10, 10, 0]',
+            '[0, 10, 0, -10]',
+            '[0, 5, 5, -10]',
+          ],
+          2,
+          'The repeated update adds its events again: +5 + 5 at 1 and -5 - 5 at 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'diff = [0] * 5\nfor left, right, delta in [(0, 2, 3), (2, 4, 3)]:\n    diff[left] += delta\n    diff[right] -= delta\nprint(diff)',
+          [
+            '[3, 0, -3, 0, -3]',
+            '[3, 0, 3, 0, -3]',
+            '[3, 0, 0, 0, -3]',
+            '[3, 3, 3, 3, 0]',
+          ],
+          2,
+          'At boundary 2 the first update ends and the second starts with the same delta, so they cancel.',
+        ),
+        choose(
+          'Two updates both start at boundary 2, with deltas 3 and -1. What is the combined entry at 2?',
+          ['3', '2', '-1', '4'],
+          1,
+          'Events at the same boundary add: 3 + (-1).',
+        ),
+        choose(
+          'u updates each cover up to n positions. How many table writes does marking them take?',
+          ['u · n', 'n + 1', 'u²', '2u'],
+          3,
+          'Two boundary writes per update, regardless of range length.',
+        ),
+      ],
+    },
+  ],
+  'cp-difference-recover': [
+    {
+      title: 'A running sum turns events back into values',
+      explanation: [
+        'Scan the real positions 0 to n − 1 from left to right, adding each difference entry to a running total. At position i, running equals the total delta of all ranges covering i: every range that starts at or before i has added its +delta, and every range that ends at or before i has removed it again.',
+      ],
+      example: {
+        code: 'diff = [3, 5, -3, 0, -5]\nrunning = 0\nvalues = []\nfor i in range(len(diff) - 1):\n    running += diff[i]\n    values.append(running)\nprint(values)',
+        output: '[3, 8, 5, 5]',
+        explanation:
+          'The 3 is active at positions 0 and 1, the 5 at positions 1 to 3, giving 3, 8, 5, 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'diff = [2, 0, -2, 0]\nrunning = 0\nvalues = []\nfor i in range(len(diff) - 1):\n    running += diff[i]\n    values.append(running)\nprint(values)',
+          ['[2, 0, -2]', '[2, 2, 0, 0]', '[2, 2, 0]', '[2, 2, 2]'],
+          2,
+          'The running sum keeps the +2 for positions 0 and 1; the -2 at position 2 switches it off.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'diff = [-1, 4, 0, 1, -4]\nrunning = 0\nvalues = []\nfor i in range(len(diff) - 1):\n    running += diff[i]\n    values.append(running)\nprint(values)',
+          [
+            '[-1, 4, 0, 1]',
+            '[-1, 3, 3, 4, 0]',
+            '[1, 5, 5, 6]',
+            '[-1, 3, 3, 4]',
+          ],
+          3,
+          'Each value is the cumulative sum of the entries up to its position.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'diff = [1, 1, -2]\nrunning = 0\nfor i in range(len(diff) - 1):\n    running += diff[i]\n    print(running)',
+          ['1\n2\n0', '1\n1', '2\n0', '1\n2'],
+          3,
+          'Two real positions are reconstructed; the last entry is the sentinel.',
+        ),
+        choose(
+          'At position i of the reconstruction, what does running equal?',
+          [
+            'The total delta of the ranges covering i',
+            'The difference entry stored at i',
+            'The total of every delta in the table',
+            'The number of ranges that start at i',
+          ],
+          0,
+          'Starts at or before i are added in; ends at or before i are cancelled out.',
+        ),
+      ],
+    },
+    {
+      title: 'The sentinel is not a position',
+      explanation: [
+        'The last entry of an n + 1 table sits after the final position; it only cancels ranges that reach the end. Reconstruction therefore produces n values by looping over range(len(diff) - 1). Including the sentinel would add an extra value, which is 0 whenever every update was recorded as a balanced pair. A one-entry table describes zero positions and recovers [].',
+      ],
+      example: {
+        code: 'diff = [4, 0, -4]\nrunning = 0\nfor i in range(len(diff)):\n    running += diff[i]\nprint(running)\nvalues = []\nrunning = 0\nfor i in range(len(diff) - 1):\n    running += diff[i]\n    values.append(running)\nprint(values)',
+        output: '0\n[4, 4]',
+        explanation:
+          'Summing every entry, sentinel included, gives 0. The two real positions both hold 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'diff = [7]\nrunning = 0\nvalues = []\nfor i in range(len(diff) - 1):\n    running += diff[i]\n    values.append(running)\nprint(values)',
+          ['[7]', '[]', '[0]', 'None'],
+          1,
+          'A one-entry table has only the sentinel, so there are no real positions.',
+        ),
+        predictOutput(
+          'This loop also visits the sentinel. What does it print?',
+          'diff = [2, 1, 0, -3]\nrunning = 0\nvalues = []\nfor i in range(len(diff)):\n    running += diff[i]\n    values.append(running)\nprint(values)',
+          ['[2, 3, 3]', '[2, 1, 0, -3]', '[2, 3, 3, -3]', '[2, 3, 3, 0]'],
+          3,
+          'The extra iteration appends a fourth value, 0, for a position that does not exist.',
+        ),
+        choose(
+          'A difference table has 9 entries. How many values does it describe?',
+          ['9', '10', '7', '8'],
+          3,
+          'n + 1 entries describe n positions.',
+        ),
+        choose(
+          'Every update was recorded as +delta at left and −delta at right. What do all entries add up to, sentinel included?',
+          ['0', 'The sum of all deltas', 'The last real value', 'n + 1'],
+          0,
+          'Each update contributes delta and -delta, which cancel.',
+        ),
+      ],
+    },
+  ],
+  'cp-difference-arrays': [
+    {
+      title: 'Mark boundaries, then reconstruct once',
+      explanation: [
+        'A difference array applies many range additions in two phases. First mark each update with difference[left] += delta and difference[right] -= delta in a table of size n + 1; then rebuild all n values with one running sum. No update ever touches the positions inside its range.',
+      ],
+      example: {
+        code: 'size = 6\nupdates = [(0, 4, 1), (2, 6, 10), (3, 3, 99)]\ndifference = [0] * (size + 1)\nfor left, right, delta in updates:\n    difference[left] += delta\n    difference[right] -= delta\nvalues = []\nrunning = 0\nfor index in range(size):\n    running += difference[index]\n    values.append(running)\nprint(values)',
+        output: '[1, 1, 11, 11, 10, 10]',
+        explanation:
+          'Positions 0–3 get 1, positions 2–5 get 10, and the empty range [3, 3) contributes nothing.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def apply(size, updates):\n    difference = [0] * (size + 1)\n    for left, right, delta in updates:\n        difference[left] += delta\n        difference[right] -= delta\n    values = []\n    running = 0\n    for index in range(size):\n        running += difference[index]\n        values.append(running)\n    return values\n\nprint(apply(4, [(1, 3, 2)]))',
+          ['[0, 2, 2, 0]', '[0, 2, 2, 2]', '[0, 2, 0, -2]', '[2, 2, 2, 0]'],
+          0,
+          'Only positions 1 and 2 lie in [1, 3).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def apply(size, updates):\n    difference = [0] * (size + 1)\n    for left, right, delta in updates:\n        difference[left] += delta\n        difference[right] -= delta\n    values = []\n    running = 0\n    for index in range(size):\n        running += difference[index]\n        values.append(running)\n    return values\n\nprint(apply(5, [(0, 5, 1), (1, 2, 4)]))',
+          [
+            '[1, 5, 5, 1, 1]',
+            '[1, 5, 1, 1, 1]',
+            '[1, 4, 0, 0, 0]',
+            '[5, 5, 1, 1, 1]',
+          ],
+          1,
+          'Every position gets 1, and only position 1 also gets 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def apply(size, updates):\n    difference = [0] * (size + 1)\n    for left, right, delta in updates:\n        difference[left] += delta\n        difference[right] -= delta\n    values = []\n    running = 0\n    for index in range(size):\n        running += difference[index]\n        values.append(running)\n    return values\n\nprint(apply(3, [(0, 3, -2), (0, 1, 2)]))',
+          ['[-2, -2, -2]', '[0, -2, -2]', '[0, 0, -2]', '[2, -2, -2]'],
+          1,
+          'At position 0 the -2 and +2 cancel; positions 1 and 2 keep only the -2.',
+        ),
+        choose(
+          'Which entries of the difference table does one update (left, right, delta) change?',
+          [
+            'Only difference[left] and difference[right]',
+            'Every entry from left to right - 1',
+            'Every entry from left to right',
+            'Only difference[left]',
+          ],
+          0,
+          'The range interior is never written; the running sum fills it in later.',
+        ),
+      ],
+    },
+    {
+      title: 'Why the running sum is right',
+      explanation: [
+        'Invariant of the rebuild: when the scan reaches position i, every update with left <= i has added its delta and every update with right <= i has removed it again, so running is the total of the updates whose range contains i. Overlaps add, negative deltas subtract, and empty ranges [i, i) cancel before they affect anything.',
+      ],
+      example: {
+        code: 'size = 5\nupdates = [(1, 4, 3), (0, 2, -1)]\ndirect = [0] * size\nfor left, right, delta in updates:\n    for index in range(left, right):\n        direct[index] += delta\ndifference = [0] * (size + 1)\nfor left, right, delta in updates:\n    difference[left] += delta\n    difference[right] -= delta\nvalues = []\nrunning = 0\nfor index in range(size):\n    running += difference[index]\n    values.append(running)\nprint(direct)\nprint(values)',
+        output: '[-1, 2, 3, 3, 0]\n[-1, 2, 3, 3, 0]',
+        explanation:
+          'Touching every covered position directly and reconstructing from boundary marks give the same list.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'size = 4\ndifference = [0] * (size + 1)\nfor left, right, delta in [(0, 2, 5), (1, 4, -2)]:\n    difference[left] += delta\n    difference[right] -= delta\nrunning = 0\nfor index in range(size):\n    running += difference[index]\n    print(running)',
+          ['5\n-2\n-5\n0', '5\n3\n-2\n-2', '5\n3\n3\n-2', '5\n3\n-2\n0'],
+          1,
+          'Position 0 has only +5; position 1 has both updates; positions 2 and 3 have only -2.',
+        ),
+        choose(
+          'Updates are (0, 5, 2), (3, 8, 4) and (6, 6, 9). What is the value at position 4?',
+          ['2', '6', '15', '4'],
+          1,
+          'Position 4 lies in [0, 5) and [3, 8); the empty range [6, 6) covers nothing.',
+        ),
+        choose(
+          'At position i of the rebuild, which updates have contributed both their +delta and their −delta?',
+          [
+            'Those with left <= i',
+            'Those with left > i',
+            'Those whose range contains i',
+            'Those with right <= i',
+          ],
+          3,
+          'Their cancellation boundary has already been passed, so they no longer affect i.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def apply(size, updates):\n    difference = [0] * (size + 1)\n    for left, right, delta in updates:\n        difference[left] += delta\n        difference[right] -= delta\n    values = []\n    running = 0\n    for index in range(size):\n        running += difference[index]\n        values.append(running)\n    return values\n\nprint(apply(4, [(2, 2, 5), (0, 4, 1)]))',
+          ['[1, 1, 1, 1]', '[1, 1, 6, 1]', '[1, 1, 6, 6]', '[6, 1, 1, 1]'],
+          0,
+          'The empty range [2, 2) marks +5 and -5 on the same boundary, so only the 1 remains.',
+        ),
+      ],
+    },
+    {
+      title: 'Batch cost, and when to use it',
+      explanation: [
+        'Marking u updates costs O(u), creating the table O(n), and the single reconstruction O(n): O(n + u) time and O(n) extra space. Applying each update directly costs up to O(n) per update, O(n · u) in total. The trade-off: values are known only after the final scan, so a task that asks for values between updates needs another approach.',
+      ],
+      example: {
+        code: 'size = 1000\nupdates = []\nfor k in range(500):\n    updates.append((0, size, 1))\ndirect_writes = 0\nfor left, right, delta in updates:\n    direct_writes += right - left\nprint(direct_writes)\nprint(2 * len(updates) + size)',
+        output: '500000\n2000',
+        explanation:
+          'Applying 500 full-length updates directly touches 500,000 positions; marking needs 1,000 writes plus one 1,000-position scan.',
+      },
+      questions: [
+        choose(
+          'There are 10⁵ positions and 10⁵ updates, each covering most of the list. About how much work does applying them directly take?',
+          [
+            'About 10¹⁰ steps',
+            'About 2 × 10⁵ steps',
+            'About 10⁵ steps',
+            'About 1.7 × 10⁶ steps',
+          ],
+          0,
+          'Up to 10⁵ positions per update, times 10⁵ updates.',
+        ),
+        choose(
+          'With a difference array, what is the total time for n positions and u updates?',
+          ['O(n · u)', 'O(u log n)', 'O(n + u)', 'O(n²)'],
+          2,
+          'Two writes per update plus one O(n) reconstruction.',
+        ),
+        choose(
+          'A task asks for one position’s value after every single update, interleaved with the updates. Why is a single difference array a poor fit?',
+          [
+            'Values exist only after the final reconstruction',
+            'It cannot store updates with negative deltas',
+            'It needs all the updates sorted by left first',
+            'It needs O(n²) memory for the interleaving',
+          ],
+          0,
+          'Reading a value needs a prefix scan, which would have to be redone after each update.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'updates = [(0, 10, 1), (2, 9, 4), (5, 6, 7)]\ndirect = 0\nfor left, right, delta in updates:\n    direct += right - left\nprint(direct)\nprint(2 * len(updates))',
+          ['30\n6', '18\n3', '18\n6', '12\n6'],
+          2,
+          'Direct application touches 10 + 7 + 1 positions; marking writes two entries per update.',
+        ),
+      ],
+    },
+  ],
+  'cp-pointer-endpoints': [
+    {
+      title: 'Two indices mark the remaining candidates',
+      explanation: [
+        'In an ascending list, left = 0 and right = len(values) - 1 point at the smallest and the largest value. Together they describe the remaining candidate interval: every pair of positions inside it is still undecided. values[left] + values[right] is the sum of the outer pair.',
+      ],
+      example: {
+        code: 'values = [-5, 1, 4, 10]\nleft = 0\nright = len(values) - 1\nprint(right)\nprint(values[left])\nprint(values[right])\nprint(values[left] + values[right])',
+        output: '3\n-5\n10\n5',
+        explanation:
+          'right is the last index, 3. The outer pair holds the smallest and largest values, -5 and 10.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [2, 3, 8, 9, 12]\nright = len(values) - 1\nprint(right)',
+          ['5', '4', '12', '3'],
+          1,
+          'Five values have indices 0 to 4; right is an index, not a value.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [-7, 0, 3]\nleft = 0\nright = len(values) - 1\nprint(values[left] + values[right])',
+          ['-4', '-7', '3', '10'],
+          0,
+          'The outer pair is -7 and 3, which sum to -4.',
+        ),
+        choose(
+          'In an ascending list, what do values[left] and values[right] hold at the start?',
+          [
+            'The two smallest values in the list',
+            'The two values in the middle',
+            'The smallest and the largest values',
+            'The first value and the second value',
+          ],
+          2,
+          'left starts at index 0 and right at the last index.',
+        ),
+        predictOutput(
+          'The pointers have moved inward. What does this program print?',
+          'values = [1, 4, 6]\nleft = 1\nright = 2\nprint(values[left] + values[right])',
+          ['7', '3', '5', '10'],
+          3,
+          'The pointers are indices; the values at indices 1 and 2 are 4 and 6.',
+        ),
+      ],
+    },
+    {
+      title: 'left < right means two different positions',
+      explanation: [
+        'A pair needs two different positions, so a pair search continues only while left < right. When left == right both indices point at the same item, which would pair it with itself. A list with fewer than two items has no pair at all, while equal values at different positions still form a valid pair.',
+      ],
+      example: {
+        code: 'values = [4, 4]\nleft = 0\nright = len(values) - 1\nprint(left < right)\nprint(values[left] + values[right])\nsingle = [9]\nprint(0 < len(single) - 1)',
+        output: 'True\n8\nFalse',
+        explanation:
+          'The two 4s sit at different positions, so they form a pair. A single item has right = 0 = left, so no pair exists.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [7]\nleft = 0\nright = len(values) - 1\nprint(left < right)',
+          ['False', 'True', '0', '7'],
+          0,
+          'With one item, right is 0, the same position as left.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = []\nprint(0 < len(values) - 1)',
+          ['False', 'True', '-1', 'None'],
+          0,
+          'For an empty list right would be -1, so there is no pair.',
+        ),
+        choose(
+          'Why does a pair search require left < right rather than left <= right?',
+          [
+            'left <= right would skip the last item',
+            'Equal values can never form a pair',
+            'left < right keeps the list sorted',
+            'left == right would pair an item with itself',
+          ],
+          3,
+          'At left == right only one position remains.',
+        ),
+        choose(
+          'values = [5, 5, 5]. Do positions 0 and 2 form a valid candidate pair?',
+          [
+            'No, equal values never pair',
+            'Only after removing duplicates',
+            'Only if the list is unsorted',
+            'Yes, they are different positions',
+          ],
+          3,
+          'Pairs are about positions; equal values at different positions count.',
+        ),
+      ],
+    },
+  ],
+  'cp-pointer-discard': [
+    {
+      title: 'If the outer pair is too heavy, right has no partner',
+      explanation: [
+        'Suppose the task counts pairs whose sum is at most limit. If values[left] + values[right] > limit, then values[right] is too large even with the smallest remaining partner, values[left]. Every other remaining partner is at least as large, so values[right] fits with nobody: decrease right to discard it.',
+      ],
+      example: {
+        code: 'values = [2, 5, 7, 12]\nleft = 0\nright = 3\nlimit = 10\nif values[left] + values[right] > limit:\n    right -= 1\nprint(right)\nprint(values[left] + values[right])',
+        output: '2\n9',
+        explanation:
+          '2 + 12 exceeds 10, so 12 cannot pair with anything. The new outer pair 2 + 7 is checked next.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [1, 3, 9]\nleft = 0\nright = 2\nif values[left] + values[right] > 8:\n    right -= 1\nprint(right)',
+          ['1', '2', '0', '3'],
+          0,
+          '1 + 9 = 10 exceeds 8, so 9 is discarded and right moves to index 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [1, 3, 9]\nleft = 0\nright = 2\nif values[left] + values[right] > 10:\n    right -= 1\nprint(right)',
+          ['1', '3', '0', '2'],
+          3,
+          '1 + 9 = 10 is not greater than 10, so nothing is discarded.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def discard(values, left, right, limit):\n    if values[left] + values[right] > limit:\n        return right - 1\n    return right\n\nvalues = [-4, -1, 6, 8]\nprint(discard(values, 0, 3, 3))\nprint(discard(values, 0, 3, 4))',
+          ['2\n3', '2\n2', '3\n3', '3\n2'],
+          0,
+          '-4 + 8 = 4 exceeds 3 but not 4, so only the first call discards right.',
+        ),
+        choose(
+          'The outer sum exceeds the limit. Why can values[right] be discarded for good?',
+          [
+            'Even its smallest possible partner is too heavy',
+            'The largest value is never part of a pair',
+            'Its sum with every partner equals the limit',
+            'It has already been counted with left',
+          ],
+          0,
+          'values[left] is the smallest remaining value; if even that fails, every partner fails.',
+        ),
+      ],
+    },
+    {
+      title: 'The proof needs sorted order and discards only right',
+      explanation: [
+        'The argument relies on ascending order: values[left] must be the smallest remaining value. Negative numbers are fine, since only comparisons are used. The proof does not justify discarding left: left failed only with the largest partner and may still fit with a smaller one.',
+      ],
+      example: {
+        code: 'values = [3, 6, 9]\nlimit = 10\nprint(values[0] + values[2] > limit)\nprint(values[0] + values[1] <= limit)',
+        output: 'True\nTrue',
+        explanation:
+          '3 fails with 9 but fits with 6. Only the right endpoint can be ruled out.',
+      },
+      questions: [
+        choose(
+          'In the unsorted list [9, 2, 7], left = 0, right = 2 and the limit is 10. Why is discarding right unsafe here?',
+          [
+            'The outer sum 16 is below the limit',
+            'Unsorted lists have no candidate pairs',
+            'right should be increased instead',
+            'values[left] is not the smallest, and 7 fits with 2',
+          ],
+          3,
+          'The proof needs values[left] to be the smallest remaining value; here 2 is smaller.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [-6, -2, 3]\nleft = 0\nright = 2\nif values[left] + values[right] > -4:\n    right -= 1\nprint(right)',
+          ['1', '2', '0', '3'],
+          0,
+          '-6 + 3 = -3 exceeds -4, so 3 is discarded; negative values do not change the rule.',
+        ),
+        choose(
+          'In a sorted list the outer sum exceeds the limit. Which endpoint may be discarded?',
+          ['Only right', 'Only left', 'Both of them', 'Neither of them'],
+          0,
+          'Only right is proven to have no partner; left may fit with a smaller right.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [1, 4, 8]\nlimit = 7\nprint(values[0] + values[2] <= limit)\nprint(values[0] + values[1] <= limit)',
+          ['False\nTrue', 'False\nFalse', 'True\nTrue', 'True\nFalse'],
+          0,
+          'The left value 1 fails with 8 but fits with 4, so discarding left would lose a valid pair.',
+        ),
+      ],
+    },
+  ],
+  'cp-pointer-count-block': [
+    {
+      title: 'A fitting outer pair certifies right − left pairs',
+      explanation: [
+        'If values[left] + values[right] <= limit, then left also fits with every position from left + 1 to right, because in sorted order those partners are no larger than values[right]. That block holds right − left partners, which can all be counted at once without checking them one by one.',
+      ],
+      example: {
+        code: 'values = [1, 2, 4, 6, 9]\nleft = 0\nright = 3\nlimit = 8\nif values[left] + values[right] <= limit:\n    print(right - left)',
+        output: '3',
+        explanation:
+          '1 + 6 fits, so 1 also fits with 2 and 4: three partners in total.',
+      },
+      questions: [
+        choose(
+          'left = 2 and right = 7, and the outer pair fits. How many pairs does left contribute?',
+          ['5', '6', '7', '4'],
+          0,
+          'The partners are positions 3 through 7: right − left of them.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [0, 3, 5, 6]\nleft = 0\nright = 3\nif values[left] + values[right] <= 6:\n    print(right - left)\nelse:\n    print(0)',
+          ['4', '1', '3', '0'],
+          2,
+          '0 + 6 fits, certifying the partners at positions 1, 2 and 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [0, 3, 5, 6]\nleft = 0\nright = 3\nif values[left] + values[right] <= 5:\n    print(right - left)\nelse:\n    print(0)',
+          ['3', '2', '0', '1'],
+          2,
+          '0 + 6 exceeds 5, so this check certifies no block.',
+        ),
+        choose(
+          'Why do all partners between left + 1 and right fit once the outer pair fits?',
+          [
+            'They all hold the same value',
+            'Partners nearer left always have smaller sums than the outer pair',
+            'The limit grows as right moves',
+            'In sorted order none of them exceeds values[right]',
+          ],
+          3,
+          'Each such partner is at most values[right], so its sum with values[left] is at most the fitting outer sum.',
+        ),
+      ],
+    },
+    {
+      title: 'Count the block, then advance left',
+      explanation: [
+        'After counting right − left pairs for left, every pair that uses left has been decided, so advance left by one; staying put would count the same block again. Duplicate values at different positions are separate partners, and each one counts.',
+      ],
+      example: {
+        code: 'values = [2, 2, 2, 5]\nleft = 0\nright = 2\nlimit = 4\ncount = 0\nif values[left] + values[right] <= limit:\n    count = count + (right - left)\n    left = left + 1\nprint(count)\nprint(left)',
+        output: '2\n1',
+        explanation:
+          'The first 2 pairs with the 2s at positions 1 and 2. Then left moves on, so these pairs are never counted again.',
+      },
+      questions: [
+        predictOutput(
+          'This loop never advances left. What does it print?',
+          'values = [1, 2, 3]\nleft = 0\nright = 2\ncount = 0\nfor step in [1, 2]:\n    if values[left] + values[right] <= 5:\n        count = count + (right - left)\nprint(count)',
+          ['2', '3', '4', '1'],
+          2,
+          'The same block of two pairs is counted on both steps because left stays at 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [3, 3, 3]\nleft = 0\nright = 2\ncount = 0\nif values[left] + values[right] <= 6:\n    count = count + (right - left)\nprint(count)',
+          ['1', '2', '3', '0'],
+          1,
+          'The equal values at positions 1 and 2 are two separate partners.',
+        ),
+        choose(
+          'After counting the block for left, which move avoids counting those pairs again?',
+          [
+            'Decrease right by one',
+            'Reset right to the end',
+            'Keep both pointers still',
+            'Advance left by one',
+          ],
+          3,
+          'All pairs using left are decided, so left is done.',
+        ),
+        choose(
+          'values = [4, 4, 4, 4], left = 0, right = 3 and the limit is 8. How many partners does the block certify?',
+          ['1', '3', '4', '6'],
+          1,
+          '4 + 4 fits, so left pairs with all three later positions.',
+        ),
+      ],
+    },
+  ],
+  'cp-two-pointers': [
+    {
+      title: 'Run the loop: count a block or discard right',
+      explanation: [
+        'Counting pairs with sum at most limit repeats one decision while left < right: if the outer pair fits, count right − left pairs and advance left; otherwise discard right. Each step settles one endpoint, and the loop stops when the pointers meet.',
+      ],
+      example: {
+        code: 'values = [1, 3, 4, 7, 8]\nlimit = 9\nleft = 0\nright = len(values) - 1\ncount = 0\nwhile left < right:\n    if values[left] + values[right] <= limit:\n        count += right - left\n        left += 1\n    else:\n        right -= 1\nprint(count)',
+        output: '5',
+        explanation:
+          '1 + 8 fits (4 pairs). Then 8 and 7 are discarded against 3, and 3 + 4 fits (1 pair): 5 in total.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def count_pairs(values, limit):\n    left = 0\n    right = len(values) - 1\n    count = 0\n    while left < right:\n        if values[left] + values[right] <= limit:\n            count += right - left\n            left += 1\n        else:\n            right -= 1\n    return count\n\nprint(count_pairs([2, 3, 5, 8], 8))',
+          ['2', '4', '6', '3'],
+          3,
+          '8 is discarded first; then 2 + 5 fits (2 pairs) and 3 + 5 fits (1 pair).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def count_pairs(values, limit):\n    left = 0\n    right = len(values) - 1\n    count = 0\n    while left < right:\n        if values[left] + values[right] <= limit:\n            count += right - left\n            left += 1\n        else:\n            right -= 1\n    return count\n\nprint(count_pairs([1, 1, 1], 2))',
+          ['1', '2', '6', '3'],
+          3,
+          'Every pair fits: 2 pairs for the first 1 and 1 for the second, all counted as blocks.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def count_pairs(values, limit):\n    left = 0\n    right = len(values) - 1\n    count = 0\n    while left < right:\n        if values[left] + values[right] <= limit:\n            count += right - left\n            left += 1\n        else:\n            right -= 1\n    return count\n\nprint(count_pairs([5, 6, 7], 10))',
+          ['1', '0', '3', '2'],
+          1,
+          'Even the smallest value fails with each larger one, so right is discarded until the pointers meet.',
+        ),
+        choose(
+          'What does each loop step do to the candidate interval [left, right]?',
+          [
+            'Shrinks it to half its size',
+            'Leaves it unchanged when a pair fits',
+            'Shrinks it by exactly one endpoint',
+            'Moves both endpoints inward',
+          ],
+          2,
+          'A fitting pair advances left; otherwise right moves. Never both, never neither.',
+        ),
+      ],
+    },
+    {
+      title: 'The invariant: outside decided, inside undecided',
+      explanation: [
+        'Before each step, every pair with an endpoint outside [left, right] has been counted or proved invalid, and every pair inside is still undecided. Counting a fitting block settles all pairs that use left; discarding settles all pairs that use right. When the pointers meet, no undecided pair remains, so count is complete.',
+      ],
+      example: {
+        code: 'values = [1, 2, 6, 7]\nlimit = 8\nleft = 0\nright = 3\ncount = 0\nwhile left < right:\n    print((left, right, count))\n    if values[left] + values[right] <= limit:\n        count += right - left\n        left += 1\n    else:\n        right -= 1\nprint((left, right, count))',
+        output: '(0, 3, 0)\n(1, 3, 3)\n(1, 2, 3)\n(2, 2, 4)',
+        explanation:
+          'Each line shows the undecided interval and the pairs settled so far. 1 + 7 fits (3 pairs), 7 is discarded against 2, then 2 + 6 fits (1 pair).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [2, 4, 5, 9]\nlimit = 7\nleft = 0\nright = 3\ncount = 0\nwhile left < right:\n    print((left, right, count))\n    if values[left] + values[right] <= limit:\n        count += right - left\n        left += 1\n    else:\n        right -= 1\nprint((left, right, count))',
+          [
+            '(0, 3, 0)\n(1, 3, 3)\n(1, 2, 3)\n(1, 1, 3)',
+            '(0, 3, 0)\n(0, 2, 2)\n(1, 2, 2)\n(1, 1, 2)',
+            '(0, 3, 0)\n(0, 2, 0)\n(1, 2, 2)\n(2, 2, 3)',
+            '(0, 3, 0)\n(0, 2, 0)\n(1, 2, 2)\n(1, 1, 2)',
+          ],
+          3,
+          '9 is discarded first. Then 2 + 5 fits (2 pairs) and 4 + 5 does not, so 5 is discarded and the pointers meet.',
+        ),
+        choose(
+          'The loop has just discarded right. Which pairs did that step decide?',
+          [
+            'Only the single pair (left, right)',
+            'Every remaining pair that uses the old right',
+            'Every remaining pair that uses left',
+            'None; it only moved a pointer',
+          ],
+          1,
+          'The proof showed the old right fits with no remaining partner.',
+        ),
+        choose(
+          'When the loop ends with left == right, why is count complete?',
+          [
+            'Every value has been added to count',
+            'left and right have swapped their roles',
+            'No undecided pair remains inside the interval',
+            'The largest value has been counted twice',
+          ],
+          2,
+          'An interval with one position contains no pair, and everything outside was settled.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def count_pairs(values, limit):\n    left = 0\n    right = len(values) - 1\n    count = 0\n    while left < right:\n        if values[left] + values[right] <= limit:\n            count += right - left\n            left += 1\n        else:\n            right -= 1\n    return count\n\nprint(count_pairs([-3, 0, 2, 4, 5], 2))',
+          ['4', '6', '5', '3'],
+          2,
+          '-3 fits with all four others; then 0 fits only with 2 after 5 and 4 are discarded.',
+        ),
+      ],
+    },
+    {
+      title: 'Cost and the sorted precondition',
+      explanation: [
+        'Each step moves one pointer inward, so at most n − 1 steps run: O(n) time and O(1) extra space on an already sorted list. Unsorted input must be sorted first, which adds O(n log n) time. The discard and block rules are valid only because of sorted order; on unsorted data they give wrong counts.',
+      ],
+      example: {
+        code: 'def count_pairs(values, limit):\n    left = 0\n    right = len(values) - 1\n    count = 0\n    while left < right:\n        if values[left] + values[right] <= limit:\n            count += right - left\n            left += 1\n        else:\n            right -= 1\n    return count\n\nprint(count_pairs([7, 1, 5, 2], 7))\nprint(count_pairs([1, 2, 5, 7], 7))',
+        output: '0\n3',
+        explanation:
+          'The same four numbers give 0 when unsorted (every step wrongly discards right) and the correct 3 when sorted.',
+      },
+      questions: [
+        choose(
+          'At most how many loop steps does the two-pointer count take on n values?',
+          ['n − 1', 'n²', 'n(n − 1)/2', 'log n'],
+          0,
+          'Each step shrinks the interval by one position, from n positions down to one.',
+        ),
+        choose(
+          'The input arrives unsorted. What is the total time to sort it and then count with two pointers?',
+          ['O(n)', 'O(n log n)', 'O(n²)', 'O(log n)'],
+          1,
+          'The O(n log n) sort dominates the O(n) scan.',
+        ),
+        predictOutput(
+          'The list here is not sorted. What does this program print?',
+          'def count_pairs(values, limit):\n    left = 0\n    right = len(values) - 1\n    count = 0\n    while left < right:\n        if values[left] + values[right] <= limit:\n            count += right - left\n            left += 1\n        else:\n            right -= 1\n    return count\n\nprint(count_pairs([4, 1, 3], 5))',
+          ['2', '1', '3', '0'],
+          1,
+          'The loop discards 3, counts the pair 4 + 1, and stops, missing 1 + 3. On unsorted input the answer is wrong.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def count_pairs(values, limit):\n    left = 0\n    right = len(values) - 1\n    count = 0\n    while left < right:\n        if values[left] + values[right] <= limit:\n            count += right - left\n            left += 1\n        else:\n            right -= 1\n    return count\n\nprint(count_pairs([1, 2, 3, 4], 100))',
+          ['4', '3', '6', '10'],
+          2,
+          'Every pair fits, so the blocks 3 + 2 + 1 cover all 4 · 3 / 2 pairs.',
+        ),
+      ],
+    },
+  ],
+  'cp-window-counts': [
+    {
+      title: 'Count exactly the labels in [left, right)',
+      explanation: [
+        'A window [left, right) contains the labels at positions left through right − 1, which is the slice labels[left:right]. Its frequency map must count exactly those labels: not the whole input, and not every label seen earlier.',
+      ],
+      example: {
+        code: 'labels = ["a", "b", "a", "c", "a"]\ncounts = {}\nfor label in labels[1:4]:\n    counts[label] = counts.get(label, 0) + 1\nprint(counts)',
+        output: "{'b': 1, 'a': 1, 'c': 1}",
+        explanation:
+          'Positions 1, 2 and 3 hold b, a and c. The a’s at positions 0 and 4 lie outside the window.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'labels = [5, 5, 7, 5]\ncounts = {}\nfor label in labels[0:3]:\n    counts[label] = counts.get(label, 0) + 1\nprint(counts)',
+          ['{5: 3, 7: 1}', '{5: 2, 7: 1}', '{5: 2}', '{7: 1, 5: 2}'],
+          1,
+          'The window [0, 3) excludes the last 5.',
+        ),
+        choose(
+          'Which positions belong to the window [2, 5)?',
+          ['2, 3 and 4', '2, 3, 4 and 5', '3, 4 and 5', '2 and 5'],
+          0,
+          'Half-open: left is included and right is excluded.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'labels = ["x", "y", "x", "y"]\ncounts = {}\nfor label in labels[1:3]:\n    counts[label] = counts.get(label, 0) + 1\nprint(counts)',
+          [
+            "{'x': 2, 'y': 2}",
+            "{'y': 1}",
+            "{'x': 1, 'y': 2}",
+            "{'y': 1, 'x': 1}",
+          ],
+          3,
+          'Only positions 1 and 2 are counted, and y comes first because it is first in the window.',
+        ),
+        choose(
+          'The window is [3, 7). Which loop counts exactly its labels?',
+          [
+            'for label in labels[3:7]',
+            'for label in labels[3:8]',
+            'for label in labels[4:7]',
+            'for label in labels',
+          ],
+          0,
+          'The slice uses the same half-open boundaries as the window.',
+        ),
+      ],
+    },
+    {
+      title: 'Map size is the distinct labels; counts add up to the length',
+      explanation: [
+        'When the map stores only labels that are present, len(counts) is the number of distinct labels in the window, and the counts add up to the window length right − left. A repeated label raises its count without adding a key. An empty window has an empty map.',
+      ],
+      example: {
+        code: 'labels = ["r", "g", "r", "r", "b"]\ncounts = {}\nfor label in labels[0:4]:\n    counts[label] = counts.get(label, 0) + 1\nprint(len(counts))\nprint(counts["r"] + counts["g"])',
+        output: '2\n4',
+        explanation:
+          'The window of length 4 holds two distinct labels, and their counts 3 and 1 add up to 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'labels = [1, 2, 1, 1, 3]\ncounts = {}\nfor label in labels[1:5]:\n    counts[label] = counts.get(label, 0) + 1\nprint(len(counts))',
+          ['4', '5', '2', '3'],
+          3,
+          'The window holds 2, 1, 1, 3: four labels but three distinct ones.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'labels = ["a", "b", "c"]\ncounts = {}\nfor label in labels[2:2]:\n    counts[label] = counts.get(label, 0) + 1\nprint(counts)',
+          ["{'c': 0}", 'None', '{}', "{'c': 1}"],
+          2,
+          'The window [2, 2) is empty, so no label is counted and no key is created.',
+        ),
+        choose(
+          'A window of length 6 has a map with 4 keys. What must its counts add up to?',
+          ['4', '6', '10', '24'],
+          1,
+          'Every position in the window adds one to some count.',
+        ),
+        choose(
+          'What does len(counts) report for a window map that stores only present labels?',
+          [
+            'The length of the window',
+            'The total of all the counts',
+            'The number of distinct labels in the window',
+            'The number of labels seen so far',
+          ],
+          2,
+          'One key per distinct label currently in the window.',
+        ),
+      ],
+    },
+  ],
+  'cp-window-remove': [
+    {
+      title: 'Decrement the outgoing label; delete it at zero',
+      explanation: [
+        'When the left boundary moves past a label, subtract one from its count. If copies of it remain in the window, keep the key. If the count reaches zero, remove the key with del counts[label].',
+      ],
+      example: {
+        code: 'counts = {"a": 2, "b": 1}\nfor outgoing in ["a", "b"]:\n    counts[outgoing] -= 1\n    if counts[outgoing] == 0:\n        del counts[outgoing]\n    print(counts)',
+        output: "{'a': 1, 'b': 1}\n{'a': 1}",
+        explanation:
+          'One a remains after the first removal, so its key stays. b’s last copy leaves, so its key is deleted.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'counts = {"x": 3}\ncounts["x"] -= 1\nif counts["x"] == 0:\n    del counts["x"]\nprint(counts)',
+          ['{}', "{'x': 3}", "{'x': 2}", "{'x': 0}"],
+          2,
+          'Two copies of x remain, so the key stays with count 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'counts = {"x": 1, "y": 4}\ncounts["x"] -= 1\nif counts["x"] == 0:\n    del counts["x"]\nprint(counts)',
+          ["{'x': 0, 'y': 4}", "{'y': 3}", "{'y': 4}", '{}'],
+          2,
+          'The last x left the window, so its key is deleted; y is untouched.',
+        ),
+        choose(
+          'Which statement removes the key label from the dictionary counts?',
+          [
+            'counts.remove(label)',
+            'del counts[label]',
+            'counts[label] = None',
+            'counts.pop()',
+          ],
+          1,
+          'del with a key removes that entry; dictionaries have no remove method.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'counts = {"p": 2, "q": 1}\nfor outgoing in ["p", "p"]:\n    counts[outgoing] -= 1\n    if counts[outgoing] == 0:\n        del counts[outgoing]\nprint(len(counts))',
+          ['2', '0', '3', '1'],
+          3,
+          'Both copies of p leave, so its key is deleted and only q remains.',
+        ),
+      ],
+    },
+    {
+      title: 'Zero entries make the distinct count lie',
+      explanation: [
+        'If a key stays at count 0, len(counts) still includes it, so the map claims a label is present when no copy is left. Deleting at zero keeps len(counts) equal to the number of distinct labels in the window. Sliding a window one step is then: add the incoming label, remove the outgoing one.',
+      ],
+      example: {
+        code: 'kept = {"a": 1, "b": 1}\nkept["a"] -= 1\nprint(len(kept))\ndeleted = {"a": 1, "b": 1}\ndeleted["a"] -= 1\nif deleted["a"] == 0:\n    del deleted["a"]\nprint(len(deleted))',
+        output: '2\n1',
+        explanation:
+          'Both maps describe a window containing only b, but only the one that deleted the zero entry reports 1 distinct label.',
+      },
+      questions: [
+        predictOutput(
+          'This program slides a window from [0, 3) to [1, 4). What does it print?',
+          'labels = ["a", "b", "a", "c"]\ncounts = {}\nfor label in labels[0:3]:\n    counts[label] = counts.get(label, 0) + 1\ncounts["c"] = counts.get("c", 0) + 1\ncounts["a"] -= 1\nif counts["a"] == 0:\n    del counts["a"]\nprint(counts)',
+          [
+            "{'a': 1, 'b': 1, 'c': 1}",
+            "{'b': 1, 'c': 1}",
+            "{'a': 2, 'b': 1, 'c': 1}",
+            "{'a': 1, 'b': 1}",
+          ],
+          0,
+          'c enters and one a leaves; another a is still in the window, so its key stays.',
+        ),
+        predictOutput(
+          'This map keeps zero entries. What does it print?',
+          'counts = {"q": 1, "r": 2}\ncounts["q"] -= 1\nprint(len(counts))',
+          ['1', '3', '2', '0'],
+          2,
+          'The zero entry for q still counts as a key, although only r is present.',
+        ),
+        choose(
+          'A window map keeps zero-count keys instead of deleting them. What goes wrong?',
+          [
+            'The counts stop adding up to the window length',
+            'len(counts) overstates the distinct labels present',
+            'Labels that are present get lost',
+            'The map becomes sorted by count',
+          ],
+          1,
+          'Each zero entry is a key for a label that is no longer in the window.',
+        ),
+        choose(
+          'Which updates slide a window one step to the right?',
+          [
+            'Clear the map and count the incoming label',
+            'Add the incoming label only',
+            'Remove the outgoing label only',
+            'Add the incoming label and remove the outgoing one',
+          ],
+          3,
+          'The window gains one position on the right and loses one on the left.',
+        ),
+      ],
+    },
+  ],
+  'cp-window-repair': [
+    {
+      title: 'Shrink from the left while there are too many labels',
+      explanation: [
+        'After the right boundary adds a label, the window may hold more than k distinct labels. Repair it by removing labels[left] and advancing left, repeating while len(counts) > k. Each removal decrements a count and deletes the key at zero.',
+      ],
+      example: {
+        code: 'labels = ["a", "a", "b", "c"]\ncounts = {"a": 2, "b": 1, "c": 1}\nleft = 0\nwhile len(counts) > 2:\n    old = labels[left]\n    counts[old] -= 1\n    if counts[old] == 0:\n        del counts[old]\n    left += 1\n    print(counts)\nprint(left)',
+        output: "{'a': 1, 'b': 1, 'c': 1}\n{'b': 1, 'c': 1}\n2",
+        explanation:
+          'Removing the first a leaves another a, so three labels remain. Removing the second a deletes its key and the window becomes valid at left = 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def repair(labels, k):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    left = 0\n    while len(counts) > k:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n    return left\n\nprint(repair(["x", "y", "z"], 2))',
+          ['1', '2', '0', '3'],
+          0,
+          'Removing x leaves y and z, which meets the limit.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def repair(labels, k):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    left = 0\n    while len(counts) > k:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n    return left\n\nprint(repair(["p", "q", "p", "q", "r"], 2))',
+          ['1', '3', '2', '4'],
+          1,
+          'The first p and the first q leave without removing a key; only removing the second p deletes p.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def repair(labels, k):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    left = 0\n    while len(counts) > k:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n    return left\n\nprint(repair(["m", "m", "n"], 2))',
+          ['0', '1', '2', '3'],
+          0,
+          'Two distinct labels already meet the limit, so nothing is removed.',
+        ),
+        choose(
+          'Removing the leftmost label did not reduce the number of distinct labels. How can that happen?',
+          [
+            'The label was added twice by mistake',
+            'Removing a label always raises the distinct count',
+            'The map was not kept sorted',
+            'Another copy of that label is still in the window',
+          ],
+          3,
+          'A key disappears only when its last copy leaves.',
+        ),
+      ],
+    },
+    {
+      title: 'Stop at the first valid boundary',
+      explanation: [
+        'Removing labels never increases the number of distinct labels, so the shrinking loop always makes progress toward a valid window. Stop as soon as len(counts) <= k: that left boundary gives the longest valid window ending at the current right boundary. With k = 0, every label has to leave.',
+      ],
+      example: {
+        code: 'def repair(labels, k):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    left = 0\n    while len(counts) > k:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n    return left\n\nlabels = ["a", "b", "b", "c", "b"]\nleft = repair(labels, 2)\nprint(left)\nprint(labels[left:])',
+        output: "1\n['b', 'b', 'c', 'b']",
+        explanation:
+          'Removing a already leaves only b and c, so the loop stops at left = 1 and keeps the longest valid suffix.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def repair(labels, k):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    left = 0\n    while len(counts) > k:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n    return left\n\nlabels = ["a", "b", "c", "c"]\nleft = repair(labels, 1)\nprint(labels[left:])',
+          ["['c', 'c']", "['c']", "['b', 'c', 'c']", "['a', 'b', 'c', 'c']"],
+          0,
+          'a and b must leave; both c’s remain because the window is valid as soon as only c is left.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def repair(labels, k):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    left = 0\n    while len(counts) > k:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n    return left\n\nlabels = ["a", "b"]\nleft = repair(labels, 0)\nprint(labels[left:])',
+          ['[]', "['b']", "['a', 'b']", "['a']"],
+          0,
+          'With k = 0 no label may stay, so left moves past both.',
+        ),
+        choose(
+          'Why stop at the first left boundary where the window becomes valid?',
+          [
+            'It keeps the shortest valid window ending at right',
+            'It guarantees every label is unique',
+            'It keeps the longest valid window ending at right',
+            'Continuing would make the window invalid again',
+          ],
+          2,
+          'Any further removal would only shorten a window that is already valid.',
+        ),
+        choose(
+          'Why is the shrinking loop guaranteed to finish?',
+          [
+            'Every removal lowers the distinct count by one',
+            'The loop always runs exactly k times',
+            'Dictionaries delete zero entries automatically',
+            'Each pass moves left forward through a finite list',
+          ],
+          3,
+          'In the worst case left passes every label and the map becomes empty.',
+        ),
+      ],
+    },
+  ],
+  'cp-sliding-window': [
+    {
+      title: 'Expand right, repair left, record the length',
+      explanation: [
+        'The longest segment with at most k distinct labels combines the window operations. For each right boundary, add labels[right] to the map; while the map has more than k keys, remove labels[left] and advance left; then the window from left to right is valid, and right − left + 1 is a candidate length.',
+      ],
+      example: {
+        code: 'def longest(labels, k):\n    counts = {}\n    left = 0\n    best = 0\n    for right in range(len(labels)):\n        label = labels[right]\n        counts[label] = counts.get(label, 0) + 1\n        while len(counts) > k:\n            old = labels[left]\n            counts[old] -= 1\n            if counts[old] == 0:\n                del counts[old]\n            left += 1\n        best = max(best, right - left + 1)\n    return best\n\nprint(longest([1, 2, 1, 3, 3, 1, 2], 2))',
+        output: '4',
+        explanation:
+          'The best window is 1, 3, 3, 1 (positions 2 to 5). Every time a third label enters, the left side shrinks until only two labels remain.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def longest(labels, k):\n    counts = {}\n    left = 0\n    best = 0\n    for right in range(len(labels)):\n        label = labels[right]\n        counts[label] = counts.get(label, 0) + 1\n        while len(counts) > k:\n            old = labels[left]\n            counts[old] -= 1\n            if counts[old] == 0:\n                del counts[old]\n            left += 1\n        best = max(best, right - left + 1)\n    return best\n\nprint(longest(["x", "y", "x", "x", "z"], 2))',
+          ['4', '3', '5', '2'],
+          0,
+          'x, y, x, x is valid with length 4; when z enters, x and y cannot both stay.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def longest(labels, k):\n    counts = {}\n    left = 0\n    best = 0\n    for right in range(len(labels)):\n        label = labels[right]\n        counts[label] = counts.get(label, 0) + 1\n        while len(counts) > k:\n            old = labels[left]\n            counts[old] -= 1\n            if counts[old] == 0:\n                del counts[old]\n            left += 1\n        best = max(best, right - left + 1)\n    return best\n\nprint(longest(["a", "b", "c", "d"], 1))',
+          ['0', '4', '2', '1'],
+          3,
+          'All labels differ, so any window with one distinct label has length 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def longest(labels, k):\n    counts = {}\n    left = 0\n    best = 0\n    for right in range(len(labels)):\n        label = labels[right]\n        counts[label] = counts.get(label, 0) + 1\n        while len(counts) > k:\n            old = labels[left]\n            counts[old] -= 1\n            if counts[old] == 0:\n                del counts[old]\n            left += 1\n        best = max(best, right - left + 1)\n    return best\n\nprint(longest([7, 8, 7, 9, 9, 9], 2))',
+          ['4', '3', '5', '6'],
+          0,
+          'When 9 enters, the window shrinks to 7, 9 and then grows to 7, 9, 9, 9.',
+        ),
+        choose(
+          'Why is right − left + 1 recorded only after the shrinking loop?',
+          [
+            'The shrinking loop also changes right',
+            'Before the loop the window is always empty',
+            'Only then is the window guaranteed valid',
+            'It avoids counting the label at right',
+          ],
+          2,
+          'Before repair the window may hold k + 1 distinct labels.',
+        ),
+      ],
+    },
+    {
+      title: 'Why the repaired window is the best for its right end',
+      explanation: [
+        'After shrinking, any left boundary further left would include labels that were just removed, and those windows have too many distinct labels. So the window [left, right] is the longest valid one ending at right, and the best over all right ends is the answer. Because adding labels on the right never lowers the distinct count, left never needs to move back.',
+      ],
+      example: {
+        code: 'labels = ["a", "b", "a", "c", "c"]\nk = 2\ncounts = {}\nleft = 0\nfor right in range(len(labels)):\n    label = labels[right]\n    counts[label] = counts.get(label, 0) + 1\n    while len(counts) > k:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n    print(right - left + 1)',
+        output: '1\n2\n3\n2\n3',
+        explanation:
+          'The lengths for each right end are 1, 2, 3, then 2 after c forces both a and b out of the way, then 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'labels = ["p", "q", "q", "r", "p"]\nk = 2\ncounts = {}\nleft = 0\nfor right in range(len(labels)):\n    label = labels[right]\n    counts[label] = counts.get(label, 0) + 1\n    while len(counts) > k:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n    print(right - left + 1)',
+          ['1\n2\n3\n3\n2', '1\n2\n3\n3\n3', '1\n2\n3\n1\n2', '1\n2\n3\n4\n5'],
+          0,
+          'When r enters, removing p leaves q, q, r. When p returns, both q’s must leave, leaving r, p.',
+        ),
+        choose(
+          'After the repair, could a window with the same right end but a smaller left be valid?',
+          [
+            'Yes, as long as it is shorter than before',
+            'Yes, whenever k is larger than the window',
+            'No, it would include the labels just removed',
+            'Only when some labels repeat inside it',
+          ],
+          2,
+          'The loop removed exactly the labels that made the window invalid.',
+        ),
+        choose(
+          'Why does left never need to move back to the left?',
+          [
+            'The map forgets every label that left has passed',
+            'right moves back whenever left moves forward',
+            'Windows always get shorter as right grows',
+            'Extending right never lowers the distinct count',
+          ],
+          3,
+          'A start that was invalid for an earlier right end stays invalid for later ones.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'labels = [1, 1, 2, 3]\nk = 2\ncounts = {}\nleft = 0\nfor right in range(len(labels)):\n    label = labels[right]\n    counts[label] = counts.get(label, 0) + 1\n    while len(counts) > k:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n    print(left)',
+          ['0\n0\n0\n2', '0\n0\n0\n1', '0\n1\n2\n3', '0\n0\n0\n3'],
+          0,
+          'When 3 enters, both 1s must leave before only two labels remain.',
+        ),
+      ],
+    },
+    {
+      title: 'Linear time despite the nested loop',
+      explanation: [
+        'The inner while loop looks nested, but left only moves forward and advances at most n times over the whole run, while right advances n times. The total work is expected O(n). The map holds at most k + 1 keys at any moment, so the extra space is O(min(n, k + 1)). With k = 0 or an empty list the answer is 0.',
+      ],
+      example: {
+        code: 'labels = ["a", "b", "c", "d", "e", "f"]\nk = 1\ncounts = {}\nleft = 0\nremovals = 0\nfor right in range(len(labels)):\n    label = labels[right]\n    counts[label] = counts.get(label, 0) + 1\n    while len(counts) > k:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n        removals += 1\nprint(removals)\nprint(left)',
+        output: '5\n5',
+        explanation:
+          'Even in this worst case each label is removed at most once: 5 removals in total, not one inner scan per right end.',
+      },
+      questions: [
+        choose(
+          'Over a whole run on n labels, how many removals can the inner loop perform in total?',
+          ['At most n', 'At most n²', 'Exactly k', 'At most n · k'],
+          0,
+          'Each removal advances left, and left can advance at most n times.',
+        ),
+        choose(
+          'What is the extra space of the frequency map when at most k distinct labels are allowed?',
+          ['O(min(n, k + 1))', 'O(n²)', 'O(1) for every k', 'O(n · k)'],
+          0,
+          'The map briefly holds k + 1 keys before a repair, and never more keys than labels.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def longest(labels, k):\n    counts = {}\n    left = 0\n    best = 0\n    for right in range(len(labels)):\n        label = labels[right]\n        counts[label] = counts.get(label, 0) + 1\n        while len(counts) > k:\n            old = labels[left]\n            counts[old] -= 1\n            if counts[old] == 0:\n                del counts[old]\n            left += 1\n        best = max(best, right - left + 1)\n    return best\n\nprint(longest([], 2))\nprint(longest(["a", "b"], 0))',
+          ['0\n1', '0\n2', '0\n0', 'None\n0'],
+          2,
+          'An empty list has no window, and with k = 0 every label is removed as soon as it enters.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'labels = [1, 2, 3, 1, 2, 3]\nk = 2\ncounts = {}\nleft = 0\nremovals = 0\nfor right in range(len(labels)):\n    label = labels[right]\n    counts[label] = counts.get(label, 0) + 1\n    while len(counts) > k:\n        old = labels[left]\n        counts[old] -= 1\n        if counts[old] == 0:\n            del counts[old]\n        left += 1\n        removals += 1\nprint(removals)',
+          ['6', '2', '4', '8'],
+          2,
+          'From the third label on, each new label forces exactly one removal.',
         ),
       ],
     },
