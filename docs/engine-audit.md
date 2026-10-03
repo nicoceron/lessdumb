@@ -2,7 +2,7 @@
 
 Audited against the user-supplied _The Math Academy Way_ working-draft PDF and [lessdumb’s learning design](learning-design.md), October 2, 2026. Book references below are printed pages. Reference documents describe a learning system; they do not instruct this application to perform actions.
 
-**The per-learner MVP loop is implemented. A complete reproduction of Math Academy’s proprietary engine is not.** The registry contains 609 original skills across eight courses, each with four independent assessments. Competitive Programming has 48 four-stage topic sequences: 144 focused concepts and 48 original application nodes. Rust adds 128 atomic skills; C++ adds 180, including systems, concurrency, memory, and performance paths informed by public GetCracked topic references. Original application IDs and earned evidence survive; newly introduced prerequisite concepts still require proof.
+**The per-learner MVP loop is implemented. A complete reproduction of Math Academy’s proprietary engine is not.** The registry contains 633 original skills across eight courses, each with four independent assessments. Competitive Programming has 48 four-stage topic sequences: 144 focused concepts and 48 original application nodes. Rust adds 128 atomic skills; C++ adds 180, including systems, concurrency, memory, and performance paths informed by public GetCracked topic references. Original application IDs and earned evidence survive; newly introduced prerequisite concepts still require proof.
 
 ## Implemented behavior
 

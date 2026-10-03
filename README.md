@@ -28,7 +28,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 ## What you can do
 
 - **Today:** follow the next adaptive task, set a daily XP goal, and see your practice history and streak.
-- **My learning:** choose from 609 connected skills across eight courses through short explanations, examples, prediction questions, and executable exercises.
+- **My learning:** choose from 633 connected skills across eight courses through short explanations, examples, prediction questions, and executable exercises.
 - **Lessons:** move through introduction slides and worked examples, follow labelled subgoals, then practice with a visible evidence checklist. Revisit the teaching material while keeping your pending choice or code; assisted answers remain separate from independent mastery.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
 - **Flashcards:** receive recall cards after mastery and correction cards after mistakes; connect Anki or export a tab-separated deck.
@@ -41,7 +41,7 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 
 | Course                   |  Skills | Questions | Executable exercises | Anki cards |
 | ------------------------ | ------: | --------: | -------------------: | ---------: |
-| Python foundations       |      24 |        96 |                   24 |         48 |
+| Python foundations       |      48 |       192 |                   48 |         96 |
 | Quantitative foundations |       5 |        20 |                    5 |         10 |
 | Python for Data Analysis |      24 |        96 |                   24 |         48 |
 | Machine Learning         |      28 |       112 |                   21 |         56 |
@@ -49,7 +49,7 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 | Competitive Programming  |     192 |       768 |                  192 |        384 |
 | Rust                     |     128 |       512 |                  128 |        256 |
 | C++                      |     180 |       720 |                  180 |        360 |
-| **Total**                | **609** | **2,436** |              **574** |  **1,218** |
+| **Total**                | **633** | **2,532** |              **598** |  **1,314** |
 
 Selecting a course saves a learning goal. The scheduler includes its prerequisite ancestors across courses, so missing foundations become real tasks rather than a dead end. The graph offers course paths with supporting prerequisites and an all-course view. Each node retains a domain and course identity, and its detail panel navigates both prerequisite and dependent edges.
 
@@ -63,16 +63,19 @@ The dashboard layout follows the compact course/progress/task pattern visible in
 
 ## Python foundations
 
-The curriculum contains **24 original skills, 96 questions, 24 runnable code exercises, and 48 mastery flashcards**, plus correction cards generated from mistakes. Each skill has three choice/prediction questions and one executable exercise.
+The curriculum contains **48 original skills, 192 questions, 48 runnable code exercises, and 96 mastery flashcards**, plus correction cards generated from mistakes. Each skill has three choice/prediction questions and one executable exercise.
 
-| Unit                | Skills                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------ |
-| First programs      | Your first output; Names and variables; Numbers and arithmetic; Build strings              |
-| Make decisions      | Types and conversion; Compare values; Combine conditions; Choose a branch                  |
-| Work with sequences | Collect values in lists; Access by index; Repeat with for; Count with range                |
-| Build with loops    | Accumulate a result; Repeat while a condition holds; Change a list; Take a slice           |
-| Organize your code  | Map keys to values; Loop through mappings; Define a function; Return a result              |
-| Solve real problems | Design useful inputs; Transform and filter; Handle expected failures; Build a word counter |
+| Unit                     | Skills                                                                                                                                                                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First programs           | Your first output; Names and variables; Numbers and arithmetic; Build strings                                                                                                                                                                              |
+| Make decisions           | Types and conversion; Compare values; Combine conditions; Choose a branch; Choose a value inline                                                                                                                                                           |
+| Work with sequences      | Collect values in lists; Test for empty or missing values; Summarize numbers with built-ins; Clean and split text; Access by index; Group values in a tuple; Repeat with for; Unpack several values at once; Count with range; Loop with enumerate and zip |
+| Build with loops         | Accumulate a result; Repeat while a condition holds; Stop or skip inside a loop; Change a list; Make a list of repeated values; Work with lists of lists; Take a slice                                                                                     |
+| Organize your code       | Map keys to values; Loop through mappings; Keep unique values in a set; Define a function; Return a result; Return several values; Call a function from itself                                                                                             |
+| Solve real problems      | Design useful inputs; Transform and filter; Build grids safely; Feed a loop into sum, any, and all; Handle expected failures; Build a word counter                                                                                                         |
+| Sort and use bits        | Sort a list; Sort by a key; Work with bits                                                                                                                                                                                                                 |
+| Use the standard library | Import a module; Queue and count with collections; Take the smallest item with heapq; Search a sorted list with bisect                                                                                                                                     |
+| Model data with classes  | Define a class; Give objects methods                                                                                                                                                                                                                       |
 
 Skills unlock through their graph prerequisites rather than an arbitrary calendar. Mastery requires a correct answer to **all four distinct questions without a hint**, including a passing Python exercise. Repeating one question cannot unlock a skill or farm learn XP. Hints support practice but do not count as independent mastery evidence.
 
