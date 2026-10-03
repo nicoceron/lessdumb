@@ -52,7 +52,6 @@ Outside the Rust and C++ review, these edits also fixed:
 
 - `unpacking-kp2-q2` and `cp-stack-pop-kp2-q2`: position-dependent explanations ("the third line", "the second … the last").
 - `ml-overfitting-kp1-q4` and `kp2-q2`: prompts that pointed at "the previous table" and "the previous curve" now state the numbers.
-- `ml-transfer-learning-kp2-q4`: the key named only a missing recompile as the cause of a 0 trainable-parameter summary; it now also names flags set on the wrong layers.
 - Four distractors written during this work were replaced on review because they were defensibly correct or too close to the key: "A, B, C, D and E" as the nodes reachable from A (A reaches itself by a path of length 0), "Count all users who have an email" as a query an email index cannot help, "301 writes" for 300 embedded copies (the supplier's own record would make 301), and `O((V + E) log V)` for lazy-heap Dijkstra with parallel edges (equal to the key whenever E is polynomial in V).
 
 ## Competitive Programming
