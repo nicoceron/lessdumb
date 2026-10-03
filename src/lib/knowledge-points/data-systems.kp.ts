@@ -32,8 +32,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'A clinic system books an appointment for patient 4410 and also computes the no-show rate of every clinic over two years. Which request is analytical?',
           [
             'Booking the appointment for patient 4410',
-            'Both, because both concern appointments',
-            'The no-show rate of every clinic over two years',
+            'Both, because both requests touch appointments',
+            'Computing each clinic’s two-year no-show rate',
             'Neither, because both use the same table',
           ],
           2,
@@ -66,7 +66,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Operational: a small, key-based read for one user',
             'Analytical, because it returns 12 rows',
-            'Analytical, because orders are historical data',
+            'Analytical, because past orders are historical data',
             'Neither, because reads are not workloads',
           ],
           0,
@@ -89,10 +89,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which requirement can be checked with a load test?',
           [
-            'The service should feel snappy',
-            'Use a modern database',
-            'Handle 300 orders per minute with 99% answered within 2 seconds',
-            'Scale to any number of users',
+            'The checkout page should feel snappy to every shopper',
+            'Use a modern, well-supported database',
+            'Handle 300 orders/min with 99% answered within 2 s',
+            'Scale to any number of users as the shop grows',
           ],
           2,
           'It names an operation, a rate and a measurable response target.',
@@ -119,7 +119,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Re-evaluate the design for the much higher write rate',
             'Nothing, because reads and writes cost the same',
-            'Only plan for the combined 1,800 requests/s',
+            'Only plan capacity for the combined 1,800 requests/s',
             'Ignore the reads, since writes dominate',
           ],
           0,
@@ -165,9 +165,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which pair are clearly different workloads within one music app?',
           [
             'Play song 381 for user 12; play song 382 for user 12',
-            'Like a song; unlike a song',
-            'Search for an artist; search for an album',
-            'Play song 381 for user 12; count monthly plays per artist across all users',
+            'Like song 381 for user 12; unlike it an hour later',
+            'Search for an artist by name; search for an album by name',
+            'Play song 381 for user 12; count monthly plays per artist',
           ],
           3,
           'One is a single key-based action; the other scans every play to summarise.',
@@ -175,10 +175,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why list each workload separately instead of averaging their numbers?',
           [
-            'Averages are always zero',
-            'An average hides that one workload needs fast key lookups and another broad scans',
-            'Separate lists make the database faster',
-            'Workloads cannot be measured',
+            'Averages are only valid when all workloads share a rate',
+            'An average describes none of the real access patterns',
+            'Separate lists make the shared database run faster',
+            'Workloads with different rates cannot be measured together',
           ],
           1,
           'Combining them produces a profile that matches none of the real access patterns.',
@@ -221,10 +221,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A batch job processes 1 million records per hour, but during the job one user’s single lookup takes 8 seconds. Which statement is right?',
           [
-            'Throughput is high, but that request’s response time is poor',
-            'High throughput guarantees fast responses',
-            'The slow lookup proves throughput is low',
-            'They measure the same thing',
+            'Throughput is high while that lookup’s response is slow',
+            'High throughput guarantees fast responses for every user',
+            'The 8-second lookup proves the job’s throughput is low',
+            'Throughput and response time measure the same thing',
           ],
           0,
           'The system completes a lot of work overall while an individual caller still waits.',
@@ -267,10 +267,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Service X has p50 of 40 ms and p99 of 3 s. Service Y has p50 of 60 ms and p99 of 150 ms. Which statement is right?',
           [
-            'X is better for every user',
-            'Their slowest requests are similar',
-            'Y is slower for a typical request but far better for the slowest 1%',
-            'p50 describes the slowest request',
+            'X is better for every user, since its p50 is lower',
+            'Y is faster for a typical request; X for the slowest 1%',
+            'Y is slower at p50 but far better for the slowest 1%',
+            'p50 describes each service’s slowest request',
           ],
           2,
           'p50 describes the typical request; p99 the slowest 1%, where X is 20 times worse.',
@@ -279,7 +279,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A target says p95 ≤ 200 ms. Over 10,000 requests, 600 took longer than 200 ms. Is the target met?',
           [
             'No: 6% exceeded 200 ms, more than the 5% allowed',
-            'Yes, because most requests were fast',
+            'Yes, because 94% of requests finished within 200 ms',
             'Yes, if the mean is below 200 ms',
             'It cannot be known without p50',
           ],
@@ -305,7 +305,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The requirement is met',
             'The service will fail at 2,000 requests/s',
-            'p95 is 25 ms at any load',
+            'p95 stays at 25 ms at any load the service sees',
             'Nothing about behaviour at 2,000 requests/s',
           ],
           3,
@@ -316,7 +316,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'A failure without a fault',
             'A fault that did not become a failure',
-            'Neither a fault nor a failure',
+            'Neither a fault nor a failure, since users noticed nothing',
             'A failure of the whole service',
           ],
           1,
@@ -325,10 +325,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which reliability requirement is testable?',
           [
-            'Keep serving with no errors when any single server is shut down',
-            'The system should never break',
-            'Use reliable hardware',
-            'Be as available as possible',
+            'No errors when any one server is shut down',
+            'The system should never break under any circumstances',
+            'Use reliable, enterprise-grade hardware for every server',
+            'Be as available as possible during peak hours',
           ],
           0,
           'It names a specific fault to inject and a specific outcome to check.',
@@ -336,7 +336,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'As load rises toward a service’s capacity, what typically happens to response times?',
           [
-            'They fall, because caches warm up',
+            'They fall, because caches warm up under load',
             'They stay constant',
             'They rise as requests wait in queues',
             'They become equal to the throughput',
@@ -367,7 +367,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Update the database to 1,204',
             'Correct or rebuild the dashboard from the database',
             'Show the average, 1,201',
-            'Trust whichever was updated most recently',
+            'Trust whichever of the two was updated most recently',
           ],
           1,
           'The copy is repaired from the authority, never the other way round.',
@@ -376,9 +376,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which store is most likely a system of record?',
           [
             'A nightly report of yesterday’s sales',
-            'A search index of product descriptions',
+            'The search index that every product query hits first',
             'A cache of the home page',
-            'The payments ledger where each charge is first recorded',
+            'The ledger where each charge is first recorded',
           ],
           3,
           'The ledger is where the fact originates; the others are built from other data.',
@@ -387,7 +387,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why name the system of record before building copies?',
           [
             'So disagreements have a defined resolution',
-            'So copies can never disagree',
+            'So copies can never disagree with one another',
             'So the copies can be deleted',
             'So every read goes to the slowest store',
           ],
@@ -397,10 +397,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Customer emails are stored in both the CRM and the billing system, and both teams edit them. What is the problem?',
           [
-            'None, because two copies are safer',
+            'None, because two editable copies are safer than one',
             'Billing becomes faster',
-            'Two stores claim authority, so conflicting edits have no winner',
-            'The CRM becomes a cache',
+            'Conflicting edits have no defined winner',
+            'The CRM silently becomes a cache of billing',
           ],
           2,
           'Without one authority, an email changed in each place has no correct value.',
@@ -423,9 +423,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which is derived data?',
           [
             'A signed contract as uploaded',
-            'Customers’ submitted addresses',
-            'A sensor’s raw readings',
-            'Monthly revenue totals computed from orders',
+            'Customers’ submitted shipping addresses',
+            'A sensor’s raw temperature readings',
+            'Monthly revenue totals per store',
           ],
           3,
           'The totals are computed from the orders and can be recomputed from them.',
@@ -434,8 +434,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'After 30 days the orders store keeps only daily totals. A new report needs last year’s hourly sales. Can it be derived?',
           [
             'Yes, by dividing each daily total by 24',
-            'No, because the hourly detail no longer exists in the source',
-            'Yes, from the report’s name',
+            'No, the hourly detail is gone from the source',
+            'Yes, by re-running the report over the daily totals',
             'Yes, but only for weekdays',
           ],
           1,
@@ -445,7 +445,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A recommendations table is deleted, but the click log and the recommendation code remain. What is lost?',
           [
             'Nothing permanent; it can be recomputed',
-            'All click history',
+            'The click history the table was built from',
             'The ability to recommend ever again',
             'The recommendation code',
           ],
@@ -456,9 +456,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'What must survive to rebuild a lost derived view?',
           [
             'Its file name and size',
-            'Only the view’s last backup',
+            'Only the view’s own most recent backup',
             'The source data and the transformation',
-            'The cache and the index',
+            'The cache and search index built on it',
           ],
           2,
           'Rebuilding re-runs the transformation over the source.',
@@ -480,8 +480,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What does keeping a precomputed total trade?',
           [
-            'Slower reads for cheaper updates',
-            'Cheaper reads for extra update and repair work',
+            'Slower reads for cheaper, simpler updates',
+            'Cheaper reads for update and repair work',
             'Accuracy for disk space only',
             'Nothing; it is free',
           ],
@@ -491,10 +491,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A follower count is cached and refreshed every 5 minutes. A user follows an account and immediately sees the old count. What is this?',
           [
-            'Data loss',
+            'Data loss: the follow was dropped before being stored',
             'A corrupted system of record',
             'A failed write',
-            'Expected staleness within the stated refresh window',
+            'Expected staleness within the refresh window',
           ],
           3,
           'The cache has not refreshed yet; the follow itself is safely recorded.',
@@ -503,7 +503,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A stored total says 980, but counting the source rows gives 1,010. How should the copy be repaired?',
           [
             'Recompute the total from the source rows',
-            'Edit the source to 980',
+            'Edit the source rows until they total 980',
             'Add 30 to every future total',
             'Delete the source rows',
           ],
@@ -514,9 +514,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Before adding a third derived copy of product prices, what should be planned?',
           [
             'Its colour scheme',
-            'Removing the system of record',
-            'How price changes reach it and how stale it may be',
-            'Nothing, since copies do not drift',
+            'Which copy becomes the new system of record',
+            'Its update path and how stale it may be',
+            'Nothing, since derived copies do not drift',
           ],
           2,
           'Each copy needs an update path and a staleness budget.',
@@ -541,10 +541,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Node A gets no response from node B. Which conclusion is justified?',
           [
-            'B has crashed',
-            'B never received the request',
+            'B crashed before it could process the request',
+            'The request was lost before B received it',
             'The network is permanently broken',
-            'A does not know whether B received or processed the request',
+            'A cannot tell what happened to the request',
           ],
           3,
           'Several different failures produce the same silence.',
@@ -553,9 +553,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which problem exists for a three-node system but not for a program on one machine?',
           [
             'Variables can change value',
-            'One part can fail while the others keep running',
+            'One node can fail while others keep running',
             'Disks can fill up',
-            'Code can contain bugs',
+            'Code can contain bugs that crash the whole program',
           ],
           1,
           'Partial failure is specific to independent machines connected by a network.',
@@ -566,7 +566,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'A measured requirement one server cannot meet',
             'Distributed systems being more modern',
             'More machines always being faster',
-            'Avoiding the need for backups',
+            'Avoiding the need for backups once data is copied',
           ],
           0,
           'Distribution brings coordination costs, so it needs a concrete reason.',
@@ -577,7 +577,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Delays are bounded at 2 ms',
             'Slow messages are always lost',
             'Messages may be delayed unpredictably',
-            'Delays only happen under maintenance',
+            'Delays only happen during planned maintenance',
           ],
           2,
           'Networks give no upper bound on delay, so timeouts and retries must expect it.',
@@ -599,10 +599,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'One server handles 400 requests/s. Peak load is 350 and growing 50% per year. What follows?',
           [
-            'One server is enough indefinitely',
+            'One server is enough, since 400 exceeds 350',
             'Peak load does not matter',
             'Distribution was needed from the start',
-            'Headroom runs out within a year, so plan more capacity',
+            'Headroom runs out within a year',
           ],
           3,
           'Peak will reach 525 requests/s next year, beyond the server’s 400.',
@@ -610,9 +610,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A service may be down at most 15 minutes, and restoring from backup takes 3 hours. Is a single node with backups enough?',
           [
-            'Yes, because backups exist',
-            'No, because recovery takes longer than the allowed downtime',
-            'Yes, if the server is fast',
+            'Yes, because the backups protect all of the data',
+            'No, recovery exceeds the allowed downtime',
+            'Yes, if the server is fast enough at peak',
             'Only during weekdays',
           ],
           1,
@@ -622,7 +622,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Peak load is 30 requests/s, capacity 600 requests/s, restore time 20 minutes, allowed downtime 4 hours. Which design fits?',
           [
             'A single node with tested backups',
-            'A five-node cluster',
+            'A five-node cluster with automatic failover',
             'Two data centres',
             'A different node per user',
           ],
@@ -633,8 +633,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'A team moves to a managed database service. What stays their responsibility?',
           [
             'Replacing failed disks',
-            'Installing operating-system patches',
-            'Data modelling, access control and recovery expectations',
+            'Installing operating-system and database engine patches',
+            'Data modelling, access control and recovery goals',
             'Nothing at all',
           ],
           2,
@@ -668,7 +668,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A buggy migration corrupts a column at 10:00, and replication copies the corruption everywhere. What can restore the correct values?',
           [
-            'Any live replica',
+            'The most up-to-date live replica',
             'A backup taken before 10:00',
             'Restarting the database',
             'Adding another replica',
@@ -681,7 +681,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'They copy mistakes as well as good changes',
             'Replicas cannot store data',
-            'Replicas are always out of date',
+            'Replicas lag too far behind to restore from',
             'Replicas are slower than backups',
           ],
           0,
@@ -691,8 +691,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'Backups run daily at 00:00. A mistake at 23:00 is found at 23:30. Without other records, what may be lost when restoring the 00:00 backup?',
           [
             'Nothing',
-            'Only the 30 minutes after the mistake',
-            'About 23 hours of legitimate changes made since the backup',
+            'Only the 30 minutes between mistake and discovery',
+            'About 23 hours of valid changes',
             'Every earlier backup',
           ],
           2,
@@ -717,12 +717,7 @@ export const knowledgePoints: KnowledgePointModule = {
       questions: [
         choose(
           'Which column makes the best primary key for a students table?',
-          [
-            'full_name',
-            'email',
-            'date_of_birth',
-            'student_id, assigned once at enrolment',
-          ],
+          ['full_name', 'email', 'date_of_birth', 'student_id'],
           3,
           'Names and birthdays repeat, and emails change; an assigned ID is unique and stable.',
         ),
@@ -732,7 +727,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Nothing, because keys may repeat',
             'The key no longer identifies one row',
             'The table has too many rows',
-            'The two rows must be identical',
+            'The two rows must hold identical values',
           ],
           1,
           'A primary key exists precisely to pick out a single row.',
@@ -740,10 +735,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is a phone number a risky primary key for customers?',
           [
-            'Customers change numbers, and old numbers get reassigned',
+            'Numbers change and get reassigned to others',
             'It is too long',
             'It contains digits',
-            'Databases cannot store phone numbers',
+            'Databases cannot store numbers with leading zeros',
           ],
           0,
           'A key must stay attached to one customer; phone numbers move between people.',
@@ -800,9 +795,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why store customer_id in orders instead of the customer’s name?',
           [
             'IDs are shorter to type',
-            'The name can change or repeat; the ID identifies one customer',
-            'Joins only work on numbers',
-            'Names cannot be stored in tables',
+            'Names change or repeat; the ID does not',
+            'Joins only work on numeric columns, not on text',
+            'Names cannot be stored in two tables at once',
           ],
           1,
           'The reference must stay correct when names change and must not be ambiguous.',
@@ -830,10 +825,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Articles have many tags, and each tag is used by many articles. Which design represents that?',
           [
-            'A tags column holding "news,sport"',
+            'A tags column in articles holding "news,sport"',
             'A tag_id column in articles',
             'An article_id column in tags',
-            'An article_tags table with article_id and tag_id',
+            'An article_tags table of (article_id, tag_id)',
           ],
           3,
           'Only a linking table lets both sides have many partners.',
@@ -841,10 +836,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Knowing only Ben’s name, you want the names of the courses he takes. Which tables does the query join?',
           [
-            'students only',
-            'courses only',
+            'students joined directly to courses',
+            'students and enrolments only',
             'students, enrolments and courses',
-            'enrolments only',
+            'enrolments only, filtered by name',
           ],
           2,
           'students gives Ben’s ID, enrolments his course IDs, and courses their names.',
@@ -852,9 +847,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why not store a comma-separated list of course names in each student row?',
           [
-            'Course lists inside text cannot be joined, counted or renamed consistently',
-            'It would make every query faster',
-            'Commas are not allowed in databases',
+            'They cannot be joined, counted or renamed reliably',
+            'Each student row would grow too large to be read quickly',
+            'Commas are not allowed inside database text columns',
             'Students would need two IDs',
           ],
           0,
@@ -880,7 +875,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which data suits a single nested document best?',
           [
-            'Products referenced by thousands of orders',
+            'Products referenced by thousands of different orders',
             'Users who follow each other',
             'A blog post with its own ordered list of paragraphs',
             'A list of countries shared by every address',
@@ -902,10 +897,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A team picks documents because “our data has no schema”. What is wrong with that reasoning?',
           [
-            'Their code still expects field names and types, so the schema lives in the readers',
+            'Their code still expects certain fields and types',
             'Document databases cannot store text',
             'Relational databases have no schema either',
-            'Nothing is wrong',
+            'Nothing; schemaless data needs no checks in code either',
           ],
           0,
           'Every reader assumes a shape; flexibility only moves where it is checked.',
@@ -914,9 +909,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'A profile is usually read without its 50,000 activity events, which keep growing. Should the events be embedded in the profile document?',
           [
             'Yes, related data should always be embedded',
-            'Yes, because the events are private',
+            'Yes, because the events are private to this user',
             'No, because documents cannot hold lists',
-            'No; they are large, unbounded and not read with the profile',
+            'No; they are unbounded and not read with it',
           ],
           3,
           'Embedding helps only when data is read together; here it would bloat every profile read.',
@@ -937,7 +932,7 @@ export const knowledgePoints: KnowledgePointModule = {
       questions: [
         choose(
           '300 documents embed the same supplier address, and the supplier moves. How many writes keep the documents consistent?',
-          ['1', '2', '0', '300'],
+          ['1', '301', '0', '300'],
           3,
           'Each embedded copy is a separate thing to update.',
         ),
@@ -992,7 +987,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which requirement pushes toward references rather than embedding?',
           [
             'Show one order with its lines',
-            'Save a draft as one unit',
+            'Save a whole draft as one unit in a single write',
             'Find every order containing product P',
             'Load a user’s settings page',
           ],
@@ -1058,7 +1053,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which design is normalised?',
           [
-            'orders store customer_name and customer_email',
+            'orders store customer_id, customer_name and customer_email',
             'customers store a list of their order totals',
             'orders store customer_id; customers store name and email',
             'every table stores every column it might need',
@@ -1069,10 +1064,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What does normalisation primarily protect against?',
           [
-            'Copies of one fact disagreeing after an update',
-            'Slow networks',
+            'Copies of one fact disagreeing',
+            'Slow networks between app and database',
             'Running out of disk space',
-            'Too many concurrent users',
+            'Too many concurrent users on one table',
           ],
           0,
           'With a single authoritative copy, there is nothing to disagree with.',
@@ -1082,7 +1077,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The customer’s current email',
             'The price the customer actually paid',
-            'The product’s current description',
+            'The product’s current catalogue description',
             'The category’s current name',
           ],
           1,
@@ -1105,9 +1100,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Course rows store the teacher’s office. After a move, 5 of 8 rows were updated. What do readers see?',
           [
-            'The same office everywhere',
+            'The new office everywhere, since most rows changed',
             'An error until the update finishes',
-            'Different offices depending on which course they read',
+            'Different offices for different courses',
             'No office at all',
           ],
           2,
@@ -1119,14 +1114,19 @@ export const knowledgePoints: KnowledgePointModule = {
             'The office stored on every course row',
             'The office stored in two tables',
             'The office stored on every enrolment',
-            'The office stored once in teachers, with courses holding teacher_id',
+            'The office stored once, in teachers',
           ],
           3,
           'One copy cannot disagree with itself.',
         ),
         choose(
           'After a partial update, two rows show different addresses for customer 12. What is this?',
-          ['An update anomaly', 'A join', 'A foreign key', 'A primary key'],
+          [
+            'An update anomaly',
+            'A join',
+            'A broken foreign key',
+            'A primary key',
+          ],
           0,
           'Copies of one fact disagree because only some were changed.',
         ),
@@ -1134,9 +1134,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which observation suggests a fact is duplicated?',
           [
             'A query returns one row',
-            'Updating one fact requires changing many rows',
+            'Changing one fact means editing many rows',
             'A table has a primary key',
-            'A row has many columns',
+            'A query needs a join to show the customer’s name',
           ],
           1,
           'If one real-world change touches many rows, the fact lives in many places.',
@@ -1180,7 +1180,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A denormalised order_count on customers has drifted from the real number of orders. What is the authoritative fix?',
           [
-            'Trust order_count',
+            'Trust order_count and fix the orders table',
             'Average the two numbers',
             'Recount from the orders table',
             'Delete the orders',
@@ -1191,10 +1191,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which question decides between normalising and denormalising a field?',
           [
-            'Is duplication always bad?',
-            'Which consistency work can the workload afford for the read speed it needs?',
+            'Is duplicating a fact always worse than adding another join?',
+            'What consistency work can it afford for its read speed?',
             'Which approach is more modern?',
-            'Which uses fewer tables?',
+            'Which design needs the fewest joins on every query?',
           ],
           1,
           'Both are trade-offs; the workload’s reads and changes decide.',
@@ -1218,7 +1218,12 @@ export const knowledgePoints: KnowledgePointModule = {
       questions: [
         choose(
           'In a social network where users follow each other, what are the edges?',
-          ['Users', 'Profile photos', 'Follow relationships', 'Usernames'],
+          [
+            'Users',
+            'Users and their profiles',
+            'Follow relationships',
+            'Usernames',
+          ],
           2,
           'Users are nodes; a follow connects two of them.',
         ),
@@ -1231,9 +1236,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does direction matter for “follows” but not for “is married to”?',
           [
-            'Following need not be mutual, while marriage is symmetric',
-            'Marriage involves more nodes',
-            'Follows edges have no type',
+            'Following can be one-way; marriage is mutual',
+            'Marriage edges carry more properties, such as a date',
+            'Follows edges have no type, so they need a direction',
             'Direction never matters in graphs',
           ],
           0,
@@ -1266,15 +1271,15 @@ export const knowledgePoints: KnowledgePointModule = {
       questions: [
         choose(
           'Edges: A→B, B→C, C→D, B→E. Starting at A and following edges forward, which nodes are reachable?',
-          ['B only', 'B and C', 'C, D and E', 'B, C, D and E'],
+          ['B only', 'A, B, C, D and E', 'C, D and E', 'B, C, D and E'],
           3,
           'A reaches B, B reaches C and E, and C reaches D.',
         ),
         choose(
           'X→Y means X is a prerequisite of Y. How do you find everything Y depends on?',
           [
-            'Follow Y’s outgoing edges',
-            'Follow incoming edges backwards from Y, repeatedly',
+            'Follow Y’s outgoing edges, then theirs, repeatedly',
+            'Walk incoming edges backwards from Y',
             'Read Y’s properties only',
             'Follow every edge in the graph',
           ],
@@ -1284,10 +1289,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A friendship graph has the cycle Ana–Ben–Cy–Ana. Why must a traversal track visited nodes?',
           [
-            'To avoid looping around the cycle forever',
-            'To sort the names',
+            'To avoid circling the cycle forever',
+            'To return the friends in alphabetical order',
             'Because cycles delete edges',
-            'It need not',
+            'It need not, since friendships are mutual',
           ],
           0,
           'Without memory, the walk returns to Ana and starts again.',
@@ -1315,7 +1320,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Can a relational database store a graph?',
           [
-            'No, edges require a graph database',
+            'No, edges require a dedicated graph database',
             'Only undirected graphs',
             'Yes, as a nodes table and an edges table',
             'Only graphs with fewer than 100 nodes',
@@ -1333,9 +1338,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'When does a dedicated graph database become attractive?',
           [
             'When the data fits on one machine',
-            'When there are any relationships at all',
+            'When there are any relationships between entities',
             'When there are no relationships',
-            'When queries routinely follow many hops of varying depth',
+            'When queries follow many hops of varying depth',
           ],
           3,
           'Deep, variable-length traversals are awkward as fixed chains of joins.',
@@ -1385,7 +1390,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which request is a point lookup?',
           [
-            'Fetch the value stored under key order-552',
+            'Fetch the value under key order-552',
             'Count every key in the store',
             'Average all stored values',
             'List every key between a-100 and a-200',
@@ -1436,8 +1441,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A cache process restarts and all its entries are gone. Why is that acceptable for a cache but not for a system of record?',
           [
-            'Cache entries can be rebuilt from the source; the system of record has no other source',
-            'Caches are faster',
+            'Only the cache can be rebuilt from another source',
+            'Caches restart faster, so they refill before anyone notices',
             'Systems of record are smaller',
             'Systems of record never restart',
           ],
@@ -1448,8 +1453,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'A store confirms a write, and only afterwards saves it to disk. It crashes in between. What happens to that write?',
           [
             'It is saved twice',
-            'It is lost even though the client was told it succeeded',
-            'It is recovered from memory',
+            'It is lost even though it was confirmed',
+            'It is recovered from memory when the store restarts',
             'Nothing, because confirmation saves it',
           ],
           1,
@@ -1477,15 +1482,20 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'With no index on email, how many of 2 million records might a lookup by email examine?',
-          ['Exactly 1', 'Up to all 2 million', 'About 20', 'Exactly half'],
+          [
+            'Exactly 1',
+            'Up to all 2 million',
+            'About 21, using a binary search',
+            'Exactly half',
+          ],
           1,
           'Without an access path, the store has to check records one by one.',
         ),
         choose(
           'A log table receives 50,000 inserts per second and is searched once a day. Why might several extra indexes hurt?',
           [
-            'Each insert would also have to update every index',
-            'Indexes slow down the daily search',
+            'Every insert must also update each index',
+            'Indexes would slow down the once-a-day search',
             'Indexes delete old rows',
             'They cannot hurt',
           ],
@@ -1495,9 +1505,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Records are stored by id. Which request needs a different access path from “get record by id”?',
           [
-            'Get record 42',
-            'Update record 42',
-            'All records created between 1 and 7 May',
+            'Get records 42, 43 and 44',
+            'Update record 42’s status',
+            'Records created 1–7 May',
             'Delete record 42',
           ],
           2,
@@ -1531,9 +1541,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why are writes to an LSM store typically fast?',
           [
-            'They skip saving anything to disk',
-            'They update every file in place',
-            'They are sorted in memory and appended, never rewriting old data in place',
+            'They skip the disk until the memtable is flushed',
+            'They update every file in place, in sorted order',
+            'They append instead of overwriting in place',
             'They store no data until read',
           ],
           2,
@@ -1601,9 +1611,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why can looking up a key that was never written cost more than looking up one in the memtable?',
           [
             'Missing keys are stored twice',
-            'The memtable is on disk',
-            'Every run must be checked before concluding the key is absent',
-            'Missing keys trigger a flush',
+            'The memtable is kept on disk, not in memory',
+            'Every run must be checked to rule it out',
+            'Missing keys force the memtable to be flushed first',
           ],
           2,
           'A found key can stop early; an absent key has to be ruled out everywhere.',
@@ -1644,9 +1654,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What does compaction trade?',
           [
-            'Durability for speed',
-            'Background disk I/O for fewer files per read and reclaimed space',
-            'Fewer writes for slower reads',
+            'Durability of old versions for faster writes',
+            'Background I/O for faster reads and less space',
+            'Fewer disk writes in exchange for slower reads',
             'Nothing; it is free',
           ],
           1,
@@ -1690,9 +1700,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What do internal B-tree pages contain?',
           [
-            'Boundary keys and pointers to child pages',
-            'Every value in the table',
-            'Only the newest writes',
+            'Boundary keys and child pointers',
+            'Every key’s full entry, sorted by key',
+            'Only the newest writes, waiting to be flushed',
             'Unsorted copies of the keys',
           ],
           0,
@@ -1701,9 +1711,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does a B-tree serve range queries such as keys 300–350 well?',
           [
-            'Ranges are cached separately',
-            'Range queries skip the root',
-            'Keys in a range sit in neighbouring leaf pages',
+            'Each range is cached separately after its first read',
+            'Range queries skip the root and start at a leaf',
+            'Keys in a range sit in adjacent leaves',
             'Sorting removes duplicates',
           ],
           2,
@@ -1747,8 +1757,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why do B-trees use pages of several kilobytes rather than one key per page?',
           [
-            'Many keys per page raise fan-out, so fewer levels must be read',
-            'Large pages never fill up',
+            'More keys per page mean fewer levels to read',
+            'Large pages rarely fill up, so splits are avoided',
             'Disks require one key per page',
             'It removes the need for a root page',
           ],
@@ -1773,9 +1783,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'What happens when an insert targets a full leaf page?',
           [
             'The insert is rejected',
-            'The page splits and the parent gains a boundary key',
-            'The whole tree is rebuilt',
-            'The key goes to a random page',
+            'The page splits and the parent gets a new key',
+            'The whole tree is rebuilt with larger pages',
+            'The key goes to an overflow page at the end of the file',
           ],
           1,
           'Splitting makes room while keeping keys sorted and the tree balanced.',
@@ -1783,7 +1793,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A crash happens after a new leaf page is written but before its parent is updated. What lets the engine repair this on restart?',
           [
-            'Nothing; the tree is lost',
+            'Nothing; the orphaned page is simply lost',
             'Adding a second root',
             'Replaying the write-ahead log',
             'Deleting the parent page',
@@ -1794,10 +1804,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is a page split riskier than changing a value inside one page?',
           [
-            'It changes several pages that must stay consistent with each other',
+            'Several pages must change together',
             'It changes no pages',
-            'It always takes longer than a full scan',
-            'It deletes data',
+            'It always takes longer than a full table scan',
+            'It deletes the old page before writing the new ones',
           ],
           0,
           'An interruption between the page writes leaves the tree inconsistent.',
@@ -1807,8 +1817,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Both only append new files',
             'Both overwrite the key in place',
-            'The LSM store overwrites in place; the B-tree appends',
-            'The B-tree overwrites the page in place; the LSM store writes a new version',
+            'LSM overwrites in place; B-tree writes a new version',
+            'B-tree overwrites in place; LSM writes a new version',
           ],
           3,
           'B-trees modify pages; LSM stores leave old runs untouched and add newer versions.',
@@ -1834,7 +1844,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which query benefits from a secondary index on email?',
           [
             'Find user 42 by primary key',
-            'Count all users',
+            'Count all users who have an email',
             'Read every user',
             'Find the user with email x@y.com',
           ],
@@ -1855,9 +1865,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A secondary index lookup returns 3 matching primary keys, and the index stores only keys. What happens next?',
           [
-            'The engine fetches the 3 rows by primary key',
+            'The 3 rows are fetched by primary key',
             'The query ends with keys only',
-            'The whole table is scanned',
+            'The whole table is scanned for those 3 keys',
             'The index is rebuilt',
           ],
           0,
@@ -1866,10 +1876,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which column is a poor choice for a secondary index meant to find a few rows quickly?',
           [
-            'email',
-            'order_number',
-            'is_active, which is true for 99% of rows',
-            'username',
+            'email, unique for every user',
+            'order_number, unique for every order',
+            'is_active, true for 99% of rows',
+            'username, unique across all accounts',
           ],
           2,
           'Looking up true still matches almost every row, so the index saves little.',
@@ -1894,7 +1904,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'created_at in May, for all customers',
             'customer_id = 7 and created_at in May',
             'Rows whose created_at is a Monday',
-            'Any query on created_at alone',
+            'Any query that filters on created_at alone',
           ],
           1,
           'Fixing the leading field leaves created_at sorted within that customer.',
@@ -1914,7 +1924,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Queries filter on status = "open" and return rows ordered by due_date. Which index fits best?',
           [
             '(title, status)',
-            '(assignee)',
+            '(due_date, status)',
             '(status, due_date)',
             '(due_date, title)',
           ],
@@ -1949,9 +1959,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A query needs only city and name. The index is on city and also stores name. What can the engine avoid?',
           [
-            'Reading the index',
-            'Sorting by city',
-            'Fetching each full row from the table',
+            'Reading the index entries for the city',
+            'Sorting the results by city',
+            'Fetching the full rows',
             'Checking the query plan',
           ],
           2,
@@ -1960,8 +1970,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What confirms that a new index actually helps the slow query?',
           [
-            'The query plan and a timing under realistic load',
-            'The index’s name',
+            'Its query plan and a timing under load',
+            'A faster timing on an idle test database',
             'That it was created without errors',
             'The number of columns it holds',
           ],
@@ -1971,10 +1981,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A table has 10 indexes and inserts have become slow. Which first step is sound?',
           [
-            'Add an 11th index',
-            'Find indexes no query uses and remove them',
+            'Add an 11th index covering the insert columns',
+            'Remove indexes that no query uses',
             'Remove the primary key',
-            'Turn off the write-ahead log',
+            'Turn off the write-ahead log during peak hours',
           ],
           1,
           'Unused indexes cost write work and give nothing back.',
@@ -1982,10 +1992,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why can a covering index slow writes more than a narrow index?',
           [
-            'It forbids writes during reads',
-            'It is rebuilt on every read',
+            'It forbids writes while a read is in progress',
+            'It is rebuilt from the table after every write',
             'It cannot slow writes',
-            'Its entries are larger, so more data is written per change',
+            'Each change writes larger index entries',
           ],
           3,
           'Extra stored columns must be written and kept current too.',
@@ -2018,7 +2028,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Average price over 5 years',
             'Fetch every field of order 881',
-            'Count rows per country',
+            'Count orders per country this year',
             'Sum quantity by month',
           ],
           1,
@@ -2059,8 +2069,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does sorting a column by value help run-length encoding?',
           [
-            'Sorting removes values',
-            'Equal values become adjacent and form longer runs',
+            'Sorting removes duplicate values before encoding',
+            'Equal values end up next to each other',
             'Sorted data cannot be compressed',
             'It changes the stored values',
           ],
@@ -2070,10 +2080,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which column compresses best with dictionary encoding?',
           [
-            'A status column with 4 distinct values across 10 million rows',
-            'Unique transaction IDs',
+            'A status column with 4 distinct values',
+            'Unique transaction IDs, one per row',
             'Random 64-bit numbers',
-            'Free-text comments',
+            'Free-text comments written by customers',
           ],
           0,
           'Few distinct values mean a tiny dictionary and short codes.',
@@ -2082,7 +2092,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why does compression make scans faster, not only smaller?',
           [
             'Compressed data needs no decoding',
-            'It skips rows',
+            'It skips rows that hold repeated values',
             'It removes columns',
             'Less data has to be read from disk',
           ],
@@ -2106,10 +2116,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What does vectorised execution process in one step?',
           [
-            'One whole row',
-            'A batch of values from one column',
+            'One whole row with all of its columns',
+            'A batch of one column’s values',
             'One byte',
-            'The entire table',
+            'A batch of whole rows from one page',
           ],
           1,
           'Batches of same-typed values are processed in tight loops.',
@@ -2118,9 +2128,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'A team moves order checkout to a column store because “columnar is faster”. What is the risk?',
           [
             'Scans become slower',
-            'Data can no longer be compressed',
-            'Nothing',
-            'Single-order writes and full-row reads become more expensive',
+            'Data can no longer be compressed per column',
+            'Nothing, since columnar is faster for every query',
+            'Single-order reads and writes get costlier',
           ],
           3,
           'Each order is spread across every column file.',
@@ -2128,8 +2138,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which design serves both checkout and yearly analytics well?',
           [
-            'A row store for checkout, copied into a column store for analytics',
-            'A column store for both',
+            'A row store for checkout, copied to a column store',
+            'A column store for checkout, copied to a row store',
             'A row store for both, with no copy',
             'Separate row stores per analyst',
           ],
@@ -2139,10 +2149,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A query reads 45 of a table’s 50 columns for every row. How much does a column layout help?',
           [
-            'It reads about 10% of the data',
+            'A lot: it reads only about 10% of the data',
             'It avoids reading the table',
-            'Little, because nearly every column is read anyway',
-            'It always doubles the speed',
+            'Little: it reads nearly every column anyway',
+            'It roughly doubles the speed via compression',
           ],
           2,
           'Column pruning only helps when many columns can be skipped.',
@@ -2168,7 +2178,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What does a materialized view store?',
           [
             'The source rows, authoritatively',
-            'Only the text of the query',
+            'Only the text of the query, run on each read',
             'The result of a query over source data',
             'A backup of the whole database',
           ],
@@ -2188,7 +2198,12 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'A count takes 5 seconds and is requested 600 times per minute. A view takes 5 seconds to refresh once per minute. How much counting work per minute does the view save?',
-          ['None', '5 seconds', '600 seconds', 'About 2,995 seconds'],
+          [
+            'About 3,005 seconds',
+            '5 seconds',
+            '600 seconds',
+            'About 2,995 seconds',
+          ],
           3,
           '600 counts cost 3,000 seconds of work; the view costs 5 seconds plus cheap reads.',
         ),
@@ -2216,25 +2231,25 @@ export const knowledgePoints: KnowledgePointModule = {
           'A view refreshes every 15 minutes, starting at 09:00, 09:15 and so on, and each refresh takes about a minute. A change is made at 09:01. When does it first appear?',
           [
             'Immediately',
-            'At 09:01',
+            'When the 09:00 refresh finishes',
             'When the 09:15 refresh finishes',
-            'Never',
+            'When the 09:15 refresh starts',
           ],
           2,
           'The 09:00 refresh read data from before the change; the next one includes it.',
         ),
         choose(
           'A view refreshes every hour, and each refresh takes 10 minutes. What is the worst-case staleness?',
-          ['10 minutes', '60 minutes', '0 minutes', 'About 70 minutes'],
+          ['10 minutes', 'About 60 minutes', '0 minutes', 'About 70 minutes'],
           3,
           'A change just after a refresh starts waits for the next start and its 10-minute run.',
         ),
         choose(
           'Why show “as of 14:00” on a dashboard backed by a batch-refreshed view?',
           [
-            'Readers can judge how stale the numbers are',
+            'Readers can judge how stale it is',
             'It makes the refresh faster',
-            'It prevents stale data',
+            'It prevents stale data from being shown',
             'It makes the view authoritative',
           ],
           0,
@@ -2244,7 +2259,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Seat availability must never offer a seat already sold. Is a view refreshed every 10 minutes suitable for the final booking decision?',
           [
             'Yes, 10 minutes is short',
-            'No, the decision needs current data from the source',
+            'No, the decision needs current source data',
             'Yes, if it is labelled with its refresh time',
             'Only outside peak hours',
           ],
@@ -2285,9 +2300,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'An incremental view handles inserts only, but users can cancel registrations. What goes wrong?',
           [
-            'Counts never decrease, so they drift above the truth',
-            'Counts drop to zero',
-            'Cancellations are blocked',
+            'Counts drift above the true number',
+            'Counts drop to zero after the first cancellation',
+            'Cancellations are blocked until the view catches up',
             'Nothing',
           ],
           0,
@@ -2296,7 +2311,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'An incremental view is suspected of drifting. What is the safest repair?',
           [
-            'Subtract an estimate of the error',
+            'Subtract an estimate of the error from the view',
             'Recompute it from the source and compare',
             'Delete the source data',
             'Refresh more often without checking',
@@ -2326,8 +2341,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Only version 4 reading version 4 data',
             'Only version 3 reading version 3 data',
-            'Version 3 and version 4 servers reading data written by either version',
-            'No reads, because deployments pause traffic',
+            'Either version reading either version’s data',
+            'No reads, because deployments pause all traffic',
           ],
           2,
           'Both versions are live and share the same data.',
@@ -2335,8 +2350,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why can old records remain long after the code that wrote them is gone?',
           [
-            'Stored records are not rewritten when code changes',
-            'Databases rewrite all data on deploy',
+            'Code changes do not rewrite stored records',
+            'Databases rewrite all stored data on each deploy',
             'Old records are always deleted',
             'They cannot',
           ],
@@ -2346,9 +2361,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A deploy is rolled back from version 2 to version 1 after version 2 wrote new records. What must version 1 handle?',
           [
-            'Only its own records',
+            'Only records it wrote before the upgrade',
             'An empty database',
-            'Nothing new',
+            'Nothing new, since a rollback restores old data',
             'Records written by version 2',
           ],
           3,
@@ -2357,10 +2372,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which plan is safest for renaming a field that every service uses?',
           [
-            'Rename it everywhere in one deploy',
-            'Add the new field, write both, move readers over, then stop writing the old one',
-            'Delete the field and re-add it',
-            'Rename it only in the database',
+            'Rename it everywhere in one coordinated deploy',
+            'Write both fields, move readers, then drop the old one',
+            'Delete the field and re-add it under the new name',
+            'Rename it in the database first, then in each service in turn',
           ],
           1,
           'Each step keeps every running version able to read what the others write.',
@@ -2407,7 +2422,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Version 1 writing its own records',
             'Nothing',
             'Only forward compatibility',
-            'Version 2 reading old records that lack the field',
+            'Version 2 reading old records',
           ],
           3,
           'Old records lack the field, and version 2 has no value to use.',
@@ -2417,7 +2432,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Nothing',
             'The version 2 field’s value',
-            'The whole record',
+            'The whole record, since it no longer parses',
             'Version 1’s own fields',
           ],
           1,
@@ -2442,7 +2457,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Renaming a field',
             'Changing a number field to text',
-            'Adding a required field',
+            'Adding a required field that new code fills in',
             'Adding an optional field with a default',
           ],
           3,
@@ -2451,10 +2466,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why not reuse a deleted field’s name for new data?',
           [
-            'Old records and old readers still interpret the name the old way',
-            'Databases forbid reusing names',
+            'Old data and old readers read it the old way',
+            'Databases forbid reusing a deleted field’s name',
             'It saves no space',
-            'It is always fine',
+            'It is fine once the field has been deleted',
           ],
           0,
           'Old data would be misread as the new field.',
@@ -2462,10 +2477,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A field changes from “price in dollars” to “price in cents” with the same name and type. Why is this dangerous?',
           [
-            'Formats reject it',
+            'Serialisation formats reject a changed meaning',
             'It changes the field’s type',
-            'Readers cannot tell which unit a record uses',
-            'It is safe',
+            'Readers cannot tell which unit is meant',
+            'It is safe, because the name and type are unchanged',
           ],
           2,
           'The bytes look identical, so the meaning change is silent.',
@@ -2473,9 +2488,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What actually confirms that a change is compatible?',
           [
-            'The format’s documentation alone',
-            'Tests pairing old readers with new writers and new readers with old writers',
-            'A code review',
+            'The format’s documentation of its compatibility rules',
+            'Testing every old/new reader-writer pair',
+            'A code review of the new schema definition',
             'Deploying to every server at once',
           ],
           1,
@@ -2518,7 +2533,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What does a message broker NOT remove?',
           [
-            'The need to handle failed and repeated deliveries',
+            'Handling failed and repeated deliveries',
             'Buffering between producer and consumer',
             'Decoupling of their timing',
             'The ability to absorb bursts',
@@ -2529,10 +2544,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'With a queue between them, the consumer is down for 5 minutes. What happens?',
           [
-            'The producer crashes',
+            'The producer blocks until the consumer is back',
             'Messages are always lost',
             'The broker processes them itself',
-            'Messages accumulate and are processed when the consumer returns',
+            'Messages wait in the queue until it returns',
           ],
           3,
           'The durable queue holds the work until it can be done.',
@@ -2554,8 +2569,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A “transfer $100” call times out. What do you know?',
           [
-            'The transfer did not happen',
-            'The transfer may or may not have happened',
+            'The transfer did not happen, so retry it',
+            'It may or may not have happened',
             'The transfer happened',
             'The account was closed',
           ],
@@ -2565,10 +2580,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which operation is safe to retry blindly after a timeout?',
           [
-            'Add $10 to the balance',
+            'Add $10 to the customer’s balance',
             'Append a new comment',
-            'Send an SMS',
-            'Set the shipping address to “12 Elm St”',
+            'Send an SMS confirming the order',
+            'Set the address to “12 Elm St”',
           ],
           3,
           'Setting the same value twice leaves the same result.',
@@ -2576,10 +2591,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is “increase the view count by 1” unsafe to retry after a timeout?',
           [
-            'If the first attempt succeeded, the retry adds a second view',
+            'The first attempt may have counted already',
             'Increments always fail',
-            'Timeouts roll back increments',
-            'It is safe',
+            'Timeouts automatically roll back the increment',
+            'It is safe, because increments are idempotent',
           ],
           0,
           'The effect accumulates with each attempt that succeeds.',
@@ -2618,8 +2633,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which operation is naturally idempotent?',
           [
-            'Add 1 to stock',
-            'Set the order status to “shipped”',
+            'Add 1 to the stock count',
+            'Set status to “shipped”',
             'Append a line to a log',
             'Send an email',
           ],
@@ -2629,9 +2644,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A consumer keeps the set of applied IDs only in memory and restarts. What risk appears?',
           [
-            'Redelivered messages are applied again',
-            'No risk',
-            'All messages are lost',
+            'Redelivered messages get reapplied',
+            'No risk, since the broker remembers applied IDs',
+            'All queued messages are lost on restart',
             'IDs become duplicated',
           ],
           0,
@@ -2642,8 +2657,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Saving together is faster',
             'IDs must be stored twice',
-            'A crash between the two steps could apply an effect without recording it, or the reverse',
-            'It does not matter',
+            'A crash in between could leave them disagreeing',
+            'It does not matter, since the broker deduplicates',
           ],
           2,
           'If the two can diverge, a retry is either applied twice or skipped wrongly.',

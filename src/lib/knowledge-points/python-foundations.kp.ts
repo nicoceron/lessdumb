@@ -3708,7 +3708,7 @@ export const knowledgePoints: KnowledgePointModule = {
         predictOutput(
           'What does this program print?',
           'slots = [None] * 2\nprint(slots)',
-          ['[None, None]', '[None]', '[]', '[0, 0]'],
+          ['[None, None]', '[None]', '[[None], [None]]', '[0, 0]'],
           0,
           'None is a value like any other, so the list holds two copies of it.',
         ),
@@ -4590,7 +4590,12 @@ export const knowledgePoints: KnowledgePointModule = {
         predictOutput(
           'What is printed?',
           'sizes = {"S": 36, "M": 40}\nfor entry in sizes.items():\n    print(entry)',
-          ['S\nM', "('S', 36)\n('M', 40)", 'S 36\nM 40', '36\n40'],
+          [
+            'S\nM',
+            "('S', 36)\n('M', 40)",
+            'S 36\nM 40',
+            "['S', 36]\n['M', 40]",
+          ],
           1,
           'Without unpacking, each item is a (key, value) tuple, and print() shows it with parentheses.',
         ),
@@ -5318,7 +5323,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It prints 0',
             'It prints 1',
-            'It prints -1',
+            'It runs forever without raising an error',
             'It raises RecursionError',
           ],
           3,
@@ -8003,7 +8008,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'B4',
             'issuing B4\nB4',
             'issuing A1\nissuing B4\nB4',
-            'issuing A1\nB4',
+            'issuing A1\nissuing B4\nissuing B4\nB4',
           ],
           2,
           '__init__ runs once for each object created, so it prints twice before b.seat is read.',

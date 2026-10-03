@@ -35,7 +35,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Three keys are used as features, and the target is the rainfall value 5.',
         ),
         choose(
-          'A churn table has the columns monthly_fee, support_calls, tenure_months, and churned. You want to predict churned. Which columns are the features?',
+          'A churn table has the columns churned, monthly_fee, support_calls and tenure_months. You want to predict churned. Which columns are the features?',
           [
             'monthly_fee, support_calls, tenure_months, churned',
             'churned only',
@@ -148,8 +148,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which dataset supports supervised learning?',
           [
             'Product photos with no tags or captions',
-            'Sensor logs with no recorded outcome',
-            'Transactions that are each marked fraud or not fraud',
+            'Sensor logs with timestamps but no recorded outcome',
+            'Transactions each labelled fraud or not fraud',
             'Website visits with no conversion data',
           ],
           2,
@@ -188,7 +188,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Applicant income',
             'Requested loan amount',
             'Missed payments on this loan',
-            'Years at current job',
+            'Missed payments on earlier loans',
           ],
           2,
           'Missed payments on this loan happen after it is issued, so they reveal the outcome you are trying to predict.',
@@ -207,8 +207,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A cancellation model scored 99% in testing but fails after launch. One input was refund_issued. What is the most likely cause?',
           [
-            'refund_issued is recorded after the cancellation it predicts',
-            'The model has too few features',
+            'refund_issued is recorded after the cancellation',
+            'refund_issued was stored as True/False, not 0/1',
             'refund_issued is a categorical column',
             'Test sets are always easier than real data',
           ],
@@ -258,9 +258,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A team checks the test score after every experiment and keeps whatever scored best. Why is their final test number optimistic?',
           [
-            'Test rows influenced the choices, so they are no longer unseen',
+            'Their choices were tuned to those test rows',
             'Test sets always contain easier rows',
-            'The training set was too small',
+            'Running many experiments overfits the training set',
             'Scores always fall after a model is chosen',
           ],
           0,
@@ -321,8 +321,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'On time-ordered sales, a random split gives a much lower error than a chronological split. What is the likely reason?',
           [
             'Chronological splits always have fewer rows',
-            'Random splitting removes the target column',
-            'Random splitting lets training include days after the test days',
+            'A random split leaves fewer unusual days in the test set',
+            'Training can include days after the test days',
             'The chronological test set is larger',
           ],
           2,
@@ -374,7 +374,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Forecasting next quarter from past quarters',
             'Keeping each patient in a single partition',
             'Regression on a continuous target',
-            'Independent rows in a classification task with uneven classes',
+            'Independent rows with uneven class shares',
           ],
           3,
           'Stratification preserves class shares; it does not address time order or repeated entities.',
@@ -468,8 +468,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why compute the baseline constant from the training targets only?',
           [
-            'Training targets are always more accurate',
-            'Using test targets would leak the answers into the rule being evaluated',
+            'Test targets are noisier, so their mean is less reliable',
+            'Using test targets would leak answers into the rule',
             'Test targets cannot be averaged',
             'A baseline must use as few rows as possible',
           ],
@@ -617,9 +617,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'A model has an RMSE of 8 minutes on the validation set. The training-mean baseline has an RMSE of 11 minutes on the test set. What is wrong with concluding that the model is better?',
           [
             'Nothing; 8 is smaller than 11',
-            'RMSE cannot be measured in minutes',
+            'The baseline should have been scored with MSE instead',
             'A baseline is never evaluated with RMSE',
-            'The errors come from different rows, so they are not comparable',
+            'The two errors come from different rows',
           ],
           3,
           'A fair comparison scores both rules on the same rows; otherwise the difference may come from the rows, not the model.',
@@ -680,9 +680,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why can computing scaling statistics on all rows before splitting inflate a test score?',
           [
-            'It changes the target labels',
+            'It lets the model see the test labels during training',
             'It removes outliers from the training set',
-            'The test rows help shape the transformation the model trains with',
+            'Test rows shape the scaling used in training',
             'It makes the test set smaller',
           ],
           2,
@@ -732,9 +732,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'You call scaler.fit(test_X) right before scaler.transform(test_X). What goes wrong?',
           [
-            'The test rows now set their own scaling, leaking their distribution',
+            'The test rows now set their own scaling',
             'transform raises an error after a second fit',
-            'The training rows are deleted',
+            'The scaler now averages training and test statistics',
             'Nothing; fitting before every transform is required',
           ],
           0,
@@ -789,9 +789,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which value should fill missing incomes in the test set?',
           [
             'The median income of the test rows',
-            'Zero, in every case',
+            'The median of all rows, training and test combined',
             'The income of the previous row',
-            'The median income learned from the training rows',
+            'The median income of the training rows',
           ],
           3,
           'Fill values are learned statistics, so they come from training rows like every other preprocessing step.',
@@ -800,9 +800,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'An encoder learned the categories bus, car, and train. In production a row arrives with "scooter". Which preparation is sound?',
           [
             'Refit the encoder on the production row',
-            'Decide in advance how unknown categories are encoded, and test that path',
+            'Plan and test how unknown categories are encoded',
             'Map scooter to the alphabetically closest category',
-            'Assume new categories cannot appear',
+            'Give scooter a fourth column for that row only',
           ],
           1,
           'A planned policy, such as encoding unknown categories as all zeros, keeps predictions working without refitting on new data.',
@@ -848,7 +848,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'In a pipeline SimpleImputer → StandardScaler, which data does the scaler learn its mean from during fit?',
           [
-            'The training rows after the imputer filled their gaps',
+            'The training rows after imputation',
             'The raw training rows, NaN included',
             'The rows passed to transform later',
             'Only the imputer’s statistics_',
@@ -860,7 +860,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'You evaluate a pipeline on five different train/validation splits. How should the preprocessing be fitted?',
           [
             'Once on all rows before splitting',
-            'Refit the whole pipeline on each split’s training rows',
+            'On each split’s training rows',
             'On each split’s validation rows',
             'Not at all; use raw values',
           ],
@@ -957,8 +957,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'A line has residuals -3 and 3 on two training points, so its residuals sum to 0. Is it the least-squares line?',
           [
             'Yes; a zero total residual means a perfect fit',
-            'Not necessarily; another line can have a smaller sum of squared residuals',
-            'Yes; residuals sum to zero only at the optimum',
+            'Not necessarily; another line may have lower SSE',
+            'Yes; least squares makes the residuals sum to zero',
             'It cannot be judged without test data',
           ],
           1,
@@ -1019,7 +1019,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does LinearRegression().fit([1.0, 2.0, 3.0], y) raise an error?',
           [
-            'X must be two-dimensional, with one row per example',
+            'X must be two-dimensional',
             'y must be two-dimensional',
             'Linear regression needs at least ten rows',
             'The targets must be integers',
@@ -1047,7 +1047,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Adding a garage to any home causes a price rise of exactly 10',
             'Garages explain 10% of the price',
-            'For homes of equal area, the model predicts 10 more when there is a garage',
+            'At equal area, the model predicts 10 more with a garage',
             'Ten homes in the data have a garage',
           ],
           2,
@@ -1056,8 +1056,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A model predicting daily sunburn cases gives ice-cream sales a large positive coefficient. What does this show?',
           [
-            'The two are associated in the data, for example because both rise on sunny days',
-            'Eating ice cream causes sunburn',
+            'They are associated, perhaps both driven by sunny days',
+            'Selling more ice cream would raise the number of sunburns',
             'The coefficient must be a calculation error',
             'Sunburn causes people to buy ice cream',
           ],
@@ -1108,7 +1108,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Down, toward smaller w',
             'Nowhere until the gradient becomes positive',
             'Directly to the minimum',
-            'Up, because the update subtracts a negative number',
+            'Up, because it subtracts a negative number',
           ],
           3,
           'w - rate * (-8) adds 8 * rate, so w increases, which is the direction in which the loss falls.',
@@ -1218,7 +1218,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does the loss curve of one-row stochastic updates look noisier than that of batch updates?',
           [
-            'Each gradient comes from a single row, so it varies from step to step',
+            'Each gradient comes from one row, so it varies by step',
             'Stochastic updates use a larger learning rate by definition',
             'Stochastic updates skip the gradient calculation',
             'Stochastic updates are evaluated on the test set',
@@ -1258,10 +1258,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'After many steps, both gradients of the mean squared error for a linear model are 0. What does this tell you?',
           [
-            'The model will have zero test error',
+            'The line now passes through every training point',
             'The learning rate was too small',
             'Training must restart from new values',
-            'b and w are the least-squares values for the training data',
+            'b and w are the training least-squares values',
           ],
           3,
           'For a linear model, mean squared error has a single valley, so a flat point is the least-squares minimum on the training rows.',
@@ -1270,8 +1270,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'A loss has several valleys. Gradient descent stops where the gradient is 0. What can you conclude?',
           [
             'It found the lowest point of the whole loss',
-            'It reached a flat point that may be only a local valley',
-            'The data contain no noise',
+            'It reached a flat point, possibly a local valley',
+            'The training loss at this point must be zero',
             'The learning rate was exactly right',
           ],
           1,
@@ -1280,7 +1280,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why compute grad_b and grad_w before updating either parameter?',
           [
-            'Both gradients should describe the same current point',
+            'Both gradients should describe the same point',
             'Python cannot assign two variables in one statement',
             'The intercept must always be updated last',
             'It halves the effective learning rate',
@@ -1432,9 +1432,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why not pick the depth with the lowest training error?',
           [
             'Training error is always zero',
-            'Deeper models always have lower training error, even when they generalize worse',
+            'Training error always favours the deepest tree',
             'Training error cannot be computed for trees',
-            'It would leak the test set',
+            'Training error is too noisy to compare depths',
           ],
           1,
           'Training error keeps falling with complexity, so it would always choose the most complex model.',
@@ -1444,7 +1444,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Nothing, the test set was never trained on',
             'Test error is always higher than validation error',
-            'It is optimistic, because the test set was used to choose',
+            'It is optimistic; the test set helped choose',
             'Depth cannot be tuned',
           ],
           2,
@@ -1496,7 +1496,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Adding columns for x**6 through x**10',
             'Training longer on the same few rows',
             'Scoring the model on its training rows',
-            'Using a simpler model or more training data',
+            'Using a simpler model or more rows',
           ],
           3,
           'Less flexibility, or more rows to constrain it, makes it harder to fit details that do not generalize.',
@@ -1552,9 +1552,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'One model measures distance in kilometres, another in metres; otherwise the data are the same. Why can Ridge treat the two differently?',
           [
             'Ridge ignores the feature columns entirely',
-            'The coefficient’s size depends on the unit, and the penalty acts on that size',
+            'The penalized coefficient size depends on the unit',
             'Ridge cannot fit features measured in metres',
-            'Ridge requires whole-number features',
+            'Ridge penalizes the feature values, which are larger in metres',
           ],
           1,
           'The metre coefficient is 1000 times smaller for the same relationship, so it is penalized far less.',
@@ -1636,9 +1636,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Validation loss falls for 30 steps, then rises while training loss keeps falling. Which parameters should early stopping keep?',
           [
             'Those from the final step',
-            'Those from the first step',
+            'Those from the step where the two losses were closest',
             'Those with the lowest training loss',
-            'Those from the step with the lowest validation loss',
+            'Those with the lowest validation loss',
           ],
           3,
           'The validation minimum marks the point after which further training only fits the training rows.',
@@ -1646,9 +1646,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'With alpha = 100, both training and validation errors are high. What is happening?',
           [
-            'The penalty is so strong that the model underfits',
+            'The strong penalty makes the model underfit',
             'The model overfits the training rows',
-            'alpha is too small to matter',
+            'The penalty also shrinks the intercept to zero',
             'Validation rows leaked into training',
           ],
           0,
@@ -1659,7 +1659,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'alpha cannot be computed from training data',
             'Validation data have more rows',
-            'Training error always prefers alpha = 0, the least constrained fit',
+            'Training error always prefers alpha = 0',
             'Training error ignores the coefficients',
           ],
           2,
@@ -1711,8 +1711,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why does logistic regression pass the linear score through the sigmoid instead of using the score as the probability?',
           [
             'The sigmoid removes the intercept',
-            'A score can be any real number, but a probability must lie between 0 and 1',
-            'Scores are always negative',
+            'A score is unbounded; a probability lies between 0 and 1',
+            'The sigmoid turns every score into a hard label of 0 or 1',
             'The sigmoid sorts the training rows',
           ],
           1,
@@ -1754,7 +1754,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What does raising the threshold from 0.5 to 0.8 do to the model’s predicted probabilities?',
           [
-            'Nothing; only the labels derived from them change',
+            'Nothing; only the labels change',
             'Every probability increases',
             'The model is retrained',
             'Probabilities below 0.8 are set to 0',
@@ -1803,7 +1803,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The 0.6 model, because it is less certain',
             'Both, equally, because both are on the wrong side of 0.5',
-            'The 0.99 model, because confident wrong predictions are penalized heavily',
+            'The 0.99 model, because it is confidently wrong',
             'Neither, because log loss ignores the label',
           ],
           2,
@@ -1812,10 +1812,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is logistic regression trained on log loss rather than on the count of wrong labels?',
           [
-            'Log loss scores the probabilities themselves and changes smoothly as the weights change',
+            'Log loss uses probabilities and changes smoothly',
             'Counting wrong labels requires test data',
             'Log loss is zero for every reasonable model',
-            'Log loss does not depend on the labels',
+            'Counting wrong labels is too slow on large datasets',
           ],
           0,
           'A wrong-label count ignores confidence and jumps in steps, which gives gradient descent nothing to follow.',
@@ -1858,8 +1858,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'In scikit-learn’s LogisticRegression, what does a smaller C mean?',
           [
             'A weaker penalty on the coefficients',
-            'A stronger penalty that pulls coefficients toward zero',
-            'A lower decision threshold',
+            'A stronger penalty on the coefficients',
+            'A lower threshold, so more rows are labelled positive',
             'Fewer training rows are used',
           ],
           1,
@@ -1919,7 +1919,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A cancer screen treats "cancer" as positive. Which outcome is a false negative?',
           [
-            'A patient with cancer who is told the result is clear',
+            'A patient with cancer told the result is clear',
             'A healthy patient flagged for a follow-up test',
             'A healthy patient told the result is clear',
             'A patient with cancer who is flagged for follow-up',
@@ -1960,7 +1960,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A spam filter has precision 0.95 and recall 0.40. What does that mean?',
           [
             'It catches most spam but also flags many real messages',
-            'Messages it flags are almost always spam, but it misses most spam',
+            'Its flags are nearly all spam, but it misses most spam',
             'It is right on 95% of all messages',
             'It flags 40% of all messages as spam',
           ],
@@ -2014,7 +2014,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Accuracy cannot be computed on rare classes',
             'Accuracy is always lower than recall',
-            'Predicting negative for every row already achieves 99%',
+            'Always predicting negative also scores 99%',
             'A rare class makes accuracy exceed 100%',
           ],
           2,
@@ -2068,7 +2068,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A bank can manually review only 50 alerts a day. How should it set the fraud threshold?',
           [
             'Keep 0.5, the default',
-            'Set it so about 50 rows a day are flagged, then check precision and recall at that level',
+            'Set it so about 50 rows a day are flagged',
             'Lower it to catch every fraud regardless of volume',
             'Pick it from the test set until recall reaches 1.0',
           ],
@@ -2078,9 +2078,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Lowering the threshold raised recall from 0.6 to 0.9 and dropped precision from 0.8 to 0.3. When is that a good trade?',
           [
-            'When each missed positive costs far more than a false alarm',
+            'When misses cost far more than false alarms',
             'When false alarms are very expensive',
-            'Never, because precision fell',
+            'When reviewers have no time for extra alerts',
             'Always, because recall rose',
           ],
           0,
@@ -2117,7 +2117,7 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'In 5-fold cross-validation, how many times is each training row used for validation?',
-          ['Five times', 'Four times', 'Exactly once', 'Never'],
+          ['Five times', 'Four times', 'Once', 'Never'],
           2,
           'The folds partition the rows, and each fold is the validation fold in exactly one round.',
         ),
@@ -2125,9 +2125,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why is a fresh model fitted in every round instead of reusing one model?',
           [
             'Reusing a model would make the folds overlap',
-            'A model already fitted on the validation fold would be scored on rows it has seen',
+            'A reused model would be scored on rows it trained on',
             'scikit-learn models can be fitted only once',
-            'Fresh models always score higher',
+            'Each round needs a model with different hyperparameters',
           ],
           1,
           'Each round’s score is honest only if that round’s model never trained on its validation rows.',
@@ -2181,7 +2181,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'cross_val_score with neg_mean_squared_error returns [-3.1, -2.8, -9.7]. What does this tell you?',
           [
-            'The mean MSE is about 5.2, and one fold is much harder than the others',
+            'The mean MSE is about 5.2, with one much harder fold',
             'The model improved from fold to fold',
             'The MSE is negative, so the model is better than perfect',
             'The third fold is the most accurate',
@@ -2192,8 +2192,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does scikit-learn report neg_mean_squared_error instead of the MSE itself?',
           [
-            'Negative numbers are cheaper to store',
-            'Its scorers treat larger values as better, so losses are negated',
+            'It keeps scores comparable across folds of different sizes',
+            'Its scorers treat larger values as better',
             'MSE is undefined for cross-validation',
             'The minus sign marks validation scores',
           ],
@@ -2256,7 +2256,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'KFold with shuffle=True',
             'StratifiedKFold on the diagnosis',
             'TimeSeriesSplit on visit order',
-            'GroupKFold with the patient ID as the group',
+            'GroupKFold by patient ID',
           ],
           3,
           'Grouping by patient keeps each patient’s visits together, so validation always uses unseen patients.',
@@ -2291,9 +2291,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'You standardize all 1,000 rows, then run 5-fold cross-validation on the scaled table. What is wrong?',
           [
-            'Each validation fold helped set the scaling statistics its model trained with',
+            'Validation rows helped set the scaling statistics',
             'Standardized data cannot be cross-validated',
-            'Five folds are too many for 1,000 rows',
+            'Scaling should be applied after cross-validation ends',
             'Nothing; scaling never leaks',
           ],
           0,
@@ -2305,7 +2305,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'It is one of the k folds',
             'It is added to every training fold',
             'It replaces the validation fold in the last round',
-            'It stays outside the process and is scored once at the end',
+            'It stays outside and is scored once at the end',
           ],
           3,
           'Cross-validation is used to make choices, so the test set must remain untouched until those choices are final.',
@@ -2355,7 +2355,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Where should a value for max_depth come from?',
           [
-            'Comparing validation scores for several candidate depths',
+            'Validation scores of several candidate depths',
             'The fit method, which learns it with the splits',
             'The depth with the best test score',
             'The deepest tree the data allow',
@@ -2410,14 +2410,14 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'A grid has 5 alphas, 4 depths, and 3 leaf sizes, scored with 5-fold cross-validation. How many models are fitted before the final refit?',
-          ['12', '60', '17', '300'],
+          ['12', '60', '301', '300'],
           3,
           '5 * 4 * 3 = 60 combinations, each fitted once per fold: 60 * 5 = 300.',
         ),
         choose(
           'What does search.best_score_ report after GridSearchCV?',
           [
-            'The best combination’s mean score across the validation folds',
+            'The best combination’s mean validation score',
             'The best combination’s score on the test set',
             'The best combination’s training score',
             'The highest single-fold score of any combination',
@@ -2450,8 +2450,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'You tried 500 configurations. The best validation score is 0.91 and the median is 0.86. What should you expect on fresh data?',
           [
-            'Exactly 0.91',
-            'Probably somewhat below 0.91, because the maximum partly reflects luck',
+            'Exactly 0.91, because validation rows were never trained on',
+            'Probably below 0.91, because the maximum is partly luck',
             'Above 0.91, because the model will keep improving',
             'Exactly 0.86, the median',
           ],
@@ -2461,7 +2461,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'When is randomized search usually preferable to a full grid?',
           [
-            'When there are many hyperparameters and a limited budget of fits',
+            'When many hyperparameters must share a small budget',
             'When there is a single hyperparameter with two values',
             'When every combination must be tried',
             'When no validation data are available',
@@ -2502,8 +2502,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'What is nested cross-validation for?',
           [
             'Training on the test labels safely',
-            'Estimating how well the whole tuning procedure performs on held-out data',
-            'Making grid search run faster',
+            'Estimating how well the whole tuning procedure works',
+            'Picking better hyperparameters than a single search finds',
             'Guaranteeing that every configuration wins once',
           ],
           1,
@@ -2514,7 +2514,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Grid search cannot be run twice',
             'The new search will be slower',
-            'The test set is now guiding choices, so its score is no longer an unbiased final estimate',
+            'The test set is now guiding the tuning',
             'Nothing; the test set exists to guide tuning',
           ],
           2,
@@ -2580,7 +2580,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'The most common class among its training rows',
             'The threshold of its parent node',
             'A weighted sum of the row’s features',
-            'The mean target of the training rows that reached it',
+            'The mean target of its training rows',
           ],
           3,
           'A regression leaf summarizes its training rows numerically, usually with their mean target.',
@@ -2666,7 +2666,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is each child’s impurity weighted by its share of the rows?',
           [
-            'So a tiny pure child cannot outweigh a large mixed one',
+            'So a tiny pure child cannot dominate the score',
             'Because larger children are always purer',
             'To make the weights add up to the tree depth',
             'Because the left child is always more important',
@@ -2677,9 +2677,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A candidate split sends every row to the left child. How much does it reduce impurity?',
           [
-            'By half',
+            'By half, because the right child is empty',
             'All the way to zero',
-            'Not at all; the child is the same as the parent',
+            'Not at all; the child equals the parent',
             'It depends on the threshold value',
           ],
           2,
@@ -2723,8 +2723,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'An unlimited-depth tree scores 100% on training rows and 70% on validation rows. What should you try?',
           [
             'Remove max_depth entirely',
-            'Standardize the features first',
-            'Limit max_depth or raise min_samples_leaf, choosing the value on validation data',
+            'Standardize the features, then refit the tree',
+            'Limit max_depth or raise min_samples_leaf',
             'Score the tree on the training rows only',
           ],
           2,
@@ -2733,8 +2733,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is standardizing usually unnecessary for a decision tree?',
           [
-            'Positive rescaling keeps each feature’s order, so the same rows fall on each side of a threshold',
-            'Trees cannot read numeric features',
+            'Positive rescaling keeps each feature’s order',
+            'Trees standardize each feature automatically during fit',
             'Scaling would change the labels',
             'Trees use only one feature',
           ],
@@ -2833,7 +2833,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The points farthest from the boundary',
             'Every point of the minority class',
-            'The points on the margin edge or inside it',
+            'The points on or inside the margin',
             'A random sample chosen during fit',
           ],
           2,
@@ -2881,7 +2881,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What does increasing C generally do in an SVM?',
           [
             'Tolerates more margin violations',
-            'Penalizes violations more, fitting training rows more tightly',
+            'Penalizes margin violations more heavily',
             'Removes every support vector',
             'Converts the scores into calibrated probabilities',
           ],
@@ -2898,7 +2898,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Validation accuracy is poor with C = 1000 although training accuracy is perfect. Which change is most sensible to try?',
           [
-            'A smaller C, chosen on validation data',
+            'A smaller C',
             'An even larger C',
             'Removing the scaler',
             'Training on the validation rows',
@@ -2911,7 +2911,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'SVMs only accept integers',
             'Scaling guarantees the classes become separable',
-            'Margins and distances are measured in feature units, so large-unit features would dominate',
+            'Large-unit features would dominate the distances',
             'Scaling turns the decision score into a probability',
           ],
           2,
@@ -2959,10 +2959,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'An RBF SVM with a very large gamma scores 100% on training rows and poorly on validation rows. What is happening?',
           [
-            'Each point influences only a tiny neighbourhood, so the boundary wraps around individual training rows',
+            'The boundary wraps around individual training rows',
             'The boundary has become a straight line',
             'gamma is too small to fit the data',
-            'The kernel ignores the training data',
+            'The kernel now treats distant points as very similar',
           ],
           0,
           'Very local influence lets the model memorize single points, which is overfitting.',
@@ -2971,7 +2971,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'When is an RBF kernel a better choice than a linear one?',
           [
             'When the classes are already separable by a straight boundary',
-            'When the classes need a curved boundary, as validation results confirm',
+            'When validation shows the classes need a curved boundary',
             'Whenever there are fewer than ten rows',
             'When features are measured in different units',
           ],
@@ -3017,7 +3017,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'When does averaging several models help the most?',
           [
-            'When their errors are weakly correlated',
+            'When they err on different rows',
             'When they are identical copies',
             'When they all fail on the same rows',
             'When each uses the test labels',
@@ -3063,7 +3063,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Each row appears exactly once',
             'The sample is the test set',
-            'A row can be drawn more than once, and some rows are not drawn',
+            'A row can be drawn more than once',
             'Rows are replaced by their averages',
           ],
           2,
@@ -3072,7 +3072,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does bagging especially help deep decision trees?',
           [
-            'Deep trees vary strongly with their training rows, and averaging reduces that variance',
+            'It averages away deep trees’ high variance',
             'Deep trees cannot be fitted without resampling',
             'Bagging makes each tree shallower',
             'Bagging removes bias from any model',
@@ -3084,7 +3084,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A bagged model reports an out-of-bag score. What is it based on?',
           [
             'The final test set',
-            'Each model’s predictions on the training rows left out of its own sample',
+            'Rows left out of each model’s sample',
             'The training rows each model was fitted on',
             'Predictions on duplicate rows only',
           ],
@@ -3116,7 +3116,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What does max_features control in a random forest?',
           [
-            'How many features each split may choose from',
+            'How many features each split may use',
             'How many trees are grown',
             'How deep each tree may be',
             'How many rows each bootstrap sample has',
@@ -3136,7 +3136,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Adding more features',
             'Using max_features=1',
-            'Setting random_state to a fixed number',
+            'Fixing random_state',
             'Fitting on fewer rows',
           ],
           2,
@@ -3172,7 +3172,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'How does boosting differ from bagging?',
           [
-            'Boosting fits models one after another, each correcting the current errors',
+            'Boosting fits each model to the errors left so far',
             'Boosting fits independent models on bootstrap samples',
             'Boosting cannot use decision trees',
             'Boosting averages identical models',
@@ -3196,7 +3196,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Training error keeps falling as boosting rounds increase, but validation error rises after round 150. What should you do?',
           [
             'Keep all rounds, because training error is lower',
-            'Use about 150 rounds, or a smaller learning rate, chosen on validation data',
+            'Use about 150 rounds, chosen on validation data',
             'Switch to more rounds and a larger learning rate',
             'Evaluate on the training rows instead',
           ],
@@ -3232,7 +3232,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The correlation with the target',
             'The number of rows kept',
-            'The variance of the data projected onto it',
+            'The variance of the projected data',
             'The distance between class means',
           ],
           2,
@@ -3249,9 +3249,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why does PCA center the features before looking for directions?',
           [
             'Centering removes the target from the data',
-            'Without centering, the fixed offsets of the data from the origin would distort the directions of spread',
+            'So directions describe spread around the mean',
             'Centering makes every feature an integer',
-            'Centering reduces the number of rows',
+            'Centering gives every feature the same variance',
           ],
           1,
           'Variance is spread around the mean; centering puts the mean at the origin so directions describe that spread.',
@@ -3288,7 +3288,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'explained_variance_ratio_ is [0.7, 0.2, 0.1]. What does 0.2 mean?',
           [
-            'The second component holds 20% of the total feature variance',
+            'The second component holds 20% of the feature variance',
             'The second component predicts the target with 20% accuracy',
             'The second feature is 20% of the data',
             '20% of the rows belong to the second component',
@@ -3344,7 +3344,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What do you give up by keeping fewer components?',
           [
-            'Some feature variance, which may include useful signal',
+            'Variance that may carry useful signal',
             'The ability to transform new rows',
             'The training labels',
             'Nothing; dropped components never matter',
@@ -3358,7 +3358,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'It will reach 95% accuracy',
             'It will match a classifier trained on all features',
             'It cannot overfit',
-            'Nothing yet; its performance must be measured on validation data',
+            'Nothing until it is checked on validation data',
           ],
           3,
           'Variance retained describes the inputs, not how well the target can be predicted.',
@@ -3389,7 +3389,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A dataset has age in years and income in dollars. Without scaling, what will the first principal component mostly reflect?',
           [
             'Age, because it is listed first',
-            'Income, because its numeric variance is far larger',
+            'Income, because its variance is far larger',
             'Both equally',
             'Whichever feature predicts the target best',
           ],
@@ -3401,8 +3401,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Nothing; PCA ignores the target',
             'PCA cannot transform test rows',
-            'The test set becomes larger',
-            'The test rows shaped the learned mean and directions, leaking information',
+            'Nothing; the model itself never trains on test rows',
+            'The test rows shaped the learned directions',
           ],
           3,
           'PCA learns statistics like any preprocessing step, so it must be fitted on training rows only.',
@@ -3410,10 +3410,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'The last component holds only 1% of the variance. Can it still matter for prediction?',
           [
-            'Yes; a low-variance direction can carry the signal that separates the target',
+            'Yes; a small direction can still carry the signal',
             'No; low variance always means noise',
             'No; PCA has removed the target from it',
-            'Only if it is the first feature',
+            'No; the first components already hold all target signal',
           ],
           0,
           'PCA ranks directions by spread, not usefulness, so a small direction can still be the predictive one.',
@@ -3445,7 +3445,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why may k-means compare squared distances instead of distances?',
           [
-            'Squaring keeps the same order, so the nearest centroid is unchanged',
+            'Squaring keeps the order of the distances',
             'Squared distances are always smaller',
             'Distances cannot be computed in more than one dimension',
             'Squaring makes the clusters equal in size',
@@ -3514,7 +3514,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'When does k-means stop iterating?',
           [
             'When every cluster has the same size',
-            'When assignments no longer change, or a step limit is reached',
+            'When the assignments stop changing',
             'When the inertia reaches zero',
             'After exactly one update',
           ],
@@ -3526,8 +3526,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It can rise sharply',
             'It always becomes zero',
-            'It doubles',
-            'It goes down or stays the same',
+            'It rises when a centroid moves far',
+            'It falls or stays the same',
           ],
           3,
           'The mean is the point with the smallest total squared distance to a group, so moving the centroid there cannot increase inertia.',
@@ -3562,8 +3562,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does KMeans run several initializations (n_init)?',
           [
-            'Different starts can end in different local solutions, so it keeps the lowest-inertia one',
-            'Each run adds another cluster',
+            'Different starts can reach different local solutions',
+            'It keeps the run whose clusters are most equal in size',
             'It averages the labels across runs',
             'It guarantees the true classes are found',
           ],
@@ -3574,7 +3574,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Run A labels a group of customers 0; run B labels the same customers 2. What does this mean?',
           [
             'The two runs found different customers',
-            'Cluster numbers are arbitrary names, so the grouping can be identical',
+            'Cluster numbers are arbitrary names',
             'Run B ranks the customers higher',
             'One run must contain an error',
           ],
@@ -3623,7 +3623,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why not choose k by picking the lowest inertia?',
           [
             'Inertia is undefined for k above 3',
-            'Inertia always decreases as k grows, so the largest k always wins',
+            'Inertia keeps falling as k grows',
             'Inertia measures label accuracy, not cluster quality',
             'Inertia increases with k',
           ],
@@ -3645,10 +3645,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A clustering has a high silhouette score. What does that establish?',
           [
-            'Points are compact and well separated under this distance, but usefulness still needs judging',
+            'Points sit closer to their own cluster than to others',
             'The clusters match the true customer segments',
             'k is the number of real classes',
-            'The features did not need scaling',
+            'The clusters will be useful for the business decision',
           ],
           0,
           'Silhouette measures geometry only; whether the groups help a decision is a separate question.',
@@ -3692,10 +3692,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A reading has z = -4 relative to last month’s data. What does that tell you?',
           [
-            'It is four standard deviations below the reference mean',
+            'It is four standard deviations below the mean',
             'It is four units below the mean',
             'It has a 4% chance of being normal',
-            'It is certainly a sensor failure',
+            'It is four times smaller than the reference mean',
           ],
           0,
           'A z-score counts standard deviations from the mean; it does not by itself explain the cause.',
@@ -3705,7 +3705,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Block the customer, since unusual means fraudulent',
             'Delete the row so it does not distort statistics',
-            'Investigate it with context, since rarity alone does not establish a problem',
+            'Investigate it, since rare does not mean wrong',
             'Ignore it, since detectors are often wrong',
           ],
           2,
@@ -3755,7 +3755,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A scikit-learn detector’s decision_function returns -3.2 for a row. What does that mean?',
           [
             'The row is 3.2 standard deviations from the mean',
-            'The row falls on the outlier side of the learned boundary',
+            'The row is on the outlier side of the boundary',
             'The row is unusually normal',
             'The model failed to score the row',
           ],
@@ -3787,7 +3787,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'An investigations team can handle about 20 alerts a day out of 10,000 scored events. How should the threshold be set?',
           [
-            'At the score that about 20 of 10,000 daily events exceed',
+            'At the score only about 20 daily events exceed',
             'At 0.5, the usual default',
             'At the score of the most unusual event ever seen',
             'So that every event with any unusual feature alerts',
@@ -3800,7 +3800,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Fewer alerts, higher precision',
             'No change in the number of alerts',
-            'Fewer missed incidents, more false alarms',
+            'Fewer misses, more false alarms',
             'Higher precision and higher recall',
           ],
           2,
@@ -3832,7 +3832,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A factory records a month of sensor data verified as normal, then scores each new reading against it. Which setting is this?',
           [
             'Outlier detection in contaminated data',
-            'Novelty detection against a clean reference',
+            'Novelty detection on a clean reference',
             'Supervised classification',
             'Clustering',
           ],
@@ -3850,7 +3850,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why can an extreme value escape a z-score rule computed on the same data?',
           [
             'z-scores ignore large values',
-            'The value raises the standard deviation, shrinking its own z-score',
+            'It inflates the standard deviation',
             'Extreme values always have z = 0',
             'The mean is unaffected by extreme values',
           ],
@@ -3998,7 +3998,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A network has ten dense layers with no activation functions. What can it represent?',
           [
             'Any nonlinear function, given enough layers',
-            'Only what a single linear layer can represent',
+            'Only what one linear layer can represent',
             'Nothing, because it cannot be trained',
             'Only binary outputs',
           ],
@@ -4021,8 +4021,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why do hidden layers usually use an activation such as ReLU?',
           [
             'It turns the outputs into probabilities',
-            'It reduces the number of parameters',
-            'It keeps the layers from collapsing into one linear map',
+            'It keeps the layer outputs from growing too large',
+            'It keeps the stack from being one linear map',
             'It makes training data unnecessary',
           ],
           2,
@@ -4073,7 +4073,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'One sigmoid unit',
             'One unit with no activation',
             '10 ReLU units',
-            '10 units followed by softmax',
+            '10 units with softmax',
           ],
           3,
           'Exactly one of ten classes is correct, so the outputs should be ten probabilities that sum to 1.',
@@ -4130,8 +4130,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why is 2*(p - y) called the upstream gradient?',
           [
             'It is computed after the parameters are updated',
-            'It is the loss’s sensitivity to p, reused by every parameter that feeds into p',
-            'It is always positive',
+            'It is the loss’s slope at p, reused by each parameter',
+            'It is the gradient flowing from the input layer upward',
             'It is the learning rate',
           ],
           1,
@@ -4174,7 +4174,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does the forward pass keep its intermediate values?',
           [
-            'The backward pass evaluates each local derivative at them',
+            'Local derivatives are evaluated at them',
             'They are needed to compute the next batch',
             'They replace the weights after training',
             'They are the final predictions for every layer',
@@ -4221,7 +4221,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'The numeric estimate is always wrong',
             'The learning rate is too large',
             'The loss has no minimum',
-            'The backpropagation code has a bug, such as a missing factor',
+            'The backpropagation code has a bug',
           ],
           3,
           'A large mismatch points to the analytic gradient; here it is off by exactly a factor of 2.',
@@ -4236,8 +4236,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is finite differencing not used to train large networks?',
           [
-            'It gives the wrong sign',
-            'It needs extra loss evaluations for every parameter, which is far too slow',
+            'Its estimates are too noisy to follow downhill',
+            'It needs two loss evaluations per parameter',
             'It only works for ReLU networks',
             'It cannot handle a bias',
           ],
@@ -4275,7 +4275,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What is the difference between backpropagation and an optimizer step?',
           [
             'Backpropagation updates weights; the optimizer computes gradients',
-            'Backpropagation computes gradients; the optimizer uses them to update the parameters',
+            'Backpropagation computes gradients; the optimizer applies them',
             'They are two names for the same calculation',
             'The optimizer runs before the forward pass',
           ],
@@ -4335,7 +4335,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'ReLU outputs are always between 0 and 1',
             'ReLU has no weights',
             'ReLU makes the loss convex',
-            'ReLU’s derivative is 1 for active units instead of at most 0.25',
+            'ReLU’s derivative is 1 for active units',
           ],
           3,
           'Multiplying by 1 keeps the gradient’s size, while multiplying by 0.25 per layer shrinks it fast.',
@@ -4413,7 +4413,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Yes, because clipping prevents all instability',
             'Yes, if the limit is very small',
-            'No; this is overfitting, which needs regularization, more data, or early stopping',
+            'No; this is overfitting, not instability',
             'No, because clipping only works for ReLU',
           ],
           2,
@@ -4450,7 +4450,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'How does standard dropout behave when the trained model makes predictions?',
           [
             'It keeps dropping the same fraction of units',
-            'It is switched off, and the full network is used',
+            'It is switched off; every unit is used',
             'It drops every unit',
             'It doubles every activation',
           ],
@@ -4460,7 +4460,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why are kept activations divided by 1 - p during training?',
           [
-            'So their expected value matches inference, when nothing is dropped',
+            'So their expected value matches inference',
             'To make the loss smaller',
             'To speed up the backward pass',
             'Because dropped units would otherwise be negative',
@@ -4471,10 +4471,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A model’s evaluation scores vary from run to run on the same data. What is a likely cause?',
           [
-            'The validation set is too large',
+            'The validation rows were shuffled between runs',
             'The learning rate schedule is too slow',
             'The weights were initialized carefully',
-            'Evaluation was left in training mode, so dropout is still active',
+            'Dropout was left active during evaluation',
           ],
           3,
           'Active dropout makes each forward pass random, so predictions change between runs.',
@@ -4512,7 +4512,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The mean and variance of that single row',
             'The statistics of the test set',
-            'Running averages collected during training',
+            'Running averages from training',
             'No statistics; it is skipped',
           ],
           2,
@@ -4529,8 +4529,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why does batch normalization help train deep networks?',
           [
             'It removes the need for a loss function',
-            'It keeps each layer’s inputs at a steady scale, which stabilizes gradients',
-            'It replaces backpropagation',
+            'It keeps each layer’s inputs at a steady scale',
+            'It normalizes the targets so the loss stays small',
             'It prevents overfitting entirely',
           ],
           1,
@@ -4564,7 +4564,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A model takes an image and a text caption as two separate inputs. Which Keras style is needed?',
           [
             'A Sequential model, because it is shorter',
-            'The Functional API, which connects layers as a graph',
+            'The Functional API, which allows branches',
             'A single Dense layer',
             'No model; Keras accepts one input only',
           ],
@@ -4574,7 +4574,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A Sequential model ends with Dense(3, activation="softmax"). What does each prediction contain?',
           [
-            'Three probabilities that add up to 1',
+            'Three probabilities summing to 1',
             'One probability between 0 and 1',
             'Three unrestricted numbers',
             'The index of the predicted class',
@@ -4680,7 +4680,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Training rows are sorted so that every positive example comes last. You call fit with validation_split=0.2. What goes wrong?',
           [
-            'The validation data come from the last 20% of rows, so they are almost all positive',
+            'The validation rows are almost all positive',
             'Keras raises an error for sorted data',
             'Validation rows are drawn at random, so nothing goes wrong',
             'The model trains on the validation rows',
@@ -4726,9 +4726,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'What does restore_best_weights=True add to EarlyStopping?',
           [
             'Training continues for extra epochs',
-            'The final model uses the weights from the epoch with the best monitored value',
+            'The weights from the best epoch are kept',
             'The test set is used as validation data',
-            'The learning rate is reset',
+            'The weights are reset to their initial values',
           ],
           1,
           'Without it, the model keeps the weights from the last, already-worse epoch.',
@@ -4736,7 +4736,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Where should X_test be used in a Keras workflow?',
           [
-            'Once, in model.evaluate after training and tuning are finished',
+            'Once, in model.evaluate after tuning',
             'As validation_data for EarlyStopping',
             'In every epoch to choose the learning rate',
             'Merged into the training data',
@@ -4841,7 +4841,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Doubles the number of outputs',
             'Makes the filter twice as wide',
-            'Spaces the filter positions farther apart, roughly halving the output size',
+            'Roughly halves the output size',
             'Adds zeros around the input',
           ],
           2,
@@ -4851,8 +4851,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why add "same" padding to a convolution?',
           [
             'To make the filter learn faster',
-            'To keep the output the same size as the input at stride 1',
-            'To remove the bias',
+            'To keep the output as long as the input',
+            'To stop the filter weights from growing too large',
             'To share weights between layers',
           ],
           1,
@@ -4910,8 +4910,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It ignores most of the pixels',
             'It works only on grayscale images',
-            'It has no biases',
-            'Its small filters are shared across every position',
+            'It stores the image at a lower resolution',
+            'Its filters are shared across positions',
           ],
           3,
           'Weight sharing makes the parameter count depend on the filter size, not the image size.',
@@ -4965,9 +4965,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why can deeper convolutional layers detect larger structures?',
           [
             'Their filters are always larger',
-            'Their receptive fields cover larger regions of the input',
+            'Their receptive fields are larger',
             'They use more input channels',
-            'They skip pooling',
+            'They see a higher-resolution copy of the image',
           ],
           1,
           'Each layer combines neighbouring outputs of the previous one, so its units depend on wider input regions.',
@@ -5018,8 +5018,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'A feature is a centred rolling average over days t - 1, t, and t + 1. Why is it a problem for forecasting day t?',
           [
             'Rolling averages are too smooth',
-            'It uses the value at day t and the future day t + 1',
-            'It has too few days',
+            'It uses day t and the later day t + 1',
+            'Averaging removes the trend the model needs',
             'It ignores day t - 1',
           ],
           1,
@@ -5051,7 +5051,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What carries information from earlier steps in a recurrent network?',
           [
             'A separate model for each step',
-            'The hidden state passed from step to step',
+            'The hidden state between steps',
             'The test labels',
             'A copy of every earlier input',
           ],
@@ -5075,8 +5075,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'To make every hidden state identical',
             'Because the sequence has one value',
-            'So one learned update rule applies to sequences of any length',
-            'To avoid computing gradients',
+            'So one update rule fits any sequence length',
+            'To store every earlier input inside the weights',
           ],
           2,
           'Sharing weights across time is to sequences what weight sharing across positions is to convolution.',
@@ -5113,10 +5113,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What do LSTM and GRU gates control?',
           [
-            'How much information is kept, written, and exposed in the state',
+            'How much of the state is kept or rewritten',
             'How many time steps the sequence has',
             'Which rows go into the test set',
-            'The learning rate of each layer',
+            'How fast each weight changes during training',
           ],
           0,
           'Gates are learned controls on the flow of information through the state.',
@@ -5125,8 +5125,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why do gated cells handle long sequences better than a plain recurrence?',
           [
             'They read the sequence backwards',
-            'They need no training data',
-            'A gate near 1 can carry information across many steps without it fading',
+            'A gate near 0 stores every input permanently',
+            'A gate near 1 stops old information fading',
             'They use larger hidden states only',
           ],
           2,
@@ -5170,9 +5170,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why report forecast error separately for each horizon?',
           [
             'Errors are the same at every horizon',
-            'It allows future values as inputs',
+            'Each horizon needs its own separate test set',
             'It removes the need for a baseline',
-            'A model can be good one step ahead but poor further out',
+            'Accuracy can fall as the horizon grows',
           ],
           3,
           'Averaging all horizons together can hide how quickly the forecast degrades.',
@@ -5181,7 +5181,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Readings from 50 machines are stored one machine after another in a single list. How should you build training windows?',
           [
             'Slide one window over the whole list',
-            'Build windows within each machine’s readings separately',
+            'Build windows within each machine’s readings',
             'Shuffle the list first, then build windows',
             'Use one window per machine, covering all its readings',
           ],
@@ -5221,9 +5221,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'What does softmax do to the attention scores?',
           [
             'Sorts them from largest to smallest',
-            'Turns them into positive weights that sum to 1',
+            'Makes them positive weights that sum to 1',
             'Removes the largest score',
-            'Rounds them to 0 or 1',
+            'Divides each score by the sum of the scores',
           ],
           1,
           'Normalized weights say what share of attention each position receives.',
@@ -5240,7 +5240,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The key stored first',
             'The key with the largest values overall',
-            'The key whose dot product with the query is largest',
+            'The key with the highest query score',
             'Every key equally, always',
           ],
           2,
@@ -5283,7 +5283,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'In attention, what do the value vectors provide?',
           [
-            'The content that is mixed into the output',
+            'The content mixed into the output',
             'The scores that decide where to look',
             'The positions of the tokens',
             'The softmax normalization',
@@ -5295,9 +5295,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why are attention scores divided by √d before softmax?',
           [
             'To make every weight equal',
-            'To keep large dot products from making softmax put nearly all weight on one position',
-            'To remove the need for keys',
-            'To make the scores negative',
+            'To stop softmax piling weight on one position',
+            'To shrink scores so that softmax runs faster',
+            'To make the weights sum to 1 across all positions',
           ],
           1,
           'Scaling keeps the scores moderate, so the weights stay spread out and gradients stay useful.',
@@ -5346,7 +5346,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Attending to earlier tokens',
             'Using value vectors',
-            'A token attending to tokens that come after it',
+            'Attending to later tokens',
             'Normalizing the scores',
           ],
           2,
@@ -5358,7 +5358,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'exp(-inf) is 0, so masked positions get exactly zero weight',
             'A score of 0 is not allowed in attention',
             'Minus infinity makes softmax faster',
-            'It flips the order of the tokens',
+            'Either works, because softmax gives a score of 0 zero weight',
           ],
           0,
           'A score of 0 would still receive positive weight after softmax.',
@@ -5393,7 +5393,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why do transformers add positional information to tokens?',
           [
-            'Attention alone does not encode token order',
+            'Attention alone ignores token order',
             'It makes every token a class label',
             'It replaces the value vectors',
             'It masks future tokens',

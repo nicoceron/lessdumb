@@ -413,7 +413,12 @@ export const knowledgePoints: KnowledgePointModule = {
         predictOutput(
           'What does this program print?',
           'import numpy as np\nm = np.array([[10, 1], [20, 0], [30, 1]])\nprint(m[m[:, 1] == 1].tolist())',
-          ['[10, 30]', '[1, 1]', '[[20, 0]]', '[[10, 1], [30, 1]]'],
+          [
+            '[10, 30]',
+            '[True, False, True]',
+            '[[20, 0]]',
+            '[[10, 1], [30, 1]]',
+          ],
           3,
           'The mask has one value per row, so whole rows whose second column is 1 are kept.',
         ),
@@ -469,7 +474,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'You want to adjust the first column of raw for a chart without changing raw itself. Which line is safe?',
           [
             'col = raw[:, 0]',
-            'col = raw',
+            'col = raw[:, 0]; col.copy()',
             'col = raw[:, 0].copy()',
             'raw[:, 0] = col',
           ],
@@ -1083,7 +1088,7 @@ export const knowledgePoints: KnowledgePointModule = {
             's.loc["north"]',
             's.add(s, fill_value=0)',
             's.reindex(["north", "east", "south", "west"])',
-            's.iloc[0]',
+            's.reindex(["north", "east", "south", "west"]).dropna()',
           ],
           2,
           'reindex produces exactly the requested labels in order and marks absent regions as missing.',
@@ -1136,8 +1141,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'After filtering, a table’s index is [0, 2, 5]. What does that tell you?',
           [
             'The table was sorted by its values',
-            'Rows 0, 2 and 5 of the original passed the condition',
-            'Three rows contain missing values',
+            'Original rows 0, 2 and 5 passed the condition',
+            'The labels 0, 2 and 5 mark the rows that were dropped',
             'The filter failed and should be repeated',
           ],
           1,
@@ -1232,9 +1237,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A teammate writes t[t["age"] < 18]["group"] = "minor" and finds that no row of t changed. Why?',
           [
-            't[t["age"] < 18] is a separate table, so the assignment edits that copy',
+            'The assignment edits a filtered copy, not t',
             'The mask must have selected no rows',
-            'Strings cannot be assigned to a column',
+            'A string cannot be assigned to rows chosen by a mask',
             'The index must be reset before assigning',
           ],
           0,
@@ -1660,9 +1665,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why count raw.notna() & converted.isna() rather than converted.isna()?',
           [
-            'It separates rejected tokens from values that were never there',
+            'It separates rejected tokens from originally missing values',
             'It includes values that were already missing',
-            'isna does not work on converted columns',
+            'converted.isna() would miss the tokens that failed to convert',
             'It turns rejected tokens into zeros',
           ],
           0,
@@ -1854,7 +1859,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'After deduplication, table["id"].is_unique is still False. What does that mean?',
           [
-            'Every id is missing',
+            'The ids are not sorted in ascending order',
             'Some id still appears more than once',
             'The table has no rows',
             'Too many rows were removed',
@@ -1925,8 +1930,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does s.strip() fail when s is a Series, while s.str.strip() works?',
           [
-            'Series cannot hold text',
-            'strip is a method of single strings, and .str applies it to every entry',
+            'A Series must be converted to a list before stripping',
+            'strip is a string method; .str runs it on each entry',
             'strip needs an argument when used on a Series',
             's.strip() works only on numeric Series',
           ],
@@ -1967,7 +1972,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Keep case and only strip surrounding spaces',
             'Lowercase both so they match',
-            'Drop one of them as a duplicate',
+            'Merge them into one code and keep the raw column',
             'Uppercase both so they match',
           ],
           0,
@@ -2041,7 +2046,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Uppercase letters being ignored',
             'A dot matching any character, as in "@exampleXcom"',
-            'Missing emails raising KeyError',
+            'Missing emails giving a missing result instead of False',
             'The @ sign being removed',
           ],
           1,
@@ -2106,7 +2111,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why sort shirt sizes with an ordered categorical rather than as plain text?',
           [
             'Plain text cannot be sorted',
-            'Plain text sorts alphabetically, putting L before M before S',
+            'Plain text sorts alphabetically: L, M, S',
             'Categoricals sort by how often each size appears',
             'Ordered categoricals remove duplicate sizes',
           ],
@@ -2162,9 +2167,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why run isin against the allowed list before converting to a Categorical?',
           [
             'isin sorts the values into category order',
-            'Conversion would turn unexpected labels into missing values, losing what they were',
+            'Conversion turns unlisted labels into missing values',
             'Categorical requires every value to be lowercase',
-            'isin removes duplicate labels',
+            'Conversion raises an error on the first unexpected label',
           ],
           1,
           'Checking first shows exactly which raw labels break the contract.',
@@ -2218,9 +2223,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Cities are encoded as 0 = Lima, 1 = Oslo, 2 = Rome, and a model treats the code as a number. What false assumption does that create?',
           [
-            'That the cities are missing values',
-            'That the column is text',
-            'That Rome is somehow double Oslo, with Oslo between Lima and Rome',
+            'That a code of 0 means the row has no city',
+            'That the model can no longer tell the cities apart',
+            'That the cities are ranked and Rome is double Oslo',
             'None, because codes are measurements',
           ],
           2,
@@ -2279,8 +2284,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The site table has duplicate sites',
             '940 sites were visited',
-            '60 visits name sites missing from the site table',
-            'The join must be repeated',
+            '60 visits name sites not in the site table',
+            '60 sites in the site table were never visited',
           ],
           2,
           'With unique site rows, each visit matches at most once, so 60 visits found no site.',
@@ -2325,7 +2330,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Some key appears more than once in the right table',
             'Some left keys have no match',
-            'The left table repeats some keys',
+            'Some key appears more than once in the left table',
             'The key columns hold different types',
           ],
           0,
@@ -2421,7 +2426,7 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'A wide table has a student id and 4 test columns for 50 students. How many rows does melting the test columns produce?',
-          ['54', '50', '4', '200'],
+          ['54', '50', '250', '200'],
           3,
           'Each of the 50 students contributes one row per test: 50 × 4.',
         ),
@@ -2429,9 +2434,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'In wide.melt(id_vars=["site"], ...), what is the role of site?',
           [
             'It is melted into the value column',
-            'It is repeated on every long row, keeping each value attached to its site',
+            'It stays a column, repeated on every long row',
             'It is dropped from the result',
-            'It becomes the new column names',
+            'It becomes the column that names each measurement',
           ],
           1,
           'Identifier columns stay as columns and are copied to every measurement row.',
@@ -2508,7 +2513,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'pivot raises ValueError saying the index contains duplicate entries. What does it mean?',
           [
-            'The value column holds text',
+            'Two long rows hold the same number in the values column',
             'Some index and column pair has more than one value',
             'The index column has missing values',
             'The table is already wide',
@@ -2519,8 +2524,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Two long rows give different temperatures for station S3 at noon. Which response is sound before pivoting?',
           [
-            'Investigate which reading is valid, then resolve it explicitly',
-            'Average them so the pivot works',
+            'Investigate which reading is valid, then resolve it',
+            'Average the two readings so pivot has one value per cell',
             'Delete station S3 entirely',
             'Swap the index and columns fields',
           ],
@@ -2685,8 +2690,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'A sales report grouped by region totals 9,200, but the raw amount column totals 10,000. What is the most likely cause?',
           [
             'groupby rounds each region’s amounts',
-            'Some regions had no sales',
-            'Rows with a missing region were left out of the groups',
+            'Regions with no sales were dropped from the report',
+            'Rows with a missing region were dropped',
             'The grouped sum counted some rows twice',
           ],
           2,
@@ -2740,7 +2745,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             't.groupby("team").agg(wins=("result", "sum"), games=("result", "size"))',
             't.groupby("team")["result"].sum()',
-            't.groupby("result").agg(team=("wins", "sum"))',
+            't.groupby("team").agg(sum=("result", "wins"), size=("result", "games"))',
             't.agg(wins=("team", "sum"), games=("team", "size"))',
           ],
           0,
@@ -2892,10 +2897,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why use transform rather than mean() when adding each row’s group mean as a column?',
           [
-            'mean() cannot follow groupby',
+            'mean() gives one overall value, not one per group',
             'transform is always faster',
             'transform removes missing values',
-            'transform returns one value per row, matching the table',
+            'transform returns one value per row',
           ],
           3,
           'A column needs one value per row; the grouped mean has only one per group.',
@@ -2949,8 +2954,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two runners in different age groups both have centered times of −3 minutes. Which conclusion is justified?',
           [
             'They ran equally fast in absolute terms',
-            'Both beat the overall mean by 3 minutes',
-            'Each was 3 minutes faster than their own group’s mean',
+            'Both beat the mean of all runners by 3 minutes',
+            'Each beat their own group’s mean by 3 minutes',
             'Their groups have the same mean time',
           ],
           2,
@@ -2995,7 +3000,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Its sales grew by 40%',
             'It made 40% of its region’s sales',
-            'It made 40% of all sales',
+            'It made 40% of the sales across all regions',
             'Its region has 0.4 shops',
           ],
           1,
@@ -3005,9 +3010,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'One region sold nothing this week, so its total is 0. What happens to its rows’ shares?',
           [
             'They become 0, which is accurate',
-            'They become 1',
+            'They become inf, as with any division by zero',
             'pandas raises ZeroDivisionError',
-            'They become NaN, so the report needs a rule for that region',
+            'They become NaN, so the report needs a rule',
           ],
           3,
           '0 / 0 is undefined, which pandas shows as NaN rather than raising an error.',
@@ -3122,9 +3127,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A 7-day rolling average uses min_periods=1. What is true of the value on day 2?',
           [
-            'It averages only 2 days, so it rests on less evidence than later values',
+            'It averages only 2 days, so it rests on less evidence',
             'It averages 7 days like every other value',
-            'It is missing',
+            'It is missing, because a 7-day window is not yet full',
             'It equals the day-2 value exactly',
           ],
           0,
@@ -3175,7 +3180,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Exactly the last three hours',
             'Three readings from the same minute',
             'The last three readings, spanning four hours',
-            'Every reading of the day',
+            'The last three readings, each weighted by its time gap',
           ],
           2,
           'A row-based window counts observations, whatever time they span.',
@@ -3185,7 +3190,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It ignores the current value',
             'It uses values from after the prediction time',
-            'It requires text data',
+            'It gives the current row more weight than the others',
             'It always returns NaN',
           ],
           1,
@@ -3237,9 +3242,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'pd.to_datetime(pd.Series(["31/02/2024"]), format="%d/%m/%Y") is called. What happens?',
           [
-            'It returns 2 March 2024',
-            'It raises an error because 31 February does not exist',
-            'It returns 29 February 2024',
+            'It rolls over and returns 2 March 2024',
+            'It raises an error: 31 February does not exist',
+            'It clamps to the last valid day, 29 February 2024',
             'It swaps the day and month',
           ],
           1,
@@ -3607,8 +3612,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'Delivery times have a mean of 9 days and a median of 3 days. What is the sound next step?',
           [
             'Report 9 days as the typical delivery',
-            'Inspect the slow deliveries and their source before summarising',
-            'Delete the slowest deliveries',
+            'Inspect the slow deliveries before summarising',
+            'Delete the slowest deliveries so the mean matches the median',
             'Report the median and never mention the gap',
           ],
           1,
@@ -3657,10 +3662,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Two columns have a correlation of 0.0. Which statement is justified?',
           [
-            'They are unrelated in every way',
+            'Knowing one column tells you nothing about the other',
             'One causes the other',
             'The data must contain missing values',
-            'They show no straight-line relationship in this data',
+            'They have no straight-line relationship here',
           ],
           3,
           'Correlation only measures linear association; a curved relationship can still exist.',
@@ -3700,9 +3705,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A notebook’s final total changes depending on which earlier cells were run. What fixes the root cause?',
           [
-            'Put the steps in a function that takes the source data and returns the result',
+            'A function that takes the source data and returns the total',
             'Run the cells in a different order',
-            'Add print statements to each cell',
+            'Keep the running total in a global variable that each cell updates',
             'Copy the final total by hand',
           ],
           0,

@@ -154,9 +154,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Are Boxed<i32> and Boxed<&str> the same type?',
           [
-            'Yes; Boxed is one type whatever T is',
+            'Yes; Boxed is a single type whatever T is',
             'Only if both values have the same size',
-            'No; each type argument makes a distinct type',
+            'No; each type argument makes a new type',
             'Yes, but only after a value is stored',
           ],
           2,
@@ -255,7 +255,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'The trait declares fn total(&self) -> u32, but the impl writes fn total(&self) -> i64. What happens?',
           [
-            'The impl is rejected for not matching the trait',
+            'It is rejected for not matching the trait',
             'It compiles, and calls return an i64',
             'It compiles, and the result is cast to u32',
             'Only calls made through the trait are rejected',
@@ -467,7 +467,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Item defaults to u32 because the field is a u32',
             'Item is inferred later from the first call',
-            'It is rejected: every impl must choose the associated type',
+            'It is rejected; every impl must set Item',
             'It compiles, but next_item can never be called',
           ],
           2,
@@ -561,7 +561,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A function takes shape: &dyn Area. When is it decided which area body runs?',
           [
             'At compile time, always the first impl written',
-            'At run time, from the concrete type behind the reference',
+            'At run time, from the actual type of the value',
             'When the function is defined, from its parameter',
             'Never; a dyn call runs every implementation',
           ],
@@ -610,7 +610,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Arrays cannot hold references unless they are mutable',
             'The dyn annotation copies both structs into the array',
             'The first version needs a third element to be valid',
-            'Without the annotation the two elements have different types',
+            'Unannotated, the two elements have different types',
           ],
           3,
           '&Coin and &Debt are different types. Converting both to &dyn Value gives the array one element type.',
@@ -618,7 +618,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'order has type [&dyn Cost; 2]. Which implementation does order[1].cost() run?',
           [
-            'The impl for the type of order[0]',
+            'The impl for the type stored at index 0',
             'A default body from the trait',
             'Both impls, adding the results',
             'The impl for the type stored at index 1',
@@ -667,7 +667,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'fn report<T>(item: &T) -> u32 { item.points() } is rejected. What fixes it?',
           [
             'Change &T to T so the method can be found',
-            'Add the bound T: Score so points is known to exist',
+            'Add the bound T: Score to report',
             'Return item instead of calling a method',
             'Wrap the call in an if that checks the type',
           ],
@@ -717,7 +717,12 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'Which bound lets a generic function print a T with {}?',
-          ['T: Ord', 'T: Clone', 'T: Copy', 'T: std::fmt::Display'],
+          [
+            'T: std::cmp::Ord',
+            'T: std::clone::Clone',
+            'T: std::fmt::Debug',
+            'T: std::fmt::Display',
+          ],
           3,
           'The {} placeholder uses the Display trait, so T must implement it.',
         ),
@@ -781,7 +786,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Before fn, on its own line above the function',
             'Inside the body, as the first statement',
             'Between the function name and <T>',
-            'After the return type, before the opening brace',
+            'After the return type, before the body',
           ],
           3,
           'A where clause follows the full signature, including the return type, and precedes the body.',
@@ -839,7 +844,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Only the returned value; name was moved',
             'Only name; the result borrows from it',
-            'name and the returned clone, as separate values',
+            'Both name and the returned clone',
             'Nothing; both were dropped inside the call',
           ],
           2,
@@ -875,7 +880,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It is a new String owned by the caller',
             'It lives for the whole program',
-            'It points into text and is valid while text is',
+            'It points into text, valid while text is',
             'It points to a local variable inside label',
           ],
           2,
@@ -938,7 +943,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'After let view = trimmed(&text);, what does view refer to?',
           [
             'A new String copied from text',
-            'Bytes inside text, without copying them',
+            'Bytes inside text, not a copy',
             'A copy of text in view’s own buffer',
             'A string literal stored in the program',
           ],
@@ -946,7 +951,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The result borrows part of the input, which is why the input must outlive it.',
         ),
         choose(
-          'Which program is rejected?',
+          'With fn trimmed(text: &str) -> &str and a mutable String s, which program is rejected?',
           [
             'let v = trimmed(&s); s.push_str("!"); println!("{}", v);',
             'let v = trimmed(&s); println!("{}", v); s.push_str("!");',
@@ -954,7 +959,7 @@ export const knowledgePoints: KnowledgePointModule = {
             's.push_str("!"); let v = trimmed(&s); println!("{}", v);',
           ],
           0,
-          'Only the second uses the view after s has been modified; n in the third is a plain number, not a borrow.',
+          'Only the program that pushes before printing v uses the view after s has been modified; n is a plain number, not a borrow.',
         ),
       ],
     },
@@ -984,7 +989,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does fn pick(a: &str, b: &str) -> &str need a lifetime parameter?',
           [
-            'With two input borrows, the source of the output is ambiguous',
+            'The output could borrow from either input',
             'Every function returning &str needs one',
             'Two &str parameters must share one allocation',
             'Otherwise the output is copied into a new String',
@@ -1058,7 +1063,7 @@ export const knowledgePoints: KnowledgePointModule = {
             "fn f<'a>(a: &str, b: &'a str) -> &'a str",
           ],
           0,
-          'Only the last ties the result to a alone. The first ties it to both, the third to b, and the second does not compile.',
+          'Only the signature that gives b no lifetime ties the result to a alone. Giving b the output lifetime ties the result to b, and the version with no lifetimes does not compile.',
         ),
         predictOutput(
           'What is the output of this program?',
@@ -1149,7 +1154,7 @@ export const knowledgePoints: KnowledgePointModule = {
           "In impl<'a> Parser<'a>, what does fn input(&self) -> &'a str promise?",
           [
             'The result is a new String owned by the caller',
-            'The result borrows the original text, not the Parser',
+            'The result borrows the text, not the Parser',
             'The Parser must live for the whole program',
             'The result expires as soon as the method returns',
           ],
@@ -1159,7 +1164,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           "Which impl header matches struct Window<'a> { data: &'a str }?",
           [
-            'impl Window',
+            "impl<'a> Window<&'a str>",
             "impl Window<'a>",
             "impl<'a> Window<'a>",
             "impl<'a> Window",
@@ -1210,7 +1215,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'The literal is copied into a new String on return',
             'Returning a literal moves it onto the caller’s stack',
             "'static extends the life of a local variable",
-            'The literal’s bytes live in the program for the whole run',
+            'The literal lives in the program for the whole run',
           ],
           3,
           'Literals are part of the compiled program, so a borrow of one never dangles.',
@@ -1253,7 +1258,7 @@ export const knowledgePoints: KnowledgePointModule = {
           "Why is fn echo(text: &str) -> &'static str { text } rejected?",
           [
             'A function returning &str cannot take a &str argument',
-            'text may point into a String dropped before the program ends',
+            'text may point into a String that is dropped early',
             "'static references must be created with String::from",
             'text would need to be mut to be returned',
           ],
@@ -1271,7 +1276,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A function returns a &str borrowed from its input, but returns the literal "n/a" in one branch. Why does that compile?',
           [
             'Literals are converted to String before being returned',
-            "A &'static str can be used where a shorter-lived &str is expected",
+            "A &'static str fits where a shorter-lived &str is expected",
             'The compiler copies the input into static memory',
             'Returning a literal turns off lifetime checking for the function',
           ],
@@ -1313,7 +1318,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why can a closure use the local variable bonus when a nested fn item cannot?',
           [
             'Closures run before local variables are created',
-            'Closures capture variables from their surrounding scope',
+            'Closures capture variables from their scope',
             'A closure copies every local variable in main',
             'A nested fn can read locals only if they are mut',
           ],
@@ -1359,7 +1364,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'greet must be declared mut to be called',
             'name is moved while greet still borrows it',
-            'Closures cannot capture a String',
+            'Closures cannot capture a String, only Copy types',
             'format! cannot be used inside a closure',
           ],
           1,
@@ -1489,7 +1494,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why may the body of fn twice<F: Fn(i32) -> i32>(f: F, x: i32) call f more than once?',
           [
-            'Each call makes a fresh copy of the closure',
+            'Each call works on a fresh copy of the closure',
             'Fn closures cannot capture anything',
             'Calling an Fn only needs a shared borrow of f',
             'The bound turns f into a named function',
@@ -1627,7 +1632,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It compiles, and a and b both hold "hi"',
             'It compiles, and b holds an empty String',
-            'It compiles but panics on the second call',
+            'It compiles but panics when give is called again',
             'It is rejected: the first call moved note out',
           ],
           3,
@@ -1852,7 +1857,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What does filter do with an item when its closure returns false?',
           [
             'Stops the whole iteration immediately',
-            'Leaves it out and moves on to the next item',
+            'Leaves it out and tests the next item',
             'Replaces it with a default value',
             'Moves it to the end of the output',
           ],
@@ -1870,7 +1875,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'In .iter().copied().filter(|n| *n > 0), why does the test write *n?',
           [
             'copied turns each item into a reference',
-            'filter passes each item to its closure by reference',
+            'filter passes each item by reference',
             'n is a mutable borrow that must be released',
             'The * converts n from u32 to i32',
           ],
@@ -2046,7 +2051,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'map results cannot be collected',
             'collect needs the closure to return a String',
             'collect only works on vectors, not arrays',
-            'Nothing tells collect which collection to build',
+            'Nothing says which collection to build',
           ],
           3,
           'collect can build many collections, so the target type must be stated.',
@@ -2071,7 +2076,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'let v = bytes.iter().copied().collect();',
             'let v = bytes.iter().copied().collect::<Vec<u8>>();',
             'let v = bytes.iter().copied().collect(Vec<u8>);',
-            'let v = Vec<u8>::collect(bytes.iter());',
+            'let v = bytes.iter().copied().collect() as Vec<u8>;',
           ],
           1,
           'The turbofish ::<Vec<u8>> names the target type on the call itself.',
@@ -2122,7 +2127,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             '? converts each item to i32 before collecting',
             '? retries failed items until they succeed',
-            'collect gave one Result; ? unwraps Ok or returns Err',
+            'It is one Result: ? unwraps Ok or returns Err',
             '? turns the iterator into a Vec without allocating',
           ],
           2,
@@ -2165,7 +2170,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'pub on soup_rating makes the whole module public',
             'Any pub function anywhere may call private functions',
-            'Private items are visible everywhere inside their own module',
+            'Items inside one module can see each other',
             'secret_spice is defined first, so it counts as public',
           ],
           2,
@@ -2199,15 +2204,16 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'In the example, why would shop::storage::count() be rejected in main even though count is pub?',
+          'Why would main’s call shop::storage::count() be rejected even though count is pub?',
           [
-            'storage is private, so main cannot reach into it',
+            'storage is private, so main cannot reach it',
             'count may only be called as storage::count()',
             'A pub fn inside a private module is an error',
             'shop must be marked pub before main can use it',
           ],
           0,
           'Every module along the path has to be visible to the caller, and storage is private to shop.',
+          'mod shop {\n    mod storage {\n        pub fn count() -> u32 {\n            7\n        }\n    }\n\n    pub fn stock() -> u32 {\n        storage::count() * 2\n    }\n}',
         ),
         predictOutput(
           'What does this program print?',
@@ -2232,7 +2238,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A module has pub fn report() that calls a private fn format_rows() in the same module. What can outside code do?',
           [
             'Call both report and format_rows directly',
-            'Call report, which may use format_rows internally',
+            'Call report, which uses format_rows inside',
             'Call neither, since one of them is private',
             'Call format_rows through report::format_rows()',
           ],
@@ -2267,7 +2273,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What does use std::cmp::max; do when the program runs?',
           [
-            'Nothing at run time; it only makes the name max available',
+            'Nothing; it only makes the name max available',
             'It calls max once to check that the import works',
             'It copies the max function into the current file',
             'It loads std::cmp from disk before main starts',
@@ -2322,10 +2328,10 @@ export const knowledgePoints: KnowledgePointModule = {
             'use a::parse; use b::parse;',
             'use a::parse; use b::parse as parse_b;',
             'use a::parse as parse; use b::parse as parse;',
-            'use a::parse as b; use b::parse as a;',
+            'use a::parse; use b as parse_b;',
           ],
           1,
-          'Two items cannot share one name in a scope, so at least one import needs a distinct alias.',
+          'Two items cannot share one name in a scope, so at least one import needs a distinct alias. Aliasing the module b only shortens the path to parse_b::parse.',
         ),
         choose(
           'After use std::collections::HashMap as Map;, how are Map and HashMap related?',
@@ -2364,7 +2370,7 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'In the example, which call from main is rejected?',
+          'Given the module library below, which call from main is rejected?',
           [
             'library::checksum()',
             'library::internal::checksum()',
@@ -2373,6 +2379,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           1,
           'internal is still private. Only the re-exported path is public.',
+          'mod library {\n    mod internal {\n        pub fn checksum() -> u32 {\n            99\n        }\n    }\n\n    pub use internal::checksum;\n}',
         ),
         predictOutput(
           'What does this program print?',
@@ -2385,7 +2392,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What is the main benefit of pub use internal::checksum; in a library module?',
           [
             'checksum runs once automatically when the module loads',
-            'Callers use a short stable path while internals stay private',
+            'Callers get a stable path; internals stay private',
             'Every item in internal becomes public too',
             'checksum is copied, so internal can be deleted',
           ],
@@ -2395,8 +2402,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A parent module writes pub use internal::secret;, where internal contains fn secret() -> u32 without pub. What happens?',
           [
-            'It is rejected: a private item cannot be re-exported',
-            'It compiles: pub use makes secret public',
+            'It is rejected: secret is private to internal',
+            'It compiles, because pub use makes secret public',
             'It compiles, but calls to secret return 0',
             'It compiles only if internal is also pub',
           ],
@@ -2420,7 +2427,7 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'In the example, which call from main is rejected?',
+          'Given the module engine below, which call from main is rejected?',
           [
             'engine::add(1, 1)',
             'engine::label()',
@@ -2429,6 +2436,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           2,
           'scale was never re-exported, and math is private.',
+          'mod engine {\n    mod math {\n        pub fn add(a: u32, b: u32) -> u32 {\n            a + b\n        }\n\n        pub fn scale(a: u32) -> u32 {\n            a * 10\n        }\n    }\n\n    mod text {\n        pub fn label() -> &\'static str {\n            "sum"\n        }\n    }\n\n    pub use math::add;\n    pub use text::label;\n}',
         ),
         predictOutput(
           'What does this program print?',
@@ -2485,7 +2493,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'super makes every item public for that one call',
             'Private items are visible to the whole program',
-            'A child module can see private items of its ancestors',
+            'A child module sees its ancestors’ private items',
             'tax is public because it is defined first',
           ],
           2,
@@ -2497,7 +2505,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'In child itself',
             'In the first external dependency',
             'In parent, the module containing child',
-            'In every module, starting from main',
+            'In every module, starting from the crate root',
           ],
           2,
           'super always refers to the module one level up from where the path is written.',
@@ -2508,7 +2516,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Yes; parents see everything their children define',
             'Yes, but only through a self:: path',
             'Only if the call is written with super',
-            'No; inner’s private items are hidden from its parent',
+            'No; inner’s private items are hidden from outer',
           ],
           3,
           'Visibility flows down to descendants, not up: an item private to inner is visible only within inner.',
@@ -2547,7 +2555,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The value a method was called on',
             'The parent of the current module',
-            'The root module of the program',
+            'The root module of the whole program',
             'The module the path is written in',
           ],
           3,
@@ -2655,7 +2663,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Two-part versions must be parsed as floating point numbers',
             'Rust cannot split a string into fewer than three pieces',
             'The patch number must always be written as 0',
-            'A missing part is malformed input, and guessing hides the error',
+            'A missing part is malformed; guessing hides the error',
           ],
           3,
           'Silently filling in a value turns bad input into a version nobody wrote.',
@@ -2666,7 +2674,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Substitutes an empty string and continues',
             'Panics because the iterator is exhausted',
             'Restarts the split from the first piece',
-            'Returns None from the whole function immediately',
+            'Returns None from the enclosing function',
           ],
           3,
           'next() gives None at the end, and ? on None returns None from the enclosing function.',
@@ -2708,7 +2716,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A false cfg predicate removes the item before it is compiled.',
         ),
         choose(
-          'Why can the example define two functions named mode?',
+          'Why may the code below define two functions named mode?',
           [
             'Rust picks the one defined last when the program runs',
             'Only one survives cfg, so only one is ever compiled',
@@ -2717,6 +2725,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           1,
           'After cfg removes the excluded item, the program contains a single mode.',
+          '#[cfg(all())]\nfn mode() -> &\'static str {\n    "included"\n}\n\n#[cfg(any())]\nfn mode() -> &\'static str {\n    "excluded"\n}',
         ),
         predictOutput(
           'What is the output of this program?',
@@ -2744,7 +2753,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A program needs different code on Windows and Linux, and the Windows code calls functions that do not exist on Linux. Which tool fits?',
           [
-            '#[cfg(...)] on each version, so only one is compiled',
+            '#[cfg(...)] so only one version is compiled',
             'An if on a variable holding the OS name',
             'Two functions with the same name and no attributes',
             'A match on a string typed in by the user',
@@ -2769,7 +2778,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'cfg! is checked at run time, #[cfg] at compile time',
             'There is no difference; both remove unused code',
-            'With cfg!, both branches compile; #[cfg] removes the item',
+            'cfg! compiles both branches; #[cfg] drops the item',
             '#[cfg] may only be placed on main',
           ],
           2,
@@ -2778,7 +2787,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Can a value computed while the program runs change which #[cfg] items exist?',
           [
-            'No; cfg decisions are fixed when the program is compiled',
+            'No; cfg decisions are fixed at compile time',
             'Yes, if the value is stored in a global variable',
             'Yes, because cfg re-checks its predicate on each call',
             'Only for items declared inside main',
@@ -2883,7 +2892,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'u32::MAX is the most common capacity in practice',
             'It is the only way to test the <= comparison',
-            'The addition overflows there, which ordinary sizes never reach',
+            'Only there does the addition overflow',
             'Large numbers execute more lines of the function',
           ],
           2,
@@ -2899,7 +2908,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'In a capacity check, what should happen when used + extra overflows?',
           [
-            'Refuse the request: the true total exceeds any capacity',
+            'Refuse it; the real total is too large',
             'Accept it, since the wrapped total is small',
             'Clamp the total to the capacity and accept',
             'Ignore the case, because u32 never overflows',
@@ -2935,7 +2944,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What is the main advantage of checking a table of (input, expected) pairs in one loop?',
           [
-            'Every case uses the same check, and adding one is a single line',
+            'Every case shares one check; adding a case is one line',
             'The loop makes the function under test run faster',
             'Only the first case in the table has to be correct',
             'Expected values can be computed by the function itself',
@@ -3031,7 +3040,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'sort of [3, 1, 2] returns [1, 2, 3]',
             'The first element of the output is 1',
-            'The output has the same length as the input',
+            'Output length equals input length',
             'The function finishes in under a second',
           ],
           2,
@@ -3047,7 +3056,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A test checks only that reverse of [1, 2, 3] is [3, 2, 1]. What does an invariant check over many inputs add?',
           [
-            'Confidence across many cases, such as every length up to 20',
+            'Confidence across many cases, like lengths 0 to 20',
             'A proof that reverse is correct for every possible input',
             'A guarantee that reverse never allocates memory',
             'Nothing; one example already covers every length',
@@ -3061,7 +3070,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'The output is always shorter than the input',
             'The output always has exactly one element',
             'The output is sorted in descending order',
-            'Applying it twice gives the same result as once',
+            'Applying it twice equals applying it once',
           ],
           3,
           'After one pass there are no repeats left, so a second pass changes nothing. Lists without repeats keep their length.',
@@ -3094,7 +3103,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'That the functions are correct for every possible input',
             'Nothing, because round trips can never fail',
-            'Strong evidence for those cases, not a proof for all inputs',
+            'Strong evidence, but not a proof for all inputs',
             'That the functions are fast enough for real use',
           ],
           2,
@@ -3111,7 +3120,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why compare whole outputs instead of only their lengths?',
           [
             'Comparing lengths is slower than comparing contents',
-            'A wrong function can keep the length while changing values',
+            'Wrong values can still have the right length',
             'The lengths of two vectors cannot be compared',
             'Whole outputs only matter for empty inputs',
           ],
@@ -3150,14 +3159,14 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'Which i32 division overflows even though the divisor is not zero?',
-          ['i32::MIN / -1', 'i32::MAX / 1', '0 / -1', '-8 / 2'],
+          ['i32::MIN / -1', 'i32::MAX / -1', '0 / -1', '-8 / 2'],
           0,
           'Negating the most negative i32 gives a value one larger than i32::MAX.',
         ),
         choose(
           'Why is fn average(total: i32, count: i32) -> Option<i32> a better contract than returning i32?',
           [
-            'Callers must handle count == 0 instead of a panic',
+            'Callers handle count == 0 instead of a panic',
             'Option values make the division run faster',
             'It lets the function skip the division entirely',
             'An i32 return type cannot hold negative averages',
@@ -3209,7 +3218,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is catching a panic a poor replacement for returning Option?',
           [
-            'State may be half-updated, and the type hides the failure',
+            'State may be left half-updated; the type hides it',
             'A panic can never be caught by the code that called it',
             'Catching a panic is always slower than dividing',
             'A caught panic turns the result into Some(0)',
@@ -3259,7 +3268,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The heap String is copied, so each Box owns one',
             'first and second share the String and count owners',
-            'Ownership moves to second; first can no longer be used',
+            'Ownership moves; first can no longer be used',
             'second borrows from first until first is dropped',
           ],
           2,
@@ -3278,7 +3287,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Box values can only be changed through methods',
             'b += 1 would allocate a second Box',
             '* copies the value out so the Box is unchanged',
-            'b is the Box; * reaches the i32 stored inside it',
+            'b is the Box; * reaches the i32 inside it',
           ],
           3,
           'Arithmetic applies to the i32, and dereferencing the Box is how you reach it.',
@@ -3316,7 +3325,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'After add_ten(&mut b) returns, who owns the heap value?',
           [
-            'Still b; the function only borrowed the value',
+            'Still b; the function only borrowed it',
             'add_ten, which received the Box by reference',
             'Nobody; the borrow freed the allocation',
             'A copy of b made for the call',
@@ -3361,7 +3370,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'The whole String, into a new allocation',
             'Nothing; it returns a borrowed &String',
             'The String, but only the first time it is used',
-            'Only the pointer; the owner count goes up by one',
+            'Only the pointer; the owner count goes up',
           ],
           3,
           'Cloning an Rc shares the existing value and records one more owner.',
@@ -3421,7 +3430,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is let shared = Rc::new(String::from("a")); shared.push_str("b"); rejected?',
           [
-            'Rc gives only shared access, so its value cannot be changed',
+            'Rc gives only shared access to its value',
             'push_str requires the String to be cloned first',
             'Rc values must be dereferenced with * before any call',
             'A String cannot be stored inside an Rc',
@@ -3467,7 +3476,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'It allows the shared value to be changed',
             'It avoids counting owners entirely',
             'It copies the value for each owner',
-            'Its clones may be shared with other threads safely',
+            'Its clones can be shared across threads',
           ],
           3,
           'Atomic counting is what makes it safe for threads to share ownership.',
@@ -3477,7 +3486,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'A full copy of the value on every clone',
             'An extra thread that manages the count',
-            'Atomic count updates, which are slower than plain ones',
+            'Slower, atomic updates to the count',
             'Nothing; Arc is always the faster choice',
           ],
           2,
@@ -3579,7 +3588,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The value T itself, copied out of the allocation',
             'An Rc that is guaranteed to be valid',
-            'Option<Rc<T>>: Some while a strong owner exists, else None',
+            'Option<Rc<T>>; None once the value is gone',
             'A bool saying whether the value still exists',
           ],
           2,
@@ -3588,7 +3597,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does a Weak pointer not keep its value alive?',
           [
-            'It is not counted in strong_count, which decides when to free',
+            'Only the strong count decides when to free',
             'It copies the value, so the original may be freed',
             'It holds a borrow that ends on the next line',
             'Weak pointers always free the value first',
@@ -3646,7 +3655,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'While code holds the Rc returned by a successful upgrade, what is guaranteed?',
           [
             'The value is freed when the Weak is dropped',
-            'The value stays alive at least as long as that Rc',
+            'The value stays alive while that Rc exists',
             'Other owners can no longer read the value',
             'The weak count drops to zero',
           ],
@@ -3681,7 +3690,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does Cell::get require the value type to be Copy?',
           [
-            'get returns a copy, never a reference to the inside',
+            'get returns a copy, never a reference',
             'Cell always stores its value on the heap',
             'Only Copy types can be changed at all',
             'get must also reset the cell to zero',
@@ -3912,7 +3921,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'When does try_borrow_mut return Err?',
           [
-            'While any borrow or borrow_mut guard is still alive',
+            'While any borrow or borrow_mut guard is alive',
             'When the value inside is zero',
             'When the RefCell was declared without mut',
             'After try_borrow was called and its guard dropped',
@@ -3949,7 +3958,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only the attempt made while guard existed fails, so 2 and 3 are added to 10.',
         ),
         choose(
-          'Inside try_add, when is the guard from Ok(mut value) released?',
+          'In try_add below, when is the guard from Ok(mut value) released?',
           [
             'Only when the program exits',
             'When the caller drops the RefCell',
@@ -3958,13 +3967,14 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           3,
           'The guard lives in value, which ends with its arm, so the next attempt is not blocked by it.',
+          'fn try_add(cell: &std::cell::RefCell<i32>, amount: i32) -> bool {\n    match cell.try_borrow_mut() {\n        Ok(mut value) => {\n            *value += amount;\n            true\n        }\n        Err(_) => false,\n    }\n}',
         ),
         choose(
           'Why might a program prefer try_borrow over borrow?',
           [
             'try_borrow is checked by the compiler instead',
             'borrow cannot read values stored inside a RefCell',
-            'A conflict is expected sometimes and should be handled, not crash',
+            'A conflict can be handled instead of crashing',
             'try_borrow clones the value so no guard exists',
           ],
           2,
@@ -4007,7 +4017,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The String itself, with no wrapper around it',
             'Nothing; join only waits for the thread',
-            'A Result holding the String, or Err if the thread panicked',
+            'A Result: the String, or Err on a panic',
             'An Option that is None while the thread still runs',
           ],
           2,
@@ -4056,7 +4066,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why is this program rejected?',
           [
             'Strings cannot be used by other threads at all',
-            'The thread might outlive text, so it cannot borrow it',
+            'The thread might outlive the borrowed text',
             'len cannot be called inside a closure',
             'spawn requires the closure to return ()',
           ],
@@ -4084,7 +4094,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Read it, since the closure only calls len',
             'Change it, and the thread sees the change',
             'Use it again after join hands it back',
-            'Nothing; it was moved into the thread’s closure',
+            'Nothing; it moved into the closure',
           ],
           3,
           'move transfers ownership into the closure even if the body only reads the value.',
@@ -4119,7 +4129,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Scoped threads copy every local variable they use',
             'Scoped threads run on the same thread as main',
-            'The scope waits for its threads, so the borrow stays valid',
+            'The scope waits for its threads to finish',
             'spawn threads may not read any data at all',
           ],
           2,
@@ -4160,15 +4170,16 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'The three threads in the example may finish in any order. Why is the output still fixed?',
+          'The three threads below may finish in any order. Why is the output still fixed?',
           [
             'Scoped threads always finish in the order they were spawned',
             'The scope sorts the results by finishing time',
-            'Results are collected by joining the handles in a fixed order',
+            'The handles are joined in a fixed order',
             'Each thread waits for the previous one to print',
           ],
           2,
           'The order of the results comes from the code that joins, not from the timing of the threads.',
+          'fn main() {\n    let words = ["red", "green", "blue"];\n    let lengths = std::thread::scope(|s| {\n        let first = s.spawn(|| words[0].len());\n        let second = s.spawn(|| words[1].len());\n        let third = s.spawn(|| words[2].len());\n        [first.join().unwrap(), second.join().unwrap(), third.join().unwrap()]\n    });\n    println!("{} {} {}", lengths[0], lengths[1], lengths[2]);\n}',
         ),
         predictOutput(
           'What does this program print?',
@@ -4181,7 +4192,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A scope spawns threads but never calls join on them. What happens at the end of the scope?',
           [
             'The scope waits for them before returning',
-            'The threads are stopped where they are',
+            'The unjoined threads are stopped where they are',
             'The program exits without waiting',
             'The compiler rejects the scope',
           ],
@@ -4224,7 +4235,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What does m.lock() do while another thread holds the lock?',
           [
             'Returns Err immediately without waiting',
-            'Waits for the release, then returns a guard',
+            'Waits, then returns a guard',
             'Returns a copy of the protected value',
             'Panics with a deadlock error message',
           ],
@@ -4237,7 +4248,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'When unlock is called on the Mutex',
             'Only when the Mutex itself is dropped',
             'After a fixed timeout',
-            'When the guard returned by lock is dropped',
+            'When the guard from lock is dropped',
           ],
           3,
           'The guard represents the held lock; dropping it unlocks.',
@@ -4288,7 +4299,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Arc is what makes the value changeable',
             'A Mutex cannot be created without an Arc',
-            'Each thread needs its own handle to one Mutex',
+            'So each thread can own a handle to it',
             'Arc lets every lock call skip the wait',
           ],
           2,
@@ -4383,7 +4394,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The channel holds too many messages',
             'for loops can never end on a receiver',
-            'A sender, like tx in main, is still alive',
+            'A sender is still alive somewhere',
             'The receiver was cloned by mistake',
           ],
           2,
@@ -4447,7 +4458,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What do atomic loads and stores guarantee that plain unsynchronized reads and writes from several threads do not?',
           [
             'That threads see writes in the order of their thread ids',
-            'No data race: each access happens as one indivisible step',
+            'No data race: each access is one indivisible step',
             'That the value never changes once stored',
             'That all memory written before the store is visible too',
           ],
@@ -4487,7 +4498,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Two threads each run let v = X.load(Relaxed); X.store(v + 1, Relaxed); on a shared atomic starting at 0. After both finish, what can X hold?',
           [
-            '1 or 2, since a store can land between a load and a store',
+            '1 or 2, as the steps can interleave',
             'Always 2, because each access is atomic',
             'Always 1, because the second store is ignored',
             '0, because Relaxed stores may be discarded',
@@ -4677,7 +4688,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'load results cannot be compared with ==',
             'store always fails right after a load',
-            'Another thread can change x between the load and the store',
+            'Another thread can change x in between',
             'compare_exchange skips the comparison to be faster',
           ],
           2,
@@ -4712,7 +4723,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Store the new value anyway with store',
             'Give up, since another thread owns the value',
             'Retry with the same expected value as before',
-            'Recompute the new value from actual and try again',
+            'Recompute from actual and try again',
           ],
           3,
           'The update must be based on the value that is really there now.',
@@ -4754,7 +4765,7 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'In the example, what guarantees that main prints 42 rather than 0?',
+          'In the program below, what guarantees that main prints 42 rather than 0?',
           [
             'Its Acquire load read the value written by the Release store',
             'DATA is written before READY in the source, so order is automatic',
@@ -4763,6 +4774,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           0,
           'The release/acquire pair is what carries the earlier write across threads; join happens too late to matter.',
+          'use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};\n\nstatic DATA: AtomicU32 = AtomicU32::new(0);\nstatic READY: AtomicBool = AtomicBool::new(false);\n\nfn main() {\n    let writer = std::thread::spawn(|| {\n        DATA.store(42, Ordering::Relaxed);\n        READY.store(true, Ordering::Release);\n    });\n    while !READY.load(Ordering::Acquire) {}\n    println!("{}", DATA.load(Ordering::Relaxed));\n    writer.join().unwrap();\n}',
         ),
         choose(
           'Which ordering belongs on the store that announces that the data is ready?',
@@ -4817,7 +4829,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'The data is ready, but the flag is stale',
             'The data is certainly still zero',
             'The writer has already finished',
-            'Nothing; it must not assume the data is ready',
+            'Nothing; the data may not be ready',
           ],
           3,
           'Only observing the released value creates the guarantee.',
@@ -4879,7 +4891,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Rc values always live on the stack',
             'Rc values cannot be cloned at all',
             'Rc requires its T to be a Copy type',
-            'Its owner count is not updated atomically',
+            'Its count updates are not atomic',
           ],
           3,
           'Clones in two threads could update the plain count at the same time.',
@@ -4889,7 +4901,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Capturing any String value at all',
             'Returning a value from the thread',
-            'Capturing borrows of local variables',
+            'Borrowing local variables',
             'Using integers inside the thread',
           ],
           2,
@@ -4980,7 +4992,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two scoped threads both borrow a std::cell::Cell<u32>. Why is that rejected?',
           [
             'Cell values cannot be borrowed at all',
-            'Cell is not Sync; unlocked changes through & would race',
+            'Cell is not Sync, so &Cell cannot be shared',
             'Scoped threads may only borrow integers',
             'Cell is not Send, so it cannot exist in main',
           ],
@@ -5033,7 +5045,7 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'Removing T: Sync from split_len makes it fail to compile. Why?',
+          'Removing T: Sync from split_len below makes it fail to compile. Why?',
           [
             'Sharing &[T] across threads needs T: Sync',
             'len can only be called on Sync types',
@@ -5042,6 +5054,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           0,
           'Without the bound, T might be something like Cell that is unsafe to share.',
+          'fn split_len<T: Sync>(items: &[T]) -> (usize, usize) {\n    let mid = items.len() / 2;\n    std::thread::scope(|s| {\n        let left = s.spawn(|| items[..mid].len());\n        let right = s.spawn(|| items[mid..].len());\n        (left.join().unwrap(), right.join().unwrap())\n    })\n}',
         ),
         predictOutput(
           'What does this program print?',
@@ -5065,7 +5078,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Can a std::sync::Arc<std::cell::RefCell<u32>> be sent to another thread?',
           [
             'Yes: Arc makes anything thread-safe',
-            'No: Arc<T> is Send only if T is Sync, and RefCell is not',
+            'No: RefCell is not Sync, so the Arc is not Send',
             'Yes, because RefCell checks borrows at run time',
             'No: an Arc can never be sent between threads',
           ],
@@ -5157,7 +5170,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A plain std::sync::Mutex<u32> created in main is captured by the first of four move closures. What goes wrong?',
           [
             'A Mutex cannot be used from a spawned thread',
-            'That closure takes ownership, so no other worker can use it',
+            'That closure owns it, so no other worker can use it',
             'lock works only on the thread that created the Mutex',
             'A Mutex can be locked only once in total',
           ],
@@ -5172,7 +5185,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'All three pieces are appended under the lock, giving 2 + 3 + 1 bytes.',
         ),
         choose(
-          'In that program, which statement about the final text is true?',
+          'In the program below, which statement about the printed text is true?',
           [
             'It is always exactly "abcdef"',
             'Length 6, with the pieces in any order',
@@ -5181,6 +5194,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           1,
           'Each push_str happens whole under the lock, but the threads may take the lock in any order.',
+          'fn main() {\n    let text = std::sync::Arc::new(std::sync::Mutex::new(String::new()));\n    let mut handles = Vec::new();\n    for piece in ["ab", "cde", "f"] {\n        let text = std::sync::Arc::clone(&text);\n        handles.push(std::thread::spawn(move || text.lock().unwrap().push_str(piece)));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", text.lock().unwrap());\n}',
         ),
       ],
     },
@@ -5229,7 +5243,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A function holds let mut g = m.lock().unwrap(); and then calls a helper that also locks m. How can it be fixed?',
           [
-            'End g’s scope first, or change the value through g',
+            'End g’s scope first, or work through g',
             'Call the helper twice so the second call succeeds',
             'Declare m with let mut',
             'Clone the Mutex before calling the helper',
@@ -5258,7 +5272,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'A data race on the values in A and B',
             'A panic that unwrap reports at once',
-            'A deadlock: neither thread can ever continue',
+            'A deadlock: neither can continue',
             'Ordinary waiting that resolves itself',
           ],
           2,
@@ -5316,7 +5330,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let base = 5;\n    let mut fut = Box::pin(async move { base * 3 });\n    let mut cx = Context::from_waker(Waker::noop());\n    if let Poll::Ready(v) = fut.as_mut().poll(&mut cx) {\n        println!("{}", v + 1);\n    }\n}',
           ['15', '18', '5', '16'],
           3,
-          'async move captures base; polling runs the body, which produces 15.',
+          'async move captures base; polling runs the body, which produces 15, and main prints 15 + 1.',
         ),
         choose(
           'Why does Pin::new(&mut fut).poll(&mut cx) fail to compile when fut is an async block?',
@@ -5332,7 +5346,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What does Box::pin(fut) return?',
           [
-            'A Pin<Box<F>> owning the future on the heap',
+            'A Pin<Box<F>> owning the future',
             'A Box<F> that can be moved out freely',
             'The future’s output, after polling it once',
             'A Pin<&mut F> borrowing a local variable',
@@ -5373,7 +5387,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Heap memory can never be moved',
             'Moving it would run its body a second time',
-            'It may hold references to its own local variables',
+            'It may hold references into itself',
             'The Waker stores the future’s address',
           ],
           2,
@@ -5384,7 +5398,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'pin! allows moving the future later; Box::pin does not',
             'Box::pin polls the future immediately',
-            'Box::pin pins on the heap; pin! pins in the current stack frame',
+            'Box::pin pins on the heap; pin! on the stack',
             'They are identical; both allocate on the heap',
           ],
           2,
@@ -5481,7 +5495,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A future returns Poll::Pending without waking or storing the waker. What can happen under a real executor?',
           [
-            'The task is never polled again and never finishes',
+            'The task may never be polled again',
             'The executor polls it again immediately anyway',
             'The future is dropped and its output is 0',
             'The compiler rejects the poll method',
@@ -5495,7 +5509,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Call wake_by_ref in a loop until the message arrives',
             'Block the thread until the message arrives',
             'Return Ready with a placeholder value instead',
-            'Store cx.waker().clone() where the message handler will wake it',
+            'Store cx.waker().clone() for the handler to wake',
           ],
           3,
           'The event source should wake the task exactly when progress becomes possible.',
@@ -5621,7 +5635,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'await polls the future on a new thread',
             'await never polls the inner future',
-            'await suspends the task instead of spinning',
+            'await suspends instead of spinning',
             'They are the same; await is a busy loop',
           ],
           2,
@@ -5705,26 +5719,28 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'In the example, why is saved = &temporary accepted although temporary goes out of scope?',
+          'In the program below, why is saved = &temporary accepted although temporary goes out of scope?',
           [
             'The compiler extends temporary to the end of main',
             'temporary is copied into saved',
-            'Raw pointers carry no lifetime, so no borrow is checked',
+            'Raw pointers carry no lifetime to check',
             'Inner blocks do not end variable lifetimes',
           ],
           2,
           'Only references are checked by the borrow checker; a raw pointer is an unchecked address.',
+          'fn main() {\n    let saved: *const i32;\n    {\n        let temporary = 10;\n        saved = &temporary;\n    }\n    println!("{}", saved.is_null());\n}',
         ),
         choose(
-          'The same program declares let saved: &i32; instead. What happens?',
+          'In the program below, saved is a reference rather than a raw pointer. What happens?',
           [
-            'It compiles and prints false',
-            'It compiles, but saved becomes null',
+            'It compiles and prints 10',
+            'It compiles, but saved becomes a null reference',
             'It panics when the inner block ends',
             'Rejected: temporary does not live long enough',
           ],
           3,
           'With a reference, the compiler sees that the borrow is used after its target is dropped.',
+          'fn main() {\n    let saved: &i32;\n    {\n        let temporary = 10;\n        saved = &temporary;\n    }\n    println!("{}", saved);\n}',
         ),
         choose(
           'What may safe code do with a raw pointer that might dangle?',
@@ -5732,7 +5748,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Read through it, since creating it was safe',
             'Nothing; the program is rejected',
             'Read through it only inside the original block',
-            'Hold, copy, and compare it, but not read through it',
+            'Hold, copy, and compare it, but not read it',
           ],
           3,
           'Handling the address is harmless; dereferencing it is what needs a validity guarantee.',
@@ -5770,7 +5786,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The check returns early for an empty slice, so the raw read happens only when an element exists.',
         ),
         choose(
-          'Why does first check values.is_empty() before reading *values.as_ptr()?',
+          'Why does first below check values.is_empty() before reading through values.as_ptr()?',
           [
             'as_ptr panics when the slice is empty',
             'is_empty must be called before entering unsafe',
@@ -5779,13 +5795,14 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           3,
           'The pointer of an empty slice is not null, but there is no initialized value behind it.',
+          'fn first(values: &[i32]) -> Option<i32> {\n    if values.is_empty() {\n        return None;\n    }\n    let p = values.as_ptr();\n    Some(unsafe { *p })\n}',
         ),
         choose(
           'What does writing unsafe { *p } promise about p: *const i32?',
           [
             'It was created inside the same unsafe block',
             'The value behind it is not zero',
-            'It was compared with another pointer first',
+            'It was compared with another valid pointer first',
             'It points to a live, aligned, initialized i32',
           ],
           3,
@@ -5819,7 +5836,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The last value stored there, guaranteed',
             'A compile error from the borrow checker',
-            'Undefined behavior: the target no longer exists',
+            'Undefined behavior: the target is gone',
             'Zero, because dead locals are cleared',
           ],
           2,
@@ -5841,7 +5858,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Read *p from std::ptr::null()',
           ],
           2,
-          'Only the first reads while the target is alive and in place.',
+          'Only reading while x is still in scope uses a target that is alive and in place.',
         ),
         predictOutput(
           'What is the output of this program?',
@@ -5881,7 +5898,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'from_raw_parts only accepts lengths up to 3',
             'The pointer must point to the last element',
             'It is fine; the extra elements read as zero',
-            'The slice would cover memory past the end of the array',
+            'It would read past the end of the array',
           ],
           3,
           'The length promises five initialized elements, but only three exist.',
@@ -5921,21 +5938,22 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'Why does first_half take &[u8] and return &[u8]?',
+          'Why does first_half below take &[u8] and return &[u8]?',
           [
             'from_raw_parts only works inside functions',
             'Returning a slice makes the unsafe block safe',
-            'Elision ties the result’s lifetime to the input',
+            'Elision ties the result to the input',
             'It lets the function free the input slice',
           ],
           2,
           'The signature hands the lifetime question back to the compiler.',
+          'fn first_half(values: &[u8]) -> &[u8] {\n    let len = values.len() / 2;\n    unsafe { std::slice::from_raw_parts(values.as_ptr(), len) }\n}',
         ),
         choose(
           'A slice built with from_raw_parts is alive while code writes to the same elements through a &mut. What is the problem?',
           [
             'The writes are ignored until the slice is dropped',
-            'The slice and the &mut alias, which is undefined behavior',
+            'The slice and the &mut alias: undefined behavior',
             'The slice sees the old values, which is allowed',
             'The compiler rejects the &mut automatically',
           ],
@@ -5987,15 +6005,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'left[2] is data[2] and right[0] is data[3]; both halves may be used at once.',
         ),
         choose(
-          'Why does split_mut clamp mid with mid.min(values.len())?',
+          'Why does split_mut below clamp mid with mid.min(values.len())?',
           [
             'from_raw_parts_mut requires mid to be even',
-            'A larger mid would start the right half past the end',
+            'Otherwise a half could lie past the end',
             'It keeps the left half shorter than the right',
             'Only for speed; any mid would be safe',
           ],
           1,
           'Without the clamp, a caller could make the unsafe code build an out-of-bounds slice.',
+          'fn split_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {\n    let mid = mid.min(values.len());\n    let len = values.len();\n    let p = values.as_mut_ptr();\n    unsafe {\n        (\n            std::slice::from_raw_parts_mut(p, mid),\n            std::slice::from_raw_parts_mut(p.add(mid), len - mid),\n        )\n    }\n}',
         ),
         choose(
           'Why can’t safe Rust return (&mut values[..mid], &mut values[mid..]) directly?',
@@ -6036,7 +6055,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The right half is one short, which is harmless',
             'p.add cannot take a subtraction',
-            'The halves overlap, giving two &mut to one element',
+            'The halves overlap, so one element has two &mut',
             'Nothing, as long as mid is at least 1',
           ],
           2,
@@ -6046,7 +6065,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'split_mut returns (&mut [i32], &mut [i32]) from values: &mut [i32]. What does that signature prevent?',
           [
             'Writing to both halves in one function',
-            'Using values directly while either half is alive',
+            'Using values while either half is alive',
             'Calling split_mut twice on the same array',
             'Reading the halves after changing them',
           ],
@@ -6106,7 +6125,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'repr(C) always makes the struct smaller',
             'Without it, Rust structs cannot hold integers',
-            'C expects fields in declared order with C’s padding rules',
+            'C expects its own field order and padding',
             'repr(C) turns the fields into C strings',
           ],
           2,
@@ -6159,7 +6178,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'u32 fields are faster for C to read',
             'repr(C) only accepts unsigned fields',
             'Variable-size fields cannot be printed',
-            'Both sides then agree on the field’s exact size',
+            'Both sides agree on its exact size',
           ],
           3,
           'A mismatch in field size would shift every following field.',
@@ -6168,7 +6187,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two repr(C) structs have the same fields in different orders. What can differ between them?',
           [
             'The field offsets, and possibly the total size',
-            'Nothing; repr(C) sorts fields by size',
+            'Nothing; repr(C) sorts the fields by their size',
             'Only the field names that C sees',
             'Only the alignment of the first field',
           ],
@@ -6234,7 +6253,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'An unsafe block around every call',
             'A #[link] attribute naming a C library',
-            'Nothing special; it is an ordinary safe call',
+            'Nothing; it is an ordinary safe call',
             'Converting the arguments to C strings',
           ],
           2,
@@ -6342,7 +6361,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The bytes o and k, without the nul',
             'The bytes o, k, and the nul',
-            'An owned String containing ok',
+            'An owned String containing the text ok',
             'The number 2, its length',
           ],
           0,

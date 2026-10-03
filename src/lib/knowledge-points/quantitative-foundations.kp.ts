@@ -817,8 +817,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'They are independent',
             'Neither can affect the other',
-            'They have equal means',
-            'There is little linear association, though a curved one is possible',
+            'They have equal means and similar spreads',
+            'They have little linear association',
           ],
           3,
           'r near 0 rules out only a linear trend.',
@@ -1844,7 +1844,7 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'A model predicts p = 0.5 for every example. What is its cross-entropy on each one?',
-          ['ln 2 ≈ 0.693', '0.5', '0', '1'],
+          ['ln 2 ≈ 0.693', '0.5', 'ln 0.5 ≈ −0.693', '1'],
           0,
           'Either label receives probability 0.5, and −ln(0.5) = ln 2.',
         ),
@@ -1922,10 +1922,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'f(2) = 9 and f(5) = 9. What does this show?',
           [
-            'f is not a function',
+            'f is not a function, since the output 9 repeats',
             'f must be constant',
             'f(9) = 2',
-            'Two inputs share an output, which a function allows',
+            'Two inputs share an output, which is allowed',
           ],
           3,
           'Only one input with two outputs would break the definition.',
@@ -2669,7 +2669,12 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'f(x) = x⁵. Where does f′(x) equal 5?',
-          ['At x = 1 and x = −1', 'At x = 5', 'At x = 0', 'Nowhere'],
+          [
+            'At x = 1 and x = −1',
+            'At x ≈ 1.5 and x ≈ −1.5',
+            'At x = 0',
+            'At x = 1 only',
+          ],
           0,
           'f′(x) = 5x⁴ = 5 when x⁴ = 1.',
         ),
@@ -2832,7 +2837,12 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'h(x) = 3x(x² − 1). Which expression is h′(x)?',
-          ['3(x² − 1) + 3x(2x)', '3 × 2x', '3x(2x)', '3(x² − 1)'],
+          [
+            '3(x² − 1) + 3x(2x)',
+            '3 × 2x',
+            '3(x² − 1) + 3x(2x − 1)',
+            '3(x² − 1)',
+          ],
           0,
           'f = 3x and g = x² − 1, so f′g + fg′ = 3(x² − 1) + 3x(2x).',
         ),
@@ -2905,7 +2915,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'When evaluating L(w) = (w − 4)² at w = 6, which step comes first?',
           [
             'Squaring 6',
-            'Squaring 4',
+            'Squaring 6 and 4 separately, then subtracting',
             'Multiplying 6 by 2',
             'Computing the inner value 6 − 4 = 2',
           ],
@@ -3110,8 +3120,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why does ∂L/∂w contain the factor x while ∂L/∂b does not?',
           [
             'The inner derivative of wx + b is x for w and 1 for b',
-            'x is the target value',
-            'b is always zero',
+            'x comes from the outer derivative of the square',
+            'b is held constant, so its derivative is zero',
             'Squared error ignores b',
           ],
           0,
@@ -3483,7 +3493,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'f′(x) = 3x². Is x = 0 a minimum of f?',
           [
-            'Yes',
+            'Yes: f′ is never negative, so no value of f is below f(0)',
             'No, it is a maximum',
             'Yes, because f′(0) = 0',
             'No: f′ is positive on both sides, so f keeps rising',
@@ -3556,7 +3566,7 @@ export const knowledgePoints: KnowledgePointModule = {
       questions: [
         choose(
           'Which function is convex?',
-          ['−x²', '(x + 4)²', 'x³', '−eˣ'],
+          ['−(x + 4)²', '(x + 4)²', 'x³', '−eˣ'],
           1,
           'An upward parabola is bowl-shaped everywhere.',
         ),
@@ -3811,7 +3821,7 @@ export const knowledgePoints: KnowledgePointModule = {
         predictOutput(
           'What does this program print?',
           'a = [1, 2]\nb = [3, 4]\nprint(a + b)',
-          ['[4, 6]', '10', '[3, 8]', '[1, 2, 3, 4]'],
+          ['[4, 6]', '[[1, 2], [3, 4]]', '[3, 8]', '[1, 2, 3, 4]'],
           3,
           'For Python lists, + joins them; it is not vector addition.',
         ),
@@ -4192,7 +4202,7 @@ export const knowledgePoints: KnowledgePointModule = {
         predictOutput(
           'What does this program print?',
           'a = [2, 2]\nb = [0, 3]\ndot = a[0] * b[0] + a[1] * b[1]\nnorm_a = (a[0] ** 2 + a[1] ** 2) ** 0.5\nnorm_b = (b[0] ** 2 + b[1] ** 2) ** 0.5\nprint(dot / (norm_a * norm_b))',
-          ['6', '0.5', '0.7071067811865475', '1.0'],
+          ['0.08333333333333333', '0.5', '0.7071067811865475', '1.0'],
           2,
           '6 / (√8 × 3) = 1 / √2 ≈ 0.707: an angle of 45°.',
         ),
@@ -4525,7 +4535,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A is 1 × 3 and x has 3 coordinates. What is Ax?',
           [
-            'A single number, as a 1-coordinate vector',
+            'A 1-coordinate vector',
             'A 3-coordinate vector',
             'A 1 × 3 matrix',
             'Undefined',
@@ -4880,8 +4890,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A = [[2, 1], [1, 2]]. Is [1, 2] an eigenvector?',
           [
-            'Yes, with eigenvalue 4',
-            'Yes, with eigenvalue 2',
+            'Yes, with eigenvalue 4, since 4 = 4 × 1',
+            'Yes: A[1, 2] = [2, 4], so the eigenvalue is 2',
             'No, because A[1, 2] = [4, 5] is not a multiple of [1, 2]',
             'Only after normalizing it',
           ],
@@ -4899,8 +4909,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'A0 = λ0 holds for every λ, so it identifies nothing',
             'It has no coordinates',
-            'A cannot multiply it',
-            'Its norm is 1',
+            'Av = λv has no solution λ when v = 0',
+            'Its eigenvalue would always be 0',
           ],
           0,
           'Every matrix sends 0 to 0, so it would fit every eigenvalue.',
@@ -4941,7 +4951,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Every determinant is 0',
             'A − λI sends a nonzero v to 0, so it has no inverse',
-            'λ must equal 0',
+            'Av = λv makes A − λI the zero matrix',
             'A must be the identity',
           ],
           1,

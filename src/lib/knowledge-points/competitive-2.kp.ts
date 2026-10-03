@@ -2241,7 +2241,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'It accepts heaps with a small leaf',
             'It rejects valid heaps whose siblings are out of order',
             'It never looks at the root',
-            'It needs a sorted copy first',
+            'It accepts lists where some child is smaller than its parent',
           ],
           1,
           'A heap such as [1, 5, 2] decreases from 5 to 2 between siblings, yet satisfies every parent–child rule.',
@@ -2445,7 +2445,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why use heapq.heappush instead of heap.append for a heap?',
           [
             'append raises an error on heaps',
-            'heappush also sorts the entire list',
+            'heappush sorts the entire list after adding the new value',
             'append removes the current minimum',
             'heappush restores the parent–child rule after adding',
           ],
@@ -2591,7 +2591,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A program must repeatedly remove the cheapest pending job while new jobs keep arriving. Why is a heap better than sorting after every arrival?',
           [
             'Each push and pop costs O(log n) instead of a full re-sort',
-            'A heap keeps every job in ascending order',
+            'A heap keeps every job in ascending order, so the cheapest is first',
             'Sorting cannot handle duplicate costs',
             'A heap removes the newest job first',
           ],
@@ -3410,7 +3410,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What makes a case a base case?',
           [
-            'It is the largest input allowed',
+            'It is the input that the first call receives from the caller',
             'It calls the function twice',
             'It prints its argument',
             'It returns without making another recursive call',
@@ -3475,7 +3475,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A power function returns 1 when exponent == 0 and otherwise halves the exponent. Where must the zero test go?',
           [
-            'After the halving step',
+            'After the halving step, once the exponent has reached 0',
             'Before any step that shrinks the exponent',
             'At the end of the function',
             'Inside the multiplication',
@@ -4423,7 +4423,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why does the recursive call use visit(index + 1) rather than visit(start)?',
           [
             'To count the solutions',
-            'To stop the recursion at depth 1',
+            'To let each index be chosen again so repeated picks are allowed',
             'To reverse the final result',
             'To keep each path increasing so no combination repeats',
           ],
@@ -4558,7 +4558,12 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'Listing every k-element combination of n indices returns C(n, k) lists of length k. Which cost bound fits?',
-          ['O((k + 1) · C(n, k))', 'O(n)', 'O(k log n)', 'O(n^k · k!)'],
+          [
+            'O((k + 1) · C(n, k))',
+            'O(C(n, k) + k)',
+            'O(k log n)',
+            'O(n^k · k!)',
+          ],
           0,
           'Copying each of the C(n, k) results costs O(k + 1), and that output dominates the search.',
         ),
@@ -4665,7 +4670,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Comparing a number with None raises TypeError',
             'None is treated as zero',
             'It makes the test faster',
-            'None is larger than every number',
+            'None is larger than every number, so every key would be rejected',
           ],
           0,
           'Python cannot order an int and None, so the missing bound must be skipped rather than compared.',
@@ -4737,7 +4742,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Every right-subtree key is larger than the node’s key',
             'The right subtree is always empty',
             'Right children are visited last',
-            'Smaller keys are stored only at leaves',
+            'Smaller keys are stored only in the leaves of the left subtree',
           ],
           0,
           'The ordering rule covers the whole right subtree, so nothing there is smaller.',
@@ -4937,7 +4942,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which condition safely decides whether key should replace best?',
           [
-            'key > best or best is None',
+            'key <= limit and (key > best or best is None)',
             'key <= limit and key > best',
             'key <= limit and (best is None or key > best)',
             'best is None and key <= limit',
@@ -5090,7 +5095,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The current key is 50 and the limit is 25. Why go left without recording 50?',
           [
             '50 is too large, and only smaller keys can qualify',
-            '50 might still be the answer later',
+            '50 might still be the answer if no key on the left fits the limit',
             'The right subtree is always empty',
             'Left keys are larger than 50',
           ],
@@ -5429,7 +5434,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'After the root is popped and its two children pushed, the stack holds [right, left]. When is right popped?',
           [
-            'Immediately after left',
+            "Right after left is popped, before left's children",
             'Before left',
             'Never',
             'After the whole left subtree is popped',
@@ -5558,7 +5563,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why can’t the root’s height be computed first?',
           [
-            'The root has no key',
+            "Its height is the tree's node count, which is not known yet",
             'It needs its children’s heights, which are unknown yet',
             'Python evaluates trees from the bottom',
             'Roots always have height 1',
@@ -5880,7 +5885,7 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'Which construction gives n independent empty lists?',
-          ['[[]] * n', '[] * n', '[[] for _ in range(n)]', 'list([] * n)'],
+          ['[[]] * n', '[] * n', '[[] for _ in range(n)]', 'list([[]] * n)'],
           2,
           'The comprehension creates a new list on every iteration; [] * n is just an empty list.',
         ),
@@ -6036,7 +6041,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'It copies only the outer list; inner lists stay shared',
             'It reverses every edge',
             'It removes duplicate edges',
-            'It raises an error on nested lists',
+            'It makes a deep copy, but append still edits the original graph',
           ],
           0,
           'The new outer list still holds the original inner lists, and append changes one of them.',
@@ -7010,7 +7015,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'popleft does not shift the remaining entries',
             'deque keeps its entries sorted',
-            'pop(0) removes the newest entry',
+            'pop(0) takes the newest entry, which turns the queue into a stack',
             'deque cannot hold duplicates',
           ],
           0,
@@ -7664,7 +7669,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'All vertices are processed',
             'The remaining graph contains a directed cycle',
-            'Some edge has a negative weight',
+            'Some remaining vertex has no edges, so it can never be released',
             'The graph is undirected',
           ],
           1,
@@ -7915,7 +7920,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '2 has the largest label',
             '2 has indegree 0, and no edge will ever release it',
             'Vertex 0 is not ready',
-            'The queue must hold every vertex',
+            'The queue must start with every vertex, ready or not',
           ],
           1,
           'A vertex enters the queue later only when an edge into it is released; 2 has no such edge.',
@@ -8067,7 +8072,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why must the test read current is None or candidate < current, in that order?',
           [
             'Comparing a number with None raises TypeError',
-            'None means distance 0',
+            'None counts as distance 0, so any candidate would look worse',
             'or always evaluates both sides',
             'It makes the candidate smaller',
           ],
@@ -8140,7 +8145,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'A better route was pushed while the older entry stayed queued',
             'The vertex has two incoming edges',
             'heapq duplicates every push',
-            'The vertex is its own neighbor',
+            'Every vertex is pushed once for each neighbor before the search starts',
           ],
           0,
           'Nothing removes the old entry when the improved one is pushed.',
@@ -8224,7 +8229,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What goes wrong if stale entries are expanded anyway?',
           [
             'Edges are relaxed again from an outdated distance, wasting work',
-            'Distances become too small',
+            'Distances can shrink below the true shortest cost and give wrong answers',
             'The heap loses its minimum',
             'Vertices become unreachable',
           ],
@@ -8342,7 +8347,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The smallest heap entry is stale. What happens next?',
           [
             'It is expanded anyway',
-            'Every distance is reset',
+            'It is pushed back with its current distance and popped again',
             'It is discarded and the next entry popped',
             'The search stops',
           ],
@@ -8473,7 +8478,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'How many times is each reachable vertex’s edge list scanned?',
           [
-            'Once per heap entry for it',
+            'Once per heap entry for it, stale ones included',
             'Once per incoming edge',
             'Once, when its current entry is popped',
             'Twice',
@@ -8545,7 +8550,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[0, 2, None]',
             '[0, 2, -1]',
             'rejected: negative weight',
-            '[0, 2, 0]',
+            'rejected: ValueError: negative weight',
           ],
           2,
           'Weights are checked while the graph is built, before any search, so the unreachable negative self-loop is still rejected.',
@@ -8554,7 +8559,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why can a popped current distance be treated as final when all weights are nonnegative?',
           [
             'Other routes pass a vertex at least as far, and weights cannot reduce it',
-            'The heap stores each vertex only once',
+            'The heap holds each vertex only once, so a vertex can never be popped again',
             'Vertices are popped in index order',
             'Each edge is relaxed exactly once',
           ],
@@ -8563,7 +8568,7 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'With parallel edges allowed, which time bound fits the lazy-heap Dijkstra?',
-          ['O(V + E)', 'O(V · E)', 'O(V²)', 'O((V + E) log(V + E))'],
+          ['O(V + E)', 'O(V · E)', 'O((V + E) log V)', 'O((V + E) log(V + E))'],
           3,
           'Up to V + E heap entries are pushed and popped, each at logarithmic cost.',
         ),
@@ -8657,7 +8662,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A forest is a single chain of 100,000 vertices. Why is a recursive find risky in Python?',
           [
-            'It returns the wrong root',
+            'It returns the wrong root once the chain is longer than 1,000',
             'One call per link exceeds the recursion limit',
             'Recursion cannot read lists',
             'It changes the parent array',
@@ -8677,7 +8682,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The length of the path to the root, up to n',
             'O(1) always',
-            'O(log n) always',
+            "The number of vertices in v's set, since find visits each one",
             'O(n²)',
           ],
           0,
@@ -8734,7 +8739,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why does the second loop save next_vertex = result[vertex] before rewriting result[vertex]?',
           [
             'To count the set size',
-            'To find a second root',
+            'To undo the rewrite if the root turns out to be wrong',
             'To continue along the original path',
             'To sort the path',
           ],
@@ -8812,7 +8817,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Points v at its grandparent, shortening the path',
             'Makes v a root',
-            'Moves v to another set',
+            'Points v straight at the root, so the next find takes one step',
             'Swaps v with its parent',
           ],
           0,
@@ -8865,7 +8870,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A set of size 10 with root 4 is merged with a set of size 3 with root 7. What changes?',
           [
-            'parent[4] becomes 7',
+            'parent[4] becomes 7, and size[7] becomes 13',
             'Both roots point to 0',
             'size[7] becomes 13',
             'parent[7] becomes 4, and size[4] becomes 13',
@@ -8919,7 +8924,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What goes wrong if the same-root check is skipped and a root is joined with itself?',
           [
             'Its parent stays itself, but its size doubles',
-            'The root gets a new parent',
+            'The root becomes its own child, so find loops forever',
             'An IndexError is raised',
             'Nothing at all',
           ],
@@ -8989,7 +8994,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Nothing; they are already connected',
             'The count drops by one',
-            'Both get new roots',
+            'Their roots swap, and the count stays the same',
             'The count rises by one',
           ],
           0,
@@ -9439,7 +9444,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'After all candidates, an acyclic selection on 7 vertices has 5 edges. What does that mean?',
           [
             'It is a spanning tree',
-            'One more edge must be a self-loop',
+            'It spans all 7 vertices, but one edge is still missing',
             'Two components remain, so no spanning tree exists',
             'The total weight must be zero',
           ],
@@ -9466,7 +9471,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The edges form a cycle and vertex 3 is isolated',
             'The weights are not sorted',
-            'A spanning tree needs n edges',
+            'A spanning tree needs n edges, so one more edge would complete it',
             'Vertex 0 appears twice',
           ],
           0,
@@ -9648,7 +9653,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Kruskal has accepted n − 1 edges, and more candidates remain. Why can it stop?',
           [
             'Every remaining edge joins two vertices already connected',
-            'Heavier edges would lower the total',
+            'Heavier edges could still replace lighter ones and lower the total',
             'Sorting failed for the rest',
             'DSU cannot handle more unions',
           ],
