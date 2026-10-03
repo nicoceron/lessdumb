@@ -4,11 +4,13 @@ import {
   type CurriculumCatalog,
   type Skill,
 } from './curriculum';
+import { estimateCompletion, type CompletionEstimate } from './dashboard';
 import {
   coursePath,
   DAY_MS,
   getSkillState,
   isMastered,
+  isUnlocked,
   type Progress,
   type SkillProgress,
 } from './learning';
@@ -503,4 +505,45 @@ export function diagnosticProgress(
   return values.length
     ? values.filter((p) => !uncertain(p)).length / values.length
     : 1;
+}
+
+export interface PlacementReport {
+  placed: Skill[];
+  /** Ready-to-learn skills on the path: where learning starts. */
+  frontier: Skill[];
+  /** Unmastered path skills from other courses that the course builds on. */
+  supporting: Skill[];
+  estimate: CompletionEstimate;
+}
+
+/** What a finished diagnostic found, and where learning goes next. */
+export function placementReport(
+  progress: Progress,
+  diagnostic: Diagnostic,
+  dailyGoal: number,
+  now: Now = Date.now(),
+  catalog: CurriculumCatalog = defaultCatalog,
+): PlacementReport {
+  const model = pathModel(diagnostic.courseId, catalog);
+  const placed = new Set(diagnostic.placed ?? []);
+  const open = model.skills.filter(
+    (skill) => !isMastered(progress, skill.id, catalog),
+  );
+  const courseFirst = (a: Skill, b: Skill) =>
+    Number(b.courseId === diagnostic.courseId) -
+      Number(a.courseId === diagnostic.courseId) || a.order - b.order;
+  return {
+    placed: model.skills.filter((skill) => placed.has(skill.id)),
+    frontier: open
+      .filter((skill) => isUnlocked(progress, skill.id, catalog))
+      .sort(courseFirst),
+    supporting: open.filter((skill) => skill.courseId !== diagnostic.courseId),
+    estimate: estimateCompletion(
+      progress,
+      dailyGoal,
+      diagnostic.courseId,
+      now,
+      catalog,
+    ),
+  };
 }
