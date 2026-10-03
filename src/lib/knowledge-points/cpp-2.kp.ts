@@ -468,7 +468,7 @@ int main() {
           'Why does `++counts[value]` work even the first time value appears?',
           [
             'unordered_map stores a zero for every possible int in advance',
-            '[] inserts the missing key with a value-initialized count of 0 before ++ runs',
+            '[] inserts the key with count 0 before ++ runs',
             '++ on a missing entry throws, and the loop skips that value',
             'The compiler rewrites the expression as emplace(value, 1)',
           ],
@@ -524,7 +524,7 @@ int main() {
             '2, because the hash table keeps keys in ascending order',
             '9, because the first key inserted always comes first',
             '5, because hashing places the middle key at the front',
-            'Whichever key the hash table places first; do not rely on it',
+            'Whichever key hashing puts first',
           ],
           3,
           'unordered_map promises neither sorted nor insertion order. Its first element depends on hashing and bucket layout.',
@@ -533,7 +533,7 @@ int main() {
           'Which way of printing counts from an unordered_map gives the same output on every standard library?',
           [
             'Print entries from begin() to end(), which follows key order',
-            'Print the count of each key from a vector of queries, in order',
+            'Print counts for a fixed list of keys, in order',
             'Print begin()->first first, since it is the most common key',
             'Print entries in reverse, from the last bucket to the first',
           ],
@@ -641,7 +641,7 @@ int main() {
           'Why does the winner scan loop over the input vector rather than over the unordered_map?',
           [
             'An unordered_map cannot be iterated with a range-for loop',
-            'The input order is fixed, so ties resolve the same way everywhere',
+            'The input order is fixed, so ties resolve alike',
             'Iterating an unordered_map while reading counts erases them',
             'counts[vote] only compiles inside a loop over the vector',
           ],
@@ -1027,7 +1027,7 @@ int main() {
         choose(
           'A program checks 10,000 IDs against a list of 500 allowed IDs. Why build a std::set from the list first?',
           [
-            'Each check becomes a fast ordered lookup instead of a full scan',
+            'Each check is a fast lookup, not a full scan',
             'A set check also removes the matched ID from the allowed list',
             'An int cannot be compared directly with vector elements',
             'A set keeps the IDs in the order they were originally listed',
@@ -1119,7 +1119,7 @@ int main() {
           'Inside such a scan, the code calls insert(value) before testing contains(value). What goes wrong?',
           [
             'Nothing; the order of the two calls does not matter',
-            'contains is then always true, so every value looks like a repeat',
+            'contains is always true, so all look like repeats',
             'insert throws because the value is already present',
             'The set stops keeping its values sorted',
           ],
@@ -1310,7 +1310,7 @@ int main() {
           'A set holds {5, 10}. For the target 7, what do find(7) and lower_bound(7) return?',
           [
             'Both return end()',
-            'find returns end(); lower_bound refers to 10',
+            'find gives end(); lower_bound gives 10',
             'Both refer to 10',
             'find refers to 5; lower_bound refers to 10',
           ],
@@ -1497,7 +1497,7 @@ int main() {
         choose(
           'Why does `int best = heap.pop();` fail to compile?',
           [
-            'pop returns void; read top() before calling pop()',
+            'pop returns void; read top() first',
             'pop needs the index of the element to remove',
             'pop can be called only on an empty heap',
             'The result of pop must be stored with auto',
@@ -1817,7 +1817,7 @@ int main() {
         choose(
           'An exchange must match the highest bid first. Which heap fits?',
           [
-            'std::priority_queue<int>, the default max heap',
+            'The default max heap',
             'A std::greater<int> min heap',
             'A min heap with the bids negated twice',
             'Either; the heap direction only affects speed',
@@ -2404,7 +2404,7 @@ int main() {
         ),
         choose(
           'Which operation does std::queue<int> not provide?',
-          ['back', 'operator[]', 'size', 'pop'],
+          ['emplace', 'operator[]', 'size', 'pop'],
           1,
           'A queue exposes only its two ends; there is no access by position.',
         ),
@@ -3000,7 +3000,7 @@ int main() {
             'Nothing; sort returns a new sorted vector',
             'v holds only its distinct values, ascending',
             'v is now in descending order',
-            'v itself now holds its elements in ascending order',
+            'v is sorted ascending in place',
           ],
           3,
           'sort works in place through the iterators and returns nothing; ascending order is the default.',
@@ -3153,7 +3153,7 @@ int main() {
           [
             'It sorts ascending instead of descending, reversing the result',
             'It is slower than > but always produces the same order',
-            'It says equal elements come before each other, breaking strict ordering',
+            '>= says equal elements precede each other',
             'It removes equal elements, so duplicates disappear from the result',
           ],
           2,
@@ -3310,7 +3310,7 @@ int main() {
         choose(
           'Why does binary_search not fall back to checking every element when the input is unsorted?',
           [
-            'It compares only about log2(n) elements and relies on order to skip the rest',
+            'It checks about log2(n) elements, relying on order',
             'It checks every element, but only after first reversing the range',
             'It sorts a copy of the range first and then searches that copy',
             'It reports an error as soon as it meets an out-of-order pair',
@@ -3381,7 +3381,7 @@ int main() {
             'Sort before every query, then binary_search',
             'binary_search the unsorted vector',
             'Sort after all the queries are answered',
-            'Sort once, then binary_search for each query',
+            'Sort once, then binary_search each query',
           ],
           3,
           'One sort pays for all the queries; every other plan either repeats the sort or searches unsorted data.',
@@ -3448,7 +3448,7 @@ int main() {
         choose(
           'What is the third argument of std::accumulate?',
           [
-            'The starting value of the total, included in the result',
+            'The starting value of the total',
             'The number of elements to add, counted from first',
             'The index of the first element to include in the sum',
             'A value that is skipped whenever an element equals it',
@@ -3519,7 +3519,7 @@ int main() {
             'Nothing; the result is converted to double at the end',
             'accumulate cannot sum doubles',
             'The seed must be the first element',
-            'The running total is an int, so each partial sum loses its fraction',
+            'The total is an int, so fractions are lost',
           ],
           3,
           'The literal 0 is an int, so the total is an int throughout. Use 0.0.',
@@ -3654,7 +3654,7 @@ int main() {
         choose(
           'Why can std::remove not shrink the vector?',
           [
-            'It receives only iterators, so it cannot call the vector’s erase',
+            'It gets only iterators, not the vector',
             'Shrinking would invalidate the iterator that remove returns',
             'It shrinks the vector only when it is declared const',
             'It does shrink the vector, but only when nothing matched',
@@ -3749,7 +3749,7 @@ int main() {
             'v.erase(std::remove(v.begin(), v.end(), 0));',
           ],
           1,
-          'Erase from the logical end to the real end. The third form erases the kept values instead, and the last erases only one element.',
+          'Erase from the logical end to the real end. Erasing from v.begin() to that point removes the kept values instead, and erase with one iterator removes only one element.',
         ),
       ],
     },
@@ -3808,7 +3808,7 @@ int main() {
             'Nothing happens, because no element matches x',
             'It erases the last element of the vector',
             'It throws std::out_of_range for the missing value',
-            'It calls erase(end()), which is undefined behavior',
+            'It calls erase(end()): undefined behavior',
           ],
           3,
           'remove returns end() when nothing matches, and erasing the element at end() is invalid because there is none.',
@@ -3942,7 +3942,7 @@ int main() {
           [
             '9, the current value',
             '0, because captured copies start empty',
-            '2, the copy made when the lambda was created',
+            '2, the copy made at creation',
             '11, the sum of both values',
           ],
           2,
@@ -4019,7 +4019,7 @@ int main() {
             'total must be captured with auto to be changed',
             'Lambdas cannot contain more than one statement',
             'total is a parameter of the lambda, not a capture',
-            'A by-value capture is read-only unless the lambda is mutable',
+            'By-value captures are const unless mutable',
           ],
           3,
           'The captured copy is const inside an ordinary lambda.',
@@ -4171,7 +4171,7 @@ int main() {
           'Why does `[&count] { ++count; }` compile without mutable while `[count] { ++count; }` does not?',
           [
             'Reference captures are mutable copies, so nothing is const',
-            'The reference version changes the caller’s variable, not a copy',
+            'It changes the caller’s variable, not a copy',
             '++ is defined only for references, never for captured copies',
             'The value version needs a return statement to compile',
           ],
@@ -4206,7 +4206,7 @@ int main() {
           [
             'Lambdas cannot be returned from functions by value',
             'local must be declared const before it can be captured',
-            'local is destroyed when make returns, so the lambda dangles',
+            'local dies when make returns; the lambda dangles',
             'The lambda copies local twice, so the result is doubled',
           ],
           2,
@@ -4453,7 +4453,7 @@ int main() {
             'Both return the number of matching elements',
             'count_if returns the first match; find_if returns all matches',
             'Both return iterators to the first matching element',
-            'count_if returns a count; find_if returns the first match or end()',
+            'A count, and the first match or end()',
           ],
           3,
           'count_if examines every element; find_if stops at the first match.',
@@ -4510,7 +4510,7 @@ int main() {
           [
             'A reference to max that is read on every call',
             'A parameter named limit that callers must pass',
-            'A closure member named limit, set once from max * 2',
+            'A member limit, set once from max * 2',
             'A copy of max that updates whenever max changes',
           ],
           2,
@@ -4568,7 +4568,7 @@ int main() {
         choose(
           'Why does `[owner] { return *owner; }` fail to compile when owner is a std::unique_ptr<int>?',
           [
-            'Capturing by value would copy the unique_ptr, which is not allowed',
+            'The capture would copy the unique_ptr',
             'Lambdas cannot dereference pointers captured from main',
             'owner must be captured as [&owner] because it owns memory',
             'unique_ptr cannot be used inside any lambda body',
@@ -4580,7 +4580,7 @@ int main() {
           'After `auto f = [held = std::move(owner)] { return *held; };`, which statement about owner is true?',
           [
             'owner still points to the same int as held',
-            'owner is empty; dereferencing it is undefined behavior',
+            'owner is empty; *owner is undefined',
             'owner was destroyed and cannot be named any more',
             'owner holds a copy of the int',
           ],
@@ -4720,7 +4720,7 @@ int main() {
             'Converts both calls to double',
             'Uses one function that checks the type at run time',
             'Reports an error because T would have two types',
-            'Generates two functions, one for int and one for double',
+            'Generates one function per type',
           ],
           3,
           'Each distinct T produces its own instantiation at compile time.',
@@ -4788,7 +4788,7 @@ int main() {
         choose(
           'Why can one template return 3 for one call and 3.5 for another?',
           [
-            'Each call instantiates its own version, and int division truncates',
+            'The int version truncates its division',
             'Templates round their results to the nearest whole number',
             'The second call casts the result to double after dividing',
             'Templates compute in double and convert back for int callers',
@@ -4887,7 +4887,7 @@ int main() {
           'Why does add(1, 2.5) fail for `template<class T> T add(T a, T b)`?',
           [
             'Templates cannot take literal arguments such as 2.5',
-            'T is deduced as int and as double, and the two conflict',
+            'T is deduced as both int and double',
             'The sum of an int and a double would overflow T',
             'A double cannot be added to an int inside a template',
           ],
@@ -4985,7 +4985,7 @@ int main() {
             'They are one type with a run-time flag',
             'Slot<double> is derived from Slot<int>',
             'Slot<int> converts automatically to Slot<double>',
-            'They are two distinct types generated from one template',
+            'Two distinct types from one template',
           ],
           3,
           'Each template argument produces a separate class type.',
@@ -5143,7 +5143,7 @@ int main() {
           'A design stores every Counter<int>’s count in one global int. What goes wrong?',
           [
             'Globals cannot be used inside member functions of templates',
-            'All counters share one value, so updating one changes every counter',
+            'Every counter shares one value',
             'Each counter gets its own private copy of the global automatically',
             'Counter<int> and Counter<double> would stop compiling',
           ],
@@ -5372,7 +5372,7 @@ int main() {
         choose(
           'When is std::move the right tool rather than std::forward<T>?',
           [
-            'When the code owns a named object and is finished with it',
+            'When a named object is no longer needed',
             'When passing on a T&& parameter in a template',
             'Whenever the argument might be an lvalue',
             'Never; std::forward replaces std::move',
@@ -5466,7 +5466,7 @@ int main() {
           'remainder requires std::integral. What does the compiler report for remainder(7.5)?',
           [
             'Nothing; it returns 1.5',
-            'The call does not satisfy the std::integral constraint',
+            'An unsatisfied std::integral constraint',
             'Nothing; it truncates 7.5 to 7 and returns 1',
             'A run-time error when the call executes',
           ],
@@ -5566,7 +5566,7 @@ int main() {
           'A concept requires `{ v.size(); v[0]; }`. A type has size() but no operator[]. Does it satisfy the concept?',
           [
             'Yes; one valid requirement is enough',
-            'No; every listed requirement must be valid',
+            'No; every requirement must hold',
             'Yes, but only if size() returns 0',
             'It depends on the values stored',
           ],
@@ -5617,7 +5617,7 @@ int main() {
             'It returns 0, because int has no elements',
             'It returns 1, because an int is one value',
             'It returns 42, the value of the argument',
-            'The call is rejected: int does not satisfy HasSize',
+            'Rejected: int does not satisfy HasSize',
           ],
           3,
           'int has no size() member, so the constraint fails and the template is not used.',
@@ -5722,7 +5722,7 @@ int main() {
             'Each time the function runs, before the branch',
             'Only when the condition turns out to be true',
             'At link time, when the program is assembled',
-            'At compile time, when the template is instantiated',
+            'At compile time, per instantiation',
           ],
           3,
           'The condition must be a constant expression, and the choice is fixed per instantiation.',
@@ -5754,7 +5754,7 @@ int main() {
         choose(
           '`template<class T> T f(T v) { if (std::is_integral_v<T>) return v % 2; else return v; }` Why does f(2.5) fail to compile?',
           [
-            'A plain if keeps both branches, and v % 2 is invalid for double',
+            'A plain if compiles v % 2 for double too',
             'is_integral_v cannot be used as the condition of an if',
             'f must return int, so the double return path is rejected',
             'The else branch needs a cast back to T before returning',
@@ -5777,7 +5777,7 @@ int main() {
           'Only the int instantiation drops the last digit; the double passes through unchanged.',
         ),
         choose(
-          'Which change makes that function with the plain if compile for both int and double?',
+          '`template<class T> T f(T v) { if (std::is_integral_v<T>) return v % 2; else return v; }` fails to compile for double. Which change makes it compile for both int and double?',
           [
             'Make v a reference parameter',
             'Replace if with if constexpr',
@@ -6122,7 +6122,7 @@ int main() {
         choose(
           'A static_assert passes. What does it add to the program’s output?',
           [
-            'Nothing; it has no run-time effect',
+            'Nothing at run time',
             'Its message',
             'The digit 1',
             'A line saying the check passed',
@@ -6157,7 +6157,7 @@ int main() {
           [
             'static_assert(index < 4);',
             'static_assert(index == index);',
-            'static_assert(sizeof(int) >= 2);',
+            'static_assert(sizeof(int) > 0);',
             'static_assert(pick(0) == 0);',
           ],
           2,
@@ -6222,7 +6222,7 @@ int main() {
           'Which size is not fixed by the C++ standard?',
           [
             'sizeof(char)',
-            'sizeof(std::uint16_t)',
+            'sizeof(unsigned char)',
             'sizeof(std::int8_t)',
             'sizeof(long)',
           ],
@@ -6344,7 +6344,7 @@ int main() {
           '`int n = read_input(); constexpr int s = square(n);` Why does this not compile?',
           [
             'square cannot be called with a variable argument',
-            'n is not a constant, so square(n) cannot initialize a constexpr variable',
+            'n is not a constant, so s cannot be constexpr',
             'constexpr variables must be declared at namespace scope',
             'square returns int, which constexpr variables cannot hold',
           ],
@@ -6357,7 +6357,7 @@ int main() {
             'Yes; the compiler computes every call to it',
             'Yes, unless the function takes parameters',
             'No; constexpr functions run only at run time',
-            'No; only calls in constant contexts are guaranteed',
+            'No; only constant contexts guarantee it',
           ],
           3,
           'Calls with run-time arguments run normally; constant contexts such as static_assert force compile-time evaluation.',
@@ -6471,7 +6471,7 @@ int main() {
           [
             'It compiles and runs at run time, like constexpr',
             'It compiles, and sq(n) always returns 0',
-            'It is a compile error, because n is not a constant',
+            'A compile error: n is not a constant',
             'It is evaluated once, when f is first called',
           ],
           2,
@@ -6575,7 +6575,7 @@ int main() {
           'What does `constexpr auto values = table();` achieve?',
           [
             'table() runs again every time values is read',
-            'The table is computed while compiling and stored as a constant',
+            'The table is computed while compiling',
             'values refers to the local array inside table()',
             'The table is computed lazily, the first time it is used',
           ],
@@ -7024,7 +7024,7 @@ int main() {
             '[](int x) { return x * 2; }',
           ],
           3,
-          'Only the last one takes one int and returns an int; the others have the wrong parameters or are not callable.',
+          'Only the one-parameter lambda takes one int and returns an int; the others have the wrong parameters or are not callable.',
         ),
         choose(
           'What does it mean for a function receiving a std::function<int(int)> parameter?',
@@ -7719,13 +7719,13 @@ int main() {
         choose(
           'Why does find_index return std::optional<int> rather than a plain int?',
           [
-            'Every int, including 0, can be a valid index, so absence needs its own state',
+            'Absence gets its own state instead of a marker like -1',
             'optional is faster to return than a plain int from a loop',
             'An int cannot be returned from inside a for loop body',
             'optional sorts the matches so the caller sees the smallest index',
           ],
           0,
-          'The empty state is separate from all values, so no valid answer has to be sacrificed as a marker.',
+          'The empty state is separate from every int, so a marker such as -1 cannot be mistaken for an index.',
         ),
       ],
     },
@@ -7796,7 +7796,7 @@ int main() {
           [
             '-1 cannot be returned from a function returning int',
             'Callers always ignore negative values, so -1 is dropped',
-            '-1 can be a real temperature, so absence looks like a match',
+            '-1 can be a real temperature',
             'It is not risky as long as the vector is sorted first',
           ],
           2,
@@ -8013,7 +8013,7 @@ int main() {
           [
             'Lambdas cannot be used as visitors for std::visit',
             'x must not be const when a variant holds a string',
-            'The visitor must suit every alternative, and string + 1 fails',
+            'string + 1 must compile too, and fails',
             'std::visit requires at least two variants to compare',
           ],
           2,
@@ -8083,7 +8083,7 @@ int main() {
         choose(
           'Why does the visitor need if constexpr rather than a plain if?',
           [
-            'A plain if would compile item.size() for the int alternative too',
+            'A plain if compiles item.size() for int too',
             'A plain if cannot compare two types with is_same_v',
             'if constexpr makes the visitor run faster at run time',
             'std::visit forbids ordinary if statements in visitors',
@@ -8276,7 +8276,7 @@ int main() {
           'Why catch with const std::runtime_error& rather than by value?',
           [
             'Handlers that catch by value never match anything',
-            'A reference avoids a copy and keeps the derived type intact',
+            'It avoids a copy and keeps the derived type',
             'const is required for e.what() to compile at all',
             'A reference makes the handler run twice for safety',
           ],
@@ -8288,7 +8288,7 @@ int main() {
           [
             'That handler runs anyway, because all exceptions match',
             'The exception is converted to out_of_range first',
-            'The handler is skipped and the exception keeps propagating',
+            'It keeps propagating past that handler',
             'The throw statement is ignored and execution continues',
           ],
           2,
@@ -8829,7 +8829,7 @@ int main() {
           'Why does working on a local copy give the strong guarantee?',
           [
             'Local copies cannot throw',
-            'The caller’s object is assigned only after every check has passed',
+            'The caller’s object changes only after all checks',
             'Assignment undoes earlier changes',
             'The compiler rolls back the caller’s object automatically',
           ],
@@ -9515,7 +9515,7 @@ int main() {
         choose(
           'Why is the virtual destructor needed for std::unique_ptr<Base> but not for a local Derived variable?',
           [
-            'Deleting through Base* must find ~Derived at run time; a local’s type is known',
+            'Deleting through Base* needs ~Derived at run time',
             'Local variables are never destroyed, so no destructor is needed',
             'unique_ptr cannot call a destructor that is not virtual at all',
             'It is needed in both cases, or ~Derived is skipped for locals too',
@@ -9598,7 +9598,7 @@ int main() {
           'Why does a sliced copy run Base’s version of a virtual function?',
           [
             'Virtual calls are disabled on any copied object',
-            'The copy is a genuine Base; the derived part was never copied',
+            'The copy is a genuine Base',
             'The compiler chooses the version by declaration order',
             'The copy still refers to the original Derived object',
           ],
@@ -9851,7 +9851,7 @@ int main() {
         choose(
           'Session inherits publicly from Counter only to reuse add(). What is the drawback?',
           [
-            'Callers can call add() on a Session directly, bypassing handle()',
+            'Callers can call add() directly, bypassing handle()',
             'Session can no longer call add() from inside handle()',
             'Inheritance makes every call to add() slower at run time',
             'There is none; inheritance and a member behave the same',
@@ -10050,7 +10050,7 @@ int main() {
         choose(
           'Two libraries both define a function named parse. How can one program use both?',
           [
-            'Each library uses its own namespace; callers write lib_a::parse or lib_b::parse',
+            'Each sits in a namespace: lib_a::parse, lib_b::parse',
             'Rename one of the two functions at run time, before the first call',
             'Call parse twice and keep whichever result the second call returns',
             'It is impossible; one library has to be removed from the program',
@@ -10196,7 +10196,7 @@ int main() {
             'Only functions in unnamed namespaces',
             'Only static functions',
             'Every function in the program, whatever its linkage',
-            'Functions with external linkage, declared where they are used',
+            'Functions with external linkage',
           ],
           3,
           'Internal linkage hides a name from the linker’s view of other files.',
@@ -10260,7 +10260,7 @@ int main() {
           'Which fix lets each file keep its own private helper?',
           [
             'Declare helper once in a shared header file',
-            'Put each helper in an unnamed namespace, or make it static',
+            'Put each in an unnamed namespace, or make it static',
             'Rename main in one of the two source files',
             'Mark only one of the two helper definitions inline',
           ],
@@ -10270,7 +10270,7 @@ int main() {
         choose(
           'A header declares `int helper(int);`, and helper is defined in an unnamed namespace in util.cpp. main.cpp includes the header and calls helper. What happens?',
           [
-            'Linking fails: the helper is internal to util.cpp, so the declaration has no definition',
+            'Linking fails: helper is internal to util.cpp',
             'It works, because the header declares helper for every file that includes it',
             'The compiler copies the definition from util.cpp into main.cpp automatically',
             'It compiles and links, but helper returns 0 when called from main.cpp',
@@ -11337,7 +11337,7 @@ int main() {
           'Inside [](const auto& x) { ... } called with an int, why is std::is_same_v<decltype(x), int> false?',
           [
             'The int argument is converted to double inside a generic lambda',
-            'decltype(x) is const int&, which differs from int until decay_t strips const and &',
+            'decltype(x) is const int&, not int',
             'is_same_v compares values, and x is not equal to int',
             'decltype works only on variables declared outside the lambda',
           ],
@@ -11496,7 +11496,7 @@ int main() {
             'count must be captured by reference to be read at all',
             'Lambdas cannot use the ++ operator',
             'count is copied only when the lambda is called',
-            'A by-value capture is read-only unless the lambda is mutable',
+            'By-value captures are const without mutable',
           ],
           3,
           'Without mutable, the closure’s copies are const inside its body.',
@@ -11608,7 +11608,7 @@ int main() {
             'mutable is implied for any lambda that uses +=',
             'Reference captures are copied when the lambda is called',
             'total becomes a global variable inside the lambda',
-            'It changes the variable it refers to, not a copy stored in the closure',
+            'It changes the referred variable, not a copy',
           ],
           3,
           'mutable is about the closure’s own copies; a reference capture owns no copy.',
@@ -11744,7 +11744,7 @@ int main() {
         choose(
           'A mutable generic lambda is called with ints and with doubles. How many copies of its captured state exist?',
           [
-            'One, shared by the versions of the body for every argument type',
+            'One, shared by every version of the body',
             'One per argument type, created by each compiled version',
             'One per call, created when the call starts',
             'None, because generic lambdas cannot capture',
@@ -11842,7 +11842,7 @@ int main() {
         choose(
           'Two generic lambdas each keep a captured total. One is called with ints, the other with doubles. How do you get one combined total?',
           [
-            'Call one lambda for both kinds, so a single closure keeps the total',
+            'Use one lambda for both kinds',
             'Mark both lambdas mutable, which makes them share captures',
             'Capture the total by value in both lambdas',
             'Use auto instead of const auto& for the parameters',

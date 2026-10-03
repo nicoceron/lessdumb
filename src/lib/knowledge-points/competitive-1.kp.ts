@@ -788,7 +788,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why must blank text be checked before reading tokens[0]?',
           [
-            'split() returns None for blank text',
+            'split() returns None for blank text, and None has no position 0',
             'Its token list is empty, so tokens[0] raises IndexError',
             'int() cannot convert any first token',
             'Blank text is split into a single empty token',
@@ -1120,7 +1120,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'level can never exceed the ceiling anyway',
             'Python cannot update two values in one loop',
             'A reset lowers level but must not erase the highest level',
-            'peak decides which command comes next',
+            'peak stores the previous level so that a reset can restore it',
           ],
           2,
           'level describes the present and peak summarizes the history; one variable cannot do both.',
@@ -1211,7 +1211,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A search for two different items uses for j in range(n) inside for i in range(n). What goes wrong?',
           [
-            'It misses the last item and the first pair',
+            'It skips the pairs where j is smaller than i, so half are missed',
             'It pairs items with themselves and visits each pair twice',
             'It only ever compares neighboring positions',
             'It only works when the list is sorted',
@@ -1386,7 +1386,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does the condition check best is None before score < best?',
           [
-            'None is smaller than every possible score',
+            'None is smaller than every score, so the first one always beats it',
             'The first score must be accepted while no best exists',
             'It makes the loop skip the first score',
             'It makes later comparisons run faster',
@@ -1563,7 +1563,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'It becomes linear after its first pass',
             'It is faster than sorting on every input',
             'It gives trusted answers on small inputs to check a faster method',
-            'It needs no extra memory, so it scales to any n',
+            'It uses no extra memory, so it still runs in time on the largest inputs',
           ],
           2,
           'Its correctness is easy to argue, so it is the baseline that faster solutions are tested against.',
@@ -1987,7 +1987,7 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'Sorting n values and then scanning the neighbor gaps costs how much time overall?',
-          ['O(n log n)', 'O(n)', 'O(n²)', 'O(log n)'],
+          ['O(n log n)', 'O(n)', 'O(n²)', 'O(n² log n)'],
           0,
           'The O(n) scan is added to the O(n log n) sort, and the sort dominates.',
         ),
@@ -1996,7 +1996,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Sorting removes all duplicate values',
             'Neighbors in the original input are always closest',
-            'Sorting makes every gap the same size',
+            'Sorting puts the two smallest values first, and they are the closest',
             'Any value lying between two others is at least as close to each',
           ],
           3,
@@ -2255,7 +2255,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'The deleted keys are skipped and it works',
             'Python silently loops over a copy instead',
             'Python raises RuntimeError because the size changed',
-            'The loop restarts from the first key',
+            'The loop skips the key after each deleted one and keeps going',
           ],
           2,
           'A dictionary must not change size while it is being iterated.',
@@ -2399,7 +2399,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Each label arrives with a price, and the task asks for the total price per label. Which structure fits?',
           [
-            'A set of the labels seen so far',
+            'A dictionary from label to how many times it arrived',
             'A sorted list of all the prices',
             'A set of (label, price) pairs',
             'A dictionary from label to running total',
@@ -2588,7 +2588,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Only None',
             'Every string ID',
             '0 and the empty string',
-            'Negative integers',
+            'Negative integers and the string "0"',
           ],
           2,
           '0 and "" are falsy; negative numbers and nonempty strings are truthy.',
@@ -2992,7 +2992,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'lower() raises an error on non-ASCII text',
             'lower() is slower than a range comparison',
             'Some non-ASCII characters lowercase into ASCII letters',
-            'lower() turns digits into letters',
+            'lower() also rewrites digits and punctuation, so they would stop matching',
           ],
           2,
           'An unrestricted lower() could make a rejected character look like an accepted letter.',
@@ -3156,7 +3156,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Yes, normalization is always harmless',
             'No, that would merge symbols the task keeps apart',
             'Yes, because dictionaries ignore case',
-            'Only when the password is long',
+            'Yes, so a capital letter and its lowercase form count once',
           ],
           1,
           'The specification defines equality; this one is case-sensitive.',
@@ -3884,7 +3884,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which entries of the difference table does one update (left, right, delta) change?',
           [
             'Only difference[left] and difference[right]',
-            'Every entry from left to right - 1',
+            'Only difference[left] and difference[right + 1]',
             'Every entry from left to right',
             'Only difference[left]',
           ],
@@ -4323,7 +4323,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'The loop has just discarded right. Which pairs did that step decide?',
           [
-            'Only the single pair (left, right)',
+            'Only the pair (left, right) whose sum was just tested',
             'Every remaining pair that uses the old right',
             'Every remaining pair that uses left',
             'None; it only moved a pointer',
@@ -4370,7 +4370,7 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'The input arrives unsorted. What is the total time to sort it and then count with two pointers?',
-          ['O(n)', 'O(n log n)', 'O(n²)', 'O(log n)'],
+          ['O(n)', 'O(n log n)', 'O(n²)', 'O(n² log n)'],
           1,
           'The O(n log n) sort dominates the O(n) scan.',
         ),
@@ -4468,7 +4468,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'The length of the window',
             'The total of all the counts',
             'The number of distinct labels in the window',
-            'The number of labels seen so far',
+            'The number of distinct labels seen since the scan began',
           ],
           2,
           'One key per distinct label currently in the window.',
@@ -4956,7 +4956,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'mid is always larger than the old high value',
             'It halves the value of high on every step',
-            'It sets low equal to the target value itself',
+            "It sets low to the target's index, so the search ends at once",
             'mid is at least low, so low rises above its old value',
           ],
           3,
@@ -5170,7 +5170,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It would visit every element twice',
             'It needs the length to be a power of two',
-            'An unsorted list has no midpoint',
+            'The loop on an unsorted list never narrows the range, so it runs forever',
             'One comparison says nothing about the discarded half',
           ],
           3,
@@ -5275,7 +5275,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Negative loads cannot be added to totals',
             'A later negative load could cancel an apparent overflow',
-            'Negative loads make the list unsorted',
+            'A negative load would start a new group even when the total still fits',
             'Zero loads would be counted twice',
           ],
           1,
@@ -5379,7 +5379,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Larger capacities always use fewer loads',
             'The greedy test re-sorts the loads',
-            'The budget of groups grows with capacity',
+            'The number of groups allowed grows by one when the capacity grows',
             'Every group total is still within the larger limit',
           ],
           3,
@@ -5606,7 +5606,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Some loads are negative. Why is this method no longer trustworthy?',
           [
             'Binary search cannot handle negative midpoints',
-            'The total becomes smaller than every load',
+            'The greedy test may open a new group for every negative load it sees',
             'Negative loads make the list unsorted',
             'The greedy test may close a group that a later load would shrink',
           ],
@@ -6018,7 +6018,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why does compression save memory for coordinates like 10⁹ and −10⁹?',
           [
             'The coordinates are stored as smaller numbers',
-            'Sets compress the integers they store',
+            'A set stores large integers in fewer bytes than a list does',
             'Sorting removes the largest values',
             'Lists need only u slots, not one per possible coordinate',
           ],
@@ -6075,7 +6075,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'One interval starts at end',
             'The coordinate end is removed',
-            'Every interval ends at end',
+            'Every interval still active at end stops there',
             'One interval stops being active at end',
           ],
           3,
@@ -6283,7 +6283,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What does active mean right after the events at coordinate x are applied?',
           [
             'The total number of intervals in the input',
-            'The number of events processed so far',
+            'The number of intervals that started at or before x, ended or not',
             'The coordinate x itself',
             'The number of intervals covering positions just after x',
           ],
@@ -6370,7 +6370,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why sort the events before scanning them?',
           [
             'Sorting removes the empty intervals',
-            'Sorting merges overlapping intervals',
+            "Sorting puts each interval's end event right after its start",
             'The peak has to be found first',
             'The active count is only right in coordinate order',
           ],
@@ -6460,7 +6460,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A task asks for the total length covered by at least one interval. What must the sweep add?',
           [
-            'A second sort by interval length',
+            "The sum of every interval's own length, end minus start",
             'A larger tie-breaking key',
             'Nothing; the peak already gives it',
             'The gaps between consecutive event coordinates',
