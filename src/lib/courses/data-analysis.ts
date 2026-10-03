@@ -123,7 +123,7 @@ const skills: Skill[] = [
     'da-numpy',
     'Create numerical arrays',
     'Turn Python sequences into arrays with an explicit shape and data type.',
-    ['lists'],
+    ['nested-lists', 'imports', 'tuples'],
     [
       'A NumPy array stores values in a grid with a shared data type. Import the package with import numpy as np, then call np.array(...) with a Python list. Unlike a list, an ordinary numeric array supports arithmetic on all its entries.',
       'shape is a tuple containing the length of each axis. A flat array of three values has shape (3,); two rows with three values each have shape (2, 3). size counts all entries, while ndim counts axes. dtype describes their representation. Use dtype=float when decimal calculations are expected.',
@@ -923,7 +923,7 @@ const skills: Skill[] = [
     'da-wrangling',
     'Normalize text keys',
     'Apply vectorized string cleaning without confusing formatting with meaning.',
-    ['da-missing-values'],
+    ['da-missing-values', 'string-methods'],
     [
       'Text identifiers often differ only because of surrounding whitespace or letter case. A string Series exposes vectorized methods through .str: .str.strip() removes surrounding whitespace, and .str.lower() converts letters to lowercase.',
       'Cleaning an identifier is a modeling decision. Treating "North" and "north" as the same site is reasonable only if your source contract says case is irrelevant. Preserve the original text separately when you need an audit trail.',

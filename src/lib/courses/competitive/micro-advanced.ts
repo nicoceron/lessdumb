@@ -122,7 +122,12 @@ stages('cp-binary-lifting', 'cp-range', [
   },
   {
     id: 'cp-lifting-compose-jumps',
-    parents: ['cp-lifting-parent-row', 'cp-work-doubling', 'comprehensions'],
+    parents: [
+      'cp-lifting-parent-row',
+      'cp-work-doubling',
+      'comprehensions',
+      'conditional-expressions',
+    ],
     title: 'Compose two equal jumps',
     summary: 'Double a jump distance using its previous row.',
     lesson: [
@@ -179,7 +184,7 @@ stages('cp-binary-lifting', 'cp-range', [
   },
   {
     id: 'cp-lifting-query-bits',
-    parents: ['cp-lifting-compose-jumps', 'cp-bit-position'],
+    parents: ['cp-lifting-compose-jumps', 'cp-bit-position', 'nested-lists'],
     title: 'Select jumps from distance bits',
     summary: 'Answer one ancestor query without overflowing the table.',
     lesson: [
@@ -318,7 +323,7 @@ stages('cp-scc', 'cp-range', [
   },
   {
     id: 'cp-scc-finish-order',
-    parents: ['cp-dfs', 'cp-tree-traversal'],
+    parents: ['cp-dfs', 'cp-tree-traversal', 'break-continue'],
     title: 'Record DFS completion',
     summary: 'Distinguish finishing order from discovery order.',
     lesson: [
@@ -633,7 +638,13 @@ stages('cp-fenwick', 'cp-range', [
 stages('cp-segment-tree', 'cp-range', [
   {
     id: 'cp-segment-leaf-layout',
-    parents: ['cp-work-doubling', 'slicing'],
+    parents: [
+      'cp-work-doubling',
+      'slicing',
+      'multiple-returns',
+      'list-repetition',
+      'number-builtins',
+    ],
     title: 'Pad minimum-tree leaves',
     summary: 'Place values under a power-of-two boundary.',
     lesson: [
@@ -889,7 +900,7 @@ stages('cp-gcd', 'cp-number-theory', [
   },
   {
     id: 'cp-gcd-remainder-step',
-    parents: ['cp-gcd-divisibility'],
+    parents: ['cp-gcd-divisibility', 'multiple-returns'],
     title: 'Preserve common divisors with a remainder',
     summary: 'Apply one Euclidean state transition.',
     lesson: [
@@ -945,7 +956,7 @@ stages('cp-gcd', 'cp-number-theory', [
   },
   {
     id: 'cp-gcd-lcm-zero',
-    parents: ['cp-gcd-divisibility'],
+    parents: ['cp-gcd-divisibility', 'number-builtins'],
     title: 'Derive a least common multiple',
     summary: 'Handle zeros before dividing by the supplied gcd.',
     lesson: [
@@ -1061,7 +1072,7 @@ stages('cp-modular', 'cp-number-theory', [
   },
   {
     id: 'cp-modular-square-step',
-    parents: ['cp-modular-residue', 'cp-recursive-combine'],
+    parents: ['cp-modular-residue', 'cp-recursive-combine', 'multiple-returns'],
     title: 'Consume one exponent bit',
     summary: 'Apply one repeated-squaring transition.',
     lesson: [
@@ -1126,7 +1137,7 @@ stages('cp-modular', 'cp-number-theory', [
   },
   {
     id: 'cp-modular-inverse-condition',
-    parents: ['cp-modular-residue', 'cp-gcd'],
+    parents: ['cp-modular-residue', 'cp-gcd', 'imports'],
     title: 'Check whether division is invertible',
     summary: 'Use coprimality rather than assuming a prime modulus.',
     lesson: [
@@ -1194,7 +1205,7 @@ stages('cp-modular', 'cp-number-theory', [
 stages('cp-sieve', 'cp-number-theory', [
   {
     id: 'cp-sieve-candidate-table',
-    parents: ['list-mutation', 'return-values'],
+    parents: ['return-values', 'list-repetition'],
     title: 'Prepare prime candidates',
     summary: 'Exclude zero and one before composite marking.',
     lesson: [
@@ -1574,7 +1585,7 @@ stages('cp-combinatorics', 'cp-number-theory', [
 stages('cp-intervals', 'cp-strategy', [
   {
     id: 'cp-interval-overlap',
-    parents: ['parameters'],
+    parents: ['parameters', 'tuples', 'number-builtins'],
     title: 'Compare interval endpoints',
     summary: 'Decide overlap under a stated endpoint convention.',
     lesson: [
@@ -1897,7 +1908,11 @@ stages('cp-greedy', 'cp-strategy', [
   },
   {
     id: 'cp-greedy-exchange-boundary',
-    parents: ['cp-greedy-compatibility', 'cp-greedy-finish-order'],
+    parents: [
+      'cp-greedy-compatibility',
+      'cp-greedy-finish-order',
+      'generator-expressions',
+    ],
     title: 'Check an exchange boundary',
     summary: 'Show that an earlier finish preserves a later continuation.',
     lesson: [
@@ -1970,7 +1985,13 @@ stages('cp-greedy', 'cp-strategy', [
 stages('cp-bitmasks', 'cp-strategy', [
   {
     id: 'cp-bit-position',
-    parents: ['comprehensions', 'parameters', 'ranges'],
+    parents: [
+      'comprehensions',
+      'parameters',
+      'ranges',
+      'truthiness',
+      'bitwise',
+    ],
     title: 'Read one membership bit',
     summary: 'Use a power of two to inspect a set position.',
     lesson: [
@@ -2021,7 +2042,7 @@ stages('cp-bitmasks', 'cp-strategy', [
   },
   {
     id: 'cp-bit-set-clear',
-    parents: ['cp-bit-position'],
+    parents: ['cp-bit-position', 'conditional-expressions'],
     title: 'Change one set position',
     summary: 'Set a bit with OR and clear it with AND.',
     lesson: [
@@ -2076,7 +2097,7 @@ stages('cp-bitmasks', 'cp-strategy', [
   },
   {
     id: 'cp-bit-submask-step',
-    parents: ['cp-bit-position', 'while-loops'],
+    parents: ['cp-bit-position', 'break-continue'],
     title: 'Move to the next submask',
     summary: 'Enumerate subsets of a fixed bit set.',
     lesson: [
@@ -2136,7 +2157,7 @@ stages('cp-bitmasks', 'cp-strategy', [
 stages('cp-geometry', 'cp-strategy', [
   {
     id: 'cp-geometry-displacement',
-    parents: ['math-vectors', 'parameters'],
+    parents: ['math-vectors', 'parameters', 'multiple-returns'],
     title: 'Subtract a common origin',
     summary: 'Convert two points into a directed vector.',
     lesson: [
@@ -2189,7 +2210,7 @@ stages('cp-geometry', 'cp-strategy', [
   },
   {
     id: 'cp-geometry-cross-product',
-    parents: ['math-vectors', 'parameters'],
+    parents: ['math-vectors', 'parameters', 'tuples'],
     title: 'Compute signed doubled area',
     summary: 'Combine two vectors without slope division.',
     lesson: [
@@ -2245,7 +2266,11 @@ stages('cp-geometry', 'cp-strategy', [
   },
   {
     id: 'cp-geometry-turn-sign',
-    parents: ['cp-geometry-displacement', 'cp-geometry-cross-product'],
+    parents: [
+      'cp-geometry-displacement',
+      'cp-geometry-cross-product',
+      'truthiness',
+    ],
     title: 'Classify one turn',
     summary: 'Translate a determinant into left, right, or collinear.',
     lesson: [
@@ -2307,7 +2332,7 @@ stages('cp-geometry', 'cp-strategy', [
 stages('cp-memoization', 'cp-dynamic', [
   {
     id: 'cp-memo-state-key',
-    parents: ['comprehensions', 'dictionaries', 'return-values'],
+    parents: ['comprehensions', 'dictionaries', 'return-values', 'unpacking'],
     title: 'Identify one subproblem',
     summary: 'Use every answer-changing input in a cache key.',
     lesson: [
@@ -2574,7 +2599,7 @@ stages('cp-knapsack', 'cp-dynamic', [
   },
   {
     id: 'cp-knapsack-take-skip',
-    parents: ['cp-knapsack-capacity-state', 'parameters'],
+    parents: ['cp-knapsack-capacity-state', 'parameters', 'number-builtins'],
     title: 'Compare taking with skipping',
     summary: 'Evaluate one item from the previous item stage.',
     lesson: [
@@ -2774,7 +2799,7 @@ stages('cp-subsequences', 'cp-dynamic', [
   },
   {
     id: 'cp-lis-tail-position',
-    parents: ['cp-subsequence-order', 'cp-binary-sentinel'],
+    parents: ['cp-subsequence-order', 'cp-binary-sentinel', 'bisect-module'],
     title: 'Find the first non-smaller tail',
     summary: 'Locate a lower bound to preserve strict increase.',
     lesson: [
@@ -2901,7 +2926,7 @@ stages('cp-subsequences', 'cp-dynamic', [
 stages('cp-tabulation', 'cp-dynamic', [
   {
     id: 'cp-dp-table-base',
-    parents: ['list-mutation', 'return-values'],
+    parents: ['return-values', 'list-repetition'],
     title: 'Initialize exact-total costs',
     summary: 'Give reachable and unreachable states different values.',
     lesson: [
@@ -2957,7 +2982,7 @@ stages('cp-tabulation', 'cp-dynamic', [
   },
   {
     id: 'cp-dp-single-relaxation',
-    parents: ['cp-dp-table-base', 'parameters'],
+    parents: ['cp-dp-table-base', 'parameters', 'number-builtins'],
     title: 'Relax one predecessor',
     summary: 'Compare keeping an answer with adding one packet.',
     lesson: [
