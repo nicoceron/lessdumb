@@ -5,6 +5,11 @@ import { dataSystemsCatalog } from './courses/data-systems';
 import { competitiveProgrammingCatalog } from './courses/competitive-programming';
 import { rustCatalog } from './courses/rust';
 import { cppCatalog } from './courses/cpp';
+import {
+  attachKnowledgePoints,
+  knowledgePointRegistryErrors,
+  knowledgePointSkillIds,
+} from './knowledge-points';
 export type Domain = 'programming' | 'mathematics' | 'physics' | 'language';
 export type CodeLanguage = 'python' | 'rust' | 'cpp';
 
@@ -38,6 +43,8 @@ export interface ChoiceQuestion extends QuestionBase {
   code?: string;
   choices: string[];
   answer: number;
+  /** The correct choice is exactly what `code` prints; catalog tests run it. */
+  checksOutput?: boolean;
 }
 
 export interface CodeQuestion extends QuestionBase {
@@ -61,6 +68,27 @@ export interface Flashcard {
   back: string;
 }
 
+export interface LessonExample {
+  code: string;
+  output: string;
+  explanation: string;
+  kind?: 'code' | 'text';
+  label?: string;
+  language?: CodeLanguage;
+}
+
+/**
+ * One separately practiced idea inside a skill: a short explanation, a fully
+ * worked example, then interchangeable practice questions on that idea only.
+ */
+export interface KnowledgePoint {
+  id: string;
+  title: string;
+  explanation: string[];
+  example: LessonExample;
+  questions: Question[];
+}
+
 export interface Skill {
   id: string;
   courseId: string;
@@ -79,15 +107,10 @@ export interface Skill {
   stageCount?: number;
   lesson: {
     paragraphs: string[];
-    example: {
-      code: string;
-      output: string;
-      explanation: string;
-      kind?: 'code' | 'text';
-      label?: string;
-      language?: CodeLanguage;
-    };
+    example: LessonExample;
   };
+  /** Ordered knowledge points; the lesson teaches and practices each in turn. */
+  knowledgePoints?: KnowledgePoint[];
   questions: Question[];
   flashcards: Flashcard[];
   /** Subject-specific evidence needed within a spaced review cycle. */
@@ -1730,7 +1753,7 @@ export const units: Unit[] = [
 export const skills: Skill[] = [
   ...pythonSkills,
   ...extensions.flatMap((c) => c.skills),
-];
+].map(attachKnowledgePoints);
 export const skillById: Record<string, Skill> = Object.fromEntries(
   skills.map((item) => [item.id, item]),
 );
@@ -1879,7 +1902,42 @@ export function validateCurriculum(
     for (const type of policy.requiredTypes)
       if (!item.questions.some((question) => question.type === type))
         errors.push(`${item.id}: missing required assessment type ${type}.`);
-    for (const question of item.questions) {
+    const points = item.knowledgePoints ?? [];
+    if (
+      item.knowledgePoints !== undefined &&
+      (points.length < 2 || points.length > 5)
+    )
+      errors.push(`${item.id}: needs two to five knowledge points.`);
+    for (const point of points) {
+      if (!point.title.trim() || !point.explanation.some((p) => p.trim()))
+        errors.push(`${point.id}: needs a title and an explanation.`);
+      if (point.questions.length < 3)
+        errors.push(`${point.id}: needs at least three practice questions.`);
+      if (
+        point.example.kind !== 'text' &&
+        ['rust', 'cpp'].includes(courseLanguage ?? '') &&
+        point.example.language !== courseLanguage
+      )
+        errors.push(`${point.id}: example language must match its course.`);
+      for (const question of point.questions)
+        if (
+          question.type === 'choice' &&
+          (question.choices.length < 4 ||
+            new Set(question.choices.map((c) => c.trim())).size !==
+              question.choices.length)
+        )
+          errors.push(`${question.id}: needs four or more distinct choices.`);
+    }
+    for (const question of [
+      ...item.questions,
+      ...points.flatMap((point) => point.questions),
+    ]) {
+      if (
+        question.type === 'choice' &&
+        question.checksOutput &&
+        !question.code?.trim()
+      )
+        errors.push(`${question.id}: output questions need code to run.`);
       if (questions.has(question.id))
         errors.push(`Duplicate question ID ${question.id}.`);
       questions.add(question.id);
@@ -1965,4 +2023,14 @@ export function validateCurriculum(
     }
   }
   return errors;
+}
+
+/** Authored knowledge points must name catalog skills, once each. */
+export function validateKnowledgePointRegistry(): string[] {
+  return [
+    ...knowledgePointRegistryErrors,
+    ...knowledgePointSkillIds
+      .filter((id) => !skillById[id])
+      .map((id) => `${id}: knowledge points for an unknown skill.`),
+  ];
 }
