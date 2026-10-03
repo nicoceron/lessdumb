@@ -1206,9 +1206,9 @@ _graph = [[] for _ in range(100000)]
 for _vertex in range(100000):
     for _next in (_vertex + _jumps[2 * _vertex], _vertex + 1, _vertex + _jumps[2 * _vertex + 1]):
         if 0 <= _next < 100000:
-            _graph[_vertex].append(_next)
-_result, _seconds = _timed(hop_distances, _graph, 0)
-assert _checksum(_result) == 693317289036805152, "The 100,000-vertex graph returned wrong distances."
+            _graph[99999 - _vertex].append(99999 - _next)
+_result, _seconds = _timed(hop_distances, _graph, 99999)
+assert _checksum(_result) == 1412230198499059278, "The 100,000-vertex graph returned wrong distances."
 _check_time(_seconds, "The 100,000-vertex graph", "Expand each vertex once in queue order instead of relaxing every edge repeatedly.")`,
         ),
         'A FIFO queue finishes a distance layer before the next one, and the first discovered distance never needs revision for unit-cost edges.',
