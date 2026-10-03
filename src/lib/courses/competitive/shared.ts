@@ -7,10 +7,12 @@ export const courseId = 'competitive-programming';
  * multiplies it by the device's measured slowness (`__lessdumb_time_scale`,
  * see public/python-runtime.mjs), so a slow phone gets a longer limit and a
  * fast computer a shorter one. Each case is sized so that, on the reference
- * machine, the reference solution has at least 7× headroom and every brute
- * force known to the tests needs at least 7× the limit; calibration keeps both
- * margins on other devices. A case may pass its own base limit to
- * `_check_time` when no size achieves both (the sieve uses 1.5 s).
+ * machine, the reference solution has at least 8× headroom and every brute
+ * force in tests/helpers/competitive-shortcuts.ts needs at least 8× the limit;
+ * calibration keeps both margins on other devices. A case may pass its own
+ * base limit to `_check_time` when no size achieves both: the sieve's trial
+ * division is only about 18× slower than the sieve, so it uses 1.5 s, which
+ * leaves 5× headroom and 3.5× over the limit.
  */
 export const TIME_LIMIT_SECONDS = 3;
 
