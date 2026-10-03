@@ -680,7 +680,8 @@ describe('versioned per-account progress', () => {
       revision: 1,
     });
     expect(getStats(state.progress).mastered).toBe(skills.length);
-  });
+    // Replays every skill in the catalog; shared CI runners need more than 5 s.
+  }, 30_000);
 
   it('rejects oversized requests before parsing them', async () => {
     const { backend } = await freshBackend();
