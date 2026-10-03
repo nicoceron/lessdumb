@@ -6,6 +6,7 @@ import {
   DAY_MS,
   getSkillState,
   nextTask,
+  selectQuestion,
 } from '../src/lib/learning';
 import {
   courseSequence,
@@ -15,6 +16,7 @@ import {
 } from '../src/lib/dashboard';
 import { createState, type LearnerState } from '../src/lib/state';
 import { REVIEW_XP } from '../src/lib/xp';
+import { masterSkill } from './helpers/mastery';
 import { openFromMenu } from './helpers/navigation';
 
 async function ready(page: Page) {
@@ -27,12 +29,7 @@ async function asGuest(page: Page, state: LearnerState) {
   );
 }
 function master(state: LearnerState, id: string, at: number) {
-  for (const question of skillById[id].questions)
-    state.progress = applyAttempt(
-      state.progress,
-      { skillId: id, questionId: question.id, correct: true, mode: 'learn' },
-      at,
-    );
+  state.progress = masterSkill(state.progress, id, at);
 }
 
 test('Learn shows the active course, XP, frontier tasks, and dated history', async ({
@@ -45,15 +42,13 @@ test('Learn shows the active course, XP, frontier tasks, and dated history', asy
   master(state, 'print-output', now - 3 * DAY_MS);
   const due = getSkillState(state.progress, 'print-output').dueAt!;
   const review = skillById['print-output'];
-  for (const question of [
-    review.questions.find((q) => q.type === 'choice')!,
-    review.questions.find((q) => q.type === 'code')!,
-  ])
+  // Complete one review cycle with the engine's own question choices.
+  while (getSkillState(state.progress, review.id).dueAt === due)
     state.progress = applyAttempt(
       state.progress,
       {
         skillId: review.id,
-        questionId: question.id,
+        questionId: selectQuestion(state.progress, review, 'review').id,
         correct: true,
         mode: 'review',
       },
