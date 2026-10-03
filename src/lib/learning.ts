@@ -5,7 +5,7 @@ import type {
   SkillOutline,
 } from './curriculum';
 import { defaultCatalog } from './catalog-index';
-import { encompassings } from './catalog-outline';
+import { assessmentType, encompassings } from './catalog-outline';
 import {
   evidenceIdFor,
   findQuestion,
@@ -34,6 +34,7 @@ import {
   type MemoryState,
 } from './retention';
 import { createActivity, recordActivity, type ActivityState } from './activity';
+import { isTypedType, TYPED_RESPONSE_MAX_LENGTH } from './typed-answer';
 
 export const DAY_MS = 86_400_000;
 /**
@@ -168,6 +169,8 @@ export interface Attempt {
   quizId?: string;
   /** Prerequisites that this successful answer gave implicit review credit. */
   credited?: string[];
+  /** What the learner typed, for a numeric or text question. */
+  response?: string;
 }
 
 export interface Progress {
@@ -196,6 +199,8 @@ export interface AttemptInput {
   attemptId?: string;
   /** Tests may name independent devices; browsers use a unique runtime writer. */
   writerId?: string;
+  /** What the learner typed, for a typed question; kept on the attempt. */
+  response?: string;
 }
 
 export interface NextTask {
@@ -549,12 +554,15 @@ function pickQuestion(
     (question) => !evidence.includes(question.id),
   );
   const candidates = available.length ? available : item.questions;
+  const typeOf = (question: QuestionRef) => assessmentType(question.type);
   const missingTypes = reviewRequirement(item).types.filter(
     (type) =>
-      !state.reviewQuestionIds.some(
-        (id) =>
-          item.questions.find((question) => question.id === id)?.type === type,
-      ),
+      !state.reviewQuestionIds.some((id) => {
+        const question = item.questions.find(
+          (candidate) => candidate.id === id,
+        );
+        return !!question && typeOf(question) === type;
+      }),
   );
   const counts = new Map<string, number>();
   progress.attempts
@@ -574,8 +582,8 @@ function pickQuestion(
     if (countDifference) return countDifference;
     // Ask for missing subject-specific assessment evidence before repeating a covered type.
     if (mode === 'review' && missingTypes.length) {
-      const aPriority = missingTypes.indexOf(a.type),
-        bPriority = missingTypes.indexOf(b.type);
+      const aPriority = missingTypes.indexOf(typeOf(a)),
+        bPriority = missingTypes.indexOf(typeOf(b));
       if (aPriority >= 0 && bPriority < 0) return -1;
       if (bPriority >= 0 && aPriority < 0) return 1;
       if (aPriority >= 0 && bPriority >= 0 && aPriority !== bPriority)
@@ -1144,6 +1152,9 @@ export function applyAttempt(
       ? { reviewDueAt: old.dueAt! }
       : {}),
     ...(outcome ? { outcome } : {}),
+    ...(input.response !== undefined && isTypedType(question.type)
+      ? { response: input.response.slice(0, TYPED_RESPONSE_MAX_LENGTH) }
+      : {}),
   };
   const updated: Progress = {
     ...progress,

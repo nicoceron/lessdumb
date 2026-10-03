@@ -1,4 +1,9 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 import type { LessonExample } from '../curriculum';
 
 /** A worked design scenario: the situation, the decision, and why. */
@@ -200,11 +205,10 @@ export const knowledgePoints: KnowledgePointModule = {
         'A single throughput number says nothing about how long any particular caller waited.',
       ),
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'requests = 18000\nseconds = 60\nprint(requests / seconds)',
-          ['300', '1080000', '300.0', '0.0033'],
-          2,
+          '300.0',
           'Throughput divides completed requests by elapsed seconds, and / always gives a float.',
         ),
         choose(
@@ -229,11 +233,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The system completes a lot of work overall while an individual caller still waits.',
         ),
-        predictOutput(
+        typeOutput(
           'Each number is the requests completed in one second. What does this program print?',
           'completed = [120, 180, 150]\ntotal = 0\nfor n in completed:\n    total = total + n\nprint(total / len(completed))',
-          ['450', '180', '3', '150.0'],
-          3,
+          '150.0',
           '450 requests over 3 seconds is an average throughput of 150 requests per second.',
         ),
       ],
@@ -250,18 +253,16 @@ export const knowledgePoints: KnowledgePointModule = {
         'Most users waited 30 ms or less, but the percentiles reveal two very slow requests that the mean hides.',
       ),
       questions: [
-        predictOutput(
+        typeOutput(
           'times holds 10 sorted response times in ms. What does this program print?',
           'times = [12, 15, 15, 18, 20, 22, 25, 30, 90, 400]\nrank = 90 * len(times) // 100\nprint(times[rank - 1])',
-          ['400', '90', '30', '64.7'],
-          1,
+          '90',
           'p90 of 10 requests is the 9th sorted time, so 9 of the 10 finish within 90 ms. 64.7 is the mean.',
         ),
-        predictOutput(
+        typeOutput(
           'times holds 20 sorted response times in ms. What does this program print?',
           'times = [5, 5, 6, 7, 8, 9, 9, 10, 11, 12, 13, 14, 15, 15, 16, 18, 20, 25, 300, 900]\nrank = 95 * len(times) // 100\nprint(times[rank - 1])',
-          ['900', '25', '70.9', '300'],
-          3,
+          '300',
           '95% of 20 is 19, so p95 is the 19th sorted time.',
         ),
         choose(
@@ -1373,18 +1374,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The second put to w-17 replaces its value instead of adding a third entry, so the store still holds two keys.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'store = {"u1": "Ana", "u2": "Ben"}\nstore["u2"] = "Bo"\nprint(store["u2"])\nprint(len(store))',
-          ['Ben\n2', 'Bo\n3', 'Ben\n3', 'Bo\n2'],
-          3,
+          'Bo\n2',
           'Assigning to an existing key replaces its value; the number of keys stays 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'store = {"a": 1}\nprint(store.get("b", "missing"))',
-          ['None', 'missing', 'KeyError', '1'],
-          1,
+          'missing',
           'get returns the default when the key is absent, instead of raising an error.',
         ),
         choose(
@@ -1424,18 +1423,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The log holds three writes in order. Replaying them leaves w-17 with its last value, full.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This program replays a log of writes. What does it print?',
           'log = [{"key": "a", "value": 1}, {"key": "b", "value": 2}, {"key": "a", "value": 3}, {"key": "c", "value": 4}]\nstore = {}\nfor entry in log:\n    store[entry["key"]] = entry["value"]\nprint(store["a"])\nprint(len(store))',
-          ['1\n4', '3\n4', '1\n3', '3\n3'],
-          3,
+          '3\n3',
           'a is written twice, and the later value 3 wins; there are three distinct keys.',
         ),
-        predictOutput(
+        typeOutput(
           'This program replays a log of writes. What does it print?',
           'log = [{"key": "x", "value": 5}, {"key": "x", "value": 6}, {"key": "x", "value": 7}]\nstore = {}\nfor entry in log:\n    store[entry["key"]] = entry["value"]\nprint(store)',
-          ["{'x': 5}", "{'x': [5, 6, 7]}", "{'x': 7}", "{'x': 18}"],
-          2,
+          "{'x': 7}",
           'Each replayed write replaces the previous value, so only the last one remains.',
         ),
         choose(
@@ -1531,11 +1528,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Ten writes fill the memtable twice, producing two runs on disk, and two writes wait in the current memtable.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'memtable_limit = 1000\nwrites = 4500\nprint(writes // memtable_limit, writes % memtable_limit)',
-          ['4.5 0', '5 500', '4 500', '4 0'],
-          2,
+          '4 500',
           'Four full memtables have been flushed, and 500 writes remain in memory.',
         ),
         choose(
@@ -1586,25 +1582,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'runs is listed from oldest to newest. Scanning in that order lets each newer version overwrite the older one, so the newest value of a wins.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'runs is listed from oldest to newest. What does this program print?',
           'runs = [{"x": 1}, {"y": 2}, {"x": 3, "y": 4}]\nkey = "y"\nvalue = None\nfor run in runs:\n    if key in run:\n        value = run[key]\nprint(value)',
-          ['2', 'None', '6', '4'],
-          3,
+          '4',
           'The newest run holds y = 4, which replaces the older 2.',
         ),
-        predictOutput(
+        typeOutput(
           'runs is listed from oldest to newest. What does this program print?',
           'runs = [{"k": "old"}, {"j": "new"}]\nkey = "k"\nvalue = None\nfor run in runs:\n    if key in run:\n        value = run[key]\nprint(value)',
-          ['new', 'old', 'None', 'KeyError'],
-          1,
+          'old',
           'Only the oldest run contains k, so its value is still the current one.',
         ),
-        predictOutput(
+        typeOutput(
           'runs is listed from oldest to newest, and "DELETED" is a tombstone. What does this program print?',
           'runs = [{"p": 10}, {"p": "DELETED"}]\nkey = "p"\nvalue = None\nfor run in runs:\n    if key in run:\n        value = run[key]\nprint(value)',
-          ['DELETED', '10', 'None', '[10, DELETED]'],
-          0,
+          'DELETED',
           'The tombstone is the newest version, so the read sees the deletion, not the old 10.',
         ),
         choose(
@@ -1633,11 +1626,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each gigabyte is written to the log, flushed once, and rewritten by three compactions, so the disk writes five times what the application wrote.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'app_writes_gb = 50\ndisk_writes_gb = 400\nprint(disk_writes_gb / app_writes_gb)',
-          ['0.125', '8.0', '350', '450'],
-          1,
+          '8.0',
           'Write amplification divides physical writes by logical writes.',
         ),
         choose(
@@ -1734,18 +1726,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Four levels of 500-way pages address 62.5 billion leaves, so a lookup reads only four pages.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fanout = 100\ndepth = 3\nprint(fanout ** depth)',
-          ['300', '10000', '1000000', '100000000'],
-          2,
+          '1000000',
           '100 × 100 × 100 leaves are reachable in three levels.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fanout = 200\nprint(fanout ** 2)\nprint(fanout ** 3)',
-          ['400\n600', '40000\n80000', '4000\n8000000', '40000\n8000000'],
-          3,
+          '40000\n8000000',
           'Each extra level multiplies the reachable leaves by 200.',
         ),
         choose(
@@ -2842,18 +2832,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The follower is 60 changes behind, which at 30 changes per second is 2 seconds of writes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'leader_position = 12500\nfollower_position = 12350\nwrites_per_second = 50\nbehind = leader_position - follower_position\nprint(behind)\nprint(behind / writes_per_second)',
-          ['150\n7500.0', '3.0\n150', '12350\n3.0', '150\n3.0'],
-          3,
+          '150\n3.0',
           '150 changes behind at 50 changes per second is 3 seconds.',
         ),
-        predictOutput(
+        typeOutput(
           'Each number is a follower’s applied position. What does this program print?',
           'leader = 400\nfollowers = [400, 395, 371]\nfor position in followers:\n    print(leader - position)',
-          ['400\n395\n371', '0\n5\n29', '29\n5\n0', '0\n5\n24'],
-          1,
+          '0\n5\n29',
           'Each follower’s lag is the leader’s position minus its own.',
         ),
         choose(
@@ -2893,11 +2881,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only follower b has applied the user’s write at position 1205, so only it can serve that user’s read.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'last_write = 870\nfollower_a = 871\nfollower_b = 860\nprint(follower_a >= last_write, follower_b >= last_write)',
-          ['False True', 'True True', 'True False', 'False False'],
-          2,
+          'True False',
           'Follower a has passed position 870; follower b has not reached it.',
         ),
         choose(
@@ -2948,18 +2935,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The user saw version 7 and then version 6, an older state, so monotonic reads were violated.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'seen = [3, 3, 4, 8]\nwent_back = False\nprevious = 0\nfor version in seen:\n    if version < previous:\n        went_back = True\n    previous = version\nprint(went_back)',
-          ['True', '8', 'False', '4'],
-          2,
+          'False',
           'Repeating a version is not going backward, and the versions never decrease.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'seen = [10, 12, 11, 13]\nwent_back = False\nprevious = 0\nfor version in seen:\n    if version < previous:\n        went_back = True\n    previous = version\nprint(went_back)',
-          ['False', 'True', '11', '13'],
-          1,
+          'True',
           'Version 11 after 12 is a step backward, even though 13 comes later.',
         ),
         choose(
@@ -3169,25 +3154,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Three writers and three readers out of five replicas must share at least one replica.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 3\nw = 2\nr = 2\nprint(r + w > n)\nprint(r + w - n)',
-          ['False\n1', 'True\n4', 'True\n1', 'False\n-1'],
-          2,
+          'True\n1',
           '2 + 2 = 4 is more than 3, so the sets share at least one replica.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 5\nw = 2\nr = 3\nprint(r + w > n)\nprint(r + w - n)',
-          ['True\n0', 'False\n0', 'True\n1', 'False\n5'],
-          1,
+          'False\n0',
           '2 + 3 equals 5, so the read set can be exactly the replicas the write missed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 7\nw = 5\nr = 4\nprint(r + w - n)',
-          ['2', '9', '1', '16'],
-          0,
+          '2',
           'At least 4 + 5 − 7 = 2 replicas are in both sets.',
         ),
         choose(
@@ -3211,18 +3193,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'With two of five replicas down, three remain, enough for both thresholds.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 5\nw = 5\nr = 1\ndown = 1\nup = n - down\nprint(up >= w, up >= r)',
-          ['True True', 'False True', 'True False', 'False False'],
-          1,
+          'False True',
           'Writes need all 5 replicas, but only 4 are up; reads need just 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'n = 3\nw = 2\nr = 2\ndown = 1\nup = n - down\nprint(up >= w, up >= r)',
-          ['False False', 'True False', 'False True', 'True True'],
-          3,
+          'True True',
           'Two replicas remain, enough for both thresholds of 2.',
         ),
         choose(
@@ -3318,11 +3298,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each shard owns a quarter of the records, and the cluster stores every record three times.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'records = 900\nshards = 3\nreplicas = 2\nprint(records // shards)\nprint(records * replicas)',
-          ['450\n1800', '300\n600', '900\n1800', '300\n1800'],
-          3,
+          '300\n1800',
           'Each of 3 shards owns 300 records, and every record is stored twice.',
         ),
         choose(
@@ -3362,11 +3341,10 @@ export const knowledgePoints: KnowledgePointModule = {
         'Queries that carry the partition key stay cheap; others pay for every shard.',
       ),
       questions: [
-        predictOutput(
+        typeOutput(
           'Records are routed with key % shards. What does this program print?',
           'shards = 4\nfor key in [10, 11, 14]:\n    print(key % shards)',
-          ['10\n11\n14', '2\n3\n3', '2\n3\n2', '0\n1\n2'],
-          2,
+          '2\n3\n2',
           '10 % 4 = 2, 11 % 4 = 3 and 14 % 4 = 2.',
         ),
         choose(
@@ -3412,11 +3390,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'One tenant holds 96% of all rows, so partitioning by tenant would put almost everything on one shard.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'largest = 600\nothers = [100, 300]\ntotal = largest\nfor rows in others:\n    total = total + rows\nprint(largest * 100 // total)',
-          ['600', '60', '33', '6'],
-          1,
+          '60',
           'The largest group holds 600 of 1,000 rows: 60%.',
         ),
         choose(
@@ -3470,18 +3447,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Shard 0 owns keys below 100, shard 1 owns 100–199, shard 2 owns 200–299 and shard 3 owns 300 and above. 250 passes two boundaries.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'boundaries = [100, 200, 300]\nkey = 99\nshard = 0\nfor b in boundaries:\n    if key >= b:\n        shard = shard + 1\nprint(shard)',
-          ['1', '99', '0', '3'],
-          2,
+          '0',
           '99 is below every boundary, so it stays in the first range.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'boundaries = [100, 200, 300]\nkey = 300\nshard = 0\nfor b in boundaries:\n    if key >= b:\n        shard = shard + 1\nprint(shard)',
-          ['2', '300', '1', '3'],
-          3,
+          '3',
           'A key equal to a boundary belongs to the range that starts there.',
         ),
         choose(
@@ -3637,18 +3612,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The hot shard serves 92% of all requests, although each shard owns the same number of keys.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Each number is one shard’s requests per second. What does this program print?',
           'hot = 300\nothers = [50, 50, 100]\ntotal = hot\nfor r in others:\n    total = total + r\nprint(hot * 100 // total)',
-          ['300', '25', '75', '60'],
-          3,
+          '60',
           'The hot shard handles 300 of 500 requests: 60%.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'keys_hot_shard = 250\nkeys_other_shard = 250\nrequests_hot_shard = 970\nrequests_other_shard = 10\nprint(keys_hot_shard == keys_other_shard)\nprint(requests_hot_shard // requests_other_shard)',
-          ['True\n97', 'False\n97', 'True\n1', 'False\n1'],
-          0,
+          'True\n97',
           'The shards own equal numbers of keys, yet the hot shard gets 97 times the traffic.',
         ),
         choose(
@@ -3687,11 +3660,10 @@ export const knowledgePoints: KnowledgePointModule = {
         'Copies of one record can share its reads; more shards cannot.',
       ),
       questions: [
-        predictOutput(
+        typeOutput(
           'This program computes how many nodes a hot record’s reads need, rounding up. What does it print?',
           'reads = 18000\nper_node = 4000\nnodes = (reads + per_node - 1) // per_node\nprint(nodes)',
-          ['4', '4.5', '18000', '5'],
-          3,
+          '5',
           'Four nodes serve 16,000 reads, so a fifth is needed; adding per_node − 1 before dividing rounds up.',
         ),
         choose(
@@ -3742,23 +3714,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Ten numbered writes rotate across four sub-keys by write % 4. Reading the total means adding all four parts.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'parts = {0: 0, 1: 0, 2: 0}\nfor write in [0, 1, 2, 3, 4, 5, 6]:\n    parts[write % 3] = parts[write % 3] + 1\nprint(parts)',
-          [
-            '{0: 2, 1: 2, 2: 3}',
-            '{0: 3, 1: 2, 2: 2}',
-            '{0: 7, 1: 0, 2: 0}',
-            '{0: 2, 1: 3, 2: 2}',
-          ],
-          1,
+          '{0: 3, 1: 2, 2: 2}',
           'Writes 0, 3 and 6 go to sub-key 0; the others get two each.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'parts = [12, 9, 15, 4]\ntotal = 0\nfor p in parts:\n    total = total + p\nprint(total)',
-          ['15', '4', '40', '10'],
-          2,
+          '40',
           'The logical counter is the sum of its parts.',
         ),
         choose(
@@ -3801,18 +3766,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only keys 0 to 3 keep the same owner when N changes from 4 to 5; 16 of 20 keys, 80%, must move.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'keys = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]\nmoved = 0\nfor key in keys:\n    if key % 2 != key % 3:\n        moved = moved + 1\nprint(moved)',
-          ['4', '6', '12', '8'],
-          3,
+          '8',
           'Only keys whose remainders match for 2 and 3 stay put; 8 of 12 move.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'keys = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]\nmoved = 0\nfor key in keys:\n    if key % 3 != key % 5:\n        moved = moved + 1\nprint(moved)',
-          ['3', '12', '5', '15'],
-          1,
+          '12',
           'Only keys 0, 1 and 2 keep their node when going from 3 to 5 nodes, so 12 of 15 move.',
         ),
         choose(
@@ -3842,11 +3805,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'With 3 nodes each holds 4 shards. A fourth node takes 3 whole shards, one from each existing node, and everything else stays put.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'shards = 100\nprint(shards // 4)\nprint(shards // 5)',
-          ['20\n25', '25\n20', '25\n25', '4\n5'],
-          1,
+          '25\n20',
           'Each of 4 nodes holds 25 shards; with 5 nodes, 20 each, so the new node receives 20 whole shards.',
         ),
         choose(
@@ -3896,11 +3858,10 @@ export const knowledgePoints: KnowledgePointModule = {
         'The snapshot alone is already out of date when the copy finishes.',
       ),
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'copy_minutes = 15\nwrites_per_minute = 240\nprint(copy_minutes * writes_per_minute)',
-          ['255', '3600', '240', '15'],
-          1,
+          '3600',
           'Every minute of copying adds 240 writes that the snapshot does not contain.',
         ),
         choose(
@@ -3971,16 +3932,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Aborting undoes every change in the transaction.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'balances = {"ana": 100, "ben": 50}\nnew_ana = balances["ana"] - 30\nnew_ben = balances["ben"] + 30\ncommitted = True\nif committed:\n    balances["ana"] = new_ana\n    balances["ben"] = new_ben\nprint(balances)',
-          [
-            "{'ana': 70, 'ben': 80}",
-            "{'ana': 100, 'ben': 50}",
-            "{'ana': 70, 'ben': 50}",
-            "{'ana': 130, 'ben': 20}",
-          ],
-          0,
+          "{'ana': 70, 'ben': 80}",
           'At commit, both changes are applied together.',
         ),
         choose(
@@ -4265,18 +4220,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both clients read 10 and wrote 11, so one of the two increments was lost; the counter should be 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Two clients each read stock and then write a new value. What does this program print?',
           'stock = 8\na_read = stock\nb_read = stock\nstock = a_read - 2\nstock = b_read - 3\nprint(stock)',
-          ['3', '5', '6', '8'],
-          1,
+          '5',
           'The second write is based on the stale 8, erasing the first change; the correct result would be 3.',
         ),
-        predictOutput(
+        typeOutput(
           'Three clients read likes before any of them writes. What does this program print?',
           'likes = 40\nreads = [likes, likes, likes]\nfor r in reads:\n    likes = r + 1\nprint(likes)',
-          ['43', '42', '40', '41'],
-          3,
+          '41',
           'Every write is computed from 40, so only one increment survives.',
         ),
         choose(
@@ -4316,11 +4269,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each increment is applied to the current value at the moment it runs, so both count.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Each deposit is applied atomically to the current balance. What does this program print?',
           'balance = 100\ndeposits = [20, 30, 50]\nfor d in deposits:\n    balance = balance + d\nprint(balance)',
-          ['150', '120', '200', '100'],
-          2,
+          '200',
           'Each deposit builds on the result of the previous one.',
         ),
         choose(
@@ -4366,11 +4318,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Alice saves first and bumps the version to 5. Bob still expects version 4, so his write is rejected instead of overwriting Alice’s.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'stored = 7\nx_read = 7\ny_read = 6\ny_ok = y_read == stored\nif y_ok:\n    stored = stored + 1\nx_ok = x_read == stored\nif x_ok:\n    stored = stored + 1\nprint(y_ok, x_ok, stored)',
-          ['True True 9', 'False False 7', 'True False 8', 'False True 8'],
-          3,
+          'False True 8',
           'y read an old version and is rejected; x read the current version and succeeds.',
         ),
         choose(

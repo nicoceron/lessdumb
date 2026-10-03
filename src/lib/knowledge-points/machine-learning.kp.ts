@@ -1,4 +1,9 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 export const knowledgePoints: KnowledgePointModule = {
   'ml-learning-tasks': [
@@ -15,23 +20,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Temperature and the holiday flag are inputs. The number of bike rentals is what the model should predict, so it is the target and is not in the feature list.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'house = {"rooms": 3, "area_m2": 72, "price": 210000}\nfeatures = [house["rooms"], house["area_m2"]]\ntarget = house["price"]\nprint(features)\nprint(target)',
-          [
-            '[3, 72, 210000]\n210000',
-            '[3, 72]\n210000',
-            '[72, 3]\n210000',
-            '[3, 72]\nprice',
-          ],
-          1,
+          '[3, 72]\n210000',
           'The feature list holds rooms and area in the order written; the target is the price value, not the key name.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'row = {"temp_c": 21, "humidity": 40, "wind": 12, "rain_mm": 5}\nfeatures = [row["temp_c"], row["humidity"], row["wind"]]\ntarget = row["rain_mm"]\nprint(len(features), target)',
-          ['4 5', '3 rain_mm', '3 5', '5 3'],
-          2,
+          '3 5',
           'Three keys are used as features, and the target is the rainfall value 5.',
         ),
         choose(
@@ -45,11 +43,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Every column except the target can serve as an input; churned is what you predict, so it cannot be a feature.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def target_of(record):\n    return record["passed"]\n\nstudents = [{"hours": 2, "passed": False}, {"hours": 9, "passed": True}]\nlabels = []\nfor student in students:\n    labels.append(target_of(student))\nprint(labels)',
-          ['[2, 9]', '[False, True]', '[True, False]', '["passed", "passed"]'],
-          1,
+          '[False, True]',
           'target_of returns the passed value of each record, and the loop keeps the records in order.',
         ),
       ],
@@ -89,11 +86,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The numbers are codes for two categories; their size means nothing, so this is binary classification.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'reading = {"sensor": "A7", "temp_c": 91.5}\noverheated = reading["temp_c"] >= 90\nprint(reading["temp_c"], overheated)',
-          ['91.5 False', 'True 91.5', '91.5 overheated', '91.5 True'],
-          3,
+          '91.5 True',
           '91.5 is at least 90, so the derived class label is True while the numeric value stays 91.5.',
         ),
         choose(
@@ -155,16 +151,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Only the transactions come with a known target for every example.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def learning_type(has_labels, takes_actions):\n    if takes_actions:\n        return "reinforcement"\n    if has_labels:\n        return "supervised"\n    return "unsupervised"\n\nprint(learning_type(False, True))\nprint(learning_type(True, False))',
-          [
-            'unsupervised\nsupervised',
-            'reinforcement\nunsupervised',
-            'reinforcement\nsupervised',
-            'supervised\nreinforcement',
-          ],
-          2,
+          'reinforcement\nsupervised',
           'takes_actions is checked first, so the first call returns reinforcement; the second has labels and no actions.',
         ),
       ],
@@ -215,16 +205,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Refunds follow cancellations, so the feature carried the answer during testing but is missing at prediction time.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'row = {"plan": "pro", "logins": 12, "cancel_reason": "price", "cancelled": True}\nusable = ["plan", "logins"]\nfeatures = []\nfor name in usable:\n    features.append(row[name])\nprint(features)\nprint(row["cancelled"])',
-          [
-            "['pro', 12, 'price']\nTrue",
-            "['plan', 'logins']\nTrue",
-            "['pro', 12]\nTrue",
-            '[pro, 12]\nTrue',
-          ],
-          2,
+          "['pro', 12]\nTrue",
           'Only the usable keys are copied, so the cancel reason, known only after cancelling, stays out. Lists print strings with quotes.',
         ),
       ],
@@ -266,11 +250,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Selecting on the test score fits the choices to those specific rows, so the score overstates performance on new data.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'rows = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\ntrain = rows[:7]\nvalidation = rows[7:9]\ntest = rows[9:]\nprint(len(train), len(validation), len(test))',
-          ['7 2 1', '7 3 1', '6 2 2', '7 2 2'],
-          0,
+          '7 2 1',
           'rows[:7] has 7 items, rows[7:9] has positions 7 and 8, and rows[9:] has only the last item.',
         ),
         choose(
@@ -299,11 +282,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first five days train the model and the two most recent days test it, so no test day comes before a training day.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'months = ["jan", "feb", "mar", "apr", "may", "jun"]\ntrain = months[:-2]\ntest = months[-2:]\nprint(train[-1], test[0])',
-          ['may jun', 'apr may', 'apr jun', 'mar may'],
-          1,
+          'apr may',
           'months[:-2] stops before "may", so training ends at "apr"; the test slice starts at "may".',
         ),
         choose(
@@ -328,11 +310,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'With a random split, the model sees neighbouring and later days, information a real forecast never has.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'temps = [3, 5, 4, 8, 9, 7, 10, 12]\nn_test = 3\ntrain = temps[:len(temps) - n_test]\ntest = temps[len(temps) - n_test:]\nprint(len(train), test)',
-          ['5 [3, 5, 4]', '3 [7, 10, 12]', '5 [9, 7, 10]', '5 [7, 10, 12]'],
-          3,
+          '5 [7, 10, 12]',
           'The cut is at position 8 - 3 = 5, so the last three readings form the test set.',
         ),
       ],
@@ -350,11 +331,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Overall, 40% of rows are positive, but slicing sorted labels leaves 25% in training and 100% in testing. A stratified split would keep both near 40%.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'labels = [1, 0, 0, 1, 0, 0, 0, 0, 1, 0]\ntrain, test = labels[:5], labels[5:]\nprint(sum(labels) / len(labels))\nprint(sum(train) / len(train), sum(test) / len(test))',
-          ['0.3\n0.4 0.2', '0.3\n0.3 0.3', '3\n2 1', '0.3\n0.2 0.4'],
-          0,
+          '0.3\n0.4 0.2',
           'There are 3 positives in 10 rows overall, 2 in the first five rows, and 1 in the last five.',
         ),
         choose(
@@ -379,11 +359,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Stratification preserves class shares; it does not address time order or repeated entities.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'labels = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1]\ntrain, test = labels[:8], labels[8:]\nprint(sum(train), sum(test))',
-          ['2 0', '1 1', '0 2', '8 2'],
-          2,
+          '0 2',
           'Both positives sit in the last two positions, so the training slice has none of them.',
         ),
       ],
@@ -401,11 +380,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both of patient A’s readings go to the test set, so the model is tested on a patient it never saw.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'readings = [{"machine": "m1", "temp": 70}, {"machine": "m2", "temp": 64},\n            {"machine": "m1", "temp": 72}, {"machine": "m3", "temp": 80},\n            {"machine": "m2", "temp": 66}]\nheld_out = ["m2"]\ntrain, test = [], []\nfor r in readings:\n    if r["machine"] in held_out:\n        test.append(r["temp"])\n    else:\n        train.append(r["temp"])\nprint(len(train), len(test))\nprint(test)',
-          ['4 1\n[64]', '3 2\n[64, 66]', '3 2\n[70, 72]', '2 3\n[64, 66]'],
-          1,
+          '3 2\n[64, 66]',
           'Machine m2 has two readings, 64 and 66, and both go to the test set; the other three stay in training.',
         ),
         choose(
@@ -458,11 +436,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The training mean is $120 / 4 = 30.0$, and the baseline predicts that same value for every new row.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'train = [3, 5, 10]\ntest = [4, 100]\nbaseline = sum(train) / len(train)\nprint(baseline)',
-          ['24.4', '52.0', '6', '6.0'],
-          3,
+          '6.0',
           'Only the training targets are averaged: $18 / 3 = 6.0$. Division with / gives a float.',
         ),
         choose(
@@ -487,11 +464,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Matching a constant predictor means the features add almost nothing to the prediction yet.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'train = [12, 18, 15]\nbaseline = sum(train) / len(train)\nnew_rows = [{"id": 1}, {"id": 2}]\nprint([baseline for row in new_rows])',
-          ['[15.0, 15.0]', '[12, 18]', '[15, 15]', '15.0'],
-          0,
+          '[15.0, 15.0]',
           'The comprehension produces the same baseline value, 15.0, once per new row.',
         ),
       ],
@@ -509,11 +485,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only 2 of 6 training labels are 1, so the majority class is 0. Predicting 0 for every test row is right for 3 of 4 rows.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'train = [1, 1, 0, 1, 1]\nif sum(train) > len(train) / 2:\n    majority = 1\nelse:\n    majority = 0\ntest = [1, 0, 1, 1, 0]\nhits = sum([1 for y in test if y == majority])\nprint(majority, hits / len(test))',
-          ['1 0.8', '1 0.6', '0 0.4', '1 3'],
-          1,
+          '1 0.6',
           'Four of five training labels are 1, so the baseline predicts 1; three of five test labels are 1.',
         ),
         choose(
@@ -538,11 +513,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'It ignores the features and always predicts the training majority; the test labels stay unused.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'majority = 0\nvalidation = [1, 0, 0, 0, 0, 1, 0, 0]\ncorrect = sum([1 for y in validation if y == majority])\nprint(correct, correct / len(validation))',
-          ['6 0.75', '2 0.25', '6 0.6', '8 1.0'],
-          0,
+          '6 0.75',
           'Six validation labels equal the predicted class 0, and $6 / 8 = 0.75$.',
         ),
       ],
@@ -560,18 +534,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The squares are 9, 0, 16, and 0, which average to $25 / 4 = 6.25$. Its square root is 2.5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'actual = [10, 12, 9]\nprediction = 10\nmse = sum([(a - prediction) ** 2 for a in actual]) / len(actual)\nprint(round(mse, 3))',
-          ['0.333', '1.0', '1.667', '5'],
-          2,
+          '1.667',
           'The residuals are 0, 2, and -1; their squares sum to 5, and $5 / 3$ rounds to 1.667.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'residuals = [5, -5, 5, -5]\nmse = sum([r ** 2 for r in residuals]) / len(residuals)\nprint(mse, mse ** 0.5)',
-          ['0.0 0.0', '25.0 25.0', '100 10.0', '25.0 5.0'],
-          3,
+          '25.0 5.0',
           'Squaring removes the signs, so each residual contributes 25; the mean is 25.0 and its square root is 5.0.',
         ),
         choose(
@@ -606,11 +578,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both use the same four validation rows and the same metric, so the model’s much lower MSE is a fair improvement over the baseline.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'baseline_residuals = [4, -4, 2, -2]\nmodel_residuals = [3, -1, 1, -3]\nbaseline_mse = sum([r ** 2 for r in baseline_residuals]) / 4\nmodel_mse = sum([r ** 2 for r in model_residuals]) / 4\nprint(baseline_mse - model_mse)',
-          ['-5.0', '0.0', '5.0', '20.0'],
-          2,
+          '5.0',
           'The baseline MSE is $40 / 4 = 10.0$ and the model MSE is $20 / 4 = 5.0$, so the model is 5.0 lower.',
         ),
         choose(
@@ -635,11 +606,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Only identical rows and an identical metric isolate the effect of the model itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'baseline_mse = 49.0\nmodel_mse = 36.0\nprint(baseline_mse ** 0.5 - model_mse ** 0.5)',
-          ['1.0', '13.0', '-1.0', '3.6'],
-          0,
+          '1.0',
           'The RMSEs are 7.0 and 6.0, so the model’s typical error is 1.0 target unit smaller.',
         ),
       ],
@@ -659,11 +629,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The training mean is 5 and the standard deviation is 2. A new 9 lies two standard deviations above the mean, and 1 lies two below.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\ntrain = np.array([10.0, 14.0])\ntest = np.array([16.0, 12.0])\nmean, std = train.mean(), train.std()\nprint(((test - mean) / std).tolist())',
-          ['[1.0, -1.0]', '[2.0, 0.0]', '[4.0, 0.0]', '[2.0, 1.0]'],
-          1,
+          '[2.0, 0.0]',
           'The training mean is 12 and the standard deviation is 2, so 16 becomes 2.0 and 12 becomes 0.0.',
         ),
         choose(
@@ -688,11 +657,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The test rows leak their distribution into training through the shared mean and standard deviation.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\ntrain = np.array([0.0, 4.0])\nmean, std = train.mean(), train.std()\nprint(((np.array([10.0]) - mean) / std).tolist())',
-          ['[4.0]', '[1.0]', '[2.5]', '[5.0]'],
-          0,
+          '[4.0]',
           'The training mean is 2 and the standard deviation is 2, so (10 - 2) / 2 = 4.0. Standardized values are not limited to -1 to 1.',
         ),
       ],
@@ -710,23 +678,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each column has its own mean (2 and 200) and scale (1 and 100). The new row becomes 0.0 in the first column and 3.0 in the second.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.preprocessing import StandardScaler\nscaler = StandardScaler().fit([[0.0], [10.0]])\nprint(scaler.mean_.tolist(), scaler.scale_.tolist())\nprint(scaler.transform([[20.0], [5.0]]).tolist())',
-          [
-            '[12.5] [7.5]\n[[1.0], [-1.0]]',
-            '[5.0] [5.0]\n[[1.0], [-1.0]]',
-            '[5.0] [5.0]\n[[4.0], [1.0]]',
-            '[5.0] [5.0]\n[[3.0], [0.0]]',
-          ],
-          3,
+          '[5.0] [5.0]\n[[3.0], [0.0]]',
           'fit learns mean 5 and scale 5 from the training rows; transform reuses them, so 20 becomes 3.0 and 5 becomes 0.0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.preprocessing import StandardScaler\ntrain = [[1.0], [2.0], [3.0]]\ntest = [[10.0], [20.0]]\nscaler = StandardScaler()\nscaler.fit_transform(train)\nscaler.transform(test)\nprint(int(scaler.n_samples_seen_))',
-          ['5', '2', '3', '6'],
-          2,
+          '3',
           'Only fit_transform learned from rows; transform applies the statistics without counting the test rows.',
         ),
         choose(
@@ -761,28 +722,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The training mean, 4.0, fills the missing value. The encoder learned blue and red, so blue is [1, 0] and the unseen green becomes all zeros.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nfrom sklearn.impute import SimpleImputer\nimputer = SimpleImputer(strategy="median").fit([[1.0], [np.nan], [3.0], [10.0]])\nprint(imputer.statistics_.tolist())\nprint(imputer.transform([[np.nan], [7.0]]).tolist())',
-          [
-            '[3.0]\n[[3.0], [7.0]]',
-            '[4.667]\n[[4.667], [7.0]]',
-            '[3.0]\n[[3.0], [3.0]]',
-            '[7.0]\n[[7.0], [7.0]]',
-          ],
-          0,
+          '[3.0]\n[[3.0], [7.0]]',
           'The median of the observed training values 1, 3, and 10 is 3.0; only the missing entry is replaced.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ntrain = pd.Series(["bus", "car", "bus"])\ntest = pd.Series(["train", "car"])\nprint(pd.get_dummies(train, dtype=int).columns.tolist())\nprint(pd.get_dummies(test, dtype=int).columns.tolist())',
-          [
-            "['bus', 'car']\n['bus', 'car']",
-            "['bus', 'car', 'train']\n['bus', 'car', 'train']",
-            "['bus', 'car']\n['car', 'train']",
-            "['bus', 'car']\n['train', 'car']",
-          ],
-          2,
+          "['bus', 'car']\n['car', 'train']",
           'get_dummies builds columns from whatever values it sees, so the two tables disagree. A fitted encoder fixes the column list from training data.',
         ),
         choose(
@@ -822,16 +771,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The imputer learns mean 3 and fills the gap, so the scaler learns from [0, 3, 6]. A new NaN becomes 3, which is 0.0 after scaling; 9 becomes $6 / 2.449 \\approx 2.449$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.impute import SimpleImputer\nfrom sklearn.preprocessing import StandardScaler\nprep = make_pipeline(SimpleImputer(strategy="mean"), StandardScaler())\nprep.fit([[1.0], [np.nan], [3.0]])\nprint(np.round(prep.transform([[np.nan], [3.0]]), 3).tolist())',
-          [
-            '[[nan], [1.225]]',
-            '[[0.0], [1.0]]',
-            '[[-1.225], [1.225]]',
-            '[[0.0], [1.225]]',
-          ],
-          3,
+          '[[0.0], [1.225]]',
           'The missing value is filled with the training mean 2, which scales to 0.0; 3 is one unit above that mean, divided by the training standard deviation 0.816.',
         ),
         choose(
@@ -884,23 +827,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'For one row, $50 + 40 \\times 3 + 15 \\times 2 = 200$. X @ w computes each row’s weighted sum, and adding b shifts every prediction.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nw = np.array([3.0, -2.0])\nb = 10.0\nx = np.array([4.0, 5.0])\nprint(b + (w * x).sum())',
-          ['32.0', '2.0', '12.0', '-12.0'],
-          2,
+          '12.0',
           '$10 + 3 \\times 4 + (-2) \\times 5 = 10 + 12 - 10 = 12.0$. The negative weight lowers the prediction.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nX = np.array([[1.0, 0.0], [2.0, 1.0], [0.0, 3.0]])\nw = np.array([5.0, 2.0])\nb = 1.0\nprint((X @ w + b).tolist())',
-          [
-            '[5.0, 12.0, 6.0]',
-            '[6.0, 12.0, 7.0]',
-            '[6.0, 13.0, 7.0]',
-            '[6.0, 13.0]',
-          ],
-          2,
+          '[6.0, 13.0, 7.0]',
           'Each row gets its own weighted sum (5, 12, 6), and the intercept adds 1 to each.',
         ),
         choose(
@@ -940,11 +876,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The line 1 + 2x misses only one point, by 1. The line 1 + 1.5x misses two points, by 0.5 and 1.5, so its squared error is larger.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nx = np.array([1.0, 2.0, 3.0])\ny = np.array([2.0, 4.0, 7.0])\n\ndef sse(b, w):\n    residuals = y - (b + w * x)\n    return float((residuals ** 2).sum())\n\nprint(sse(0.0, 2.0), sse(-1.0, 2.5))',
-          ['1.0 1.0', '0.5 1.0', '1.0 0.25', '1.0 0.5'],
-          3,
+          '1.0 0.5',
           'The first line misses by 0, 0, and 1; the second by 0.5, 0, and 0.5, whose squares sum to 0.5. Their absolute errors tie, but the squared errors do not.',
         ),
         choose(
@@ -969,16 +904,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Its SSE is 18. A line through both points would have SSE 0, so zero total residual is not enough.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\ny = np.array([2.0, 6.0, 7.0])\nfor b in [4.0, 5.0, 6.0]:\n    print(b, float(((y - b) ** 2).sum()))',
-          [
-            '4.0 17.0\n5.0 14.0\n6.0 17.0',
-            '4.0 3.0\n5.0 0.0\n6.0 -3.0',
-            '4.0 17.0\n5.0 17.0\n6.0 17.0',
-            '4.0 9.0\n5.0 14.0\n6.0 17.0',
-          ],
-          0,
+          '4.0 17.0\n5.0 14.0\n6.0 17.0',
           'The constant 5, which is the mean of y, gives the smallest squared error: 9 + 1 + 4 = 14.',
         ),
       ],
@@ -996,23 +925,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The points lie on $y = 3 + 2x$, so the fitted intercept is 3 and the one coefficient is 2. At $x = 10$ the model predicts 23.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.linear_model import LinearRegression\nX = [[1, 0], [0, 1], [1, 1], [2, 1]]\ny = [3, 4, 6, 8]\nmodel = LinearRegression().fit(X, y)\nprint(model.coef_.round(3).tolist(), round(float(model.intercept_), 3))',
-          [
-            '[3.0, 2.0] 1.0',
-            '[2.0, 3.0] 1.0',
-            '[2.0, 3.0] 0.0',
-            '[1.0, 2.0] 3.0',
-          ],
-          1,
+          '[2.0, 3.0] 1.0',
           'Every row satisfies $y = 1 + 2x_1 + 3x_2$; coef_ lists the weights in column order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nx = np.array([4.0, 5.0, 6.0])\nX = x.reshape(-1, 1)\nprint(x.shape, X.shape)',
-          ['(3,) (1, 3)', '(3, 1) (3,)', '(1, 3) (3, 1)', '(3,) (3, 1)'],
-          3,
+          '(3,) (3, 1)',
           'reshape(-1, 1) keeps three rows and makes one column, the shape scikit-learn expects for one feature.',
         ),
         choose(
@@ -1069,18 +991,16 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A shared cause such as sunshine creates the association; the coefficient alone cannot separate cause from correlation.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.linear_model import LinearRegression\nhours = [[1.0], [2.0], [3.0]]\nminutes = [[60.0], [120.0], [180.0]]\ncost = [30.0, 50.0, 70.0]\na = LinearRegression().fit(hours, cost).coef_[0]\nb = LinearRegression().fit(minutes, cost).coef_[0]\nprint(round(float(a), 3), round(float(b), 3))',
-          ['20.0 20.0', '20.0 0.333', '20.0 1200.0', '0.333 20.0'],
-          1,
+          '20.0 0.333',
           'Cost rises 20 per hour, which is $20 / 60 \\approx 0.333$ per minute.',
         ),
-        predictOutput(
+        typeOutput(
           'The second column holds x squared. What does this program print?',
           'from sklearn.linear_model import LinearRegression\nX = [[0.0, 0.0], [1.0, 1.0], [2.0, 4.0], [3.0, 9.0]]\ny = [1.0, 2.0, 5.0, 10.0]\nmodel = LinearRegression().fit(X, y)\nprint(model.predict([[4.0, 16.0]]).round(3).tolist())',
-          ['[13.0]', '[16.0]', '[10.0]', '[17.0]'],
-          3,
+          '[17.0]',
           'The data follow $y = 1 + 0 \\cdot x + 1 \\cdot x^2$, a weighted sum of the two columns, so the model predicts $1 + 16 = 17$.',
         ),
       ],
@@ -1100,11 +1020,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'For the loss $(w - 1)^2$ at $w = 4$, the gradient is 6, so the step subtracts $0.25 \\times 6 = 1.5$ and $w$ moves toward 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The loss is $(w - 3)^2$. What does this program print?',
           'w = 0.0\ngradient = 2 * (w - 3)\nw = w - 0.1 * gradient\nprint(round(w, 2))',
-          ['-0.6', '6.0', '0.6', '3.0'],
-          2,
+          '0.6',
           'The gradient is -6, and subtracting 0.1 * (-6) raises w to 0.6, toward the minimum at 3.',
         ),
         choose(
@@ -1129,11 +1048,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Subtracting a small multiple of the gradient moves w in the direction of decreasing loss.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'weights = [1.0, -2.0]\ngradient = [4.0, -6.0]\nlr = 0.5\nweights = [weights[i] - lr * gradient[i] for i in range(2)]\nprint(weights)',
-          ['[-1.0, 1.0]', '[3.0, -5.0]', '[2.0, -3.0]', '[-1.0, -5.0]'],
-          0,
+          '[-1.0, 1.0]',
           'Each weight moves by its own gradient: $1 - 0.5 \\times 4 = -1$ and $-2 - 0.5 \\times (-6) = 1$.',
         ),
       ],
@@ -1151,18 +1069,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'With 0.1, the distance shrinks by 20% per step. With 0.5, the first step lands on 10. With 1.1, each step overshoots further, so w moves away from 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The loss is $(w - 8)^2$. What does this program print?',
           'w = 0.0\nfor step in range(2):\n    w = w - 0.25 * 2 * (w - 8)\nprint(w)',
-          ['4.0', '8.0', '6.0', '2.0'],
-          2,
+          '6.0',
           'Each step halves the distance to 8: it goes from 8 to 4 to 2, so w ends at 6.0.',
         ),
-        predictOutput(
+        typeOutput(
           'The loss is $(w - 4)^2$. What does this program print?',
           'w = 0.0\nfor step in range(2):\n    w = w - 0.75 * 2 * (w - 4)\n    print(w)',
-          ['3.0\n3.75', '6.0\n3.0', '6.0\n8.0', '6.0\n6.0'],
-          1,
+          '6.0\n3.0',
           'The first step jumps past 4 to 6.0; the next jumps back to 3.0. The steps overshoot, but the distance shrinks.',
         ),
         choose(
@@ -1202,11 +1118,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each example says $w$ is too small, by different amounts. The batch gradient is their average, $-28 / 3$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Only the first two examples form this mini-batch. What does this program print?',
           'xs = [1.0, 2.0, 3.0, 4.0]\nys = [3.0, 6.0, 9.0, 12.0]\nw = 2.0\nbatch = [0, 1]\ngrads = [2 * (w * xs[i] - ys[i]) * xs[i] for i in batch]\nprint(sum(grads) / len(grads))',
-          ['-15.0', '-10.0', '5.0', '-5.0'],
-          3,
+          '-5.0',
           'The two gradients are -2 and -8, whose average is -5.0. The full batch would average all four examples instead.',
         ),
         choose(
@@ -1231,11 +1146,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A one-row gradient is a rough estimate of the average gradient, so successive steps point in varying directions.',
         ),
-        predictOutput(
+        typeOutput(
           'This loop makes one stochastic update per example. What does it print?',
           'xs = [1.0, 2.0]\nys = [2.0, 4.0]\nw = 0.0\nfor i in range(2):\n    w = w - 0.1 * 2 * (w * xs[i] - ys[i]) * xs[i]\n    print(round(w, 3))',
-          ['0.4\n2.0', '1.0\n1.0', '0.4\n1.68', '0.4\n0.8'],
-          2,
+          '0.4\n1.68',
           'The first update gives 0.4. The second gradient is computed at $w = 0.4$: $2(0.8 - 4) \\times 2 = -12.8$, so $w$ rises by 1.28.',
         ),
       ],
@@ -1253,11 +1167,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Five hundred small steps reach the line $y = 1 + 2x$, which fits all three points exactly.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print after one update?',
           'xs = [1.0, 2.0]\nys = [3.0, 5.0]\nb, w = 0.0, 0.0\nerrors = [b + w * xs[i] - ys[i] for i in range(2)]\ngrad_b = sum([2 * e for e in errors]) / 2\ngrad_w = sum([2 * errors[i] * xs[i] for i in range(2)]) / 2\nb, w = b - 0.1 * grad_b, w - 0.1 * grad_w\nprint(round(b, 3), round(w, 3))',
-          ['-0.8 -1.3', '0.8 1.3', '1.6 2.6', '0.8 0.8'],
-          1,
+          '0.8 1.3',
           'The errors are -3 and -5, so grad_b = -8 and grad_w = (-6 - 20) / 2 = -13. Subtracting 0.1 times each gives 0.8 and 1.3.',
         ),
         choose(
@@ -1332,16 +1245,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Both errors are high and barely beat a constant baseline, so the model misses real structure.',
         ),
-        predictOutput(
+        typeOutput(
           'Each pair is (training MSE, validation MSE). What does this program print?',
           'models = {"shallow": (5.1, 5.4), "medium": (2.2, 2.6), "deep": (0.1, 7.9)}\nfor name, (train, val) in models.items():\n    print(name, round(val - train, 1))',
-          [
-            'shallow 0.3\nmedium 0.4\ndeep 7.8',
-            'shallow 5.4\nmedium 2.6\ndeep 7.9',
-            'shallow 0.3\nmedium 0.4\ndeep 0.1',
-            'shallow -0.3\nmedium -0.4\ndeep -7.8',
-          ],
-          0,
+          'shallow 0.3\nmedium 0.4\ndeep 7.8',
           'Each line subtracts training error from validation error. The deep model has by far the largest gap.',
         ),
         choose(
@@ -1370,16 +1277,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The gap shrinks from 5.5 to 0.5 as data grows: the extra rows stop the model from fitting details that do not generalize.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'train = [6.8, 7.0, 7.1]\nval = [7.4, 7.3, 7.3]\ngaps = [round(v - t, 1) for t, v in zip(train, val)]\nprint(gaps)',
-          [
-            '[7.4, 7.3, 7.3]',
-            '[0.6, 0.3, 0.2]',
-            '[-0.6, -0.3, -0.2]',
-            '[0.2, 0.3, 0.6]',
-          ],
-          1,
+          '[0.6, 0.3, 0.2]',
           'Each gap subtracts training error from validation error at the same training size.',
         ),
         choose(
@@ -1393,11 +1294,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'When both curves level off high with a small gap, the model lacks capacity; more rows do not add it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'train = [0.2, 0.6, 0.9, 1.2]\nval = [5.0, 3.1, 2.0, 1.5]\nprint(round(val[-1] - train[-1], 1) < round(val[0] - train[0], 1))',
-          ['False', '0.3', '4.8', 'True'],
-          3,
+          'True',
           'The last gap is 0.3 and the first is 4.8, so the curve narrows as data grows.',
         ),
         choose(
@@ -1426,11 +1326,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Position 1 has the lowest validation error. The most complex model, at position 3, has zero training error but generalizes worst.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Each pair is (model, validation MSE). What does this program print?',
           'results = [("linear", 2.8), ("tree", 2.1), ("forest", 2.3)]\nbest_name, best_error = results[0]\nfor name, error in results:\n    if error < best_error:\n        best_name, best_error = name, error\nprint(best_name)',
-          ['linear', 'forest', 'tree', '2.1'],
-          2,
+          'tree',
           'The loop keeps the name with the lowest validation error, which is the tree at 2.1.',
         ),
         choose(
@@ -1506,11 +1405,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Less flexibility, or more rows to constrain it, makes it harder to fit details that do not generalize.',
         ),
-        predictOutput(
+        typeOutput(
           'Each list position is a model of increasing complexity. What does this program print?',
           'train_mse = [4.1, 2.0, 0.6, 0.1]\nval_mse = [4.5, 2.4, 2.9, 7.8]\nbest = 0\nfor i in range(len(val_mse)):\n    if val_mse[i] < val_mse[best]:\n        best = i\nprint(best, train_mse[best])',
-          ['3 0.1', '1 2.0', '0 4.1', '1 2.4'],
-          1,
+          '1 2.0',
           'The loop keeps the lowest validation error, at position 1. The most complex model has the lowest training error but generalizes worst.',
         ),
       ],
@@ -1528,18 +1426,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The least-squares slope is 2. As alpha grows, the penalty pulls the slope toward 0, even though the data fit $y = 2x$ exactly.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'data_loss = 2.0\nweights = [1.0, -3.0]\nalpha = 0.1\nprint(data_loss + alpha * sum([w ** 2 for w in weights]))',
-          ['2.4', '12.0', '3.0', '2.1'],
-          2,
+          '3.0',
           'The squared weights sum to 1 + 9 = 10; alpha scales that to 1.0, which is added to the data loss.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.linear_model import LinearRegression, Ridge\nX = [[-1.0], [0.0], [1.0]]\ny = [-2.0, 0.0, 2.0]\nplain = LinearRegression().fit(X, y).coef_[0]\nridge = Ridge(alpha=2.0).fit(X, y).coef_[0]\nprint(round(float(plain), 3), round(float(ridge), 3))',
-          ['2.0 2.0', '2.0 4.0', '1.0 2.0', '2.0 1.0'],
-          3,
+          '2.0 1.0',
           'Least squares finds slope 2. The ridge penalty halves it here, trading training fit for a smaller coefficient.',
         ),
         choose(
@@ -1579,18 +1475,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The target depends only on the first column. Lasso sets the noise column’s coefficient to exactly zero; Ridge only makes it small.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'data_loss = 1.0\nweights = [2.0, -3.0, 0.0]\nalpha = 0.5\nprint(data_loss + alpha * sum([abs(w) for w in weights]))',
-          ['7.5', '3.5', '2.5', '-0.5'],
-          1,
+          '3.5',
           'The absolute values sum to 5, so the L1 penalty is 2.5. Squaring instead would give the ridge value 7.5.',
         ),
-        predictOutput(
+        typeOutput(
           'Only the first two columns influence y. What does this program print?',
           'import numpy as np\nfrom sklearn.linear_model import Lasso\nX = np.array([[1.0, 2.0, 0.5], [2.0, 1.0, -0.5], [3.0, 4.0, 0.0], [4.0, 3.0, 1.0], [5.0, 5.0, -1.0]])\ny = 3 * X[:, 0] + 0.5 * X[:, 1]\nfor alpha in [0.01, 2.0]:\n    coef = Lasso(alpha=alpha).fit(X, y).coef_\n    print(alpha, int((coef == 0).sum()))',
-          ['0.01 0\n2.0 0', '0.01 2\n2.0 1', '0.01 1\n2.0 2', '0.01 1\n2.0 1'],
-          2,
+          '0.01 1\n2.0 2',
           'Even a small penalty removes the useless third column. The larger penalty also zeroes the weak second column.',
         ),
         choose(
@@ -1630,11 +1524,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Validation loss bottoms out at step 3 and then rises, so early stopping keeps the parameters saved at step 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'alphas = [0.01, 0.1, 1.0, 10.0]\ntrain_mse = [1.2, 1.5, 2.3, 4.0]\nval_mse = [5.2, 4.1, 3.6, 4.4]\nbest = 0\nfor i in range(len(alphas)):\n    if val_mse[i] < val_mse[best]:\n        best = i\nprint(alphas[best], train_mse[best])',
-          ['0.01 1.2', '1.0 3.6', '1.0 2.3', '10.0 4.0'],
-          2,
+          '1.0 2.3',
           'alpha = 1.0 has the lowest validation error, 3.6; the program prints its training error, 2.3.',
         ),
         choose(
@@ -1687,18 +1580,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '$\\exp(0) = 1$, so the score 0 maps to $1 / 2$. Scores of 2 and -2 land the same distance above and below 0.5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\nb, w = -3.0, 0.5\nx = 6.0\nz = b + w * x\nprint(z, 1 / (1 + math.exp(-z)))',
-          ['0.0 0.0', '-3.0 0.047', '0.0 1.0', '0.0 0.5'],
-          3,
+          '0.0 0.5',
           'The score is $-3 + 0.5 \\times 6 = 0$, and the sigmoid of 0 is 0.5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\n\ndef sigmoid(z):\n    return 1 / (1 + math.exp(-z))\n\nprint(round(sigmoid(1.5) + sigmoid(-1.5), 3))',
-          ['1.0', '0.0', '0.5', '2.0'],
-          0,
+          '1.0',
           'sigmoid(-z) = 1 - sigmoid(z), so the two probabilities always add up to 1.',
         ),
         choose(
@@ -1738,11 +1629,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'At 0.5, two rows are positive. At 0.7, the row with 0.58 drops out while the probabilities stay the same.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'probabilities = [0.25, 0.3, 0.65, 0.1]\nthreshold = 0.3\nprint([int(p >= threshold) for p in probabilities])',
-          ['[0, 0, 1, 0]', '[1, 1, 1, 0]', '[0, 1, 1, 0]', '[0, 1, 1, 1]'],
-          2,
+          '[0, 1, 1, 0]',
           'p >= 0.3 includes the value exactly equal to the threshold, so 0.3 and 0.65 are labelled 1.',
         ),
         choose(
@@ -1767,11 +1657,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The threshold is applied after the model; the probabilities are unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'probabilities = [0.05, 0.35, 0.5, 0.62, 0.77, 0.93]\nfor threshold in [0.5, 0.75]:\n    flagged = [p for p in probabilities if p >= threshold]\n    print(threshold, len(flagged))',
-          ['0.5 3\n0.75 2', '0.5 4\n0.75 2', '0.5 4\n0.75 4', '0.5 2\n0.75 4'],
-          1,
+          '0.5 4\n0.75 2',
           'Four probabilities are at least 0.5, counting 0.5 itself; only 0.77 and 0.93 reach 0.75.',
         ),
       ],
@@ -1789,18 +1678,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both rows are positive. Predicting 0.9 costs $-\\log(0.9) \\approx 0.105$; predicting 0.1 costs $-\\log(0.1) \\approx 2.303$, about 22 times more.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\n\ndef log_loss(y, p):\n    return -(y * math.log(p) + (1 - y) * math.log(1 - p))\n\nprint(round(log_loss(0, 0.8), 3))',
-          ['0.223', '0.8', '1.609', '0.2'],
-          2,
+          '1.609',
           'The label is 0, so the loss is $-\\log(1 - 0.8) = -\\log(0.2) \\approx 1.609$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\n\ndef log_loss(y, p):\n    return -(y * math.log(p) + (1 - y) * math.log(1 - p))\n\nlosses = [log_loss(1, 0.5), log_loss(0, 0.5)]\nprint(round(sum(losses) / len(losses), 3))',
-          ['0.5', '1.386', '0.0', '0.693'],
-          3,
+          '0.693',
           'A probability of 0.5 costs $\\log(2) \\approx 0.693$ whichever label is true, so the average is also 0.693.',
         ),
         choose(
@@ -1840,23 +1727,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '$x = 4.5$ is midway between the classes, so both columns are 0.5. Rows far to either side get the matching label.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.linear_model import LogisticRegression\nX = [[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]\ny = [0, 0, 0, 1, 1, 1]\nweak = LogisticRegression(C=0.01).fit(X, y).coef_[0][0]\nstrong = LogisticRegression(C=100.0).fit(X, y).coef_[0][0]\nprint(round(float(weak), 3), round(float(strong), 3))',
-          ['3.095 0.068', '0.068 3.095', '1.042 1.042', '0.068 0.068'],
-          1,
+          '0.068 3.095',
           'C = 0.01 imposes a strong penalty, so its coefficient is tiny; C = 100 barely penalizes, so the coefficient is large.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.linear_model import LogisticRegression\nX = [[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]\ny = ["yes", "yes", "yes", "no", "no", "no"]\nmodel = LogisticRegression().fit(X, y)\nprint(model.classes_.tolist())\nprint(model.predict_proba([[1.0]]).round(2).tolist())',
-          [
-            "['yes', 'no']\n[[0.97, 0.03]]",
-            "['no', 'yes']\n[[0.97, 0.03]]",
-            "['yes', 'no']\n[[0.03, 0.97]]",
-            "['no', 'yes']\n[[0.03, 0.97]]",
-          ],
-          3,
+          "['no', 'yes']\n[[0.03, 0.97]]",
           'classes_ is sorted, so "no" is column 0. A row at $x = 1$ is almost surely "yes", which is column 1.',
         ),
         choose(
@@ -1898,16 +1778,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Rows 0 and 3 are caught positives, row 1 is a false alarm, row 2 is a missed positive, and rows 4 and 5 are correctly rejected.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.metrics import confusion_matrix\nactual = [0, 1, 1, 0, 1]\npredicted = [0, 1, 0, 1, 1]\nprint(confusion_matrix(actual, predicted).tolist())',
-          [
-            '[[2, 1], [1, 1]]',
-            '[[1, 1], [1, 2]]',
-            '[[2, 1], [1, 1], [0, 0]]',
-            '[[1, 2], [1, 1]]',
-          ],
-          1,
+          '[[1, 1], [1, 2]]',
           'Actual 0: one predicted 0 and one predicted 1. Actual 1: one predicted 0 and two predicted 1. The layout is [[TN, FP], [FN, TP]].',
         ),
         choose(
@@ -1932,11 +1806,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The actual class is positive and the prediction is negative: the screen missed the cancer.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'actual = [1, 1, 0, 0, 1, 0]\npredicted = [1, 0, 0, 1, 1, 1]\nrows = range(len(actual))\nfp = sum([1 for i in rows if actual[i] == 0 and predicted[i] == 1])\nfn = sum([1 for i in rows if actual[i] == 1 and predicted[i] == 0])\nprint(fp, fn)',
-          ['1 2', '2 2', '2 1', '3 1'],
-          2,
+          '2 1',
           'Rows 3 and 5 are predicted 1 but are actually 0 (two false positives); row 1 is a missed positive.',
         ),
       ],
@@ -1954,11 +1827,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Eight of the ten flagged rows were positive, so precision is 0.8. The model found eight of the sixteen actual positives, so recall is 0.5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.metrics import precision_score, recall_score\nactual = [1, 1, 1, 1, 0, 0, 0, 0]\npredicted = [1, 1, 0, 0, 1, 0, 0, 0]\np = precision_score(actual, predicted)\nr = recall_score(actual, predicted)\nprint(round(float(p), 3), round(float(r), 3))',
-          ['0.5 0.667', '0.667 0.667', '0.667 0.5', '0.75 0.5'],
-          2,
+          '0.667 0.5',
           'TP = 2, FP = 1, FN = 2. Precision is $2 / 3$ and recall is $2 / 4$.',
         ),
         choose(
@@ -1978,11 +1850,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Recall counts how many actual frauds were caught, so it directly measures the costly misses.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'tp, fp, fn = 9, 1, 21\nprint(tp / (tp + fp), tp / (tp + fn))',
-          ['0.3 0.9', '0.9 0.9', '0.45 0.3', '0.9 0.3'],
-          3,
+          '0.9 0.3',
           'Nine of ten flags were right (precision 0.9), but only nine of thirty positives were found (recall 0.3).',
         ),
       ],
@@ -2000,18 +1871,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Predicting negative for all 1,000 rows is right 99% of the time, yet it catches none of the 10 positives.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'precision, recall = 0.5, 1.0\nf1 = 2 * precision * recall / (precision + recall)\nprint(round(f1, 3))',
-          ['0.75', '0.667', '0.5', '1.0'],
-          1,
+          '0.667',
           'The harmonic mean is $2 \\times 0.5 \\times 1.0 / 1.5 \\approx 0.667$, below the ordinary average 0.75.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.metrics import accuracy_score, f1_score\nactual = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1]\npredicted = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]\nprint(accuracy_score(actual, predicted), round(float(f1_score(actual, predicted)), 3))',
-          ['0.9 0.667', '0.9 0.9', '0.5 0.667', '0.9 0.5'],
-          0,
+          '0.9 0.667',
           'Nine of ten rows are correct. Precision is 1.0 and recall 0.5, so $\\text{F1} = 2 \\times 0.5 / 1.5 \\approx 0.667$.',
         ),
         choose(
@@ -2051,11 +1920,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'At 0.75, the false alarm at 0.7 disappears, so precision reaches 1.0, but the positive at 0.6 is now missed, so recall falls to 0.5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'probs = [0.9, 0.6, 0.45, 0.35, 0.2]\nactual = [1, 0, 1, 1, 0]\npred = [int(p >= 0.3) for p in probs]\ntp = sum([1 for i in range(5) if pred[i] == 1 and actual[i] == 1])\nfp = sum([1 for i in range(5) if pred[i] == 1 and actual[i] == 0])\nfn = sum([1 for i in range(5) if pred[i] == 0 and actual[i] == 1])\nprint(tp / (tp + fp), tp / (tp + fn))',
-          ['0.75 1.0', '1.0 0.75', '0.5 1.0', '0.75 0.75'],
-          0,
+          '0.75 1.0',
           'At 0.3, four rows are flagged: three positives and one negative. Every actual positive is caught, so recall is 1.0.',
         ),
         choose(
@@ -2137,16 +2005,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Each round’s score is honest only if that round’s model never trained on its validation rows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.model_selection import KFold\nX = [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]]\nsizes = []\nfor train_idx, val_idx in KFold(n_splits=5).split(X):\n    sizes.append(len(train_idx))\nprint(sizes)',
-          [
-            '[2, 2, 2, 2, 2]',
-            '[10, 10, 10, 10, 10]',
-            '[8, 6, 4, 2, 0]',
-            '[8, 8, 8, 8, 8]',
-          ],
-          3,
+          '[8, 8, 8, 8, 8]',
           'Each round holds out one fold of two rows and trains on the other eight.',
         ),
       ],
@@ -2164,23 +2026,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The three fold errors are close to each other, and their mean, 0.043, is the cross-validated MSE.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nscores = np.array([-4.0, -9.0, -2.0])\nprint(float(-scores.mean()))',
-          ['-5.0', '5.0', '15.0', '3.0'],
-          1,
+          '5.0',
           'The scores are negated MSEs, so the mean MSE is $-(-15 / 3) = 5.0$.',
         ),
-        predictOutput(
+        typeOutput(
           'DummyRegressor predicts the training mean. What does this program print?',
           'from sklearn.dummy import DummyRegressor\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.model_selection import cross_val_score\nX = [[0], [1], [2], [3], [4], [5]]\ny = [1.0, 2.9, 5.2, 7.0, 8.8, 11.1]\nfor model in [DummyRegressor(), LinearRegression()]:\n    scores = cross_val_score(model, X, y, cv=3, scoring="neg_mean_squared_error")\n    print(round(float(-scores.mean()), 3))',
-          [
-            '-25.023\n-0.043',
-            '0.043\n25.023',
-            '25.023\n0.043',
-            '25.023\n25.023',
-          ],
-          2,
+          '25.023\n0.043',
           'Both models face the same folds and metric; the mean baseline’s error is far larger than the line’s.',
         ),
         choose(
@@ -2220,28 +2075,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each round validates on the next row in time and trains on everything before it, so the training window grows.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.model_selection import StratifiedKFold\ny = [0, 0, 0, 0, 1, 1]\nX = [[0], [1], [2], [3], [4], [5]]\nfor train_idx, val_idx in StratifiedKFold(n_splits=2).split(X, y):\n    print([y[i] for i in val_idx])',
-          [
-            '[0, 0, 0]\n[0, 1, 1]',
-            '[0, 0, 1]\n[0, 0, 1]',
-            '[0, 0, 0, 0]\n[1, 1]',
-            '[0, 1]\n[0, 1]',
-          ],
-          1,
+          '[0, 0, 1]\n[0, 0, 1]',
           'Two thirds of the labels are 0, and stratification keeps that share in both validation folds.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.model_selection import GroupKFold\nX = [[0], [1], [2], [3], [4], [5]]\ngroups = ["a", "a", "b", "b", "b", "c"]\nfor train_idx, val_idx in GroupKFold(n_splits=3).split(X, groups=groups):\n    print([groups[i] for i in val_idx])',
-          [
-            "['a', 'a']\n['b', 'b']\n['b', 'c']",
-            "['a', 'b']\n['a', 'b']\n['b', 'c']",
-            "['b', 'b', 'b']\n['a', 'a']\n['c']",
-            "['a']\n['b']\n['c']",
-          ],
-          2,
+          "['b', 'b', 'b']\n['a', 'a']\n['c']",
           'Every validation fold holds whole groups, so no group is split between training and validation.',
         ),
         choose(
@@ -2281,16 +2124,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Round one trains on 4 and 6, so its scaler mean is 5; round two trains on 0 and 2, so its mean is 1. Neither saw its validation rows.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.model_selection import cross_validate\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LinearRegression\nX = [[1.0], [2.0], [3.0], [10.0], [11.0], [12.0]]\ny = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]\npipe = make_pipeline(StandardScaler(), LinearRegression())\nresult = cross_validate(pipe, X, y, cv=3, return_estimator=True)\nfor fitted in result["estimator"]:\n    print(fitted.named_steps["standardscaler"].mean_.tolist())',
-          [
-            '[6.5]\n[6.5]\n[6.5]',
-            '[1.5]\n[6.5]\n[11.5]',
-            '[9.0]\n[6.5]\n[4.0]',
-            '[4.0]\n[6.5]\n[9.0]',
-          ],
-          2,
+          '[9.0]\n[6.5]\n[4.0]',
           'Each round’s scaler sees only that round’s four training rows; the first round leaves out 1 and 2, so its mean is $36 / 4 = 9$.',
         ),
         choose(
@@ -2315,11 +2152,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Cross-validation is used to make choices, so the test set must remain untouched until those choices are final.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.model_selection import cross_validate\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LinearRegression\nX = [[0.0], [2.0], [4.0], [6.0], [8.0]]\ny = [1.0, 2.0, 3.0, 4.0, 5.0]\nresult = cross_validate(make_pipeline(StandardScaler(), LinearRegression()), X, y, cv=5, scoring="neg_mean_squared_error", return_estimator=True)\nprint(len(result["estimator"]))',
-          ['1', '4', '5', '6'],
-          2,
+          '5',
           'Five rounds fit five separate pipelines, one per held-out fold.',
         ),
       ],
@@ -2350,11 +2186,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The learning rate is set before training and controls how fitting proceeds; the others are outputs of fit.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.linear_model import Ridge\nmodel = Ridge(alpha=2.0).fit([[-1.0], [0.0], [1.0]], [-2.0, 0.0, 2.0])\nprint(model.alpha)\nprint(round(float(model.coef_[0]), 3))',
-          ['2.0\n2.0', '1.0\n2.0', '2.0\n1.0', '2.0\n0.5'],
-          2,
+          '2.0\n1.0',
           'alpha stays exactly as supplied; the coefficient is learned, and the penalty shrinks it from 2 to 1.',
         ),
         choose(
@@ -2394,23 +2229,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Six combinations were scored. Deeper trees did no better on the held-out folds, so the simplest tree wins.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = {"max_depth": [2, 4, 6, 8], "min_samples_leaf": [1, 5, 10]}\ncombos = len(grid["max_depth"]) * len(grid["min_samples_leaf"])\nfolds = 5\nprint(combos, combos * folds)',
-          ['7 35', '12 12', '12 60', '12 61'],
-          2,
+          '12 60',
           'Four depths times three leaf sizes make 12 combinations, each fitted once per fold.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.model_selection import GridSearchCV\nfrom sklearn.linear_model import Ridge\nX = [[0.0], [1.0], [2.0], [3.0], [4.0], [5.0]]\ny = [0.2, 1.9, 4.1, 6.2, 7.8, 10.1]\nsearch = GridSearchCV(Ridge(), {"alpha": [0.01, 1.0, 100.0]}, cv=3, scoring="neg_mean_squared_error")\nsearch.fit(X, y)\nprint(search.best_params_)\nprint(round(float(-search.best_score_), 3))',
-          [
-            "{'alpha': 100.0}\n0.04",
-            "{'alpha': 0.01}\n-0.04",
-            "{'alpha': 1.0}\n0.04",
-            "{'alpha': 0.01}\n0.04",
-          ],
-          3,
+          "{'alpha': 0.01}\n0.04",
           'The data are almost exactly linear, so the weakest penalty validates best. best_score_ is a negated MSE, so negating it gives 0.04.',
         ),
         choose(
@@ -2445,11 +2273,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Here 50 equally good settings get a true score of 0.80 plus seeded random noise. Picking the maximum reports 0.839, an advantage that comes entirely from luck.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.model_selection import RandomizedSearchCV\nfrom sklearn.tree import DecisionTreeClassifier\nX = [[1], [2], [3], [4], [5], [6], [7], [8]]\ny = [0, 0, 1, 0, 1, 1, 1, 1]\nspace = {"max_depth": [1, 2, 3, 4, 5], "min_samples_leaf": [1, 2, 3]}\nsearch = RandomizedSearchCV(DecisionTreeClassifier(random_state=0), space, n_iter=4, cv=2, random_state=0)\nsearch.fit(X, y)\nprint(len(search.cv_results_["params"]))',
-          ['15', '8', '4', '2'],
-          2,
+          '4',
           'Randomized search evaluates only n_iter = 4 of the 15 possible combinations.',
         ),
         choose(
@@ -2474,11 +2301,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A grid grows multiplicatively with each hyperparameter; random sampling keeps the cost fixed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'validation = [0.84, 0.86, 0.91, 0.85]\ntest = [0.83, 0.85, 0.84, 0.84]\nbest = 0\nfor i in range(len(validation)):\n    if validation[i] > validation[best]:\n        best = i\nprint(validation[best], test[best])',
-          ['0.91 0.84', '0.91 0.91', '0.86 0.85', '0.84 0.83'],
-          0,
+          '0.91 0.84',
           'The configuration chosen for its 0.91 validation score scores only 0.84 on new data, a typical drop for a selected winner.',
         ),
       ],
@@ -2496,11 +2322,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The search picks depth 1 on the training data, refits it there, and the test rows are used once, only to check that final model.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.model_selection import GridSearchCV\nfrom sklearn.tree import DecisionTreeClassifier\nX_train = [[1], [2], [3], [4], [5], [6], [7], [8]]\ny_train = [0, 0, 0, 0, 1, 1, 1, 1]\nsearch = GridSearchCV(DecisionTreeClassifier(random_state=0), {"max_depth": [1, 2, 3]}, cv=2)\nsearch.fit(X_train, y_train)\nprint(int(search.best_estimator_.tree_.n_node_samples[0]))',
-          ['4', '2', '10', '8'],
-          3,
+          '8',
           'The root node counts the rows the final tree was fitted on: all eight training rows, not one fold’s four.',
         ),
         choose(
@@ -2525,11 +2350,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Once its score influences decisions, the test set is effectively validation data.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'outer_folds = 5\ncombinations = 4\ninner_folds = 3\ninner_fits = outer_folds * combinations * inner_folds\nprint(inner_fits, inner_fits + outer_folds)',
-          ['60 65', '12 17', '60 60', '20 25'],
-          0,
+          '60 65',
           'Each of the 5 outer rounds scores 4 combinations with 3 inner folds, then refits its winner once.',
         ),
       ],
@@ -2549,23 +2373,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first row has income 30, so it goes left, where its debt of 15 fails the second test. The second row goes right at the first question and reaches a leaf immediately.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def predict(row):\n    if row["temp"] <= 20:\n        return "jacket"\n    if row["rain"] <= 0:\n        return "t-shirt"\n    return "umbrella"\n\nprint(predict({"temp": 20, "rain": 3}))\nprint(predict({"temp": 25, "rain": 3}))',
-          [
-            'jacket\numbrella',
-            'umbrella\numbrella',
-            'jacket\nt-shirt',
-            't-shirt\numbrella',
-          ],
-          0,
+          'jacket\numbrella',
           'temp 20 satisfies <= 20, so the first row stops at "jacket". The second row passes on and has rain above 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.tree import DecisionTreeClassifier\nX = [[1], [3], [4], [8], [9], [10]]\ny = [0, 0, 0, 1, 1, 1]\ntree = DecisionTreeClassifier(max_depth=1, random_state=0).fit(X, y)\nprint(tree.tree_.threshold[0])\nprint(tree.predict([[5], [7]]).tolist())',
-          ['6.0\n[0, 0]', '4.0\n[1, 1]', '6.0\n[0, 1]', '5.5\n[0, 1]'],
-          2,
+          '6.0\n[0, 1]',
           'The learned threshold is the midpoint between 4 and 8. Then 5 goes left to class 0 and 7 goes right to class 1.',
         ),
         choose(
@@ -2605,18 +2422,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'A pure node scores 0. Two equal classes give 1 - (0.25 + 0.25) = 0.5. A 3:1 mix gives 1 - (0.5625 + 0.0625) = 0.375.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def gini(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    total = len(labels)\n    return 1 - sum([(c / total) ** 2 for c in counts.values()])\n\nprint(round(gini(["x", "y", "z"]), 3))',
-          ['0.5', '0.667', '1.0', '0.333'],
-          1,
+          '0.667',
           'Each class has proportion $1/3$, so the impurity is $1 - 3 \\times (1/9) \\approx 0.667$. With three classes it can exceed 0.5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def gini(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    total = len(labels)\n    return 1 - sum([(c / total) ** 2 for c in counts.values()])\n\nprint(round(gini([1, 1, 1, 1, 0]), 3))',
-          ['0.2', '0.8', '0.68', '0.32'],
-          3,
+          '0.32',
           'The proportions are 0.8 and 0.2, so the impurity is 1 - (0.64 + 0.04) = 0.32.',
         ),
         choose(
@@ -2656,16 +2471,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'At 2.5 the left child [0, 0] is pure and the right child [1, 0, 1, 1] scores 0.375, weighted by $4/6$. At 3.5 both children are mixed, so 2.5 is the better split.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def gini(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    return 1 - sum([(c / len(labels)) ** 2 for c in counts.values()])\n\nx = [1, 2, 3, 4]\ny = [0, 0, 1, 1]\nfor t in [1.5, 2.5]:\n    left = [y[i] for i in range(4) if x[i] <= t]\n    right = [y[i] for i in range(4) if x[i] > t]\n    print(t, round(len(left) / 4 * gini(left) + len(right) / 4 * gini(right), 3))',
-          [
-            '1.5 0.444\n2.5 0.0',
-            '1.5 0.333\n2.5 0.0',
-            '1.5 0.0\n2.5 0.333',
-            '1.5 0.333\n2.5 0.5',
-          ],
-          1,
+          '1.5 0.333\n2.5 0.0',
           'At 1.5 the right child [0, 1, 1] scores 0.444, weighted by $3/4$. At 2.5 both children are pure.',
         ),
         choose(
@@ -2690,11 +2499,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The left child holds exactly the parent’s rows, so the weighted impurity is unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.tree import DecisionTreeClassifier\nX = [[1], [2], [3], [7], [8], [9]]\nX_km = [[1000], [2000], [3000], [7000], [8000], [9000]]\ny = [0, 0, 0, 1, 1, 1]\na = DecisionTreeClassifier(random_state=0).fit(X, y)\nb = DecisionTreeClassifier(random_state=0).fit(X_km, y)\nprint(a.tree_.threshold[0], b.tree_.threshold[0])',
-          ['5.0 5.0', '5.0 5000.0', '3.0 3000.0', '5.0 0.005'],
-          1,
+          '5.0 5000.0',
           'Both trees split between the third and fourth rows, at the midpoint of those values in each unit.',
         ),
       ],
@@ -2712,16 +2520,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'With no limit, the tree grows five levels deep to classify every training row correctly, including the isolated labels at 3 and 7 that are likely noise.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.tree import DecisionTreeClassifier\nX = [[1], [2], [3], [4], [5], [6], [7], [8]]\ny = [0, 0, 1, 0, 1, 1, 0, 1]\nfor leaf in [1, 3]:\n    tree = DecisionTreeClassifier(min_samples_leaf=leaf, random_state=0).fit(X, y)\n    print(leaf, tree.get_n_leaves(), tree.score(X, y))',
-          [
-            '1 6 1.0\n3 6 1.0',
-            '1 2 0.75\n3 6 1.0',
-            '1 8 1.0\n3 3 0.75',
-            '1 6 1.0\n3 2 0.75',
-          ],
-          3,
+          '1 6 1.0\n3 2 0.75',
           'Requiring at least three rows per leaf forbids the tiny leaves that isolate single rows, so the tree stays small and no longer fits every row.',
         ),
         choose(
@@ -2746,11 +2548,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A threshold test depends only on order, which multiplying by a positive constant does not change.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.tree import DecisionTreeClassifier\nX = [[1], [2], [3], [7], [8], [9]]\nX_km = [[1000], [2000], [3000], [7000], [8000], [9000]]\ny = [0, 0, 0, 1, 1, 1]\na = DecisionTreeClassifier(random_state=0).fit(X, y)\nb = DecisionTreeClassifier(random_state=0).fit(X_km, y)\nprint(a.predict([[4]]).tolist(), b.predict([[4000]]).tolist())',
-          ['[0] [1]', '[1] [0]', '[0] [0]', '[1] [1]'],
-          2,
+          '[0] [0]',
           'The same row in either unit lands on the same side of its tree’s threshold, so both predictions agree.',
         ),
       ],
@@ -2770,16 +2571,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The learned score is x - 2: the boundary sits at 2, midway between the closest points 1 and 3, which lie exactly on the margin at -1 and +1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nw = np.array([1.0, 2.0])\nb = -4.0\npoints = np.array([[1.0, 1.0], [2.0, 2.0], [0.0, 3.0]])\nscores = points @ w + b\nprint(scores.tolist())\nprint([int(s > 0) for s in scores])',
-          [
-            '[-1.0, 2.0, 2.0]\n[0, 1, 1]',
-            '[3.0, 6.0, 6.0]\n[1, 1, 1]',
-            '[-1.0, 2.0, 2.0]\n[1, 0, 0]',
-            '[-1.0, 6.0, 2.0]\n[0, 1, 1]',
-          ],
-          0,
+          '[-1.0, 2.0, 2.0]\n[0, 1, 1]',
           'Each score is $x_1 + 2x_2 - 4$, so the first point falls on the negative side and the other two on the positive side.',
         ),
         choose(
@@ -2804,11 +2599,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Among boundaries that separate the classes, it prefers the one with the widest gap to the nearest points.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.svm import SVC\nX = [[0.0], [1.0], [3.0], [4.0]]\ny = [0, 0, 1, 1]\nmodel = SVC(kernel="linear", C=1.0).fit(X, y)\nprint(model.predict([[1.5], [2.9], [10.0]]).tolist())',
-          ['[0, 0, 1]', '[1, 1, 1]', '[0, 1, 0]', '[0, 1, 1]'],
-          3,
+          '[0, 1, 1]',
           'The boundary is at 2, so 1.5 is negative while 2.9 and 10 are positive; distance beyond the margin does not flip the class.',
         ),
       ],
@@ -2826,11 +2620,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only the points at 1 and 3, rows 1 and 2, touch the margin. The far points at 0, 4, and 10 do not constrain the boundary.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The second model is fitted on the two support vectors only. What does this program print?',
           'from sklearn.svm import SVC\nfull = SVC(kernel="linear", C=10.0).fit([[0.0], [1.0], [3.0], [4.0], [10.0]], [0, 0, 1, 1, 1])\nsmall = SVC(kernel="linear", C=10.0).fit([[1.0], [3.0]], [0, 1])\nprint(full.decision_function([[2.5]]).round(3).tolist(), small.decision_function([[2.5]]).round(3).tolist())',
-          ['[0.5] [0.5]', '[0.5] [1.5]', '[1.5] [0.5]', '[0.25] [0.5]'],
-          0,
+          '[0.5] [0.5]',
           'The non-support points did not influence the fit, so both models learn the same boundary and score.',
         ),
         choose(
@@ -2855,16 +2648,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Only support vectors determine the solution, and a far point is not one of them.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.svm import SVC\nX = [[0.0], [1.0], [3.0], [4.0]]\ny = [0, 0, 1, 1]\nmodel = SVC(kernel="linear", C=1.0).fit(X, y)\nprint(model.support_.tolist(), model.n_support_.tolist())',
-          [
-            '[0, 3] [1, 1]',
-            '[1, 2] [2, 2]',
-            '[0, 1, 2, 3] [2, 2]',
-            '[1, 2] [1, 1]',
-          ],
-          3,
+          '[1, 2] [1, 1]',
           'The points at 1 and 3 sit on the margin edges, one from each class; the outer points do not.',
         ),
       ],
@@ -2893,11 +2680,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'C multiplies the violation cost, so a larger C means weaker regularization.',
         ),
-        predictOutput(
+        typeOutput(
           'The class depends only on the first feature. What does this program print?',
           'from sklearn.svm import SVC\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nX = [[0, 1000], [0, 3000], [0, 5000], [1, 2000], [1, 4000], [1, 6000]]\ny = [0, 0, 0, 1, 1, 1]\ntest = [[0, 5900], [1, 1100]]\nraw = SVC(kernel="rbf").fit(X, y)\nscaled = make_pipeline(StandardScaler(), SVC(kernel="rbf")).fit(X, y)\nprint(raw.predict(test).tolist(), scaled.predict(test).tolist())',
-          ['[0, 1] [0, 1]', '[0, 1] [1, 0]', '[1, 0] [1, 0]', '[1, 0] [0, 1]'],
-          3,
+          '[1, 0] [0, 1]',
           'Unscaled, the thousands in the second column dominate every distance, so the model matches on the irrelevant feature. After scaling, the first feature counts again.',
         ),
         choose(
@@ -2937,28 +2723,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'No single threshold puts the middle class on one side, so the linear model fails. The RBF model encloses the middle interval.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\ngamma = 0.5\nprint([round(math.exp(-gamma * d ** 2), 3) for d in [0, 1, 2]])',
-          [
-            '[0.0, 0.607, 0.135]',
-            '[1.0, 0.5, 0.25]',
-            '[1.0, 0.607, 0.135]',
-            '[1.0, 0.368, 0.018]',
-          ],
-          2,
+          '[1.0, 0.607, 0.135]',
           'At distance 0 the similarity is $\\exp(0) = 1$, and it decays as $\\exp(-0.5 d^2)$ with distance.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\ndistance = 2\nfor gamma in [0.1, 2.0]:\n    print(gamma, round(math.exp(-gamma * distance ** 2), 4))',
-          [
-            '0.1 0.0003\n2.0 0.6703',
-            '0.1 0.6703\n2.0 0.0003',
-            '0.1 0.8187\n2.0 0.0183',
-            '0.1 0.6703\n2.0 0.6703',
-          ],
-          1,
+          '0.1 0.6703\n2.0 0.0003',
           'With a small gamma, a point two units away is still fairly similar; with a large gamma, it barely counts.',
         ),
         choose(
@@ -3000,23 +2774,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'If the true labels are [1, 1, 1, 0], each model makes one mistake, each on a different row, so the majority vote gets every row right.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Each row of the array holds one model’s predictions. What does this program print?',
           'import numpy as np\npredictions = np.array([[10.0, 20.0, 30.0], [14.0, 18.0, 33.0], [12.0, 22.0, 27.0]])\nprint(predictions.mean(axis=0).tolist())',
-          [
-            '[20.0, 21.67, 24.0]',
-            '[12.0, 20.0, 30.0]',
-            '[60.0, 65.0, 66.0]',
-            '[36.0, 60.0, 90.0]',
-          ],
-          1,
+          '[12.0, 20.0, 30.0]',
           'axis=0 averages down each column, giving one combined prediction per observation.',
         ),
-        predictOutput(
+        typeOutput(
           'The true labels are [1, 1, 0]. What does this program print?',
           'predictions = [[0, 1, 0], [0, 1, 0], [1, 1, 0]]\ncombined = []\nfor j in range(3):\n    ones = sum([model[j] for model in predictions])\n    if ones >= 2:\n        combined.append(1)\n    else:\n        combined.append(0)\nprint(combined)',
-          ['[1, 1, 0]', '[0, 1, 1]', '[1, 1, 1]', '[0, 1, 0]'],
-          3,
+          '[0, 1, 0]',
           'Two models make the same mistake on the first row, so the vote repeats it.',
         ),
         choose(
@@ -3056,11 +2823,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'rng.choice draws 8 row numbers with replacement from a seeded generator. Rows 6 and 7 were drawn twice, and np.setdiff1d shows that rows 2 and 5 are out of bag.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'rows = [0, 1, 2, 3, 4, 5]\nsample = [2, 0, 2, 5, 3, 0]\nout_of_bag = [r for r in rows if r not in sample]\nprint(len(sample), out_of_bag)',
-          ['6 [1, 4]', '4 [1, 4]', '6 [0, 2]', '6 []'],
-          0,
+          '6 [1, 4]',
           'The sample still has six draws, but rows 0 and 2 repeat, so rows 1 and 4 never appear.',
         ),
         choose(
@@ -3111,11 +2877,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The point lies between the groups, so the four trees disagree. Three of four lean towards class 1, and the forest’s probability averages them.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.ensemble import RandomForestClassifier\nX = [[1, 5], [2, 4], [3, 6], [6, 1], [7, 2], [8, 1]]\ny = [0, 0, 0, 1, 1, 1]\nforest = RandomForestClassifier(n_estimators=25, random_state=0).fit(X, y)\nprint(len(forest.estimators_))\nprint(forest.predict([[2, 5], [7, 1]]).tolist())',
-          ['1\n[0, 1]', '25\n[1, 0]', '6\n[0, 1]', '25\n[0, 1]'],
-          3,
+          '25\n[0, 1]',
           'n_estimators=25 fits 25 trees, and points deep inside each group get that group’s class.',
         ),
         choose(
@@ -3129,11 +2894,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Limiting the candidate features at each split forces trees to differ, which decorrelates their errors.',
         ),
-        predictOutput(
+        typeOutput(
           'Five trees vote on one row. What does this program print?',
           'tree_probabilities = [1.0, 0.0, 1.0, 1.0, 0.5]\nprint(sum(tree_probabilities) / len(tree_probabilities))',
-          ['0.5', '0.7', '1.0', '3.5'],
-          1,
+          '0.7',
           'The forest averages the trees’ class-1 probabilities: $3.5 / 5 = 0.7$.',
         ),
         choose(
@@ -3162,16 +2926,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The constant 21.5 leaves the residuals shown. A one-split tree predicts their group means, $\\pm 10.5$, and half of that correction moves each prediction toward its target.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.ensemble import GradientBoostingRegressor\nX = [[1], [2], [3], [4]]\ny = [1.0, 1.0, 5.0, 5.0]\nfor n in [1, 2]:\n    model = GradientBoostingRegressor(n_estimators=n, learning_rate=0.5, max_depth=1, random_state=0).fit(X, y)\n    print(model.predict(X).round(3).tolist())',
-          [
-            '[2.0, 2.0, 4.0, 4.0]\n[1.0, 1.0, 5.0, 5.0]',
-            '[3.0, 3.0, 3.0, 3.0]\n[2.0, 2.0, 4.0, 4.0]',
-            '[2.0, 2.0, 4.0, 4.0]\n[1.5, 1.5, 4.5, 4.5]',
-            '[1.0, 1.0, 5.0, 5.0]\n[1.0, 1.0, 5.0, 5.0]',
-          ],
-          2,
+          '[2.0, 2.0, 4.0, 4.0]\n[1.5, 1.5, 4.5, 4.5]',
           'Starting from 3, each round fits the residuals and adds half of them: the residuals go from $\\pm 2$ to $\\pm 1$ to $\\pm 0.5$.',
         ),
         choose(
@@ -3185,16 +2943,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Each boosted model depends on the ensemble so far; bagged models are fitted independently.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.ensemble import GradientBoostingRegressor\nimport numpy as np\nX = np.arange(10).reshape(-1, 1)\ny = np.array([3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0, 5.0, 3.0])\nfor n in [1, 10, 200]:\n    m = GradientBoostingRegressor(n_estimators=n, learning_rate=0.3, max_depth=2, random_state=0).fit(X, y)\n    print(n, round(float(((m.predict(X) - y) ** 2).mean()), 3))',
-          [
-            '1 0.0\n10 0.504\n200 3.846',
-            '1 3.846\n10 3.846\n200 3.846',
-            '1 3.846\n10 0.504\n200 0.504',
-            '1 3.846\n10 0.504\n200 0.0',
-          ],
-          3,
+          '1 3.846\n10 0.504\n200 0.0',
           'Every round removes more of the training residuals; with 200 rounds the model fits these ten noisy targets exactly, a sign of overfitting.',
         ),
         choose(
@@ -3225,11 +2977,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The points lie on the diagonal, so projecting onto the unit diagonal direction keeps all of their spread in a single number per row.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The rows are already centered. What does this program print?',
           'import numpy as np\nX = np.array([[3.0, 1.0], [-3.0, -1.0], [1.0, -1.0], [-1.0, 1.0]])\nfor d in [np.array([1.0, 0.0]), np.array([0.0, 1.0])]:\n    print(float((X @ d).var()))',
-          ['1.0\n5.0', '5.0\n1.0', '0.0\n0.0', '20.0\n4.0'],
-          1,
+          '5.0\n1.0',
           'Projecting onto [1, 0] keeps the first column, whose variance is (9 + 9 + 1 + 1) / 4 = 5; the second column’s variance is 1.',
         ),
         choose(
@@ -3243,11 +2994,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'PCA ignores any target; the first component is the direction of greatest spread in the features.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([3.0, 4.0])\nb = np.array([-4.0, 3.0])\nprint(float(a @ b), float(np.linalg.norm(a)))',
-          ['0.0 5.0', '24.0 5.0', '0.0 7.0', '0.0 25.0'],
-          0,
+          '0.0 5.0',
           '$3 \\times (-4) + 4 \\times 3 = 0$, so the vectors are orthogonal. np.linalg.norm gives the length, $\\sqrt{9 + 16} = 5$; dividing by it would make a unit direction.',
         ),
         choose(
@@ -3276,18 +3026,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The horizontal spread has variance 4 times the vertical spread, so the first component holds 80% of the total and the second 20%.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.decomposition import PCA\nX = [[1.0, 2.0], [2.0, 4.0], [3.0, 6.0], [4.0, 8.0]]\npca = PCA().fit(X)\nprint(pca.explained_variance_ratio_.round(3).tolist())',
-          ['[0.5, 0.5]', '[0.667, 0.333]', '[0.8, 0.2]', '[1.0, 0.0]'],
-          3,
+          '[1.0, 0.0]',
           'Every point lies on the line $y = 2x$, so one direction carries all of the variance.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nfrom sklearn.decomposition import PCA\nX = np.array([[1.0, 2.0, 0.0], [2.0, 1.0, 1.0], [3.0, 5.0, 0.0], [4.0, 3.0, 2.0], [5.0, 4.0, 1.0]])\npca = PCA(n_components=2).fit(X)\nprint(pca.transform(X).shape, pca.components_.shape)',
-          ['(5, 3) (2, 3)', '(5, 2) (2, 3)', '(5, 2) (3, 2)', '(2, 5) (2, 3)'],
-          1,
+          '(5, 2) (2, 3)',
           'transform keeps one row per example with one column per component; components_ holds one row per component with one entry per feature.',
         ),
         choose(
@@ -3327,23 +3075,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two running totals fall short of 0.9, so the third component is the first to reach it: keep 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nratios = np.array([0.4, 0.3, 0.2, 0.1])\ncumulative = np.cumsum(ratios)\nprint(cumulative.round(2).tolist())\nprint(int((cumulative < 0.8).sum()) + 1)',
-          [
-            '[0.4, 0.7, 0.9, 1.0]\n2',
-            '[0.4, 0.3, 0.2, 0.1]\n3',
-            '[0.4, 0.7, 0.9, 1.0]\n4',
-            '[0.4, 0.7, 0.9, 1.0]\n3',
-          ],
-          3,
+          '[0.4, 0.7, 0.9, 1.0]\n3',
           'Only 0.4 and 0.7 fall short of 0.8, so three components are needed.',
         ),
-        predictOutput(
+        typeOutput(
           'Columns 1 and 2 are near copies, and so are columns 3 and 4. What does this program print?',
           'import numpy as np\nfrom sklearn.decomposition import PCA\nrng = np.random.default_rng(0)\nbase = rng.normal(size=(40, 1))\nother = rng.normal(size=(40, 1))\nX = np.hstack([base, base + rng.normal(scale=0.1, size=(40, 1)), other, other + rng.normal(scale=0.1, size=(40, 1))])\nprint(PCA(n_components=0.95).fit(X).n_components_)',
-          ['1', '2', '3', '4'],
-          1,
+          '2',
           'The four columns carry about two independent signals, so two components already hold over 95% of the variance.',
         ),
         choose(
@@ -3383,11 +3124,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'np.abs drops the arbitrary sign of each component. Unscaled, the first component is essentially "salary"; after scaling, age and salary weigh equally.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The two features are uncorrelated. What does this program print?',
           'from sklearn.decomposition import PCA\nfrom sklearn.preprocessing import StandardScaler\nX = [[0.0, 0.0], [10.0, 1.0], [0.0, 1.0], [10.0, 0.0]]\nraw = PCA().fit(X).explained_variance_ratio_[0]\nscaled = PCA().fit(StandardScaler().fit_transform(X)).explained_variance_ratio_[0]\nprint(round(float(raw), 2), round(float(scaled), 2))',
-          ['0.5 0.5', '0.5 0.99', '0.99 0.5', '0.99 0.99'],
-          2,
+          '0.99 0.5',
           'Raw, the first column’s variance (25) dwarfs the second’s (0.25). Scaled, both have variance 1 and share the total equally.',
         ),
         choose(
@@ -3440,11 +3180,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each row prints the squared distances to both centroids and the index of the closer one, which becomes that point’s cluster label.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\npoints = np.array([1.0, 4.0, 6.0, 9.0])\ncenters = np.array([2.0, 8.0])\nlabels = [int(np.abs(centers - p).argmin()) for p in points]\nprint(labels)',
-          ['[0, 1, 1, 1]', '[0, 0, 0, 1]', '[0, 0, 1, 1]', '[1, 1, 0, 0]'],
-          2,
+          '[0, 0, 1, 1]',
           '4 is 2 from the first centroid and 4 from the second; 6 is closer to 8.',
         ),
         choose(
@@ -3458,16 +3197,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'For non-negative numbers, a smaller distance always has a smaller square.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\npoint = np.array([3.0, 3.0])\ncenters = np.array([[0.0, 0.0], [4.0, 0.0], [3.0, 5.0]])\nd = ((centers - point) ** 2).sum(axis=1)\nprint(d.tolist(), int(d.argmin()))',
-          [
-            '[18.0, 10.0, 4.0] 0',
-            '[18.0, 10.0, 4.0] 2',
-            '[6.0, 4.0, 2.0] 2',
-            '[18.0, 10.0, 4.0] 1',
-          ],
-          1,
+          '[18.0, 10.0, 4.0] 2',
           'The squared distances are 9 + 9, 1 + 9, and 0 + 4; the smallest is at index 2.',
         ),
         choose(
@@ -3496,23 +3229,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Cluster 0’s centroid moves to the average of its two points; so does cluster 1’s.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This runs one assignment step and one update step. What does it print?',
           'import numpy as np\npoints = np.array([1.0, 1.5, 3.0, 10.0, 11.0])\ncenters = np.array([1.0, 3.0])\nlabels = np.array([int(np.abs(centers - p).argmin()) for p in points])\ncenters = np.array([points[labels == k].mean() for k in [0, 1]])\nprint(labels.tolist(), centers.tolist())',
-          [
-            '[0, 0, 1, 1, 1] [1.25, 8.0]',
-            '[0, 0, 1, 1, 1] [1.0, 3.0]',
-            '[0, 0, 0, 1, 1] [1.833, 10.5]',
-            '[0, 1, 1, 1, 1] [1.0, 6.375]',
-          ],
-          0,
+          '[0, 0, 1, 1, 1] [1.25, 8.0]',
           '1 and 1.5 are nearer to 1; the rest are nearer to 3. The new centroids are the means of each group.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\npoints = np.array([1.0, 3.0, 10.0, 12.0])\nlabels = np.array([0, 0, 1, 1])\ncenters = np.array([2.0, 11.0])\nprint(float(((points - centers[labels]) ** 2).sum()))',
-          ['2.0', '0.0', '4.0', '8.0'],
-          2,
+          '4.0',
           'centers[labels] gives each point its own centroid; every point is 1 away, so the inertia is $4 \\times 1 = 4.0$.',
         ),
         choose(
@@ -3552,16 +3278,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The second start splits the first pair between two centroids and never recovers; its much higher inertia shows why restarts keep the best run.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\npoints = np.array([0.0, 2.0, 9.0, 11.0])\ncenters = np.array([0.0, 2.0])\nfor step in range(3):\n    labels = np.array([int(np.abs(centers - p).argmin()) for p in points])\n    centers = np.array([points[labels == k].mean() for k in [0, 1]])\nprint(centers.tolist())',
-          [
-            '[0.0, 2.0]',
-            '[1.0, 10.0]',
-            '[0.0, 7.333]',
-            '[0.0, 7.333333333333333]',
-          ],
-          1,
+          '[1.0, 10.0]',
           'The first update gives centroids 0 and $22 / 3$. Then 2 is nearer to 0, so the groups become $\\{0, 2\\}$ and $\\{9, 11\\}$, with means 1 and 10; this start recovers.',
         ),
         choose(
@@ -3612,16 +3332,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Grouping the two visible clumps gives a high silhouette. A three-way labelling that cuts across them scores far lower.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The list holds inertia for $k = 1, 2, 3, 4$. What does this program print?',
           'inertias = [169.21, 4.0, 2.33, 1.12]\ndrops = [round(inertias[i] - inertias[i + 1], 2) for i in range(3)]\nprint(drops)',
-          [
-            '[165.21, 1.67, 1.21]',
-            '[4.0, 2.33, 1.12]',
-            '[165.21, 167.88, 168.09]',
-            '[-165.21, -1.67, -1.21]',
-          ],
-          0,
+          '[165.21, 1.67, 1.21]',
           'Going from 1 to 2 clusters removes almost all inertia; later clusters add little, so the elbow is at $k = 2$.',
         ),
         choose(
@@ -3635,16 +3349,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'More centroids can only bring points closer to one, so inertia alone favours too many clusters.',
         ),
-        predictOutput(
+        typeOutput(
           'Features are age in years and income in dollars. What does this program print?',
           'import numpy as np\npoint = np.array([30.0, 52000.0])\ncenters = np.array([[31.0, 60000.0], [65.0, 52500.0]])\nd = np.sqrt(((centers - point) ** 2).sum(axis=1))\nprint(d.round(1).tolist())',
-          [
-            '[1.0, 35.0]',
-            '[8000.0, 35.0]',
-            '[501.2, 8000.0]',
-            '[8000.0, 501.2]',
-          ],
-          3,
+          '[8000.0, 501.2]',
           'Income differences in thousands swamp a 35-year age gap, so the 65-year-old centroid is "closer". Standardizing would fix this.',
         ),
         choose(
@@ -3675,23 +3383,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The reference has mean 50 and standard deviation about 1.41. Both 58 and 41 lie more than three standard deviations away, in opposite directions.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nreference = np.array([10.0, 12.0, 8.0, 10.0])\nmean, std = reference.mean(), reference.std()\nz = (np.array([13.0, 10.5]) - mean) / std\nprint(np.round(z, 2).tolist())\nprint((np.abs(z) >= 2).tolist())',
-          [
-            '[1.5, 0.25]\n[False, False]',
-            '[3.0, 0.5]\n[True, False]',
-            '[2.12, 0.35]\n[True, True]',
-            '[2.12, 0.35]\n[True, False]',
-          ],
-          3,
+          '[2.12, 0.35]\n[True, False]',
           'The reference has mean 10 and standard deviation $\\sqrt{2} \\approx 1.41$, so 13 is 2.12 standard deviations above the mean.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'z = [0.3, -2.8, 1.1, 3.4, -0.9]\nprint([i for i in range(len(z)) if abs(z[i]) >= 2.5])',
-          ['[3]', '[1, 3]', '[1, 2, 3]', '[0, 2, 4]'],
-          1,
+          '[1, 3]',
           'abs() catches unusually low values as well as high ones, so positions 1 and 3 are flagged.',
         ),
         choose(
@@ -3731,11 +3432,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The ordinary reading gets 1 and a positive score; the two extreme readings get -1 and strongly negative scores.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'These are scikit-learn detector predictions. What does this program print?',
           'predictions = [1, -1, 1, 1, -1]\nalerts = [i for i in range(len(predictions)) if predictions[i] == -1]\nprint(alerts)',
-          ['[0, 2, 3]', '[2, 5]', '[1, 4]', '[]'],
-          2,
+          '[1, 4]',
           '-1 marks an outlier, which occurs at positions 1 and 4.',
         ),
         choose(
@@ -3749,11 +3449,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The rule selects the highest scores, which under this contract are the least unusual rows.',
         ),
-        predictOutput(
+        typeOutput(
           'Here a higher score means more normal. What does this program print?',
           'normality = [0.9, 0.2, 0.7, 0.4]\nanomaly = [-s for s in normality]\nthreshold = -0.5\nprint([i for i in range(4) if anomaly[i] >= threshold])',
-          ['[0, 2]', '[1]', '[0, 1, 2, 3]', '[1, 3]'],
-          3,
+          '[1, 3]',
           'Negating turns "higher is more normal" into "higher is more unusual"; rows 1 and 3 have normality below 0.5.',
         ),
         choose(
@@ -3782,11 +3481,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The 80th percentile of these ten scores is 0.72, so the two highest scores, 0.9 and 0.8, become alerts.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Larger scores are more unusual. What does this program print?',
           'scores = [0.9, 0.2, 0.75, 0.1, 0.6, 0.85]\nincident = [1, 0, 0, 0, 1, 0]\nalerts = [int(s >= 0.7) for s in scores]\ntp = sum([1 for i in range(6) if alerts[i] == 1 and incident[i] == 1])\nprint(round(tp / sum(alerts), 3), round(tp / sum(incident), 3))',
-          ['0.5 0.333', '0.333 0.5', '0.667 0.5', '0.333 1.0'],
-          1,
+          '0.333 0.5',
           'Three rows are alerted but only one is an incident (precision $1/3$); one of the two incidents was caught (recall $1/2$).',
         ),
         choose(
@@ -3811,11 +3509,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'More rows pass a lower bar, catching more incidents along with more ordinary rows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nscores = np.arange(1, 11)\ncutoff = np.quantile(scores, 0.9)\nprint(round(float(cutoff), 2), int((scores >= cutoff).sum()))',
-          ['9.0 2', '10.0 1', '9.1 2', '9.1 1'],
-          3,
+          '9.1 1',
           'The 90th percentile interpolates between 9 and 10, at 9.1, so only the score 10 is flagged.',
         ),
       ],
@@ -3844,11 +3541,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The reference is known to be clean, and only new readings are judged against it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\ndata = np.array([5.0, 6.0, 5.0, 7.0, 6.0, 5.0, 40.0])\nmedian = np.median(data)\nmad = np.median(np.abs(data - median))\nprint(median, mad, (40.0 - median) / mad)',
-          ['6.0 1.0 34.0', '10.57 11.6 2.54', '6.0 0.0 inf', '5.0 1.0 35.0'],
-          0,
+          '6.0 1.0 34.0',
           'The median is 6, and the median absolute deviation is 1; the extreme value does not affect either, so 40 sits 34 deviations away.',
         ),
         choose(
@@ -3890,23 +3586,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two rows with three inputs pass through two neurons. Row 1, neuron 1: $1 \\times 1 + 0 \\times 2 + 2 \\times 0.5 + 0 = 2$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nX = np.zeros((10, 3))\nW = np.zeros((3, 4))\nb = np.zeros(4)\nprint((X @ W + b).shape)',
-          ['(3, 4)', '(10, 3)', '(10, 4)', '(4, 10)'],
-          2,
+          '(10, 4)',
           'The shared size 3 is summed over, leaving 10 rows and 4 neuron outputs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nX = np.array([[2.0, 1.0]])\nW = np.array([[1.0, 0.0, -1.0], [3.0, 1.0, 2.0]])\nb = np.array([0.5, 0.0, 1.0])\nprint((X @ W + b).tolist())',
-          [
-            '[[5.5, 1.0, 1.0]]',
-            '[[5.0, 1.0, 0.0]]',
-            '[[2.5, 1.0, 0.0]]',
-            '[[5.5, 1.0, 3.0]]',
-          ],
-          0,
+          '[[5.5, 1.0, 1.0]]',
           'Neuron 1: $2 \\times 1 + 1 \\times 3 + 0.5 = 5.5$. Neuron 3: $2 \\times (-1) + 1 \\times 2 + 1 = 1$.',
         ),
         choose(
@@ -3936,16 +3625,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'ReLU zeroes the negative entry and keeps 2.0. The sigmoid maps the same three values into (0, 1), with 0 mapped to 0.5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nX = np.array([[1.0, 2.0], [-1.0, 0.0]])\nW = np.array([[2.0, -1.0], [1.0, 1.0]])\nb = np.array([0.0, -2.0])\nprint(np.maximum(0, X @ W + b).tolist())',
-          [
-            '[[4.0, -1.0], [-2.0, -1.0]]',
-            '[[4.0, 0.0], [0.0, 0.0]]',
-            '[[4.0, 1.0], [0.0, 0.0]]',
-            '[[4.0, 0.0], [2.0, 1.0]]',
-          ],
-          1,
+          '[[4.0, 0.0], [0.0, 0.0]]',
           'The pre-activations are [[4, -1], [-2, -1]]; ReLU replaces the three negatives with 0.',
         ),
         choose(
@@ -3954,16 +3637,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'ReLU is max(0, value), so any negative input becomes 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nz = np.array([-4.0, 4.0])\nprint(np.maximum(0, z).tolist(), (1 / (1 + np.exp(-z))).round(2).tolist())',
-          [
-            '[0.0, 4.0] [0.02, 0.98]',
-            '[0.0, 4.0] [0.0, 1.0]',
-            '[4.0, 4.0] [0.02, 0.98]',
-            '[-4.0, 4.0] [0.02, 0.98]',
-          ],
-          0,
+          '[0.0, 4.0] [0.02, 0.98]',
           'ReLU clips -4 to 0. The sigmoid approaches but never reaches 0 or 1.',
         ),
         choose(
@@ -3992,11 +3669,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Without an activation, two layers give exactly the same output as their single combined matrix. With ReLU in between, the second row changes, so the stack is no longer one linear map.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nW1 = np.array([[2.0, 0.0], [0.0, 3.0]])\nW2 = np.array([[1.0], [1.0]])\nprint((W1 @ W2).tolist())',
-          ['[[2.0], [3.0]]', '[[5.0]]', '[[2.0, 3.0]]', '[[1.0], [1.0]]'],
-          0,
+          '[[2.0], [3.0]]',
           'The two layers combine into a single (2, 1) weight matrix: scale the inputs by 2 and 3 and add them.',
         ),
         choose(
@@ -4010,16 +3686,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The ten matrices multiply into one, so the whole network is one linear (affine) map.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nx = np.array([[-2.0], [2.0]])\nW1 = np.array([[1.0]])\nW2 = np.array([[1.0]])\nprint(((x @ W1) @ W2).ravel().tolist(), (np.maximum(0, x @ W1) @ W2).ravel().tolist())',
-          [
-            '[0.0, 2.0] [0.0, 2.0]',
-            '[-2.0, 2.0] [-2.0, 2.0]',
-            '[-2.0, 2.0] [0.0, 2.0]',
-            '[2.0, 2.0] [0.0, 2.0]',
-          ],
-          2,
+          '[-2.0, 2.0] [0.0, 2.0]',
           'ravel flattens the column into a list. The linear stack passes -2 through unchanged; ReLU in between turns it into 0.',
         ),
         choose(
@@ -4048,28 +3718,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Softmax turns three raw scores into three probabilities that sum to 1, keeping their order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nfor scores in [np.array([1.0, 2.0, 3.0]), np.array([101.0, 102.0, 103.0])]:\n    p = np.exp(scores) / np.exp(scores).sum()\n    print(p.round(3).tolist())',
-          [
-            '[0.167, 0.333, 0.5]\n[0.33, 0.333, 0.337]',
-            '[0.09, 0.245, 0.665]\n[1.0, 1.0, 1.0]',
-            '[0.09, 0.245, 0.665]\n[0.0, 0.0, 1.0]',
-            '[0.09, 0.245, 0.665]\n[0.09, 0.245, 0.665]',
-          ],
-          3,
+          '[0.09, 0.245, 0.665]\n[0.09, 0.245, 0.665]',
           'Adding 100 to every score multiplies each exp by the same factor, which cancels in the division.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nscores = np.array([0.0, 0.0, 0.0, 0.0])\np = np.exp(scores) / np.exp(scores).sum()\nprint(p.tolist())',
-          [
-            '[0.0, 0.0, 0.0, 0.0]',
-            '[0.25, 0.25, 0.25, 0.25]',
-            '[1.0, 1.0, 1.0, 1.0]',
-            '[0.5, 0.5, 0.5, 0.5]',
-          ],
-          1,
+          '[0.25, 0.25, 0.25, 0.25]',
           'Equal scores give equal probabilities, and four of them must add up to 1.',
         ),
         choose(
@@ -4111,11 +3769,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The prediction overshoots by 3, so $\\frac{dL}{dp} = 6$. The weight gradient multiplies by $x = 3$, and the bias gradient by 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x, y, w, b = 2.0, 5.0, 1.0, 0.0\np = w * x + b\nupstream = 2 * (p - y)\nprint(upstream * x, upstream)',
-          ['-12.0 -6.0', '-6.0 -12.0', '12.0 6.0', '-6.0 -6.0'],
-          0,
+          '-12.0 -6.0',
           'The prediction 2 is 3 below the target, so $\\frac{dL}{dp} = -6$, and the weight gradient adds a factor of $x = 2$.',
         ),
         choose(
@@ -4124,11 +3781,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Changing w by a small amount changes p by x times that amount.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x, y, w, b = 4.0, 9.0, 2.0, 1.0\np = w * x + b\nupstream = 2 * (p - y)\nprint(upstream * x, upstream)',
-          ['8.0 2.0', '36.0 9.0', '-8.0 -2.0', '0.0 0.0'],
-          3,
+          '0.0 0.0',
           'The prediction 9 equals the target, so the loss is at its minimum and both gradients are 0.',
         ),
         choose(
@@ -4157,23 +3813,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The loss derivative $-1/p$ times the sigmoid derivative $p(1 - p)$ gives $dz = -(1 - p) = p - y = -0.5$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nz = np.array([0.0, 2.0])\ns = 1 / (1 + np.exp(-z))\nprint((s * (1 - s)).round(3).tolist())',
-          ['[0.5, 0.881]', '[0.25, 0.105]', '[0.0, 0.105]', '[1.0, 1.0]'],
-          1,
+          '[0.25, 0.105]',
           'The sigmoid’s slope is largest, 0.25, at $z = 0$ and shrinks as $z$ moves away from 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nz = np.array([-1.0, 0.5, 3.0, -0.2])\nupstream = np.array([4.0, 4.0, 4.0, 4.0])\nprint((upstream * (z > 0)).tolist())',
-          [
-            '[4.0, 4.0, 4.0, 4.0]',
-            '[0.0, 2.0, 12.0, 0.0]',
-            '[0.0, 4.0, 4.0, 0.0]',
-            '[4.0, 0.0, 0.0, 4.0]',
-          ],
-          2,
+          '[0.0, 4.0, 4.0, 0.0]',
           'z > 0 is True (1) only where ReLU was active, so gradient passes through those two entries and is blocked elsewhere.',
         ),
         choose(
@@ -4213,11 +3862,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both methods give a slope of 6, so the analytic formula is implemented correctly.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def loss(w):\n    return w ** 2\n\nh = 0.001\nw = 3.0\nprint(round((loss(w + h) - loss(w - h)) / (2 * h), 3))',
-          ['3.0', '9.0', '6.0', '0.006'],
-          2,
+          '6.0',
           'The slope of $w^2$ at $w = 3$ is $2 \\times 3 = 6$, and the symmetric difference recovers it.',
         ),
         choose(
@@ -4231,11 +3879,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A large mismatch points to the analytic gradient; here it is off by exactly a factor of 2.',
         ),
-        predictOutput(
+        typeOutput(
           'The code under test forgot the factor 2. What does this program print?',
           'x, y, w = 2.0, 1.0, 1.0\n\ndef loss(w):\n    return (w * x - y) ** 2\n\nh = 0.001\nnumeric = (loss(w + h) - loss(w - h)) / (2 * h)\nbuggy = (w * x - y) * x\nprint(round(numeric, 3), buggy)',
-          ['4.0 2.0', '2.0 2.0', '4.0 4.0', '1.0 2.0'],
-          0,
+          '4.0 2.0',
           'The true slope is 2*(2 - 1)*2 = 4; the buggy formula returns half of it, which the check exposes.',
         ),
         choose(
@@ -4264,16 +3911,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each step computes the loss, backpropagates, and updates w and b. The loss falls by a factor of 4 per step.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nX = np.array([[1.0, 2.0], [3.0, 0.0]])\ny = np.array([[1.0], [2.0]])\nW = np.array([[0.5], [0.5]])\nP = X @ W\ndP = 2 * (P - y) / len(X)\nprint(P.tolist(), (X.T @ dP).tolist())',
-          [
-            '[[1.5], [1.5]] [[1.0], [-1.0]]',
-            '[[1.5], [1.5]] [[0.5], [-0.5]]',
-            '[[1.5], [1.5]] [[-1.0], [1.0]]',
-            '[[1.0], [2.0]] [[0.0], [0.0]]',
-          ],
-          2,
+          '[[1.5], [1.5]] [[-1.0], [1.0]]',
           'dP is [[0.5], [-0.5]]. The first weight gets $1 \\times 0.5 + 3 \\times (-0.5) = -1$; the second gets $2 \\times 0.5 + 0 \\times (-0.5) = 1$.',
         ),
         choose(
@@ -4287,16 +3928,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Computing the direction and taking the step are separate operations.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x, y = 1.0, 3.0\nw = 0.0\nfor step in range(2):\n    p = w * x\n    grad = 2 * (p - y) * x\n    w = w - 0.25 * grad\n    print(step, (p - y) ** 2, w)',
-          [
-            '0 9.0 1.5\n1 2.25 2.25',
-            '0 9.0 1.5\n1 0.0 3.0',
-            '0 9.0 -1.5\n1 20.25 -3.75',
-            '0 3.0 1.5\n1 1.5 2.25',
-          ],
-          0,
+          '0 9.0 1.5\n1 2.25 2.25',
           'The loss is printed from the forward pass before each update: 9 at $w = 0$, then 2.25 at $w = 1.5$.',
         ),
         choose(
@@ -4345,11 +3980,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Multiplying by 1 keeps the gradient’s size, while multiplying by 0.25 per layer shrinks it fast.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grad = 1.0\nfor layer in range(8):\n    grad = grad * 2.0\nprint(grad)',
-          ['16.0', '2.0', '256.0', '10.0'],
-          2,
+          '256.0',
           'Eight factors of 2 multiply the gradient by $2^8 = 256$, which is how gradients explode with depth.',
         ),
         choose(
@@ -4378,16 +4012,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The norm is 10, twice the limit, so the vector is halved: same direction, length 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\ngradient = np.array([1.0, 2.0, 2.0])\nnorm = float(np.linalg.norm(gradient))\nfor limit in [1.0, 5.0]:\n    print(limit, (gradient * min(1.0, limit / norm)).round(3).tolist())',
-          [
-            '1.0 [1.0, 1.0, 1.0]\n5.0 [1.0, 2.0, 2.0]',
-            '1.0 [0.333, 0.667, 0.667]\n5.0 [1.667, 3.333, 3.333]',
-            '1.0 [0.333, 0.667, 0.667]\n5.0 [1.0, 2.0, 2.0]',
-            '1.0 [1.0, 2.0, 2.0]\n5.0 [1.0, 2.0, 2.0]',
-          ],
-          2,
+          '1.0 [0.333, 0.667, 0.667]\n5.0 [1.0, 2.0, 2.0]',
           'The norm is 3. A limit of 1 scales the vector by $1/3$; a limit of 5 leaves it alone, because clipping never enlarges.',
         ),
         predictOutput(
@@ -4439,16 +4067,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'In training, half the units are dropped by this mask and the rest are doubled. At inference, the activations pass through unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\na = np.array([3.0, 3.0, 3.0, 3.0])\nmask = np.array([1.0, 1.0, 1.0, 0.0])\np_drop = 0.25\nprint((a * mask / (1 - p_drop)).tolist())',
-          [
-            '[3.0, 3.0, 3.0, 0.0]',
-            '[4.0, 4.0, 4.0, 4.0]',
-            '[2.25, 2.25, 2.25, 0.0]',
-            '[4.0, 4.0, 4.0, 0.0]',
-          ],
-          3,
+          '[4.0, 4.0, 4.0, 0.0]',
           'Kept values are divided by 0.75, giving 4.0; the dropped one is 0. The mean stays 3.',
         ),
         choose(
@@ -4500,16 +4122,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'In training, the batch’s own mean 5 and variance 5 are used (the tiny 1e-5 avoids division by zero). At inference, a single 6.0 is normalized with the stored running mean and variance of 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Each column is one feature. What does this program print?',
           'import numpy as np\nbatch = np.array([[1.0, 10.0], [3.0, 30.0]])\nprint(((batch - batch.mean(axis=0)) / batch.std(axis=0)).tolist())',
-          [
-            '[[-1.0, -1.0], [1.0, 1.0]]',
-            '[[-1.0, 1.0], [-1.0, 1.0]]',
-            '[[0.1, 1.0], [0.1, 1.0]]',
-            '[[-10.0, -10.0], [10.0, 10.0]]',
-          ],
-          0,
+          '[[-1.0, -1.0], [1.0, 1.0]]',
           'Each column is standardized with its own mean and standard deviation, so both features end up on the same scale.',
         ),
         choose(
@@ -4523,11 +4139,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'One row has no meaningful batch statistics, so the stored running averages are used.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nrunning_mean, running_var = 10.0, 25.0\nrows = np.array([20.0, 5.0])\nprint(((rows - running_mean) / np.sqrt(running_var)).tolist())',
-          ['[0.4, -0.2]', '[1.0, -1.0]', '[2.0, -1.0]', '[2.0, 1.0]'],
-          2,
+          '[2.0, -1.0]',
           'Inference uses the stored mean 10 and standard deviation 5: (20 - 10) / 5 = 2 and (5 - 10) / 5 = -1.',
         ),
         choose(
@@ -4558,11 +4173,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'A stack of 4 inputs, Dense(8), and Dense(3) has $4 \\times 8 + 8 = 40$ and $8 \\times 3 + 3 = 27$ parameters: 67 in total, as model.summary() would report.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The model has 10 inputs, Dense(16), and Dense(1). What does this program print?',
           'layers = [10, 16, 1]\ntotal = 0\nfor i in range(len(layers) - 1):\n    total += layers[i] * layers[i + 1] + layers[i + 1]\nprint(total)',
-          ['176', '177', '193', '160'],
-          2,
+          '193',
           '$10 \\times 16 + 16 = 176$ and $16 \\times 1 + 1 = 17$, which sum to 193.',
         ),
         choose(
@@ -4613,11 +4227,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The one-hot form and the integer form pick out the same probability, 0.7, so both losses are $-\\log(0.7)$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\none_hot = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]])\nprint(np.argmax(one_hot, axis=1).tolist())',
-          ['[1, 1, 1]', '[0, 1, 2]', '[1, 0, 2]', '[2, 0, 1]'],
-          2,
+          '[1, 0, 2]',
           'np.argmax finds the position of the 1 in each row, converting one-hot vectors to integer labels.',
         ),
         choose(
@@ -4631,11 +4244,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The sparse variant accepts integer labels; the plain categorical loss expects one-hot vectors.',
         ),
-        predictOutput(
+        typeOutput(
           'p[np.arange(2), labels] picks each row’s probability for its true class. What does this program print?',
           'import numpy as np\np = np.array([[0.8, 0.1, 0.1], [0.2, 0.2, 0.6]])\nlabels = np.array([0, 1])\nlosses = -np.log(p[np.arange(2), labels])\nprint(losses.round(3).tolist())',
-          ['[0.223, 0.511]', '[0.223, 1.609]', '[2.303, 1.609]', '[0.8, 0.2]'],
-          1,
+          '[0.223, 1.609]',
           'Row 1 gave its true class 0.8, a small loss; row 2 gave its true class only 0.2, a loss of $-\\log(0.2) \\approx 1.609$.',
         ),
         choose(
@@ -4664,11 +4276,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'math.ceil rounds up: 1,000 rows make 31 full batches and one partial batch, so 32 updates per epoch and 160 over five epochs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\nsteps = math.ceil(50000 / 128)\nprint(steps, steps * 10)',
-          ['390 3900', '391 3910', '128 1280', '50000 500000'],
-          1,
+          '391 3910',
           '$50{,}000 / 128$ is 390.6, which rounds up to 391 updates per epoch.',
         ),
         choose(
@@ -4693,11 +4304,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'validation_split takes the final rows before shuffling, so shuffle the data first or pass validation_data.',
         ),
-        predictOutput(
+        typeOutput(
           'This dictionary has the shape of a History. What does this program print?',
           'history = {"loss": [0.9, 0.6, 0.4, 0.3, 0.25], "val_loss": [0.95, 0.7, 0.55, 0.58, 0.62]}\nval = history["val_loss"]\nbest = 0\nfor epoch in range(len(val)):\n    if val[epoch] < val[best]:\n        best = epoch\nprint(best + 1, val[best])',
-          ['5 0.25', '5 0.62', '3 0.55', '2 0.7'],
-          2,
+          '3 0.55',
           'Validation loss is lowest in the third epoch; training loss keeps falling after that, a sign of overfitting.',
         ),
       ],
@@ -4715,16 +4325,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Epochs 3 and 4 fail to beat 0.50, so patience runs out at epoch 4, and the weights from epoch 2 are restored. break leaves the loop early.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'val_loss = [0.8, 0.6, 0.62, 0.59, 0.61, 0.63, 0.65]\npatience = 2\nbest, best_epoch, waited = val_loss[0], 0, 0\nfor epoch in range(1, len(val_loss)):\n    if val_loss[epoch] < best:\n        best, best_epoch, waited = val_loss[epoch], epoch, 0\n    else:\n        waited += 1\n        if waited >= patience:\n            print("stop after epoch", epoch)\n            break\nprint("restore epoch", best_epoch)',
-          [
-            'stop after epoch 2\nrestore epoch 1',
-            'stop after epoch 6\nrestore epoch 3',
-            'stop after epoch 4\nrestore epoch 3',
-            'stop after epoch 5\nrestore epoch 3',
-          ],
-          3,
+          'stop after epoch 5\nrestore epoch 3',
           'Epoch 3 improves to 0.59 and resets the count, so epochs 4 and 5 use up the patience.',
         ),
         choose(
@@ -4749,16 +4353,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Any use that guides training turns the test set into validation data.',
         ),
-        predictOutput(
+        typeOutput(
           'predict returned these sigmoid outputs. What does this program print?',
           'import numpy as np\nprobs = np.array([[0.2], [0.8], [0.5], [0.49]])\nprint([int(p >= 0.5) for p in probs[:, 0]])',
-          [
-            '[0, 1, 0, 0]',
-            '[0, 1, 1, 1]',
-            '[0.2, 0.8, 0.5, 0.49]',
-            '[0, 1, 1, 0]',
-          ],
-          3,
+          '[0, 1, 1, 0]',
           'predict returns probabilities; a threshold of 0.5 turns them into labels, with 0.5 itself counted as positive.',
         ),
       ],
@@ -4778,16 +4376,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The filter [-1, 1] measures each step from one value to the next: +2, -1, +3, -1. Five values and a two-wide filter give four outputs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nsignal = np.array([0.0, 1.0, 4.0, 9.0])\nf = np.array([1.0, 1.0])\nprint(np.correlate(signal, f, mode="valid").tolist())',
-          [
-            '[1.0, 5.0, 13.0, 9.0]',
-            '[1.0, 3.0, 5.0]',
-            '[0.0, 1.0, 4.0, 9.0]',
-            '[1.0, 5.0, 13.0]',
-          ],
-          3,
+          '[1.0, 5.0, 13.0]',
           'Each output sums a neighbouring pair: 0+1, 1+4, 4+9. Four values and a two-wide filter give three outputs.',
         ),
         choose(
@@ -4801,11 +4393,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'One filter slides across the input, so it uses far fewer weights and detects a pattern anywhere.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nsignal = np.zeros(10)\nf = np.ones(3)\nprint(len(np.correlate(signal, f, mode="valid")))',
-          ['10', '8', '7', '3'],
-          1,
+          '8',
           'A filter of width 3 fits in 10 - 3 + 1 = 8 positions.',
         ),
         choose(
@@ -4834,11 +4425,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Stride 2 keeps every other response. np.pad adds one zero on each side, so the two-wide filter fits in 6 positions.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def out_len(n, k, p, s):\n    return (n + 2 * p - k) // s + 1\n\nprint(out_len(32, 3, 0, 1), out_len(32, 3, 1, 1), out_len(32, 3, 1, 2))',
-          ['30 32 16', '30 32 15', '32 32 16', '29 31 16'],
-          0,
+          '30 32 16',
           'No padding loses k - 1 = 2 positions; padding 1 restores them; stride 2 then halves the count.',
         ),
         choose(
@@ -4863,11 +4453,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Zeros at the edges give the filter enough room at the borders to produce one output per input position.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def out_len(n, k, p, s):\n    return (n + 2 * p - k) // s + 1\n\nprint(out_len(9, 5, 0, 1), out_len(9, 5, 2, 1))',
-          ['4 9', '5 9', '5 5', '5 7'],
-          1,
+          '5 9',
           '9 - 5 + 1 = 5 without padding; padding 2 on each side gives 13 - 5 + 1 = 9, the same as the input.',
         ),
       ],
@@ -4885,23 +4474,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The nested comprehension slides the 2 by 2 kernel over every position. It responds only where dark changes to bright, so it detects the vertical edge.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nimage = np.array([[1, 1, 1], [5, 5, 5], [5, 5, 5]], dtype=float)\nkernel = np.array([[-1.0, -1.0], [1.0, 1.0]])\nout = np.array([[(image[r:r + 2, c:c + 2] * kernel).sum() for c in range(2)] for r in range(2)])\nprint(out.tolist())',
-          [
-            '[[0.0, 0.0], [8.0, 8.0]]',
-            '[[8.0, 0.0], [8.0, 0.0]]',
-            '[[8.0, 8.0], [0.0, 0.0]]',
-            '[[4.0, 4.0], [0.0, 0.0]]',
-          ],
-          2,
+          '[[8.0, 8.0], [0.0, 0.0]]',
           'This kernel compares each row with the one below; it fires on the dark-to-bright change in the top rows and stays 0 in the uniform bottom rows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'k, in_channels, filters = 3, 3, 16\nconv = k * k * in_channels * filters + filters\ndense = 32 * 32 * 3 * 16 + 16\nprint(conv, dense)',
-          ['432 49152', '448 49168', '448 3088', '160 49168'],
-          1,
+          '448 49168',
           'The convolution reuses $3 \\times 3 \\times 3$ weights per filter at every position; a dense layer needs a weight for every pixel and channel.',
         ),
         choose(
@@ -4936,23 +4518,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'reshape(-1, 2) groups the values into pairs, and max(axis=1) keeps the largest in each pair.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nx = np.array([5.0, 1.0, 2.0, 8.0, 0.0, 3.0, 7.0, 7.0])\nprint(x.reshape(-1, 2).max(axis=1).tolist())',
-          [
-            '[5.0, 8.0, 3.0, 7.0]',
-            '[3.0, 5.0, 1.5, 7.0]',
-            '[8.0, 7.0]',
-            '[5.0, 2.0, 0.0, 7.0]',
-          ],
-          0,
+          '[5.0, 8.0, 3.0, 7.0]',
           'Each pair keeps its largest value, halving the length from 8 to 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def receptive_field(layers, k):\n    return 1 + layers * (k - 1)\n\nprint(receptive_field(1, 3), receptive_field(2, 3), receptive_field(3, 3))',
-          ['3 6 9', '3 5 7', '3 9 27', '1 3 5'],
-          1,
+          '3 5 7',
           'Each extra 3-wide layer adds 2 input positions to what one output unit can see.',
         ),
         choose(
@@ -5012,11 +4587,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A causal window ends before the target time; any window containing time 5 or later leaks the answer.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = list(range(100))\nwindow = 7\nprint(len(values) - window)',
-          ['93', '100', '7', '94'],
-          0,
+          '93',
           'The first target needs 7 earlier values, so targets run from position 7 to 99: 93 examples.',
         ),
         choose(
@@ -5045,11 +4619,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first input raises the state; with zero inputs it slowly fades, still remembering the 1; the new input 2 pushes it close to 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This simplified recurrence has no activation. What does this program print?',
           'h = 0.0\nfor x in [4.0, 0.0, 0.0]:\n    h = 0.5 * h + x\nprint(h)',
-          ['4.0', '0.0', '2.0', '1.0'],
-          3,
+          '1.0',
           'The 4 enters the state and is halved at each later step: 4, then 2, then 1.',
         ),
         choose(
@@ -5063,16 +4636,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The state is updated at each step from the previous state and the current input.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nprint(np.tanh(np.array([-10.0, 0.0, 10.0])).round(3).tolist())',
-          [
-            '[-1.0, 0.0, 1.0]',
-            '[0.0, 0.5, 1.0]',
-            '[-10.0, 0.0, 10.0]',
-            '[0.0, 0.0, 10.0]',
-          ],
-          0,
+          '[-1.0, 0.0, 1.0]',
           'tanh keeps the state between -1 and 1, with 0 mapped to 0.',
         ),
         choose(
@@ -5101,18 +4668,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'With $g = 0.9$ the state stays close to its old value 0.8; with $g = 0.1$ it moves most of the way to the candidate -0.4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'h = 1.0\nfor step in range(5):\n    h = 1.0 * h + (1 - 1.0) * 0.0\nprint(h)',
-          ['0.0', '0.5', '5.0', '1.0'],
-          3,
+          '1.0',
           'A gate of exactly 1 keeps the whole old state at every step, so the value survives unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'h_old, candidate, g = 2.0, 6.0, 0.25\nprint(g * h_old + (1 - g) * candidate)',
-          ['2.0', '5.0', '3.0', '8.0'],
-          1,
+          '5.0',
           'A quarter of the old state plus three quarters of the candidate: 0.5 + 4.5 = 5.0.',
         ),
         choose(
@@ -5152,23 +4717,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each sensor gets its own windows. Concatenating the lists first would create a window [4, 10] that mixes sensor A with sensor B.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = [5, 6, 7]\nb = [50, 60, 70]\njoined = a + b\nwindow = 2\nbad = [joined[i - window:i] for i in range(window, len(joined))]\nprint(bad[1:3])',
-          [
-            '[[5, 6], [6, 7]]',
-            '[[7, 50], [50, 60]]',
-            '[[6, 7], [7, 50]]',
-            '[[50, 60], [60, 70]]',
-          ],
-          2,
+          '[[6, 7], [7, 50]]',
           'After concatenating, the window [7, 50] spans the end of one series and the start of the other.',
         ),
-        predictOutput(
+        typeOutput(
           'The naive forecast repeats the last observed value 20 for the next three steps. What does this program print?',
           'actual = [21, 24, 29]\nlast = 20\nprint([abs(a - last) for a in actual])',
-          ['[1, 4, 9]', '[1, 3, 5]', '[21, 24, 29]', '[9, 4, 1]'],
-          0,
+          '[1, 4, 9]',
           'The error grows with the horizon because the series keeps moving away from the last value.',
         ),
         choose(
@@ -5210,16 +4768,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first and third keys share the query’s direction and score 1; the second scores 0 and gets the smallest weight.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nq = np.array([0.0, 2.0])\nK = np.array([[1.0, 1.0], [0.0, 3.0], [2.0, 0.0]])\nprint((K @ q).tolist())',
-          [
-            '[2.0, 6.0, 0.0]',
-            '[1.0, 3.0, 2.0]',
-            '[0.0, 2.0, 0.0]',
-            '[2.0, 3.0, 2.0]',
-          ],
-          0,
+          '[2.0, 6.0, 0.0]',
           'Each score is the dot product of a key with the query: $0 \\times 1 + 2 \\times 1 = 2$, $0 \\times 0 + 2 \\times 3 = 6$, and $2 \\times 0 + 0 \\times 2 = 0$.',
         ),
         choose(
@@ -5233,11 +4785,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Normalized weights say what share of attention each position receives.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nscores = np.array([5.0, 5.0])\nweights = np.exp(scores) / np.exp(scores).sum()\nprint(weights.tolist())',
-          ['[1.0, 1.0]', '[5.0, 5.0]', '[0.5, 0.5]', '[1.0, 0.0]'],
-          2,
+          '[0.5, 0.5]',
           'Equal scores give equal weights, however large the scores are.',
         ),
         choose(
@@ -5266,23 +4817,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Most weight falls on the first and third values, so the context leans toward their first coordinate.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nweights = np.array([0.25, 0.75])\nV = np.array([[2.0, 0.0], [0.0, 4.0]])\nprint((weights @ V).tolist())',
-          ['[2.0, 4.0]', '[0.5, 3.0]', '[1.0, 2.0]', '[0.25, 0.75]'],
-          1,
+          '[0.5, 3.0]',
           '0.25 of the first value contributes 0.5; 0.75 of the second contributes 3.0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nfor d in [4, 64]:\n    q = np.ones(d)\n    k = np.ones(d)\n    print(d, float(q @ k), float(q @ k / np.sqrt(d)))',
-          [
-            '4 4.0 4.0\n64 64.0 64.0',
-            '4 2.0 1.0\n64 8.0 1.0',
-            '4 4.0 1.0\n64 64.0 1.0',
-            '4 4.0 2.0\n64 64.0 8.0',
-          ],
-          3,
+          '4 4.0 2.0\n64 64.0 8.0',
           'Raw dot products grow with $d$; dividing by $\\sqrt{d}$ keeps them in a smaller range.',
         ),
         choose(
@@ -5383,16 +4927,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Reversing the order of the key–value pairs leaves the output unchanged, so attention alone cannot tell which token came first.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\ntokens = np.array([[1.0, 0.0], [1.0, 0.0]])\npositions = np.array([[0.0, 0.1], [0.0, 0.2]])\nprint((tokens + positions).tolist())',
-          [
-            '[[1.0, 0.0], [1.0, 0.0]]',
-            '[[0.0, 0.1], [0.0, 0.2]]',
-            '[[1.0, 0.1], [1.0, 0.2]]',
-            '[[1.0, 0.3], [1.0, 0.3]]',
-          ],
-          2,
+          '[[1.0, 0.1], [1.0, 0.2]]',
           'Two identical tokens become different vectors once their positions are added, so attention can tell them apart.',
         ),
         choose(
@@ -5446,11 +4984,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The frozen base turns each row into three features. Only the head is fitted, and a new row passes through the same frozen base before the head predicts.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'base_params = 2_000_000\nhead_params = 1_281\nprint(head_params, base_params + head_params)',
-          ['1281 1281', '1281 2001281', '2001281 1281', '2000000 1281'],
-          1,
+          '1281 2001281',
           'With the base frozen, only the head’s 1,281 parameters are trained, out of about two million in the model. Underscores in numbers are only digit separators.',
         ),
         choose(
@@ -5464,11 +5001,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Large early errors from a random head could otherwise damage the pretrained features.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nW_base = np.array([[1.0, 0.0], [0.0, 2.0]])\nrow = np.array([[3.0, -1.0]])\nprint(np.maximum(0, row @ W_base).tolist())',
-          ['[[3.0, -2.0]]', '[[3.0, 2.0]]', '[[0.0, 0.0]]', '[[3.0, 0.0]]'],
-          3,
+          '[[3.0, 0.0]]',
           'The frozen base computes [3, -2], and its ReLU clips the negative value, exactly as for the training rows.',
         ),
         choose(
@@ -5497,11 +5033,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Multiplying by the trainable flags (True = 1, False = 0) applies the update only to the last two weights; the frozen ones are unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'layers = [{"name": "conv1", "params": 1000, "trainable": False}, {"name": "conv2", "params": 5000, "trainable": True}, {"name": "head", "params": 200, "trainable": True}]\ntrainable_total = sum([layer["params"] for layer in layers if layer["trainable"]])\nprint(trainable_total)',
-          ['6200', '1000', '5200', '200'],
-          2,
+          '5200',
           'Only conv2 and the head are trainable: 5,000 + 200.',
         ),
         choose(
@@ -5515,16 +5050,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'compile fixes the training configuration, so it must run again after trainable flags change.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nweights = np.array([1.0, 1.0, 1.0])\ntrainable = np.array([True, False, True])\nfor step in range(2):\n    weights = weights - 0.5 * np.array([2.0, 2.0, 2.0]) * trainable\nprint(weights.tolist())',
-          [
-            '[-1.0, -1.0, -1.0]',
-            '[-1.0, 1.0, -1.0]',
-            '[0.0, 1.0, 0.0]',
-            '[1.0, -1.0, 1.0]',
-          ],
-          1,
+          '[-1.0, 1.0, -1.0]',
           'Each step subtracts 1 from the trainable weights only; the frozen middle weight stays at 1.',
         ),
         choose(
@@ -5553,11 +5082,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'At 0.1 one step halves the pretrained weight. At 0.0001 the weight barely moves, preserving what it learned.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'w = 1.0\nfor step in range(3):\n    w = w - 0.5 * 2.0\nprint(w)',
-          ['0.0', '-2.0', '1.0', '-0.5'],
-          1,
+          '-2.0',
           'Each step subtracts 1, so three large steps move the pretrained weight from 1 to -2, far from its learned value.',
         ),
         choose(
@@ -5609,11 +5137,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The same pixels become different numbers under the two conventions. A base trained on the second would receive a shifted input range if fed the first.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The base was trained on inputs scaled with p / 127.5 - 1. What does this program print?',
           'pixel = 51\nexpected = pixel / 127.5 - 1\nactual = pixel / 255\nprint(round(expected, 2), round(actual, 2))',
-          ['0.2 0.2', '-0.6 -0.6', '0.2 -0.6', '-0.6 0.2'],
-          3,
+          '-0.6 0.2',
           'The base expects -0.6 for this pixel but would receive 0.2 under the wrong convention.',
         ),
         choose(
@@ -5667,16 +5194,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each two-number row is squeezed into one code. np.outer multiplies each code by the direction to rebuild a row; the mean squared error measures what was lost.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nx = np.array([[2.0, 2.0], [1.0, 1.0]])\nd = np.array([1.0, 1.0]) / np.sqrt(2)\nrecon = np.outer(x @ d, d)\nprint(recon.round(3).tolist(), round(float(((x - recon) ** 2).mean()), 3))',
-          [
-            '[[2.0, 2.0], [1.0, 1.0]] 1.0',
-            '[[2.0, 2.0], [1.0, 1.0]] 0.0',
-            '[[2.828, 2.828], [1.414, 1.414]] 0.0',
-            '[[1.0, 1.0], [0.5, 0.5]] 1.25',
-          ],
-          1,
+          '[[2.0, 2.0], [1.0, 1.0]] 0.0',
           'These rows lie exactly along the code direction, so one number per row reconstructs them perfectly.',
         ),
         choose(
@@ -5690,11 +5211,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Its training target is the input itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'original = [1.0, 0.0, 2.0]\nreconstructed = [0.8, 0.1, 2.1]\nerrors = [(original[i] - reconstructed[i]) ** 2 for i in range(3)]\nprint(round(sum(errors) / len(errors), 3))',
-          ['0.06', '0.2', '0.02', '0.133'],
-          2,
+          '0.02',
           'The squared errors are 0.04, 0.01, and 0.01, which average to 0.02.',
         ),
         choose(
@@ -5723,11 +5243,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Different noise values give different codes around the mean 2.0; sigma sets how far they spread.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nmu = np.array([1.0, -1.0])\nsigma = np.array([0.1, 2.0])\neps = np.array([1.0, 0.5])\nprint((mu + sigma * eps).tolist())',
-          ['[1.1, 0.0]', '[1.1, -2.0]', '[0.1, 1.0]', '[2.0, -0.5]'],
-          0,
+          '[1.1, 0.0]',
           'Each coordinate moves from its mean by its own sigma times its noise: 1 + 0.1 and -1 + 1.0.',
         ),
         choose(
@@ -5741,16 +5260,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The regularized code space can be sampled directly, and the decoder turns samples into data.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mu = 0.0\nfor sigma in [0.1, 3.0]:\n    print(sigma, mu + sigma * 2.0)',
-          [
-            '0.1 0.2\n3.0 6.0',
-            '0.1 2.0\n3.0 2.0',
-            '0.1 0.1\n3.0 3.0',
-            '0.1 2.1\n3.0 5.0',
-          ],
-          0,
+          '0.1 0.2\n3.0 6.0',
           'The same noise moves the code much farther when sigma is large.',
         ),
         choose(
@@ -5779,16 +5292,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The discriminator is doing well (0.9 on real, 0.2 on fake), so its loss is low and the generator’s is high.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\nfor d_fake in [0.1, 0.5]:\n    print(d_fake, round(-math.log(d_fake), 3))',
-          [
-            '0.1 0.105\n0.5 0.693',
-            '0.1 2.303\n0.5 0.693',
-            '0.1 0.693\n0.5 2.303',
-            '0.1 2.303\n0.5 0.5',
-          ],
-          1,
+          '0.1 2.303\n0.5 0.693',
           'The generator’s loss falls as the discriminator gives its samples a higher probability of being real.',
         ),
         choose(
@@ -5839,16 +5346,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'With $a = 0.64$ the noisy point is 0.8 parts signal and 0.6 parts noise. Subtracting the noise contribution and rescaling recovers the clean point exactly.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\nx0 = np.array([1.0])\nnoise = np.array([2.0])\nfor a in [1.0, 0.0]:\n    print(a, (np.sqrt(a) * x0 + np.sqrt(1 - a) * noise).tolist())',
-          [
-            '1.0 [2.0]\n0.0 [1.0]',
-            '1.0 [1.0]\n0.0 [1.0]',
-            '1.0 [1.0]\n0.0 [2.0]',
-            '1.0 [3.0]\n0.0 [3.0]',
-          ],
-          2,
+          '1.0 [1.0]\n0.0 [2.0]',
           'At $a = 1$ the sample is the clean data; at $a = 0$ it is pure noise.',
         ),
         choose(
@@ -5862,11 +5363,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Predicting the noise is what allows it to be removed step by step.',
         ),
-        predictOutput(
+        typeOutput(
           'The model predicted the noise exactly. What does this program print?',
           'import numpy as np\na = 0.36\nxt = np.array([1.4])\npredicted_noise = np.array([1.0])\nprint(((xt - np.sqrt(1 - a) * predicted_noise) / np.sqrt(a)).round(3).tolist())',
-          ['[1.4]', '[0.6]', '[2.333]', '[1.0]'],
-          3,
+          '[1.0]',
           '$\\sqrt{0.64} = 0.8$ of noise is removed, leaving 0.6, and dividing by $\\sqrt{0.36} = 0.6$ gives 1.0.',
         ),
         choose(
@@ -5895,16 +5395,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first sample is an exact copy of a training example. The second is new, at distance $\\sqrt{13} \\approx 3.606$ from its nearest neighbour.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Each sample is labelled with the kind of data it shows. What does this program print?',
           'training_kinds = ["cat", "dog", "bird", "fish"]\nsample_kinds = ["cat", "cat", "dog", "cat", "dog"]\ncovered = [k for k in training_kinds if k in sample_kinds]\nprint(covered, len(covered) / len(training_kinds))',
-          [
-            "['cat', 'dog'] 0.4",
-            "['cat', 'dog', 'bird', 'fish'] 1.0",
-            "['cat', 'cat', 'dog'] 0.75",
-            "['cat', 'dog'] 0.5",
-          ],
-          3,
+          "['cat', 'dog'] 0.5",
           'The samples show only two of the four kinds, so half of the training data’s variety is missing.',
         ),
         choose(
@@ -5957,11 +5451,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The policy maps each observed state to an action, and the rewards for the chosen actions add up to 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'policy = {"red": "stop", "green": "go"}\nreward_for = {"stop": 0, "go": 2}\ntotal = 0\nfor state in ["green", "red", "green"]:\n    total += reward_for[policy[state]]\nprint(total)',
-          ['2', '6', '4', '0'],
-          2,
+          '4',
           'Two green states lead to "go", each earning 2; the red state earns 0.',
         ),
         choose(
@@ -5986,16 +5479,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The feedback is a reward signal, and the agent must discover which actions earn it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'policy = {"hungry": "eat", "tired": "sleep", "fine": "work"}\nactions = [policy[s] for s in ["tired", "fine", "hungry"]]\nprint(actions)',
-          [
-            "['sleep', 'work', 'eat']",
-            "['eat', 'sleep', 'work']",
-            "['tired', 'fine', 'hungry']",
-            "['work', 'work', 'work']",
-          ],
-          0,
+          "['sleep', 'work', 'eat']",
           'The comprehension looks up the policy’s action for each state, in order.',
         ),
       ],
@@ -6013,23 +5500,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The return is $1 + 0.5 \\times 2 + 0.25 \\times 4 = 3$. The weight halves for each step further into the future.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'rewards = [2, 4]\ngamma = 0.5\ntotal = 0\nweight = 1\nfor reward in rewards:\n    total += weight * reward\n    weight *= gamma\nprint(total)',
-          ['6.0', '3.0', '4.0', '2.0'],
-          2,
+          '4.0',
           'The immediate reward counts fully and the next one is halved: $2 + 0.5 \\times 4 = 4$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'rewards = [0, 0, 10]\nfor gamma in [0.9, 0.1]:\n    total = 0\n    weight = 1\n    for reward in rewards:\n        total += weight * reward\n        weight *= gamma\n    print(gamma, round(total, 3))',
-          [
-            '0.9 10.0\n0.1 10.0',
-            '0.9 9.0\n0.1 1.0',
-            '0.9 8.1\n0.1 0.1',
-            '0.9 0.0\n0.1 0.0',
-          ],
-          2,
+          '0.9 8.1\n0.1 0.1',
           'The reward arrives two steps away, so it is weighted by $\\gamma^2$: 0.81 or 0.01.',
         ),
         choose(
@@ -6069,18 +5549,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The greedy choice is the action with the largest Q-value. The update moves 2.0 halfway toward the target $1 + 0.9 \\times 5 = 5.5$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'q = {"up": 0.2, "down": 0.9, "wait": 0.4}\nbest = "up"\nfor action in ["up", "down", "wait"]:\n    if q[action] > q[best]:\n        best = action\nprint(best, q[best])',
-          ['up 0.2', 'wait 0.4', 'down 0.4', 'down 0.9'],
-          3,
+          'down 0.9',
           'The loop keeps the action with the largest Q-value seen so far.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'old, reward, gamma, best_next, alpha = 0.0, 2.0, 0.5, 4.0, 0.25\ntarget = reward + gamma * best_next\nprint(target, old + alpha * (target - old))',
-          ['4.0 1.0', '6.0 1.5', '4.0 4.0', '2.0 0.5'],
-          0,
+          '4.0 1.0',
           'The target is $2 + 0.5 \\times 4 = 4$, and the estimate moves a quarter of the way from 0 toward it.',
         ),
         choose(
@@ -6120,11 +5598,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The greedy action can be chosen deliberately or by the random pick; the other three share only the random pick. The four probabilities add up to 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'epsilon = 0.1\nn_actions = 2\nprint(round(1 - epsilon + epsilon / n_actions, 3), round(epsilon / n_actions, 3))',
-          ['0.9 0.1', '0.95 0.05', '0.9 0.05', '1.0 0.0'],
-          1,
+          '0.95 0.05',
           'The random pick can also land on the greedy action, adding 0.05 to its 0.9.',
         ),
         choose(
@@ -6138,16 +5615,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Exploration gathers information that a purely greedy agent would never collect.',
         ),
-        predictOutput(
+        typeOutput(
           'The greedy action pays 1.0 on average and the other action pays 0.0. What does this program print?',
           'for epsilon in [0.0, 0.5]:\n    p_greedy = 1 - epsilon + epsilon / 2\n    print(epsilon, p_greedy * 1.0 + (1 - p_greedy) * 0.0)',
-          [
-            '0.0 1.0\n0.5 0.5',
-            '0.0 0.5\n0.5 0.75',
-            '0.0 1.0\n0.5 1.0',
-            '0.0 1.0\n0.5 0.75',
-          ],
-          3,
+          '0.0 1.0\n0.5 0.75',
           'More exploration costs some immediate reward, which is the price of learning about the other action.',
         ),
         choose(
@@ -6178,23 +5649,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The request lacks rain, so it should be rejected or flagged. distance_km arrives as text but converts cleanly to a number.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'required = ["age", "plan", "visits"]\nrecord = {"plan": "pro", "visits": 4, "browser": "x"}\nprint([name for name in required if name not in record])',
-          ["['browser']", "['age']", "['age', 'browser']", '[]'],
-          1,
+          "['age']",
           'Only required names are checked, so the extra browser key is ignored and age is reported missing.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def parse_age(text):\n    try:\n        age = int(text)\n    except ValueError:\n        return "rejected"\n    if age < 0 or age > 120:\n        return "rejected"\n    return age\n\nprint(parse_age("42"), parse_age("forty"), parse_age("300"))',
-          [
-            '42 forty 300',
-            '42 rejected 300',
-            '42 rejected rejected',
-            'rejected rejected rejected',
-          ],
-          2,
+          '42 rejected rejected',
           '"forty" fails the conversion, and 300 converts but is outside the plausible range.',
         ),
         choose(
@@ -6208,11 +5672,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A silent default changes the input the model sees; failing visibly keeps the problem detectable.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'schema = {"distance_km": float, "items": int}\nrecord = {"distance_km": "3.2", "items": "two"}\nproblems = []\nfor name in ["distance_km", "items"]:\n    try:\n        schema[name](record[name])\n    except ValueError:\n        problems.append(name)\nprint(problems)',
-          ["['distance_km']", "['items']", "['distance_km', 'items']", '[]'],
-          1,
+          "['items']",
           'float("3.2") succeeds, but int("two") raises ValueError, so only items is reported.',
         ),
       ],
@@ -6230,11 +5693,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The stored scaler shows that live values are far above the training range. Refitting on live data erases that and feeds the model ordinary-looking values.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'artifact = {"model": "delivery-v3", "features": ["distance_km", "rain"]}\nlive_features = ["rain", "distance_km"]\nprint(len(live_features) == len(artifact["features"]), live_features == artifact["features"])',
-          ['True True', 'False False', 'False True', 'True False'],
-          3,
+          'True False',
           'The same names arrive in a different order. A model reading columns by position would receive rain where it expects distance.',
         ),
         choose(
@@ -6248,16 +5710,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The model’s weights only make sense for inputs prepared exactly as in training.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'from sklearn.preprocessing import StandardScaler\nscaler = StandardScaler().fit([[0.0], [4.0]])\nbatch_a = [[2.0]]\nbatch_b = [[2.0], [100.0]]\nprint(scaler.transform(batch_a).tolist(), scaler.transform(batch_b).tolist())',
-          [
-            '[[0.0]] [[0.0], [49.0]]',
-            '[[0.0]] [[-1.0], [1.0]]',
-            '[[1.0]] [[1.0], [50.0]]',
-            '[[0.0]] [[0.0], [1.0]]',
-          ],
-          0,
+          '[[0.0]] [[0.0], [49.0]]',
           'The stored scaler treats each row the same way regardless of what else is in the batch, so the value 2.0 always maps to 0.0.',
         ),
         choose(
@@ -6286,16 +5742,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The live mean 10.5 sits more than three training standard deviations above the training mean 6, a large shift worth investigating.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\ntrain = pd.Series(["card", "card", "cash", "card"])\nlive = pd.Series(["cash", "cash", "card", "cash"])\nprint(train.value_counts(normalize=True).to_dict())\nprint(live.value_counts(normalize=True).to_dict())',
-          [
-            "{'card': 3, 'cash': 1}\n{'cash': 3, 'card': 1}",
-            "{'card': 0.75, 'cash': 0.25}\n{'card': 0.75, 'cash': 0.25}",
-            "{'card': 0.75, 'cash': 0.25}\n{'cash': 0.75, 'card': 0.25}",
-            "{'card': 0.5, 'cash': 0.5}\n{'cash': 0.5, 'card': 0.5}",
-          ],
-          2,
+          "{'card': 0.75, 'cash': 0.25}\n{'cash': 0.75, 'card': 0.25}",
           'Card payments fall from three quarters of training rows to one quarter of live rows: the input mix has shifted.',
         ),
         choose(
@@ -6309,11 +5759,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Input monitoring signals risk; only labelled outcomes show whether predictions degraded.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import numpy as np\ntrain = np.array([20.0, 22.0, 18.0, 20.0])\nfor live in [np.array([21.0, 19.0]), np.array([30.0, 32.0])]:\n    print(round(float((live.mean() - train.mean()) / train.std()), 2))',
-          ['0.0\n7.78', '0.0\n11.0', '1.0\n7.78', '0.0\n1.41'],
-          0,
+          '0.0\n7.78',
           'The first live batch has the training mean, 20; the second sits 11 units, about 7.78 training standard deviations, above it.',
         ),
         choose(
@@ -6342,16 +5791,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Every week-1 prediction was correct, but only one of three in week 2: a drop that calls for investigation.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import pandas as pd\nlog = pd.DataFrame({"region": ["N", "N", "S", "S", "S", "N"], "correct": [1, 1, 0, 1, 0, 1]})\nprint(round(float(log["correct"].mean()), 3))\nprint(log.groupby("region")["correct"].mean().round(3).to_dict())',
-          [
-            "0.667\n{'N': 0.667, 'S': 0.667}",
-            "0.667\n{'N': 1.0, 'S': 0.333}",
-            "0.5\n{'N': 1.0, 'S': 0.333}",
-            "0.667\n{'N': 3, 'S': 1}",
-          ],
-          1,
+          "0.667\n{'N': 1.0, 'S': 0.333}",
           'The overall rate of 0.667 hides that every northern prediction was right and two of three southern ones were wrong.',
         ),
         choose(

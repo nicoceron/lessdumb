@@ -1,6 +1,7 @@
 import type {
-  ChoiceQuestion,
+  AnswerQuestion,
   GraphCatalog,
+  Question,
   Skill,
   SkillOutline,
 } from './curriculum';
@@ -18,6 +19,7 @@ import {
 } from './learning';
 import { lessonSteps } from './lesson-plan';
 import { acquisitionMemory } from './retention';
+import { gradeAnswer } from './typed-answer';
 
 // An adaptive placement diagnostic. It is a transparent heuristic, not Math
 // Academy's calibrated model: each skill on the course path has a probability
@@ -40,6 +42,11 @@ export const KNOWN = 0.85;
 export const UNKNOWN = 0.15;
 /** Correct answers slower than this count as half the evidence. */
 export const SLOW_ANSWER_MS = 60_000;
+/**
+ * Chance of typing a correct answer without knowing the skill. Far below a
+ * four-way choice, but not zero: some outputs are a guessable True or 0.
+ */
+export const TYPED_GUESS = 0.1;
 /** Placed skills' first reviews spread over at most this many days. */
 const MAX_REVIEW_SPREAD_DAYS = 14;
 const REVIEWS_PER_DAY = 8;
@@ -53,7 +60,8 @@ export interface DiagnosticQuestion {
 }
 
 export interface DiagnosticAnswer extends DiagnosticQuestion {
-  answer: number;
+  /** The authored choice index, or the text typed for a typed question. */
+  answer: number | string;
   correct: boolean;
   at: number;
   /** Time from showing the question to submitting it, measured by the page. */
@@ -120,24 +128,27 @@ function pathModel(courseId: string, catalog: GraphCatalog): PathModel {
   return model;
 }
 
-/** Choice questions from a skill's knowledge points; no code editor. */
-function choiceQuestions(skill: SkillOutline) {
+/** Chosen and typed questions from a skill's knowledge points; no code editor. */
+function answerQuestions(skill: SkillOutline) {
   return (skill.knowledgePoints ?? []).flatMap((point) =>
-    point.questions.filter((question) => question.type === 'choice'),
+    point.questions.filter((question) => question.type !== 'code'),
   );
 }
 
 /**
- * The guessing rate of a question, from its number of choices. The placement
- * session loads every course on the path first, so the content is available.
+ * The guessing rate of a question: one over its number of choices, or
+ * TYPED_GUESS for a typed question. The placement session loads every course
+ * on the path first, so the content is available.
  */
 function guessRate(skill: SkillOutline, questionId?: string): number {
   const questions = (contentOf(skill)?.knowledgePoints ?? []).flatMap(
     (point) => point.questions,
   );
-  const question = questionId
+  const question: Question | undefined = questionId
     ? questions.find((item) => item.id === questionId)
-    : questions.find((item) => item.type === 'choice');
+    : questions.find((item) => item.type !== 'code');
+  if (question?.type === 'numeric' || question?.type === 'text')
+    return TYPED_GUESS;
   return 1 / (question?.type === 'choice' ? question.choices.length : 4);
 }
 
@@ -148,13 +159,15 @@ function guessRate(skill: SkillOutline, questionId?: string): number {
 export function diagnosticQuestion(
   slot: Pick<DiagnosticQuestion, 'skillId' | 'questionId'>,
   catalog: GraphCatalog = defaultCatalog,
-): { skill: Skill; question: ChoiceQuestion } | undefined {
+): { skill: Skill; question: AnswerQuestion } | undefined {
   const outline = catalog.skills.find((item) => item.id === slot.skillId);
   const skill = outline && contentOf(outline);
   const question = skill?.knowledgePoints
     ?.flatMap((point) => point.questions)
     .find((item) => item.id === slot.questionId);
-  return skill && question?.type === 'choice' ? { skill, question } : undefined;
+  return skill && question && question.type !== 'code'
+    ? { skill, question }
+    : undefined;
 }
 
 const odds = (p: number) => p / (1 - p);
@@ -222,7 +235,7 @@ export function nextDiagnosticQuestion(
     (skill) =>
       uncertain(belief.get(skill.id)!) &&
       (asked.get(skill.id) ?? 0) < QUESTIONS_PER_SKILL &&
-      choiceQuestions(skill).some((question) => !used.has(question.id)),
+      answerQuestions(skill).some((question) => !used.has(question.id)),
   );
   if (!candidates.length) return null;
   const fixed = (id: string) => isMastered(progress, id, catalog);
@@ -270,7 +283,7 @@ export function nextDiagnosticQuestion(
       Math.abs(belief.get(a.id)! - 0.5) - Math.abs(belief.get(b.id)! - 0.5) ||
       a.order - b.order,
   )[0];
-  const question = choiceQuestions(best).find((item) => !used.has(item.id))!;
+  const question = answerQuestions(best).find((item) => !used.has(item.id))!;
   return {
     skillId: best.id,
     questionId: question.id,
@@ -333,11 +346,15 @@ export function startDiagnostic(
   };
 }
 
-/** Record the answer to the current question, then ask the next or finish. */
+/**
+ * Record the answer to the current question (a choice index, or the text
+ * typed for a typed question), then ask the next or finish. A typed response
+ * that cannot be graded is rejected rather than counted wrong.
+ */
 export function answerDiagnostic(
   progress: Progress,
   diagnosticId: string,
-  answer: number,
+  answer: number | string,
   now: Now = Date.now(),
   elapsedMs?: number,
   catalog: GraphCatalog = defaultCatalog,
@@ -349,12 +366,7 @@ export function answerDiagnostic(
     return progress;
   const found = diagnosticQuestion(diagnostic.current, catalog);
   if (!found) throw new Error('This placement question is not in the catalog.');
-  if (
-    !Number.isInteger(answer) ||
-    answer < 0 ||
-    answer >= found.question.choices.length
-  )
-    throw new Error('Unknown choice.');
+  const correct = gradeAnswer(found.question, answer);
   const at = time(now);
   const answered: Diagnostic = {
     ...diagnostic,
@@ -364,7 +376,7 @@ export function answerDiagnostic(
       {
         ...diagnostic.current,
         answer,
-        correct: answer === found.question.answer,
+        correct,
         at,
         ...(elapsedMs !== undefined &&
         Number.isFinite(elapsedMs) &&

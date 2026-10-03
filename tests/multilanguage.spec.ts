@@ -5,6 +5,7 @@ import {
   skillById,
   type Question,
   type CodeLanguage,
+  type CodeQuestion,
 } from '../src/lib/curriculum';
 import {
   isMastered,
@@ -70,7 +71,8 @@ async function runAndCheck(page: Page) {
 async function answer(page: Page, question: Question) {
   if (question.type === 'choice') await answerChoice(page, question);
   else {
-    await fillCode(page, question.solution);
+    // Browser specs predate typed answers (CEN-111): they answer choices only.
+    await fillCode(page, (question as CodeQuestion).solution);
     await runAndCheck(page);
   }
 }

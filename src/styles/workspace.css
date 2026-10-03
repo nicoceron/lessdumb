@@ -1827,6 +1827,89 @@ code {
   line-height: 1.7;
   white-space: nowrap;
 }
+/* Typed answers: one field that Enter submits; answered ones freeze to text. */
+.typed-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.typed-answer-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.typed-answer-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.lesson-workspace .typed-answer-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 30rem;
+}
+.typed-answer-unit {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.typed-answer-hint {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.typed-answer-error {
+  color: var(--destructive);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.typed-response {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.typed-response pre {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.typed-response > svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.typed-response.is-correct {
+  border-color: var(--success);
+  background: color-mix(in oklab, var(--success) 10%, transparent);
+}
+.typed-response.is-correct > svg,
+.typed-response.is-accepted > svg {
+  color: #22634c;
+}
+.typed-response.is-accepted {
+  border-color: var(--success);
+}
+.typed-response.is-incorrect {
+  border-color: var(--destructive);
+  background: color-mix(in oklab, var(--destructive) 8%, transparent);
+}
+.typed-response.is-incorrect > svg {
+  color: var(--destructive);
+}
+.typed-answer-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .lesson-workspace .typed-answer-input {
+    max-width: none;
+  }
+}
 .lesson-reread {
   border-top: 1px solid var(--border);
 }

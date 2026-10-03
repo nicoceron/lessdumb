@@ -1,4 +1,9 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 export const knowledgePoints: KnowledgePointModule = {
   'rust-generic-functions': [
@@ -16,11 +21,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first call makes T an integer, so its result can be added to. The second call makes T a &str. Both calls use the same function.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn pick_last<T>(a: T, b: T) -> T {\n    b\n}\n\nfn main() {\n    println!("{}", pick_last(4, 9));\n    println!("{}", pick_last("left", "right"));\n}',
-          ['4\nleft', '4\nright', '9\nleft', '9\nright'],
-          3,
+          '9\nright',
           'pick_last returns its second argument whatever T is: 9 for the integers and right for the strings.',
         ),
         choose(
@@ -34,11 +38,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Both parameters use the same T, so one call cannot make T an integer and a &str at once.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn echo<T>(value: T) -> T {\n    value\n}\n\nfn main() {\n    let total = echo(10) + echo(5);\n    let name = echo(String::from("crab"));\n    println!("{} {}", total, name);\n}',
-          ['15 crab', '105 crab', '10 crab', '15 "crab"'],
-          0,
+          '15 crab',
           'Each echo call returns its argument unchanged, so the integers add to 15 and the String prints as crab.',
         ),
         choose(
@@ -79,11 +82,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Moving and returning a value works for every type. Addition, comparison, and {} formatting need operations that T might not have.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn first<T>(a: T, b: T) -> T {\n    a\n}\n\nfn last<T>(a: T, b: T) -> T {\n    b\n}\n\nfn main() {\n    println!("{}", first(last(1, 2), last(3, 4)));\n}',
-          ['1', '3', '4', '2'],
-          3,
+          '2',
           'The inner calls give 2 and 4, and first returns the first of those, 2.',
         ),
         choose(
@@ -126,11 +128,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'number is a Boxed<i32>, so its field supports + 1. word is a Boxed<&str>. The same declaration serves both.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Pair<T> {\n    left: T,\n    right: T,\n}\n\nfn main() {\n    let p = Pair { left: 3, right: 8 };\n    println!("{}", p.right - p.left);\n}',
-          ['5', '-5', '11', '3'],
-          0,
+          '5',
           'Both fields are i32 here, and right - left is 8 - 3.',
         ),
         choose(
@@ -144,11 +145,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Both fields are declared as the same T, so one Pair cannot hold an integer and a &str.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'struct Entry<K, V> {\n    key: K,\n    value: V,\n}\n\nfn main() {\n    let e = Entry { key: "port", value: 8080 };\n    println!("{}={}", e.key, e.value + 1);\n}',
-          ['port=8080', '8081=port', 'port=80801', 'port=8081'],
-          3,
+          'port=8081',
           'K is &str and V is an integer, so key prints as port and value + 1 is 8081.',
         ),
         choose(
@@ -178,11 +178,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'fill builds a Slot<String>, and empty_out takes ownership of it and moves the field out, so main ends up owning the String again.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Pair<T> {\n    first: T,\n    second: T,\n}\n\nfn make<T>(a: T, b: T) -> Pair<T> {\n    Pair { first: b, second: a }\n}\n\nfn main() {\n    let p = make(2, 7);\n    println!("{} {}", p.first, p.second);\n}',
-          ['2 7', '7 7', '2 2', '7 2'],
-          3,
+          '7 2',
           'make stores b in first and a in second, so the order is swapped.',
         ),
         choose(
@@ -196,11 +195,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'T must be declared on the function, and Wrapper needs its type argument; the result is the field type T.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'struct Holder<T> {\n    value: T,\n}\n\nfn main() {\n    let outer = Holder { value: Holder { value: 5 } };\n    println!("{}", outer.value.value * 3);\n}',
-          ['15', '5', '8', '45'],
-          0,
+          '15',
           'outer is a Holder<Holder<i32>>. outer.value.value reaches the inner 5, and 5 * 3 is 15.',
         ),
         choose(
@@ -227,11 +225,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The impl gives Dog a describe body that reads its own field, so rex.describe() builds the text from Rex.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'trait Wheels {\n    fn wheels(&self) -> u32;\n}\n\nstruct Bike {\n    riders: u32,\n}\n\nstruct Car {\n    doors: u32,\n}\n\nimpl Wheels for Bike {\n    fn wheels(&self) -> u32 {\n        2\n    }\n}\n\nimpl Wheels for Car {\n    fn wheels(&self) -> u32 {\n        4\n    }\n}\n\nfn main() {\n    let bike = Bike { riders: 1 };\n    let car = Car { doors: 4 };\n    println!("{}", bike.wheels() + car.wheels() * 2);\n}',
-          ['12', '6', '8', '10'],
-          3,
+          '10',
           'Each type runs its own body: 2 for the bike and 4 for the car. Multiplication happens first, so 2 + 8 is 10.',
         ),
         choose(
@@ -245,11 +242,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The trait only declares the method; the impl must supply a body whose signature matches the declaration.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'trait Total {\n    fn total(&self) -> u32;\n}\n\nstruct Order {\n    price: u32,\n    count: u32,\n}\n\nimpl Total for Order {\n    fn total(&self) -> u32 {\n        self.price * self.count\n    }\n}\n\nfn main() {\n    let order = Order { price: 6, count: 3 };\n    println!("{}", order.total());\n}',
-          ['18', '9', '63', '6'],
-          0,
+          '18',
           'The impl multiplies the two fields of this Order: 6 * 3 is 18.',
         ),
         choose(
@@ -279,11 +275,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The impl adds shout to i32, and inside it self is the i32 value, so the method formats 7 with an exclamation mark.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'trait Triple {\n    fn triple(&self) -> u32;\n}\n\nimpl Triple for u32 {\n    fn triple(&self) -> u32 {\n        self * 3\n    }\n}\n\nfn main() {\n    let a: u32 = 4;\n    let b: u32 = 5;\n    println!("{}", a.triple() + b);\n}',
-          ['17', '27', '12', '15'],
-          0,
+          '17',
           'a.triple() is 12, and b is added unchanged, giving 17.',
         ),
         choose(
@@ -297,16 +292,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Only i32 has an impl. Other integer types and &str would each need their own impl block.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'trait Label {\n    fn label(&self) -> String;\n}\n\nimpl Label for u8 {\n    fn label(&self) -> String {\n        format!("small {}", self)\n    }\n}\n\nimpl Label for u64 {\n    fn label(&self) -> String {\n        format!("large {}", self)\n    }\n}\n\nfn main() {\n    let a: u8 = 3;\n    let b: u64 = 3;\n    println!("{} / {}", b.label(), a.label());\n}',
-          [
-            'small 3 / large 3',
-            'large 3 / large 3',
-            'small 3 / small 3',
-            'large 3 / small 3',
-          ],
-          3,
+          'large 3 / small 3',
           'The value 3 is the same, but b is a u64 and a is a u8, so each call uses the impl for its own type.',
         ),
         choose(
@@ -338,11 +327,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Triangle writes only sides. describe comes from the default, which calls Triangle’s sides and gets 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'trait Price {\n    fn base(&self) -> u32;\n    fn with_fee(&self) -> u32 {\n        self.base() + 5\n    }\n}\n\nstruct Ticket {\n    cost: u32,\n}\n\nimpl Price for Ticket {\n    fn base(&self) -> u32 {\n        self.cost * 2\n    }\n}\n\nfn main() {\n    let t = Ticket { cost: 10 };\n    println!("{}", t.with_fee());\n}',
-          ['15', '20', '30', '25'],
-          3,
+          '25',
           'with_fee is the default: it calls Ticket’s base, which is 20, and adds 5.',
         ),
         choose(
@@ -356,11 +344,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Methods without a body are required. A method with a default body may be omitted.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'trait Counted {\n    fn count(&self) -> u32;\n    fn doubled(&self) -> u32 {\n        self.count() * 2\n    }\n}\n\nstruct Pair {\n    left: u32,\n    right: u32,\n}\n\nstruct Single {\n    value: u32,\n}\n\nimpl Counted for Pair {\n    fn count(&self) -> u32 {\n        2\n    }\n}\n\nimpl Counted for Single {\n    fn count(&self) -> u32 {\n        1\n    }\n}\n\nfn main() {\n    let p = Pair { left: 7, right: 9 };\n    let s = Single { value: 5 };\n    println!("{} {}", p.doubled(), s.doubled());\n}',
-          ['4 2', '32 10', '2 1', '4 4'],
-          0,
+          '4 2',
           'The same default runs for both types, but each call uses that type’s count: 2 * 2 and 1 * 2.',
         ),
         choose(
@@ -390,11 +377,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Square keeps the default corners, which returns its 4 sides. Circle overrides corners and returns 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'trait Points {\n    fn base(&self) -> u32 {\n        10\n    }\n    fn bonus(&self) -> u32 {\n        self.base() * 2\n    }\n}\n\nstruct Rookie {\n    level: u32,\n}\n\nstruct Veteran {\n    level: u32,\n}\n\nimpl Points for Rookie {}\n\nimpl Points for Veteran {\n    fn base(&self) -> u32 {\n        25\n    }\n}\n\nfn main() {\n    let r = Rookie { level: 1 };\n    let v = Veteran { level: 9 };\n    println!("{} {}", r.bonus(), v.bonus());\n}',
-          ['20 50', '10 25', '20 20', '50 50'],
-          0,
+          '20 50',
           'Both use the default bonus, but self.base() runs Veteran’s override, so the results are 10 * 2 and 25 * 2.',
         ),
         choose(
@@ -408,11 +394,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'An override replaces the default only for the type that wrote it. B still uses the default.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'trait Greeting {\n    fn greet(&self) -> String {\n        String::from("hello")\n    }\n}\n\nstruct Friend {\n    nickname: String,\n}\n\nstruct Stranger {\n    id: u32,\n}\n\nimpl Greeting for Friend {\n    fn greet(&self) -> String {\n        format!("hey {}", self.nickname)\n    }\n}\n\nimpl Greeting for Stranger {}\n\nfn main() {\n    let f = Friend { nickname: String::from("Jo") };\n    let s = Stranger { id: 4 };\n    println!("{}, {}", s.greet(), f.greet());\n}',
-          ['hey Jo, hello', 'hello, hello', 'hey Jo, hey Jo', 'hello, hey Jo'],
-          3,
+          'hello, hey Jo',
           'Stranger uses the default and Friend uses its override. The format string prints Stranger’s greeting first.',
         ),
         choose(
@@ -444,11 +429,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'For Rope, Self::Unit is u32, so its amount supports + 3. For Label it is String, so its amount is text.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'trait Source {\n    type Item;\n    fn next_item(&self) -> Self::Item;\n}\n\nstruct Counter {\n    start: u32,\n}\n\nimpl Source for Counter {\n    type Item = u32;\n    fn next_item(&self) -> Self::Item {\n        self.start + 1\n    }\n}\n\nfn main() {\n    let c = Counter { start: 41 };\n    let a = c.next_item();\n    let b = c.next_item();\n    println!("{} {}", a, b);\n}',
-          ['42 42', '42 43', '41 42', '41 41'],
-          0,
+          '42 42',
           'next_item takes &self and never changes start, so both calls compute 41 + 1.',
         ),
         choose(
@@ -473,11 +457,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'An associated type without a default must be specified in each impl; the compiler does not guess it.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'trait Split {\n    type Parts;\n    fn split(&self) -> Self::Parts;\n}\n\nstruct Span {\n    hours: u32,\n}\n\nimpl Split for Span {\n    type Parts = (u32, u32);\n    fn split(&self) -> Self::Parts {\n        (self.hours, self.hours * 60)\n    }\n}\n\nfn main() {\n    let s = Span { hours: 2 };\n    let parts = s.split();\n    println!("{} {}", parts.1, parts.0);\n}',
-          ['120 2', '2 120', '120 120', '2 2'],
-          0,
+          '120 2',
           'Parts is a tuple here. Field 1 holds the minutes (120) and field 0 the hours (2), printed in that order.',
         ),
       ],
@@ -507,18 +490,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The parameter is Self::Item, which this impl fixed as u32. Only an integer argument fits.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'trait Convert {\n    type Input;\n    type Output;\n    fn convert(&self, input: Self::Input) -> Self::Output;\n}\n\nstruct Doubler {\n    extra: u32,\n}\n\nimpl Convert for Doubler {\n    type Input = u32;\n    type Output = String;\n    fn convert(&self, input: Self::Input) -> Self::Output {\n        format!("{}+{}", input * 2, self.extra)\n    }\n}\n\nfn main() {\n    let d = Doubler { extra: 1 };\n    println!("{}", d.convert(6));\n}',
-          ['12+1', '13', '6+1', '7+1'],
-          0,
+          '12+1',
           'The input is a u32 that gets doubled, and the output is a String built from 12 and extra.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'trait Reading {\n    type Value;\n    fn read(&self) -> Self::Value;\n}\n\nstruct Thermometer {\n    celsius: i32,\n}\n\nstruct Gps {\n    lat: i32,\n    lon: i32,\n}\n\nimpl Reading for Thermometer {\n    type Value = i32;\n    fn read(&self) -> Self::Value {\n        self.celsius - 3\n    }\n}\n\nimpl Reading for Gps {\n    type Value = (i32, i32);\n    fn read(&self) -> Self::Value {\n        (self.lon, self.lat)\n    }\n}\n\nfn main() {\n    let t = Thermometer { celsius: 20 };\n    let g = Gps { lat: 4, lon: 9 };\n    let pos = g.read();\n    println!("{} {} {}", t.read(), pos.0, pos.1);\n}',
-          ['17 9 4', '17 4 9', '20 9 4', '23 9 4'],
-          0,
+          '17 9 4',
           'The thermometer returns an i32, 20 - 3. The GPS returns a tuple with lon first, so field 0 is 9.',
         ),
         choose(
@@ -550,11 +531,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'announce is written once, but each call runs the speak of the value passed in: first the robot’s, then the cat’s.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'trait Area {\n    fn area(&self) -> u32;\n}\n\nstruct Square {\n    side: u32,\n}\n\nstruct Rect {\n    w: u32,\n    h: u32,\n}\n\nimpl Area for Square {\n    fn area(&self) -> u32 {\n        self.side * self.side\n    }\n}\n\nimpl Area for Rect {\n    fn area(&self) -> u32 {\n        self.w * self.h\n    }\n}\n\nfn double_area(shape: &dyn Area) -> u32 {\n    shape.area() * 2\n}\n\nfn main() {\n    let s = Square { side: 3 };\n    let r = Rect { w: 2, h: 5 };\n    println!("{} {}", double_area(&s), double_area(&r));\n}',
-          ['9 10', '6 14', '20 18', '18 20'],
-          3,
+          '18 20',
           'The square’s area is 9 and the rectangle’s is 10; double_area doubles whichever implementation it receives.',
         ),
         choose(
@@ -574,11 +554,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The parameter is a reference to an implementor. A Cat value is not a reference, and i32 has no Speak impl.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'trait Noise {\n    fn noise(&self) -> String;\n}\n\nstruct Duck {\n    volume: u32,\n}\n\nstruct Cow {\n    volume: u32,\n}\n\nimpl Noise for Duck {\n    fn noise(&self) -> String {\n        format!("quack{}", self.volume)\n    }\n}\n\nimpl Noise for Cow {\n    fn noise(&self) -> String {\n        format!("moo{}", self.volume)\n    }\n}\n\nfn describe(animal: &dyn Noise) -> String {\n    animal.noise()\n}\n\nfn main() {\n    let d = Duck { volume: 1 };\n    let c = Cow { volume: 2 };\n    println!("{} {}", describe(&c), describe(&d));\n}',
-          ['quack1 moo2', 'moo2 moo2', 'quack1 quack1', 'moo2 quack1'],
-          3,
+          'moo2 quack1',
           'describe(&c) runs Cow’s noise and describe(&d) runs Duck’s, in the order they appear in the format string.',
         ),
       ],
@@ -597,11 +576,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The annotation makes both elements &dyn Cost. The coffee costs 2 + 2 and the bagel 3 + 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'trait Value {\n    fn value(&self) -> i32;\n}\n\nstruct Coin {\n    cents: i32,\n}\n\nstruct Debt {\n    owed: i32,\n}\n\nimpl Value for Coin {\n    fn value(&self) -> i32 {\n        self.cents\n    }\n}\n\nimpl Value for Debt {\n    fn value(&self) -> i32 {\n        -self.owed\n    }\n}\n\nfn main() {\n    let a = Coin { cents: 25 };\n    let b = Debt { owed: 10 };\n    let c = Coin { cents: 5 };\n    let wallet: [&dyn Value; 3] = [&a, &b, &c];\n    println!("{}", wallet[0].value() + wallet[1].value() + wallet[2].value());\n}',
-          ['20', '40', '30', '-20'],
-          0,
+          '20',
           'The coins count +25 and +5 and the debt counts -10, because each element uses its own type’s value.',
         ),
         choose(
@@ -626,16 +604,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Each element remembers its concrete type, so the call dispatches to the value at that index.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'trait Noise {\n    fn noise(&self) -> String;\n}\n\nstruct Duck {\n    volume: u32,\n}\n\nstruct Cow {\n    volume: u32,\n}\n\nimpl Noise for Duck {\n    fn noise(&self) -> String {\n        format!("quack{}", self.volume)\n    }\n}\n\nimpl Noise for Cow {\n    fn noise(&self) -> String {\n        format!("moo{}", self.volume)\n    }\n}\n\nfn main() {\n    let d = Duck { volume: 1 };\n    let c = Cow { volume: 2 };\n    let farm: [&dyn Noise; 3] = [&c, &d, &c];\n    println!("{} {} {}", farm[1].noise(), farm[2].noise(), farm[0].noise());\n}',
-          [
-            'quack1 moo2 moo2',
-            'moo2 quack1 moo2',
-            'quack1 quack1 moo2',
-            'moo2 moo2 quack1',
-          ],
-          0,
+          'quack1 moo2 moo2',
           'Index 1 holds the duck and indexes 0 and 2 hold the cow; the format string prints 1, 2, then 0.',
         ),
       ],
@@ -656,11 +628,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The bound allows item.grams() inside heavier_by. For this apple it is 150, plus the extra 20.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'trait Score {\n    fn points(&self) -> u32;\n}\n\nstruct Goal {\n    scorer: u32,\n}\n\nstruct Try {\n    converted: bool,\n}\n\nimpl Score for Goal {\n    fn points(&self) -> u32 {\n        3\n    }\n}\n\nimpl Score for Try {\n    fn points(&self) -> u32 {\n        if self.converted { 7 } else { 5 }\n    }\n}\n\nfn twice<T: Score>(event: &T) -> u32 {\n    event.points() * 2\n}\n\nfn main() {\n    let g = Goal { scorer: 9 };\n    let t = Try { converted: false };\n    println!("{} {}", twice(&g), twice(&t));\n}',
-          ['6 10', '6 14', '3 5', '18 10'],
-          0,
+          '6 10',
           'twice works for any Score type. The goal is worth 3 and the unconverted try 5, each doubled.',
         ),
         choose(
@@ -685,11 +656,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Every argument type must satisfy the bound, and i32 does not implement Score.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'trait Size {\n    fn size(&self) -> u32;\n}\n\nstruct Crate {\n    items: u32,\n}\n\nimpl Size for Crate {\n    fn size(&self) -> u32 {\n        self.items * 4\n    }\n}\n\nfn fits<T: Size>(thing: &T, limit: u32) -> bool {\n    thing.size() <= limit\n}\n\nfn main() {\n    let small = Crate { items: 2 };\n    let big = Crate { items: 5 };\n    println!("{} {}", fits(&small, 8), fits(&big, 8));\n}',
-          ['true false', 'true true', 'false false', 'false true'],
-          0,
+          'true false',
           'The small crate has size 8, which is within the limit; the big crate has size 20.',
         ),
       ],
@@ -708,11 +678,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The Ord bound permits <=. Integers compare numerically and strings alphabetically.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn larger<T: Ord>(a: T, b: T) -> T {\n    if a >= b {\n        a\n    } else {\n        b\n    }\n}\n\nfn main() {\n    println!("{}", larger(larger("fig", "kiwi"), "date"));\n}',
-          ['fig', 'date', 'figkiwi', 'kiwi'],
-          3,
+          'kiwi',
           'Alphabetically, kiwi comes after fig, and kiwi also comes after date.',
         ),
         choose(
@@ -726,11 +695,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The {} placeholder uses the Display trait, so T must implement it.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn bigger<T: Ord>(a: T, b: T) -> T {\n    if a > b {\n        a\n    } else {\n        b\n    }\n}\n\nfn main() {\n    println!("{} {}", bigger("10", "9"), bigger(10, 9));\n}',
-          ['9 10', '10 10', '10 9', '9 9'],
-          0,
+          '9 10',
           'As strings, "9" is greater than "10" because the first characters compare 9 > 1. As integers, 10 is greater.',
         ),
         choose(
@@ -773,11 +741,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The where clause comes after the return type and lists the same bound.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn max_copy<T>(a: &T, b: &T) -> T\nwhere\n    T: Clone + Ord,\n{\n    if a >= b {\n        a.clone()\n    } else {\n        b.clone()\n    }\n}\n\nfn main() {\n    let x = String::from("bee");\n    let y = String::from("ant");\n    let winner = max_copy(&x, &y);\n    println!("{} {} {}", winner, x, y);\n}',
-          ['ant bee ant', 'bee ant', 'bee bee ant', 'ant ant bee'],
-          2,
+          'bee bee ant',
           'Ord allows the comparison and Clone allows returning an owned copy; bee sorts after ant, and x and y remain usable.',
         ),
         choose(
@@ -791,11 +758,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A where clause follows the full signature, including the return type, and precedes the body.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn pair_up<A, B>(a: &A, b: &B) -> (A, B)\nwhere\n    A: Clone,\n    B: Clone,\n{\n    (a.clone(), b.clone())\n}\n\nfn main() {\n    let name = String::from("ada");\n    let age = 36;\n    let pair = pair_up(&name, &age);\n    println!("{} {}", pair.1 + 1, pair.0);\n}',
-          ['36 ada', '37 ada', 'ada 37', '37 ada36'],
-          1,
+          '37 ada',
           'A is String and B is an integer, each with its own bound. pair.1 is the cloned 36, plus 1.',
         ),
       ],
@@ -825,18 +791,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Moving out of a borrow would leave the owner with nothing. A clone produces a new owned value instead.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn copy_of<T>(value: &T) -> T\nwhere\n    T: Clone,\n{\n    value.clone()\n}\n\nfn main() {\n    let scores = [1, 2, 3];\n    let mut backup = copy_of(&scores);\n    backup[0] = 9;\n    println!("{} {}", scores[0], backup[0]);\n}',
-          ['9 9', '1 9', '1 1', '9 1'],
-          1,
+          '1 9',
           'backup is a separate array cloned from scores, so changing backup[0] leaves scores[0] at 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn twin<T>(item: &T) -> (T, T)\nwhere\n    T: Clone,\n{\n    (item.clone(), item.clone())\n}\n\nfn main() {\n    let mut base = String::from("ab");\n    let pair = twin(&base);\n    base.push_str("c");\n    println!("{} {} {}", pair.0, pair.1, base);\n}',
-          ['abc abc abc', 'ab ab abc', 'abc ab abc', 'ab ab ab'],
-          1,
+          'ab ab abc',
           'The clones were taken before the push, and they do not share storage with base.',
         ),
         choose(
@@ -868,11 +832,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'trim returns a slice inside raw without the surrounding spaces, and elision ties the result to raw.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn tidy(text: &str) -> &str {\n    text.trim()\n}\n\nfn main() {\n    let input = String::from("   ok ");\n    println!("{} {}", input.len(), tidy(&input).len());\n}',
-          ['2 6', '6 2', '6 6', '4 2'],
-          1,
+          '6 2',
           'input still holds all 6 bytes; the trimmed view covers only the 2 letters.',
         ),
         choose(
@@ -897,11 +860,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Elision needs exactly one input reference to tie the output to. Two inputs are ambiguous, and none leaves nothing to borrow.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn core(text: &str) -> &str {\n    text.trim()\n}\n\nfn main() {\n    let a = String::from(" x ");\n    let b = core(&a);\n    let c = core(b);\n    println!("<{}>{}", c, a.len() - c.len());\n}',
-          ['< x >0', '<x>2', '<x>0', '< x >2'],
-          1,
+          '<x>2',
           'Both calls return views into a. The second trim changes nothing, and the view is 2 bytes shorter than a.',
         ),
       ],
@@ -932,11 +894,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'view borrows from owner and is printed after owner moves, so it would point into storage that changed hands.',
           'fn trimmed(text: &str) -> &str {\n    text.trim()\n}\n\nfn main() {\n    let owner = String::from(" a ");\n    let view = trimmed(&owner);\n    let moved = owner;\n    println!("{}", view);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn trimmed(text: &str) -> &str {\n    text.trim()\n}\n\nfn main() {\n    let mut note = String::from(" go ");\n    let first = trimmed(&note).len();\n    note.push_str("now");\n    let second = trimmed(&note).len();\n    println!("{} {}", first, second);\n}',
-          ['2 2', '2 6', '4 7', '2 5'],
-          1,
+          '2 6',
           'The first view is used immediately. After the push, note is " go now", whose trimmed form is 6 bytes long.',
         ),
         choose(
@@ -979,11 +940,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The lifetime parameter ties the result to both inputs; at run time, pear is the longer one.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn longer<\'a>(a: &\'a str, b: &\'a str) -> &\'a str {\n    if a.len() > b.len() {\n        a\n    } else {\n        b\n    }\n}\n\nfn main() {\n    println!("{} {}", longer("ab", "xyz"), longer("hi", "yo"));\n}',
-          ['xyz yo', 'xyz hi', 'ab yo', 'ab hi'],
-          0,
+          'xyz yo',
           'xyz is longer than ab. hi and yo tie, and with a strict > the else branch returns b, yo.',
         ),
         choose(
@@ -1047,11 +1007,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           "mode is not tied to 'a, so returning it would break the signature’s promise.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn pick<\'a>(main: &\'a str, backup: &\'a str, use_main: bool) -> &\'a str {\n    if use_main {\n        main\n    } else {\n        backup\n    }\n}\n\nfn main() {\n    let a = String::from("alpha");\n    let b = String::from("beta");\n    println!("{} {}", pick(&a, &b, false), pick(&b, &a, true));\n}',
-          ['beta beta', 'alpha beta', 'beta alpha', 'alpha alpha'],
-          0,
+          'beta beta',
           'The first call returns its backup, b. The second returns its main argument, which is also b.',
         ),
         choose(
@@ -1065,11 +1024,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Only the signature that gives b no lifetime ties the result to a alone. Giving b the output lifetime ties the result to b, and the version with no lifetimes does not compile.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn longest<\'a>(a: &\'a str, b: &\'a str, c: &\'a str) -> &\'a str {\n    let ab = if a.len() >= b.len() { a } else { b };\n    if ab.len() >= c.len() {\n        ab\n    } else {\n        c\n    }\n}\n\nfn main() {\n    println!("{}", longest("tea", "cocoa", "juice"));\n}',
-          ['juice', 'tea', 'teacocoa', 'cocoa'],
-          3,
+          'cocoa',
           'cocoa beats tea, and cocoa ties juice; with >= the earlier winner, cocoa, is kept.',
         ),
       ],
@@ -1113,18 +1071,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'tag holds a reference into source and is used after source moves.',
           'struct Tag<\'a> {\n    name: &\'a str,\n}\n\nfn main() {\n    let source = String::from("v1");\n    let tag = Tag { name: &source };\n    let moved = source;\n    println!("{}", tag.name);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Pair<\'a> {\n    left: &\'a str,\n    right: &\'a str,\n}\n\nfn main() {\n    let text = String::from(" key ");\n    let other = String::from("value");\n    let p = Pair { left: text.trim(), right: &other };\n    println!("{}={} {}", p.left, p.right, p.left.len() + p.right.len());\n}',
-          ['key=value 10', ' key =value 10', 'key=value 8', 'value=key 8'],
-          2,
+          'key=value 8',
           'left is the trimmed view of text, 3 bytes, and right is all of other, 5 bytes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'struct View<\'a> {\n    part: &\'a str,\n}\n\nfn main() {\n    let line = String::from("  ab  ");\n    let raw = View { part: &line };\n    let clean = View { part: line.trim() };\n    println!("{} {}", raw.part.len(), clean.part.len());\n}',
-          ['6 2', '2 2', '6 6', '2 6'],
-          0,
+          '6 2',
           'Both views borrow line at once, which is fine for shared borrows. One covers all 6 bytes and one only ab.',
         ),
       ],
@@ -1143,11 +1099,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'trimmed returns an empty view of raw, so is_blank is true, while input still covers all 3 spaces.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Header<\'a> {\n    name: &\'a str,\n    value: &\'a str,\n}\n\nimpl<\'a> Header<\'a> {\n    fn longest(&self) -> &\'a str {\n        if self.name.len() >= self.value.len() {\n            self.name\n        } else {\n            self.value\n        }\n    }\n}\n\nfn main() {\n    let line = String::from("host");\n    let val = String::from("example");\n    let h = Header { name: &line, value: &val };\n    println!("{}", h.longest());\n}',
-          ['host', '7', 'hostexample', 'example'],
-          3,
+          'example',
           'value is longer (7 bytes against 4), so longest returns the borrow of val.',
         ),
         choose(
@@ -1172,11 +1127,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The lifetime must be declared after impl and then applied to the type.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           "struct Window<'a> {\n    data: &'a str,\n}\n\nimpl<'a> Window<'a> {\n    fn shrink(&self) -> Window<'a> {\n        Window { data: self.data.trim() }\n    }\n}\n\nfn main() {\n    let s = String::from(\"  mid  \");\n    let w = Window { data: &s };\n    let n = w.shrink();\n    println!(\"{} {}\", w.data.len(), n.data.len());\n}",
-          ['3 3', '7 7', '5 3', '7 3'],
-          3,
+          '7 3',
           'shrink makes a new Window over the trimmed part of the same String; the original still covers all 7 bytes.',
         ),
       ],
@@ -1197,16 +1151,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Every branch returns a literal, so the static return type is satisfied for each input.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn size_name(bytes: u32) -> &\'static str {\n    if bytes > 1000 {\n        "large"\n    } else if bytes > 100 {\n        "medium"\n    } else {\n        "small"\n    }\n}\n\nfn main() {\n    println!("{} {} {}", size_name(100), size_name(1000), size_name(1001));\n}',
-          [
-            'small medium large',
-            'medium large large',
-            'small small large',
-            'medium medium large',
-          ],
-          0,
+          'small medium large',
           'The comparisons are strict: 100 is not above 100, 1000 is above 100 but not above 1000.',
         ),
         choose(
@@ -1231,11 +1179,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Only the literal lives for the whole program. The others either return an owned String or borrow a local that is dropped.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn pick(on: bool) -> &\'static str {\n    if on {\n        "on"\n    } else {\n        "off"\n    }\n}\n\nfn main() {\n    let a = pick(true);\n    let b = pick(false);\n    let mut owned = String::from(b);\n    owned.push_str(a);\n    println!("{} {}", owned, owned.len());\n}',
-          ['offon 5', 'onoff 5', 'offon 4', 'off 3'],
-          0,
+          'offon 5',
           'owned starts as a copy of off and then has on appended, for 5 bytes.',
         ),
       ],
@@ -1265,11 +1212,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The caller may pass a borrow of a short-lived String, which cannot be promised for the whole program.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn label(code: &str) -> &str {\n    if code == "" {\n        "none"\n    } else {\n        code.trim()\n    }\n}\n\nfn main() {\n    let a = String::from(" x1 ");\n    let b = String::from("");\n    println!("[{}] [{}]", label(&a), label(&b));\n}',
-          ['[x1] [none]', '[ x1 ] [none]', '[x1] []', '[none] [x1]'],
-          0,
+          '[x1] [none]',
           'a is trimmed to x1, and the empty b is replaced by the literal none.',
         ),
         choose(
@@ -1283,11 +1229,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A borrow that lives longer than required is always acceptable in place of a shorter one.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn grade(score: u32) -> &\'static str {\n    if score >= 90 {\n        "A"\n    } else if score >= 80 {\n        "B"\n    } else {\n        "C"\n    }\n}\n\nfn main() {\n    let mut report = String::from("grades:");\n    report.push_str(grade(85));\n    report.push_str(grade(90));\n    report.push_str(grade(79));\n    println!("{}", report);\n}',
-          ['grades:ABC', 'grades:BBC', 'grades:CAB', 'grades:BAC'],
-          3,
+          'grades:BAC',
           '85 is a B, 90 reaches the A threshold, and 79 is below both, giving B, A, C in call order.',
         ),
       ],
@@ -1307,11 +1252,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Each call adds the captured bonus to its own argument.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let factor = 3;\n    let offset = 2;\n    let scale = |x| x * factor + offset;\n    println!("{}", scale(4));\n}',
-          ['14', '20', '18', '12'],
-          0,
+          '14',
           'The closure uses both captured values: 4 * 3 + 2.',
         ),
         choose(
@@ -1325,11 +1269,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Capturing the environment is what distinguishes a closure from an ordinary function item.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let sep = String::from("-");\n    let join = |a, b| format!("{}{}{}", a, sep, b);\n    println!("{}", join(1, 2));\n    println!("{}", sep);\n}',
-          ['1-2', '12\n-', '1 - 2\n-', '1-2\n-'],
-          3,
+          '1-2\n-',
           'The closure only reads sep, so sep is still usable by main afterwards.',
         ),
         choose(
@@ -1371,18 +1314,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'greet is called after the move, so its borrow of name is still active when name moves.',
           'fn main() {\n    let name = String::from("Ivy");\n    let greet = |g| format!("{} {}", g, name);\n    let moved = name;\n    println!("{}", greet("Hi"));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let low = 10;\n    let high = 20;\n    let span = |extra| high - low + extra;\n    println!("{} {}", span(0), span(5));\n}',
-          ['10 15', '30 35', '10 10', '-10 -5'],
-          0,
+          '10 15',
           'Both calls see the same captured values: 20 - 10, then plus each extra.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let word = String::from("tree");\n    let longer = |n| word.len() + n;\n    let total = longer(1) + longer(2);\n    println!("{} {}", total, word);\n}',
-          ['11 tree', '7 tree', '11', '8 tree'],
-          0,
+          '11 tree',
           'Each call reads the 4-byte word: 5 + 6 is 11, and word is still owned by main.',
         ),
         choose(
@@ -1414,18 +1355,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The closure adds the captured offset, and apply_twice calls it on its own result: 1, 11, 21.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn thrice<F: Fn(i32) -> i32>(f: F, x: i32) -> i32 {\n    f(f(f(x)))\n}\n\nfn main() {\n    println!("{}", thrice(|n| n * 2, 3));\n}',
-          ['18', '12', '48', '24'],
-          3,
+          '24',
           'Doubling three times takes 3 to 6, 12, and 24.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn square(n: i32) -> i32 {\n    n * n\n}\n\nfn apply<F: Fn(i32) -> i32>(f: F, x: i32) -> i32 {\n    f(x) + 1\n}\n\nfn main() {\n    println!("{} {}", apply(square, 4), apply(|n| n - 1, 4));\n}',
-          ['16 3', '17 4', '25 4', '17 3'],
-          1,
+          '17 4',
           'A named function and a closure both satisfy the bound: 16 + 1 and 3 + 1.',
         ),
         choose(
@@ -1466,11 +1405,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The same closure is called three times; 8 and 6 are above the captured limit.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn both<F: Fn(i32) -> bool>(check: F, a: i32, b: i32) -> bool {\n    check(a) && check(b)\n}\n\nfn main() {\n    let max = 9;\n    println!("{} {}", both(|n| n <= max, 3, 9), both(|n| n <= max, 4, 12));\n}',
-          ['true false', 'true true', 'false false', 'false true'],
-          0,
+          'true false',
           '3 and 9 are both at most 9; in the second call 12 is not.',
         ),
         choose(
@@ -1484,11 +1422,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Only that closure changes a captured variable, which Fn does not allow.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn sum_mapped<F: Fn(i32) -> i32>(f: F, values: [i32; 3]) -> i32 {\n    f(values[0]) + f(values[1]) + f(values[2])\n}\n\nfn main() {\n    let bonus = 1;\n    println!("{}", sum_mapped(|v| v * 10 + bonus, [1, 2, 3]));\n}',
-          ['61', '60', '66', '63'],
-          3,
+          '63',
           'Each of the three calls adds the bonus: 11 + 21 + 31.',
         ),
         choose(
@@ -1520,11 +1457,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each call adds 1 through the mutable borrow, and clicks is read only after the last call.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut total = 10;\n    let mut spend = |amount| total -= amount;\n    spend(3);\n    spend(4);\n    println!("{}", total);\n}',
-          ['10', '3', '7', '17'],
-          1,
+          '3',
           'Both calls change the captured total: 10 - 3 - 4.',
         ),
         choose(
@@ -1538,11 +1474,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The call changes state held by the closure, so the closure itself must be mutable.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let mut log = String::new();\n    let mut record = |word: &str| {\n        log.push_str(word);\n        log.push_str(";");\n    };\n    record("a");\n    record("bc");\n    println!("{} {}", log, log.len());\n}',
-          ['abc 3', 'a;bc 4', 'a;bc; 5', 'bc; 3'],
-          2,
+          'a;bc; 5',
           'Each call appends a word and a semicolon to the captured String.',
         ),
         choose(
@@ -1573,11 +1508,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'each calls the closure once per element, and the closure updates the captured largest.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn visit<F: FnMut(i32)>(values: &[i32], mut f: F) {\n    for &v in values {\n        f(v);\n    }\n}\n\nfn main() {\n    let mut big = 0;\n    visit(&[1, 2, 4, 7, 8], |v| {\n        if v > 3 {\n            big += 1;\n        }\n    });\n    println!("{}", big);\n}',
-          ['2', '5', '3', '4'],
-          2,
+          '3',
           'The closure counts the values above 3: 4, 7, and 8.',
         ),
         choose(
@@ -1602,11 +1536,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Calling an FnMut needs mutable access to it, so the parameter binding must be mutable.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn feed<F: FnMut(i32)>(values: &[i32], mut sink: F) {\n    for &v in values {\n        sink(v);\n    }\n}\n\nfn main() {\n    let mut sum = 0;\n    let mut calls = 0;\n    feed(&[5, -2, 6], |v| {\n        sum += v;\n        calls += 1;\n    });\n    println!("{} {}", sum, calls);\n}',
-          ['13 3', '9 2', '9 3', '11 3'],
-          2,
+          '9 3',
           'The closure runs once per element, adding 5 - 2 + 6 and counting three calls.',
         ),
       ],
@@ -1650,18 +1583,16 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Only the closure that hands its String to the caller loses it on the first call.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let label = String::from("box");\n    let size = move || label.len();\n    println!("{} {}", size(), size());\n}',
-          ['3 0', '0 3', '3 3', '3'],
-          2,
+          '3 3',
           'size owns label but only reads it, so every call sees the same 3-byte String.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let message = String::from("ping");\n    let send = move || {\n        let sent = message;\n        sent.len() * 2\n    };\n    println!("{}", send());\n}',
-          ['8', '4', '16', '0'],
-          0,
+          '8',
           'The single call moves message into sent and doubles its length of 4.',
         ),
       ],
@@ -1697,18 +1628,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Every closure implements FnOnce, while Fn and FnMut exclude closures that consume or mutate captures.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn consume<F: FnOnce() -> String>(f: F) -> usize {\n    f().len()\n}\n\nfn main() {\n    let a = String::from("abc");\n    let b = String::from("de");\n    println!("{}", consume(move || a) + consume(|| String::from("xyz")) + b.len());\n}',
-          ['6', '8', '5', '7'],
-          1,
+          '8',
           'The two closures produce Strings of lengths 3 and 3, and b adds 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn once<F: FnOnce(i32) -> i32>(f: F, x: i32) -> i32 {\n    f(x)\n}\n\nfn main() {\n    let step = 4;\n    println!("{} {}", once(|n| n + step, 1), once(|n| n * step, 2));\n}',
-          ['5 6', '4 8', '8 5', '5 8'],
-          3,
+          '5 8',
           'Closures that only read their captures are accepted by FnOnce too: 1 + 4 and 2 * 4.',
         ),
       ],
@@ -1741,16 +1670,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Nothing runs until count consumes the iterator, after ready has been printed.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let values = [1, 2, 3];\n    let _plan = values.iter().map(|n| {\n        println!("work {}", n);\n        n * 10\n    });\n    println!("end");\n}',
-          [
-            'work 1\nwork 2\nwork 3\nend',
-            'end\nwork 1\nwork 2\nwork 3',
-            'work 1\nend',
-            'end',
-          ],
-          3,
+          'end',
           '_plan is never consumed, so the closure never runs.',
         ),
         choose(
@@ -1764,11 +1687,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Adapters only describe work; a consumer drives it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let prices = [3, 4, 5];\n    let fee = 2;\n    let total: i32 = prices.iter().map(|p| p + fee).sum();\n    println!("{}", total);\n}',
-          ['18', '14', '16', '12'],
-          0,
+          '18',
           'sum consumes the iterator, and the fee is added to each of the three prices: 5 + 6 + 7.',
         ),
       ],
@@ -1787,16 +1709,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Item 1 goes through a and b before item 2 starts. The results 20 and 30 add to 50.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let values = [4, 5, 6, 7];\n    let total: i32 = values\n        .iter()\n        .map(|n| {\n            println!("visit {}", n);\n            n * 2\n        })\n        .take(2)\n        .sum();\n    println!("{}", total);\n}',
-          [
-            'visit 4\nvisit 5\nvisit 6\nvisit 7\n18',
-            'visit 4\nvisit 5\nvisit 6\nvisit 7\n44',
-            'visit 4\nvisit 5\n18',
-            '18',
-          ],
-          2,
+          'visit 4\nvisit 5\n18',
           'take(2) stops after two items, so map only ever sees 4 and 5.',
         ),
         choose(
@@ -1810,11 +1726,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Each item travels through the whole chain before the next item is pulled.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let count = [7, 8, 9]\n        .iter()\n        .map(|n| {\n            print!("{} ", n);\n            n\n        })\n        .take(2)\n        .count();\n    println!("-> {}", count);\n}',
-          ['7 8 9 -> 2', '7 8 -> 2', '-> 2', '7 8 -> 3'],
-          1,
+          '7 8 -> 2',
           'Only two items are pulled, so the closure prints 7 and 8, and count is 2.',
         ),
         choose(
@@ -1846,11 +1761,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only 12 fails the test. The kept values appear in the same order as in temps.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let values = [5, 1, 8, 3, 9];\n    let kept: Vec<i32> = values.iter().copied().filter(|n| *n > 4).collect();\n    println!("{:?}", kept);\n}',
-          ['[1, 3]', '[5, 8, 9]', '[9, 8, 5]', '[8, 9]'],
-          1,
+          '[5, 8, 9]',
           'filter keeps 5, 8, and 9 in their original order; 5 counts because 5 > 4.',
         ),
         choose(
@@ -1864,11 +1778,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'filter skips rejected items and keeps pulling, so later items are still tested.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let words = ["tea", "", "cake", "", "jam"];\n    let filled = words.iter().filter(|w| w.len() > 0).count();\n    println!("{}", filled);\n}',
-          ['5', '2', '3', '4'],
-          2,
+          '3',
           'The two empty strings fail the test, leaving three words to count.',
         ),
         choose(
@@ -1898,11 +1811,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'In a, the test sees 1 to 4 and keeps 3 and 4. In b, it sees 10 to 40 and keeps all of them.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let scores = [4, 7, 2, 9];\n    let total: i32 = scores.iter().copied().map(|s| s * 2).filter(|s| *s > 8).sum();\n    println!("{}", total);\n}',
-          ['18', '44', '32', '16'],
-          2,
+          '32',
           'Doubling gives 8, 14, 4, 18; the test then keeps 14 and 18.',
         ),
         choose(
@@ -1916,23 +1828,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Test the original sign first, then transform only the survivors.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let words = ["ox", "bee", "ant", "eel", "yak"];\n    let kept: Vec<String> = words\n        .iter()\n        .filter(|w| w.len() == 3)\n        .map(|w| format!("{}!", w))\n        .collect();\n    println!("{} {}", kept.len(), kept[0]);\n}',
-          ['4 ox!', '4 bee!', '5 bee!', '1 ox!'],
-          1,
+          '4 bee!',
           'ox is the only word that is not 3 letters long, so four words are kept, the first being bee.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut out = Vec::new();\n    for n in [1, 2, 3, 4, 5].iter().copied().filter(|n| *n != 3).map(|n| n * n) {\n        out.push(n);\n    }\n    println!("{:?}", out);\n}',
-          [
-            '[1, 4, 9, 16, 25]',
-            '[1, 2, 4, 5]',
-            '[4, 16, 25]',
-            '[1, 4, 16, 25]',
-          ],
-          3,
+          '[1, 4, 16, 25]',
           'The for loop consumes the chain: 3 is filtered out, and every other value is squared.',
         ),
       ],
@@ -1952,18 +1857,16 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The accumulator goes 100, 120, 125, 135.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let product = [2, 5, 3].iter().fold(0, |acc, n| acc * n);\n    println!("{}", product);\n}',
-          ['30', '0', '10', '1'],
-          1,
+          '0',
           'Starting from 0, every multiplication gives 0 again. A product must start at 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let left = [1, 2, 3].iter().fold(10, |acc, n| acc - n);\n    println!("{}", left);\n}',
-          ['6', '-4', '16', '4'],
-          3,
+          '4',
           'Each item is subtracted from the running value: 10 - 1 - 2 - 3.',
         ),
         choose(
@@ -1972,11 +1875,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'With no items the closure never runs, so the initial accumulator is the result.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let words = ["sun", "moon", "sky"];\n    let letters = words.iter().fold(0, |acc, w| acc + w.len());\n    println!("{}", letters);\n}',
-          ['10', '3', '9', '11'],
-          0,
+          '10',
           'The lengths 3, 4, and 3 are added to the accumulator one by one.',
         ),
       ],
@@ -1995,18 +1897,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The accumulator is a String. Each step appends the next digit to the text built so far.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let values = [4, 6, 8];\n    let stats = values.iter().fold((0, 0), |acc, v| (acc.0 + 1, acc.1 + v));\n    println!("{} {}", stats.0, stats.1);\n}',
-          ['18 3', '3 8', '3 18', '2 18'],
-          2,
+          '3 18',
           'The tuple counts items in field 0 and sums them in field 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let letters = ["a", "b", "c"];\n    let word = letters.iter().fold(String::new(), |acc, l| format!("{}{}", l, acc));\n    println!("{}", word);\n}',
-          ['cba', 'abc', 'a', 'c'],
-          0,
+          'cba',
           'Each new letter is placed before the text so far, which reverses the order.',
         ),
         choose(
@@ -2020,11 +1920,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Each result becomes the next accumulator, so it must match the type of init.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let r = [1, 2, 3, 4].iter().fold((0, 1), |acc, n| (acc.0 + n, acc.1 * n));\n    println!("{} {}", r.0, r.1);\n}',
-          ['24 10', '10 0', '9 24', '10 24'],
-          3,
+          '10 24',
           'One pass keeps a sum starting at 0 and a product starting at 1.',
         ),
       ],
@@ -2056,18 +1955,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'collect can build many collections, so the target type must be stated.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let parts = ["ab", "", "cd"];\n    let joined: String = parts.iter().copied().filter(|p| p.len() > 0).collect();\n    println!("{} {}", joined, joined.len());\n}',
-          ['ab cd 5', 'abcd 3', 'abcd 6', 'abcd 4'],
-          3,
+          'abcd 4',
           'Collecting &str pieces into a String concatenates them with nothing in between.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let lengths: Vec<usize> = ["one", "three", "five"].iter().map(|w| w.len()).collect();\n    println!("{} {}", lengths[1], lengths.len());\n}',
-          ['3 3', '4 3', '5 13', '5 3'],
-          3,
+          '5 3',
           'lengths is [3, 5, 4]; index 1 holds 5, and there are 3 entries.',
         ),
         choose(
@@ -2097,23 +1994,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The second item fails, so the whole collection is that Err; -9 is never reached.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn checked(n: i32) -> Result<i32, String> {\n    if n < 0 {\n        Err(format!("{} is negative", n))\n    } else {\n        Ok(n * 2)\n    }\n}\n\nfn main() {\n    let all: Result<Vec<i32>, String> = [1, 0, 3].iter().map(|n| checked(*n)).collect();\n    match all {\n        Ok(values) => {\n            let sum: i32 = values.iter().sum();\n            println!("sum {}", sum);\n        }\n        Err(e) => println!("error: {}", e),\n    }\n}',
-          ['sum 4', 'error: 0 is negative', 'sum 6', 'sum 8'],
-          3,
+          'sum 8',
           'Every item succeeds, so the Vec holds 2, 0, and 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn digit(s: &str) -> Result<i32, String> {\n    println!("parsing {}", s);\n    match s.parse::<i32>() {\n        Ok(n) => Ok(n),\n        Err(_) => Err(format!("bad {}", s)),\n    }\n}\n\nfn main() {\n    let result: Result<Vec<i32>, String> = ["7", "x", "9"].iter().map(|s| digit(s)).collect();\n    match result {\n        Ok(v) => println!("{}", v.len()),\n        Err(e) => println!("{}", e),\n    }\n}',
-          [
-            'parsing 7\nparsing x\nparsing 9\nbad x',
-            'parsing 7\nparsing x\nbad x',
-            'parsing 7\nparsing x\nparsing 9\n2',
-            'bad x',
-          ],
-          1,
+          'parsing 7\nparsing x\nbad x',
           'collect stops pulling at the first Err, so 9 is never parsed.',
         ),
         choose(
@@ -2151,11 +2041,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'main may call the pub function, and that function may call the private helper because both live in kitchen.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mod scores {\n    fn base() -> u32 {\n        10\n    }\n\n    pub fn doubled() -> u32 {\n        base() * 2\n    }\n\n    pub fn bonus() -> u32 {\n        base() + 1\n    }\n}\n\nfn main() {\n    println!("{} {}", scores::doubled(), scores::bonus());\n}',
-          ['10 11', '20 10', '11 20', '20 11'],
-          3,
+          '20 11',
           'Both public functions use the private base, which returns 10.',
         ),
         choose(
@@ -2215,11 +2104,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Every module along the path has to be visible to the caller, and storage is private to shop.',
           'mod shop {\n    mod storage {\n        pub fn count() -> u32 {\n            7\n        }\n    }\n\n    pub fn stock() -> u32 {\n        storage::count() * 2\n    }\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mod outer {\n    fn hidden() -> u32 {\n        5\n    }\n\n    pub mod inner {\n        pub fn seven() -> u32 {\n            7\n        }\n    }\n\n    pub fn combined() -> u32 {\n        hidden() + inner::seven()\n    }\n}\n\nfn main() {\n    println!("{} {}", outer::inner::seven(), outer::combined());\n}',
-          ['7 5', '12 7', '5 12', '7 12'],
-          3,
+          '7 12',
           'main can reach seven directly, and combined adds the private hidden value to it.',
         ),
         choose(
@@ -2263,11 +2151,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'area and geometry::area name the same function; the use line just adds the short name.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::cmp::max;\nuse std::cmp::min;\n\nfn main() {\n    let low = min(8, 3);\n    let high = max(8, 3);\n    println!("{} {}", low, high);\n}',
-          ['8 3', '3 8', '8 8', '3 3'],
-          1,
+          '3 8',
           'The imported names call std::cmp::min and std::cmp::max, which return the smaller and larger value.',
         ),
         choose(
@@ -2281,11 +2168,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'use is resolved by the compiler; it only adds a name to the current scope.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'mod units {\n    pub fn cm(m: u32) -> u32 {\n        m * 100\n    }\n}\n\nfn first() -> u32 {\n    use units::cm;\n    cm(3)\n}\n\nfn main() {\n    println!("{}", first() + units::cm(2));\n}',
-          ['300', '5', '500', '302'],
-          2,
+          '500',
           'first uses the short name cm, and main uses the full path; both reach the same function: 300 + 200.',
         ),
         choose(
@@ -2315,11 +2201,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both modules export convert. The aliases give each one a distinct local name.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::cmp::max as larger;\nuse std::cmp::min as smaller;\n\nfn main() {\n    let a = larger(4, 11);\n    let b = smaller(a, 7);\n    println!("{} {}", a, b);\n}',
-          ['4 7', '11 4', '11 7', '7 11'],
-          2,
+          '11 7',
           'larger is max, so a is 11; smaller is min, so b is the smaller of 11 and 7.',
         ),
         choose(
@@ -2344,11 +2229,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'An alias changes only the local name; the type is the same.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'mod network {\n    pub mod http {\n        pub fn port() -> u32 {\n            80\n        }\n    }\n}\n\nuse network::http as web;\n\nfn main() {\n    println!("{}", web::port() + network::http::port());\n}',
-          ['80', '8080', '160', '0'],
-          2,
+          '160',
           'web is an alias for the module network::http, so both paths call the same function: 80 + 80.',
         ),
       ],
@@ -2381,11 +2265,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'internal is still private. Only the re-exported path is public.',
           'mod library {\n    mod internal {\n        pub fn checksum() -> u32 {\n            99\n        }\n    }\n\n    pub use internal::checksum;\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mod shapes {\n    mod circle {\n        pub fn area_x100(r: u32) -> u32 {\n            r * r * 314\n        }\n    }\n\n    pub use circle::area_x100 as circle_area;\n}\n\nfn main() {\n    println!("{}", shapes::circle_area(2));\n}',
-          ['628', '314', '1256', '2512'],
-          2,
+          '1256',
           'The re-export renames area_x100 to circle_area; with r = 2 it computes 2 * 2 * 314.',
         ),
         choose(
@@ -2438,18 +2321,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'scale was never re-exported, and math is private.',
           'mod engine {\n    mod math {\n        pub fn add(a: u32, b: u32) -> u32 {\n            a + b\n        }\n\n        pub fn scale(a: u32) -> u32 {\n            a * 10\n        }\n    }\n\n    mod text {\n        pub fn label() -> &\'static str {\n            "sum"\n        }\n    }\n\n    pub use math::add;\n    pub use text::label;\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mod outer {\n    mod middle {\n        mod inner {\n            pub fn depth() -> u32 {\n                3\n            }\n        }\n\n        pub use inner::depth;\n    }\n\n    pub use middle::depth;\n}\n\nfn main() {\n    println!("{}", outer::depth() * 2);\n}',
-          ['3', '6', '9', '12'],
-          1,
+          '6',
           'The chain of re-exports gives inner’s function the short path outer::depth.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'mod api {\n    pub mod v1 {\n        pub fn version() -> u32 {\n            1\n        }\n    }\n\n    pub mod v2 {\n        pub fn version() -> u32 {\n            2\n        }\n    }\n\n    pub use v2::version as latest;\n}\n\nfn main() {\n    println!("{} {}", api::latest(), api::v1::version());\n}',
-          ['1 2', '2 1', '2 2', '1 1'],
-          1,
+          '2 1',
           'latest is a re-export of v2::version, while v1::version is still reachable by its own path.',
         ),
         choose(
@@ -2481,11 +2362,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'super::tax() inside checkout names the private tax in shop, which a child module may use.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mod a {\n    fn level() -> u32 {\n        1\n    }\n\n    pub mod b {\n        fn level() -> u32 {\n            2\n        }\n\n        pub mod c {\n            pub fn sum() -> u32 {\n                super::level() * 10 + super::super::level()\n            }\n        }\n    }\n}\n\nfn main() {\n    println!("{}", a::b::c::sum());\n}',
-          ['12', '3', '20', '21'],
-          3,
+          '21',
           'From c, super is b (level 2) and super::super is a (level 1), giving 2 * 10 + 1.',
         ),
         choose(
@@ -2537,11 +2417,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both self:: paths start at report: one names its private header, the other its child module body.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mod app {\n    pub mod config {\n        pub fn retries() -> u32 {\n            3\n        }\n    }\n\n    pub mod network {\n        pub fn attempts() -> u32 {\n            super::config::retries() + 1\n        }\n    }\n}\n\nfn main() {\n    println!("{}", app::network::attempts());\n}',
-          ['4', '3', '1', '31'],
-          0,
+          '4',
           'From network, super is app, and app::config::retries returns 3.',
         ),
         choose(
@@ -2561,11 +2440,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'In a path, self means the current module. The method receiver is a different use of the word.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'mod math {\n    pub fn double(n: u32) -> u32 {\n        n * 2\n    }\n\n    pub mod extra {\n        pub fn quadruple(n: u32) -> u32 {\n            super::double(super::double(n))\n        }\n\n        pub fn octuple(n: u32) -> u32 {\n            self::quadruple(n) * 2\n        }\n    }\n}\n\nfn main() {\n    println!("{}", math::extra::octuple(3));\n}',
-          ['24', '12', '48', '6'],
-          0,
+          '24',
           'self::quadruple is extra’s own function, which doubles 3 twice via super; octuple doubles that 12.',
         ),
       ],
@@ -2598,23 +2476,16 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Removing public API breaks callers, so major increases and the other parts reset.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let installed = (2, 0, 9);\n    let required = (2, 1, 0);\n    println!("{} {}", installed >= required, (3, 0, 0) > (2, 99, 99));\n}',
-          ['false true', 'true true', 'true false', 'false false'],
-          0,
+          'false true',
           'The minor part decides the first comparison (0 < 1), and the major part decides the second (3 > 2).',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let text_newer = "0.10.1" > "0.9.0";\n    let number_newer = (0, 10, 1) > (0, 9, 0);\n    println!("text: {}, numbers: {}", text_newer, number_newer);\n}',
-          [
-            'text: true, numbers: true',
-            'text: true, numbers: false',
-            'text: false, numbers: true',
-            'text: false, numbers: false',
-          ],
-          2,
+          'text: false, numbers: true',
           'As text, "0.1…" sorts before "0.9…"; as numbers, minor 10 is greater than 9.',
         ),
       ],
@@ -2633,28 +2504,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'All three pieces parse and nothing is left over, so the function returns the three numbers.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn parse_version(text: &str) -> Option<(u32, u32, u32)> {\n    let mut parts = text.split(\'.\');\n    let major = parts.next()?.parse().ok()?;\n    let minor = parts.next()?.parse().ok()?;\n    let patch = parts.next()?.parse().ok()?;\n    if parts.next().is_some() {\n        return None;\n    }\n    Some((major, minor, patch))\n}\n\nfn show(text: &str) {\n    match parse_version(text) {\n        Some(v) => println!("{}.{}.{}", v.0, v.1, v.2),\n        None => println!("invalid {}", text),\n    }\n}\n\nfn main() {\n    show("1.2");\n    show("3.0.12");\n}',
-          [
-            '1.2.0\n3.0.12',
-            'invalid 1.2\n3.0.12',
-            '1.2\n3.0.12',
-            'invalid 1.2\ninvalid 3.0.12',
-          ],
-          1,
+          'invalid 1.2\n3.0.12',
           '"1.2" runs out of pieces at patch, so ? returns None; "3.0.12" has exactly three numbers.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn parse_version(text: &str) -> Option<(u32, u32, u32)> {\n    let mut parts = text.split(\'.\');\n    let major = parts.next()?.parse().ok()?;\n    let minor = parts.next()?.parse().ok()?;\n    let patch = parts.next()?.parse().ok()?;\n    if parts.next().is_some() {\n        return None;\n    }\n    Some((major, minor, patch))\n}\n\nfn show(text: &str) {\n    match parse_version(text) {\n        Some(v) => println!("{}.{}.{}", v.0, v.1, v.2),\n        None => println!("invalid {}", text),\n    }\n}\n\nfn main() {\n    show("1.2.3.4");\n    show("1.x.3");\n}',
-          [
-            '1.2.3\ninvalid 1.x.3',
-            '1.2.3\n1.0.3',
-            'invalid 1.2.3.4\n1.0.3',
-            'invalid 1.2.3.4\ninvalid 1.x.3',
-          ],
-          3,
+          'invalid 1.2.3.4\ninvalid 1.x.3',
           'A fourth piece is rejected rather than ignored, and x fails to parse, so both inputs are invalid.',
         ),
         choose(
@@ -2697,11 +2556,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The second mode is removed during compilation, so only the first exists to be called.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[cfg(not(any()))]\nfn limit() -> u32 {\n    10\n}\n\n#[cfg(any())]\nfn limit() -> u32 {\n    20\n}\n\nfn main() {\n    println!("{}", limit() + 1);\n}',
-          ['11', '21', '10', '31'],
-          0,
+          '11',
           'not(any()) is true, so the first limit is kept and the second is removed.',
         ),
         choose(
@@ -2727,11 +2585,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'After cfg removes the excluded item, the program contains a single mode.',
           '#[cfg(all())]\nfn mode() -> &\'static str {\n    "included"\n}\n\n#[cfg(any())]\nfn mode() -> &\'static str {\n    "excluded"\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           '#[cfg(all(not(any()), all()))]\nfn greeting() -> &\'static str {\n    "hi"\n}\n\n#[cfg(not(all()))]\nfn greeting() -> &\'static str {\n    "bye"\n}\n\nfn main() {\n    println!("{}", greeting());\n}',
-          ['hi', 'bye', 'hibye', 'bye hi'],
-          0,
+          'hi',
           'all(not(any()), all()) combines two true predicates, while not(all()) is false.',
         ),
       ],
@@ -2761,16 +2618,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Only cfg removes the code for the other platform, so its missing functions never need to compile.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a = cfg!(all());\n    let b = cfg!(any());\n    let c = cfg!(not(any()));\n    println!("{} {} {}", a, b, c);\n}',
-          [
-            'true false true',
-            'false true false',
-            'true true true',
-            'true false false',
-          ],
-          0,
+          'true false true',
           'all() with no conditions is true, any() with no conditions is false, and not flips it.',
         ),
         choose(
@@ -2813,16 +2664,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The three inputs sit just below, exactly at, and just past the limit, which pins down the comparison.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version has a bug. What does the program print?',
           'fn fits(size: u32, capacity: u32) -> bool {\n    size < capacity\n}\n\nfn main() {\n    println!("{} {} {}", fits(0, 5), fits(5, 5), fits(6, 5));\n}',
-          [
-            'true true false',
-            'false false false',
-            'true false false',
-            'true true true',
-          ],
-          2,
+          'true false false',
           'With <, a size equal to the capacity is refused, which only the middle test reveals.',
         ),
         choose(
@@ -2847,16 +2692,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Only the case exactly at the limit separates < from <=.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let max_len = 3;\n    let valid = |name: &str| name.len() > 0 && name.len() <= max_len;\n    println!("{} {} {} {}", valid(""), valid("a"), valid("abc"), valid("abcd"));\n}',
-          [
-            'false true true false',
-            'true true true false',
-            'false true false false',
-            'false true true true',
-          ],
-          0,
+          'false true true false',
           'The four inputs probe both limits: empty is too short, 1 and 3 are inside, 4 is too long.',
         ),
       ],
@@ -2875,16 +2714,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The second call would overflow, so checked_add gives None and the request is refused.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn fits(used: u8, extra: u8, capacity: u8) -> bool {\n    used.checked_add(extra).is_some_and(|total| total <= capacity)\n}\n\nfn main() {\n    println!("{} {} {}", fits(200, 55, 255), fits(200, 56, 255), fits(0, 0, 0));\n}',
-          [
-            'true true true',
-            'false false true',
-            'true false false',
-            'true false true',
-          ],
-          3,
+          'true false true',
           '200 + 55 is exactly 255; 200 + 56 overflows u8; 0 + 0 fits a capacity of 0.',
         ),
         choose(
@@ -2898,11 +2731,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Overflow is a boundary of the integer type itself, separate from the capacity limit.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let used: u8 = 250;\n    let extra: u8 = 10;\n    println!("{} {}", used.wrapping_add(extra), used.checked_add(extra).is_some());\n}',
-          ['4 false', '260 true', '255 false', '4 true'],
-          0,
+          '4 false',
           'wrapping_add shows what a release build does: 260 wraps to 4. checked_add reports the overflow as None.',
         ),
         choose(
@@ -2934,11 +2766,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The loop applies the same comparison to every row, and all four rows agree with sign.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn clamp_small(n: i32) -> i32 {\n    if n > 2 {\n        2\n    } else {\n        n\n    }\n}\n\nfn main() {\n    let cases = [(9, 2), (2, 2), (0, 0), (-2, -2), (-9, -2)];\n    let mut failed = 0;\n    for (input, expected) in cases {\n        if clamp_small(input) != expected {\n            failed += 1;\n        }\n    }\n    println!("{}", failed);\n}',
-          ['0', '2', '1', '5'],
-          2,
+          '1',
           'clamp_small never raises small values, so only the -9 row fails.',
         ),
         choose(
@@ -2952,16 +2783,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The table separates the data from the checking logic, which is written once.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn double(n: i32) -> i32 {\n    n + n\n}\n\nfn main() {\n    let cases = [(1, 2), (0, 0), (3, 7), (-4, -8)];\n    for (input, expected) in cases {\n        if double(input) != expected {\n            println!("double({}) gave {}, expected {}", input, double(input), expected);\n        }\n    }\n    println!("done");\n}',
-          [
-            'done',
-            'double(3) gave 6, expected 7\ndone',
-            'double(3) gave 7, expected 6\ndone',
-            'double(1) gave 2, expected 2\ndone',
-          ],
-          1,
+          'double(3) gave 6, expected 7\ndone',
           'Only the row (3, 7) disagrees, and here the table entry, not the function, is wrong.',
         ),
         choose(
@@ -2997,11 +2822,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Every existing row takes the non-negative path; a negative input exercises the other branch.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn abs(n: i32) -> i32 {\n    if n < -1 {\n        -n\n    } else {\n        n\n    }\n}\n\nfn count_failures(rows: &[(i32, i32)]) -> usize {\n    let mut failures = 0;\n    for &(input, expected) in rows {\n        if abs(input) != expected {\n            failures += 1;\n        }\n    }\n    failures\n}\n\nfn main() {\n    let positive_only = [(3, 3), (10, 10)];\n    let with_edges = [(3, 3), (0, 0), (-1, 1), (-7, 7)];\n    println!("{} {}", count_failures(&positive_only), count_failures(&with_edges));\n}',
-          ['0 0', '1 1', '0 1', '0 2'],
-          2,
+          '0 1',
           'The bug only affects -1, which the positive-only table never tries.',
         ),
         choose(
@@ -3010,11 +2834,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'These rows sit on both sides of 100 and of 0, so each branch runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn positive(n: i32) -> Option<i32> {\n    if n >= 0 {\n        Some(n)\n    } else {\n        None\n    }\n}\n\nfn main() {\n    let rows = [(4, Some(4)), (0, None), (-2, None), (1, Some(1))];\n    let mut ok = 0;\n    for (input, expected) in rows {\n        if positive(input) == expected {\n            ok += 1;\n        }\n    }\n    println!("{} of {}", ok, rows.len());\n}',
-          ['4 of 4', '3 of 4', '2 of 4', '1 of 4'],
-          1,
+          '3 of 4',
           'The function treats 0 as positive, so the (0, None) row is the one that fails.',
         ),
       ],
@@ -3046,11 +2869,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The length relationship holds for every input; the others are single examples or unrelated to correctness.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn buggy_reverse(values: &[i32]) -> Vec<i32> {\n    values.iter().skip(1).rev().copied().collect()\n}\n\nfn main() {\n    let held = (0..5)\n        .filter(|n| {\n            let input: Vec<i32> = (0..*n).collect();\n            buggy_reverse(&buggy_reverse(&input)) == input\n        })\n        .count();\n    println!("{}", held);\n}',
-          ['1', '0', '5', '4'],
-          0,
+          '1',
           'The bug drops an element, so the round trip only survives for the empty input.',
         ),
         choose(
@@ -3091,11 +2913,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each generated list, including negative values, comes back unchanged after the pair of shifts.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn bad_reverse(values: &[i32]) -> Vec<i32> {\n    values.iter().copied().collect()\n}\n\nfn main() {\n    let input = vec![1, 2, 3];\n    let out = bad_reverse(&input);\n    println!("{} {}", out.len() == input.len(), out[0] == input[2]);\n}',
-          ['true false', 'true true', 'false false', 'false true'],
-          0,
+          'true false',
           'The broken function keeps the length, so only a check on the content catches it.',
         ),
         choose(
@@ -3109,11 +2930,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A finite sample cannot rule out failures for inputs it never tried.',
         ),
-        predictOutput(
+        typeOutput(
           'This function claims to return its input unchanged. What does the program print?',
           'fn cap(values: &[i32]) -> Vec<i32> {\n    values.iter().map(|v| (*v).min(5)).collect()\n}\n\nfn main() {\n    let held = (0..10)\n        .filter(|n| {\n            let input: Vec<i32> = (0..*n).collect();\n            cap(&input) == input\n        })\n        .count();\n    println!("{}", held);\n}',
-          ['6', '10', '7', '5'],
-          2,
+          '7',
           'Lists 0..n for n up to 6 contain no value above 5, so they pass; longer lists include 6 or more and fail.',
         ),
         choose(
@@ -3145,16 +2965,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The valid division returns Some; dividing by zero returns None rather than panicking.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a: i32 = -8;\n    println!("{:?} {:?}", a.checked_div(2), i32::MIN.checked_div(-1));\n}',
-          [
-            'Some(-4) Some(2147483648)',
-            'Some(4) None',
-            'None None',
-            'Some(-4) None',
-          ],
-          3,
+          'Some(-4) None',
           '-8 / 2 is fine. i32::MIN / -1 would be 2147483648, which does not fit in an i32, so checked_div returns None.',
         ),
         choose(
@@ -3174,11 +2988,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The signature makes the impossible case visible, and the caller handles it explicitly.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let scores = [70, 85, 90];\n    println!("{:?} {:?}", scores.get(1), scores.get(3));\n}',
-          ['Some(70) None', 'Some(85) Some(90)', '85 None', 'Some(85) None'],
-          3,
+          'Some(85) None',
           'get checks the index: 1 is valid, while 3 is past the end and gives None where scores[3] would panic.',
         ),
       ],
@@ -3208,11 +3021,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The promise is about b = 0, so the tests must include it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn previous(index: usize) -> Option<usize> {\n    index.checked_sub(1)\n}\n\nfn main() {\n    println!("{:?} {:?}", previous(3), previous(0));\n}',
-          ['Some(2) Some(0)', '2 None', 'Some(4) None', 'Some(2) None'],
-          3,
+          'Some(2) None',
           'usize cannot go below 0, so 0 - 1 has no answer and checked_sub returns None.',
         ),
         choose(
@@ -3226,16 +3038,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'An Option result is part of the contract; a panic is an interruption the type does not mention.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let totals: [i32; 3] = [10, 0, 7];\n    let counts = [2, 5, 0];\n    println!(\n        "{:?} {:?} {:?}",\n        totals[0].checked_div(counts[0]),\n        totals[1].checked_div(counts[1]),\n        totals[2].checked_div(counts[2])\n    );\n}',
-          [
-            'Some(5) Some(0) None',
-            'Some(5) None None',
-            'Some(5) Some(0) Some(0)',
-            '5 0 None',
-          ],
-          0,
+          'Some(5) Some(0) None',
           'Dividing 0 by 5 is a valid 0. Only the zero divisor in the last pair gives None.',
         ),
       ],
@@ -3256,11 +3062,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '*score changes the i32 inside the Box to 15, and reading it again gives 30 for the doubled value.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a = Box::new(7);\n    let b = Box::new(3);\n    println!("{}", *a - *b * 2);\n}',
-          ['8', '4', '-1', '1'],
-          3,
+          '1',
           'Each * reads the boxed value, and multiplication happens before subtraction: 7 - 6.',
         ),
         choose(
@@ -3274,11 +3079,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A Box is the single owner of its allocation, so assignment moves it like any owned value.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn double(mut boxed: Box<i32>) -> Box<i32> {\n    *boxed *= 2;\n    boxed\n}\n\nfn main() {\n    let start = Box::new(6);\n    let result = double(double(start));\n    println!("{}", result);\n}',
-          ['24', '12', '6', '36'],
-          0,
+          '24',
           'Each call takes ownership of the Box, doubles the value inside, and hands the Box back.',
         ),
         choose(
@@ -3308,18 +3112,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '&mut b lends the boxed i32 to add_ten, which makes it 15; show then borrows it to compute 16.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn triple(n: &mut i32) {\n    *n *= 3;\n}\n\nfn main() {\n    let mut b = Box::new(2);\n    triple(&mut b);\n    triple(&mut b);\n    println!("{}", b);\n}',
-          ['18', '6', '12', '2'],
-          0,
+          '18',
           'Both calls change the same boxed value: 2, then 6, then 18.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn shout_len(text: &str) -> usize {\n    text.len() + 1\n}\n\nfn main() {\n    let boxed = Box::new(String::from("hey"));\n    println!("{} {}", shout_len(&boxed), boxed);\n}',
-          ['3 hey', '4', '4 hey', '4 "hey"'],
-          2,
+          '4 hey',
           '&boxed is turned into a &str view of the String inside, and boxed itself is still printed afterwards.',
         ),
         choose(
@@ -3357,11 +3159,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'All three pointers share one String, so the count seen through any of them is 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a = std::rc::Rc::new(5);\n    let b = std::rc::Rc::clone(&a);\n    let c = std::rc::Rc::clone(&a);\n    println!("{} {}", std::rc::Rc::strong_count(&b), *a + *c);\n}',
-          ['2 10', '3 10', '3 15', '1 10'],
-          1,
+          '3 10',
           'There are three owners of one value 5, and a and c both point to it.',
         ),
         choose(
@@ -3375,11 +3176,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Cloning an Rc shares the existing value and records one more owner.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let shared = std::rc::Rc::new(String::from("map"));\n    let owners = (std::rc::Rc::clone(&shared), std::rc::Rc::clone(&shared));\n    println!("{} {}", owners.0, std::rc::Rc::strong_count(&shared));\n}',
-          ['map 2', 'map 1', 'map 3', 'mapmap 3'],
-          2,
+          'map 3',
           'The tuple holds two more owners besides shared, all pointing at one String.',
         ),
         choose(
@@ -3409,11 +3209,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'While count_inside runs, its parameter is a second owner. It is dropped when the function returns.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn owners(handle: std::rc::Rc<String>) -> usize {\n    std::rc::Rc::strong_count(&handle)\n}\n\nfn main() {\n    let name = std::rc::Rc::new(String::from("ada"));\n    let keep = std::rc::Rc::clone(&name);\n    let during = owners(std::rc::Rc::clone(&name));\n    println!("{} {}", during, std::rc::Rc::strong_count(&keep));\n}',
-          ['2 2', '3 3', '3 2', '2 1'],
-          2,
+          '3 2',
           'During the call there are three owners; after it returns, name and keep remain.',
         ),
         choose(
@@ -3438,11 +3237,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Several owners may read the value at once, so Rc never hands out a mutable reference.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let a = std::rc::Rc::new(3);\n    let b = std::rc::Rc::clone(&a);\n    let c = b;\n    println!("{}", std::rc::Rc::strong_count(&a));\n}',
-          ['3', '1', '2', '0'],
-          2,
+          '2',
           'let c = b moves an existing owner rather than adding one, so the count stays at 2.',
         ),
       ],
@@ -3463,11 +3261,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Arc::clone adds a second owner of the same String, exactly as Rc::clone would.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn count(shared: std::sync::Arc<u32>) -> usize {\n    std::sync::Arc::strong_count(&shared)\n}\n\nfn main() {\n    let a = std::sync::Arc::new(8);\n    let b = std::sync::Arc::clone(&a);\n    let during = count(std::sync::Arc::clone(&b));\n    println!("{} {} {}", during, std::sync::Arc::strong_count(&a), *b);\n}',
-          ['2 2 8', '3 3 8', '3 2 8', '3 2 16'],
-          2,
+          '3 2 8',
           'The parameter is a third owner during the call and is dropped when count returns.',
         ),
         choose(
@@ -3492,11 +3289,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Atomic operations coordinate between processor cores, which takes more work than a plain increment.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let a = std::sync::Arc::new(String::from("log"));\n    let b = a.clone();\n    let c = (*a).clone();\n    println!("{} {}", std::sync::Arc::strong_count(&a), c);\n}',
-          ['3 log', '1 log', '2 log', '2 loglog'],
-          2,
+          '2 log',
           'a.clone() clones the Arc pointer, adding an owner. (*a).clone() clones the String inside, which is a separate value.',
         ),
       ],
@@ -3526,11 +3322,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Arc never hands out a mutable reference to its value.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let text = std::sync::Arc::new(String::from("shared"));\n    let copy = std::sync::Arc::clone(&text);\n    let owned = (*copy).clone();\n    println!("{} {}", owned.len(), std::sync::Arc::strong_count(&text));\n}',
-          ['6 3', '6 1', '6 2', '12 2'],
-          2,
+          '6 2',
           'Cloning the String inside makes an independent value, so the Arc count stays at 2.',
         ),
         choose(
@@ -3544,11 +3339,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Arc provides shared ownership only; synchronized mutation comes from the type it wraps.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn total(values: std::sync::Arc<[i32; 3]>) -> i32 {\n    values[0] + values[1] + values[2]\n}\n\nfn main() {\n    let data = std::sync::Arc::new([2, 4, 6]);\n    let sum = total(std::sync::Arc::clone(&data));\n    println!("{} {}", sum, std::sync::Arc::strong_count(&data));\n}',
-          ['12 2', '12 1', '6 1', '12 0'],
-          1,
+          '12 1',
           'total reads through its own owner, which is dropped when it returns, leaving only data.',
         ),
       ],
@@ -3569,18 +3363,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The Weak is counted separately. Dropping the only strong owner frees the String, so upgrade gives None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a = std::rc::Rc::new(1);\n    let b = std::rc::Rc::clone(&a);\n    let w1 = std::rc::Rc::downgrade(&a);\n    let w2 = std::rc::Rc::downgrade(&b);\n    println!("{} {}", std::rc::Rc::strong_count(&a), std::rc::Rc::weak_count(&a));\n}',
-          ['4 0', '2 0', '2 2', '4 2'],
-          2,
+          '2 2',
           'a and b are strong owners; the two downgrades add to the weak count only.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let a = std::rc::Rc::new(5);\n    let b = std::rc::Rc::clone(&a);\n    let w = std::rc::Rc::downgrade(&a);\n    drop(a);\n    let first = w.upgrade().is_some();\n    drop(b);\n    let second = w.upgrade().is_some();\n    println!("{} {}", first, second);\n}',
-          ['true false', 'false false', 'true true', 'false true'],
-          0,
+          'true false',
           'After dropping a, b still keeps the value alive. Once b is dropped too, upgrade fails.',
         ),
         choose(
@@ -3621,23 +3413,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first upgrade finds the String. After the only owner is dropped, the same handle upgrades to None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let owner = std::rc::Rc::new(9);\n    let weak = std::rc::Rc::downgrade(&owner);\n    let extra = weak.upgrade();\n    println!("{}", std::rc::Rc::strong_count(&owner));\n}',
-          ['1', '2', '3', '0'],
-          1,
+          '2',
           'The upgraded pointer stored in extra is a strong owner, alongside owner.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn describe(handle: &std::rc::Weak<String>) -> String {\n    match handle.upgrade() {\n        Some(text) => format!("alive: {}", text),\n        None => String::from("gone"),\n    }\n}\n\nfn main() {\n    let owner = std::rc::Rc::new(String::from("img"));\n    let handle = std::rc::Rc::downgrade(&owner);\n    let backup = std::rc::Rc::clone(&owner);\n    drop(owner);\n    println!("{}", describe(&handle));\n    drop(backup);\n    println!("{}", describe(&handle));\n}',
-          [
-            'gone\ngone',
-            'alive: img\nalive: img',
-            'gone\nalive: img',
-            'alive: img\ngone',
-          ],
-          3,
+          'alive: img\ngone',
           'backup keeps the String alive after owner is dropped; only dropping backup frees it.',
         ),
         choose(
@@ -3680,11 +3465,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both shared references update the same Cell, and nothing is declared mut.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn record(counter: &std::cell::Cell<i32>, amount: i32) {\n    counter.set(counter.get() + amount);\n}\n\nfn main() {\n    let total = std::cell::Cell::new(10);\n    record(&total, 5);\n    record(&total, -3);\n    println!("{}", total.get());\n}',
-          ['10', '15', '12', '7'],
-          2,
+          '12',
           'record only receives a shared reference, yet each call updates the Cell: 10 + 5 - 3.',
         ),
         choose(
@@ -3698,11 +3482,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Handing out copies means no reference into the Cell can outlive a later set.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let level = std::cell::Cell::new(1);\n    let before = level.get();\n    level.set(5);\n    println!("{} {}", before, level.get());\n}',
-          ['5 5', '1 5', '1 1', '5 1'],
-          1,
+          '1 5',
           'before is a copy taken earlier, so it keeps 1 after the Cell changes.',
         ),
         choose(
@@ -3732,11 +3515,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'replace hands back first, take hands back second and leaves an empty String, which the last take returns.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let c = std::cell::Cell::new(4);\n    let a = c.replace(9);\n    let b = c.replace(a + c.get());\n    println!("{} {} {}", a, b, c.get());\n}',
-          ['9 13 13', '4 9 13', '4 4 13', '4 9 9'],
-          1,
+          '4 9 13',
           'The first replace returns 4 and stores 9. The second stores 4 + 9 and returns the 9 it replaced.',
         ),
         choose(
@@ -3750,11 +3532,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Without Copy, the only safe ways out are moving the value with replace or take.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let name = std::cell::Cell::new(String::from("kay"));\n    let taken = name.take();\n    let rest = name.take();\n    println!("{} {} {}", taken, rest.len(), taken.len());\n}',
-          ['kay 3 3', 'kay 3 0', 'kay 0 3', '0 kay 3'],
-          2,
+          'kay 0 3',
           'The first take moves kay out and leaves an empty String, which the second take returns.',
         ),
         choose(
@@ -3786,11 +3567,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each borrow_mut lasts only for its statement, so the pushes and the later reads never overlap with a writer.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn add(list: &std::cell::RefCell<Vec<i32>>, value: i32) {\n    list.borrow_mut().push(value * 2);\n}\n\nfn main() {\n    let list = std::cell::RefCell::new(vec![1]);\n    add(&list, 3);\n    add(&list, 4);\n    println!("{} {}", list.borrow().len(), list.borrow()[2]);\n}',
-          ['3 4', '2 8', '3 6', '3 8'],
-          3,
+          '3 8',
           'add only needs a shared reference to push. The vector becomes [1, 6, 8].',
         ),
         choose(
@@ -3815,11 +3595,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A writer cannot coexist with a reader, and RefCell enforces that by panicking.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let names = std::cell::RefCell::new(vec![String::from("ana")]);\n    let snapshot = names.borrow().clone();\n    names.borrow_mut().push(String::from("bo"));\n    println!("{} {}", snapshot.len(), names.borrow().len());\n}',
-          ['2 2', '1 1', '2 1', '1 2'],
-          3,
+          '1 2',
           'snapshot is an independent clone taken before the push, and its borrow ended right away.',
         ),
       ],
@@ -3850,11 +3629,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'guard lives until the end of main, so the shared borrow conflicts with it at run time.',
           'fn main() {\n    let cell = std::cell::RefCell::new(5);\n    let guard = cell.borrow_mut();\n    let reader = cell.borrow();\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let cell = std::cell::RefCell::new(String::from("a"));\n    cell.borrow_mut().push(\'b\');\n    let first = cell.borrow().len();\n    cell.borrow_mut().push_str("cd");\n    println!("{} {}", first, cell.borrow());\n}',
-          ['4 abcd', '2 ab', '1 abcd', '2 abcd'],
-          3,
+          '2 abcd',
           'Each unnamed guard ends with its statement. first records the length before cd is added.',
         ),
         choose(
@@ -3868,11 +3646,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Ending the guard’s scope ends the mutable borrow.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let scores = std::cell::RefCell::new(vec![10, 20]);\n    {\n        let mut s = scores.borrow_mut();\n        s[0] += 5;\n        s.push(30);\n    }\n    let s = scores.borrow();\n    println!("{} {}", s[0], s.len());\n}',
-          ['15 3', '10 3', '15 2', '10 2'],
-          0,
+          '15 3',
           'Both changes go through the guard inside the block; the read afterwards sees them.',
         ),
       ],
@@ -3893,11 +3670,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'While writer exists, reading is refused with Err. After drop(writer), the same call succeeds.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let cell = std::cell::RefCell::new(String::from("x"));\n    let reader = cell.borrow();\n    let first = match cell.try_borrow_mut() {\n        Ok(_) => "ok",\n        Err(_) => "blocked",\n    };\n    let second = match cell.try_borrow() {\n        Ok(_) => "ok",\n        Err(_) => "blocked",\n    };\n    println!("{} {}", first, second);\n}',
-          ['ok ok', 'blocked blocked', 'ok blocked', 'blocked ok'],
-          3,
+          'blocked ok',
           'An active reader blocks a writer but allows another reader.',
         ),
         choose(
@@ -3911,11 +3687,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The check is the same; only the way a conflict is reported differs.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let cell = std::cell::RefCell::new(3);\n    let a = cell.borrow();\n    let b = cell.try_borrow();\n    let c = cell.try_borrow_mut();\n    println!("{} {}", b.is_ok(), c.is_ok());\n}',
-          ['true false', 'false false', 'true true', 'false true'],
-          0,
+          'true false',
           'With reader a active, a second reader is fine but a writer is refused.',
         ),
         choose(
@@ -3945,16 +3720,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first attempt fails because reader is active. After drop(reader), the second attempt adds 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn try_add(cell: &std::cell::RefCell<i32>, amount: i32) -> bool {\n    match cell.try_borrow_mut() {\n        Ok(mut value) => {\n            *value += amount;\n            true\n        }\n        Err(_) => false,\n    }\n}\n\nfn main() {\n    let cell = std::cell::RefCell::new(10);\n    let guard = cell.borrow_mut();\n    let a = try_add(&cell, 1);\n    drop(guard);\n    let b = try_add(&cell, 2);\n    let c = try_add(&cell, 3);\n    println!("{} {} {} {}", a, b, c, cell.borrow());\n}',
-          [
-            'false true true 15',
-            'false true true 16',
-            'true true true 16',
-            'false false true 13',
-          ],
-          0,
+          'false true true 15',
           'Only the attempt made while guard existed fails, so 2 and 3 are added to 10.',
         ),
         choose(
@@ -3980,11 +3749,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'When overlapping access is a normal situation, a Result lets the code choose what to do.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let cell = std::cell::RefCell::new(vec![1, 2]);\n    let during;\n    {\n        let _writer = cell.borrow_mut();\n        during = cell.try_borrow().is_err();\n    }\n    let after = cell.try_borrow().is_err();\n    println!("{} {}", during, after);\n}',
-          ['true false', 'false false', 'true true', 'false true'],
-          0,
+          'true false',
           '_writer is a named binding, so the guard lives until the block ends; afterwards reading succeeds.',
         ),
       ],
@@ -4005,11 +3773,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The thread computes 42; join waits for it and hands the closure’s return value back to main.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a = std::thread::spawn(|| 10 + 5);\n    let b = std::thread::spawn(|| 10 * 5);\n    let second = b.join().unwrap();\n    let first = a.join().unwrap();\n    println!("{} {}", first, second);\n}',
-          ['15 50', '50 15', '15 15', '50 50'],
-          0,
+          '15 50',
           'Each handle returns its own thread’s result, whatever order the joins happen in.',
         ),
         choose(
@@ -4034,16 +3801,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The thread starts at spawn; join is the point where main waits for it and receives its result.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let handle = std::thread::spawn(|| {\n        let mut total = 0;\n        for n in 1..=4 {\n            total += n;\n        }\n        total\n    });\n    println!("before join");\n    println!("{}", handle.join().unwrap());\n}',
-          [
-            'before join\n10',
-            '10\nbefore join',
-            'before join\n4',
-            'before join',
-          ],
-          0,
+          'before join\n10',
           'Only main prints. It prints its first line, then waits in join for the thread’s sum of 1 to 4.',
         ),
       ],
@@ -4074,18 +3835,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Without move, the closure borrows text, and spawn requires captures that stay valid for as long as the thread might run.',
           'fn main() {\n    let text = String::from("abc");\n    let handle = std::thread::spawn(|| text.len());\n    println!("{}", handle.join().unwrap());\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let text = String::from("hello");\n    let copy = text.clone();\n    let handle = std::thread::spawn(move || copy.len() * 10);\n    println!("{} {}", handle.join().unwrap(), text);\n}',
-          ['50 hello', '5 hello', 'hello 50', '50 hellohello'],
-          0,
+          '50 hello',
           'Only the clone moves into the thread, so main can still print text.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    for i in 1..=3 {\n        let result = std::thread::spawn(move || i * i).join().unwrap();\n        println!("{}", result);\n    }\n}',
-          ['1\n4\n9', '1\n2\n3', '9\n4\n1', '2\n4\n6'],
-          0,
+          '1\n4\n9',
           'Each pass moves its own i into a new thread and joins it before the next pass starts.',
         ),
         choose(
@@ -4117,11 +3876,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The thread borrows values to sum it; main still owns values afterwards.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let data = [3, 1, 4, 1, 5, 9];\n    let total = std::thread::scope(|s| {\n        let a = s.spawn(|| data[..3].iter().sum::<i32>());\n        let b = s.spawn(|| data[3..].iter().sum::<i32>());\n        a.join().unwrap() * 100 + b.join().unwrap()\n    });\n    println!("{}", total);\n}',
-          ['23', '1508', '815', '800'],
-          2,
+          '815',
           'The two threads borrow different halves: 3 + 1 + 4 is 8 and 1 + 5 + 9 is 15.',
         ),
         choose(
@@ -4146,11 +3904,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Waiting for all of its threads is what the scope promises.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let message = String::from("scoped");\n    let length = std::thread::scope(|s| s.spawn(|| message.len()).join().unwrap());\n    println!("{} {}", message, length);\n}',
-          ['6 scoped', 'scoped 7', 'scoped 6', '6'],
-          2,
+          'scoped 6',
           'The thread only borrowed message, so main prints both the String and its length.',
         ),
       ],
@@ -4181,11 +3938,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The order of the results comes from the code that joins, not from the timing of the threads.',
           'fn main() {\n    let words = ["red", "green", "blue"];\n    let lengths = std::thread::scope(|s| {\n        let first = s.spawn(|| words[0].len());\n        let second = s.spawn(|| words[1].len());\n        let third = s.spawn(|| words[2].len());\n        [first.join().unwrap(), second.join().unwrap(), third.join().unwrap()]\n    });\n    println!("{} {} {}", lengths[0], lengths[1], lengths[2]);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let scores = [72, 95, 64, 88];\n    let summary = std::thread::scope(|s| {\n        let total = s.spawn(|| scores.iter().sum::<i32>());\n        let count = s.spawn(|| scores.len());\n        (total.join().unwrap(), count.join().unwrap())\n    });\n    println!("{} {}", summary.0, summary.1);\n}',
-          ['4 319', '319 3', '319 4', '72 4'],
-          2,
+          '319 4',
           'Two threads read the same array at once; the tuple places the total first and the count second.',
         ),
         choose(
@@ -4199,11 +3955,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A scope always joins its remaining threads automatically.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let name = String::from("ivy");\n    std::thread::scope(|s| {\n        s.spawn(|| println!("hello {}", name));\n    });\n    println!("bye {}", name);\n}',
-          ['bye ivy\nhello ivy', 'hello ivy\nbye ivy', 'bye ivy', 'hello ivy'],
-          1,
+          'hello ivy\nbye ivy',
           'The scope does not return until the thread has printed, so hello always comes first.',
         ),
       ],
@@ -4224,11 +3979,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The named guard releases the lock at the end of its block, so the next lock call can proceed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn deposit(account: &std::sync::Mutex<i32>, amount: i32) {\n    *account.lock().unwrap() += amount;\n}\n\nfn main() {\n    let account = std::sync::Mutex::new(100);\n    deposit(&account, 50);\n    deposit(&account, -30);\n    println!("{}", account.lock().unwrap());\n}',
-          ['100', '120', '150', '70'],
-          1,
+          '120',
           'deposit only needs a shared reference: the lock provides the exclusive access to change the value.',
         ),
         choose(
@@ -4253,11 +4007,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The guard represents the held lock; dropping it unlocks.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let log = std::sync::Mutex::new(String::from("a"));\n    log.lock().unwrap().push_str("b");\n    {\n        let mut entry = log.lock().unwrap();\n        entry.push_str("c");\n        entry.push_str("d");\n    }\n    println!("{}", log.lock().unwrap().len());\n}',
-          ['3', '4', '1', '2'],
-          1,
+          '4',
           'Every change goes through a guard, and each guard ends before the next lock call.',
         ),
       ],
@@ -4276,11 +4029,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The thread locks through its Arc clone. main locks only after join, when the thread is done.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let shared = std::sync::Arc::new(std::sync::Mutex::new(1));\n    for step in 1..=3 {\n        let worker = std::sync::Arc::clone(&shared);\n        std::thread::spawn(move || {\n            *worker.lock().unwrap() += step;\n        })\n        .join()\n        .unwrap();\n    }\n    println!("{}", shared.lock().unwrap());\n}',
-          ['6', '4', '7', '10'],
-          2,
+          '7',
           'Each thread adds its step to the same protected value: 1 + 1 + 2 + 3.',
         ),
         choose(
@@ -4305,11 +4057,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Arc provides shared ownership; the Mutex inside provides the exclusive access.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let text = std::sync::Arc::new(std::sync::Mutex::new(String::from("go")));\n    let worker = std::sync::Arc::clone(&text);\n    std::thread::spawn(move || worker.lock().unwrap().push_str("!"))\n        .join()\n        .unwrap();\n    let final_text = text.lock().unwrap().clone();\n    println!("{} {}", final_text, std::sync::Arc::strong_count(&text));\n}',
-          ['go! 2', 'go 1', 'go! 1', 'go!! 1'],
-          2,
+          'go! 1',
           'The thread’s change is visible after join, and its Arc clone was dropped when the thread finished.',
         ),
       ],
@@ -4330,11 +4081,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The producer sends 10, 20, 30 in order; main receives the first two.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let (tx, rx) = std::sync::mpsc::channel();\n    std::thread::spawn(move || {\n        tx.send(String::from("first")).unwrap();\n        tx.send(String::from("second")).unwrap();\n    })\n    .join()\n    .unwrap();\n    let a = rx.recv().unwrap();\n    let b = rx.recv().unwrap();\n    println!("{} {}", b, a);\n}',
-          ['first second', 'second second', 'second first', 'first first'],
-          2,
+          'second first',
           'The messages queue up in send order; the program then prints them swapped.',
         ),
         choose(
@@ -4359,11 +4109,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'While a sender exists, a message may still come, so recv blocks.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let (tx, rx) = std::sync::mpsc::channel();\n    std::thread::spawn(move || tx.send(5).unwrap()).join().unwrap();\n    let a = rx.recv();\n    let b = rx.recv();\n    println!("{} {}", a.is_ok(), b.is_ok());\n}',
-          ['true true', 'false false', 'true false', 'false true'],
-          2,
+          'true false',
           'The only sender was moved into the finished thread and dropped, so after the one message recv reports Err.',
         ),
       ],
@@ -4382,11 +4131,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both senders were moved into threads that have finished, so the loop ends after the five queued messages.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let (tx, rx) = std::sync::mpsc::channel();\n    let producer = std::thread::spawn(move || {\n        for word in ["a", "b", "c"] {\n            tx.send(word).unwrap();\n        }\n    });\n    let mut joined = String::new();\n    for word in rx {\n        joined.push_str(word);\n    }\n    producer.join().unwrap();\n    println!("{}", joined);\n}',
-          ['cba', 'abc', 'a', 'ab'],
-          1,
+          'abc',
           'One sender keeps its order, and the loop ends when the producer finishes and drops tx.',
         ),
         choose(
@@ -4411,11 +4159,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The channel preserves order per sender but not across senders.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let (tx, rx) = std::sync::mpsc::channel();\n    let tx2 = tx.clone();\n    std::thread::spawn(move || tx.send(4).unwrap()).join().unwrap();\n    std::thread::spawn(move || tx2.send(9).unwrap()).join().unwrap();\n    let total: i32 = rx.iter().sum();\n    println!("{}", total);\n}',
-          ['9', '13', '4', '49'],
-          1,
+          '13',
           'Both senders are dropped with their threads, so the receiver’s iterator ends after the two messages.',
         ),
       ],
@@ -4436,11 +4183,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'store replaces the value and load reads the current one; no mut binding is needed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn reset(value: &AtomicU32) {\n    value.store(0, Ordering::Relaxed);\n}\n\nfn main() {\n    let value = AtomicU32::new(42);\n    let before = value.load(Ordering::Relaxed);\n    reset(&value);\n    println!("{} {}", before, value.load(Ordering::Relaxed));\n}',
-          ['0 0', '42 42', '42 0', '0 42'],
-          2,
+          '42 0',
           'before is a plain copy read earlier; reset changes the atomic through a shared reference.',
         ),
         choose(
@@ -4465,11 +4211,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Atomicity covers this one value. Publishing other memory needs stronger orderings than Relaxed.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'use std::sync::atomic::{AtomicBool, Ordering};\n\nfn main() {\n    let done = AtomicBool::new(false);\n    let before = done.load(Ordering::Relaxed);\n    done.store(true, Ordering::Relaxed);\n    println!("{} {}", before, done.load(Ordering::Relaxed));\n}',
-          ['true true', 'false false', 'false true', 'true false'],
-          2,
+          'false true',
           'AtomicBool works the same way as AtomicU32: the first load sees false, the second sees the stored true.',
         ),
       ],
@@ -4488,11 +4233,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The thread stores into the static atomic; after join, main loads the new value.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::sync::atomic::{AtomicU32, Ordering};\n\nstatic LAST: AtomicU32 = AtomicU32::new(0);\n\nfn main() {\n    for id in [3, 7, 2] {\n        std::thread::spawn(move || LAST.store(id, Ordering::Relaxed))\n            .join()\n            .unwrap();\n    }\n    println!("{}", LAST.load(Ordering::Relaxed));\n}',
-          ['7', '2', '12', '3'],
-          1,
+          '2',
           'Each thread is joined before the next starts, so the last store wins.',
         ),
         choose(
@@ -4517,11 +4261,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Relaxed keeps each access atomic but makes no promise about other memory.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'use std::sync::atomic::{AtomicBool, Ordering};\n\nstatic DONE: AtomicBool = AtomicBool::new(false);\n\nfn main() {\n    let before = DONE.load(Ordering::Relaxed);\n    std::thread::spawn(|| DONE.store(true, Ordering::Relaxed))\n        .join()\n        .unwrap();\n    let after = DONE.load(Ordering::Relaxed);\n    println!("{} {}", before, after);\n}',
-          ['true true', 'false true', 'false false', 'true false'],
-          1,
+          'false true',
           'The thread sets the flag; the load after join sees it.',
         ),
       ],
@@ -4542,11 +4285,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each call returns the number before its own increment, and the atomic ends two higher.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn main() {\n    let stock = AtomicU32::new(10);\n    let a = stock.fetch_sub(3, Ordering::Relaxed);\n    let b = stock.fetch_add(5, Ordering::Relaxed);\n    println!("{} {} {}", a, b, stock.load(Ordering::Relaxed));\n}',
-          ['7 12 12', '10 10 12', '10 7 12', '7 2 12'],
-          2,
+          '10 7 12',
           'fetch_sub returns 10 and leaves 7; fetch_add returns 7 and leaves 12.',
         ),
         choose(
@@ -4560,11 +4302,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Returning the previous value tells each caller exactly which value it replaced.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn main() {\n    let best = AtomicU32::new(40);\n    let a = best.fetch_max(25, Ordering::Relaxed);\n    let b = best.fetch_max(70, Ordering::Relaxed);\n    println!("{} {} {}", a, b, best.load(Ordering::Relaxed));\n}',
-          ['40 70 70', '40 40 70', '25 70 70', '40 25 70'],
-          1,
+          '40 40 70',
           '25 does not beat 40, so the first call changes nothing; 70 does, and the second call returns the old 40.',
         ),
         choose(
@@ -4594,11 +4335,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Four threads add 1000 each. Interleaving changes nothing, because each increment is atomic.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::sync::atomic::{AtomicU32, Ordering};\n\nstatic TOTAL: AtomicU32 = AtomicU32::new(0);\n\nfn main() {\n    let mut handles = Vec::new();\n    for _ in 0..3 {\n        handles.push(std::thread::spawn(|| {\n            for _ in 0..250 {\n                TOTAL.fetch_add(2, Ordering::Relaxed);\n            }\n        }));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", TOTAL.load(Ordering::Relaxed));\n}',
-          ['750', '1500', '500', '1000'],
-          1,
+          '1500',
           'Three threads each add 2 a total of 250 times: 3 * 250 * 2.',
         ),
         choose(
@@ -4612,11 +4352,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Each fetch_add sees a different previous value, but which thread gets which depends on timing.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'use std::sync::atomic::{AtomicU32, Ordering};\n\nstatic NEXT: AtomicU32 = AtomicU32::new(10);\n\nfn main() {\n    let mut handles = Vec::new();\n    for _ in 0..3 {\n        handles.push(std::thread::spawn(|| NEXT.fetch_add(1, Ordering::Relaxed)));\n    }\n    let mut sum = 0;\n    for handle in handles {\n        sum += handle.join().unwrap();\n    }\n    println!("{} {}", sum, NEXT.load(Ordering::Relaxed));\n}',
-          ['30 13', '36 13', '33 13', '33 12'],
-          2,
+          '33 13',
           'The threads receive 10, 11, and 12 in some order, so their sum is fixed at 33, and NEXT ends at 13.',
         ),
         choose(
@@ -4648,16 +4387,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first call finds 0 and stores 1. The second expects 0 but finds 1, so it stores nothing.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn main() {\n    let slot = AtomicU32::new(5);\n    let a = slot.compare_exchange(5, 9, Ordering::SeqCst, Ordering::SeqCst);\n    let b = slot.compare_exchange(9, 3, Ordering::SeqCst, Ordering::SeqCst);\n    let c = slot.compare_exchange(9, 4, Ordering::SeqCst, Ordering::SeqCst);\n    println!("{:?} {:?} {:?}", a, b, c);\n}',
-          [
-            'Ok(9) Ok(3) Err(3)',
-            'Ok(5) Ok(9) Err(3)',
-            'Ok(5) Ok(9) Ok(3)',
-            'Ok(5) Err(9) Err(3)',
-          ],
-          1,
+          'Ok(5) Ok(9) Err(3)',
           'Ok carries the replaced value. The third call expects 9, but the slot already holds 3.',
         ),
         choose(
@@ -4671,16 +4404,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Err means the comparison failed, and it reports the value that was actually there.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn claim(lock: &AtomicU32, id: u32) -> String {\n    match lock.compare_exchange(0, id, Ordering::SeqCst, Ordering::SeqCst) {\n        Ok(_) => format!("{} claimed", id),\n        Err(owner) => format!("{} saw owner {}", id, owner),\n    }\n}\n\nfn main() {\n    let lock = AtomicU32::new(0);\n    println!("{}", claim(&lock, 7));\n    println!("{}", claim(&lock, 9));\n}',
-          [
-            '7 claimed\n9 claimed',
-            '7 saw owner 0\n9 saw owner 7',
-            '7 claimed\n9 saw owner 7',
-            '7 claimed\n9 saw owner 9',
-          ],
-          2,
+          '7 claimed\n9 saw owner 7',
           'Only the first claim finds 0. The second finds 7 and reports it through Err.',
         ),
         choose(
@@ -4710,11 +4437,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each call computes the capped sum from the value it saw and stores it only if that value is still current.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn double(x: &AtomicU32) -> u32 {\n    let mut current = x.load(Ordering::SeqCst);\n    while let Err(actual) =\n        x.compare_exchange(current, current * 2, Ordering::SeqCst, Ordering::SeqCst)\n    {\n        current = actual;\n    }\n    current * 2\n}\n\nfn main() {\n    let x = AtomicU32::new(3);\n    double(&x);\n    println!("{} {}", double(&x), x.load(Ordering::SeqCst));\n}',
-          ['6 12', '6 6', '12 12', '12 24'],
-          2,
+          '12 12',
           'The first call stores 6; the second doubles 6 to 12 and returns it.',
         ),
         choose(
@@ -4728,11 +4454,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The update must be based on the value that is really there now.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'use std::sync::atomic::{AtomicU32, Ordering};\n\nstatic LEVEL: AtomicU32 = AtomicU32::new(0);\n\nfn add_capped(amount: u32, cap: u32) {\n    let mut current = LEVEL.load(Ordering::SeqCst);\n    while let Err(actual) = LEVEL.compare_exchange(\n        current,\n        (current + amount).min(cap),\n        Ordering::SeqCst,\n        Ordering::SeqCst,\n    ) {\n        current = actual;\n    }\n}\n\nfn main() {\n    let mut handles = Vec::new();\n    for _ in 0..4 {\n        handles.push(std::thread::spawn(|| add_capped(3, 10)));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", LEVEL.load(Ordering::SeqCst));\n}',
-          ['12', '10', '3', '9'],
-          1,
+          '10',
           'The four updates of 3 would reach 12, but every update respects the cap, whatever order they run in.',
         ),
         choose(
@@ -4793,11 +4518,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Relaxed orders nothing but the flag itself, so the data writes are not guaranteed to be visible.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};\n\nstatic A: AtomicU32 = AtomicU32::new(0);\nstatic B: AtomicU32 = AtomicU32::new(0);\nstatic READY: AtomicBool = AtomicBool::new(false);\n\nfn main() {\n    let writer = std::thread::spawn(|| {\n        A.store(3, Ordering::Relaxed);\n        B.store(4, Ordering::Relaxed);\n        READY.store(true, Ordering::Release);\n    });\n    while !READY.load(Ordering::Acquire) {}\n    println!("{}", A.load(Ordering::Relaxed) * 10 + B.load(Ordering::Relaxed));\n    writer.join().unwrap();\n}',
-          ['0', '30', '7', '34'],
-          3,
+          '34',
           'Both writes come before the release store, so both are visible after the acquire load sees true.',
         ),
       ],
@@ -4816,11 +4540,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Before the writer runs, the flag is false and try_read refuses to read DATA. Afterwards it sees the flag and the data.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};\n\nstatic DATA: AtomicU32 = AtomicU32::new(0);\nstatic READY: AtomicBool = AtomicBool::new(false);\n\nfn try_read() -> Option<u32> {\n    if READY.load(Ordering::Acquire) {\n        Some(DATA.load(Ordering::Relaxed))\n    } else {\n        None\n    }\n}\n\nfn main() {\n    DATA.store(5, Ordering::Relaxed);\n    let first = try_read();\n    std::thread::spawn(|| {\n        DATA.store(9, Ordering::Relaxed);\n        READY.store(true, Ordering::Release);\n    })\n    .join()\n    .unwrap();\n    println!("{:?} {:?}", first, try_read());\n}',
-          ['Some(5) Some(9)', 'None Some(9)', 'None Some(5)', 'Some(5) None'],
-          1,
+          'None Some(9)',
           'Data written without setting the flag is never handed out; the reader waits for the published 9.',
         ),
         choose(
@@ -4907,11 +4630,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The thread may outlive the current function, so it may only hold data that cannot dangle.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let parts = (String::from("ab"), 3);\n    let result = std::thread::spawn(move || format!("{}{}", parts.0, parts.1))\n        .join()\n        .unwrap();\n    println!("{}", result);\n}',
-          ['ab 3', 'ab3', '3ab', 'ab'],
-          1,
+          'ab3',
           'A tuple of a String and an integer is Send, so it moves into the thread whole.',
         ),
       ],
@@ -4941,11 +4663,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           "spawn needs everything it captures to be Send and 'static, so the generic T must promise both.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn background<F: FnOnce() -> R + Send + \'static, R: Send + \'static>(job: F) -> R {\n    std::thread::spawn(job).join().unwrap()\n}\n\nfn main() {\n    let base = 10;\n    let a = background(move || base * 2);\n    let b = background(|| String::from("ok"));\n    println!("{} {}", a, b);\n}',
-          ['20 ok', '10 ok', 'ok 20', '20'],
-          0,
+          '20 ok',
           'Each closure runs on its own thread, and its Send result returns through join.',
         ),
         choose(
@@ -5010,11 +4731,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Sync is about sharing references; Send is about moving values.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let text = String::from("shared text");\n    let facts = std::thread::scope(|s| {\n        let len = s.spawn(|| text.len());\n        let has = s.spawn(|| text.contains("text"));\n        (len.join().unwrap(), has.join().unwrap())\n    });\n    println!("{} {}", facts.0, facts.1);\n}',
-          ['11 false', '10 true', '2 true', '11 true'],
-          3,
+          '11 true',
           'String is Sync, so both threads read it through shared references at the same time.',
         ),
         choose(
@@ -5056,11 +4776,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Without the bound, T might be something like Cell that is unsafe to share.',
           'fn split_len<T: Sync>(items: &[T]) -> (usize, usize) {\n    let mid = items.len() / 2;\n    std::thread::scope(|s| {\n        let left = s.spawn(|| items[..mid].len());\n        let right = s.spawn(|| items[mid..].len());\n        (left.join().unwrap(), right.join().unwrap())\n    })\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn peek<T: Sync + Send + Copy>(value: &T) -> T {\n    std::thread::scope(|s| s.spawn(|| *value).join().unwrap())\n}\n\nfn main() {\n    let n = 21;\n    let pair = (1, 2);\n    println!("{} {}", peek(&n) * 2, peek(&pair).1);\n}',
-          ['21 2', '42 2', '42 1', '42 12'],
-          1,
+          '42 2',
           'Each thread copies the borrowed value and returns it through join.',
         ),
         choose(
@@ -5103,11 +4822,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Four workers add 1, 2, 3, and 4 in some order; the lock makes each addition safe, so the sum is always 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let names = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));\n    let mut handles = Vec::new();\n    for n in 0..5 {\n        let names = std::sync::Arc::clone(&names);\n        handles.push(std::thread::spawn(move || {\n            names.lock().unwrap().push(n);\n        }));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", names.lock().unwrap().len());\n}',
-          ['5', '4', '1', '0'],
-          0,
+          '5',
           'Every worker pushes exactly once under the lock, so none of the five pushes is lost.',
         ),
         choose(
@@ -5132,11 +4850,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Holding the lock only for the update lets other workers compute in parallel.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let count = std::sync::Arc::new(std::sync::Mutex::new(0));\n    let mut handles = Vec::new();\n    for _ in 0..3 {\n        let count = std::sync::Arc::clone(&count);\n        handles.push(std::thread::spawn(move || {\n            for _ in 0..100 {\n                *count.lock().unwrap() += 1;\n            }\n        }));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{} {}", count.lock().unwrap(), std::sync::Arc::strong_count(&count));\n}',
-          ['300 1', '300 4', '100 1', '3 1'],
-          0,
+          '300 1',
           'All 300 increments are counted, and the workers’ Arc clones were dropped when they finished.',
         ),
       ],
@@ -5177,11 +4894,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The Mutex has one owner; wrapping it in an Arc lets every worker own a handle.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let text = std::sync::Arc::new(std::sync::Mutex::new(String::new()));\n    let mut handles = Vec::new();\n    for piece in ["ab", "cde", "f"] {\n        let text = std::sync::Arc::clone(&text);\n        handles.push(std::thread::spawn(move || text.lock().unwrap().push_str(piece)));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", text.lock().unwrap().len());\n}',
-          ['3', '6', '2', '0'],
-          1,
+          '6',
           'All three pieces are appended under the lock, giving 2 + 3 + 1 bytes.',
         ),
         choose(
@@ -5226,18 +4942,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The same thread is waiting for a lock that only it can release.',
           'fn main() {\n    let value = std::sync::Mutex::new(1);\n    let guard = value.lock().unwrap();\n    let again = value.lock().unwrap();\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let m = std::sync::Mutex::new(0);\n    let while_held;\n    {\n        let _guard = m.lock().unwrap();\n        while_held = m.try_lock().is_ok();\n    }\n    let after = m.try_lock().is_ok();\n    println!("{} {}", while_held, after);\n}',
-          ['true true', 'false true', 'false false', 'true false'],
-          1,
+          'false true',
           '_guard keeps the lock until the block ends; afterwards try_lock succeeds.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn add(m: &std::sync::Mutex<i32>, n: i32) {\n    *m.lock().unwrap() += n;\n}\n\nfn main() {\n    let m = std::sync::Mutex::new(1);\n    add(&m, 2);\n    let doubled = *m.lock().unwrap() * 2;\n    add(&m, doubled);\n    println!("{}", m.lock().unwrap());\n}',
-          ['6', '9', '12', '3'],
-          1,
+          '9',
           'The temporary guard in the let statement is dropped before add locks again: 3, then 3 + 6.',
         ),
         choose(
@@ -5289,11 +5003,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'With one global order, no thread can hold the second lock while waiting for the first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn transfer(from: &std::sync::Mutex<i32>, to: &std::sync::Mutex<i32>, amount: i32) {\n    *from.lock().unwrap() -= amount;\n    *to.lock().unwrap() += amount;\n}\n\nfn main() {\n    let a = std::sync::Mutex::new(10);\n    let b = std::sync::Mutex::new(0);\n    let c = std::sync::Mutex::new(5);\n    transfer(&a, &b, 4);\n    transfer(&b, &c, 3);\n    transfer(&c, &a, 8);\n    println!("{} {} {}", a.lock().unwrap(), b.lock().unwrap(), c.lock().unwrap());\n}',
-          ['6 1 8', '14 4 0', '10 1 0', '14 1 0'],
-          3,
+          '14 1 0',
           'a gives 4 and receives 8; b receives 4 and gives 3; c receives 3 and gives 8.',
         ),
         choose(
@@ -5325,11 +5038,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The boxed, pinned async block can be polled through as_mut, and its body finishes on the first poll.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let base = 5;\n    let mut fut = Box::pin(async move { base * 3 });\n    let mut cx = Context::from_waker(Waker::noop());\n    if let Poll::Ready(v) = fut.as_mut().poll(&mut cx) {\n        println!("{}", v + 1);\n    }\n}',
-          ['15', '18', '5', '16'],
-          3,
+          '16',
           'async move captures base; polling runs the body, which produces 15, and main prints 15 + 1.',
         ),
         choose(
@@ -5354,16 +5066,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The future lives in the box, and the Pin promises it will not be moved out again.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut fut = Box::pin(async {\n        println!("inside");\n        9\n    });\n    println!("created");\n    let mut cx = Context::from_waker(Waker::noop());\n    if let Poll::Ready(v) = fut.as_mut().poll(&mut cx) {\n        println!("got {}", v);\n    }\n}',
-          [
-            'inside\ncreated\ngot 9',
-            'created\ngot 9',
-            'inside\ngot 9\ncreated',
-            'created\ninside\ngot 9',
-          ],
-          3,
+          'created\ninside\ngot 9',
           'Creating the async block runs none of its body; poll runs it.',
         ),
       ],
@@ -5404,11 +5110,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Both give a pinned future; they differ in where it is stored and how long it can live.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut fut = Box::pin(async { 2 + 2 });\n    let mut cx = Context::from_waker(Waker::noop());\n    let first = match fut.as_mut().poll(&mut cx) {\n        Poll::Ready(v) => v,\n        Poll::Pending => 0,\n    };\n    let moved_box = fut;\n    println!("{}", first);\n}',
-          ['0', '2', '4', '22'],
-          2,
+          '4',
           'The future is ready on its first poll. Moving the Pin<Box> afterwards only moves the pointer.',
         ),
         choose(
@@ -5440,11 +5145,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first two polls count left down to 0 and return Pending; the third finds 0 and returns Ready.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::{Context, Poll, Waker};\n\nstruct Countdown {\n    left: u32,\n}\n\nimpl Future for Countdown {\n    type Output = &\'static str;\n\n    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<\'_>) -> Poll<&\'static str> {\n        if self.left == 0 {\n            Poll::Ready("liftoff")\n        } else {\n            self.left -= 1;\n            cx.waker().wake_by_ref();\n            Poll::Pending\n        }\n    }\n}\n\nfn polls_needed(left: u32) -> u32 {\n    let mut fut = Countdown { left };\n    let mut cx = Context::from_waker(Waker::noop());\n    let mut polls = 1;\n    while Pin::new(&mut fut).poll(&mut cx).is_pending() {\n        polls += 1;\n    }\n    polls\n}\n\nfn main() {\n    println!("{} {}", polls_needed(0), polls_needed(3));\n}',
-          ['0 3', '1 3', '0 4', '1 4'],
-          3,
+          '1 4',
           'A countdown starting at n returns Pending n times and is Ready on poll n + 1.',
         ),
         choose(
@@ -5469,11 +5173,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Locals vanish when poll returns, so state that must survive goes in the struct.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::{Context, Poll, Waker};\n\nstruct Sum {\n    next: u32,\n    total: u32,\n}\n\nimpl Future for Sum {\n    type Output = u32;\n\n    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<\'_>) -> Poll<u32> {\n        if self.next > 3 {\n            Poll::Ready(self.total)\n        } else {\n            let next = self.next;\n            self.total += next;\n            self.next += 1;\n            cx.waker().wake_by_ref();\n            Poll::Pending\n        }\n    }\n}\n\nfn main() {\n    let mut fut = Sum { next: 1, total: 0 };\n    let mut cx = Context::from_waker(Waker::noop());\n    let mut pending = 0;\n    let mut result = Pin::new(&mut fut).poll(&mut cx);\n    while result.is_pending() {\n        pending += 1;\n        result = Pin::new(&mut fut).poll(&mut cx);\n    }\n    println!("{:?} {}", result, pending);\n}',
-          ['Ready(6) 4', 'Ready(10) 3', 'Ready(3) 3', 'Ready(6) 3'],
-          3,
+          'Ready(6) 3',
           'Three Pending polls add 1, 2, and 3; the fourth poll finds next above 3 and returns the total.',
         ),
       ],
@@ -5514,11 +5217,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The event source should wake the task exactly when progress becomes possible.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::{Context, Poll, Waker};\n\nstruct Later {\n    value: i32,\n    waiting: bool,\n    wakes: u32,\n}\n\nimpl Future for Later {\n    type Output = i32;\n\n    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<\'_>) -> Poll<i32> {\n        if self.waiting {\n            self.waiting = false;\n            self.wakes += 1;\n            cx.waker().wake_by_ref();\n            Poll::Pending\n        } else {\n            Poll::Ready(self.value)\n        }\n    }\n}\n\nfn main() {\n    let mut fut = Later { value: -3, waiting: true, wakes: 0 };\n    let mut cx = Context::from_waker(Waker::noop());\n    let a = Pin::new(&mut fut).poll(&mut cx).is_ready();\n    let b = Pin::new(&mut fut).poll(&mut cx).is_ready();\n    println!("{} {} {}", a, b, fut.wakes);\n}',
-          ['true true 0', 'false false 1', 'false true 1', 'false true 2'],
-          2,
+          'false true 1',
           'Only the first poll waits and wakes; the second finds waiting false and finishes.',
         ),
         choose(
@@ -5550,11 +5252,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each await yields the ready future’s value, and the block returns their product.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nasync fn double(n: i32) -> i32 {\n    n * 2\n}\n\nfn main() {\n    let mut task = Box::pin(async { double(double(5).await).await + 1 });\n    let mut cx = Context::from_waker(Waker::noop());\n    if let Poll::Ready(v) = task.as_mut().poll(&mut cx) {\n        println!("{}", v);\n    }\n}',
-          ['21', '11', '20', '22'],
-          0,
+          '21',
           'The inner await gives 10, the outer await doubles that to 20, and 1 is added.',
         ),
         choose(
@@ -5641,11 +5342,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Suspending frees the executor to run other tasks until a wakeup arrives.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut task = Box::pin(async {\n        let a = std::future::ready(2).await;\n        let b = std::future::ready(a + 3).await;\n        a * b\n    });\n    let mut cx = Context::from_waker(Waker::noop());\n    let mut polls = 1;\n    while task.as_mut().poll(&mut cx).is_pending() {\n        polls += 1;\n    }\n    println!("{}", polls);\n}',
-          ['2', '3', '0', '1'],
-          3,
+          '1',
           'Ready futures never return Pending, so both awaits complete within the first poll.',
         ),
       ],
@@ -5666,11 +5366,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The values are equal, but a and b are separate variables. Two pointers to a hold the same address.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let x = 7;\n    let r1 = &x;\n    let r2 = &x;\n    let y = 7;\n    println!("{} {}", std::ptr::eq(r1, r2), std::ptr::eq(r1, &y));\n}',
-          ['true true', 'true false', 'false false', 'false true'],
-          1,
+          'true false',
           'r1 and r2 point to the same variable; y is a different variable that happens to hold 7.',
         ),
         choose(
@@ -5695,11 +5394,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Pointer equality is address equality, regardless of the stored values.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let values = [4, 4, 4];\n    let first: *const i32 = &values[0];\n    let second: *const i32 = &values[1];\n    let first_again: *const i32 = &values[0];\n    println!("{} {}", first == second, first == first_again);\n}',
-          ['true true', 'false true', 'false false', 'true false'],
-          1,
+          'false true',
           'Neighbouring elements have different addresses even though all of them hold 4.',
         ),
       ],
@@ -5753,11 +5451,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Handling the address is harmless; dereferencing it is what needs a validity guarantee.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let x = 1;\n    let p: *const i32 = &x;\n    let q: *const i32 = std::ptr::null();\n    println!("{} {}", p.is_null(), q.is_null());\n}',
-          ['true false', 'false false', 'true true', 'false true'],
-          3,
+          'false true',
           'A pointer made from a reference is never null; std::ptr::null() is the null address.',
         ),
       ],
@@ -5778,11 +5475,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'p comes from a reference to score, which is still alive, so the read is valid.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn first(values: &[i32]) -> Option<i32> {\n    if values.is_empty() {\n        return None;\n    }\n    let p = values.as_ptr();\n    Some(unsafe { *p })\n}\n\nfn main() {\n    println!("{:?} {:?}", first(&[9, 4]), first(&[]));\n}',
-          ['Some(9) Some(0)', 'Some(9) None', 'Some(4) None', '9 None'],
-          1,
+          'Some(9) None',
           'The check returns early for an empty slice, so the raw read happens only when an element exists.',
         ),
         choose(
@@ -5808,11 +5504,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'These are the conditions under which reading through a raw pointer is defined.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let mut level = 3;\n    let p: *mut i32 = &mut level;\n    unsafe {\n        *p += 4;\n        *p *= 2;\n    }\n    println!("{}", level);\n}',
-          ['10', '14', '7', '11'],
-          1,
+          '14',
           'Both writes go through the pointer to level: 3 + 4, then doubled.',
         ),
       ],
@@ -5842,11 +5537,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The unsafe block promised a live target, and that promise is false here.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn read_at(values: &[i32], index: usize) -> Option<i32> {\n    if index >= values.len() {\n        return None;\n    }\n    let p: *const i32 = &values[index];\n    Some(unsafe { *p })\n}\n\nfn main() {\n    let data = [1, 2];\n    println!("{:?} {:?}", read_at(&data, 1), read_at(&data, 2));\n}',
-          ['Some(1) None', 'Some(2) None', 'Some(2) Some(0)', 'None None'],
-          1,
+          'Some(2) None',
           'Index 1 is the last valid element; index 2 is past the end and is rejected before any raw read.',
         ),
         choose(
@@ -5860,11 +5554,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Only reading while x is still in scope uses a target that is alive and in place.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let mut total = 10;\n    {\n        let r = &mut total;\n        *r += 5;\n    }\n    let p: *const i32 = &total;\n    println!("{}", unsafe { *p } * 2);\n}',
-          ['20', '25', '30', '15'],
-          2,
+          '30',
           'The &mut is finished before the pointer is created, so the read sees 15 without any aliasing conflict.',
         ),
       ],
@@ -5885,11 +5578,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The new slice covers the first two elements of values: 2 and 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let values = [10, 20, 30, 40];\n    let tail = unsafe { std::slice::from_raw_parts(values.as_ptr().add(1), 3) };\n    println!("{} {}", tail[0], tail.len());\n}',
-          ['20 3', '10 3', '20 4', '30 3'],
-          0,
+          '20 3',
           'add(1) starts at the second element, and the slice covers the three elements from there to the end.',
         ),
         choose(
@@ -5914,11 +5606,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Like a slice’s own len, it counts elements.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn prefix_sum(values: &[i32], count: usize) -> i32 {\n    let count = count.min(values.len());\n    let view = unsafe { std::slice::from_raw_parts(values.as_ptr(), count) };\n    view.iter().sum()\n}\n\nfn main() {\n    println!("{} {}", prefix_sum(&[4, 5, 6], 2), prefix_sum(&[4, 5, 6], 10));\n}',
-          ['9 15', '9 0', '9 6', '15 15'],
-          0,
+          '9 15',
           'The count is clamped to the slice length, so asking for 10 gives the whole slice.',
         ),
       ],
@@ -5960,23 +5651,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Shared and mutable access to the same memory at once breaks Rust’s aliasing rules.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn first_half(values: &[u8]) -> &[u8] {\n    let len = values.len() / 2;\n    unsafe { std::slice::from_raw_parts(values.as_ptr(), len) }\n}\n\nfn main() {\n    let a = first_half(&[9, 8, 7]);\n    let b = first_half(&[]);\n    println!("{} {}", a.len(), b.len());\n}',
-          ['2 0', '1 0', '1 1', '3 0'],
-          1,
+          '1 0',
           'Integer division gives 1 for three bytes and 0 for none; a zero-length slice is valid.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn window(values: &[i32], start: usize, len: usize) -> Option<&[i32]> {\n    if start > values.len() || len > values.len() - start {\n        return None;\n    }\n    Some(unsafe { std::slice::from_raw_parts(values.as_ptr().add(start), len) })\n}\n\nfn main() {\n    let data = [1, 2, 3, 4];\n    println!("{:?} {:?}", window(&data, 1, 2), window(&data, 3, 2));\n}',
-          [
-            'Some([2, 3]) Some([4])',
-            'Some([1, 2]) None',
-            'Some([2, 3, 4]) None',
-            'Some([2, 3]) None',
-          ],
-          3,
+          'Some([2, 3]) None',
           'The second window would run past the end, so the checks reject it before any unsafe code runs.',
         ),
       ],
@@ -5997,11 +5681,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'left covers indexes 0 and 1, right covers 2 to 4, and both write into data.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn split_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {\n    let mid = mid.min(values.len());\n    let len = values.len();\n    let p = values.as_mut_ptr();\n    unsafe {\n        (\n            std::slice::from_raw_parts_mut(p, mid),\n            std::slice::from_raw_parts_mut(p.add(mid), len - mid),\n        )\n    }\n}\n\nfn main() {\n    let mut data = [1, 2, 3, 4];\n    let (left, right) = split_mut(&mut data, 3);\n    left[2] += right[0];\n    right[0] = 0;\n    println!("{:?}", data);\n}',
-          ['[1, 2, 3, 0]', '[1, 2, 7, 4]', '[1, 2, 7, 0]', '[4, 2, 3, 0]'],
-          2,
+          '[1, 2, 7, 0]',
           'left[2] is data[2] and right[0] is data[3]; both halves may be used at once.',
         ),
         choose(
@@ -6027,11 +5710,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The compiler does not reason about index ranges, so it treats both as borrowing all of values.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn split_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {\n    let mid = mid.min(values.len());\n    let len = values.len();\n    let p = values.as_mut_ptr();\n    unsafe {\n        (\n            std::slice::from_raw_parts_mut(p, mid),\n            std::slice::from_raw_parts_mut(p.add(mid), len - mid),\n        )\n    }\n}\n\nfn main() {\n    let mut data = [5, 6];\n    let (left, right) = split_mut(&mut data, 9);\n    println!("{} {}", left.len(), right.len());\n}',
-          ['9 0', '2 7', '2 0', '0 2'],
-          2,
+          '2 0',
           'mid is clamped to 2, so the left half is everything and the right half is empty.',
         ),
       ],
@@ -6072,16 +5754,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Both halves borrow from the incoming &mut, so the original stays locked until they are done.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn split_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {\n    let mid = mid.min(values.len());\n    let len = values.len();\n    let p = values.as_mut_ptr();\n    unsafe {\n        (\n            std::slice::from_raw_parts_mut(p, mid),\n            std::slice::from_raw_parts_mut(p.add(mid), len - mid),\n        )\n    }\n}\n\nfn bump_halves(values: &mut [i32], mid: usize) {\n    let (left, right) = split_mut(values, mid);\n    for n in left.iter_mut() {\n        *n += 1;\n    }\n    for n in right.iter_mut() {\n        *n += 100;\n    }\n}\n\nfn main() {\n    let mut data = [1, 1, 1, 1, 1];\n    bump_halves(&mut data, 3);\n    println!("{:?}", data);\n}',
-          [
-            '[2, 2, 101, 101, 101]',
-            '[2, 2, 2, 2, 101]',
-            '[101, 101, 101, 2, 2]',
-            '[2, 2, 2, 101, 101]',
-          ],
-          3,
+          '[2, 2, 2, 101, 101]',
           'The first three elements are in the left half and the last two in the right.',
         ),
         choose(
@@ -6113,11 +5789,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Four bytes need no padding, and two i32 fields sit back to back.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[repr(C)]\nstruct Record {\n    a: u8,\n    b: u32,\n    c: u8,\n}\n\nfn main() {\n    println!("{}", std::mem::size_of::<Record>());\n}',
-          ['6', '12', '8', '9'],
-          1,
+          '12',
           'a is at 0, b must start at 4, c is at 8, and the total rounds up to a multiple of 4.',
         ),
         choose(
@@ -6142,11 +5817,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The default layout is unspecified, which leaves the compiler free to optimize it.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           '#[repr(C)]\nstruct Packet {\n    a: u32,\n    b: u8,\n    c: u8,\n    d: u16,\n}\n\nfn main() {\n    println!("{}", std::mem::size_of::<Packet>());\n}',
-          ['12', '8', '16', '7'],
-          1,
+          '8',
           'b and c fill offsets 4 and 5, and d is already aligned at 6, so no padding is needed.',
         ),
       ],
@@ -6165,11 +5839,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The two bytes come first, so length starts at 2 and id at 4, with no padding anywhere.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[repr(C)]\nstruct Header {\n    kind: u8,\n    id: u32,\n    flags: u8,\n    length: u16,\n}\n\nfn main() {\n    println!(\n        "{} {} {}",\n        std::mem::offset_of!(Header, id),\n        std::mem::offset_of!(Header, length),\n        std::mem::size_of::<Header>()\n    );\n}',
-          ['1 6 8', '4 9 12', '4 10 12', '4 10 11'],
-          2,
+          '4 10 12',
           'id is padded to 4, flags sits at 8, length is aligned to 10, and the size rounds up to 12.',
         ),
         choose(
@@ -6194,11 +5867,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'repr(C) follows the declared order, so a different order means a different layout.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           '#[repr(C)]\nstruct Entry {\n    a: u16,\n    b: u8,\n    c: u32,\n}\n\nfn main() {\n    println!("{} {}", std::mem::offset_of!(Entry, b), std::mem::offset_of!(Entry, c));\n}',
-          ['2 3', '1 4', '2 4', '2 8'],
-          2,
+          '2 4',
           'b follows the two-byte a, and c is padded up to the next multiple of 4.',
         ),
       ],
@@ -6219,11 +5891,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The body is ordinary Rust; only the calling convention differs, which this direct call does not notice.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'extern "C" fn scale(x: i32, k: i32) -> i32 {\n    x * k\n}\n\nextern "C" fn offset(x: i32) -> i32 {\n    x - 1\n}\n\nfn main() {\n    println!("{}", offset(scale(5, 3)));\n}',
-          ['15', '10', '12', '14'],
-          3,
+          '14',
           'scale gives 15 and offset subtracts 1; both are plain safe calls.',
         ),
         choose(
@@ -6275,11 +5946,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The call goes to the C library’s abs, through a declaration Rust cannot verify.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'extern "C" {\n    fn abs(x: i32) -> i32;\n}\n\nfn main() {\n    let total = unsafe { abs(3 - 10) + abs(4) };\n    println!("{}", total);\n}',
-          ['11', '-3', '3', '17'],
-          0,
+          '11',
           'abs(-7) is 7 and abs(4) is 4.',
         ),
         choose(
@@ -6333,16 +6003,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only the first input ends in a single nul. The second has no terminator, and the third has a nul inside.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn content_len(bytes: &[u8]) -> Option<usize> {\n    std::ffi::CStr::from_bytes_with_nul(bytes)\n        .ok()\n        .map(|s| s.to_bytes().len())\n}\n\nfn main() {\n    println!(\n        "{:?} {:?} {:?}",\n        content_len(b"rust\\0"),\n        content_len(b"\\0"),\n        content_len(b"ru\\0st\\0")\n    );\n}',
-          [
-            'Some(4) Some(0) None',
-            'Some(5) Some(1) None',
-            'Some(4) None None',
-            'Some(4) Some(0) Some(2)',
-          ],
-          0,
+          'Some(4) Some(0) None',
           'The content excludes the nul, a lone nul is a valid empty string, and an interior nul is rejected.',
         ),
         choose(
@@ -6367,11 +6031,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'to_bytes leaves out the terminator; to_bytes_with_nul keeps it.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let buffer = b"name\\0garbage";\n    let text = std::ffi::CStr::from_bytes_until_nul(buffer)\n        .ok()\n        .map(|s| s.to_bytes().len());\n    println!("{:?} {}", text, buffer.len());\n}',
-          ['Some(4) 12', 'None 12', 'Some(12) 12', 'Some(5) 12'],
-          0,
+          'Some(4) 12',
           'from_bytes_until_nul stops at the first nul and ignores the rest of the buffer.',
         ),
       ],
@@ -6390,11 +6053,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'hello gains a nul for 6 bytes; text with an interior nul is refused.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let name = std::ffi::CString::new("crab").ok();\n    let sizes = name.map(|c| (c.as_bytes().len(), c.as_bytes_with_nul().len()));\n    println!("{:?}", sizes);\n}',
-          ['Some((5, 5))', 'Some((4, 4))', 'Some((5, 6))', 'Some((4, 5))'],
-          3,
+          'Some((4, 5))',
           'The content is 4 bytes, and the terminator adds one more.',
         ),
         choose(
@@ -6419,16 +6081,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The CString owns the bytes; once the temporary is dropped, the pointer refers to freed memory.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let inputs = ["ok", "", "a\\0b"];\n    for text in inputs {\n        println!("{}", std::ffi::CString::new(text).is_ok());\n    }\n}',
-          [
-            'true\nfalse\nfalse',
-            'true\ntrue\ntrue',
-            'false\ntrue\nfalse',
-            'true\ntrue\nfalse',
-          ],
-          3,
+          'true\ntrue\nfalse',
           'An empty string is fine and becomes a lone nul; only the interior nul is rejected.',
         ),
       ],
@@ -6449,23 +6105,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Big-endian reads 0x00000102. Little-endian reads the same bytes backwards as 0x02010000.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{} {}", u16::from_be_bytes([1, 0]), u16::from_le_bytes([1, 0]));\n}',
-          ['1 256', '256 1', '256 256', '1 1'],
-          1,
+          '256 1',
           'Big-endian treats the first byte as the high byte; little-endian treats it as the low byte.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let n: u16 = 0x1234;\n    println!("{:?} {:?}", n.to_be_bytes(), n.to_le_bytes());\n}',
-          [
-            '[52, 18] [18, 52]',
-            '[18, 52] [18, 52]',
-            '[12, 34] [34, 12]',
-            '[18, 52] [52, 18]',
-          ],
-          3,
+          '[18, 52] [52, 18]',
           '0x12 is 18 and 0x34 is 52; big-endian puts 0x12 first.',
         ),
         choose(
@@ -6506,16 +6155,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Four bytes convert to an array; three bytes fail the conversion, which becomes None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn field(bytes: &[u8], start: usize) -> Option<u16> {\n    let array: [u8; 2] = bytes.get(start..start + 2)?.try_into().ok()?;\n    Some(u16::from_be_bytes(array))\n}\n\nfn main() {\n    let packet = [0x01, 0x00, 0x02, 0x00];\n    println!("{:?} {:?} {:?}", field(&packet, 0), field(&packet, 2), field(&packet, 3));\n}',
-          [
-            'Some(1) Some(2) None',
-            'Some(256) Some(512) Some(0)',
-            'Some(256) Some(512) None',
-            'Some(256) None None',
-          ],
-          2,
+          'Some(256) Some(512) None',
           'Fields at 0 and 2 decode big-endian; a field at 3 would need a byte past the end, so get returns None.',
         ),
         choose(
@@ -6529,16 +6172,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Input from outside may be truncated, and the length check turns that into a normal result.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn read_u16_le(bytes: &[u8]) -> Option<u16> {\n    let array: [u8; 2] = bytes.try_into().ok()?;\n    Some(u16::from_le_bytes(array))\n}\n\nfn main() {\n    println!("{:?} {:?}", read_u16_le(&[0x10, 0x00]), read_u16_le(&[0x00, 0x10]));\n}',
-          [
-            'Some(4096) Some(16)',
-            'Some(16) Some(4096)',
-            'Some(16) Some(16)',
-            'Some(1) Some(256)',
-          ],
-          1,
+          'Some(16) Some(4096)',
           'In little-endian the first byte is the low byte: 0x0010 is 16 and 0x1000 is 4096.',
         ),
         choose(
@@ -6570,11 +6207,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The reserved space is there from the start, but len only grows with each push.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let v: Vec<u8> = Vec::with_capacity(8);\n    println!("{} {:?}", v.len(), v.get(0));\n}',
-          ['8 None', '0 Some(0)', '0 None', '8 Some(0)'],
-          2,
+          '0 None',
           'Reserved space is not an element, so there is nothing at index 0 yet.',
         ),
         choose(
@@ -6599,11 +6235,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The stored elements must fit in the allocation, which may have spare room.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let mut v = Vec::with_capacity(4);\n    v.push(1);\n    v.push(2);\n    v.push(3);\n    v.clear();\n    println!("{} {}", v.len(), v.capacity() >= 3);\n}',
-          ['3 true', '0 false', '0 true', '3 false'],
-          2,
+          '0 true',
           'clear removes the elements but keeps the allocation for reuse.',
         ),
       ],
@@ -6633,11 +6268,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Capacity is only a reservation; it saves reallocations without adding elements.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![1, 2, 3];\n    v.reserve(10);\n    println!("{} {}", v.len(), v.capacity() >= 13);\n}',
-          ['13 true', '3 false', '3 true', '10 true'],
-          2,
+          '3 true',
           'reserve counts additional elements beyond the current 3, and adds none itself.',
         ),
         choose(
@@ -6651,11 +6285,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'reserve is about room for future pushes, measured from the current length.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let mut v: Vec<u32> = Vec::with_capacity(3);\n    let before = v.as_ptr();\n    v.push(1);\n    v.push(2);\n    v.push(3);\n    println!("{} {}", v.len(), v.as_ptr() == before);\n}',
-          ['3 false', '3 true', '0 true', '4 false'],
-          1,
+          '3 true',
           'Three pushes fit the reserved capacity, so the buffer stays at the same address.',
         ),
       ],
@@ -6675,11 +6308,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Each integer is as large as its alignment requirement.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!(\n        "{} {}",\n        std::mem::size_of::<[u32; 5]>(),\n        std::mem::align_of::<[u32; 5]>()\n    );\n}',
-          ['20 4', '20 20', '5 4', '4 20'],
-          0,
+          '20 4',
           'Five u32 values take 20 bytes, but the array only needs the alignment of one u32.',
         ),
         choose(
@@ -6704,11 +6336,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Every field must end up aligned, so the struct takes the strictest requirement.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           '#[repr(C)]\nstruct Two {\n    a: u8,\n    b: u8,\n}\n\n#[repr(C)]\nstruct Mixed {\n    a: u8,\n    b: u16,\n}\n\nfn main() {\n    println!("{} {}", std::mem::size_of::<Two>(), std::mem::size_of::<Mixed>());\n}',
-          ['2 4', '2 3', '2 2', '4 4'],
-          0,
+          '2 4',
           'Two bytes need no padding. In Mixed, b must start at offset 2, so the struct is 4 bytes.',
         ),
       ],
@@ -6727,11 +6358,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Loose pads 3 bytes before b and 3 after c. Tight packs the two bytes after b and pads only 2 at the end.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[repr(C)]\nstruct First {\n    a: u8,\n    b: u64,\n}\n\n#[repr(C)]\nstruct Last {\n    b: u64,\n    a: u8,\n}\n\nfn main() {\n    println!("{} {}", std::mem::size_of::<First>(), std::mem::size_of::<Last>());\n}',
-          ['16 9', '9 9', '16 8', '16 16'],
-          3,
+          '16 16',
           'Either way the size rounds up to a multiple of 8, so moving the u8 to the end saves nothing here.',
         ),
         choose(
@@ -6745,11 +6375,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           '3 bytes of padding precede the u32, and 3 more follow the last u8.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           '#[repr(C)]\nstruct Loose {\n    a: u8,\n    b: u32,\n    c: u8,\n}\n\n#[repr(C)]\nstruct Tight {\n    b: u32,\n    a: u8,\n    c: u8,\n}\n\nfn main() {\n    println!(\n        "{} {}",\n        std::mem::size_of::<[Loose; 10]>(),\n        std::mem::size_of::<[Tight; 10]>()\n    );\n}',
-          ['120 80', '60 60', '120 120', '80 120'],
-          0,
+          '120 80',
           'An array repeats each struct’s padded size: 10 * 12 and 10 * 8.',
         ),
         choose(
@@ -6780,16 +6409,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '200 fits in a u8, but 260 does not.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a: u8 = 250;\n    println!("{:?} {:?}", a.checked_add(5), a.checked_add(6));\n}',
-          [
-            'Some(255) Some(0)',
-            'None None',
-            'Some(255) None',
-            'Some(256) None',
-          ],
-          2,
+          'Some(255) None',
           '255 is the largest u8, so 250 + 6 overflows.',
         ),
         choose(
@@ -6876,16 +6499,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'None cannot be confused with any real size.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn remaining(capacity: u32, used: u32) -> Option<u32> {\n    capacity.checked_sub(used)\n}\n\nfn main() {\n    println!("{:?} {:?} {:?}", remaining(10, 3), remaining(10, 10), remaining(3, 10));\n}',
-          [
-            'Some(7) None None',
-            'Some(7) Some(0) None',
-            'Some(7) Some(0) Some(7)',
-            '7 0 None',
-          ],
-          1,
+          'Some(7) Some(0) None',
           'Zero remaining is a valid answer; using more than the capacity would go below zero, which u32 cannot hold.',
         ),
       ],
@@ -6906,11 +6523,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each run of 1s shrinks to one 1, but the two runs are separated by 2, so both remain.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![5, 5, 5, 2, 5];\n    v.dedup();\n    println!("{:?}", v);\n}',
-          ['[5, 2]', '[2, 5]', '[5, 5, 2, 5]', '[5, 2, 5]'],
-          3,
+          '[5, 2, 5]',
           'The first three 5s form one run; the last 5 follows a 2, so it is kept.',
         ),
         choose(
@@ -6924,11 +6540,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'dedup compares each element only with its neighbour.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let mut v = vec!["a", "a", "b", "b", "a"];\n    v.dedup();\n    println!("{} {}", v.len(), v[2]);\n}',
-          ['3 a', '2 b', '3 b', '5 a'],
-          0,
+          '3 a',
           'The runs collapse to a, b, a; the last a is not next to the first.',
         ),
         choose(
@@ -6958,18 +6573,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Sorting gives [1, 1, 2, 3, 3], and dedup then collapses each run.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![4, 2, 4, 9, 2, 2];\n    v.sort();\n    v.dedup();\n    println!("{:?}", v);\n}',
-          ['[2, 4, 9]', '[4, 2, 4, 9, 2]', '[2, 2, 4, 4, 9]', '[9, 4, 2]'],
-          0,
+          '[2, 4, 9]',
           'After sorting, all equal values are adjacent, so each appears once.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let mut fruit = vec!["pear", "fig", "pear", "apple", "fig"];\n    fruit.sort();\n    fruit.dedup();\n    println!("{} {}", fruit.len(), fruit[0]);\n}',
-          ['3 pear', '5 apple', '3 apple', '4 apple'],
-          2,
+          '3 apple',
           'Three distinct words remain, sorted alphabetically with apple first.',
         ),
         choose(
@@ -6983,11 +6596,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Only sorting would bring the 2s together.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![1, 2, 1, 2];\n    v.dedup();\n    v.sort();\n    println!("{:?}", v);\n}',
-          ['[1, 2]', '[1, 1, 2, 2]', '[1, 2, 1, 2]', '[2, 1]'],
-          1,
+          '[1, 1, 2, 2]',
           'dedup found no adjacent duplicates, and the later sort only reorders.',
         ),
       ],
@@ -7008,11 +6620,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '4 first appears at index 1; 5 would go before 7 at index 3; nothing reaches 10, so the answer is the length.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn lower_bound(values: &[i32], target: i32) -> usize {\n    let mut i = 0;\n    while i < values.len() && values[i] < target {\n        i += 1;\n    }\n    i\n}\n\nfn main() {\n    let values = [1, 3, 3, 3, 8];\n    println!("{} {} {}", lower_bound(&values, 3), lower_bound(&values, 0), lower_bound(&values, 9));\n}',
-          ['3 0 5', '1 0 4', '1 0 5', '2 0 5'],
-          2,
+          '1 0 5',
           'The first 3 is at index 1, every value is at least 0, and no value reaches 9.',
         ),
         choose(
@@ -7032,11 +6643,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'No index qualifies, so the answer is the position just past the end.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn lower_bound(values: &[i32], target: i32) -> usize {\n    let mut i = 0;\n    while i < values.len() && values[i] < target {\n        i += 1;\n    }\n    i\n}\n\nfn main() {\n    let values = [2, 5, 5, 5, 8];\n    println!("{}", lower_bound(&values, 6) - lower_bound(&values, 5));\n}',
-          ['1', '4', '3', '2'],
-          2,
+          '3',
           'Between the first 5 (index 1) and the first value at least 6 (index 4) lie all the 5s.',
         ),
       ],
@@ -7055,11 +6665,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '7 at mid 3 is not below the target, so high moves to 3; then 3 and 5 are too small, so low climbs to 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn search(values: &[i32], target: i32) -> (usize, u32) {\n    let (mut low, mut high) = (0, values.len());\n    let mut steps = 0;\n    while low < high {\n        steps += 1;\n        let mid = low + (high - low) / 2;\n        if values[mid] < target {\n            low = mid + 1;\n        } else {\n            high = mid;\n        }\n    }\n    (low, steps)\n}\n\nfn main() {\n    let values = [0, 1, 2, 3, 4, 5, 6, 7];\n    let (index, steps) = search(&values, 5);\n    println!("{} {}", index, steps);\n}',
-          ['5 8', '5 3', '5 4', '4 3'],
-          1,
+          '5 3',
           'The interval shrinks from 8 to 3, then 1, then 0 elements: three steps for eight values.',
         ),
         choose(
@@ -7084,11 +6693,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The difference never exceeds the length, so the sum is never formed.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn lower_bound(values: &[i32], target: i32) -> usize {\n    let (mut low, mut high) = (0, values.len());\n    while low < high {\n        let mid = low + (high - low) / 2;\n        if values[mid] < target {\n            low = mid + 1;\n        } else {\n            high = mid;\n        }\n    }\n    low\n}\n\nfn main() {\n    let values = [5, 5, 5, 5];\n    println!("{} {}", lower_bound(&values, 5), lower_bound(&values, 6));\n}',
-          ['3 4', '0 4', '0 3', '2 4'],
-          1,
+          '0 4',
           'Equal values move high left, so the search lands on the first 5; nothing reaches 6.',
         ),
       ],
@@ -7109,11 +6717,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '1 + 9 matches at once. For 2 every sum is too large, so right walks down until the pointers meet.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn find_pair(values: &[i32], target: i32) -> Option<(usize, usize)> {\n    if values.len() < 2 {\n        return None;\n    }\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] + values[right];\n        if sum == target {\n            return Some((left, right));\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    None\n}\n\nfn main() {\n    println!("{:?}", find_pair(&[1, 2, 3, 5, 8], 7));\n}',
-          ['Some((0, 3))', 'Some((1, 3))', 'Some((2, 3))', 'None'],
-          1,
+          'Some((1, 3))',
           '1 + 8 is too big, 1 + 5 too small, then 2 + 5 matches at indexes 1 and 3.',
         ),
         choose(
@@ -7138,16 +6745,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'With left == right, the same element would be added to itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn find_pair(values: &[i32], target: i32) -> Option<(usize, usize)> {\n    if values.len() < 2 {\n        return None;\n    }\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] + values[right];\n        if sum == target {\n            return Some((left, right));\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    None\n}\n\nfn main() {\n    println!("{:?} {:?}", find_pair(&[2, 5, 9], 10), find_pair(&[2, 5, 9], 7));\n}',
-          [
-            'Some((1, 1)) Some((0, 1))',
-            'None Some((0, 1))',
-            'None None',
-            'Some((0, 2)) Some((0, 1))',
-          ],
-          1,
+          'None Some((0, 1))',
           '5 + 5 would need the same element twice, so 10 is not found; 2 + 5 makes 7.',
         ),
       ],
@@ -7166,11 +6767,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The large sum fits in i64. The unsorted slice contains 1 + 9 and 2 + 8, but the moves skip both.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn has_pair(values: &[i32], target: i64) -> bool {\n    if values.len() < 2 {\n        return false;\n    }\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] as i64 + values[right] as i64;\n        if sum == target {\n            return true;\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    false\n}\n\nfn main() {\n    println!("{} {}", has_pair(&[1, 9, 2, 8], 10), has_pair(&[1, 2, 8, 9], 10));\n}',
-          ['true true', 'false false', 'false true', 'true false'],
-          2,
+          'false true',
           'The same values succeed once sorted, because then each move follows the order.',
         ),
         choose(
@@ -7195,11 +6795,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Without order, a too-small sum no longer means the left value can be discarded.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn final_pointers(values: &[i32], target: i32) -> (usize, usize) {\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] + values[right];\n        if sum == target {\n            return (left, right);\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    (left, right)\n}\n\nfn main() {\n    let (left, right) = final_pointers(&[1, 4, 5, 11], 9);\n    println!("{} {}", left, right);\n}',
-          ['0 3', '2 2', '1 2', '1 3'],
-          2,
+          '1 2',
           '1 + 11 is too big, 1 + 5 too small, and 4 + 5 matches.',
         ),
       ],
@@ -7220,16 +6819,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Vertices 1 and 2 are one edge from 0 and come first; 3 is two edges away.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn bfs_order(graph: &[Vec<usize>], start: usize) -> Vec<usize> {\n    let mut seen = vec![false; graph.len()];\n    let mut order = Vec::new();\n    let mut queue = std::collections::VecDeque::new();\n    seen[start] = true;\n    queue.push_back(start);\n    while let Some(node) = queue.pop_front() {\n        order.push(node);\n        for &next in &graph[node] {\n            if !seen[next] {\n                seen[next] = true;\n                queue.push_back(next);\n            }\n        }\n    }\n    order\n}\n\nfn main() {\n    let graph = vec![vec![2, 1], vec![3], vec![4], vec![], vec![]];\n    println!("{:?}", bfs_order(&graph, 0));\n}',
-          [
-            '[0, 1, 2, 3, 4]',
-            '[0, 2, 4, 1, 3]',
-            '[0, 1, 3, 2, 4]',
-            '[0, 2, 1, 4, 3]',
-          ],
-          3,
+          '[0, 2, 1, 4, 3]',
           '0 queues 2 then 1. Both are processed before 4 and 3, which they queue in that order.',
         ),
         choose(
@@ -7243,16 +6836,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A stack would dive along one path first, which is depth-first search.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn bfs_order(graph: &[Vec<usize>], start: usize) -> Vec<usize> {\n    let mut seen = vec![false; graph.len()];\n    let mut order = Vec::new();\n    let mut queue = std::collections::VecDeque::new();\n    seen[start] = true;\n    queue.push_back(start);\n    while let Some(node) = queue.pop_front() {\n        order.push(node);\n        for &next in &graph[node] {\n            if !seen[next] {\n                seen[next] = true;\n                queue.push_back(next);\n            }\n        }\n    }\n    order\n}\n\nfn main() {\n    let graph = vec![vec![1], vec![2], vec![0, 3], vec![]];\n    println!("{:?}", bfs_order(&graph, 0));\n}',
-          [
-            '[0, 1, 2, 3]',
-            '[0, 1, 2, 0, 3]',
-            '[0, 1, 2]',
-            '[0, 1, 2, 0, 1, 2, 3]',
-          ],
-          0,
+          '[0, 1, 2, 3]',
           'The edge from 2 back to 0 is ignored because 0 is already marked, so the cycle is not repeated.',
         ),
         choose(
@@ -7282,11 +6869,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Vertex 3 is a neighbour of both 1 and 2, but it already has a distance when 2 is processed, so it is queued once.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version counts queue insertions. What does it print?',
           'fn enqueued(graph: &[Vec<usize>], start: usize) -> usize {\n    let mut dist = vec![None; graph.len()];\n    let mut queue = std::collections::VecDeque::new();\n    let mut pushes = 1;\n    dist[start] = Some(0);\n    queue.push_back(start);\n    while let Some(node) = queue.pop_front() {\n        for &next in &graph[node] {\n            if dist[next].is_none() {\n                dist[next] = Some(dist[node].unwrap() + 1);\n                queue.push_back(next);\n                pushes += 1;\n            }\n        }\n    }\n    pushes\n}\n\nfn main() {\n    let graph = vec![vec![1, 2], vec![3], vec![3], vec![]];\n    println!("{}", enqueued(&graph, 0));\n}',
-          ['4', '5', '3', '6'],
-          0,
+          '4',
           'Each of the four vertices enters the queue exactly once, including 3, which two vertices point to.',
         ),
         choose(
@@ -7341,16 +6927,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'peek shows 9 without removing it; two pops then remove 9 and 7, leaving two elements.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut heap = std::collections::BinaryHeap::new();\n    heap.push(3);\n    heap.push(8);\n    heap.push(5);\n    let a = heap.pop();\n    let b = heap.pop();\n    heap.push(6);\n    println!("{:?} {:?} {:?}", a, b, heap.peek());\n}',
-          [
-            'Some(3) Some(5) Some(6)',
-            'Some(8) Some(5) Some(3)',
-            'Some(8) Some(6) Some(5)',
-            'Some(8) Some(5) Some(6)',
-          ],
-          3,
+          'Some(8) Some(5) Some(6)',
           'After 8 and 5 are popped, 3 remains; pushing 6 puts a larger value on top.',
         ),
         choose(
@@ -7364,11 +6944,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'BinaryHeap is a max-heap: the top is always the greatest element.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let mut heap = std::collections::BinaryHeap::new();\n    for n in [5, 1, 4] {\n        heap.push(n);\n    }\n    println!("{:?}", heap.into_sorted_vec());\n}',
-          ['[1, 4, 5]', '[5, 4, 1]', '[5, 1, 4]', '[4, 5, 1]'],
-          0,
+          '[1, 4, 5]',
           'into_sorted_vec returns the elements in ascending order, whatever order they were pushed in.',
         ),
         choose(
@@ -7398,11 +6977,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Whenever a fourth value arrives, the smallest of the four is popped; 5, 7, and 9 survive and are sorted for printing.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut heap = std::collections::BinaryHeap::new();\n    for n in [4, 9, 1, 7] {\n        heap.push(std::cmp::Reverse(n));\n    }\n    heap.pop();\n    println!("{:?} {}", heap.peek().map(|r| r.0), heap.len());\n}',
-          ['Some(4) 3', 'Some(7) 3', 'Some(1) 3', 'Some(4) 4'],
-          0,
+          'Some(4) 3',
           'With Reverse, pop removes the smallest value, 1, leaving 4 on top.',
         ),
         choose(
@@ -7416,11 +6994,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The heap’s top is its smallest member, which is the one that no longer belongs among the k largest.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn top_k(values: &[i32], k: usize) -> Vec<i32> {\n    let mut heap = std::collections::BinaryHeap::new();\n    for &n in values {\n        heap.push(std::cmp::Reverse(n));\n        if heap.len() > k {\n            heap.pop();\n        }\n    }\n    let mut result: Vec<i32> = heap.into_iter().map(|r| r.0).collect();\n    result.sort();\n    result\n}\n\nfn main() {\n    println!("{:?} {:?}", top_k(&[3, 3, 1, 3], 2), top_k(&[2, 8], 5));\n}',
-          ['[1, 3] [2, 8]', '[3] [2, 8]', '[3, 3] [8]', '[3, 3] [2, 8]'],
-          3,
+          '[3, 3] [2, 8]',
           'Duplicates are kept like any other values, and with fewer than k values nothing is evicted.',
         ),
         choose(
@@ -7452,16 +7029,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '[0, 3] is 3 in big-endian, and [1, 0] is 256. Only the two header bytes are read.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn declared_length(bytes: &[u8]) -> Option<usize> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    Some(u16::from_be_bytes(header) as usize)\n}\n\nfn main() {\n    println!("{:?} {:?}", declared_length(&[0x01, 0x02]), declared_length(&[0, 0]));\n}',
-          [
-            'Some(513) Some(0)',
-            'Some(258) None',
-            'Some(3) Some(0)',
-            'Some(258) Some(0)',
-          ],
-          3,
+          'Some(258) Some(0)',
           '0x0102 is 258. A zero length is a valid header that announces an empty payload.',
         ),
         choose(
@@ -7486,11 +7057,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'With fewer than two bytes, there is no length to read, and guessing would be wrong.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn declared_length(bytes: &[u8]) -> Option<usize> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    Some(u16::from_be_bytes(header) as usize)\n}\n\nfn main() {\n    println!("{:?} {:?}", declared_length(&[7]), declared_length(&[]));\n}',
-          ['Some(7) None', 'Some(1792) None', 'Some(7) Some(0)', 'None None'],
-          3,
+          'None None',
           'Neither buffer has two bytes, so get(..2) returns None before anything is decoded.',
         ),
       ],
@@ -7543,16 +7113,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Without the length, the parser cannot tell where this frame ends.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn status(bytes: &[u8]) -> &\'static str {\n    let header: [u8; 2] = match bytes.get(..2) {\n        Some(h) => [h[0], h[1]],\n        None => return "short header",\n    };\n    let length = u16::from_be_bytes(header) as usize;\n    if bytes.len() - 2 >= length {\n        "complete"\n    } else {\n        "incomplete"\n    }\n}\n\nfn main() {\n    println!("{} / {}", status(&[0, 1, 9, 9]), status(&[1, 0, 5]));\n}',
-          [
-            'complete / incomplete',
-            'incomplete / incomplete',
-            'complete / complete',
-            'short header / incomplete',
-          ],
-          0,
+          'complete / incomplete',
           'The first frame needs one byte and has two; the second announces 256 bytes and has one.',
         ),
       ],
@@ -7573,16 +7137,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first frame’s two payload bytes are present; the second announces four but has two.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn frame_payload(bytes: &[u8]) -> Option<&[u8]> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    let length = u16::from_be_bytes(header) as usize;\n    bytes.get(2..2 + length)\n}\n\nfn main() {\n    println!("{:?} {:?}", frame_payload(&[0, 0, 5]), frame_payload(&[0, 1, 5, 6]));\n}',
-          [
-            'Some([]) Some([5])',
-            'None Some([5])',
-            'Some([5]) Some([5, 6])',
-            'Some([0]) Some([5])',
-          ],
-          0,
+          'Some([]) Some([5])',
           'A zero length gives an empty payload, and extra bytes after the payload are not part of it.',
         ),
         choose(
@@ -7607,11 +7165,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Malformed input should produce a normal result, not crash the parser.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn frame_payload(bytes: &[u8]) -> Option<&[u8]> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    let length = u16::from_be_bytes(header) as usize;\n    bytes.get(2..2 + length)\n}\n\nfn main() {\n    println!(\n        "{:?} {:?}",\n        frame_payload(&[0, 3, 1, 2, 3, 4]).map(|p| p.len()),\n        frame_payload(&[0, 3, 1, 2]).map(|p| p.len())\n    );\n}',
-          ['Some(3) None', 'Some(4) None', 'Some(3) Some(2)', 'Some(5) None'],
-          0,
+          'Some(3) None',
           'The first payload is exactly the 3 announced bytes; the second buffer is one byte short.',
         ),
       ],
@@ -7641,16 +7198,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A wrapped end could select the wrong bytes without any error.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn payload_at(bytes: &[u8], offset: usize) -> Option<&[u8]> {\n    let start = offset.checked_add(2)?;\n    let header: [u8; 2] = bytes.get(offset..start)?.try_into().ok()?;\n    let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n    bytes.get(start..end)\n}\n\nfn main() {\n    let buffer = [0, 1, 42, 0, 2, 7, 8];\n    println!("{:?} {:?}", payload_at(&buffer, 3), payload_at(&buffer, 1));\n}',
-          [
-            'Some([7, 8]) None',
-            'Some([7, 8]) Some([42])',
-            'None None',
-            'Some([0, 2]) None',
-          ],
-          0,
+          'Some([7, 8]) None',
           'Offset 1 is not a frame boundary: it reads [1, 42] as a length of 298, which the buffer cannot hold.',
         ),
         choose(
@@ -7664,16 +7215,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The danger comes from the sum, and the offset is also input-dependent.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn payload_at(bytes: &[u8], offset: usize) -> Option<&[u8]> {\n    let start = offset.checked_add(2)?;\n    let header: [u8; 2] = bytes.get(offset..start)?.try_into().ok()?;\n    let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n    bytes.get(start..end)\n}\n\nfn main() {\n    let buffer = [0, 2, 5, 6, 0, 1, 9];\n    println!("{:?} {:?}", payload_at(&buffer, 0), payload_at(&buffer, 4));\n}',
-          [
-            'Some([5, 6]) None',
-            'Some([5]) Some([9])',
-            'Some([2, 5]) Some([1, 9])',
-            'Some([5, 6]) Some([9])',
-          ],
-          3,
+          'Some([5, 6]) Some([9])',
           'The first frame ends at index 4, which is where the second header begins.',
         ),
       ],
@@ -7717,16 +7262,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Reserving does not add bytes; it only avoids growing the Vec in steps.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn encode_frame(payload: &[u8]) -> Option<Vec<u8>> {\n    let length = u16::try_from(payload.len()).ok()?;\n    let mut output = Vec::with_capacity(2 + payload.len());\n    output.extend_from_slice(&length.to_be_bytes());\n    output.extend_from_slice(payload);\n    Some(output)\n}\n\nfn main() {\n    let frame = encode_frame(&[0; 300]);\n    println!("{:?}", frame.map(|f| (f[0], f[1], f.len())));\n}',
-          [
-            'Some((44, 1, 302))',
-            'Some((1, 44, 300))',
-            'Some((0, 300, 302))',
-            'Some((1, 44, 302))',
-          ],
-          3,
+          'Some((1, 44, 302))',
           '300 is 0x012C, so the header is [1, 44], and the frame is 2 bytes longer than the payload.',
         ),
         choose(
@@ -7756,16 +7295,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'try_from refuses the value that does not fit, while as silently wraps it to 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn encode_frame(payload: &[u8]) -> Option<Vec<u8>> {\n    let length = u16::try_from(payload.len()).ok()?;\n    let mut output = Vec::with_capacity(2 + payload.len());\n    output.extend_from_slice(&length.to_be_bytes());\n    output.extend_from_slice(payload);\n    Some(output)\n}\n\nfn main() {\n    let large = vec![1u8; 70000];\n    let largest = vec![1u8; 65535];\n    println!("{} {:?}", encode_frame(&large).is_none(), encode_frame(&largest).map(|f| f.len()));\n}',
-          [
-            'false Some(65537)',
-            'true Some(65535)',
-            'true None',
-            'true Some(65537)',
-          ],
-          3,
+          'true Some(65537)',
           '70,000 bytes cannot be described by a u16; 65,535 can, plus two header bytes.',
         ),
         choose(
@@ -7790,16 +7323,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A wrong length corrupts every frame after it, while None reports the problem at its source.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    println!(\n        "{} {:?} {:?}",\n        u16::try_from(70000usize).is_err(),\n        u8::try_from(255u32).ok(),\n        u8::try_from(256u32).ok()\n    );\n}',
-          [
-            'false Some(255) None',
-            'true Some(255) Some(0)',
-            'true None None',
-            'true Some(255) None',
-          ],
-          3,
+          'true Some(255) None',
           '255 is the largest u8, so 256 does not fit; 70,000 does not fit in a u16.',
         ),
       ],
@@ -7820,11 +7347,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first frame ends at index 3, where the second header starts; the second frame ends exactly at the buffer’s end.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}\n\nfn main() {\n    println!("{:?}", decode_frames(&[0, 0, 0, 1, 9]));\n}',
-          ['Some([[9]])', 'Some([[0], [9]])', 'Some([[], [9]])', 'None'],
-          2,
+          'Some([[], [9]])',
           'An empty frame is still a frame: its header is followed directly by the next header.',
         ),
         choose(
@@ -7838,11 +7364,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Frames are packed with nothing between them.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}\n\nfn main() {\n    let stream = [0, 2, 1, 1, 0, 2, 2, 2, 0, 0];\n    println!("{:?}", decode_frames(&stream).map(|frames| frames.len()));\n}',
-          ['Some(2)', 'Some(3)', 'Some(10)', 'Some(4)'],
-          1,
+          'Some(3)',
           'Two 2-byte frames take 8 bytes, and the final [0, 0] is an empty third frame.',
         ),
         choose(
@@ -7872,16 +7397,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first stream’s second frame announces 3 bytes but has 1; the second stream ends inside a header.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}\n\nfn main() {\n    println!("{:?} {:?}", decode_frames(&[]), decode_frames(&[0, 2, 1]));\n}',
-          [
-            'None None',
-            'Some([]) None',
-            'Some([]) Some([[1]])',
-            'Some([[]]) None',
-          ],
-          1,
+          'Some([]) None',
           'An empty stream contains zero frames; the second announces 2 bytes and has only 1.',
         ),
         choose(
@@ -7895,11 +7414,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The caller cannot tell that data was lost.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}\n\nfn main() {\n    println!(\n        "{} {:?}",\n        decode_frames(&[0, 1, 7, 0]).is_none(),\n        decode_frames(&[0, 1, 7]).map(|frames| frames.len())\n    );\n}',
-          ['false Some(1)', 'true None', 'true Some(1)', 'false Some(2)'],
-          2,
+          'true Some(1)',
           'A single stray byte after a frame is half a header, so that stream is rejected; the other ends cleanly.',
         ),
         choose(

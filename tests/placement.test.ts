@@ -36,6 +36,7 @@ import {
 } from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
 import { masterSkill } from './helpers/mastery';
+import { rightAnswer, wrongAnswer } from './helpers/answers';
 
 const NOW = Date.parse('2026-10-01T16:00:00Z');
 const COURSE = 'python-foundations';
@@ -67,8 +68,8 @@ function take(
     if (!diagnostic) break;
     const { question } = diagnosticQuestion(diagnostic.current!)!;
     const answer = known.has(diagnostic.current!.skillId)
-      ? question.answer
-      : (question.answer + 1) % question.choices.length;
+      ? rightAnswer(question)
+      : wrongAnswer(question);
     result = answerDiagnostic(
       result,
       diagnostic.id,
@@ -86,14 +87,14 @@ describe('inference through the graph', () => {
     const question = diagnosticQuestion({
       skillId: skill.id,
       questionId: skill.knowledgePoints![0].questions.find(
-        (q) => q.type === 'choice',
+        (q) => q.type !== 'code',
       )!.id,
     })!.question;
     return {
       skillId: skill.id,
       questionId: question.id,
       presentation: 0,
-      answer: correct ? question.answer : (question.answer + 1) % 4,
+      answer: correct ? rightAnswer(question) : wrongAnswer(question),
       correct,
       at: NOW,
       ...(elapsedMs !== undefined ? { elapsedMs } : {}),
@@ -162,7 +163,8 @@ describe('question selection and stopping', () => {
       ),
     ).toBe(true);
     expect(first.skillId).not.toBe('print-output');
-    expect(diagnosticQuestion(first)?.question.type).toBe('choice');
+    // Chosen or typed: the test has no code editor.
+    expect(diagnosticQuestion(first)?.question.type).not.toBe('code');
   });
 
   it('never repeats a question and asks a skill at most twice', () => {

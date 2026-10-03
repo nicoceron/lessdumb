@@ -20,6 +20,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { ChoiceText, InlineText } from './inline-text';
+import { TypedAnswerInput, TypedAnswerResult } from './typed-answer';
 import type {
   CodeLanguage,
   KnowledgePoint,
@@ -54,6 +55,7 @@ import {
   type LessonStep,
 } from '../lib/lesson-plan';
 import { choiceLetter, choiceOrder } from '../lib/choice-order';
+import { gradeTyped, isTyped } from '../lib/typed-answer';
 import { type PythonResult } from '../lib/python';
 import { runCode } from '../lib/code-runner';
 import {
@@ -114,6 +116,10 @@ interface Entry {
   presentation: number;
   /** The authored index of the selected choice, whatever position it shows at. */
   selected: number | null;
+  /** What the learner typed, for a numeric or text question. */
+  response: string;
+  /** Why the typed response could not be graded; it is not a miss. */
+  invalid: string | null;
   code: string;
   output: PythonResult | null;
   feedback: { correct: boolean; attemptId: string } | null;
@@ -138,6 +144,7 @@ const END_ID = 'lesson-end';
 const stepDomId = (stepId: string) => `step-${stepId}`;
 const stepTitleId = (stepId: string) => `step-${stepId}-title`;
 const promptId = (key: string) => `prompt-${key}`;
+const continueId = (key: string) => `continue-${key}`;
 
 /** How often a question has been answered; it seeds a fresh choice order. */
 function presentationOf(progress: Progress, questionId: string) {
@@ -183,6 +190,8 @@ function buildEntry(
     number: answers ? answers.correct.length + answers.incorrect + 1 : 1,
     presentation: presentationOf(progress, question.id),
     selected: null,
+    response: '',
+    invalid: null,
     code:
       question.type === 'code'
         ? keepCode
@@ -472,6 +481,7 @@ function LessonPage({
       correct,
       mode: current.mode,
       attemptId,
+      ...(isTyped(question) ? { response: current.response } : {}),
     };
     update((s) =>
       live.current && isUnlocked(s.progress, input.skillId)
@@ -480,6 +490,18 @@ function LessonPage({
     );
     setSessionAttemptIds((ids) => [...ids, attemptId]);
     patchCurrent(current.key, { ...patch, feedback: { correct, attemptId } });
+  }
+  /** Grade a typed answer; one that is not a number asks again instead. */
+  function submitTyped() {
+    if (!current || !question || !isTyped(question) || current.feedback) return;
+    const grade = gradeTyped(question, current.response);
+    if (grade.status === 'invalid') {
+      patchCurrent(current.key, { invalid: grade.message });
+      return;
+    }
+    // The field is replaced by the result: keep keyboard focus on Continue.
+    pendingFocus.current = { id: continueId(current.key), block: 'nearest' };
+    record(grade.status === 'correct', { invalid: null });
   }
   async function checkCode() {
     if (!current || !question || question.type !== 'code' || activeRun.current)
@@ -701,9 +723,14 @@ function LessonPage({
           attempt?.outcome !== 'lesson-failed'
         }
         onSelect={(index) => patchCurrent(entry.key, { selected: index })}
+        onResponse={(response) =>
+          patchCurrent(entry.key, { response, invalid: null })
+        }
         onCode={(code) => patchCurrent(entry.key, { code })}
         onSubmit={() =>
-          item.type === 'choice' && record(entry.selected === item.answer)
+          item.type === 'choice'
+            ? record(entry.selected === item.answer)
+            : submitTyped()
         }
         onRun={checkCode}
         onContinue={next}
@@ -1111,6 +1138,7 @@ function QuestionCard({
   xp,
   canContinue,
   onSelect,
+  onResponse,
   onCode,
   onSubmit,
   onRun,
@@ -1129,13 +1157,14 @@ function QuestionCard({
   xp: number;
   canContinue: boolean;
   onSelect: (index: number) => void;
+  onResponse: (response: string) => void;
   onCode: (code: string) => void;
   onSubmit: () => void;
   onRun: () => void;
   onContinue: () => void;
   after?: ReactNode;
 }) {
-  const { feedback, selected, code, output } = entry;
+  const { feedback, selected, response, code, output } = entry;
   const answered = !!feedback;
   const order =
     question.type === 'choice' ? choiceOrder(question, entry.presentation) : [];
@@ -1173,7 +1202,7 @@ function QuestionCard({
       <h3 id={promptId(entry.key)} className="question-prompt" tabIndex={-1}>
         <InlineText text={question.prompt} />
       </h3>
-      {question.type === 'choice' && question.code && (
+      {question.type !== 'code' && question.code && (
         <CodeBlock
           code={question.code}
           language={courseLanguage}
@@ -1181,7 +1210,24 @@ function QuestionCard({
           className="mb-5"
         />
       )}
-      {question.type === 'choice' ? (
+      {isTyped(question) ? (
+        answered ? (
+          <TypedAnswerResult
+            question={question}
+            response={response}
+            correct={feedback.correct}
+          />
+        ) : (
+          <TypedAnswerInput
+            question={question}
+            value={response}
+            error={entry.invalid}
+            disabled={!live}
+            onChange={onResponse}
+            onSubmit={onSubmit}
+          />
+        )
+      ) : question.type === 'choice' ? (
         <div className="answer-options" role="group" aria-label="Choices">
           {order.map((index, position) => {
             const chosen = selected === index;
@@ -1343,11 +1389,15 @@ function QuestionCard({
       {live && (!answered || canContinue) && (
         <div className="question-actions">
           {answered ? (
-            <Btn onClick={onContinue}>
+            <Btn id={continueId(entry.key)} onClick={onContinue}>
               Continue <ArrowRight size={18} />
             </Btn>
           ) : question.type === 'choice' ? (
             <Btn onClick={onSubmit} disabled={selected === null}>
+              Submit
+            </Btn>
+          ) : isTyped(question) ? (
+            <Btn onClick={onSubmit} disabled={!response.trim()}>
               Submit
             </Btn>
           ) : (

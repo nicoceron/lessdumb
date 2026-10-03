@@ -1,28 +1,36 @@
 import { describe, expect, it } from 'vitest';
-import { courses, skills, type ChoiceQuestion } from '../src/lib/curriculum';
+import {
+  courses,
+  skills,
+  type ChoiceQuestion,
+  type TypedQuestion,
+} from '../src/lib/curriculum';
 import { parseMathText } from '../src/lib/math-text';
 
 // Knowledge-point questions are checked for giveaways a learner could exploit
 // without knowing the idea. The executed-output tests in
 // knowledge-points.test.ts cannot see these: they prove an output key right,
-// not that its choices are fair.
+// not that its choices are fair. Choice checks apply to the questions that
+// still have choices; prompt checks apply to typed questions too.
 
-interface Item {
+interface Asked<Q> {
   courseId: string;
   skillId: string;
-  question: ChoiceQuestion;
+  question: Q;
 }
+type Item = Asked<ChoiceQuestion>;
 
-const items: Item[] = skills.flatMap((skill) =>
+const asked: Asked<ChoiceQuestion | TypedQuestion>[] = skills.flatMap((skill) =>
   (skill.knowledgePoints ?? []).flatMap((point) =>
-    point.questions
-      .filter((question) => question.type === 'choice')
-      .map((question) => ({
-        courseId: skill.courseId,
-        skillId: skill.id,
-        question,
-      })),
+    point.questions.flatMap((question) =>
+      question.type === 'code'
+        ? []
+        : [{ courseId: skill.courseId, skillId: skill.id, question }],
+    ),
   ),
+);
+const items: Item[] = asked.filter(
+  (item): item is Item => item.question.type === 'choice',
 );
 
 /** TeX source of a math span, measured roughly as KaTeX displays it. */
@@ -189,7 +197,7 @@ describe('knowledge point question quality', () => {
   it('never repeats a prompt and its code within one skill', () => {
     const seen = new Map<string, string>();
     const repeated: string[] = [];
-    for (const { skillId, question } of items) {
+    for (const { skillId, question } of asked) {
       const key = [
         skillId,
         collapse(question.prompt.toLowerCase()),
@@ -236,7 +244,7 @@ describe('knowledge point question quality', () => {
   ];
 
   it('never relies on the worked example or another question, which reviews do not show', () => {
-    const flagged = items
+    const flagged = asked
       .filter(({ question }) =>
         ELSEWHERE.some((pattern) => pattern.test(question.prompt)),
       )

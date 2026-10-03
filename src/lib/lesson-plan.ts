@@ -7,7 +7,7 @@ import type {
   Skill,
   SkillOutline,
 } from './curriculum';
-import { assessmentPolicy } from './catalog-outline';
+import { assessmentPolicy, assessmentType } from './catalog-outline';
 
 // A knowledge-point lesson is a fixed sequence of steps: each point in order,
 // then the skill's code exercise when its policy requires code. Skills without
@@ -173,7 +173,9 @@ export function hasLessonEvidence(
     steps.some(
       (step) =>
         evidence.includes(step.id) &&
-        step.questions.some((question) => question.type === type),
+        step.questions.some(
+          (question) => assessmentType(question.type) === type,
+        ),
     ),
   );
 }
@@ -211,7 +213,10 @@ export function reviewCycleComplete(
     return (
       reviewQuestionIds.length >= requirement.answers &&
       requirement.types.every((type) =>
-        reviewQuestionIds.some((id) => questions.get(id)?.type === type),
+        reviewQuestionIds.some((id) => {
+          const question = questions.get(id);
+          return !!question && assessmentType(question.type) === type;
+        }),
       )
     );
   const pointIds = new Set(points.map((point) => point.id));

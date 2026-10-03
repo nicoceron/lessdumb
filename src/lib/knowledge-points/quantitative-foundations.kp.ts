@@ -1,5 +1,11 @@
 import type { LessonExample } from '../curriculum';
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeNumber,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 /** A worked calculation shown step by step, without running code. */
 const worked = (
@@ -28,30 +34,26 @@ export const knowledgePoints: KnowledgePointModule = {
           'The total is 20 and there are 4 values, so the mean is $20 / 4 = 5.0$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [3, 9, 6]\ntotal = 0\nfor value in values:\n    total += value\nprint(total / len(values))',
-          ['6.0', '18', '6', '9.0'],
-          0,
+          '6.0',
           'The total 18 divided by the count 3 is 6.0; / always gives a float.',
         ),
-        choose(
+        typeNumber(
           'What is the mean of 10, 20, 20, and 50?',
-          ['20', '33.3', '25', '100'],
-          2,
+          25,
           'The sum is 100 and the count is 4, so the mean is 25.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'scores = [7, 5, 9, 3]\ntotal = 0\nfor score in scores:\n    total += score\nprint(total / len(scores))',
-          ['24', '6.5', '6.0', '4.0'],
-          2,
+          '6.0',
           'The scores sum to 24, and $24 / 4 = 6.0$.',
         ),
-        choose(
+        typeNumber(
           'Five observations have mean 12. What is their sum?',
-          ['12', '60', '17', '2.4'],
-          1,
+          60,
           '$\\text{mean} = \\text{sum} / \\text{count}$, so $\\text{sum} = 12 \\times 5 = 60$.',
         ),
       ],
@@ -67,23 +69,20 @@ export const knowledgePoints: KnowledgePointModule = {
         'One unusual trip more than doubles the mean, which is now larger than every ordinary trip.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'Four values have mean 10. A fifth value, 10, is added. What is the new mean?',
-          ['12.5', '10', '8', '50'],
-          1,
+          10,
           'The new sum is 50 over 5 values, so a value equal to the mean leaves it at 10.',
         ),
-        choose(
+        typeNumber(
           'The mean of 2, 3, and 4 is 3. Which added value makes the new mean 6?',
-          ['6', '9', '12', '15'],
-          3,
+          15,
           'Four values with mean 6 must sum to 24, and $24 - 9 = 15$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [1, 2, 3, 100]\ntotal = 0\nfor value in values:\n    total += value\nprint(total / len(values))',
-          ['26.5', '2.5', '106', '26'],
-          0,
+          '26.5',
           'The 100 dominates the total of 106, and $106 / 4 = 26.5$.',
         ),
         choose(
@@ -116,10 +115,9 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           '$(100 \\times 20 + 300 \\times 40) / 400 = 14{,}000 / 400 = \\$35$.',
         ),
-        choose(
+        typeNumber(
           'Homework scores 80 with weight 0.3 and the exam scores 90 with weight 0.7. What is the weighted mean?',
-          ['87', '85', '83', '170'],
-          0,
+          87,
           '$80 \\times 0.3 + 90 \\times 0.7 = 24 + 63 = 87$; the weights already sum to 1.',
         ),
         choose(
@@ -133,10 +131,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Each group mean should count once per student, so the larger group needs more weight.',
         ),
-        choose(
+        typeNumber(
           'Values 2 and 8 have weights 3 and 1. What is the weighted mean?',
-          ['5', '3.5', '14', '4.67'],
-          1,
+          3.5,
           '$(2 \\times 3 + 8 \\times 1) / (3 + 1) = 14 / 4 = 3.5$.',
         ),
       ],
@@ -155,11 +152,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The deviations −3, −1, 1, and 3 cancel, but their squares sum to 20, and $20 / 4 = 5.0$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [3, 5, 7]\nmean = 5\nprint([x - mean for x in values])',
-          ['[-2, 0, 2]', '[2, 0, 2]', '[4, 0, 4]', '[0, 0, 0]'],
-          0,
+          '[-2, 0, 2]',
           'Each deviation keeps its sign: $3 - 5 = -2$, $5 - 5 = 0$, $7 - 5 = 2$.',
         ),
         choose(
@@ -173,17 +169,15 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Positive and negative deviations cancel exactly, whatever the spread.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [2, 6, 4, 8]\nmean = 5\nsquares = [(x - mean) ** 2 for x in values]\ntotal = 0\nfor square in squares:\n    total += square\nprint(total / len(values))',
-          ['0.0', '20', '5.0', '2.0'],
-          2,
+          '5.0',
           'The squared deviations 9, 1, 1, 9 sum to 20, and $20 / 4 = 5.0$.',
         ),
-        choose(
+        typeNumber(
           'What is the population variance of 10, 10, 14, and 14?',
-          ['2', '4', '16', '0'],
-          1,
+          4,
           'The mean is 12, every squared deviation is 4, and their mean is 4.',
         ),
       ],
@@ -206,11 +200,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The standard deviation is $\\sqrt{16} = 4$, in the original unit, centimeters.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(49 ** 0.5)',
-          ['24.5', '7', '7.0', '2401'],
-          2,
+          '7.0',
           'Raising to the power 0.5 takes a square root, and the result is a float.',
         ),
         choose(
@@ -243,10 +236,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'Both start from the same sum of squared deviations; only the divisor changes.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'Squared deviations sum to 30 across 6 sampled observations. What is the sample variance, using $n - 1$?',
-          ['5', '6', '30', '7.5'],
-          1,
+          6,
           '$30 / (6 - 1) = 6$.',
         ),
         choose(
@@ -298,16 +290,14 @@ export const knowledgePoints: KnowledgePointModule = {
         'With 5 values, position $(5 + 1) / 2 = 3$ holds the middle value 5. The middle of the unsorted list, 9, is not the median.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'What is the median of 8, 3, 6, 1, 4?',
-          ['6', '4', '4.4', '3'],
-          1,
+          4,
           'Sorted, the values are 1, 3, 4, 6, 8, so the middle value is 4.',
         ),
-        choose(
+        typeNumber(
           'What is the median of 15, 11, and 30?',
-          ['11', '18.67', '15', '30'],
-          2,
+          15,
           'Sorted, the values are 11, 15, 30, and the middle one is 15.',
         ),
         choose(
@@ -316,10 +306,9 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           '$(7 + 1) / 2 = 4$, leaving three values on each side.',
         ),
-        choose(
+        typeNumber(
           'What is the median of −2, 5, 0, −7, 3?',
-          ['-7', '3', '-0.2', '0'],
-          3,
+          0,
           'Sorted, the values are −7, −2, 0, 3, 5, so the middle value is 0.',
         ),
       ],
@@ -335,16 +324,14 @@ export const knowledgePoints: KnowledgePointModule = {
         'Positions 3 and 4 hold 5 and 8, and their mean is 6.5, a value that does not appear in the data.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'What is the median of 4, 1, 7, 2?',
-          ['3', '4', '3.5', '2'],
-          0,
+          3,
           'Sorted, the values are 1, 2, 4, 7; the middle pair 2 and 4 averages to 3.',
         ),
-        choose(
+        typeNumber(
           'What is the median of 30, 10, 90, 25, 40, 50?',
-          ['57.5', '35', '40.83', '30'],
-          1,
+          35,
           'Sorted: 10, 25, 30, 40, 50, 90. The middle pair 30 and 40 averages to 35.',
         ),
         choose(
@@ -353,10 +340,9 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           '$n / 2 = 4$ and $n / 2 + 1 = 5$.',
         ),
-        choose(
+        typeNumber(
           'What is the median of 1, 2, 2, 9?',
-          ['3.5', '5.5', '2.5', '2'],
-          3,
+          2,
           'The middle pair is 2 and 2, whose mean is 2.',
         ),
       ],
@@ -468,28 +454,24 @@ export const knowledgePoints: KnowledgePointModule = {
         'Position 1.2 lies a fifth of the way from position 1, holding 20, to position 2, holding 30.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'Sorted values are 4, 8, 15, 16, 23, 42. What is the 50th percentile by the position rule?',
-          ['15', '15.5', '16', '18'],
-          1,
+          15.5,
           'The position $0.5 \\times 5 = 2.5$ lies halfway between 15 and 16.',
         ),
-        choose(
+        typeNumber(
           'Sorted values are 2, 4, 6, 8, 10. What is the 75th percentile?',
-          ['7.5', '9', '8', '6'],
-          2,
+          8,
           'The position $0.75 \\times 4 = 3$ is a whole number, and position 3 holds 8.',
         ),
-        choose(
+        typeNumber(
           'Sorted values are 1, 5, 9. What is the 25th percentile?',
-          ['5', '1', '2', '3'],
           3,
           'The position $0.25 \\times 2 = 0.5$ lies halfway from 1 to 5, giving 3.',
         ),
-        choose(
+        typeNumber(
           'Sorted values are 100, 200, 300, 400, 500. What is the 90th percentile?',
-          ['460', '450', '500', '360'],
-          0,
+          460,
           'The position $0.9 \\times 4 = 3.6$ lies 60% of the way from 400 to 500.',
         ),
       ],
@@ -505,10 +487,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'The extreme 60 inflates the range but leaves the middle half untouched.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$Q_1 = 12$ and $Q_3 = 30$. What is the IQR?',
-          ['42', '21', '18', '9'],
-          2,
+          18,
           '$\\text{IQR} = Q_3 - Q_1 = 30 - 12 = 18$.',
         ),
         choose(
@@ -542,10 +523,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'The fences extend one and a half IQRs beyond the quartiles in each direction.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$Q_1 = 40$ and $Q_3 = 60$. What is the upper fence?',
-          ['80', '90', '75', '120'],
-          1,
+          90,
           '$\\text{IQR} = 20$, so the fence is $60 + 1.5 \\times 20 = 90$.',
         ),
         choose(
@@ -565,10 +545,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The rule flags values for investigation; it does not prove they are errors.',
         ),
-        choose(
+        typeNumber(
           '$Q_1 = 100$ and $Q_3 = 140$. What is the lower fence?',
-          ['40', '60', '20', '100'],
-          0,
+          40,
           '$\\text{IQR} = 40$, so the fence is $100 - 1.5 \\times 40 = 40$.',
         ),
       ],
@@ -593,11 +572,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Above-average hours pair with below-average errors, giving negative products.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x = [2, 4, 6]\ny = [5, 3, 1]\nmean_x = 4\nmean_y = 3\nprint([(x[i] - mean_x) * (y[i] - mean_y) for i in range(len(x))])',
-          ['[4, 0, 4]', '[10, 12, 6]', '[-4, 0, -4]', '[-2, 0, 2]'],
-          2,
+          '[-4, 0, -4]',
           'The deviations are (−2, 2), (0, 0), and (2, −2), so the products are −4, 0, −4.',
         ),
         choose(
@@ -606,10 +584,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A positive deviation times a negative deviation is negative.',
         ),
-        choose(
+        typeNumber(
           'The paired deviation products are 6, −1, 2, and −3. What is the population covariance?',
-          ['1', '4', '3', '-1'],
-          0,
+          1,
           'Their sum is 4 and there are 4 pairs, so the covariance is 1.',
         ),
       ],
@@ -626,28 +603,24 @@ export const knowledgePoints: KnowledgePointModule = {
           'The products are 3, 1, 0, and 6, summing to 10; dividing by the 4 pairs gives 2.5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x = [0, 1, 2]\ny = [3, 3, 6]\nmean_x = 1\nmean_y = 4\ntotal = 0\nfor i in range(len(x)):\n    total += (x[i] - mean_x) * (y[i] - mean_y)\nprint(total / len(x))',
-          ['3', '1.0', '1.5', '0.0'],
-          1,
+          '1.0',
           'The products are 1, 0, and 2, summing to 3; $3 / 3 = 1.0$.',
         ),
-        choose(
+        typeNumber(
           '$x = [1, 3]$ and $y = [2, 6]$. What is their population covariance?',
-          ['4', '1', '2', '8'],
           2,
           'The means are 2 and 4; the products $(-1)(-2)$ and $(1)(2)$ are both 2, and their mean is 2.',
         ),
-        choose(
+        typeNumber(
           'The centered vectors are $[-1, 0, 1]$ and $[-2, 1, 1]$. What is the population covariance?',
-          ['3', '0', '2', '1'],
-          3,
+          1,
           'Their dot product is $2 + 0 + 1 = 3$, and $3 / 3 = 1$.',
         ),
-        choose(
+        typeNumber(
           '$x = [5, 5, 5]$ and $y = [1, 7, 4]$. What is $\\operatorname{cov}(x, y)$?',
-          ['0', '4', '12', '-4'],
           0,
           'Every $x$ deviation is 0, so every product is 0.',
         ),
@@ -664,22 +637,19 @@ export const knowledgePoints: KnowledgePointModule = {
         'Every height deviation becomes 100 times larger, so every product and their mean do too, although the relationship is unchanged.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$\\operatorname{cov}(x, y) = 3$. What is $\\operatorname{cov}(2x, y)$?',
-          ['3', '6', '12', '1.5'],
-          1,
+          6,
           'Doubling $x$ doubles every deviation of $x$ and therefore every product.',
         ),
-        choose(
+        typeNumber(
           '$\\operatorname{cov}(x, y) = 3$. What is $\\operatorname{cov}(x + 10, y)$?',
-          ['13', '30', '3', '0'],
-          2,
+          3,
           'Adding 10 moves the mean by 10 as well, so the deviations do not change.',
         ),
-        choose(
+        typeNumber(
           '$\\operatorname{Var}(x) = 9$. What is $\\operatorname{cov}(x, x)$?',
-          ['3', '81', '0', '9'],
-          3,
+          9,
           'Covariance of a variable with itself averages its squared deviations, which is its variance.',
         ),
         choose(
@@ -709,30 +679,26 @@ export const knowledgePoints: KnowledgePointModule = {
           '$S_{xy} = 1$, $S_{xx} = 2$, and $S_{yy} = 2$, so $r = 1 / \\sqrt{4} = 0.5$: a moderate positive linear trend.',
       },
       questions: [
-        choose(
+        typeNumber(
           '$\\operatorname{cov}(x, y) = 6$, $\\sigma_x = 2$, and $\\sigma_y = 5$. What is $r$?',
-          ['60', '0.6', '1.2', '0.3'],
-          1,
+          0.6,
           '$r = 6 / (2 \\times 5) = 0.6$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'sxy = -6\nsxx = 4\nsyy = 9\nprint(sxy / (sxx * syy) ** 0.5)',
-          ['-0.16666666666666666', '1.0', '-1.0', '-0.5'],
-          2,
+          '-1.0',
           '$\\sqrt{4 \\times 9} = 6.0$, and $-6 / 6.0 = -1.0$.',
         ),
-        choose(
+        typeNumber(
           '$S_{xy} = 12$, $S_{xx} = 16$, and $S_{yy} = 25$. What is $r$?',
-          ['0.03', '0.75', '0.48', '0.6'],
-          3,
+          0.6,
           '$\\sqrt{16 \\times 25} = 20$, and $12 / 20 = 0.6$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x = [1, 2, 3]\ny = [4, 6, 8]\nmean_x = 2\nmean_y = 6\nsxy = 0\nsxx = 0\nsyy = 0\nfor i in range(len(x)):\n    sxy += (x[i] - mean_x) * (y[i] - mean_y)\n    sxx += (x[i] - mean_x) ** 2\n    syy += (y[i] - mean_y) ** 2\nprint(sxy / (sxx * syy) ** 0.5)',
-          ['1.0', '2.0', '4', '0.5'],
-          0,
+          '1.0',
           '$S_{xy} = 4$, $S_{xx} = 2$, and $S_{yy} = 8$, so $r = 4 / \\sqrt{16} = 1.0$: the points lie on a rising line.',
         ),
       ],
@@ -765,10 +731,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A positive rescaling changes covariance and standard deviation by the same factor, which cancels.',
         ),
-        choose(
+        typeNumber(
           'Points lie exactly on the line $y = 5 - 2x$. What is $r$?',
-          ['-2', '-1', '0', '1'],
-          1,
+          -1,
           'An exact line with negative slope has $r = -1$; $r$ is not the slope.',
         ),
         choose(
@@ -795,10 +760,9 @@ export const knowledgePoints: KnowledgePointModule = {
         '$y$ is completely determined by $x$, but the falling left half and rising right half cancel.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$y = x^2$ for $x = -3, -1, 1, 3$. What is the correlation of $x$ and $y$?',
-          ['1', '0', '-1', '0.5'],
-          1,
+          0,
           'The relationship is symmetric about 0, so the deviation products cancel.',
         ),
         choose(
@@ -849,17 +813,15 @@ export const knowledgePoints: KnowledgePointModule = {
         'Two of the six equally likely faces satisfy the event.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'A bag holds 3 red and 7 blue marbles. What is $P(\\text{red})$ for one random draw?',
-          ['0.7', '3/7', '0.3', '0.03'],
-          2,
+          0.3,
           '3 favorable marbles out of 10 equally likely ones.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'favorable = 5\ntotal = 20\nprint(favorable / total)',
-          ['4.0', '0.25', '0.2', '25'],
-          1,
+          '0.25',
           '$5 / 20 = 0.25$; the favorable count goes on top.',
         ),
         choose(
@@ -868,10 +830,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Probabilities lie between 0 and 1.',
         ),
-        choose(
+        typeNumber(
           'Two fair coins are flipped. What is $P(\\text{exactly one head})$?',
-          ['1/4', '1/3', '1/2', '3/4'],
-          2,
+          0.5,
           'Of the four equally likely outcomes HH, HT, TH, TT, two have exactly one head.',
         ),
       ],
@@ -888,29 +849,26 @@ export const knowledgePoints: KnowledgePointModule = {
           'Rain and no rain cover every outcome without overlap, so their probabilities sum to 1.',
       },
       questions: [
-        choose(
+        typeNumber(
           '$P(\\text{defect}) = 0.04$. What is $P(\\text{no defect})$?',
-          ['0.04', '0.96', '0.6', '1.04'],
-          1,
+          0.96,
           '$1 - 0.04 = 0.96$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'p = 0.2\nprint(1 - p)',
-          ['0.2', '-0.8', '1.2', '0.8'],
-          3,
+          '0.8',
           'The complement of an event with probability 0.2 has probability 0.8.',
         ),
-        choose(
+        typeNumber(
           'A fair die is rolled. What is $P(\\text{not a 6})$?',
-          ['1/6', '5/6', '6/5', '1/5'],
-          1,
+          5 / 6,
           '$1 - 1/6 = 5/6$.',
+          { tolerance: 0.0005, unit: 'fraction or 3 decimals' },
         ),
-        choose(
+        typeNumber(
           '$P(\\text{at least one alert today}) = 0.7$. What is $P(\\text{no alerts today})$?',
-          ['0.7', '1.7', '0.3', '0'],
-          2,
+          0.3,
           '"No alerts" is the complement of "at least one alert".',
         ),
       ],
@@ -927,23 +885,20 @@ export const knowledgePoints: KnowledgePointModule = {
           'Among the 40 flagged emails, 30 are spam. The other 160 emails are outside the condition and do not enter the denominator.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'customers = 500\nreturned = 50\nreturned_and_damaged = 20\nprint(returned_and_damaged / returned)',
-          ['0.04', '0.4', '2.5', '0.1'],
-          1,
+          '0.4',
           'Within the 50 returns, 20 were damaged: $20 / 50 = 0.4$.',
         ),
-        choose(
+        typeNumber(
           '$P(A \\text{ and } B) = 0.12$ and $P(B) = 0.4$. What is $P(A \\mid B)$?',
-          ['0.3', '0.048', '0.52', '3.33'],
-          0,
+          0.3,
           '$0.12 / 0.4 = 0.3$.',
         ),
-        choose(
+        typeNumber(
           'Of 1,000 people, 100 smoke, and 30 of the smokers have a cough. What is $P(\\text{cough} \\mid \\text{smoker})$?',
-          ['0.03', '0.1', '0.3', '0.13'],
-          2,
+          0.3,
           'Restrict to the 100 smokers: $30 / 100 = 0.3$.',
         ),
         choose(
@@ -981,16 +936,14 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The denominator of $P(\\text{sick} \\mid \\text{positive})$ is dominated by healthy patients who test positive.',
         ),
-        choose(
+        typeNumber(
           'Of 100 students, 60 study math, 20 study art, and 15 study both. What is $P(\\text{math} \\mid \\text{art})$?',
-          ['0.25', '0.15', '0.6', '0.75'],
-          3,
+          0.75,
           'Among the 20 art students, 15 study math: $15 / 20 = 0.75$.',
         ),
-        choose(
+        typeNumber(
           'Of 100 students, 60 study math, 20 study art, and 15 study both. What is $P(\\text{art} \\mid \\text{math})$?',
-          ['0.75', '0.25', '0.2', '0.15'],
-          1,
+          0.25,
           'Among the 60 math students, 15 study art: $15 / 60 = 0.25$.',
         ),
         choose(
@@ -1014,16 +967,14 @@ export const knowledgePoints: KnowledgePointModule = {
         'Two of the four equally likely outcomes give $X = 1$, so that value gets probability 1/2.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$X$ is the number of heads in two fair coin flips. What is $P(X = 1)$?',
-          ['1/4', '1/3', '1/2', '2/3'],
-          2,
+          0.5,
           'HT and TH both give one head: 2 of 4 equally likely outcomes.',
         ),
-        choose(
+        typeNumber(
           'A distribution has $P(X = 0) = 0.5$, $P(X = 1) = 0.3$, and one other value, 2. What is $P(X = 2)$?',
-          ['0.8', '0.2', '0.5', '0.3'],
-          1,
+          0.2,
           'The probabilities must sum to 1: $1 - 0.5 - 0.3 = 0.2$.',
         ),
         choose(
@@ -1037,10 +988,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Only 0.3 and 0.7 are both nonnegative and sum to 1.',
         ),
-        choose(
+        typeNumber(
           '$X$ is 1 when a fair die shows an even number and 0 otherwise. What is $P(X = 1)$?',
-          ['1/2', '1/6', '1/3', '1'],
-          0,
+          0.5,
           'Three of the six faces are even.',
         ),
       ],
@@ -1056,29 +1006,25 @@ export const knowledgePoints: KnowledgePointModule = {
         'The products are 0, 0.3, and 0.4. The average 0.7 is not a value $X$ can take.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$X$ is the roll of a fair six-sided die. What is $E[X]$?',
-          ['3', '3.5', '6', '21'],
-          1,
+          3.5,
           'Each face has probability 1/6, so $E[X] = 21 / 6 = 3.5$.',
         ),
-        choose(
+        typeNumber(
           '$X$ is 10 with probability 0.1 and 0 otherwise. What is $E[X]$?',
-          ['10', '0.1', '1', '5'],
-          2,
+          1,
           '$10 \\times 0.1 + 0 \\times 0.9 = 1$.',
         ),
-        predictOutput(
+        typeOutput(
           'This program computes $E[X]$ for $X = 0, 2, 4$ with probabilities 0.25, 0.5, 0.25. What does it print?',
           'print(0 * 0.25 + 2 * 0.5 + 4 * 0.25)',
-          ['6', '2', '1.5', '2.0'],
-          3,
+          '2.0',
           'The products 0, 1.0, and 1.0 sum to the float 2.0.',
         ),
-        choose(
+        typeNumber(
           'A bet wins 50 with probability 0.02 and loses 2 otherwise. What is its expected result?',
-          ['-0.96', '48', '1', '-2'],
-          0,
+          -0.96,
           '$50 \\times 0.02 - 2 \\times 0.98 = 1 - 1.96 = -0.96$.',
         ),
       ],
@@ -1094,30 +1040,22 @@ export const knowledgePoints: KnowledgePointModule = {
         'Scaling by 3 and subtracting 20 act on the expectation the same way they act on each value.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$E[X] = 5$. What is $E[2X + 3]$?',
-          ['10', '13', '16', '8'],
-          1,
+          13,
           '$2 \\times 5 + 3 = 13$.',
         ),
-        choose(
+        typeNumber(
           '$E[X] = 2$ and $E[Y] = 7$, and $X$ and $Y$ are dependent. What is $E[X + Y]$?',
-          ['14', '5', '9', 'Unknown without independence'],
-          2,
+          9,
           'Linearity of expectation holds with or without independence.',
         ),
-        choose(
+        typeNumber(
           'Each of 30 transactions has an expected fee of 0.5. What is the expected total fee?',
-          ['0.5', '30', '60', '15'],
-          3,
+          15,
           'The expected total is the sum of the 30 expected fees.',
         ),
-        choose(
-          '$E[X] = -4$. What is $E[-X + 1]$?',
-          ['-3', '5', '-5', '3'],
-          1,
-          '$-(-4) + 1 = 5$.',
-        ),
+        typeNumber('$E[X] = -4$. What is $E[-X + 1]$?', 5, '$-(-4) + 1 = 5$.'),
       ],
     },
   ],
@@ -1133,28 +1071,24 @@ export const knowledgePoints: KnowledgePointModule = {
         'Both values lie 2 from the mean, so the expected squared distance is 4.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$X$ is 1 or 5, each with probability 1/2. What is $\\operatorname{Var}(X)$?',
-          ['2', '16', '4', '3'],
-          2,
+          4,
           'The mean is 3 and both values lie 2 away, so $\\operatorname{Var}(X) = 4$.',
         ),
-        choose(
+        typeNumber(
           '$E[X] = 2$ and $E[X^2] = 7$. What is $\\operatorname{Var}(X)$?',
-          ['5', '3', '9', '7'],
-          1,
+          3,
           '$\\operatorname{Var}(X) = E[X^2] - \\mu^2 = 7 - 4 = 3$.',
         ),
-        choose(
+        typeNumber(
           '$X$ always equals 8. What is $\\operatorname{Var}(X)$?',
-          ['8', '64', '1', '0'],
-          3,
+          0,
           'A constant never deviates from its mean.',
         ),
-        choose(
+        typeNumber(
           '$\\operatorname{Var}(X) = 25$. What is the standard deviation of $X$?',
-          ['5', '25', '625', '12.5'],
-          0,
+          5,
           'The standard deviation is $\\sqrt{25} = 5$.',
         ),
       ],
@@ -1170,28 +1104,24 @@ export const knowledgePoints: KnowledgePointModule = {
         'The shift by 32 has no effect; the factor 1.8 enters squared.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$\\operatorname{Var}(X) = 3$. What is $\\operatorname{Var}(X + 100)$?',
-          ['103', '3', '300', '0'],
-          1,
+          3,
           'A shift does not change spread.',
         ),
-        choose(
+        typeNumber(
           '$\\operatorname{Var}(X) = 3$. What is $\\operatorname{Var}(4X)$?',
-          ['48', '12', '7', '3'],
-          0,
+          48,
           '$4^2 \\times 3 = 48$.',
         ),
-        choose(
+        typeNumber(
           '$\\operatorname{Var}(X) = 2$. What is $\\operatorname{Var}(-X)$?',
-          ['-2', '4', '0', '2'],
-          3,
+          2,
           '$(-1)^2 \\times 2 = 2$; variance is never negative.',
         ),
-        choose(
+        typeNumber(
           '$X$ has standard deviation 5. What is the standard deviation of $3X - 7$?',
-          ['8', '225', '15', '45'],
-          2,
+          15,
           'The standard deviation scales by $|3|$, and the shift has no effect.',
         ),
       ],
@@ -1207,16 +1137,14 @@ export const knowledgePoints: KnowledgePointModule = {
         'Dividing the sum by 4 divides its variance by $4^2 = 16$, giving $8 / 4$.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$X$ and $Y$ are independent with variances 3 and 4. What is $\\operatorname{Var}(X - Y)$?',
-          ['-1', '1', '7', '12'],
-          2,
+          7,
           'Subtracting an independent variable still adds its variance.',
         ),
-        choose(
+        typeNumber(
           'Each of 25 independent readings has variance 50. What is the variance of their mean?',
-          ['50', '2', '1250', '10'],
-          1,
+          2,
           '$\\sigma^2 / n = 50 / 25 = 2$.',
         ),
         choose(
@@ -1230,10 +1158,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'When errors move together they do not cancel, so the $\\sigma^2 / n$ reduction does not apply.',
         ),
-        choose(
+        typeNumber(
           'Averaging $n$ independent copies cuts the variance to one tenth of a single copy. What is $n$?',
-          ['$\\sqrt{10}$', '100', '10', '5'],
-          2,
+          10,
           '$\\sigma^2 / n = \\sigma^2 / 10$ when $n = 10$.',
         ),
       ],
@@ -1251,22 +1178,19 @@ export const knowledgePoints: KnowledgePointModule = {
         'The mean is the success probability; the variance multiplies it by the failure probability.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$X$ is Bernoulli with $p = 0.25$. What is $E[X]$?',
-          ['0.75', '0.25', '0.1875', '1'],
-          1,
+          0.25,
           'The mean of a Bernoulli variable is $p$.',
         ),
-        choose(
+        typeNumber(
           '$X$ is Bernoulli with $p = 0.25$. What is $\\operatorname{Var}(X)$?',
-          ['0.25', '0.0625', '0.1875', '0.75'],
-          2,
+          0.1875,
           '$p(1 - p) = 0.25 \\times 0.75 = 0.1875$.',
         ),
-        choose(
+        typeNumber(
           'Which $p$ gives a Bernoulli variable its largest variance?',
-          ['0', '1', '0.25', '0.5'],
-          3,
+          0.5,
           '$p(1 - p)$ peaks at $p = 0.5$, where the outcome is least predictable.',
         ),
         choose(
@@ -1294,17 +1218,15 @@ export const knowledgePoints: KnowledgePointModule = {
           'The sequence 1, 1, 0 multiplies $p$, $p$, and $1 - p$: $0.5 \\times 0.5 \\times 0.5 = 0.125$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This program computes the probability of the sequence 1, 0, 0, 1. What does it print?',
           'p = 0.5\nprint(p * (1 - p) * (1 - p) * p)',
-          ['0.25', '1.0', '0.0625', '0.5'],
-          2,
+          '0.0625',
           'Four independent factors of 0.5 multiply to 0.0625.',
         ),
-        choose(
+        typeNumber(
           'A server fails on a given day with probability 0.1, independently across days. What is $P(\\text{no failure on two days})$?',
-          ['0.8', '0.81', '0.9', '0.01'],
-          1,
+          0.81,
           '$0.9 \\times 0.9 = 0.81$; probabilities multiply, they do not subtract.',
         ),
         choose(
@@ -1337,28 +1259,24 @@ export const knowledgePoints: KnowledgePointModule = {
         'There are 10 ways to place 2 successes among 5 trials.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'What is $C(4, 1)$?',
-          ['1', '4', '24', '3'],
-          1,
+          4,
           'The single success can be in any of the 4 positions.',
         ),
-        choose(
+        typeNumber(
           'What is $C(6, 2)$?',
-          ['12', '30', '15', '36'],
-          2,
+          15,
           '$6! / (2! \\times 4!) = 720 / 48 = 15$.',
         ),
-        choose(
+        typeNumber(
           'What is $C(10, 10)$?',
-          ['10', '0', '100', '1'],
-          3,
+          1,
           'There is exactly one way to make every trial a success.',
         ),
-        choose(
+        typeNumber(
           '$C(8, 3) = 56$. What is $C(8, 5)$?',
-          ['56', '40', '336', '15'],
-          0,
+          56,
           'Choosing 3 successes is the same as choosing the 5 failures.',
         ),
       ],
@@ -1375,29 +1293,25 @@ export const knowledgePoints: KnowledgePointModule = {
           'For exactly 2 successes in 3 trials there are $C(3, 2) = 3$ arrangements, each with probability $0.5^2 \\times 0.5$.',
       },
       questions: [
-        choose(
+        typeNumber(
           'Three fair coins are flipped. What is $P(\\text{exactly 2 heads})$?',
-          ['1/8', '3/8', '1/2', '2/3'],
-          1,
+          0.375,
           '$C(3, 2) = 3$ arrangements, each with probability 1/8.',
         ),
-        predictOutput(
+        typeOutput(
           'This program computes $P(K = 3)$ for $n = 4$ fair trials. What does it print?',
           'p = 0.5\nprint(4 * p ** 3 * (1 - p))',
-          ['0.0625', '0.125', '0.5', '0.25'],
-          3,
+          '0.25',
           '$C(4, 3) = 4$ arrangements, each with probability 1/16.',
         ),
-        choose(
+        typeNumber(
           'A test has 20 independent questions, each answered correctly with probability 0.8. What is the expected number correct?',
-          ['4', '20', '16', '3.2'],
-          2,
+          16,
           '$np = 20 \\times 0.8 = 16$.',
         ),
-        choose(
+        typeNumber(
           '$K$ is binomial with $n = 50$ and $p = 0.2$. What is $\\operatorname{Var}(K)$?',
-          ['8', '10', '0.16', '40'],
-          0,
+          8,
           '$np(1 - p) = 50 \\times 0.2 \\times 0.8 = 8$.',
         ),
       ],
@@ -1415,10 +1329,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'The means match, so both curves are centered at 50; only $\\sigma$ differs.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$X \\sim N(30, 4^2)$. What is $P(X < 30)$?',
-          ['0.3', '0.5', '0.68', '0'],
-          1,
+          0.5,
           'A normal distribution is symmetric about its mean.',
         ),
         choose(
@@ -1432,16 +1345,14 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           '$\\sigma$ controls the width; $\\mu$ and shifts only move the center.',
         ),
-        choose(
+        typeNumber(
           '$X \\sim N(0, 1)$. What is $P(X = 0)$ exactly?',
-          ['0.5', '1', '0.4', '0'],
-          3,
+          0,
           'A single exact value covers no area under the curve.',
         ),
-        choose(
+        typeNumber(
           '$X \\sim N(100, 15^2)$. What is the median of $X$?',
-          ['100', '85', '115', '15'],
-          0,
+          100,
           'Symmetry makes the median equal the mean.',
         ),
       ],
@@ -1495,11 +1406,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '50 lies 20 below the mean, which is 2.5 standard deviations of size 8.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mu = 200\nsigma = 25\nx = 250\nprint((x - mu) / sigma)',
-          ['50', '2.0', '-2.0', '0.5'],
-          1,
+          '2.0',
           '$(250 - 200) / 25 = 2.0$ standard deviations above the mean.',
         ),
         choose(
@@ -1508,17 +1418,15 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           "Ana's z-score is 2 and Ben's is 1.",
         ),
-        choose(
+        typeNumber(
           'A value has $z = -1.5$ under $N(40, 4^2)$. What is the value?',
-          ['46', '38.5', '-6', '34'],
-          3,
+          34,
           '$x = \\mu + z\\sigma = 40 - 1.5 \\times 4 = 34$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mu = 12\nsigma = 3\nx = 3\nprint((x - mu) / sigma)',
-          ['3.0', '-3.0', '-9', '1.0'],
-          1,
+          '-3.0',
           '$(3 - 12) / 3 = -3.0$: three standard deviations below the mean.',
         ),
       ],
@@ -1594,23 +1502,20 @@ export const knowledgePoints: KnowledgePointModule = {
           '$\\sqrt{225} = 15$, so the standard error is $30 / 15 = 2.0$. ** binds before /, so n ** 0.5 is computed first.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'sigma = 12\nn = 16\nprint(sigma / n ** 0.5)',
-          ['0.75', '12', '3.0', '48.0'],
-          2,
+          '3.0',
           '$\\sqrt{16} = 4$, and $12 / 4 = 3.0$.',
         ),
-        choose(
+        typeNumber(
           '$\\sigma = 8$ and $n = 64$. What is the standard error of the sample mean?',
-          ['1', '0.125', '8', '64'],
-          0,
+          1,
           '$8 / \\sqrt{64} = 8 / 8 = 1$.',
         ),
-        choose(
+        typeNumber(
           'A sample of 100 gives a standard error of 4. What sample size gives a standard error of 2?',
-          ['200', '50', '141', '400'],
-          3,
+          400,
           'Halving the standard error requires four times as many observations.',
         ),
         choose(
@@ -1687,10 +1592,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'For the data 1, 1, 0, the value $p = 0.75$ makes the observations more probable than $p = 0.5$.',
       },
       questions: [
-        choose(
+        typeNumber(
           'The data are 1, 0 from a $\\text{Bernoulli}(p)$ model. What is $L(0.5)$?',
-          ['0.5', '0.25', '1', '0'],
-          1,
+          0.25,
           '$0.5 \\times (1 - 0.5) = 0.25$.',
         ),
         predictOutput(
@@ -1735,22 +1639,19 @@ export const knowledgePoints: KnowledgePointModule = {
         'The likelihood rises toward the observed rate 0.4 and falls after it.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'A drug works for 18 of 24 independent patients. What is the maximum likelihood estimate of its success rate?',
-          ['0.5', '0.75', '18', '0.25'],
-          1,
+          0.75,
           '$k / n = 18 / 24 = 0.75$.',
         ),
-        choose(
+        typeNumber(
           'A filter sees 3 spam messages among 60. What is the maximum likelihood estimate of the spam rate?',
-          ['0.3', '0.5', '0.05', '20'],
-          2,
+          0.05,
           '$3 / 60 = 0.05$.',
         ),
-        choose(
+        typeNumber(
           'The data are 0, 0, 0, 0. What is the maximum likelihood estimate of $p$?',
-          ['0.5', '0.25', '1', '0'],
-          3,
+          0,
           '$L(p) = (1 - p)^4$ is largest at $p = 0$, matching $k / n = 0 / 4$.',
         ),
         choose(
@@ -1841,9 +1742,8 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           '$-\\ln(0.01) \\approx 4.6$ is far larger than the others.',
         ),
-        choose(
+        typeNumber(
           'The label is $y = 1$ and $p = e^{-1}$. What is the cross-entropy?',
-          ['$e$', '$1$', '$-1$', '$0.368$'],
           1,
           '$-\\ln(e^{-1}) = 1$.',
         ),
@@ -1874,29 +1774,25 @@ export const knowledgePoints: KnowledgePointModule = {
           'The same rule $f(x) = 3x - 2$ is applied to two inputs: $f(4) = 10$ and $f(-1) = -5$.',
       },
       questions: [
-        choose(
+        typeNumber(
           '$f(x) = 2x^2 - 3$. What is $f(-2)$?',
-          ['-11', '5', '13', '-7'],
-          1,
+          5,
           '$(-2)^2 = 4$, so $f(-2) = 2 \\times 4 - 3 = 5$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x = -3\nprint(x ** 2 + 1)',
-          ['-8', '7', '10', '-5'],
-          2,
+          '10',
           'x holds −3, and $(-3)^2 + 1 = 10$.',
         ),
-        choose(
+        typeNumber(
           '$g(t) = 5 - t$. What is $g(8)$?',
-          ['3', '13', '40', '-3'],
-          3,
+          -3,
           'Substitute 8 for $t$: $5 - 8 = -3$.',
         ),
-        choose(
+        typeNumber(
           '$h(x) = (x + 1)(x - 1)$. What is $h(3)$?',
-          ['8', '9', '6', '10'],
-          0,
+          8,
           '$(3 + 1)(3 - 1) = 4 \\times 2 = 8$.',
         ),
       ],
@@ -1964,10 +1860,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'The slope comes from the two points; substituting one point into $y = 2x + b$ gives $b = 3$.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'A line passes through $(0, 4)$ and $(2, 10)$. What is its slope?',
-          ['6', '3', '2', '5'],
-          1,
+          3,
           'The output rises 6 over a run of 2.',
         ),
         choose(
@@ -1987,10 +1882,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The fixed charge is the intercept 3 and the per-kilometer rate is the slope 2.',
         ),
-        choose(
+        typeNumber(
           'A line passes through $(1, 8)$ and $(5, 0)$. What is its slope?',
-          ['-2', '2', '-0.5', '8'],
-          0,
+          -2,
           '$(0 - 8) / (5 - 1) = -2$; the line falls.',
         ),
       ],
@@ -2009,11 +1903,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Three factors of 2 times four more factors of 2 is seven factors of 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(3 ** 2 * 3 ** 3)',
-          ['729', '243', '45', '7776'],
-          1,
+          '243',
           'The exponents add: $3^5 = 243$. Multiplying them would give $3^6 = 729$.',
         ),
         choose(
@@ -2028,11 +1921,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Four groups of three factors make twelve factors.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print((10 ** 2) ** 3)',
-          ['100000', '1000', '10000000000', '1000000'],
-          3,
+          '1000000',
           '$(10^2)^3 = 10^6 = 1{,}000{,}000$.',
         ),
       ],
@@ -2048,30 +1940,26 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '$7^0 = 1$, and $2^{-3} = 1 / 2^3 = 1 / 8 = 0.125$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(4 ** -1)',
-          ['-4', '0.25', '-0.25', '4'],
-          1,
+          '0.25',
           '$4^{-1} = 1 / 4 = 0.25$.',
         ),
-        choose(
+        typeNumber(
           'What is $9^0$?',
-          ['0', '9', '1', 'Undefined'],
-          2,
+          1,
           'Any nonzero number to the power 0 is 1.',
         ),
-        choose(
-          'Which value equals $2^{-4}$?',
-          ['$\\frac{1}{16}$', '$-16$', '$-\\frac{1}{16}$', '$\\frac{1}{8}$'],
-          0,
+        typeNumber(
+          'What is $2^{-4}$?',
+          0.0625,
           '$2^{-4} = 1 / 2^4 = 1/16$, a positive number.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(10 ** -2 * 10 ** 3)',
-          ['0.1', '100000.0', '10', '10.0'],
-          3,
+          '10.0',
           'The exponents add to 1, giving 10; the negative power makes the result a float.',
         ),
       ],
@@ -2087,10 +1975,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'Each period multiplies the current value by 1.5, so the second period adds more than the first.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'A balance of 200 doubles every year. What is it after 3 years?',
-          ['800', '1600', '1200', '600'],
-          1,
+          1600,
           '$200 \\times 2^3 = 1{,}600$.',
         ),
         choose(
@@ -2099,11 +1986,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           '$80 \\times 0.5^4 = 80 / 16 = 5$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(64 * 0.5 ** 3)',
-          ['32.0', '96.0', '0.125', '8.0'],
-          3,
+          '8.0',
           '** comes first: $0.5^3 = 0.125$, and $64 \\times 0.125 = 8.0$.',
         ),
         choose(
@@ -2130,17 +2016,16 @@ export const knowledgePoints: KnowledgePointModule = {
         'A negative exponent is the reciprocal, and opposite exponents cancel to $e^0 = 1$.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'What is $e^0$?',
-          ['0', '$e$', '1', '2.718'],
-          2,
+          1,
           'Any nonzero base to the power 0 is 1.',
         ),
-        choose(
+        typeNumber(
           '$e^3 \\approx 20.09$. What is $e^{-3}$, approximately?',
-          ['−20.09', '0.050', '−0.050', '3'],
-          1,
+          0.05,
           '$e^{-3} = 1 / e^3 \\approx 1 / 20.09 \\approx 0.050$.',
+          { tolerance: 0.0005, unit: 'to 3 decimals' },
         ),
         choose(
           'Which statement about $e^x$ is true?',
@@ -2174,18 +2059,8 @@ export const knowledgePoints: KnowledgePointModule = {
         'Each answer is the exponent that produces the input.',
       ),
       questions: [
-        choose(
-          'What is $\\log_2(32)$?',
-          ['16', '5', '6', '64'],
-          1,
-          '$2^5 = 32$.',
-        ),
-        choose(
-          'What is $\\log_{10}(0.001)$?',
-          ['3', '0.001', '−3', '−1000'],
-          2,
-          '$10^{-3} = 0.001$.',
-        ),
+        typeNumber('What is $\\log_2(32)$?', 5, '$2^5 = 32$.'),
+        typeNumber('What is $\\log_{10}(0.001)$?', -3, '$10^{-3} = 0.001$.'),
         choose(
           'Which statement means the same as $\\log_3(x) = 4$?',
           ['$x = 4^3$', '$x = 3 \\times 4$', '$x = 4 / 3$', '$x = 3^4$'],
@@ -2211,10 +2086,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'Reaching 0.5 from $e$ needs a negative exponent.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'What is $\\ln(e^{-2})$?',
-          ['2', '−2', '$e^{-2}$', '0.135'],
-          1,
+          -2,
           '$\\ln$ undoes the exponential, leaving the exponent.',
         ),
         choose(
@@ -2223,10 +2097,9 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Inputs between 0 and 1 have negative natural logs.',
         ),
-        choose(
+        typeNumber(
           'What is $e^{\\ln 7}$?',
-          ['$\\ln 7$', '$e^7$', '1', '7'],
-          3,
+          7,
           'The exponential undoes $\\ln$.',
         ),
         choose(
@@ -2248,10 +2121,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'The product 0.01 becomes a sum of three logs.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$\\log_2(8) = 3$ and $\\log_2(4) = 2$. What is $\\log_2(32)$?',
-          ['6', '5', '12', '1'],
-          1,
+          5,
           '$32 = 8 \\times 4$, so its log is $3 + 2 = 5$.',
         ),
         choose(
@@ -2265,10 +2137,9 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The log of a quotient is a difference of logs.',
         ),
-        choose(
+        typeNumber(
           '$\\log_{10}(x) = 2.5$. What is $\\log_{10}(x^4)$?',
-          ['6.5', '39.06', '$2.5^4$', '10'],
-          3,
+          10,
           'The power comes down as a factor: $4 \\times 2.5 = 10$.',
         ),
         choose(
@@ -2298,23 +2169,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'e ** -0 is 1.0, so the denominator is 2 and the output is 0.5.',
       },
       questions: [
-        choose(
+        typeNumber(
           '$e^{-1} \\approx 0.368$. What is $\\sigma(1)$?',
-          ['0.368', '0.269', '0.731', '0.632'],
-          2,
+          0.731,
           '$1 / (1 + 0.368) \\approx 0.731$.',
+          { tolerance: 0.0005, unit: 'to 3 decimals' },
         ),
-        choose(
+        typeNumber(
           '$e^2 \\approx 7.389$. What is $\\sigma(-2)$?',
-          ['0.881', '0.119', '0.135', '−0.881'],
-          1,
+          0.119,
           'For $z = -2$, $e^{-z} = e^2 \\approx 7.389$, so $\\sigma(-2) = 1 / 8.389 \\approx 0.119$.',
+          { tolerance: 0.0005, unit: 'to 3 decimals' },
         ),
-        predictOutput(
+        typeOutput(
           'Here exp_neg_z holds $e^{-z}$ for some score $z$. What does this program print?',
           'exp_neg_z = 3.0\nprint(1 / (1 + exp_neg_z))',
-          ['0.75', '0.3333333333333333', '4.0', '0.25'],
-          3,
+          '0.25',
           'The denominator is $1 + 3.0 = 4.0$, and $1 / 4.0 = 0.25$.',
         ),
         choose(
@@ -2336,11 +2206,11 @@ export const knowledgePoints: KnowledgePointModule = {
         'Opposite scores give outputs that add up to 1.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$\\sigma(4) \\approx 0.982$. What is $\\sigma(-4)$?',
-          ['−0.982', '0.018', '0.982', '0.25'],
-          1,
+          0.018,
           '$\\sigma(-4) = 1 - 0.982 = 0.018$.',
+          { tolerance: 0.0005, unit: 'to 3 decimals' },
         ),
         choose(
           'Which number can $\\sigma(z)$ output?',
@@ -2348,16 +2218,14 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Outputs lie strictly between 0 and 1, so 0.9999 is possible but 0 and 1 are not.',
         ),
-        choose(
+        typeNumber(
           '$\\sigma(a) = 0.3$. What is $\\sigma(-a)$?',
-          ['0.3', '−0.3', '3.33', '0.7'],
-          3,
+          0.7,
           '$\\sigma(-a) = 1 - \\sigma(a) = 0.7$.',
         ),
-        choose(
+        typeNumber(
           'What is $\\sigma(z) + \\sigma(-z)$?',
-          ['1', '0', '0.5', '$2\\sigma(z)$'],
-          0,
+          1,
           'The symmetry $\\sigma(-z) = 1 - \\sigma(z)$ makes the sum 1.',
         ),
       ],
@@ -2423,23 +2291,21 @@ export const knowledgePoints: KnowledgePointModule = {
           'Here a, b, and c hold the exponentials of three scores. Dividing each by their total 8.0 gives probabilities that sum to 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'a and b hold the exponentials of two scores. What does this program print?',
           'a = 3.0\nb = 1.0\ntotal = a + b\nprint(a / total, b / total)',
-          ['3.0 1.0', '0.5 0.5', '0.75 0.25', '0.25 0.75'],
-          2,
+          '0.75 0.25',
           'Each exponential is divided by the total 4.0, keeping the order of the scores.',
         ),
-        choose(
+        typeNumber(
           '$e^1 \\approx 2.72$ and $e^0 = 1$. What softmax probability goes to the first of the scores 1, 0, 0?',
-          ['0.333', '0.576', '0.731', '1.0'],
-          1,
+          0.576,
           '$2.72 / (2.72 + 1 + 1) \\approx 0.576$.',
+          { tolerance: 0.0005, unit: 'to 3 decimals' },
         ),
-        choose(
+        typeNumber(
           'Softmax gives three classes the probabilities 0.2, 0.5, and $p$. What is $p$?',
-          ['0.7', '0.5', '0.2', '0.3'],
-          3,
+          0.3,
           'Softmax probabilities sum to 1.',
         ),
         choose(
@@ -2508,17 +2374,16 @@ export const knowledgePoints: KnowledgePointModule = {
         'Only the difference 2 matters, and the second class receives the rest of the probability.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'Two class scores are 0.5 and 0.5. What probability does softmax give the first class?',
-          ['0.62', '1', '0.5', '0.25'],
-          2,
+          0.5,
           'The difference is 0, and $\\sigma(0) = 0.5$.',
         ),
-        choose(
+        typeNumber(
           '$\\sigma(3) \\approx 0.953$. The scores are 4 and 1. What is the first class’s softmax probability?',
-          ['0.047', '0.953', '0.982', '0.8'],
-          1,
+          0.953,
           'The probability is $\\sigma(4 - 1) = \\sigma(3)$.',
+          { tolerance: 0.0005, unit: 'to 3 decimals' },
         ),
         choose(
           'Which expression equals the softmax probability of the first of two scores $a$ and $b$?',
@@ -2558,17 +2423,15 @@ export const knowledgePoints: KnowledgePointModule = {
           'For $f(x) = x^2$, the output rises from 1 to 16 while $x$ rises by 3, so the average rate is $15 / 3 = 5.0$.',
       },
       questions: [
-        choose(
+        typeNumber(
           '$f(x) = x^2 + 1$. What is its average rate of change from $x = 2$ to $x = 5$?',
-          ['21', '7', '3', '10'],
-          1,
+          7,
           '$(26 - 5) / (5 - 2) = 21 / 3 = 7$.',
         ),
-        predictOutput(
+        typeOutput(
           'This program computes the average rate of change of $x^3$ from 0 to 2. What does it print?',
           'a = 0\nb = 2\nprint((b ** 3 - a ** 3) / (b - a))',
-          ['8.0', '4', '4.0', '2.0'],
-          2,
+          '4.0',
           'The output rises by 8 over a run of 2, and / gives the float 4.0.',
         ),
         choose(
@@ -2577,10 +2440,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           '$(300 - 120) / (5 - 2) = 60$ km per hour.',
         ),
-        choose(
+        typeNumber(
           '$f(1) = 10$ and $f(3) = 4$. What is the average rate of change from $x = 1$ to $x = 3$?',
-          ['−3', '3', '−6', '7'],
-          0,
+          -3,
           '$(4 - 10) / (3 - 1) = -3$; the function fell on average.',
         ),
       ],
@@ -2597,17 +2459,15 @@ export const knowledgePoints: KnowledgePointModule = {
           "For $f(x) = x^2$ at $a = 3$, halving $h$ moves the quotient from 6.5 to 6.25, closing in on $f'(3) = 6$.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This program computes a difference quotient of $x^2$ at $a = 1$. What does it print?',
           'a = 1\nh = 0.5\nprint(((a + h) ** 2 - a ** 2) / h)',
-          ['2.0', '2.5', '1.25', '0.5'],
-          1,
+          '2.5',
           "$(1.5^2 - 1^2) / 0.5 = 1.25 / 0.5 = 2.5$, on its way toward $f'(1) = 2$.",
         ),
-        choose(
+        typeNumber(
           "For $f(x) = x^2$ at $x = 2$, the quotients are 4.5, 4.1, and 4.01 for $h = 0.5$, 0.1, and 0.01. What is $f'(2)$?",
-          ['4.5', '4.01', '4', '2'],
-          2,
+          4,
           'The derivative is the value the quotients approach as $h$ shrinks.',
         ),
         choose(
@@ -2656,10 +2516,9 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A negative derivative means the function is falling there.',
         ),
-        choose(
+        typeNumber(
           "$f(2) = 10$ and $f'(2) = 5$. About what is $f(2.1)$?",
-          ['15', '10.1', '10.5', '5.5'],
-          2,
+          10.5,
           'A step of 0.1 changes $f$ by about $5 \\times 0.1 = 0.5$.',
         ),
         choose(
@@ -2700,16 +2559,14 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Bring down the 9 and lower the exponent to 8.',
         ),
-        choose(
+        typeNumber(
           "$f(x) = x^3$. What is $f'(2)$?",
-          ['8', '6', '12', '3'],
-          2,
+          12,
           "$f'(x) = 3x^2$, so $f'(2) = 12$.",
         ),
-        choose(
+        typeNumber(
           "$f(x) = x$. What is $f'(x)$?",
-          ['$x$', '$0$', '$x^2/2$', '$1$'],
-          3,
+          1,
           '$x = x^1$, so the derivative is $1 \\times x^0 = 1$: a line of slope 1.',
         ),
         choose(
@@ -2742,16 +2599,14 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           '$6 \\times 3x^2 = 18x^2$.',
         ),
-        choose(
+        typeNumber(
           'What is the derivative of the constant 42?',
-          ['$42$', '$1$', '$0$', '$42x$'],
-          2,
+          0,
           'A constant never changes, so its rate of change is 0.',
         ),
-        choose(
+        typeNumber(
           "$g(x) = 0.5x^2$. What is $g'(6)$?",
-          ['18', '3', '36', '6'],
-          3,
+          6,
           "$g'(x) = 0.5 \\times 2x = x$, so $g'(6) = 6$.",
         ),
         choose(
@@ -2774,17 +2629,15 @@ export const knowledgePoints: KnowledgePointModule = {
           "For $f(x) = 4x^3$, $f'(x) = 12x^2$, and at $x = 3$ the slope is $12 \\times 9 = 108$.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           "$f(x) = 2x^4$, so $f'(x) = 8x^3$. What does this program print?",
           'x = 2\nprint(2 * 4 * x ** 3)',
-          ['32', '128', '64', '16'],
-          2,
+          '64',
           '$8 \\times 2^3 = 64$.',
         ),
-        choose(
+        typeNumber(
           '$f(x) = 3x^2$. What is the slope of its graph at $x = -1$?',
-          ['6', '−6', '3', '−3'],
-          1,
+          -6,
           "$f'(x) = 6x$, so the slope at −1 is −6.",
         ),
         choose(
@@ -2798,10 +2651,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           "Differentiate first: $f'(x) = 3x^2$, so the slope at 2 is 12.",
         ),
-        choose(
+        typeNumber(
           "$f(x) = x^4$. What is $f'(-1)$?",
-          ['−4', '4', '1', '−1'],
-          0,
+          -4,
           "$f'(x) = 4x^3$, and $4 \\times (-1)^3 = -4$.",
         ),
       ],
@@ -2825,10 +2677,9 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Differentiate each term: $12x^3$, $-2x$, and 0 for the constant.',
         ),
-        choose(
+        typeNumber(
           "$f(x) = x^2 + 6x$. What is $f'(-3)$?",
-          ['−3', '9', '0', '12'],
-          2,
+          0,
           "$f'(x) = 2x + 6$, which is 0 at $x = -3$.",
         ),
         choose(
@@ -2837,11 +2688,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The constant 11 has derivative 0; $8x$ becomes 8.',
         ),
-        predictOutput(
+        typeOutput(
           "$f(x) = x^3 - 4x$, so $f'(x) = 3x^2 - 4$. What does this program print?",
           'x = 2\nprint(3 * x ** 2 - 4)',
-          ['8', '0', '12', '4'],
-          0,
+          '8',
           '$3 \\times 4 - 4 = 8$.',
         ),
       ],
@@ -2863,10 +2713,9 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           '$1 \\times (x + 4) + x \\times 1 = 2x + 4$.',
         ),
-        choose(
+        typeNumber(
           "$f(2) = 3$, $f'(2) = 1$, $g(2) = 5$, and $g'(2) = 4$. What is $(fg)'$ at $x = 2$?",
-          ['4', '15', '17', '20'],
-          2,
+          17,
           "$f'g + fg' = 1 \\times 5 + 3 \\times 4 = 17$.",
         ),
         choose(
@@ -2916,17 +2765,15 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           '$x^2(x + 1) = x^3 + x^2$, whose derivative is $3x^2 + 2x$.',
         ),
-        choose(
+        typeNumber(
           "Expanding gives $f(x) = x^3 - 2x^2$. What is $f'(2)$?",
-          ['0', '8', '12', '4'],
-          3,
+          4,
           "$f'(x) = 3x^2 - 4x$, so $f'(2) = 12 - 8 = 4$.",
         ),
-        predictOutput(
+        typeOutput(
           '$h(x) = 2x(x + 5)$. This program applies the product rule at $x = 3$. What does it print?',
           'x = 3\nprint(2 * (x + 5) + 2 * x * 1)',
-          ['22', '16', '48', '2'],
-          0,
+          '22',
           "$f'g + fg' = 2 \\times 8 + 6 \\times 1 = 22$, matching the expanded derivative $4x + 10$.",
         ),
       ],
@@ -2967,11 +2814,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The inner function is evaluated before the outer square.',
         ),
-        predictOutput(
+        typeOutput(
           'This program evaluates $h(x) = (3x - 4)^2$ at $x = 2$. What does it print?',
           'x = 2\nu = 3 * x - 4\nprint(u ** 2)',
-          ['4', '2', '12', '36'],
-          0,
+          '4',
           'The inner value is $u = 2$, and the outer square gives 4.',
         ),
       ],
@@ -3005,10 +2851,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The inner derivative of $5 - x$ is −1, which flips the sign.',
         ),
-        choose(
+        typeNumber(
           'What is the derivative of $(3x)^5$ at $x = 1/3$?',
-          ['15', '5', '45', '1'],
-          0,
+          15,
           '$5(3x)^4 \\times 3$; at $x = 1/3$, $3x = 1$, giving $5 \\times 1 \\times 3 = 15$.',
         ),
       ],
@@ -3025,28 +2870,24 @@ export const knowledgePoints: KnowledgePointModule = {
           'The three local rates multiply to −6: a small increase in $w$ lowers $L$ about 6 times as much.',
       },
       questions: [
-        choose(
+        typeNumber(
           '$\\frac{dL}{dp} = 2$, $\\frac{dp}{dz} = -3$, and $\\frac{dz}{dw} = 0.5$. What is $\\frac{dL}{dw}$?',
-          ['−0.5', '−3', '3', '−1'],
-          1,
+          -3,
           '$2 \\times (-3) \\times 0.5 = -3$; the local rates multiply rather than add.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'dL_dp = 6\ndp_dw = -2\nprint(dL_dp * dp_dw)',
-          ['4', '-3', '-12', '12'],
-          2,
+          '-12',
           'The chain rule multiplies the two local rates: $6 \\times (-2) = -12$.',
         ),
-        choose(
+        typeNumber(
           '$L = (p - 1)^2$ and $p = 3w$. What is $\\frac{dL}{dw}$ at $w = 1$?',
-          ['4', '3', '7', '12'],
-          3,
+          12,
           'At $w = 1$, $p = 3$, so $\\frac{dL}{dp} = 2(3 - 1) = 4$, and $\\frac{dp}{dw} = 3$; their product is 12.',
         ),
-        choose(
+        typeNumber(
           'One local rate in a chain is 0. What is the overall derivative?',
-          ['0', 'The product of the other rates', '1', 'Undefined'],
           0,
           'A product with a zero factor is zero: a change cannot pass through a flat link.',
         ),
@@ -3071,9 +2912,8 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           '$2y$ is constant when only $x$ moves.',
         ),
-        choose(
+        typeNumber(
           '$f(x, y) = x^3 + 2y$. What is $\\frac{\\partial f}{\\partial y}$?',
-          ['$3x^2 + 2$', '$2y$', '$2$', '$0$'],
           2,
           '$x^3$ is constant when only $y$ moves, and $2y$ has derivative 2.',
         ),
@@ -3103,17 +2943,15 @@ export const knowledgePoints: KnowledgePointModule = {
           'For $f(x, y) = x^2y + 3y$, $\\frac{\\partial f}{\\partial x} = 2xy$ and $\\frac{\\partial f}{\\partial y} = x^2 + 3$; at $(2, 5)$ they are 20 and 7.',
       },
       questions: [
-        choose(
+        typeNumber(
           '$f(x, y) = 3x + xy^2$. What is $\\frac{\\partial f}{\\partial x}$ at $(1, 3)$?',
-          ['6', '12', '30', '9'],
-          1,
+          12,
           '$\\frac{\\partial f}{\\partial x} = 3 + y^2$, which is 12 at $y = 3$.',
         ),
-        predictOutput(
+        typeOutput(
           'For $f(x, y) = x^2y$, this program prints $\\frac{\\partial f}{\\partial x}$ and then $\\frac{\\partial f}{\\partial y}$ at $(3, 4)$. What does it print?',
           'x = 3\ny = 4\nprint(2 * x * y, x ** 2)',
-          ['9 24', '36 9', '24 9', '24 16'],
-          2,
+          '24 9',
           '$\\frac{\\partial f}{\\partial x} = 2xy = 24$ and $\\frac{\\partial f}{\\partial y} = x^2 = 9$.',
         ),
         choose(
@@ -3152,11 +2990,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The prediction 7 is 3 below the target, so the residual is −3; the partials are $2 \\times (-3) \\times 3$ and $2 \\times (-3)$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This program prints $\\frac{\\partial L}{\\partial w}$ and then $\\frac{\\partial L}{\\partial b}$. What does it print?',
           'x = 2\ny = 3\nw = 1\nb = 0\nresidual = w * x + b - y\nprint(2 * residual * x, 2 * residual)',
-          ['-2 -4', '-4 -2', '4 2', '-1 -1'],
-          1,
+          '-4 -2',
           'The residual is $2 - 3 = -1$, so $\\frac{\\partial L}{\\partial w} = -4$ and $\\frac{\\partial L}{\\partial b} = -2$.',
         ),
         choose(
@@ -3165,10 +3002,9 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The shared residual factor is 0, so both partials vanish.',
         ),
-        choose(
+        typeNumber(
           'For $x = 4$, the residual $wx + b - y$ is 0.5. What is $\\frac{\\partial L}{\\partial w}$?',
-          ['1', '2', '0.5', '4'],
-          3,
+          4,
           '$2 \\times 0.5 \\times 4 = 4$.',
         ),
         choose(
@@ -3204,17 +3040,15 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           '$\\frac{\\partial f}{\\partial x} = 4$ and $\\frac{\\partial f}{\\partial y} = 2y$, listed in input order.',
         ),
-        predictOutput(
+        typeOutput(
           'For $f(x, y) = x^2y$, this program builds $\\nabla f$ at $(3, 2)$. What does it print?',
           'x = 3\ny = 2\nprint([2 * x * y, x ** 2])',
-          ['[9, 12]', '[6, 9]', '[12, 9]', '[12, 4]'],
-          2,
+          '[12, 9]',
           '$\\frac{\\partial f}{\\partial x} = 2xy = 12$ and $\\frac{\\partial f}{\\partial y} = x^2 = 9$.',
         ),
-        choose(
+        typeNumber(
           'A loss depends on 5 weights and 1 bias. How many coordinates does its gradient have?',
-          ['1', '5', '2', '6'],
-          3,
+          6,
           'There is one partial derivative per parameter.',
         ),
         choose(
@@ -3333,11 +3167,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The derivative −6.0 points left, so the step moves right by $0.25 \\times 6 = 1.5$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This program takes one step on $f(w) = (w - 3)^2$. What does it print?',
           'w = 5.0\nlearning_rate = 0.25\ngradient = 2 * (w - 3)\nw = w - learning_rate * gradient\nprint(w)',
-          ['6.0', '4.0', '1.0', '3.0'],
-          1,
+          '4.0',
           'The derivative is 4.0, so $w$ moves from 5.0 to $5.0 - 1.0 = 4.0$.',
         ),
         choose(
@@ -3387,11 +3220,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each coordinate moves against its own partial derivative: $1 - 2 = -1$ and $-2 + 1 = -1$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'w = [2.0, 0.0]\ngradient = [1.0, -4.0]\nlearning_rate = 0.5\nw = [w[i] - learning_rate * gradient[i] for i in range(len(w))]\nprint(w)',
-          ['[2.5, -2.0]', '[1.5, -2.0]', '[1.5, 2.0]', '[1.0, 4.0]'],
-          2,
+          '[1.5, 2.0]',
           '$2.0 - 0.5 = 1.5$ and $0.0 + 2.0 = 2.0$.',
         ),
         choose(
@@ -3431,11 +3263,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'With learning rate 1.5 on $w^2$, each step overshoots the minimum at 0 and lands twice as far away.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This program takes one step on $f(w) = w^2$ with learning rate 0.25. What does it print?',
           'w = 4.0\nw = w - 0.25 * 2 * w\nprint(w)',
-          ['-4.0', '3.5', '2.0', '6.0'],
-          2,
+          '2.0',
           'The derivative is 8.0, and $4.0 - 0.25 \\times 8.0 = 2.0$.',
         ),
         choose(
@@ -3449,10 +3280,9 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Oversized steps jump past the minimum to points with higher loss.',
         ),
-        choose(
+        typeNumber(
           'For $f(w) = w^2$, which learning rate makes one step land exactly on the minimum from any $w$?',
-          ['0.1', '1', '2', '0.5'],
-          3,
+          0.5,
           'The step gives $(1 - 2r)w$, which is 0 when $r = 0.5$.',
         ),
         choose(
@@ -3509,10 +3339,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A nonzero slope always offers a nearby lower point.',
         ),
-        choose(
+        typeNumber(
           '$f(x) = 2x^2 + 8x$. What is the value of $f$ at its critical point?',
-          ['−2', '−8', '0', '8'],
-          1,
+          -8,
           "$f'(x) = 4x + 8 = 0$ at $x = -2$, and $f(-2) = 8 - 16 = -8$.",
         ),
       ],
@@ -3580,10 +3409,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'Comparing the values at all critical points identifies the lowest ones.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'A function has local minima with values 3, −1, and 5 and grows without bound in both directions. What is its global minimum value?',
-          ['3', '−1', '5', '0'],
-          1,
+          -1,
           'The global minimum is the lowest of the local minima here.',
         ),
         choose(
@@ -3603,10 +3431,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The critical point $x = 0$ lies outside the domain, and $f$ increases on it, so the minimum is at the left end.',
         ),
-        choose(
+        typeNumber(
           '$f(x) = (x - 2)^2 + 7$. What is its global minimum value?',
-          ['7', '2', '0', '9'],
-          0,
+          7,
           'The square is at least 0 and equals 0 at $x = 2$, leaving 7.',
         ),
       ],
@@ -3676,10 +3503,9 @@ export const knowledgePoints: KnowledgePointModule = {
         "Wherever $f''$ is negative, the slope is decreasing and the graph bends downward.",
       ),
       questions: [
-        choose(
+        typeNumber(
           "$f(x) = 5x^2$. What is $f''(x)$?",
-          ['$10x$', '10', '5', '0'],
-          1,
+          10,
           "$f'(x) = 10x$, and its derivative is 10.",
         ),
         choose(
@@ -3699,10 +3525,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A positive second derivative everywhere means the slope keeps increasing.',
         ),
-        choose(
+        typeNumber(
           "$f(x) = x^4 - 2x^2$. What is $f''(0)$?",
-          ['−4', '0', '4', '12'],
-          0,
+          -4,
           "$f' = 4x^3 - 4x$ and $f'' = 12x^2 - 4$, which is −4 at 0.",
         ),
       ],
@@ -3820,17 +3645,15 @@ export const knowledgePoints: KnowledgePointModule = {
           'Position 1 holds the area, and the vector has three coordinates, one per feature.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'x = [5, 0, 2, 7]\nprint(x[2])',
-          ['0', '2', '7', '5'],
-          1,
+          '2',
           'Positions start at 0, so position 2 is the third coordinate.',
         ),
-        choose(
+        typeNumber(
           'Customer vectors store [age, visits, spend]. One customer is [41, 6, 300]. What is the visits coordinate?',
-          ['41', '300', '6', '3'],
-          2,
+          6,
           'Visits is the second feature, so it is the second coordinate.',
         ),
         choose(
@@ -3844,11 +3667,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Coordinates are matched by position, so positions must mean the same feature.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'v = [4, 1, 8]\nprint(len(v), v[0] + v[2])',
-          ['3 12', '3 5', '4 12', '2 9'],
-          0,
+          '3 12',
           'There are 3 coordinates, and the first and last are 4 and 8.',
         ),
       ],
@@ -3871,23 +3693,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Add matching coordinates: $2 + 4$ and $-1 + 3$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'v = [1, -2, 4]\nprint([3 * x for x in v])',
-          [
-            '[1, -2, 4, 1, -2, 4, 1, -2, 4]',
-            '[3, -2, 4]',
-            '[3, -6, 12]',
-            '[4, 1, 7]',
-          ],
-          2,
+          '[3, -6, 12]',
           'The comprehension multiplies every coordinate by 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = [1, 2]\nb = [3, 4]\nprint(a + b)',
-          ['[4, 6]', '[[1, 2], [3, 4]]', '[3, 8]', '[1, 2, 3, 4]'],
-          3,
+          '[1, 2, 3, 4]',
           'For Python lists, + joins them; it is not vector addition.',
         ),
         choose(
@@ -3910,24 +3725,21 @@ export const knowledgePoints: KnowledgePointModule = {
           'The coordinate products are 8, 3, and −5, and the dot product is their sum, 6.',
       },
       questions: [
-        choose(
+        typeNumber(
           'What is $[1, -2, 3] \\cdot [4, 0, -1]$?',
-          ['[4, 0, −3]', '7', '1', '−1'],
-          2,
+          1,
           '$4 + 0 - 3 = 1$; the dot product is a single number.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = [3, 1]\nb = [2, 5]\nprint([a[i] * b[i] for i in range(len(a))])',
-          ['11', '[6, 5]', '[5, 6]', '[3, 1, 2, 5]'],
-          1,
+          '[6, 5]',
           'The comprehension keeps the separate products; it does not add them.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = [2, 0, 1]\nb = [1, 4, 3]\nprint(a[0] * b[0] + a[1] * b[1] + a[2] * b[2])',
-          ['[2, 0, 3]', '11', '6', '5'],
-          3,
+          '5',
           '$2 \\times 1 + 0 \\times 4 + 1 \\times 3 = 5$.',
         ),
         choose(
@@ -3954,10 +3766,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'Each feature is multiplied by its own weight before the intercept is added.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$w = [0.5, -1]$, $x = [4, 2]$, and $b = 3$. What is $w \\cdot x + b$?',
-          ['1', '5', '3', '−1'],
-          2,
+          3,
           '$0.5 \\times 4 - 1 \\times 2 + 3 = 2 - 2 + 3 = 3$.',
         ),
         choose(
@@ -3977,10 +3788,9 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Its product with the feature is 0 whatever the feature value.',
         ),
-        choose(
+        typeNumber(
           '$w = [1, 1, 1]$ and $x = [4, 9, 2]$. What is $w \\cdot x$?',
-          ['[4, 9, 2]', '15', '3', '72'],
-          1,
+          15,
           'With all weights 1, the dot product adds the coordinates.',
         ),
       ],
@@ -3999,17 +3809,15 @@ export const knowledgePoints: KnowledgePointModule = {
           'The squares 36 and 64 add to 100, and the length is its square root, 10.0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'v = [1, 2, 2]\ntotal = 0\nfor x in v:\n    total += x * x\nprint(total ** 0.5)',
-          ['9', '5.0', '3.0', '2.23606797749979'],
-          2,
+          '3.0',
           'The squares sum to 9, and $\\sqrt{9} = 3.0$. Adding the coordinates would wrongly give 5.',
         ),
-        choose(
+        typeNumber(
           'What is $\\lVert [-5, 12] \\rVert$?',
-          ['7', '17', '169', '13'],
-          3,
+          13,
           '$\\sqrt{25 + 144} = \\sqrt{169} = 13$.',
         ),
         choose(
@@ -4018,10 +3826,9 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Only the zero vector has length 0; squares of nonzero coordinates are positive.',
         ),
-        choose(
+        typeNumber(
           '$v = [3, 4]$ has norm 5. What is $v \\cdot v$?',
-          ['5', '25', '7', '12'],
-          1,
+          25,
           '$v \\cdot v = 9 + 16 = 25$, the square of the norm.',
         ),
       ],
@@ -4038,17 +3845,15 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each coordinate is divided by the length 5; the result has length $\\sqrt{0.36 + 0.64} = 1$.',
       },
       questions: [
-        choose(
+        typeNumber(
           '$\\lVert v \\rVert = 2$. What is $\\lVert 5v \\rVert$?',
-          ['7', '10', '2', '25'],
-          1,
+          10,
           'Scaling by 5 multiplies the length by 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'v = [0, -6]\nlength = 6\nprint([x / length for x in v])',
-          ['[0, -1]', '[0.0, 1.0]', '[0.0, -1.0]', '[-6.0, 0.0]'],
-          2,
+          '[0.0, -1.0]',
           'Dividing keeps each sign, and / always produces floats.',
         ),
         choose(
@@ -4057,10 +3862,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The norm is 13, so divide each coordinate by 13.',
         ),
-        choose(
+        typeNumber(
           '$\\lVert v \\rVert = 3$. What is $\\lVert -2v \\rVert$?',
-          ['6', '−6', '1', '9'],
-          0,
+          6,
           'The length is multiplied by $|-2| = 2$; it cannot be negative.',
         ),
       ],
@@ -4076,16 +3880,14 @@ export const knowledgePoints: KnowledgePointModule = {
         'Absolute values and squares both remove signs, but squares weigh large coordinates more.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'What is the L1 norm of $[-2, 5, -1]$?',
-          ['2', '8', '30', '$\\sqrt{30}$'],
-          1,
+          8,
           '$2 + 5 + 1 = 8$.',
         ),
-        choose(
+        typeNumber(
           'What is the squared L2 norm of the weights $[3, -1]$?',
-          ['4', '2', '10', '$\\sqrt{10}$'],
-          2,
+          10,
           '$9 + 1 = 10$.',
         ),
         choose(
@@ -4121,23 +3923,20 @@ export const knowledgePoints: KnowledgePointModule = {
           'The differences −3 and 4 square to 9 and 16, which add to 25; the distance is 5.0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'a = [1, 1, 1]\nb = [3, 2, 3]\ntotal = 0\nfor i in range(len(a)):\n    total += (a[i] - b[i]) ** 2\nprint(total ** 0.5)',
-          ['9', '5.0', '3.0', '-3.0'],
-          2,
+          '3.0',
           'The squared differences 4, 1, and 4 add to 9, and $\\sqrt{9} = 3.0$.',
         ),
-        choose(
+        typeNumber(
           'What is the distance between $[0, 6]$ and $[8, 0]$?',
-          ['14', '10', '100', '2'],
-          1,
+          10,
           '$\\sqrt{64 + 36} = \\sqrt{100} = 10$.',
         ),
-        choose(
+        typeNumber(
           '$\\operatorname{dist}(a, b) = 4$. What is $\\operatorname{dist}(b, a)$?',
-          ['−4', '16', '0', '4'],
-          3,
+          4,
           'Distance is symmetric because each difference is squared.',
         ),
         choose(
@@ -4165,11 +3964,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The second center has the smallest squared distance, so it is the nearest.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'point = [3, 0]\ncenters = [[0, 0], [3, 4], [4, 1]]\nprint([(point[0] - c[0]) ** 2 + (point[1] - c[1]) ** 2 for c in centers])',
-          ['[3, 4, 1.4]', '[9, 16, 2]', '[3, 5, 2]', '[9, 25, 2]'],
-          1,
+          '[9, 16, 2]',
           'The squared distances are $9 + 0$, $0 + 16$, and $1 + 1$.',
         ),
         choose(
@@ -4236,10 +4034,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Standardizing puts both features on comparable scales.',
         ),
-        choose(
+        typeNumber(
           'After standardizing, two points differ by 3 in one feature and 4 in the other. What is their distance?',
-          ['7', '5', '25', '12'],
-          1,
+          5,
           '$\\sqrt{9 + 16} = 5$.',
         ),
       ],
@@ -4258,10 +4055,9 @@ export const knowledgePoints: KnowledgePointModule = {
           '$a \\cdot b = 3$, $\\lVert a \\rVert = 1$, and $\\lVert b \\rVert = 5$, so the cosine similarity is $3 / 5 = 0.6$.',
       },
       questions: [
-        choose(
+        typeNumber(
           '$a \\cdot b = 6$, $\\lVert a \\rVert = 2$, and $\\lVert b \\rVert = 5$. What is the cosine similarity?',
-          ['60', '0.6', '3', '1.2'],
-          1,
+          0.6,
           '$6 / (2 \\times 5) = 0.6$.',
         ),
         predictOutput(
@@ -4271,16 +4067,14 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           '$6 / (\\sqrt{8} \\times 3) = 1 / \\sqrt{2} \\approx 0.707$: an angle of 45°.',
         ),
-        choose(
+        typeNumber(
           'What is the cosine similarity of $[4, 0]$ and $[0, -2]$?',
-          ['−1', '1', '0', '−8'],
-          2,
+          0,
           'The dot product is 0, so the vectors are perpendicular.',
         ),
-        choose(
+        typeNumber(
           'What is the cosine similarity of $[1, 2, 2]$ and $[2, 4, 4]$?',
-          ['2', '0.5', '9', '1'],
-          3,
+          1,
           'The second vector is twice the first, so they point the same way.',
         ),
       ],
@@ -4318,10 +4112,9 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A cosine of −1 means an angle of 180°.',
         ),
-        choose(
+        typeNumber(
           'For which $k$ is $[k, 2]$ orthogonal to $[3, 6]$?',
-          ['4', '−1', '1', '−4'],
-          3,
+          -4,
           '$3k + 12 = 0$ gives $k = -4$.',
         ),
         choose(
@@ -4348,16 +4141,14 @@ export const knowledgePoints: KnowledgePointModule = {
         'B is ten times A, so their directions match exactly.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$\\cos(a, b) = 0.4$. What is $\\cos(3a, b)$?',
-          ['1.2', '0.4', '0.13', '1'],
-          1,
+          0.4,
           'The factor 3 cancels between the dot product and $\\lVert 3a \\rVert$.',
         ),
-        choose(
+        typeNumber(
           'Document A has word counts $[1, 3]$ and B has $[10, 30]$. What is their cosine similarity?',
-          ['0.1', '10', '1', '0'],
-          2,
+          1,
           'B is ten times A, so they point the same way.',
         ),
         choose(
@@ -4371,10 +4162,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Only cosine similarity is unchanged by positive scaling.',
         ),
-        choose(
+        typeNumber(
           '$\\cos(a, b) = 0.5$. What is $\\cos(-a, b)$?',
-          ['−0.5', '0.5', '1.5', '0'],
-          0,
+          -0.5,
           'Negating $a$ flips the sign of the dot product but not the norms.',
         ),
       ],
@@ -4398,16 +4188,14 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Shape lists rows, then columns.',
         ),
-        choose(
+        typeNumber(
           '$A = [[1, 2], [3, 4], [5, 6]]$. What is $A_{32}$, the entry in row 3 and column 2, counting from 1?',
-          ['5', '4', '6', '3'],
-          2,
+          6,
           'Row 3 is $[5, 6]$, and its second entry is 6.',
         ),
-        choose(
+        typeNumber(
           'A data matrix has shape $1{,}000 \\times 8$. How many observations does it hold?',
-          ['8', '8,000', '1,008', '1,000'],
-          3,
+          1000,
           'Rows are observations; the 8 columns are features.',
         ),
         choose(
@@ -4435,25 +4223,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'A[1] is the second row, A[0][2] is the first row’s third entry, and the shape is $2 \\times 3$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'A = [[5, 6], [7, 8], [9, 10]]\nprint(A[2][1])',
-          ['8', '9', '10', '7'],
-          2,
+          '10',
           'A[2] is the third row [9, 10], and position 1 holds 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'A = [[5, 6], [7, 8], [9, 10]]\nprint(len(A), len(A[0]))',
-          ['2 3', '3 2', '6 2', '3 3'],
-          1,
+          '3 2',
           'There are 3 row lists, each with 2 entries.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'A = [[1, 2, 3], [4, 5, 6]]\nprint([row[0] for row in A])',
-          ['[1, 2, 3]', '[4, 5, 6]', '[1, 2]', '[1, 4]'],
-          3,
+          '[1, 4]',
           'Taking position 0 of each row collects the first column.',
         ),
         choose(
@@ -4498,16 +4283,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Transposing swaps the numbers of rows and columns.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'A = [[1, 2], [3, 4], [5, 6]]\nprint([[A[i][j] for i in range(len(A))] for j in range(len(A[0]))])',
-          [
-            '[[1, 2], [3, 4], [5, 6]]',
-            '[[2, 1], [4, 3], [6, 5]]',
-            '[[1, 4], [2, 5], [3, 6]]',
-            '[[1, 3, 5], [2, 4, 6]]',
-          ],
-          3,
+          '[[1, 3, 5], [2, 4, 6]]',
           'The $3 \\times 2$ matrix becomes $2 \\times 3$; each new row is an old column.',
         ),
         choose(
@@ -4543,11 +4322,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Row $[1, 0]$ picks 7 and row $[0, 1]$ picks 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'A = [[2, 1], [0, 3]]\nx = [4, -1]\nprint([row[0] * x[0] + row[1] * x[1] for row in A])',
-          ['[8, -3]', '[2, 3]', '[7, -3]', '[8, 0, 4, -3]'],
-          2,
+          '[7, -3]',
           '$2 \\times 4 + 1 \\times (-1) = 7$ and $0 \\times 4 + 3 \\times (-1) = -3$.',
         ),
         choose(
@@ -4575,10 +4353,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'Each of the 4 rows needs exactly 3 partner coordinates.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$A$ has shape $5 \\times 2$ and $x$ has 2 coordinates. How many coordinates does $Ax$ have?',
-          ['2', '5', '10', '7'],
-          1,
+          5,
           'One dot product per row of $A$.',
         ),
         choose(
@@ -4633,10 +4410,9 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           '$6 - 1 = 5$ and $0 - 4 = -4$.',
         ),
-        choose(
+        typeNumber(
           '$X = [[1, 1], [2, 3]]$, $w = [2, 2]$, and $b = 10$. What is the second prediction?',
-          ['10', '14', '20', '15'],
-          2,
+          20,
           '$2 \\times 2 + 3 \\times 2 + 10 = 20$.',
         ),
         choose(
@@ -4724,17 +4500,15 @@ export const knowledgePoints: KnowledgePointModule = {
           'Row 1 of $A$, $[1, 2]$, dotted with column 2 of $B$, $[6, 8]$, gives $6 + 16 = 22$. The full product is $[[19, 22], [43, 50]]$.',
       },
       questions: [
-        choose(
+        typeNumber(
           '$A = [[1, 2], [3, 4]]$ and $B = [[5, 6], [7, 8]]$. What is the entry of $AB$ in row 2, column 1?',
-          ['50', '43', '19', '23'],
-          1,
+          43,
           'Row $[3, 4]$ dotted with column $[5, 7]$: $15 + 28 = 43$.',
         ),
-        predictOutput(
+        typeOutput(
           'This program computes the row 2, column 2 entry of $AB$. What does it print?',
           'A = [[2, 0], [1, 3]]\nB = [[1, 4], [2, 5]]\nprint(A[1][0] * B[0][1] + A[1][1] * B[1][1])',
-          ['8', '15', '19', '7'],
-          2,
+          '19',
           'Row $[1, 3]$ dotted with column $[4, 5]$: $4 + 15 = 19$.',
         ),
         choose(
@@ -4834,11 +4608,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Multiplying by the identity on either side returns $A$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'M = [[3, 0], [0, 3]]\nx = [2, -1]\nprint([row[0] * x[0] + row[1] * x[1] for row in M])',
-          ['[2, -1]', '[5, 2]', '[6, 3]', '[6, -3]'],
-          3,
+          '[6, -3]',
           '$M = 3I$ scales every coordinate by 3.',
         ),
         choose(
@@ -4865,10 +4638,9 @@ export const knowledgePoints: KnowledgePointModule = {
         'Check one entry of $A^{-1}A$: $0.6 \\times 4 - 0.7 \\times 2 = 1$.',
       ),
       questions: [
-        choose(
+        typeNumber(
           'What is the determinant of $[[3, 1], [4, 2]]$?',
-          ['10', '2', '−2', '5'],
-          1,
+          2,
           '$3 \\times 2 - 1 \\times 4 = 2$.',
         ),
         choose(
@@ -4923,9 +4695,8 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           '$3 \\times 2 - 6 \\times 1 = 0$; the first row is 3 times the second.',
         ),
-        choose(
+        typeNumber(
           'For which $k$ does $[[k, 4], [1, 2]]$ have no inverse?',
-          ['4', '0', '2', '−2'],
           2,
           'The determinant $2k - 4$ is 0 when $k = 2$.',
         ),
@@ -4967,11 +4738,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '$Av$ equals $v$ itself, so $v$ is an eigenvector with eigenvalue 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'A = [[3, 1], [0, 2]]\nv = [1, 0]\nprint([row[0] * v[0] + row[1] * v[1] for row in A])',
-          ['[1, 0]', '[3, 0]', '[3, 1]', '[0, 2]'],
-          1,
+          '[3, 0]',
           '$Av = [3, 0] = 3v$, so $[1, 0]$ is an eigenvector with eigenvalue 3.',
         ),
         choose(
@@ -4985,9 +4755,8 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           '$4 = 4 \\times 1$ but $5 \\ne 4 \\times 2$, so $A$ turns the vector.',
         ),
-        choose(
+        typeNumber(
           '$Av = [6, -3]$ for $v = [2, -1]$. What is the eigenvalue?',
-          ['−3', '6', '2', '3'],
           3,
           '$[6, -3] = 3 \\times [2, -1]$.',
         ),
@@ -5062,16 +4831,14 @@ export const knowledgePoints: KnowledgePointModule = {
         'Variances sit on the diagonal and the shared covariance fills both off-diagonal positions.',
       ),
       questions: [
-        choose(
+        typeNumber(
           '$\\Sigma = [[4, -1], [-1, 9]]$. What is the variance of the second feature?',
-          ['−1', '4', '9', '3'],
-          2,
+          9,
           'The second diagonal entry is $\\operatorname{Var}(x_2)$.',
         ),
-        choose(
+        typeNumber(
           '$\\Sigma = [[4, -1], [-1, 9]]$. What is the covariance of the two features?',
-          ['4', '−1', '9', '13'],
-          1,
+          -1,
           'Off-diagonal entries are covariances.',
         ),
         choose(
@@ -5116,15 +4883,13 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The second feature has the larger variance, 7, along $[0, 1]$.',
         ),
-        choose(
+        typeNumber(
           'The feature variances are 4 and 6. What is the sum of the covariance matrix’s eigenvalues?',
-          ['24', '2', '5', '10'],
-          3,
+          10,
           'The eigenvalues add up to the sum of the diagonal variances.',
         ),
-        choose(
+        typeNumber(
           'Two principal directions of a covariance matrix are $[1, 1]$ and $[1, -1]$. What is their dot product?',
-          ['0', '1', '2', '−1'],
           0,
           'Principal directions are perpendicular.',
         ),
@@ -5145,18 +4910,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '$e^0 = 1$, returned as a float. $e^1$ is the constant $e$, so the comparison is True, and $e^{-1} = 1 / e$ is still positive.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'import math\nprint(math.exp(0) + math.exp(0))',
-          ['2', '0.0', '2.0', '2.718281828459045'],
-          2,
+          '2.0',
           '$e^0 = 1$, and math.exp always returns a float, so the sum is 2.0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\nprint(math.exp(2) > 7, math.exp(-2) > 0)',
-          ['True True', 'True False', 'False True', 'False False'],
-          0,
+          'True True',
           '$e^2 \\approx 7.39$, and $e$ raised to any power is positive, even a negative one.',
         ),
         choose(
@@ -5165,11 +4928,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'math.exp takes the exponent as its argument. math.e is a number, not a function, and $-e^z$ is negative.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'import math\nprint(math.exp(1) == math.e, math.exp(-1) < 0)',
-          ['True True', 'False False', 'False True', 'True False'],
-          3,
+          'True False',
           'math.exp(1) is exactly the stored constant $e$, and $e^{-1} = 1 / e$ is positive.',
         ),
       ],
@@ -5187,18 +4949,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '$e^0 = 1$, so $\\ln 1 = 0$. $\\ln$ undoes $e^x$ and returns 3. $2^5 = 32$ and $10^{-2} = 0.01$.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'import math\nprint(math.log(math.exp(5)))',
-          ['148.4131591025766', '5.0', '1.6094379124341003', '0.0'],
-          1,
+          '5.0',
           'math.log undoes math.exp, so the result is the exponent 5, as a float.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\nprint(math.log2(64), math.log10(100))',
-          ['8.0 10.0', '6 2', '6.0 2.0', '32.0 50.0'],
-          2,
+          '6.0 2.0',
           '$2^6 = 64$ and $10^2 = 100$, and the log functions return floats.',
         ),
         choose(
@@ -5212,11 +4972,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'No power of $e$ is negative, so math.log refuses negative inputs instead of returning a number.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'import math\nprint(math.log(8, 2) + math.log(1))',
-          ['4.0', '3', '2.0794415416798357', '3.0'],
-          3,
+          '3.0',
           'math.log(8, 2) asks which power of 2 gives 8, which is 3.0, and $\\ln 1$ adds 0.0.',
         ),
       ],
@@ -5234,18 +4993,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '$0.01^{200} = 10^{-400}$, far below the smallest float, so the product becomes 0.0. The log of the same product, $200 \\ln 0.01$, is an ordinary float.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'import math\ntotal = math.log(0.5) + math.log(0.5)\nprint(math.exp(total))',
-          ['1.0', '0.25', '0.5', '-1.3862943611198906'],
-          1,
+          '0.25',
           'Adding the logs multiplies the probabilities, and math.exp turns the sum back into $0.5 \\times 0.5 = 0.25$.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'import math\nprint(0.001 ** 120, 120 * math.log(0.001) < 0)',
-          ['1e-360 True', '0.0 False', '0.0 True', '1e-360 False'],
-          2,
+          '0.0 True',
           '$10^{-360}$ is too small for a float, so the product underflows to 0.0. Its log, $120 \\ln 0.001$, is negative.',
         ),
         choose(
@@ -5259,11 +5016,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The products underflowed, but $\\ln$ is increasing, so the larger log-sum still marks the larger true product.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'import math\nlog_p = math.log(0.2) + math.log(0.5)\nprint(math.exp(log_p) < 0.11, log_p < 0)',
-          ['False True', 'True False', 'False False', 'True True'],
-          3,
+          'True True',
           'The sum of logs is $\\ln(0.2 \\times 0.5) = \\ln 0.1$, which is negative, and math.exp turns it back into about 0.1.',
         ),
       ],

@@ -4,17 +4,20 @@ import { Badge } from '@/components/ui/badge';
 
 export function Btn({
   children,
+  id,
   onClick,
   secondary = false,
   disabled = false,
 }: {
   children: ReactNode;
+  id?: string;
   onClick?: () => void;
   secondary?: boolean;
   disabled?: boolean;
 }) {
   return (
     <Button
+      id={id}
       variant={secondary ? 'outline' : 'default'}
       onClick={onClick}
       disabled={disabled}
