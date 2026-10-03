@@ -1,6 +1,6 @@
 # The lessdumb learning model
 
-The MVP contains 633 original skills, 2,532 questions, 598 executable exercises, and 1,314 cards across Python, quantitative foundations, data analysis, machine learning, data systems, competitive programming, Rust, and C++. The learning engine operates on a subject-neutral graph. A course is a selection of skill IDs; each skill names its domain, unit, course, and prerequisites. Additional programming languages, mathematics, physics, and natural languages can use the same registry and scheduler. Learning functions accept an optional `CurriculumCatalog` so another catalog can be evaluated independently of the public curriculum registry.
+The MVP contains 710 original skills, 2,840 questions, 648 executable exercises, and 1,420 cards across Python, quantitative foundations, data analysis, machine learning, data systems, competitive programming, Rust, and C++. The learning engine operates on a subject-neutral graph. A course is a selection of skill IDs; each skill names its domain, unit, course, and prerequisites. Additional programming languages, mathematics, physics, and natural languages can use the same registry and scheduler. Learning functions accept an optional `CurriculumCatalog` so another catalog can be evaluated independently of the public curriculum registry.
 
 ## Sources and boundaries
 

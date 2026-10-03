@@ -36,13 +36,13 @@ function master(progress: Progress, id: string): Progress {
 }
 
 describe('granular C++20 curriculum', () => {
-  it('has 45 complete four-stage topics with original compilable evidence', () => {
+  it('has 52 complete four-stage topics with original compilable evidence', () => {
     expect(validateCurriculum(cppCatalog.skills, cppCatalog)).toEqual([]);
     expect(cppCatalog.courses[0].id).toBe('cpp');
     expect(cppCatalog.courses[0].language).toBe('cpp');
     expect(cppCatalog.units).toHaveLength(12);
-    expect(cppCatalog.skills).toHaveLength(180);
-    expect(Object.keys(cppTopicStages)).toHaveLength(45);
+    expect(cppCatalog.skills).toHaveLength(208);
+    expect(Object.keys(cppTopicStages)).toHaveLength(52);
     const byId = Object.fromEntries(
       cppCatalog.skills.map((skill) => [skill.id, skill]),
     );
@@ -92,7 +92,7 @@ describe('granular C++20 curriculum', () => {
 
   it('requires real native-language foundations and connects all application ancestors', () => {
     const path = coursePath('cpp', cppCatalog);
-    expect(path).toHaveLength(180);
+    expect(path).toHaveLength(208);
     expect(new Set(path.map((skill) => skill.courseId))).toEqual(
       new Set(['cpp']),
     );
