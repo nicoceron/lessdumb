@@ -558,11 +558,13 @@ export function validateCurriculum(
         )
           errors.push(`${question.id}: needs four or more distinct choices.`);
     }
-    // A typed synonym must not accept a distractor of the same skill.
+    // A typed synonym must not accept a distractor of the same skill,
+    // multistep parts included.
     errors.push(
       ...synonymCollisionErrors([
         ...item.questions,
         ...points.flatMap((point) => point.questions),
+        ...(item.multistep ?? []).flatMap((problem) => problem.parts ?? []),
       ]),
     );
     for (const question of [

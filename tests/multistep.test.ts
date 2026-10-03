@@ -488,7 +488,20 @@ describe('multistep problems in quizzes', () => {
         DUE + 1000,
       );
     const [p1, p2, p3] = problem.parts;
-    result = answerQuiz(result, quiz.id, start, rightAnswer(p1), DUE + 2000);
+    result = answerQuiz(
+      result,
+      quiz.id,
+      start,
+      rightAnswer(p1),
+      DUE + 2000,
+      undefined,
+      undefined,
+      7_500,
+    );
+    expect(result.attempts.at(-1)).toMatchObject({
+      questionId: p1.id,
+      elapsedMs: 7_500,
+    });
     result = answerQuiz(
       result,
       quiz.id,
@@ -567,6 +580,7 @@ describe('multistep state', () => {
         // The second part is missed.
         correct: question.id !== problem.parts[1].id,
         mode: 'review',
+        elapsedMs: 4_000 + index,
         ...(question.type === 'numeric' || question.type === 'text'
           ? { response: 'typed' }
           : {}),
@@ -580,6 +594,10 @@ describe('multistep state', () => {
     const parts = state.progress.attempts.filter((attempt) =>
       attempt.questionId.startsWith(problem.id),
     );
+    // Each part keeps its own answer time, like any question (CEN-161).
+    expect(parts.map((attempt) => attempt.elapsedMs)).toEqual([
+      4_001, 4_002, 4_003,
+    ]);
     expect(
       parts.map((attempt) => [attempt.questionId, attempt.correct]),
     ).toEqual([

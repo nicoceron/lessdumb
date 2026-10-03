@@ -456,7 +456,9 @@ function LessonPage({
       : undefined,
     () => {
       const prompt = current && document.getElementById(promptId(current.key));
-      return prompt?.closest('.lesson-question') ?? prompt ?? null;
+      return (
+        prompt?.closest('.lesson-question, .multistep-part') ?? prompt ?? null
+      );
     },
   );
   const pointLesson = !!skill && hasKnowledgePoints(skill);
