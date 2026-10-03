@@ -23,8 +23,12 @@ import {
   reviewRequirement,
 } from '../src/lib/lesson-plan';
 import { lessonXp } from '../src/lib/xp';
+import * as parts from '../src/lib/content/parts';
 import {
   catalogIndexModule,
+  contentPartsModule,
+  contentUnitModule,
+  contentUnits,
   encodedCatalogIndex,
 } from '../scripts/catalog-index-plugin.mjs';
 
@@ -121,6 +125,57 @@ describe('per-course content', () => {
     expect(await loadSkill(index.skillById['print-output'])).toBe(
       curriculum.skillById['print-output'],
     );
+  });
+
+  it('ships each unit to the browser as its own part, exactly as the server derives it', async () => {
+    // What the build plugin serves in place of src/lib/content/parts.ts.
+    const units: {
+      id: string;
+      courseId: string;
+      skills: typeof curriculum.skills;
+    }[] = await contentUnits();
+    expect(units.map((unit) => unit.id)).toEqual(
+      curriculum.units
+        .filter((unit) => curriculum.skills.some((s) => s.unitId === unit.id))
+        .map((unit) => unit.id),
+    );
+    const shipped = new Map<string, unknown>();
+    for (const unit of units) {
+      const source = contentUnitModule(unit);
+      expect(source).toMatch(/^export default JSON\.parse\(".*"\);\n$/s);
+      const skills = JSON.parse(
+        JSON.parse(source.slice('export default JSON.parse('.length, -3)),
+      ) as typeof curriculum.skills;
+      for (const skill of skills) {
+        expect(skill.unitId).toBe(unit.id);
+        expect(skill.courseId).toBe(unit.courseId);
+        shipped.set(skill.id, skill);
+      }
+    }
+    // Every skill exactly once, with all of its content.
+    expect([...shipped.keys()].sort()).toEqual(
+      curriculum.skills.map((skill) => skill.id).sort(),
+    );
+    for (const skill of curriculum.skills)
+      expect(shipped.get(skill.id), skill.id).toEqual(skill);
+
+    // The replacement module exports what the real module exports, keys its
+    // parts by unit, and loads each through its own dynamic import.
+    const source = contentPartsModule(units);
+    const generated = await import(
+      `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
+    );
+    expect(Object.keys(generated).sort()).toEqual(Object.keys(parts).sort());
+    expect(Object.keys(generated.contentParts)).toEqual(
+      units.map((unit) => unit.id),
+    );
+    for (const unit of units) {
+      expect(generated.contentParts[unit.id].courseId).toBe(unit.courseId);
+      expect(source).toContain(`import("lessdumb:content/${unit.id}")`);
+    }
+    const skill = index.skillById['print-output'];
+    expect(generated.partOf(skill)).toBe(skill.unitId);
+    expect(parts.partOf(skill)).toBe(skill.courseId);
   });
 
   it('keeps the browser off the full curriculum', () => {

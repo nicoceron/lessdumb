@@ -35,6 +35,7 @@ import {
   type Progress,
 } from '../src/lib/learning';
 import { reviewCycleComplete } from '../src/lib/lesson-plan';
+import { cardBlocks } from '../src/lib/card-text';
 import {
   decodeIndex,
   encodeIndex,
@@ -452,9 +453,11 @@ describe('typed questions in the engine', () => {
       response: '"Ready"',
     });
     expect(state.progress.attempts[0].response).toBe('"Ready"');
-    expect(state.cards[0].back).toBe(
-      `${question.answers[0]}\n\n${question.explanation}`,
-    );
+    // The accepted answer is literal text, as the lesson shows it (CEN-128).
+    expect(cardBlocks(state.cards[0].back)).toEqual([
+      { kind: 'code', text: question.answers[0] },
+      { kind: 'prose', text: question.explanation },
+    ]);
     expect(state.cards[0].front).toContain(question.code);
     // A choice answer records no response.
     const choice = skill.knowledgePoints![0].questions.find(
