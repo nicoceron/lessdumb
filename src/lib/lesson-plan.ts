@@ -1,52 +1,76 @@
-import {
-  assessmentPolicy,
-  type ChoiceQuestion,
-  type KnowledgePoint,
-  type Question,
-  type Skill,
+import type {
+  ChoiceQuestion,
+  KnowledgePoint,
+  KnowledgePointRef,
+  Question,
+  QuestionRef,
+  Skill,
+  SkillOutline,
 } from './curriculum';
+import { assessmentPolicy } from './catalog-outline';
 
 // A knowledge-point lesson is a fixed sequence of steps: each point in order,
 // then the skill's code exercise when its policy requires code. Skills without
 // knowledge points keep one step per authored question.
+//
+// The plan needs only IDs and question types, so it runs on skill outlines.
+// Given a skill with its content, the same functions return that content.
 
 /** Correct answers, on distinct questions, that pass one knowledge point. */
 export const POINT_PASS_CORRECT = 2;
 /** Incorrect answers on one knowledge point that fail the lesson attempt. */
 export const POINT_FAIL_INCORRECT = 3;
 
-export interface LessonStep {
+export interface LessonStep<
+  P extends KnowledgePointRef = KnowledgePoint,
+  Q extends QuestionRef = Question,
+> {
   /** The evidence ID: a knowledge point ID or a question ID. */
   id: string;
   kind: 'point' | 'code' | 'question';
+  /** Display title; empty for a point whose content is not loaded. */
   title: string;
-  point?: KnowledgePoint;
-  questions: Question[];
+  point?: P;
+  questions: Q[];
 }
+
+/** Lesson steps of a skill outline: IDs and question types only. */
+export type LessonStepRef = LessonStep<KnowledgePointRef, QuestionRef>;
+
+/** A full skill's steps carry content; an outline's carry references. */
+export type StepOf<S extends SkillOutline> = S extends Skill
+  ? LessonStep
+  : LessonStepRef;
+export type QuestionOf<S extends SkillOutline> = S extends Skill
+  ? Question
+  : QuestionRef;
+export type PointOf<S extends SkillOutline> = S extends Skill
+  ? KnowledgePoint
+  : KnowledgePointRef;
 
 interface Plan {
-  steps: LessonStep[];
+  steps: LessonStepRef[];
   stepIds: string[];
   /** Every question that can be served for this skill, by ID. */
-  questions: Map<string, Question>;
+  questions: Map<string, QuestionRef>;
   /** Evidence ID for each servable question. */
   evidence: Map<string, string>;
-  points: KnowledgePoint[];
+  points: KnowledgePointRef[];
 }
 
-const plans = new WeakMap<Skill, Plan>();
+const plans = new WeakMap<SkillOutline, Plan>();
 
-function plan(skill: Skill): Plan {
+function plan(skill: SkillOutline): Plan {
   const cached = plans.get(skill);
   if (cached) return cached;
   const points = skill.knowledgePoints ?? [];
-  const steps: LessonStep[] = [];
+  const steps: LessonStepRef[] = [];
   if (points.length) {
     for (const point of points)
       steps.push({
         id: point.id,
         kind: 'point',
-        title: point.title,
+        title: 'title' in point ? String(point.title) : '',
         point,
         questions: point.questions,
       });
@@ -69,7 +93,7 @@ function plan(skill: Skill): Plan {
         questions: [question],
       }),
     );
-  const questions = new Map<string, Question>();
+  const questions = new Map<string, QuestionRef>();
   const evidence = new Map<string, string>();
   for (const step of steps)
     for (const question of step.questions) {
@@ -87,16 +111,16 @@ function plan(skill: Skill): Plan {
   return result;
 }
 
-export function hasKnowledgePoints(skill: Skill): boolean {
+export function hasKnowledgePoints(skill: SkillOutline): boolean {
   return plan(skill).points.length > 0;
 }
 
 /** Ordered lesson steps; their IDs are the evidence that masters the skill. */
-export function lessonSteps(skill: Skill): LessonStep[] {
-  return plan(skill).steps;
+export function lessonSteps<S extends SkillOutline>(skill: S): StepOf<S>[] {
+  return plan(skill).steps as StepOf<S>[];
 }
 
-export function lessonEvidenceIds(skill: Skill): string[] {
+export function lessonEvidenceIds(skill: SkillOutline): string[] {
   return plan(skill).stepIds;
 }
 
@@ -104,33 +128,41 @@ export function lessonEvidenceIds(skill: Skill): string[] {
  * A question the engine can serve and grade for this skill. Legacy choice
  * questions of a knowledge-point skill are no longer part of its lesson.
  */
-export function findQuestion(
-  skill: Skill,
+export function findQuestion<S extends SkillOutline>(
+  skill: S,
   questionId: string,
-): Question | undefined {
-  return plan(skill).questions.get(questionId);
+): QuestionOf<S> | undefined {
+  return plan(skill).questions.get(questionId) as QuestionOf<S> | undefined;
 }
 
 /** The lesson step (point or question) a servable question gives evidence for. */
 export function evidenceIdFor(
-  skill: Skill,
+  skill: SkillOutline,
   questionId: string,
 ): string | undefined {
   return plan(skill).evidence.get(questionId);
 }
 
-export function stepFor(skill: Skill, evidenceId: string) {
-  return plan(skill).steps.find((step) => step.id === evidenceId);
+export function stepFor<S extends SkillOutline>(
+  skill: S,
+  evidenceId: string,
+): StepOf<S> | undefined {
+  return plan(skill).steps.find((step) => step.id === evidenceId) as
+    | StepOf<S>
+    | undefined;
 }
 
-export function masteryFraction(skill: Skill, evidence: string[]): number {
+export function masteryFraction(skill: SkillOutline, evidence: string[]): number {
   const ids = plan(skill).stepIds;
   if (!ids.length) return 0;
   return ids.filter((id) => evidence.includes(id)).length / ids.length;
 }
 
 /** Evidence of every lesson step, plus each type the policy requires. */
-export function hasLessonEvidence(skill: Skill, evidence: string[]): boolean {
+export function hasLessonEvidence(
+  skill: SkillOutline,
+  evidence: string[],
+): boolean {
   const { steps, stepIds } = plan(skill);
   if (!stepIds.length || !stepIds.every((id) => evidence.includes(id)))
     return false;
@@ -145,7 +177,7 @@ export function hasLessonEvidence(skill: Skill, evidence: string[]): boolean {
 }
 
 /** Answers needed in one due review cycle. */
-export function reviewRequirement(skill: Skill) {
+export function reviewRequirement(skill: SkillOutline) {
   const policy = assessmentPolicy(skill);
   const { points } = plan(skill);
   if (!points.length)
@@ -168,7 +200,7 @@ export function reviewRequirement(skill: Skill) {
 
 /** Whether these distinct correct review answers complete a due cycle. */
 export function reviewCycleComplete(
-  skill: Skill,
+  skill: SkillOutline,
   reviewQuestionIds: string[],
 ): boolean {
   const requirement = reviewRequirement(skill);
@@ -194,7 +226,10 @@ export function reviewCycleComplete(
 }
 
 /** Review slots for display: one per point answered or still needed, plus code. */
-export function reviewProgress(skill: Skill, reviewQuestionIds: string[]) {
+export function reviewProgress(
+  skill: SkillOutline,
+  reviewQuestionIds: string[],
+) {
   const requirement = reviewRequirement(skill);
   const { questions, evidence, points } = plan(skill);
   if (!points.length) {
@@ -219,8 +254,11 @@ export function reviewProgress(skill: Skill, reviewQuestionIds: string[]) {
 }
 
 /** Points ordered for a review cycle; each cycle starts one point later. */
-export function reviewPointOrder(skill: Skill, cycle: number) {
-  const { points } = plan(skill);
+export function reviewPointOrder<S extends SkillOutline>(
+  skill: S,
+  cycle: number,
+): PointOf<S>[] {
+  const points = plan(skill).points as PointOf<S>[];
   if (!points.length) return [];
   const start = ((cycle % points.length) + points.length) % points.length;
   return [...points.slice(start), ...points.slice(0, start)];
@@ -231,4 +269,14 @@ export function servedChoiceQuestions(skill: Skill): ChoiceQuestion[] {
   return [...plan(skill).questions.values()].filter(
     (question): question is ChoiceQuestion => question.type === 'choice',
   );
+}
+
+/**
+ * Question IDs of the four-question lessons that knowledge points replaced:
+ * `<skill>-q1` to `-q4`. Their choice questions are retired (CEN-117) and the
+ * code exercise kept slot 4, but saved evidence, review cycles, XP ledgers,
+ * attempts, and cards may still name any of them.
+ */
+export function legacyQuestionIds(skill: Pick<SkillOutline, 'id'>): string[] {
+  return [1, 2, 3, 4].map((slot) => `${skill.id}-q${slot}`);
 }

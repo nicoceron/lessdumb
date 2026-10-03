@@ -1,9 +1,11 @@
-import {
-  defaultCatalog,
-  type ChoiceQuestion,
-  type CurriculumCatalog,
-  type Skill,
+import type {
+  ChoiceQuestion,
+  GraphCatalog,
+  Skill,
+  SkillOutline,
 } from './curriculum';
+import { defaultCatalog } from './catalog-index';
+import { contentOf } from './content';
 import {
   activityDay,
   applyImplicitCredit,
@@ -85,13 +87,26 @@ export function quizDeadline(quiz: Quiz): number {
   return quiz.createdAt + quiz.timeLimitMs;
 }
 
-function choiceQuestions(skill: Skill) {
+function choiceQuestions(skill: SkillOutline) {
   return (skill.knowledgePoints ?? []).map((point) => ({
     point,
     questions: point.questions.filter(
-      (question): question is ChoiceQuestion => question.type === 'choice',
+      (question) => question.type === 'choice',
     ),
   }));
+}
+
+/** A quiz question with its content; undefined until its course is loaded. */
+function quizChoice(
+  slot: Pick<QuizQuestion, 'skillId' | 'questionId'>,
+  catalog: GraphCatalog,
+): { skill: Skill; question: ChoiceQuestion } | undefined {
+  const outline = catalog.skills.find((item) => item.id === slot.skillId);
+  const skill = outline && contentOf(outline);
+  const question = skill?.knowledgePoints
+    ?.flatMap((point) => point.questions)
+    .find((item) => item.id === slot.questionId);
+  return skill && question?.type === 'choice' ? { skill, question } : undefined;
 }
 
 /**
@@ -104,7 +119,7 @@ function choiceQuestions(skill: Skill) {
 export function planQuiz(
   progress: Progress,
   courseId: string,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): QuizQuestion[] {
   const lastQuizzed = new Map<string, number>();
   for (const quiz of quizzesOf(progress))
@@ -135,7 +150,7 @@ export function planQuiz(
   );
   const picked: QuizQuestion[] = [];
   const usedPoints = new Map<string, Set<string>>();
-  const pick = (skill: Skill) => {
+  const pick = (skill: SkillOutline) => {
     const counts = seenCounts(progress, skill.id);
     const used = usedPoints.get(skill.id) ?? new Set<string>();
     const points = choiceQuestions(skill)
@@ -186,7 +201,7 @@ export type QuizStatus =
 export function quizStatus(
   progress: Progress,
   courseId: string,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): QuizStatus {
   const active = activeQuiz(progress);
   if (active) return { kind: 'active', quiz: active };
@@ -209,7 +224,7 @@ export function startQuiz(
   progress: Progress,
   courseId: string,
   now: Now = Date.now(),
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): Progress {
   const status = quizStatus(progress, courseId, catalog);
   if (status.kind === 'active') return progress;
@@ -232,16 +247,15 @@ export function startQuiz(
   };
 }
 
-/** The catalog question a quiz slot asks. */
+/**
+ * The catalog question a quiz slot asks, with its content. Undefined for an
+ * unknown question or while its skill's course is not loaded.
+ */
 export function quizQuestion(
   slot: Pick<QuizQuestion, 'skillId' | 'questionId'>,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): { skill: Skill; question: ChoiceQuestion } | undefined {
-  const skill = catalog.skills.find((item) => item.id === slot.skillId);
-  const question = skill?.knowledgePoints
-    ?.flatMap((point) => point.questions)
-    .find((item) => item.id === slot.questionId);
-  return skill && question?.type === 'choice' ? { skill, question } : undefined;
+  return quizChoice(slot, catalog);
 }
 
 /** A missed skill's review becomes due now; nothing is unlearned yet. */
@@ -274,7 +288,7 @@ export function answerQuiz(
   index: number,
   answer: number,
   now: Now = Date.now(),
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
   writerId?: string,
 ): Progress {
   const quiz = quizzesOf(progress).find((item) => item.id === quizId);
@@ -283,12 +297,9 @@ export function answerQuiz(
   if (at > quizDeadline(quiz)) return finishQuiz(progress, quizId, at, catalog);
   const slot = quiz.questions[index];
   if (!slot || slot.answer !== undefined) return progress;
-  const skill = catalog.skills.find((item) => item.id === slot.skillId);
-  const question = skill?.knowledgePoints
-    ?.flatMap((point) => point.questions)
-    .find((item) => item.id === slot.questionId);
-  if (!skill || question?.type !== 'choice')
-    throw new Error('This quiz question is not in the catalog.');
+  const found = quizChoice(slot, catalog);
+  if (!found) throw new Error('This quiz question is not in the catalog.');
+  const { skill, question } = found;
   if (
     !Number.isInteger(answer) ||
     answer < 0 ||
@@ -369,7 +380,7 @@ export function finishQuiz(
   progress: Progress,
   quizId: string,
   now: Now = Date.now(),
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): Progress {
   const quiz = quizzesOf(progress).find((item) => item.id === quizId);
   if (!quiz || quiz.completedAt !== undefined) return progress;

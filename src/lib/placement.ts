@@ -1,9 +1,11 @@
-import {
-  defaultCatalog,
-  type ChoiceQuestion,
-  type CurriculumCatalog,
-  type Skill,
+import type {
+  ChoiceQuestion,
+  GraphCatalog,
+  Skill,
+  SkillOutline,
 } from './curriculum';
+import { defaultCatalog } from './catalog-index';
+import { contentOf } from './content';
 import { estimateCompletion, type CompletionEstimate } from './dashboard';
 import {
   coursePath,
@@ -74,16 +76,16 @@ type Now = Date | number;
 const time = (now: Now) => (now instanceof Date ? now.getTime() : now);
 
 interface PathModel {
-  skills: Skill[];
-  byId: Map<string, Skill>;
+  skills: SkillOutline[];
+  byId: Map<string, SkillOutline>;
   /** Ancestors and descendants within the path, with hop distance. */
   ancestors: Map<string, Map<string, number>>;
   descendants: Map<string, Map<string, number>>;
 }
 
-const models = new WeakMap<CurriculumCatalog, Map<string, PathModel>>();
+const models = new WeakMap<GraphCatalog, Map<string, PathModel>>();
 
-function pathModel(courseId: string, catalog: CurriculumCatalog): PathModel {
+function pathModel(courseId: string, catalog: GraphCatalog): PathModel {
   let perCatalog = models.get(catalog);
   if (!perCatalog) models.set(catalog, (perCatalog = new Map()));
   const cached = perCatalog.get(courseId);
@@ -119,22 +121,40 @@ function pathModel(courseId: string, catalog: CurriculumCatalog): PathModel {
 }
 
 /** Choice questions from a skill's knowledge points; no code editor. */
-function choiceQuestions(skill: Skill): ChoiceQuestion[] {
+function choiceQuestions(skill: SkillOutline) {
   return (skill.knowledgePoints ?? []).flatMap((point) =>
-    point.questions.filter(
-      (question): question is ChoiceQuestion => question.type === 'choice',
-    ),
+    point.questions.filter((question) => question.type === 'choice'),
   );
 }
 
+/**
+ * The guessing rate of a question, from its number of choices. The placement
+ * session loads every course on the path first, so the content is available.
+ */
+function guessRate(skill: SkillOutline, questionId?: string): number {
+  const questions = (contentOf(skill)?.knowledgePoints ?? []).flatMap(
+    (point) => point.questions,
+  );
+  const question = questionId
+    ? questions.find((item) => item.id === questionId)
+    : questions.find((item) => item.type === 'choice');
+  return 1 / (question?.type === 'choice' ? question.choices.length : 4);
+}
+
+/**
+ * The question a placement slot asks, with its content. Undefined for an
+ * unknown question or while its skill's course is not loaded.
+ */
 export function diagnosticQuestion(
   slot: Pick<DiagnosticQuestion, 'skillId' | 'questionId'>,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): { skill: Skill; question: ChoiceQuestion } | undefined {
-  const skill = catalog.skills.find((item) => item.id === slot.skillId);
-  const question =
-    skill && choiceQuestions(skill).find((item) => item.id === slot.questionId);
-  return skill && question ? { skill, question } : undefined;
+  const outline = catalog.skills.find((item) => item.id === slot.skillId);
+  const skill = outline && contentOf(outline);
+  const question = skill?.knowledgePoints
+    ?.flatMap((point) => point.questions)
+    .find((item) => item.id === slot.questionId);
+  return skill && question?.type === 'choice' ? { skill, question } : undefined;
 }
 
 const odds = (p: number) => p / (1 - p);
@@ -148,7 +168,7 @@ const clamp = (p: number) => Math.min(0.999, Math.max(0.001, p));
 export function beliefs(
   progress: Progress,
   diagnostic: Pick<Diagnostic, 'courseId' | 'answers'>,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): Map<string, number> {
   const model = pathModel(diagnostic.courseId, catalog);
   const belief = new Map<string, number>();
@@ -161,8 +181,7 @@ export function beliefs(
   for (const answer of diagnostic.answers) {
     const skill = model.byId.get(answer.skillId);
     if (!skill) continue;
-    const guess =
-      1 / (diagnosticQuestion(answer, catalog)?.question.choices.length ?? 4);
+    const guess = guessRate(skill, answer.questionId);
     // Likelihood ratio of "known" against "not known" for this answer.
     let ratio = answer.correct ? (1 - SLIP) / guess : SLIP / (1 - guess);
     if (answer.correct && (answer.elapsedMs ?? 0) > SLOW_ANSWER_MS)
@@ -188,7 +207,7 @@ const uncertain = (p: number) => p > UNKNOWN && p < KNOWN;
 export function nextDiagnosticQuestion(
   progress: Progress,
   diagnostic: Pick<Diagnostic, 'courseId' | 'answers'>,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): DiagnosticQuestion | null {
   if (diagnostic.answers.length >= DIAGNOSTIC_MAX_QUESTIONS) return null;
   const model = pathModel(diagnostic.courseId, catalog);
@@ -208,8 +227,8 @@ export function nextDiagnosticQuestion(
   if (!candidates.length) return null;
   const fixed = (id: string) => isMastered(progress, id, catalog);
   // Skills an answer would newly classify, if it were correct or wrong.
-  const classified = (skill: Skill, correct: boolean) => {
-    const guess = 1 / (choiceQuestions(skill)[0]?.choices.length ?? 4);
+  const classified = (skill: SkillOutline, correct: boolean) => {
+    const guess = guessRate(skill);
     const ratio = correct ? (1 - SLIP) / guess : SLIP / (1 - guess);
     const related = correct
       ? model.ancestors.get(skill.id)!
@@ -227,7 +246,7 @@ export function nextDiagnosticQuestion(
   const gain = new Map(
     candidates.map((skill) => {
       const p = belief.get(skill.id)!;
-      const guess = 1 / (choiceQuestions(skill)[0]?.choices.length ?? 4);
+      const guess = guessRate(skill);
       const right = p * (1 - SLIP) + (1 - p) * guess;
       return [
         skill.id,
@@ -236,7 +255,7 @@ export function nextDiagnosticQuestion(
       ];
     }),
   );
-  const split = (skill: Skill) => {
+  const split = (skill: SkillOutline) => {
     const count = (related: Map<string, number>) =>
       [...related.keys()].filter((id) => uncertain(belief.get(id)!)).length;
     return Math.min(
@@ -277,7 +296,7 @@ export function startDiagnostic(
   progress: Progress,
   courseId: string,
   now: Now = Date.now(),
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): Progress {
   const active = activeDiagnostic(progress);
   if (active?.courseId === courseId) return progress;
@@ -321,7 +340,7 @@ export function answerDiagnostic(
   answer: number,
   now: Now = Date.now(),
   elapsedMs?: number,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): Progress {
   const diagnostic = progress.diagnostics?.find(
     (item) => item.id === diagnosticId,
@@ -374,8 +393,8 @@ export function answerDiagnostic(
 export function placementsFor(
   progress: Progress,
   diagnostic: Pick<Diagnostic, 'courseId' | 'answers'>,
-  catalog: CurriculumCatalog = defaultCatalog,
-): Skill[] {
+  catalog: GraphCatalog = defaultCatalog,
+): SkillOutline[] {
   const model = pathModel(diagnostic.courseId, catalog);
   const belief = beliefs(progress, diagnostic, catalog);
   const placed = new Set<string>();
@@ -407,7 +426,7 @@ export function finishDiagnostic(
   progress: Progress,
   diagnosticId: string,
   now: Now = Date.now(),
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): Progress {
   const diagnostic = progress.diagnostics?.find(
     (item) => item.id === diagnosticId,
@@ -498,7 +517,7 @@ export function mergeDiagnostics(
 export function diagnosticProgress(
   progress: Progress,
   diagnostic: Pick<Diagnostic, 'courseId' | 'answers'>,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): number {
   const belief = beliefs(progress, diagnostic, catalog);
   const values = [...belief.values()];
@@ -508,11 +527,11 @@ export function diagnosticProgress(
 }
 
 export interface PlacementReport {
-  placed: Skill[];
+  placed: SkillOutline[];
   /** Ready-to-learn skills on the path: where learning starts. */
-  frontier: Skill[];
+  frontier: SkillOutline[];
   /** Unmastered path skills from other courses that the course builds on. */
-  supporting: Skill[];
+  supporting: SkillOutline[];
   estimate: CompletionEstimate;
 }
 
@@ -522,14 +541,14 @@ export function placementReport(
   diagnostic: Diagnostic,
   dailyGoal: number,
   now: Now = Date.now(),
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): PlacementReport {
   const model = pathModel(diagnostic.courseId, catalog);
   const placed = new Set(diagnostic.placed ?? []);
   const open = model.skills.filter(
     (skill) => !isMastered(progress, skill.id, catalog),
   );
-  const courseFirst = (a: Skill, b: Skill) =>
+  const courseFirst = (a: SkillOutline, b: SkillOutline) =>
     Number(b.courseId === diagnostic.courseId) -
       Number(a.courseId === diagnostic.courseId) || a.order - b.order;
   return {
