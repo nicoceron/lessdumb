@@ -55,9 +55,19 @@ export function parseNumber(text: string): number | null {
   return Number.isFinite(result) ? result : null;
 }
 
-/** A number as the learner should read it, without floating-point noise. */
+/**
+ * A number as the learner should read it, without floating-point noise: a
+ * short decimal, or a simple fraction such as `5/6` when the decimal repeats.
+ */
 export function formatNumber(value: number): string {
-  return String(Number(value.toPrecision(12)));
+  const decimal = String(Number(value.toPrecision(12)));
+  if (!/\.\d{7,}/.test(decimal)) return decimal;
+  for (let denominator = 2; denominator <= 100; denominator++) {
+    const numerator = Math.round(value * denominator);
+    if (Math.abs(value - numerator / denominator) < 1e-12)
+      return `${numerator}/${denominator}`;
+  }
+  return decimal;
 }
 
 /**

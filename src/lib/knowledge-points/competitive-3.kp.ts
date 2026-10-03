@@ -1,4 +1,10 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeNumber,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 // Competitive Programming, part 3: dynamic programming, strategy, number
 // theory, and range queries. Programs are complete Python scripts.
@@ -24,24 +30,22 @@ print(by_state)`,
           'Keyed by position alone, the budget-8 answer replaces the budget-2 answer. The (position, budget) key keeps the two states apart.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `cache = {}
 for position, budget, answer in [(2, 1, 4), (2, 5, 9), (2, 1, 4)]:
     cache[position] = answer
 print(cache)`,
-          ['{2: 9}', '{2: 4}', '{(2, 1): 4, (2, 5): 9}', '{2: 4, 2: 9}'],
-          1,
+          '{2: 4}',
           'All three stores use key 2, so each overwrites the last; the final store writes 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `cache = {}
 for position, budget, answer in [(2, 1, 4), (2, 5, 9), (2, 1, 4)]:
     cache[(position, budget)] = answer
 print(len(cache))`,
-          ['1', '3', '6', '2'],
-          3,
+          '2',
           'There are two distinct (position, budget) keys; the repeated state (2, 1) reuses its key.',
         ),
         choose(
@@ -89,14 +93,13 @@ print(len(cache))`,
           'Each list becomes a tuple. The repeated state produces an equal tuple, so the cache holds only two keys.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `cache = {}
 cache[(1, 4)] = 10
 cache[(1, 4)] = 12
 print(cache[(1, 4)], len(cache))`,
-          ['10 1', '12 2', '12 1', '10 2'],
-          2,
+          '12 1',
           'The second assignment uses an equal tuple, so it replaces the value under the same single key.',
         ),
         choose(
@@ -105,16 +108,15 @@ print(cache[(1, 4)], len(cache))`,
           1,
           'A list is mutable and therefore unhashable; tuples, strings, and integers are hashable.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `states = [[0, 5], [0, 5], [1, 5]]
 keys = [(position, budget) for position, budget in states]
 print(keys[0] == keys[1], keys[0] == keys[2])`,
-          ['True False', 'False False', 'True True', 'False True'],
-          0,
+          'True False',
           'Tuples built from equal values are equal; (0, 5) and (1, 5) differ in position.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `cache = {}
 for state in [[2, 3], [3, 2], [2, 3]]:
@@ -124,13 +126,7 @@ for state in [[2, 3], [3, 2], [2, 3]]:
     else:
         cache[key] = 1
 print(cache)`,
-          [
-            '{(2, 3): 3}',
-            '{(2, 3): 1, (3, 2): 1}',
-            '{(2, 3): 2, (3, 2): 1, (2, 3): 1}',
-            '{(2, 3): 2, (3, 2): 1}',
-          ],
-          3,
+          '{(2, 3): 2, (3, 2): 1}',
           'Order inside a tuple matters, so (3, 2) is its own key, while the repeated (2, 3) increments one counter.',
         ),
       ],
@@ -159,7 +155,7 @@ print(route_boundary(-3))`,
           'Zero remaining is one completed route. A negative remainder is a route that overshot, so it contributes nothing.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def route_boundary(remaining):
     if remaining == 0:
@@ -169,8 +165,7 @@ print(route_boundary(-3))`,
     return None
 
 print([route_boundary(r) for r in [0, -1, 0]])`,
-          ['[0, 0, 0]', '[1, 1, 1]', '[1, 0, 1]', '[0, 1, 0]'],
-          2,
+          '[1, 0, 1]',
           'Each zero is one finished route, and the negative remainder counts zero.',
         ),
         choose(
@@ -184,13 +179,12 @@ print([route_boundary(r) for r in [0, -1, 0]])`,
           1,
           'The empty continuation is one way to finish, regardless of which step sizes exist.',
         ),
-        choose(
+        typeNumber(
           'A counting recurrence adds the counts of smaller states. If the zero state returned 0 instead of 1, what would every count become?',
-          ['0', '1', 'Unchanged', 'Negative'],
           0,
           'Every count is ultimately a sum of base values; with no base value of 1, all sums are 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def route_boundary(remaining):
     if remaining == 0:
@@ -203,8 +197,7 @@ total = 0
 for r in [-2, 0, -1, 0]:
     total += route_boundary(r)
 print(total)`,
-          ['0', '4', '-3', '2'],
-          3,
+          '2',
           'The two zeros contribute 1 each, and the two negative remainders contribute 0.',
         ),
       ],
@@ -229,7 +222,7 @@ print([route_boundary(value) for value in [3, -1, 0]])`,
           'Three units remain, so that state is unfinished. The overshoot counts zero and the exact finish counts one.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def route_boundary(remaining):
     if remaining == 0:
@@ -239,8 +232,7 @@ print([route_boundary(value) for value in [3, -1, 0]])`,
     return None
 
 print([route_boundary(r) for r in [2, -2, 0]])`,
-          ['[2, 0, 1]', '[None, 0, 1]', '[None, 1, 0]', '[1, 0, 1]'],
-          1,
+          '[None, 0, 1]',
           'A positive remainder still needs transitions, a negative one overshot, and zero is complete.',
         ),
         choose(
@@ -265,7 +257,7 @@ print([route_boundary(r) for r in [2, -2, 0]])`,
           3,
           '0 means "no completions", which is false for a state that may still finish with more steps.',
         ),
-        predictOutput(
+        typeOutput(
           'This helper merges two cases. What does it print?',
           `def boundary(remaining):
     if remaining <= 0:
@@ -273,8 +265,7 @@ print([route_boundary(r) for r in [2, -2, 0]])`,
     return None
 
 print([boundary(r) for r in [-1, 0, 1]])`,
-          ['[1, 1, None]', '[0, 1, None]', '[1, 0, None]', '[None, 1, None]'],
-          0,
+          '[1, 1, None]',
           'remaining <= 0 is true for -1, so the overshoot is wrongly counted as a finished route.',
         ),
       ],
@@ -305,7 +296,7 @@ print(calls)`,
           'solve(4) computes and stores states 4 down to 1. solve(3) is then a cache hit, so calls gains nothing new.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `calls = []
 cache = {0: 0}
@@ -318,16 +309,10 @@ def solve(t):
 print(solve(3))
 print(solve(5))
 print(calls)`,
-          [
-            '6\n15\n[3, 2, 1, 5, 4, 3, 2, 1]',
-            '6\n15\n[5, 4, 3, 2, 1]',
-            '6\n15\n[3, 2, 1, 5, 4]',
-            '6\n9\n[3, 2, 1, 5, 4]',
-          ],
-          2,
+          '6\n15\n[3, 2, 1, 5, 4]',
           'solve(5) computes only 5 and 4; it finds state 3 already stored by the first call.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `calls = []
 cache = {0: 0}
@@ -340,8 +325,7 @@ def solve(t):
 solve(6)
 solve(6)
 print(len(calls))`,
-          ['12', '7', '1', '6'],
-          3,
+          '6',
           'The first call computes states 6 down to 1. The second call is a cache hit, and state 0 was stored from the start.',
         ),
         choose(
@@ -392,7 +376,7 @@ print(suffix_total([10, 20]))`,
           'Each call builds its own cache. A shared module-level cache would already hold key 0 with answer 6 and return 6 for the second list.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `cache = {}
 def suffix_total(values):
@@ -406,11 +390,10 @@ def suffix_total(values):
 
 print(suffix_total([4, 5]))
 print(suffix_total([1, 1, 1]))`,
-          ['9\n3', '9\n9', '9\n12', '3\n3'],
-          1,
+          '9\n9',
           'The cache outlives the first call, so solve(0) finds the stored 9 for the second list.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def suffix_total(values):
     cache = {}
@@ -424,8 +407,7 @@ print(suffix_total([1, 1, 1]))`,
 
 print(suffix_total([4, 5]))
 print(suffix_total([1, 1, 1]))`,
-          ['9\n9', '9\n12', '3\n3', '9\n3'],
-          3,
+          '9\n3',
           'The cache is created inside each call, so the second list is summed from scratch.',
         ),
         choose(
@@ -480,7 +462,7 @@ print([routes(d) for d in range(7)])`,
           'Each entry adds the counts three and one positions earlier, for example 6 = 4 + 2 at distance 6.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from functools import cache
 
@@ -495,11 +477,10 @@ def routes(distance):
     return ways(distance)
 
 print(routes(5))`,
-          ['5', '8', '13', '6'],
-          1,
+          '8',
           'With moves of 1 and 2 the counts are 1, 1, 2, 3, 5, 8 for distances 0 through 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from functools import cache
 
@@ -514,8 +495,7 @@ def routes(distance):
     return ways(distance)
 
 print(routes(7))`,
-          ['1', '2', '5', '3'],
-          3,
+          '3',
           'The ordered routes are 2+2+3, 2+3+2, and 3+2+2; the order of moves makes them different routes.',
         ),
         choose(
@@ -570,7 +550,7 @@ print(count_evaluations(6))`,
           'The body runs once for each of the states 6 down to 0 and for -1 and -2: nine evaluations.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version has no cache. What does it print?',
           `evaluated = []
 def ways(r):
@@ -582,11 +562,10 @@ def ways(r):
     return ways(r - 1) + ways(r - 3)
 
 print(ways(4), len(evaluated))`,
-          ['3 7', '3 11', '3 5', '11 3'],
-          1,
+          '3 11',
           'Small states such as 1 and 0 are recomputed on several branches, giving 11 calls for only 3 routes.',
         ),
-        predictOutput(
+        typeOutput(
           'This version caches each state. What does it print?',
           `from functools import cache
 
@@ -601,8 +580,7 @@ def ways(r):
     return ways(r - 1) + ways(r - 3)
 
 print(ways(4), len(evaluated))`,
-          ['3 11', '3 5', '3 7', '7 3'],
-          2,
+          '3 7',
           'The states 4, 3, 2, 1, 0, -1, and -2 are each evaluated once.',
         ),
         choose(
@@ -653,7 +631,7 @@ print(routes(4, [2]))`,
           'Each call to routes creates a new cached helper for its own moves. A shared cache would have returned 3 again for the second call.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from functools import cache
 
@@ -672,11 +650,10 @@ def ways(r):
 print(ways(4))
 moves = [4]
 print(ways(4))`,
-          ['5\n1', '5\n2', '1\n1', '5\n5'],
-          3,
+          '5\n5',
           'The cache key is only r, so the second call returns the answer stored for the old moves.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from functools import cache
 
@@ -695,8 +672,7 @@ def routes(distance, moves):
 
 print(routes(4, [1, 2]))
 print(routes(4, [4]))`,
-          ['5\n5', '5\n1', '5\n2', '1\n1'],
-          1,
+          '5\n1',
           'Each call builds a fresh cached helper, so moves [4] gives the single route 4.',
         ),
         choose(
@@ -744,13 +720,12 @@ print(packet_table(4))`,
           'Five entries cover totals 0 through 4. Only total 0 starts reachable.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `table = [float("inf")] * (5 + 1)
 table[0] = 0
 print(len(table), table[0], table[5])`,
-          ['5 0 inf', '6 inf inf', '6 0 inf', '5 0 0'],
-          2,
+          '6 0 inf',
           'Six entries cover totals 0 through 5; index 0 is set to 0 and index 5 stays infinity.',
         ),
         choose(
@@ -764,25 +739,18 @@ print(len(table), table[0], table[5])`,
           1,
           'Placing no packets reaches exactly total 0 at a cost of 0.',
         ),
-        predictOutput(
+        typeOutput(
           'This table is meant to cover totals 0 through 3. What does it print?',
           `target = 3
 table = [float("inf")] * target
 table[0] = 0
 print(table)`,
-          [
-            '[0, inf, inf, inf]',
-            '[inf, inf, inf]',
-            '[0, 0, 0]',
-            '[0, inf, inf]',
-          ],
-          3,
+          '[0, inf, inf]',
           'Multiplying by target gives only three entries, so there is no index for total 3.',
         ),
-        choose(
+        typeNumber(
           'How many entries does a table for exact totals 0 through 10 need?',
-          ['10', '11', '9', '20'],
-          1,
+          11,
           'Counting both endpoints, 0 through 10 is eleven totals.',
         ),
       ],
@@ -804,36 +772,28 @@ print(min(right[3], 2))`,
           'The zero-filled table keeps a false answer of 0 packets. The infinity-filled table accepts the real candidate 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Total 4 can be reached with 3 packets, but this table was filled with zeros. What does it print?',
           `table = [0] * 5
 table[4] = min(table[4], 3)
 print(table[4])`,
-          ['3', '4', 'inf', '0'],
-          3,
+          '0',
           'min(0, 3) keeps the false starting value 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `table = [float("inf")] * 5
 table[0] = 0
 table[4] = min(table[4], 3)
 print(table)`,
-          [
-            '[0, inf, inf, inf, 3]',
-            '[0, 0, 0, 0, 3]',
-            '[0, inf, inf, inf, inf]',
-            '[3, inf, inf, inf, 3]',
-          ],
-          0,
+          '[0, inf, inf, inf, 3]',
           'Infinity loses to the real candidate 3, and the untouched totals stay unreached.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `unreachable = float("inf")
 print(unreachable + 1, min(unreachable + 1, 7))`,
-          ['inf inf', 'inf 7', '1 1', 'inf 8'],
-          1,
+          'inf 7',
           'Adding 1 to infinity is still infinity, and any finite value is smaller.',
         ),
         choose(
@@ -869,30 +829,27 @@ print(relax_packet(2, 5))`,
           'In the first call the candidate 1 + 1 = 2 beats 4. In the second, the current 2 beats the candidate 6.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def relax_packet(current, previous):
     return min(current, previous + 1)
 
 print(relax_packet(6, 3), relax_packet(3, 3))`,
-          ['3 3', '4 3', '4 4', '7 4'],
-          1,
+          '4 3',
           'First the candidate 4 beats 6. Second, the candidate 4 loses to the current 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `current = float("inf")
 for previous in [5, 2, 4]:
     current = min(current, previous + 1)
 print(current)`,
-          ['5', '2', '6', '3'],
-          3,
+          '3',
           'The candidates are 6, 3, and 5, and the running minimum keeps 3.',
         ),
-        choose(
+        typeNumber(
           'Total 7 currently needs 3 packets. Total 3 needs 1 packet. After relaxing total 7 with a size-4 packet, what is its count?',
-          ['3', '2', '1', '4'],
-          1,
+          2,
           'The candidate is dp[3] + 1 = 2, which beats the current 3.',
         ),
         choose(
@@ -926,26 +883,24 @@ print(relax_packet(inf, inf))`,
           'An unreachable predecessor cannot improve 4. When both are unreachable, the total stays unreachable.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `inf = float("inf")
 def relax_packet(current, previous):
     return min(current, previous + 1)
 
 print(relax_packet(inf, 0), relax_packet(5, inf))`,
-          ['inf 5', '1 inf', '1 5', '0 5'],
-          2,
+          '1 5',
           'A reachable total 0 proposes 1 packet. An unreachable predecessor proposes infinity, so 5 stays.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `inf = float("inf")
 dp = [0, inf, inf, inf, inf]
 dp[3] = min(dp[3], dp[0] + 1)
 dp[4] = min(dp[4], dp[1] + 1)
 print(dp[3], dp[4])`,
-          ['1 inf', '1 2', '1 1', 'inf inf'],
-          0,
+          '1 inf',
           'dp[0] is reachable, so total 3 gets 1 packet. dp[1] is unreachable, so total 4 stays infinity.',
         ),
         choose(
@@ -959,15 +914,14 @@ print(dp[3], dp[4])`,
           3,
           '-1 + 1 is 0, which beats every real packet count.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `inf = float("inf")
 best = inf
 for previous in [inf, inf, 2]:
     best = min(best, previous + 1)
 print(best)`,
-          ['inf', '2', '3', '1'],
-          2,
+          '3',
           'The two unreachable predecessors propose infinity; the reachable one proposes 3.',
         ),
       ],
@@ -996,7 +950,7 @@ print(one_four_table(8))`,
           'Each total reads totals 1 and 4 smaller, which were filled earlier in the loop. Total 8 uses two size-4 packets.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def one_two_table(target):
     dp = [0] * (target + 1)
@@ -1007,28 +961,16 @@ print(one_four_table(8))`,
     return dp
 
 print(one_two_table(5))`,
-          [
-            '[0, 1, 2, 3, 4, 5]',
-            '[0, 1, 1, 2, 2, 3]',
-            '[0, 1, 1, 1, 1, 1]',
-            '[1, 1, 2, 2, 3, 3]',
-          ],
-          1,
+          '[0, 1, 1, 2, 2, 3]',
           'Using as many 2s as possible, totals 0 through 5 need 0, 1, 1, 2, 2, and 3 packets.',
         ),
-        predictOutput(
+        typeOutput(
           'This loop fills totals from high to low. What does it print?',
           `dp = [0] + [float("inf")] * 4
 for total in range(4, 0, -1):
     dp[total] = dp[total - 1] + 1
 print(dp)`,
-          [
-            '[0, 1, 2, 3, 4]',
-            '[0, inf, inf, inf, inf]',
-            '[0, 1, inf, inf, inf]',
-            '[0, 4, 3, 2, 1]',
-          ],
-          2,
+          '[0, 1, inf, inf, inf]',
           'Totals 4, 3, and 2 read predecessors that are still infinity; only total 1 reads the finished dp[0].',
         ),
         choose(
@@ -1071,22 +1013,16 @@ print(total >= 3)`,
           'dp[-1] is the last entry, not an error. The guard is False, so the size-3 transition must be skipped at total 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This loop has no size guard. What does it print?',
           `dp = [0] * 4
 for total in range(1, 4):
     dp[total] = min(dp[total - 1], dp[total - 3]) + 1
 print(dp)`,
-          [
-            '[0, 1, 2, 1]',
-            '[0, 1, 1, 1]',
-            '[0, 1, 2, 3]',
-            'An IndexError is raised',
-          ],
-          1,
+          '[0, 1, 1, 1]',
           'At totals 1 and 2, dp[-2] and dp[-1] wrap around to entries that are still 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `dp = [0] * 4
 for total in range(1, 4):
@@ -1094,8 +1030,7 @@ for total in range(1, 4):
     if total >= 3:
         dp[total] = min(dp[total], dp[total - 3] + 1)
 print(dp)`,
-          ['[0, 1, 1, 1]', '[0, 1, 2, 3]', '[0, 1, 2, 1]', '[0, 1, 1, 2]'],
-          2,
+          '[0, 1, 2, 1]',
           'Totals 1 and 2 use only size 1. Total 3 can use one size-3 packet.',
         ),
         choose(
@@ -1109,7 +1044,7 @@ print(dp)`,
           1,
           'A size-5 packet cannot end at total 2, so this size contributes no candidate.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `dp = [0, 1, 2, 1]
 total = 2
@@ -1118,8 +1053,7 @@ if total >= size:
     print(dp[total - size] + 1)
 else:
     print("skip")`,
-          ['2', '1', 'skip', '3'],
-          2,
+          'skip',
           'The guard 2 >= 3 is False, so the program prints skip instead of reading dp[-1].',
         ),
       ],
@@ -1170,7 +1104,7 @@ print(packet_table([3, 4], 8))`,
           1,
           'Total 5 cannot be made from 3s and 4s. Totals 6, 7, and 8 are 3+3, 3+4, and 4+4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def min_packets(sizes, target):
     dp = [float("inf")] * (target + 1)
@@ -1182,14 +1116,12 @@ print(packet_table([3, 4], 8))`,
     return -1 if dp[target] == float("inf") else dp[target]
 
 print(min_packets([1, 4, 5], 8))`,
-          ['4', '3', '2', '1'],
-          2,
+          '2',
           'Two size-4 packets make 8. Starting with 5 would need 5 + 1 + 1 + 1, four packets.',
         ),
-        choose(
+        typeNumber(
           'Sizes are [1, 3, 4] and dp[5] = 2, dp[3] = 1, dp[2] = 2. What is dp[6]?',
-          ['3', '1', '4', '2'],
-          3,
+          2,
           'The candidates are dp[5] + 1 = 3, dp[3] + 1 = 2, and dp[2] + 1 = 3; the minimum is 2.',
         ),
         choose(
@@ -1228,7 +1160,7 @@ print(min_packets([], 0))`,
           'Sums of 4s and 6s are even, so 9 stays infinity and becomes -1. Target 0 needs no packets even with no sizes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def min_packets(sizes, target):
     dp = [float("inf")] * (target + 1)
@@ -1240,11 +1172,10 @@ print(min_packets([], 0))`,
     return -1 if dp[target] == float("inf") else dp[target]
 
 print(min_packets([6, 10], 14), min_packets([6, 10], 16))`,
-          ['2 2', '-1 -1', 'inf 2', '-1 2'],
-          3,
+          '-1 2',
           '14 is not a sum of 6s and 10s, while 16 = 6 + 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def min_packets(sizes, target):
     dp = [float("inf")] * (target + 1)
@@ -1256,8 +1187,7 @@ print(min_packets([6, 10], 14), min_packets([6, 10], 16))`,
     return -1 if dp[target] == float("inf") else dp[target]
 
 print(min_packets([], 0), min_packets([], 3))`,
-          ['0 -1', '-1 -1', '0 0', '1 -1'],
-          0,
+          '0 -1',
           'Total 0 is reachable with zero packets; with no sizes, nothing else is.',
         ),
         choose(
@@ -1271,7 +1201,7 @@ print(min_packets([], 0), min_packets([], 3))`,
           2,
           'A predecessor of -1 proposes -1 + 1 = 0 packets, which beats every real answer.',
         ),
-        predictOutput(
+        typeOutput(
           'This table writes -1 for unreachable totals from the start. What does it print?',
           `dp = [0, -1, -1, -1]
 for total in range(1, 4):
@@ -1279,13 +1209,7 @@ for total in range(1, 4):
         if size <= total:
             dp[total] = min(dp[total], dp[total - size] + 1)
 print(dp)`,
-          [
-            '[0, -1, 1, -1]',
-            '[0, -1, -1, -1]',
-            '[0, -1, 1, 0]',
-            '[0, 1, 1, 2]',
-          ],
-          1,
+          '[0, -1, -1, -1]',
           'min(-1, 1) keeps -1 at total 2, so the real one-packet answer is lost.',
         ),
       ],
@@ -1327,7 +1251,7 @@ print(min_packets([4, 3, 1], 6))`,
           2,
           'Each of the T totals tries each of the m sizes once.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def largest_first(sizes_desc, target):
     count = 0
@@ -1347,8 +1271,7 @@ def min_packets(sizes, target):
     return -1 if dp[target] == float("inf") else dp[target]
 
 print(largest_first([6, 5, 1], 10), min_packets([6, 5, 1], 10))`,
-          ['2 2', '5 5', '2 5', '5 2'],
-          3,
+          '5 2',
           'Largest-first takes 6 and then four 1s. The table finds 5 + 5.',
         ),
         choose(
@@ -1464,15 +1387,14 @@ print(capacity_values(0))`,
           'Capacities 0 through 4 all start with the empty selection, worth 0. Capacity 0 still has one entry.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def capacity_values(capacity):
     return [0] * (capacity + 1)
 
 table = capacity_values(3)
 print(len(table), table[3])`,
-          ['3 0', '4 inf', '4 0', '3 inf'],
-          2,
+          '4 0',
           'Capacities 0 through 3 need four entries, and each starts at 0.',
         ),
         choose(
@@ -1497,7 +1419,7 @@ print(len(table), table[3])`,
           0,
           'Before any item is chosen, only weight exactly 0 is achieved.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def capacity_values(capacity):
     return [0] * (capacity + 1)
@@ -1506,13 +1428,7 @@ first = capacity_values(2)
 first[2] = 5
 second = capacity_values(2)
 print(first, second)`,
-          [
-            '[0, 0, 5] [0, 0, 5]',
-            '[0, 0, 5] [0, 0, 0]',
-            '[0, 0, 0] [0, 0, 0]',
-            '[5, 5, 5] [0, 0, 0]',
-          ],
-          1,
+          '[0, 0, 5] [0, 0, 0]',
           'Each call builds a new list, so changing first does not affect second.',
         ),
       ],
@@ -1538,7 +1454,7 @@ print(item_choice([0, 0, 4, 4, 6], 4, 2, 3))`,
           'Skipping gives 6. Taking leaves capacity 2, worth 4, plus the item’s 3, which is 7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def item_choice(previous, capacity, weight, value):
     if weight > capacity:
@@ -1546,11 +1462,10 @@ print(item_choice([0, 0, 4, 4, 6], 4, 2, 3))`,
     return max(previous[capacity], previous[capacity - weight] + value)
 
 print(item_choice([0, 3, 3, 6, 6], 4, 3, 5))`,
-          ['6', '11', '8', '5'],
-          2,
+          '8',
           'Taking leaves capacity 1, worth 3, plus 5 gives 8, which beats skipping at 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def item_choice(previous, capacity, weight, value):
     if weight > capacity:
@@ -1558,14 +1473,12 @@ print(item_choice([0, 3, 3, 6, 6], 4, 3, 5))`,
     return max(previous[capacity], previous[capacity - weight] + value)
 
 print(item_choice([0, 4, 4, 8, 8], 4, 2, 3))`,
-          ['7', '11', '3', '8'],
-          3,
+          '8',
           'Taking gives previous[2] + 3 = 7, which loses to skipping at 8.',
         ),
-        choose(
+        typeNumber(
           'previous = [0, 0, 6, 6, 8, 8], capacity 5, and the item has weight 3 and value 4. What does taking the item propose?',
-          ['12', '10', '8', '4'],
-          1,
+          10,
           'Taking reads previous[5 - 3] = 6 and adds 4. Adding to previous[5] would ignore the item’s weight.',
         ),
         choose(
@@ -1599,17 +1512,16 @@ print(item_choice([0, 2, 2, 5], 1, 3, 9))`,
           'A weight-3 item cannot fit in capacity 1, so the value stays at previous[1] = 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version has no fit check. What does it print?',
           `def unguarded(previous, capacity, weight, value):
     return max(previous[capacity], previous[capacity - weight] + value)
 
 print(unguarded([0, 2, 2, 5], 1, 3, 9))`,
-          ['2', '11', 'An IndexError is raised', '9'],
-          1,
+          '11',
           'capacity - weight is -2, and previous[-2] is 2, so the impossible take is scored as 2 + 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def item_choice(previous, capacity, weight, value):
     if weight > capacity:
@@ -1618,8 +1530,7 @@ print(unguarded([0, 2, 2, 5], 1, 3, 9))`,
 
 previous = [0, 1, 1, 4]
 print(item_choice(previous, 1, 2, 3), item_choice(previous, 2, 2, 3), item_choice(previous, 3, 2, 3))`,
-          ['7 3 4', '1 3 7', '4 4 4', '1 3 4'],
-          3,
+          '1 3 4',
           'Capacity 1 cannot hold the item. Capacity 2 takes it for 3. At capacity 3, taking gives 1 + 3 = 4, tying the skip value 4.',
         ),
         choose(
@@ -1668,7 +1579,7 @@ print(apply_one_item([0, 0, 0, 0, 0, 0, 0], 3, 4))`,
           'Capacity 6 reads dp[3] before dp[3] is updated, so even capacity 6 holds only one copy of the item.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def apply_one_item(previous, weight, value):
     dp = previous[:]
@@ -1677,29 +1588,17 @@ print(apply_one_item([0, 0, 0, 0, 0, 0, 0], 3, 4))`,
     return dp
 
 print(apply_one_item([0, 0, 0, 0, 0, 0, 0], 2, 3))`,
-          [
-            '[0, 0, 3, 3, 6, 6, 9]',
-            '[0, 0, 3, 3, 3, 3, 3]',
-            '[0, 0, 3, 0, 0, 0, 0]',
-            '[0, 0, 3, 6, 9, 12, 15]',
-          ],
-          1,
+          '[0, 0, 3, 3, 3, 3, 3]',
           'Every capacity from 2 up holds one copy, worth 3.',
         ),
-        predictOutput(
+        typeOutput(
           'This pass runs capacities upward. What does it print?',
           `dp = [0, 0, 0, 0, 0, 0, 0]
 weight, value = 2, 3
 for capacity in range(weight, len(dp)):
     dp[capacity] = max(dp[capacity], dp[capacity - weight] + value)
 print(dp)`,
-          [
-            '[0, 0, 3, 3, 3, 3, 3]',
-            '[0, 0, 3, 0, 0, 0, 0]',
-            '[0, 0, 3, 3, 6, 6, 9]',
-            '[0, 0, 3, 6, 9, 12, 15]',
-          ],
-          2,
+          '[0, 0, 3, 3, 6, 6, 9]',
           'Capacity 4 reads the already updated dp[2] and adds the item again; capacity 6 ends with three copies.',
         ),
         choose(
@@ -1713,7 +1612,7 @@ print(dp)`,
           2,
           'Capacities are visited 7, 6, 5, 4, ..., so dp[4] has not been touched when capacity 7 reads it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def apply_one_item(previous, weight, value):
     dp = previous[:]
@@ -1722,13 +1621,7 @@ print(dp)`,
     return dp
 
 print(apply_one_item([0, 2, 2, 2, 2], 1, 5))`,
-          [
-            '[0, 5, 10, 15, 20]',
-            '[0, 5, 7, 12, 17]',
-            '[0, 2, 2, 2, 2]',
-            '[0, 5, 7, 7, 7]',
-          ],
-          3,
+          '[0, 5, 7, 7, 7]',
           'Each capacity combines the earlier stage’s value 2 with one copy of the new item; an upward pass would stack copies.',
         ),
       ],
@@ -1763,7 +1656,7 @@ print(list(range(6 - 1, weight - 1, -1)))`,
           2,
           'The stop value weight - 1 = 1 is excluded, so the last capacity visited is 2.',
         ),
-        predictOutput(
+        typeOutput(
           'This version does not copy. What does it print?',
           `def apply_in_place(previous, weight, value):
     dp = previous
@@ -1774,8 +1667,7 @@ print(list(range(6 - 1, weight - 1, -1)))`,
 old = [0, 0, 0]
 new = apply_in_place(old, 1, 4)
 print(old)`,
-          ['[0, 0, 0]', '[0, 4, 8]', '[4, 4, 4]', '[0, 4, 4]'],
-          3,
+          '[0, 4, 4]',
           'dp = previous names the same list, so the caller’s old stage is overwritten.',
         ),
         choose(
@@ -1789,7 +1681,7 @@ print(old)`,
           0,
           'Below the weight, only skipping is possible, which leaves the entry unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def apply_one_item(previous, weight, value):
     dp = previous[:]
@@ -1798,8 +1690,7 @@ print(old)`,
     return dp
 
 print(apply_one_item([0, 3, 3], 4, 10))`,
-          ['[0, 3, 13]', '[0, 3, 3]', '[10, 3, 3]', '[0, 13, 13]'],
-          1,
+          '[0, 3, 3]',
           'range(2, 3, -1) is empty, so the weight-4 item changes nothing.',
         ),
       ],
@@ -1828,7 +1719,7 @@ print(best_value([(2, 3), (3, 4)], 5))`,
           'After the first item, every capacity of at least 2 is worth 3. The second item adds capacities 3 and 4 worth 4, and capacity 5 holds both items for 7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def best_value(items, capacity):
     dp = [0] * (capacity + 1)
@@ -1838,11 +1729,10 @@ print(best_value([(2, 3), (3, 4)], 5))`,
     return dp[capacity]
 
 print(best_value([(1, 2), (2, 3), (3, 5)], 4))`,
-          ['10', '8', '5', '7'],
-          3,
+          '7',
           'Weights 1 and 3 fit together for 2 + 5 = 7. All three items weigh 6, and weights 2 and 3 weigh 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def best_table(items, capacity):
     dp = [0] * (capacity + 1)
@@ -1852,13 +1742,7 @@ print(best_value([(1, 2), (2, 3), (3, 5)], 4))`,
     return dp
 
 print(best_table([(3, 4), (1, 1), (2, 3)], 4))`,
-          [
-            '[0, 1, 3, 4, 5]',
-            '[0, 1, 3, 4, 8]',
-            '[0, 1, 1, 4, 5]',
-            '[0, 1, 3, 4, 4]',
-          ],
-          0,
+          '[0, 1, 3, 4, 5]',
           'Capacity 3 holds weight 3 or weights 1 + 2, both worth 4. Capacity 4 holds weights 3 and 1 for 5.',
         ),
         choose(
@@ -1906,7 +1790,7 @@ print(best_value([(2, 5), (2, 5)], 4))`,
           'One item cannot fill the second half of the capacity. Two distinct items with the same pair can.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version runs capacities upward. What does it print?',
           `def best_value(items, capacity):
     dp = [0] * (capacity + 1)
@@ -1916,11 +1800,10 @@ print(best_value([(2, 5), (2, 5)], 4))`,
     return dp[capacity]
 
 print(best_value([(3, 4)], 6))`,
-          ['4', '0', '8', '12'],
-          2,
+          '8',
           'Capacity 6 reads dp[3], which already contains this item, so the item is counted twice.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def best_value(items, capacity):
     dp = [0] * (capacity + 1)
@@ -1930,8 +1813,7 @@ print(best_value([(3, 4)], 6))`,
     return dp[capacity]
 
 print(best_value([(3, 4), (3, 4)], 6))`,
-          ['4', '12', '0', '8'],
-          3,
+          '8',
           'The two equal pairs are separate items, and together they weigh exactly 6.',
         ),
         choose(
@@ -1945,7 +1827,7 @@ print(best_value([(3, 4), (3, 4)], 6))`,
           1,
           'An upward pass reads entries that already include the current item, so the item can be stacked repeatedly.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def best_value(items, capacity):
     dp = [0] * (capacity + 1)
@@ -1955,8 +1837,7 @@ print(best_value([(3, 4), (3, 4)], 6))`,
     return dp[capacity]
 
 print(best_value([(5, 10), (4, 7), (3, 5)], 7))`,
-          ['10', '17', '12', '22'],
-          2,
+          '12',
           'Weights 4 and 3 fit together for 12. Weights 5 and 4 would weigh 9, over the capacity.',
         ),
       ],
@@ -2005,7 +1886,7 @@ print(best_value([(1, 9)], 0))`,
           1,
           'The table needs one entry per capacity unit, so a capacity near 10^12 is far too large, even with only 3 items.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def best_value(items, capacity):
     dp = [0] * (capacity + 1)
@@ -2015,11 +1896,10 @@ print(best_value([(1, 9)], 0))`,
     return dp[capacity]
 
 print(best_value([(7, 50), (2, 3)], 5))`,
-          ['50', '53', '3', '0'],
-          2,
+          '3',
           'The weight-7 item does not fit capacity 5, so only the value-3 item is taken.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def best_value(items, capacity):
     dp = [0] * (capacity + 1)
@@ -2029,8 +1909,7 @@ print(best_value([(7, 50), (2, 3)], 5))`,
     return dp[capacity]
 
 print(best_value([(1, 9)], 0), best_value([], 0))`,
-          ['0 0', '9 0', '0 9', '9 9'],
-          0,
+          '0 0',
           'Capacity 0 holds nothing, so both calls return the empty selection’s value.',
         ),
       ],
@@ -2065,7 +1944,7 @@ print(is_subsequence([9, 3], [3, 1, 9]))`,
           2,
           '5 and 4 appear in order with 1 between them. [1, 4] is contiguous, and the others reverse the order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def is_subsequence(wanted, source):
     matched = 0
@@ -2075,8 +1954,7 @@ print(is_subsequence([9, 3], [3, 1, 9]))`,
     return matched == len(wanted)
 
 print(is_subsequence([1, 3], [3, 1, 2, 3]), is_subsequence([3, 1, 3], [3, 1, 2]))`,
-          ['True False', 'False False', 'True True', 'False True'],
-          0,
+          'True False',
           'The first 3 is skipped while waiting for 1, then the last 3 matches. The second check never finds a final 3.',
         ),
         choose(
@@ -2090,7 +1968,7 @@ print(is_subsequence([1, 3], [3, 1, 2, 3]), is_subsequence([3, 1, 3], [3, 1, 2])
           2,
           'Selecting no elements trivially preserves order; the match counter is already 0 = len([]).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `wanted = [2, 2, 5]
 source = [2, 5, 2, 5]
@@ -2099,8 +1977,7 @@ for value in source:
     if matched < len(wanted) and wanted[matched] == value:
         matched += 1
 print(matched)`,
-          ['2', '1', '4', '3'],
-          3,
+          '3',
           'The scan matches 2, skips the first 5, matches the second 2, then matches the final 5.',
         ),
       ],
@@ -2126,7 +2003,7 @@ print(is_subsequence([4, 4], [4, 1, 4]))`,
           'One 4 cannot be used twice. With a second 4 later in the source, both wanted elements are matched.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def is_subsequence(wanted, source):
     matched = 0
@@ -2136,8 +2013,7 @@ print(is_subsequence([4, 4], [4, 1, 4]))`,
     return matched == len(wanted)
 
 print(is_subsequence([7, 7, 7], [7, 3, 7]), is_subsequence([7, 7], [7, 3, 7]))`,
-          ['True True', 'False True', 'False False', 'True False'],
-          1,
+          'False True',
           'The source has only two 7s, enough for [7, 7] but not [7, 7, 7].',
         ),
         choose(
@@ -2162,7 +2038,7 @@ print(is_subsequence([7, 7, 7], [7, 3, 7]), is_subsequence([7, 7], [7, 3, 7]))`,
           1,
           'Any match found later could be swapped for the earlier one without blocking the remaining elements.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def is_subsequence(wanted, source):
     matched = 0
@@ -2172,13 +2048,7 @@ print(is_subsequence([7, 7, 7], [7, 3, 7]), is_subsequence([7, 7], [7, 3, 7]))`,
     return matched == len(wanted)
 
 print(is_subsequence("aa", "banana"), is_subsequence("aaa", "banana"), is_subsequence("aaaa", "banana"))`,
-          [
-            'True False False',
-            'True True True',
-            'False False False',
-            'True True False',
-          ],
-          3,
+          'True True False',
           'banana has three a characters at separate positions, enough for "aaa" but not "aaaa".',
         ),
       ],
@@ -2204,22 +2074,20 @@ print(bisect_left(tails, 12))`,
           '4 is found at its first occurrence. 5 lands before 9. 12 is larger than every tail, so the result is len(tails).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
 print(bisect_left([2, 6, 6, 8], 6), bisect_left([2, 6, 6, 8], 7))`,
-          ['2 3', '1 2', '1 3', '3 3'],
-          2,
+          '1 3',
           'The first entry >= 6 is at index 1; the first entry >= 7 is the 8 at index 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
 print(bisect_left([3, 5, 8], 1), bisect_left([3, 5, 8], 9))`,
-          ['-1 3', '0 3', '0 2', '-1 2'],
-          1,
+          '0 3',
           'Every tail is >= 1, so the answer is 0. No tail is >= 9, so the answer is len(tails) = 3.',
         ),
         choose(
@@ -2262,14 +2130,13 @@ print(bisect_left(tails, 3), bisect_right(tails, 3))`,
           'bisect_left stops before the equal 3s; bisect_right stops after them.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left, bisect_right
 
 tails = [4, 4, 4]
 print(bisect_left(tails, 4), bisect_right(tails, 4))`,
-          ['3 0', '0 0', '0 3', '1 3'],
-          2,
+          '0 3',
           'Every entry equals 4, so the left search stops at the start and the right search at the end.',
         ),
         choose(
@@ -2283,7 +2150,7 @@ print(bisect_left(tails, 4), bisect_right(tails, 4))`,
           3,
           'bisect_right skips past equal tails, so an equal value can be placed after them.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2292,8 +2159,7 @@ positions = []
 for value in [1, 5, 6, 10]:
     positions.append(bisect_left(tails, value))
 print(positions)`,
-          ['[0, 2, 2, 3]', '[0, 1, 2, 3]', '[-1, 1, 2, 3]', '[0, 1, 1, 2]'],
-          1,
+          '[0, 1, 2, 3]',
           '1 is below every tail, 5 matches index 1, 6 lands before 9, and 10 is past the end.',
         ),
         choose(
@@ -2337,7 +2203,7 @@ print(update_tails([1, 4, 8], 9))`,
           '5 gives length 3 a lower ending than 8. 9 is larger than every tail, so it creates length 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2351,11 +2217,10 @@ def update_tails(tails, value):
     return result
 
 print(update_tails([3, 6, 9], 7))`,
-          ['[3, 6, 7, 9]', '[3, 6, 9, 7]', '[3, 7, 9]', '[3, 6, 7]'],
-          3,
+          '[3, 6, 7]',
           '7 replaces the first tail >= 7, which is 9; the length stays 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2372,13 +2237,7 @@ tails = []
 for value in [5, 1, 6]:
     tails = update_tails(tails, value)
     print(tails)`,
-          [
-            '[5]\n[1, 5]\n[1, 5, 6]',
-            '[5]\n[1]\n[1, 6]',
-            '[5]\n[5, 1]\n[5, 1, 6]',
-            '[5]\n[5]\n[5, 6]',
-          ],
-          1,
+          '[5]\n[1]\n[1, 6]',
           '1 replaces 5 as the best length-1 ending, and 6 extends it to length 2.',
         ),
         choose(
@@ -2392,7 +2251,7 @@ for value in [5, 1, 6]:
           2,
           'Every value that can follow the old ending can also follow the smaller one, and possibly more.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2406,8 +2265,7 @@ def update_tails(tails, value):
     return result
 
 print(update_tails([2, 5, 9], 2))`,
-          ['[2, 5, 9]', '[2, 2, 5, 9]', '[2, 5, 9, 2]', '[2, 2, 9]'],
-          0,
+          '[2, 5, 9]',
           'The equal 2 is found at index 0 and replaced by itself, so the tails do not change.',
         ),
       ],
@@ -2439,7 +2297,7 @@ print(tails, len(tails))`,
           'The length 2 is right (5, 6), even though 1 comes after 6 in the input.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2456,8 +2314,7 @@ tails = []
 for value in [4, 8, 2]:
     tails = update_tails(tails, value)
 print(tails)`,
-          ['[4, 8]', '[2, 8]', '[2, 4, 8]', '[2]'],
-          1,
+          '[2, 8]',
           '2 replaces 4 as the best length-1 ending; 8 still ends the length-2 subsequence 4, 8.',
         ),
         choose(
@@ -2471,7 +2328,7 @@ print(tails)`,
           3,
           'Each entry is the best ending for its own length; together they need not form one subsequence.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2487,13 +2344,7 @@ def update_tails(tails, value):
 old = [1, 5, 9]
 new = update_tails(old, 3)
 print(old, new)`,
-          [
-            '[1, 3, 9] [1, 3, 9]',
-            '[1, 5, 9] [1, 3, 5, 9]',
-            '[1, 5, 9] [1, 3, 9]',
-            '[1, 5, 9] [1, 5, 9]',
-          ],
-          2,
+          '[1, 5, 9] [1, 3, 9]',
           'tails[:] copies the list, so only new changes; 3 replaces 5.',
         ),
         choose(
@@ -2538,7 +2389,7 @@ print(tails, len(tails))`,
           'For example 1, 4, 5, 9 has length 4. The late 2 only lowers the length-2 ending.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2553,11 +2404,10 @@ def increasing_length(values):
     return len(tails)
 
 print(increasing_length([6, 2, 8, 3, 4, 1]))`,
-          ['2', '4', '3', '6'],
-          2,
+          '3',
           '2, 3, 4 is strictly increasing. The final 1 replaces 2 without adding a length.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2572,8 +2422,7 @@ def final_tails(values):
     return tails
 
 print(final_tails([5, 7, 6, 8, 6]))`,
-          ['[5, 6, 6, 8]', '[5, 7, 8]', '[5, 6, 8, 6]', '[5, 6, 8]'],
-          3,
+          '[5, 6, 8]',
           '6 lowers the length-2 ending from 7; the last 6 lands on the equal tail and changes nothing.',
         ),
         choose(
@@ -2587,7 +2436,7 @@ print(final_tails([5, 7, 6, 8, 6]))`,
           0,
           'The first tail >= 0 is 1, so 0 becomes the best length-1 ending.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2602,8 +2451,7 @@ def increasing_length(values):
     return len(tails)
 
 print(increasing_length([9, 1, 8, 2, 7, 3]))`,
-          ['2', '3', '6', '4'],
-          1,
+          '3',
           '1, 2, 3 is the longest strictly increasing choice; each larger value lands before an earlier one.',
         ),
       ],
@@ -2634,7 +2482,7 @@ print(longest([4, 4, 4], bisect_right))`,
           'Strictly, equal 4s give only one element. Non-decreasing, all three 4s can be used.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2649,11 +2497,10 @@ def increasing_length(values):
     return len(tails)
 
 print(increasing_length([2, 2, 3, 3, 4]))`,
-          ['5', '2', '4', '3'],
-          3,
+          '3',
           'Strictly increasing allows only one of each value: 2, 3, 4.',
         ),
-        predictOutput(
+        typeOutput(
           'This version uses bisect_right. What does it print?',
           `from bisect import bisect_right
 
@@ -2668,8 +2515,7 @@ def length(values):
     return len(tails)
 
 print(length([2, 2, 3, 3, 4]))`,
-          ['3', '5', '4', '2'],
-          1,
+          '5',
           'bisect_right lets equal values extend, so the whole non-decreasing list counts.',
         ),
         choose(
@@ -2678,7 +2524,7 @@ print(length([2, 2, 3, 3, 4]))`,
           2,
           'Strictly, [1, 1, 2] gives 2; non-decreasing, it gives 3. The other inputs have no equal values to disagree on.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2693,8 +2539,7 @@ def increasing_length(values):
     return len(tails)
 
 print(increasing_length([5, 5, 5, 5]), increasing_length([5, 6, 5, 6]))`,
-          ['1 2', '4 4', '1 4', '4 2'],
-          0,
+          '1 2',
           'Equal values never extend each other, so four 5s give 1, and 5, 6, 5, 6 gives 2.',
         ),
       ],
@@ -2737,7 +2582,7 @@ print(increasing_length([-5, -2, -3, 0]))`,
           1,
           'n log n is about 200,000 × 18, while n² is 4 × 10^10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2752,11 +2597,10 @@ def increasing_length(values):
     return len(tails)
 
 print(increasing_length([]), increasing_length([8, 6, 3]))`,
-          ['0 3', '1 1', '0 0', '0 1'],
-          3,
+          '0 1',
           'An empty list has no tails. In a decreasing list each value replaces the single tail.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from bisect import bisect_left
 
@@ -2771,8 +2615,7 @@ def increasing_length(values):
     return len(tails)
 
 print(increasing_length([-3, -1, -2, 0]))`,
-          ['4', '3', '2', '1'],
-          1,
+          '3',
           '-3, -1, 0 and -3, -2, 0 both have length 3; -1 and -2 cannot both be used.',
         ),
         choose(
@@ -2810,24 +2653,22 @@ print(max(1, 3), min(5, 8))`,
           'The shared region runs from the later start 3 to the earlier end 5, and 3 < 5, so it is nonempty.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def intervals_overlap(first, second):
     return max(first[0], second[0]) < min(first[1], second[1])
 
 print(intervals_overlap((2, 6), (6, 9)), intervals_overlap((2, 7), (6, 9)))`,
-          ['True True', 'False False', 'True False', 'False True'],
-          3,
+          'False True',
           'The first pair shares no point: 6 < 6 is False. The second shares [6, 7).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def intervals_overlap(first, second):
     return max(first[0], second[0]) < min(first[1], second[1])
 
 print(intervals_overlap((0, 10), (3, 4)), intervals_overlap((5, 6), (1, 2)))`,
-          ['True False', 'False False', 'True True', 'False True'],
-          0,
+          'True False',
           'A contained interval overlaps its container. The second pair is disjoint even though it is listed in reverse order.',
         ),
         choose(
@@ -2885,14 +2726,13 @@ print(closed_overlap((1, 4), (4, 6)))`,
           2,
           'The first booking excludes 10, so no moment belongs to both.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def closed_overlap(first, second):
     return max(first[0], second[0]) <= min(first[1], second[1])
 
 print(closed_overlap((3, 5), (5, 7)), closed_overlap((3, 5), (6, 7)))`,
-          ['False False', 'True False', 'True True', 'False True'],
-          1,
+          'True False',
           'Closed intervals [3, 5] and [5, 7] share 5. [3, 5] and [6, 7] leave a gap.',
         ),
         choose(
@@ -2901,7 +2741,7 @@ print(closed_overlap((3, 5), (5, 7)), closed_overlap((3, 5), (6, 7)))`,
           2,
           'Both closed intervals include 5, and no other point lies in both.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def half_open_overlap(first, second):
     return max(first[0], second[0]) < min(first[1], second[1])
@@ -2910,13 +2750,7 @@ results = []
 for first, second in [((-5, -1), (-3, 2)), ((-5, -3), (-3, 0)), ((0, 1), (0, 1))]:
     results.append(half_open_overlap(first, second))
 print(results)`,
-          [
-            '[True, True, True]',
-            '[False, False, True]',
-            '[True, False, False]',
-            '[True, False, True]',
-          ],
-          3,
+          '[True, False, True]',
           'Negative endpoints behave like any others. The middle pair only touches at -3; identical intervals overlap.',
         ),
       ],
@@ -2938,16 +2772,10 @@ print(sorted(intervals))`,
           'Tuples compare by their first field first, so the intervals come out in increasing start order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(sorted([(6, 7), (2, 9), (4, 5)]))`,
-          [
-            '[(4, 5), (6, 7), (2, 9)]',
-            '[(2, 9), (4, 5), (6, 7)]',
-            '[(6, 7), (2, 9), (4, 5)]',
-            '[(2, 9), (6, 7), (4, 5)]',
-          ],
-          1,
+          '[(2, 9), (4, 5), (6, 7)]',
           'Sorting tuples compares starts first: 2, 4, then 6. Sorting by end would give a different order.',
         ),
         choose(
@@ -2972,16 +2800,10 @@ print(sorted(intervals))`,
           1,
           'Without sorted starts, the scan cannot know that no future interval reaches back before the current span.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(sorted([(5, 6), (1, 2), (0, 10)]))`,
-          [
-            '[(1, 2), (5, 6), (0, 10)]',
-            '[(5, 6), (1, 2), (0, 10)]',
-            '[(0, 10), (5, 6), (1, 2)]',
-            '[(0, 10), (1, 2), (5, 6)]',
-          ],
-          3,
+          '[(0, 10), (1, 2), (5, 6)]',
           'The long interval starts at 0, so it comes first even though it ends last.',
         ),
       ],
@@ -3003,30 +2825,18 @@ print(intervals)`,
           'Equal starts are ordered by end, both copies of (1, 4) remain, and the original list keeps its order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(sorted([(3, 9), (3, 4), (3, 6)]))`,
-          [
-            '[(3, 9), (3, 4), (3, 6)]',
-            '[(3, 9), (3, 6), (3, 4)]',
-            '[(3, 4), (3, 6), (3, 9)]',
-            '[(3, 4)]',
-          ],
-          2,
+          '[(3, 4), (3, 6), (3, 9)]',
           'All starts are equal, so the ends decide the order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `intervals = [(4, 7), (1, 5)]
 result = intervals.sort()
 print(result, intervals)`,
-          [
-            '[(1, 5), (4, 7)] [(4, 7), (1, 5)]',
-            'None [(1, 5), (4, 7)]',
-            '[(1, 5), (4, 7)] [(1, 5), (4, 7)]',
-            'None [(4, 7), (1, 5)]',
-          ],
-          1,
+          'None [(1, 5), (4, 7)]',
           'list.sort() reorders the list itself and returns None.',
         ),
         choose(
@@ -3075,7 +2885,7 @@ print(merge_next((2, 5), (6, 9)))`,
           'The first pair touches at 5, so the union is one span. The second pair leaves the gap [5, 6).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def merge_next(current, following):
     if following[0] <= current[1]:
@@ -3084,13 +2894,7 @@ print(merge_next((2, 5), (6, 9)))`,
 
 print(merge_next((1, 6), (3, 8)))
 print(merge_next((1, 6), (7, 8)))`,
-          [
-            '[(1, 8)]\n[(1, 8)]',
-            '[(1, 6), (3, 8)]\n[(1, 6), (7, 8)]',
-            '[(1, 8)]\n[(1, 6), (7, 8)]',
-            '[(3, 6)]\n[(1, 6), (7, 8)]',
-          ],
-          2,
+          '[(1, 8)]\n[(1, 6), (7, 8)]',
           '3 <= 6 joins the first pair into (1, 8). 7 > 6 leaves a gap, so the second pair stays separate.',
         ),
         choose(
@@ -3115,7 +2919,7 @@ print(merge_next((1, 6), (7, 8)))`,
           3,
           'Overlap asks for a shared point; union asks only whether the covered region is continuous.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def merge_next(current, following):
     if following[0] <= current[1]:
@@ -3123,8 +2927,7 @@ print(merge_next((1, 6), (7, 8)))`,
     return [current, following]
 
 print(merge_next((-4, -2), (-1, 3)))`,
-          ['[(-4, -2), (-1, 3)]', '[(-4, 3)]', '[(-2, -1)]', '[(-1, 3)]'],
-          0,
+          '[(-4, -2), (-1, 3)]',
           '-1 > -2, so the gap [-2, -1) keeps the intervals separate.',
         ),
       ],
@@ -3146,7 +2949,7 @@ print(merge_next((1, 9), (3, 5)))`,
         explanation: '[3, 5) lies inside [1, 9), so the union is still [1, 9).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version takes the end of the following interval. What does it print?',
           `def merge_next(current, following):
     if following[0] <= current[1]:
@@ -3154,11 +2957,10 @@ print(merge_next((1, 9), (3, 5)))`,
     return [current, following]
 
 print(merge_next((0, 10), (2, 4)))`,
-          ['[(0, 10)]', '[(0, 4)]', '[(2, 4)]', '[(0, 10), (2, 4)]'],
-          1,
+          '[(0, 4)]',
           'Replacing the end with 4 drops the covered region [4, 10).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def merge_next(current, following):
     if following[0] <= current[1]:
@@ -3166,8 +2968,7 @@ print(merge_next((0, 10), (2, 4)))`,
     return [current, following]
 
 print(merge_next((0, 10), (2, 4)))`,
-          ['[(0, 4)]', '[(2, 4)]', '[(0, 10), (2, 4)]', '[(0, 10)]'],
-          3,
+          '[(0, 10)]',
           'max keeps the longer reach 10, so the contained interval adds nothing.',
         ),
         choose(
@@ -3216,7 +3017,7 @@ merge_bookings([(5, 7), (1, 3), (2, 4), (8, 9)])`,
           '(2, 4) extends (1, 3). (5, 7) starts after 4, so it opens a new span, and (8, 9) does the same.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def merge_bookings(bookings):
     merged = []
@@ -3228,16 +3029,10 @@ merge_bookings([(5, 7), (1, 3), (2, 4), (8, 9)])`,
     return merged
 
 print(merge_bookings([(4, 6), (1, 2), (5, 9), (2, 3)]))`,
-          [
-            '[(1, 3), (4, 9)]',
-            '[(1, 2), (2, 3), (4, 9)]',
-            '[(1, 9)]',
-            '[(1, 3), (4, 6), (5, 9)]',
-          ],
-          0,
+          '[(1, 3), (4, 9)]',
           '(1, 2) and (2, 3) touch, giving (1, 3). (4, 6) starts after 3, and (5, 9) extends it to (4, 9).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def merge_bookings(bookings):
     merged = []
@@ -3249,13 +3044,7 @@ print(merge_bookings([(4, 6), (1, 2), (5, 9), (2, 3)]))`,
     return merged
 
 print(merge_bookings([(10, 12), (0, 1), (3, 5)]))`,
-          [
-            '[(10, 12), (0, 1), (3, 5)]',
-            '[(0, 12)]',
-            '[(0, 1), (3, 5), (10, 12)]',
-            '[(0, 5), (10, 12)]',
-          ],
-          2,
+          '[(0, 1), (3, 5), (10, 12)]',
           'No booking reaches the next start, so the output is the three bookings in sorted order.',
         ),
         choose(
@@ -3305,7 +3094,7 @@ print(merge_bookings([(2, 10), (4, 6)]))`,
           'The touching bookings form one occupied span. The nested booking leaves the containing span unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version uses < instead of <=. What does it print?',
           `def merge_strict(bookings):
     merged = []
@@ -3317,11 +3106,10 @@ print(merge_bookings([(2, 10), (4, 6)]))`,
     return merged
 
 print(merge_strict([(1, 3), (3, 5)]))`,
-          ['[(1, 5)]', '[(1, 3), (3, 5)]', '[(3, 5)]', '[(1, 3)]'],
-          1,
+          '[(1, 3), (3, 5)]',
           '3 < 3 is False, so the touching booking starts a separate span.',
         ),
-        predictOutput(
+        typeOutput(
           'This version replaces the end instead of taking max. What does it print?',
           `def merge_bookings(bookings):
     merged = []
@@ -3333,11 +3121,10 @@ print(merge_strict([(1, 3), (3, 5)]))`,
     return merged
 
 print(merge_bookings([(2, 10), (4, 6), (8, 12)]))`,
-          ['[(2, 12)]', '[(2, 10), (8, 12)]', '[(2, 6)]', '[(2, 6), (8, 12)]'],
-          3,
+          '[(2, 6), (8, 12)]',
           'The nested (4, 6) shrinks the span to end at 6, so (8, 12) no longer looks connected.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def merge_bookings(bookings):
     merged = []
@@ -3349,13 +3136,7 @@ print(merge_bookings([(2, 10), (4, 6), (8, 12)]))`,
     return merged
 
 print(merge_bookings([(3, 6), (3, 6), (0, 1)]))`,
-          [
-            '[(0, 1), (3, 6)]',
-            '[(0, 1), (3, 6), (3, 6)]',
-            '[(0, 6)]',
-            '[(0, 1), (3, 12)]',
-          ],
-          0,
+          '[(0, 1), (3, 6)]',
           'The duplicate starts inside the open span and extends it to max(6, 6) = 6.',
         ),
         choose(
@@ -3407,7 +3188,7 @@ print(merge_bookings([]))`,
           3,
           'The scan touches each booking once; sorting costs the extra log factor.',
         ),
-        predictOutput(
+        typeOutput(
           'This version sorts the list in place. What does it print?',
           `def merge_in_place(bookings):
     bookings.sort()
@@ -3422,11 +3203,10 @@ print(merge_bookings([]))`,
 data = [(5, 6), (1, 2)]
 merge_in_place(data)
 print(data)`,
-          ['[(5, 6), (1, 2)]', '[(1, 2), (5, 6)]', '[]', 'None'],
-          1,
+          '[(1, 2), (5, 6)]',
           'list.sort() reorders the caller’s list, so data changes even though only the result was wanted.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def merge_bookings(bookings):
     merged = []
@@ -3438,11 +3218,10 @@ print(data)`,
     return merged
 
 print(merge_bookings([]), merge_bookings([(4, 9)]))`,
-          ['[] [(4, 9)]', 'None [(4, 9)]', '[] []', '[(0, 0)] [(4, 9)]'],
-          0,
+          '[] [(4, 9)]',
           'An empty input leaves merged empty; a single booking is appended unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'This version forgets to sort. What does it print?',
           `def merge_unsorted(bookings):
     merged = []
@@ -3454,8 +3233,7 @@ print(merge_bookings([]), merge_bookings([(4, 9)]))`,
     return merged
 
 print(merge_unsorted([(5, 8), (1, 6)]))`,
-          ['[(1, 8)]', '[(1, 6), (5, 8)]', '[(5, 8)]', '[(5, 8), (1, 6)]'],
-          2,
+          '[(5, 8)]',
           '(1, 6) passes the start test against (5, 8), but the span keeps start 5, losing the covered region [1, 5).',
         ),
       ],
@@ -3479,19 +3257,13 @@ print(finish_order([(0, 9), (2, 4), (5, 7)]))`,
           'The long activity (0, 9) starts first but finishes last, so it is considered last.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def finish_order(intervals):
     return sorted(intervals, key=lambda interval: (interval[1], interval[0]))
 
 print(finish_order([(1, 8), (0, 3), (4, 6)]))`,
-          [
-            '[(0, 3), (1, 8), (4, 6)]',
-            '[(1, 8), (4, 6), (0, 3)]',
-            '[(0, 3), (4, 6), (1, 8)]',
-            '[(4, 6), (0, 3), (1, 8)]',
-          ],
-          2,
+          '[(0, 3), (4, 6), (1, 8)]',
           'The ends are 3, 6, and 8, so that is the order.',
         ),
         choose(
@@ -3505,23 +3277,16 @@ print(finish_order([(1, 8), (0, 3), (4, 6)]))`,
           1,
           'Finishing at 3 leaves the most room; (0, 10) would block every other activity.',
         ),
-        choose(
+        typeNumber(
           'Sorting by start picks (0, 100) first from (0, 100), (1, 2), and (3, 4). How many activities does that schedule hold?',
-          ['1', '2', '3', '0'],
-          0,
+          1,
           'Both short activities overlap (0, 100), so nothing else fits; earliest finish would fit 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `intervals = [(0, 100), (1, 2), (3, 4)]
 print(sorted(intervals)[0], sorted(intervals, key=lambda iv: (iv[1], iv[0]))[0])`,
-          [
-            '(0, 100) (0, 100)',
-            '(1, 2) (1, 2)',
-            '(1, 2) (0, 100)',
-            '(0, 100) (1, 2)',
-          ],
-          3,
+          '(0, 100) (1, 2)',
           'Plain sorting puts the earliest start first; the finish key puts the earliest end first.',
         ),
       ],
@@ -3542,37 +3307,24 @@ print(finish_order([(3, 5), (1, 5), (2, 4)]))`,
           '(2, 4) ends first. The two activities ending at 5 are ordered by start.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(sorted([(4, 6), (2, 6), (5, 6)], key=lambda iv: (iv[1], iv[0])))`,
-          [
-            '[(2, 6), (4, 6), (5, 6)]',
-            '[(4, 6), (2, 6), (5, 6)]',
-            '[(5, 6), (4, 6), (2, 6)]',
-            '[(6, 2), (6, 4), (6, 5)]',
-          ],
-          0,
+          '[(2, 6), (4, 6), (5, 6)]',
           'All ends are 6, so the starts decide the order.',
         ),
-        predictOutput(
+        typeOutput(
           'This key uses only the end. What does it print?',
           `print(sorted([(4, 6), (2, 6)], key=lambda iv: iv[1]))`,
-          [
-            '[(2, 6), (4, 6)]',
-            '[(6, 4), (6, 2)]',
-            '[(2, 6)]',
-            '[(4, 6), (2, 6)]',
-          ],
-          3,
+          '[(4, 6), (2, 6)]',
           'The keys tie, and a stable sort keeps tied items in their input order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `sessions = [(5, 9), (0, 2)]
 ordered = sorted(sessions, key=lambda s: (s[1], s[0]))
 print(sessions[0], ordered[0])`,
-          ['(0, 2) (0, 2)', '(5, 9) (0, 2)', '(5, 9) (5, 9)', '(0, 2) (5, 9)'],
-          1,
+          '(5, 9) (0, 2)',
           'sorted builds a new list, so sessions keeps its original first item.',
         ),
         choose(
@@ -3607,19 +3359,13 @@ print(compatible_starts(6, [4, 6, 9]))`,
           'A start of 4 would overlap the activity ending at 6; starts of 6 or later are compatible.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def compatible_starts(last_end, candidates):
     return [start >= last_end for start in candidates]
 
 print(compatible_starts(3, [3, 2, 7]))`,
-          [
-            '[False, False, True]',
-            '[True, True, True]',
-            '[True, False, True]',
-            '[False, True, False]',
-          ],
-          2,
+          '[True, False, True]',
           'A start equal to the last end is compatible; 2 starts before it.',
         ),
         choose(
@@ -3628,19 +3374,13 @@ print(compatible_starts(3, [3, 2, 7]))`,
           1,
           'Only [6, 8) starts at or after 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def compatible_starts(last_end, candidates):
     return [start >= last_end for start in candidates]
 
 print(compatible_starts(-5, [-1, -6, -5]))`,
-          [
-            '[False, True, True]',
-            '[True, True, False]',
-            '[False, False, True]',
-            '[True, False, True]',
-          ],
-          3,
+          '[True, False, True]',
           'Negative times compare like any integers: -1 and -5 are >= -5, while -6 is not.',
         ),
         choose(
@@ -3679,7 +3419,7 @@ print(count_feasible([(1, 3), (4, 6), (0, 9)]))`,
           'Both schedules are valid, but taking the long activity first blocks the two short ones.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def count_feasible(order):
     last_end = float("-inf")
@@ -3691,11 +3431,10 @@ print(count_feasible([(1, 3), (4, 6), (0, 9)]))`,
     return count
 
 print(count_feasible([(0, 5), (1, 2), (2, 3), (5, 6)]))`,
-          ['4', '3', '1', '2'],
-          3,
+          '2',
           '(0, 5) is accepted first, which rejects (1, 2) and (2, 3); only (5, 6) follows.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def count_feasible(order):
     last_end = float("-inf")
@@ -3707,8 +3446,7 @@ print(count_feasible([(0, 5), (1, 2), (2, 3), (5, 6)]))`,
     return count
 
 print(count_feasible([(1, 2), (2, 3), (0, 5), (5, 6)]))`,
-          ['3', '2', '4', '1'],
-          0,
+          '3',
           'The two short activities are accepted, (0, 5) is rejected, and (5, 6) fits after 3.',
         ),
         choose(
@@ -3755,14 +3493,13 @@ print(exchange_preserves(7, 6, [6, 8]))`,
           'Ending at 4 instead of 6 keeps both later starts valid. Ending at 7 breaks the activity that starts at 6.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def exchange_preserves(greedy_end, old_end, later_starts):
     return all(start < old_end or start >= greedy_end for start in later_starts)
 
 print(exchange_preserves(2, 5, [5, 7, 1]), exchange_preserves(6, 5, [5]))`,
-          ['True True', 'False False', 'True False', 'False True'],
-          2,
+          'True False',
           'Ending at 2 keeps starts 5 and 7 valid. Ending at 6 breaks the start at 5.',
         ),
         choose(
@@ -3787,18 +3524,12 @@ print(exchange_preserves(2, 5, [5, 7, 1]), exchange_preserves(6, 5, [5]))`,
           3,
           'Only an end that is no later guarantees that every later start remains valid.',
         ),
-        predictOutput(
+        typeOutput(
           'The replacement ends later than the original. What does this program print?',
           `greedy_end, old_end = 9, 7
 later = [7, 8, 9, 12]
 print([start >= greedy_end for start in later if start >= old_end])`,
-          [
-            '[True, True, True, True]',
-            '[False, False, True, True]',
-            '[False, True, True, True]',
-            '[True, True, False, False]',
-          ],
-          1,
+          '[False, False, True, True]',
           'Starts 7 and 8 fit after the old end but not after 9, so a later end can break continuations.',
         ),
       ],
@@ -3831,27 +3562,20 @@ for start in [1, 5, 7]:
           3,
           'An implication fails only when its premise holds and its conclusion does not.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def exchange_preserves(greedy_end, old_end, later_starts):
     return all(start < old_end or start >= greedy_end for start in later_starts)
 
 print(exchange_preserves(4, 4, [1, 4, 9]), exchange_preserves(9, 2, []))`,
-          ['True False', 'True True', 'False True', 'False False'],
-          1,
+          'True True',
           'Equal ends change nothing. With no later starts, all([]) is True.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `old_end, greedy_end = 6, 8
 print([start < old_end or start >= greedy_end for start in [5, 6, 8]])`,
-          [
-            '[True, True, True]',
-            '[False, False, True]',
-            '[True, False, True]',
-            '[True, False, False]',
-          ],
-          2,
+          '[True, False, True]',
           'Start 6 was feasible after 6 but not after 8, so its implication fails.',
         ),
         choose(
@@ -3890,7 +3614,7 @@ print(chosen_sessions([(0, 6), (1, 2), (3, 5), (2, 4), (5, 7)]))`,
           'By end time the order is (1, 2), (2, 4), (3, 5), (0, 6), (5, 7). (3, 5) and (0, 6) overlap the chosen (2, 4).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def max_sessions(sessions):
     end_of_last = None
@@ -3902,11 +3626,10 @@ print(chosen_sessions([(0, 6), (1, 2), (3, 5), (2, 4), (5, 7)]))`,
     return count
 
 print(max_sessions([(0, 3), (2, 5), (4, 7), (6, 9), (1, 2)]))`,
-          ['2', '5', '4', '3'],
-          3,
+          '3',
           'The greedy takes (1, 2), (2, 5), and (6, 9); each other session overlaps one of these.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def chosen_sessions(sessions):
     chosen = []
@@ -3916,13 +3639,7 @@ print(max_sessions([(0, 3), (2, 5), (4, 7), (6, 9), (1, 2)]))`,
     return chosen
 
 print(chosen_sessions([(3, 8), (1, 4), (4, 6), (6, 9), (8, 10)]))`,
-          [
-            '[(1, 4), (4, 6), (6, 9)]',
-            '[(1, 4), (4, 6), (8, 10)]',
-            '[(1, 4), (3, 8), (8, 10)]',
-            '[(1, 4), (4, 6), (6, 9), (8, 10)]',
-          ],
-          0,
+          '[(1, 4), (4, 6), (6, 9)]',
           'After (6, 9) is accepted, (8, 10) starts before 9, so it is rejected.',
         ),
         choose(
@@ -3984,7 +3701,7 @@ print(valid(optimal), valid(exchanged), len(exchanged))`,
           1,
           'Later sessions already started at or after 8, so an end of 5 cannot conflict with them.',
         ),
-        predictOutput(
+        typeOutput(
           'This replacement ends later than the session it replaces. What does the program print?',
           `def valid(schedule):
     last_end = float("-inf")
@@ -3997,8 +3714,7 @@ print(valid(optimal), valid(exchanged), len(exchanged))`,
 optimal = [(0, 3), (3, 5)]
 exchanged = [(1, 4), optimal[1]]
 print(valid(optimal), valid(exchanged))`,
-          ['True True', 'False True', 'False False', 'True False'],
-          3,
+          'True False',
           'The replacement ends at 4, after the next session’s start 3, so the swap breaks the schedule.',
         ),
         choose(
@@ -4058,7 +3774,7 @@ print(starts_at_zero(sessions))`,
           'The correct version takes (-5, -2) and then (-1, 0). Starting at 0 rejects every session, since all start before 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version starts end_of_last at 0. What does it print?',
           `def starts_at_zero(sessions):
     end_of_last = 0
@@ -4070,11 +3786,10 @@ print(starts_at_zero(sessions))`,
     return count
 
 print(starts_at_zero([(-4, -2), (-2, 1), (1, 3)]))`,
-          ['3', '1', '0', '2'],
-          1,
+          '1',
           'The two sessions that start before 0 are rejected; only (1, 3) passes, although all three fit together.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def max_sessions(sessions):
     end_of_last = None
@@ -4086,8 +3801,7 @@ print(starts_at_zero([(-4, -2), (-2, 1), (1, 3)]))`,
     return count
 
 print(max_sessions([(0, 2), (2, 4), (4, 6), (1, 5)]))`,
-          ['2', '4', '3', '1'],
-          2,
+          '3',
           'The touching sessions (0, 2), (2, 4), and (4, 6) are all compatible; (1, 5) overlaps them.',
         ),
         choose(
@@ -4129,29 +3843,22 @@ print(displacement((6, 2), (1, 4)))`,
           'Going from (1, 4) to (6, 2) moves 5 right and 2 down. The reverse trip negates both moves.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def displacement(a, b):
     return (b[0] - a[0], b[1] - a[1])
 
 print(displacement((3, -1), (0, 5)))`,
-          ['(3, -6)', '(-3, 6)', '(3, 4)', '(-3, 4)'],
-          1,
+          '(-3, 6)',
           '0 - 3 = -3 and 5 - (-1) = 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def displacement(a, b):
     return (b[0] - a[0], b[1] - a[1])
 
 print(displacement((2, 2), (5, 7)), displacement((5, 7), (2, 2)))`,
-          [
-            '(3, 5) (3, 5)',
-            '(7, 9) (7, 9)',
-            '(-3, -5) (3, 5)',
-            '(3, 5) (-3, -5)',
-          ],
-          3,
+          '(3, 5) (-3, -5)',
           'Reversing the direction negates each coordinate.',
         ),
         choose(
@@ -4191,29 +3898,22 @@ print(displacement((10**20, 0), (10**20 + 1, -2)))`,
           'Moving both points by (10, 10) leaves the vector unchanged, and huge integers subtract exactly.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def displacement(a, b):
     return (b[0] - a[0], b[1] - a[1])
 
 print(displacement((1, 2), (4, 4)), displacement((101, -48), (104, -46)))`,
-          [
-            '(3, 2) (3, 2)',
-            '(3, 2) (103, -46)',
-            '(3, 2) (-3, -2)',
-            '(3, 2) (100, -50)',
-          ],
-          0,
+          '(3, 2) (3, 2)',
           'The second pair is the first pair shifted by (100, -50), which cancels in the subtraction.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def displacement(a, b):
     return (b[0] - a[0], b[1] - a[1])
 
 print(displacement((10**18, 5), (10**18 + 7, 5)))`,
-          ['(0, 0)', '(7.0, 0)', '(7, 0)', '(1e18, 0)'],
-          2,
+          '(7, 0)',
           'Python integers have no fixed size, so the difference 7 is exact.',
         ),
         choose(
@@ -4259,24 +3959,22 @@ print(cross_product((1, 2), (3, 1)))`,
           '3 * 2 - 1 * 1 = 5. Swapping the vectors swaps the two products, negating the result.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def cross_product(u, v):
     return u[0] * v[1] - u[1] * v[0]
 
 print(cross_product((2, 5), (4, 1)))`,
-          ['18', '13', '-18', '22'],
-          2,
+          '-18',
           '2 * 1 - 5 * 4 = 2 - 20 = -18. 13 would be the dot product.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def cross_product(u, v):
     return u[0] * v[1] - u[1] * v[0]
 
 print(cross_product((1, 3), (2, 0)), cross_product((2, 0), (1, 3)))`,
-          ['6 6', '-6 6', '6 -6', '-6 -6'],
-          1,
+          '-6 6',
           '1 * 0 - 3 * 2 = -6, and swapping the arguments negates it.',
         ),
         choose(
@@ -4320,24 +4018,22 @@ print(cross_product((2, 1), (4, 2)))`,
           'The right triangle with legs 4 and 3 has area 6, doubled to 12. (4, 2) is parallel to (2, 1), giving 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def cross_product(u, v):
     return u[0] * v[1] - u[1] * v[0]
 
 print(cross_product((5, 0), (2, 4)) / 2)`,
-          ['20', '10', '10.0', '5.0'],
-          2,
+          '10.0',
           'The cross product is 20, twice the triangle area; dividing with / gives the float 10.0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def cross_product(u, v):
     return u[0] * v[1] - u[1] * v[0]
 
 print(cross_product((3, -6), (-1, 2)))`,
-          ['12', '0', '-12', '-15'],
-          1,
+          '0',
           '3 * 2 - (-6) * (-1) = 6 - 6 = 0: the vectors point in opposite directions along one line.',
         ),
         choose(
@@ -4384,36 +4080,33 @@ print(turn((0, 0), (2, 0), (3, 1)))`,
           'b - a = (2, 0) and c - a = (3, 1); the cross product 2 * 1 - 0 * 3 = 2 is positive, a left turn.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def turn(a, b, c):
     cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
     return (cross > 0) - (cross < 0)
 
 print(turn((1, 1), (4, 1), (2, -3)))`,
-          ['1', '0', '-12', '-1'],
-          3,
+          '-1',
           'b - a = (3, 0) and c - a = (1, -4); 3 * (-4) - 0 * 1 = -12, a right turn.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def turn(a, b, c):
     cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
     return (cross > 0) - (cross < 0)
 
 print(turn((0, 0), (1, 2), (2, 4)), turn((0, 0), (1, 2), (1, 3)))`,
-          ['0 1', '1 1', '0 -1', '1 0'],
-          0,
+          '0 1',
           '(2, 4) lies on the line through (1, 2). For (1, 3), 1 * 3 - 2 * 1 = 1 is positive.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `signs = []
 for cross in [-7, 0, 9]:
     signs.append((cross > 0) - (cross < 0))
 print(signs)`,
-          ['[-7, 0, 9]', '[False, False, True]', '[-1, 0, 1]', '[1, 0, 1]'],
-          2,
+          '[-1, 0, 1]',
           'Subtracting the two comparisons gives 1 - 0, 0 - 0, or 0 - 1.',
         ),
         choose(
@@ -4447,15 +4140,14 @@ print(turn((0, 0), (3, 3), (-1, -1)))`,
           'Repeated points give a zero vector. (-1, -1) is on the line through (0, 0) and (3, 3), but behind the start.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def turn(a, b, c):
     cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
     return (cross > 0) - (cross < 0)
 
 print(turn((5, 5), (5, 5), (8, 1)))`,
-          ['1', '-1', '0', '-4'],
-          2,
+          '0',
           'a and b are the same point, so b - a is (0, 0) and the cross product is 0.',
         ),
         choose(
@@ -4469,15 +4161,14 @@ print(turn((5, 5), (5, 5), (8, 1)))`,
           3,
           'Flipping the y axis mirrors the picture, so the same algebraic sign appears as the opposite rotation.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def turn(a, b, c):
     cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
     return (cross > 0) - (cross < 0)
 
 print(turn((1, 1), (3, 2), (-1, 0)))`,
-          ['-1', '0', '1', '2'],
-          1,
+          '0',
           'c - a = (-2, -1) is exactly opposite to b - a = (2, 1), so the points are collinear.',
         ),
         choose(
@@ -4517,7 +4208,7 @@ print(turn_signs([(0, 0), (4, 0), (4, 3), (0, 3)]))`,
           'Going right and then up is a left turn, and going up and then left is another left turn.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def turn_signs(points):
     signs = []
@@ -4528,11 +4219,10 @@ print(turn_signs([(0, 0), (4, 0), (4, 3), (0, 3)]))`,
     return signs
 
 print(turn_signs([(0, 0), (2, 0), (2, 2), (4, 2)]))`,
-          ['[1, 1]', '[-1, 1]', '[1, -1]', '[1, 0]'],
-          2,
+          '[1, -1]',
           'Right then up turns left; up then right turns right.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def turn_signs(points):
     signs = []
@@ -4543,14 +4233,12 @@ print(turn_signs([(0, 0), (2, 0), (2, 2), (4, 2)]))`,
     return signs
 
 print(turn_signs([(0, 0), (1, 1), (2, 2), (3, 1)]))`,
-          ['[0, -1]', '[0, 1]', '[1, -1]', '[-1]'],
-          0,
+          '[0, -1]',
           'The first three points are collinear. From (1, 1) through (2, 2), the path then bends right to (3, 1).',
         ),
-        choose(
+        typeNumber(
           'A path has 7 points. How many signs does turn_signs return?',
-          ['7', '6', '3', '5'],
-          3,
+          5,
           'Triples start at indices 0 through 4, which is 7 - 2 = 5 triples.',
         ),
         choose(
@@ -4582,23 +4270,21 @@ print(turn_signs([(1, 2), (3, 4)]))`,
         explanation: 'Neither input has a triple, so the loop body never runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(list(range(len([(0, 0)]) - 2)), list(range(len([(0, 0), (1, 1), (2, 2), (3, 3)]) - 2)))`,
-          ['[] [0, 1, 2]', '[-1] [0, 1]', '[] [0, 1]', '[0] [0, 1]'],
-          2,
+          '[] [0, 1]',
           'range(-1) is empty. Four points give the two starting indices 0 and 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `points = [(0, 0), (1, 0), (1, 1), (0, 1)]
 a, b, c = points[1:4]
 print(a, c)`,
-          ['(0, 0) (1, 1)', '(1, 0) (1, 1)', '(0, 0) (0, 1)', '(1, 0) (0, 1)'],
-          3,
+          '(1, 0) (0, 1)',
           'The slice holds indices 1, 2, and 3, so a is (1, 0) and c is (0, 1).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def turn_signs(points):
     signs = []
@@ -4609,8 +4295,7 @@ print(a, c)`,
     return signs
 
 print(turn_signs([(3, 3), (3, 3), (3, 3)]))`,
-          ['[0]', '[]', '[1]', '[0, 0, 0]'],
-          0,
+          '[0]',
           'Three points form one triple, and repeated points give a zero cross product.',
         ),
         choose(
@@ -4642,7 +4327,7 @@ print(b[0] - a[0])`,
           'A slope through a and b would divide by 0. The cross product is 10, so c is to the left of the upward segment.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def turn_signs(points):
     signs = []
@@ -4653,8 +4338,7 @@ print(b[0] - a[0])`,
     return signs
 
 print(turn_signs([(0, 0), (10**15, 1), (2 * 10**15, 3)]))`,
-          ['[0]', '[-1]', '[]', '[1]'],
-          3,
+          '[1]',
           'The cross product is 10^15 * 3 - 1 * 2 * 10^15 = 10^15, exactly positive.',
         ),
         choose(
@@ -4668,13 +4352,12 @@ print(turn_signs([(0, 0), (10**15, 1), (2 * 10**15, 3)]))`,
           1,
           'A vertical segment has B.x - A.x = 0.',
         ),
-        predictOutput(
+        typeOutput(
           'The points (0, 0), (3, 0.3), and (1, 0.1) lie on one line. What does this slope comparison print?',
           `slope_ab = (0.3 - 0.0) / (3 - 0)
 slope_ac = (0.1 - 0.0) / (1 - 0)
 print(slope_ab == slope_ac)`,
-          ['True', '0.1', 'False', 'An error is raised'],
-          2,
+          'False',
           '0.3 / 3 rounds to 0.09999999999999999, which is not equal to 0.1, so float slopes miss the collinearity.',
         ),
         choose(
@@ -4712,21 +4395,19 @@ print(divides(5, 0), divides(3, -12))`,
           '28 is 4 × 7, while 30 leaves remainder 2. Zero and -12 are exact multiples of 5 and 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(-12 % 5, 0 % 7, 18 % 6)`,
-          ['-2 0 0', '3 0 0', '2 0 0', '-2 7 0'],
-          1,
+          '3 0 0',
           'With a positive divisor Python returns a remainder from 0 to 4: -12 = 5 × (-3) + 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def divides(divisor, value):
     return value % divisor == 0
 
 print(divides(6, -42), divides(6, 15))`,
-          ['False False', 'True True', 'False True', 'True False'],
-          3,
+          'True False',
           '-42 is 6 × (-7), an exact multiple. 15 leaves remainder 3.',
         ),
         choose(
@@ -4768,7 +4449,7 @@ print(common)`,
           '8 divides 24 but leaves remainder 4 on 36, so it is not common. The largest common candidate is 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def is_common_divisor(a, b, divisor):
     return a % divisor == 0 and b % divisor == 0
@@ -4778,23 +4459,16 @@ for d in [1, 2, 3, 4, 5, 6, 10, 15]:
     if is_common_divisor(20, 30, d):
         common.append(d)
 print(common)`,
-          [
-            '[1, 2, 5, 10]',
-            '[1, 2, 3, 4, 5, 6, 10, 15]',
-            '[2, 5]',
-            '[1, 2, 5, 10, 15]',
-          ],
-          0,
+          '[1, 2, 5, 10]',
           '3, 6, and 15 do not divide 20, and 4 does not divide 30.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def is_common_divisor(a, b, divisor):
     return a % divisor == 0 and b % divisor == 0
 
 print(is_common_divisor(0, 0, 7), is_common_divisor(0, 9, 2))`,
-          ['False False', 'True True', 'True False', 'False True'],
-          2,
+          'True False',
           '7 divides 0 twice over. 2 divides 0 but not 9.',
         ),
         choose(
@@ -4808,10 +4482,9 @@ print(is_common_divisor(0, 0, 7), is_common_divisor(0, 9, 2))`,
           1,
           'With or, one zero remainder is enough, so 8 passes because it divides 24.',
         ),
-        choose(
+        typeNumber(
           'Which positive integer divides every pair of integers?',
-          ['2', 'The smaller number', 'None', '1'],
-          3,
+          1,
           'Every integer is a multiple of 1, so 1 is always a common divisor.',
         ),
       ],
@@ -4836,25 +4509,23 @@ print(euclid_step(7, 30))`,
           '84 = 2 × 36 + 12. For (7, 30), the remainder is 7, so the step only swaps.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def euclid_step(a, b):
     return (b, a % b)
 
 print(euclid_step(50, 15))`,
-          ['(15, 5)', '(50, 5)', '(5, 15)', '(15, 3)'],
-          0,
+          '(15, 5)',
           '50 = 3 × 15 + 5, so the new pair is (15, 5).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `a, b = 48, 18
 a, b = b, a % b
 print(a, b)
 a, b = b, a % b
 print(a, b)`,
-          ['18 12\n12 0', '18 12\n12 6', '48 12\n12 6', '18 30\n30 18'],
-          1,
+          '18 12\n12 6',
           '48 % 18 = 12, then 18 % 12 = 6.',
         ),
         choose(
@@ -4868,14 +4539,13 @@ print(a, b)`,
           2,
           'Subtracting multiples of b cannot create or destroy a divisor shared with b.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def euclid_step(a, b):
     return (b, a % b)
 
 print(euclid_step(7, 30))`,
-          ['(7, 0)', '(30, 23)', '(7, 30)', '(30, 7)'],
-          3,
+          '(30, 7)',
           '7 % 30 is 7, so a smaller first value is just swapped into second place.',
         ),
       ],
@@ -4899,7 +4569,7 @@ print(step1, step2, step3)`,
           'The second value goes 18, 12, 6, 0. The final remainder is 0 because 6 divides 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def euclid_step(a, b):
     return (b, a % b)
@@ -4908,13 +4578,7 @@ step1 = euclid_step(21, 8)
 step2 = euclid_step(step1[0], step1[1])
 step3 = euclid_step(step2[0], step2[1])
 print(step1, step2, step3)`,
-          [
-            '(8, 5) (5, 3) (3, 2)',
-            '(8, 13) (13, 8) (8, 5)',
-            '(8, 5) (5, 0) (0, 5)',
-            '(8, 5) (5, 3) (3, 1)',
-          ],
-          0,
+          '(8, 5) (5, 3) (3, 2)',
           '21 % 8 = 5, 8 % 5 = 3, and 5 % 3 = 2.',
         ),
         choose(
@@ -4928,14 +4592,13 @@ print(step1, step2, step3)`,
           1,
           'A remainder after dividing by b is between 0 and b - 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def euclid_step(a, b):
     return (b, a % b)
 
 print(euclid_step(45, 15), 45 % 15 == 0)`,
-          ['(15, 3) True', '(15, 0) False', '(15, 0) True', '(45, 0) True'],
-          2,
+          '(15, 0) True',
           '15 divides 45 exactly, so the remainder is 0 after one step.',
         ),
         choose(
@@ -4973,7 +4636,7 @@ print(lcm_from_gcd(-12, 18, 6))`,
           '18 // 6 = 3 and 3 × 30 = 90. For -12, the product -36 is made nonnegative by abs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def lcm_from_gcd(a, b, divisor):
     if a == 0 or b == 0:
@@ -4981,11 +4644,10 @@ print(lcm_from_gcd(-12, 18, 6))`,
     return abs((a // divisor) * b)
 
 print(lcm_from_gcd(8, 12, 4), lcm_from_gcd(7, 5, 1))`,
-          ['96 35', '24 35', '24 12', '4 1'],
-          1,
+          '24 35',
           '8 // 4 × 12 = 24. Coprime numbers have lcm equal to their product.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def lcm_from_gcd(a, b, divisor):
     if a == 0 or b == 0:
@@ -4993,8 +4655,7 @@ print(lcm_from_gcd(8, 12, 4), lcm_from_gcd(7, 5, 1))`,
     return abs((a // divisor) * b)
 
 print(lcm_from_gcd(-4, 10, 2))`,
-          ['-20', '40', '20', '10'],
-          2,
+          '20',
           '-4 // 2 = -2, times 10 is -20, and abs gives 20.',
         ),
         choose(
@@ -5008,10 +4669,9 @@ print(lcm_from_gcd(-4, 10, 2))`,
           3,
           'Both are exact; dividing first just avoids building the large product a * b.',
         ),
-        choose(
+        typeNumber(
           'a = 12, b = 18, and gcd(a, b) = 6. What is lcm(a, b)?',
-          ['216', '6', '36', '72'],
-          2,
+          36,
           '12 // 6 × 18 = 36, the smallest positive multiple of both.',
         ),
       ],
@@ -5046,7 +4706,7 @@ print(lcm_from_gcd(0, 0, 0))`,
           1,
           '0 // 0 is a division by zero, which Python rejects.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def lcm_from_gcd(a, b, divisor):
     if a == 0 or b == 0:
@@ -5054,8 +4714,7 @@ print(lcm_from_gcd(0, 0, 0))`,
     return abs((a // divisor) * b)
 
 print(lcm_from_gcd(0, 0, 0), lcm_from_gcd(-7, 0, 7))`,
-          ['0 7', '0 0', '0 -7', '1 0'],
-          1,
+          '0 0',
           'Either input being zero returns 0 immediately.',
         ),
         choose(
@@ -5069,7 +4728,7 @@ print(lcm_from_gcd(0, 0, 0), lcm_from_gcd(-7, 0, 7))`,
           2,
           'Every multiple of 0 is 0, so no positive common multiple exists.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def lcm_from_gcd(a, b, divisor):
     if a == 0 or b == 0:
@@ -5077,8 +4736,7 @@ print(lcm_from_gcd(0, 0, 0), lcm_from_gcd(-7, 0, 7))`,
     return abs((a // divisor) * b)
 
 print(lcm_from_gcd(5, 0, 5), lcm_from_gcd(-6, -4, 2))`,
-          ['5 12', '0 -12', '0 24', '0 12'],
-          3,
+          '0 12',
           'The zero input gives 0. -6 // 2 = -3, times -4 is 12.',
         ),
       ],
@@ -5106,7 +4764,7 @@ print(gcd(252, 105))`,
           '252 % 105 = 42, 105 % 42 = 21, and 42 % 21 = 0, leaving 21.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def gcd(a, b):
     x, y = abs(a), abs(b)
@@ -5115,11 +4773,10 @@ print(gcd(252, 105))`,
     return x
 
 print(gcd(84, 120))`,
-          ['6', '24', '4', '12'],
-          3,
+          '12',
           'The pairs are (120, 84), (84, 36), (36, 12), (12, 0).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `x, y = 13, 8
 steps = 0
@@ -5127,8 +4784,7 @@ while y:
     x, y = y, x % y
     steps += 1
 print(x, steps)`,
-          ['1 5', '1 4', '8 5', '1 6'],
-          0,
+          '1 5',
           'The pairs are (8, 5), (5, 3), (3, 2), (2, 1), (1, 0): five steps to reach gcd 1.',
         ),
         choose(
@@ -5174,7 +4830,7 @@ print(gcd(-12, 18), gcd(0, -7), gcd(0, 0))`,
           'Signs are removed first. With a zero input the loop runs at most once, leaving the other absolute value.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version skips abs. What does it print?',
           `def gcd_raw(a, b):
     while b:
@@ -5182,11 +4838,10 @@ print(gcd(-12, 18), gcd(0, -7), gcd(0, 0))`,
     return a
 
 print(gcd_raw(12, -18))`,
-          ['6', '-6', '12', '-18'],
-          1,
+          '-6',
           '12 % -18 is -6 in Python, and the loop ends at -6, a negative "gcd".',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def gcd(a, b):
     x, y = abs(a), abs(b)
@@ -5195,8 +4850,7 @@ print(gcd_raw(12, -18))`,
     return x
 
 print(gcd(0, -7), gcd(0, 0))`,
-          ['0 0', '-7 0', '7 1', '7 0'],
-          3,
+          '7 0',
           'gcd(0, -7) is |-7| = 7. gcd(0, 0) is 0 by convention, and the loop never runs.',
         ),
         choose(
@@ -5210,7 +4864,7 @@ print(gcd(0, -7), gcd(0, 0))`,
           1,
           'With no largest common divisor, 0 is the convention that keeps formulas like the lcm consistent.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def gcd(a, b):
     x, y = abs(a), abs(b)
@@ -5219,8 +4873,7 @@ print(gcd(0, -7), gcd(0, 0))`,
     return x
 
 print(gcd(-8, -20))`,
-          ['-4', '20', '4', '8'],
-          2,
+          '4',
           'After abs, the pairs are (20, 8), (8, 4), (4, 0).',
         ),
       ],
@@ -5247,7 +4900,7 @@ print(gcd_lcm(0, 5))`,
           '4 // 2 × 6 = 12. -9 // 3 × 12 = -36, made nonnegative. A zero input gives lcm 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def gcd_lcm(a, b):
     x, y = abs(a), abs(b)
@@ -5257,11 +4910,10 @@ print(gcd_lcm(0, 5))`,
     return x, multiple
 
 print(gcd_lcm(21, 6))`,
-          ['(3, 126)', '(3, 42)', '(6, 21)', '(1, 126)'],
-          1,
+          '(3, 42)',
           'gcd(21, 6) = 3, and 21 // 3 × 6 = 42.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def gcd_lcm(a, b):
     x, y = abs(a), abs(b)
@@ -5271,13 +4923,7 @@ print(gcd_lcm(21, 6))`,
     return x, multiple
 
 print(gcd_lcm(10, 10), gcd_lcm(1, 9))`,
-          [
-            '(10, 100) (1, 9)',
-            '(10, 10) (9, 9)',
-            '(10, 10) (1, 9)',
-            '(1, 10) (1, 9)',
-          ],
-          2,
+          '(10, 10) (1, 9)',
           'Equal numbers are their own gcd and lcm. 1 divides 9, so the lcm is 9.',
         ),
         choose(
@@ -5291,7 +4937,7 @@ print(gcd_lcm(10, 10), gcd_lcm(1, 9))`,
           3,
           'lcm = a × b / gcd, so multiplying back by the gcd gives the product.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def gcd_lcm(a, b):
     x, y = abs(a), abs(b)
@@ -5301,8 +4947,7 @@ print(gcd_lcm(10, 10), gcd_lcm(1, 9))`,
     return x, multiple
 
 print(gcd_lcm(0, 0), gcd_lcm(-7, 0))`,
-          ['(0, 0) (7, 0)', '(0, 0) (-7, 0)', '(1, 0) (7, 7)', '(0, 0) (7, 7)'],
-          0,
+          '(0, 0) (7, 0)',
           'Both calls skip the division because an input is zero; the gcd of -7 and 0 is 7.',
         ),
       ],
@@ -5323,11 +4968,10 @@ print(gcd_lcm(0, 0), gcd_lcm(-7, 0))`,
           '17 = 3 × 5 + 2. -17 = -4 × 5 + 3. -5 is an exact multiple of 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(-1 % 7, -8 % 7, 15 % 7)`,
-          ['-1 -1 1', '6 6 1', '1 1 1', '6 -1 1'],
-          1,
+          '6 6 1',
           '-1 and -8 differ by 7, so they share residue 6. 15 = 2 × 7 + 1.',
         ),
         choose(
@@ -5341,18 +4985,16 @@ print(gcd_lcm(0, 0), gcd_lcm(-7, 0))`,
           2,
           'Adding or subtracting multiples of m does not change the residue.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(23 % 10 == 3 % 10, -7 % 10 == 3 % 10)`,
-          ['True False', 'False True', 'False False', 'True True'],
-          3,
+          'True True',
           '23 - 3 = 20 and 3 - (-7) = 10 are both multiples of 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(12 % 1, -5 % 1)`,
-          ['0 0', '1 1', '12 -5', '0 1'],
-          0,
+          '0 0',
           'Every integer is a multiple of 1, so modulo 1 the only residue is 0.',
         ),
       ],
@@ -5374,24 +5016,22 @@ print(123 * 456 % 10)`,
           'Only the last digits matter modulo 10: 3 × 6 = 18, which leaves 8, the same as the full product.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def product_residue(a, b, modulus):
     return (a % modulus) * (b % modulus) % modulus
 
 print(product_residue(-3, 4, 7))`,
-          ['-5', '5', '2', '-12'],
-          2,
+          '2',
           '-3 % 7 = 4, and 4 × 4 = 16 leaves 2, matching -12 % 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def product_residue(a, b, modulus):
     return (a % modulus) * (b % modulus) % modulus
 
 print(product_residue(10**30, 10**30, 9))`,
-          ['0', '9', '10', '1'],
-          3,
+          '1',
           'Every power of 10 leaves 1 modulo 9, so the product leaves 1 × 1 = 1.',
         ),
         choose(
@@ -5405,11 +5045,10 @@ print(product_residue(10**30, 10**30, 9))`,
           0,
           'Reduction removes multiples of m, which never affect the final residue.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print((6 % 7) * (5 % 7), (6 % 7) * (5 % 7) % 7)`,
-          ['2 2', '30 30', '30 2', '2 30'],
-          2,
+          '30 2',
           'The product of residues is 30, which is not itself a residue; one more % 7 gives 2.',
         ),
       ],
@@ -5437,7 +5076,7 @@ print(power_step(1, 5, 3, 11))`,
           'The odd exponent moves a 5 into the result. The base becomes 25 % 11 = 3, and 3 // 2 = 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def power_step(result, base, exponent, modulus):
     if exponent % 2:
@@ -5447,11 +5086,10 @@ print(power_step(1, 5, 3, 11))`,
     return (result, base * base % modulus, exponent // 2)
 
 print(power_step(1, 3, 6, 7))`,
-          ['(3, 2, 3)', '(1, 2, 3)', '(1, 9, 3)', '(1, 2, 6)'],
-          1,
+          '(1, 2, 3)',
           'The exponent is even, so the result stays 1. The base becomes 9 % 7 = 2 and 6 halves to 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def power_step(result, base, exponent, modulus):
     if exponent % 2:
@@ -5461,8 +5099,7 @@ print(power_step(1, 3, 6, 7))`,
     return (result, base * base % modulus, exponent // 2)
 
 print(power_step(2, 4, 3, 10))`,
-          ['(8, 6, 1)', '(2, 6, 1)', '(8, 16, 1)', '(8, 6, 2)'],
-          0,
+          '(8, 6, 1)',
           'The odd exponent moves a 4 into the result: 2 × 4 = 8. The base becomes 16 % 10 = 6.',
         ),
         choose(
@@ -5512,7 +5149,7 @@ print(state, state[0] * state[1] ** state[2] % 7)`,
           '3^5 = 243 leaves 5 modulo 7. After the step, 3 × 2² = 12 also leaves 5: the represented value is unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def power_step(result, base, exponent, modulus):
     if exponent % 2:
@@ -5526,8 +5163,7 @@ state = power_step(state[0], state[1], state[2], 13)
 state = power_step(state[0], state[1], state[2], 13)
 state = power_step(state[0], state[1], state[2], 13)
 print(state)`,
-          ['(2, 3, 1)', '(32, 9, 0)', '(6, 3, 0)', '(6, 9, 0)'],
-          3,
+          '(6, 9, 0)',
           'The states are (2, 4, 2), (2, 3, 1), then (6, 9, 0). With exponent 0 the result 6 is 2^5 = 32 modulo 13.',
         ),
         choose(
@@ -5541,7 +5177,7 @@ print(state)`,
           2,
           'Floor division drops the remainder each time; the dropped 1 is what the odd case handled.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def power_step(result, base, exponent, modulus):
     if exponent % 2:
@@ -5551,14 +5187,12 @@ print(state)`,
     return (result, base * base % modulus, exponent // 2)
 
 print(power_step(9, -3, 4, 5))`,
-          ['(9, 9, 2)', '(4, 4, 2)', '(4, -4, 2)', '(-3, 4, 2)'],
-          1,
+          '(4, 4, 2)',
           'The even case reduces 9 to 4. (-3)² = 9 leaves 4 modulo 5.',
         ),
-        choose(
+        typeNumber(
           'How many halving steps take exponent 1000 down to 0?',
-          ['1000', '500', '10', '32'],
-          2,
+          10,
           '1000, 500, 250, 125, 62, 31, 15, 7, 3, 1, 0: ten steps, about log₂(1000).',
         ),
       ],
@@ -5585,7 +5219,7 @@ print(7 * 7 % 12)`,
           '7 is coprime to 12, and indeed 7 × 7 = 49 leaves 1. 8 shares the factor 4 with 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This program searches for inverses of 3 and 4 modulo 10. What does it print?',
           `found3 = []
 found4 = []
@@ -5597,11 +5231,10 @@ while x < 10:
         found4.append(x)
     x += 1
 print(found3, found4)`,
-          ['[7] [4]', '[] []', '[7] []', '[3] [9]'],
-          2,
+          '[7] []',
           '3 × 7 = 21 leaves 1. Every multiple of 4 is even, so it never leaves 1 modulo 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from math import gcd
 
@@ -5609,8 +5242,7 @@ def has_modular_inverse(value, modulus):
     return gcd(value, modulus) == 1
 
 print(has_modular_inverse(9, 20), has_modular_inverse(15, 20))`,
-          ['True False', 'False False', 'True True', 'False True'],
-          0,
+          'True False',
           '9 and 20 share no factor. 15 and 20 share 5.',
         ),
         choose(
@@ -5651,7 +5283,7 @@ print(units)`,
           'Modulo 8, the odd residues are invertible and the even ones share the factor 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from math import gcd
 
@@ -5660,16 +5292,10 @@ for value in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]:
     if gcd(value, 10) == 1:
         units.append(value)
 print(units)`,
-          [
-            '[1, 3, 5, 7, 9]',
-            '[1, 3, 7, 9]',
-            '[2, 3, 5, 7]',
-            '[1, 2, 3, 4, 5, 6, 7, 8, 9]',
-          ],
-          1,
+          '[1, 3, 7, 9]',
           'Residues sharing 2 or 5 with 10 are excluded, including 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from math import gcd
 
@@ -5677,8 +5303,7 @@ def has_modular_inverse(value, modulus):
     return gcd(value, modulus) == 1
 
 print(has_modular_inverse(-3, 10), has_modular_inverse(0, 7))`,
-          ['False False', 'True True', 'False True', 'True False'],
-          3,
+          'True False',
           'gcd(-3, 10) = 1, so -3 is invertible (its residue is 7). gcd(0, 7) = 7.',
         ),
         choose(
@@ -5732,7 +5357,7 @@ print(mod_power(3, 13, 7))`,
           '13 is 1101 in binary, so factors are moved in at the steps where the exponent is odd. Four iterations replace twelve multiplications.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def mod_power(base, exponent, modulus):
     result = 1 % modulus
@@ -5745,11 +5370,10 @@ print(mod_power(3, 13, 7))`,
     return result
 
 print(mod_power(2, 10, 1000))`,
-          ['1024', '20', '24', '0'],
-          2,
+          '24',
           '2^10 = 1024, which leaves 24 modulo 1000.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def mod_power(base, exponent, modulus):
     result = 1 % modulus
@@ -5762,8 +5386,7 @@ print(mod_power(2, 10, 1000))`,
     return result
 
 print(mod_power(5, 3, 13))`,
-          ['125', '8', '2', '15'],
-          1,
+          '8',
           '5^3 = 125 = 9 × 13 + 8.',
         ),
         choose(
@@ -5808,7 +5431,7 @@ print(mod_power(0, 0, 7), mod_power(9, 0, 1), mod_power(-2, 3, 5))`,
           '0^0 is the empty product 1. Modulo 1 everything is 0. (-2)^3 = -8 leaves 2 modulo 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The first function starts its result at 1. What does this program print?',
           `def starts_at_one(base, exponent, modulus):
     result = 1
@@ -5831,11 +5454,10 @@ def mod_power(base, exponent, modulus):
     return result
 
 print(starts_at_one(5, 0, 1), mod_power(5, 0, 1))`,
-          ['0 0', '1 0', '1 1', '0 1'],
-          1,
+          '1 0',
           'With exponent 0 the loop never runs, so the first version returns 1, which is not a residue modulo 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def mod_power(base, exponent, modulus):
     result = 1 % modulus
@@ -5848,11 +5470,10 @@ print(starts_at_one(5, 0, 1), mod_power(5, 0, 1))`,
     return result
 
 print(mod_power(-3, 3, 10))`,
-          ['-7', '7', '-27', '3'],
-          3,
+          '3',
           '-3 becomes 7, and 7^3 = 343 leaves 3, matching -27 % 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def mod_power(base, exponent, modulus):
     result = 1 % modulus
@@ -5865,8 +5486,7 @@ print(mod_power(-3, 3, 10))`,
     return result
 
 print(mod_power(0, 0, 7), mod_power(7, 3, 7), mod_power(8, 3, 7))`,
-          ['0 0 1', '1 0 8', '1 0 1', '0 0 0'],
-          2,
+          '1 0 1',
           '0^0 is 1. 7 is 0 modulo 7. 8 is 1 modulo 7, so 8^3 leaves 1.',
         ),
         choose(
@@ -5900,18 +5520,16 @@ if gcd(b, m) == 1:
           'gcd(7, 12) = 1, so the inverse exists. Here 7 is its own inverse, since 49 leaves 1 modulo 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(pow(3, -1, 11), 3 * pow(3, -1, 11) % 11)`,
-          ['3 1', '4 0', '8 1', '4 1'],
-          3,
+          '4 1',
           '3 × 4 = 12 leaves 1 modulo 11, so 4 is the inverse of 3.',
         ),
-        predictOutput(
+        typeOutput(
           'Modulus 12 is composite. What does this program print?',
           `print(pow(5, 12 - 2, 12), pow(5, -1, 12))`,
-          ['5 5', '1 5', '1 1', '5 1'],
-          1,
+          '1 5',
           'The prime-only shortcut gives 1, but 5 × 1 is not 1 modulo 12. The real inverse is 5, since 25 leaves 1.',
         ),
         choose(
@@ -5963,7 +5581,7 @@ print(len(table))`,
           'Indices 0 through 6 give seven entries. 4 and 6 are still candidates until marking runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def prime_candidates(limit):
     table = [True] * (limit + 1)
@@ -5974,8 +5592,7 @@ print(len(table))`,
 
 table = prime_candidates(4)
 print(len(table), table[4])`,
-          ['4 False', '5 False', '5 True', '4 True'],
-          2,
+          '5 True',
           'Five entries cover 0 through 4, and 4 has not been ruled out yet.',
         ),
         choose(
@@ -6000,7 +5617,7 @@ print(len(table), table[4])`,
           3,
           'Index 30 must exist so that 30 itself can be tested.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def prime_candidates(limit):
     table = [True] * (limit + 1)
@@ -6014,8 +5631,7 @@ for flag in prime_candidates(10):
     if flag:
         count += 1
 print(count)`,
-          ['9', '4', '11', '10'],
-          0,
+          '9',
           'Before marking, every number from 2 to 10 is a candidate; only 4 of them will turn out prime.',
         ),
       ],
@@ -6041,7 +5657,7 @@ print(prime_candidates(1))`,
           'Limit 0 has a single entry. Limit 1 has entries for 0 and 1, both excluded.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def prime_candidates(limit):
     table = [True] * (limit + 1)
@@ -6051,13 +5667,7 @@ print(prime_candidates(1))`,
     return table
 
 print(prime_candidates(3))`,
-          [
-            '[False, True, True, True]',
-            '[False, False, True, True]',
-            '[True, True, True, True]',
-            '[False, False, True]',
-          ],
-          1,
+          '[False, False, True, True]',
           'Four entries cover 0 through 3; 0 and 1 are excluded, 2 and 3 remain.',
         ),
         choose(
@@ -6082,7 +5692,7 @@ print(prime_candidates(3))`,
           1,
           'The candidate table is only the starting point; composites are marked later.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def prime_candidates(limit):
     table = [True] * (limit + 1)
@@ -6092,13 +5702,7 @@ print(prime_candidates(3))`,
     return table
 
 print(prime_candidates(2))`,
-          [
-            '[False, True, True]',
-            '[True, True, True]',
-            '[False, False]',
-            '[False, False, True]',
-          ],
-          3,
+          '[False, False, True]',
           'Three entries cover 0 through 2, and 2 is the first candidate.',
         ),
       ],
@@ -6122,19 +5726,13 @@ print(square_multiples(5, 40))`,
           '10, 15, and 20 were already marked by 2 or 3, so the pass for 5 starts at 25.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def square_multiples(prime, limit):
     return list(range(prime * prime, limit + 1, prime))
 
 print(square_multiples(7, 70))`,
-          [
-            '[14, 21, 28, 35, 42, 49, 56, 63, 70]',
-            '[49, 56, 63]',
-            '[49, 56, 63, 70]',
-            '[7, 14, 21]',
-          ],
-          2,
+          '[49, 56, 63, 70]',
           'The pass starts at 49 and steps by 7 up to and including 70.',
         ),
         choose(
@@ -6148,22 +5746,15 @@ print(square_multiples(7, 70))`,
           0,
           'Every multiple of 5 below 25 has a factor 2 or 3, handled by earlier passes.',
         ),
-        predictOutput(
+        typeOutput(
           'Starting at 2p also works but repeats work. What does this program print?',
           `print(list(range(2 * 3, 16, 3)), list(range(3 * 3, 16, 3)))`,
-          [
-            '[6, 9, 12, 15] [6, 9, 12, 15]',
-            '[9, 12, 15] [6, 9, 12, 15]',
-            '[6, 9, 12] [9, 12]',
-            '[6, 9, 12, 15] [9, 12, 15]',
-          ],
-          3,
+          '[6, 9, 12, 15] [9, 12, 15]',
           '6 is already marked by 2, so starting at 9 skips one redundant write.',
         ),
-        choose(
+        typeNumber(
           'For prime p = 11, which number is the first one its pass must mark?',
-          ['22', '11', '121', '33'],
-          2,
+          121,
           'Smaller multiples of 11 have a factor below 11, so 11 × 11 = 121 is the first new one.',
         ),
       ],
@@ -6185,26 +5776,19 @@ print(square_multiples(5, 24))`,
           'With limit 25 the square itself is included. With limit 24 the pass starts beyond the limit.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(list(range(4, 12, 2)), list(range(4, 12 + 1, 2)))`,
-          [
-            '[4, 6, 8, 10] [4, 6, 8, 10, 12]',
-            '[4, 6, 8, 10, 12] [4, 6, 8, 10, 12]',
-            '[4, 6, 8, 10] [4, 6, 8, 10]',
-            '[6, 8, 10] [6, 8, 10, 12]',
-          ],
-          0,
+          '[4, 6, 8, 10] [4, 6, 8, 10, 12]',
           'The stop is excluded, so only the second range reaches 12.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def square_multiples(prime, limit):
     return list(range(prime * prime, limit + 1, prime))
 
 print(square_multiples(2, 9))`,
-          ['[4, 6, 8, 10]', '[2, 4, 6, 8]', '[4, 8]', '[4, 6, 8]'],
-          3,
+          '[4, 6, 8]',
           'Starting at 4 and stepping by 2, the next value 10 would pass the limit 9.',
         ),
         choose(
@@ -6218,14 +5802,13 @@ print(square_multiples(2, 9))`,
           1,
           'Only multiples of 3 should be marked; a step of 1 visits every number.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def square_multiples(prime, limit):
     return list(range(prime * prime, limit + 1, prime))
 
 print(square_multiples(11, 100))`,
-          ['[121]', '[11, 22, 33]', '[]', '[100]'],
-          2,
+          '[]',
           '121 is already above 100, so the range is empty.',
         ),
       ],
@@ -6255,7 +5838,7 @@ print(smallest_factor(97))`,
           '91 = 7 × 13 is found by 7, below √91 ≈ 9.5. 97 has no factor up to 9, so it is prime and returns itself.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def smallest_factor(n):
     candidate = 2
@@ -6266,11 +5849,10 @@ print(smallest_factor(97))`,
     return n
 
 print(smallest_factor(221))`,
-          ['17', '221', '11', '13'],
-          3,
+          '13',
           '221 = 13 × 17, and 13 × 13 = 169 is still within the bound.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def smallest_factor(n):
     candidate = 2
@@ -6281,8 +5863,7 @@ print(smallest_factor(221))`,
     return n
 
 print(smallest_factor(49), smallest_factor(53))`,
-          ['7 53', '49 53', '7 1', '49 1'],
-          0,
+          '7 53',
           '7 × 7 = 49 is included by <=. 53 has no factor up to 7, so it is prime.',
         ),
         choose(
@@ -6296,10 +5877,9 @@ print(smallest_factor(49), smallest_factor(53))`,
           2,
           'Two factors above √100 multiply to more than 100.',
         ),
-        choose(
-          'To find every prime up to 1,000,000, sieve passes are needed for candidates up to...',
-          ['1,000', '500,000', '1,000,000', '100'],
-          0,
+        typeNumber(
+          'To find every prime up to 1,000,000, up to which candidate are sieve passes needed?',
+          1000,
           '√1,000,000 = 1,000; every composite up to the limit has a factor at most 1,000.',
         ),
       ],
@@ -6325,7 +5905,7 @@ print(sieve_factor_candidates(48))`,
         explanation: '7 × 7 = 49 is within the first bound but not the second.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def sieve_factor_candidates(limit):
     result = []
@@ -6336,11 +5916,10 @@ print(sieve_factor_candidates(48))`,
     return result
 
 print(sieve_factor_candidates(35))`,
-          ['[2, 3, 4, 5, 6]', '[2, 3, 5]', '[2, 3, 4, 5]', '[2, 3, 4]'],
-          2,
+          '[2, 3, 4, 5]',
           '5 × 5 = 25 <= 35, while 6 × 6 = 36 is too large.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def sieve_factor_candidates(limit):
     result = []
@@ -6351,8 +5930,7 @@ print(sieve_factor_candidates(35))`,
     return result
 
 print(sieve_factor_candidates(8), sieve_factor_candidates(9))`,
-          ['[2] [2]', '[2, 3] [2, 3]', '[] [2, 3]', '[2] [2, 3]'],
-          3,
+          '[2] [2, 3]',
           '3 × 3 = 9 exceeds 8 but equals 9, so only the second list includes 3.',
         ),
         choose(
@@ -6366,14 +5944,13 @@ print(sieve_factor_candidates(8), sieve_factor_candidates(9))`,
           0,
           'An exact integer test never loses the boundary candidate to rounding.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `candidate = 2
 while (candidate + 1) * (candidate + 1) <= 30:
     candidate += 1
 print(candidate)`,
-          ['6', '5', '15', '30'],
-          1,
+          '5',
           '5 × 5 = 25 fits within 30, but 6 × 6 = 36 does not.',
         ),
       ],
@@ -6407,7 +5984,7 @@ print(primes_up_to(30))`,
           'Passes for 2, 3, and 5 remove every composite up to 30; 4 is skipped because it is already marked.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def primes_up_to(limit):
     if limit < 2:
@@ -6423,16 +6000,10 @@ print(primes_up_to(30))`,
     return [value for value in range(2, limit + 1) if prime[value]]
 
 print(primes_up_to(25))`,
-          [
-            '[2, 3, 5, 7, 11, 13, 17, 19, 23, 25]',
-            '[2, 3, 5, 7, 11, 13, 17, 19, 23]',
-            '[2, 3, 5, 7, 11, 13, 17, 19]',
-            '[1, 2, 3, 5, 7, 11, 13, 17, 19, 23]',
-          ],
-          1,
+          '[2, 3, 5, 7, 11, 13, 17, 19, 23]',
           'The pass for 5 starts at 25 and marks it; 1 was excluded from the start.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `limit = 50
 prime = [True] * (limit + 1)
@@ -6446,13 +6017,7 @@ while p * p <= limit:
             prime[multiple] = False
     p += 1
 print(processed)`,
-          [
-            '[2, 3, 4, 5, 6, 7]',
-            '[2, 3, 5]',
-            '[2, 3, 5, 7, 11]',
-            '[2, 3, 5, 7]',
-          ],
-          3,
+          '[2, 3, 5, 7]',
           'p runs up to 7, since 7 × 7 = 49 <= 50. 4 and 6 are skipped because they are already marked.',
         ),
         choose(
@@ -6466,7 +6031,7 @@ print(processed)`,
           2,
           'A composite p’s multiples all share its smaller prime factors, which have already been processed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def primes_up_to(limit):
     if limit < 2:
@@ -6482,8 +6047,7 @@ print(processed)`,
     return [value for value in range(2, limit + 1) if prime[value]]
 
 print(len(primes_up_to(100)))`,
-          ['26', '24', '25', '50'],
-          2,
+          '25',
           'There are 25 primes up to 100, the last being 97.',
         ),
       ],
@@ -6524,7 +6088,7 @@ print(primes_strict(49)[-3:])`,
           'With <, the loop stops before p = 7, so 49 = 7 × 7 is never marked and is reported as prime.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version uses < in the outer loop. What does it print?',
           `def primes_strict(limit):
     prime = [True] * (limit + 1)
@@ -6538,11 +6102,10 @@ print(primes_strict(49)[-3:])`,
     return [value for value in range(2, limit + 1) if prime[value]]
 
 print(primes_strict(25)[-2:])`,
-          ['[19, 23]', '[23]', '[21, 23]', '[23, 25]'],
-          3,
+          '[23, 25]',
           'The loop stops at p = 4, so the pass for 5 never marks 25.',
         ),
-        predictOutput(
+        typeOutput(
           'This program counts marking writes when passes start at p² and at 2p. What does it print?',
           `def count_marks(limit, start_at_square):
     prime = [True] * (limit + 1)
@@ -6558,14 +6121,12 @@ print(primes_strict(25)[-2:])`,
     return marks
 
 print(count_marks(30, True), count_marks(30, False))`,
-          ['28 24', '24 24', '24 28', '14 14'],
-          2,
+          '24 28',
           'Starting at 2p rewrites 6, 10, 15, and 20, which earlier passes had already marked.',
         ),
-        choose(
+        typeNumber(
           'n = 120. What is the largest p whose marking pass runs?',
-          ['10', '7', '11', '60'],
-          1,
+          7,
           '7 × 7 = 49 <= 120 and 11 × 11 = 121 > 120; 8, 9, and 10 are composite, so they are skipped.',
         ),
         choose(
@@ -6608,7 +6169,7 @@ print([q for q in [1, 2, 51, 97] if table[q]])`,
           'One table answers all four queries. 1 is not prime and 51 = 3 × 17.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def primes_up_to(limit):
     if limit < 2:
@@ -6624,11 +6185,10 @@ print([q for q in [1, 2, 51, 97] if table[q]])`,
     return [value for value in range(2, limit + 1) if prime[value]]
 
 print(primes_up_to(0), primes_up_to(3))`,
-          ['[0] [2, 3]', '[] [2, 3]', '[] [1, 2, 3]', '[] [2]'],
-          1,
+          '[] [2, 3]',
           'Limits below 2 return immediately. The bound 3 is inclusive.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def prime_table(limit):
     prime = [True] * (limit + 1)
@@ -6645,8 +6205,7 @@ print(primes_up_to(0), primes_up_to(3))`,
 
 table = prime_table(100)
 print([q for q in [0, 49, 53, 91] if table[q]])`,
-          ['[53, 91]', '[49, 53, 91]', '[]', '[53]'],
-          3,
+          '[53]',
           '49 = 7 × 7 and 91 = 7 × 13 are marked by the pass for 7.',
         ),
         choose(
@@ -6696,7 +6255,7 @@ print(choose_boundary(5, 0), choose_boundary(5, 5), choose_boundary(0, 0))`,
           'Empty and full selections each count once, including the empty selection from no items.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def choose_boundary(n, k):
     if k < 0 or k > n:
@@ -6706,14 +6265,12 @@ print(choose_boundary(5, 0), choose_boundary(5, 5), choose_boundary(0, 0))`,
     return None
 
 print([choose_boundary(3, k) for k in [0, 1, 3]])`,
-          ['[1, 3, 1]', '[0, None, 0]', '[1, None, 1]', '[1, 1, 1]'],
-          2,
+          '[1, None, 1]',
           'k = 1 is an interior state that still needs a recurrence; the ends count once each.',
         ),
-        choose(
+        typeNumber(
           'In how many ways can all 6 of 6 items be chosen?',
-          ['6', '720', '0', '1'],
-          3,
+          1,
           'There is only one selection containing every item; order does not matter.',
         ),
         choose(
@@ -6727,7 +6284,7 @@ print([choose_boundary(3, k) for k in [0, 1, 3]])`,
           1,
           'The empty selection exists even when there are no items.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def choose_boundary(n, k):
     if k < 0 or k > n:
@@ -6737,8 +6294,7 @@ print([choose_boundary(3, k) for k in [0, 1, 3]])`,
     return None
 
 print(choose_boundary(7, 7), choose_boundary(7, 0), choose_boundary(7, 6))`,
-          ['7 1 None', '1 0 None', '1 1 7', '1 1 None'],
-          3,
+          '1 1 None',
           'Choosing all or none counts once. k = 6 is a valid interior state.',
         ),
       ],
@@ -6763,7 +6319,7 @@ print([choose_boundary(2, k) for k in [-1, 0, 1, 2, 3]])`,
           'Outside 0 through 2 the count is 0; the ends count once; k = 1 still needs a recurrence.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def choose_boundary(n, k):
     if k < 0 or k > n:
@@ -6773,17 +6329,15 @@ print([choose_boundary(2, k) for k in [-1, 0, 1, 2, 3]])`,
     return None
 
 print([choose_boundary(4, k) for k in [5, -2, 2]])`,
-          ['[0, 0, None]', '[1, 0, None]', '[None, None, None]', '[0, 0, 6]'],
-          0,
+          '[0, 0, None]',
           '5 > 4 and -2 < 0 are impossible; 2 is interior.',
         ),
-        choose(
+        typeNumber(
           'What is C(3, 5)?',
-          ['1', '10', 'Undefined', '0'],
-          3,
+          0,
           'There is no way to choose 5 items from 3.',
         ),
-        predictOutput(
+        typeOutput(
           'This version checks the boundaries in a different order. What does it print?',
           `def bad_boundary(n, k):
     if k == 0 or k == n:
@@ -6793,8 +6347,7 @@ print([choose_boundary(4, k) for k in [5, -2, 2]])`,
     return None
 
 print(bad_boundary(3, -1), bad_boundary(3, 4))`,
-          ['0 0', 'None 0', '1 0', 'None None'],
-          1,
+          'None 0',
           'It never tests k < 0, so -1 is wrongly treated as an interior state.',
         ),
         choose(
@@ -6832,7 +6385,7 @@ print(next_pascal_row([1, 4, 6, 4, 1], 100))`,
         explanation: 'For example C(5, 2) = C(4, 1) + C(4, 2) = 4 + 6 = 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def next_pascal_row(previous, modulus):
     result = [1 % modulus]
@@ -6842,13 +6395,7 @@ print(next_pascal_row([1, 4, 6, 4, 1], 100))`,
     return result
 
 print(next_pascal_row([1, 5, 10, 10, 5, 1], 1000))`,
-          [
-            '[1, 6, 15, 20, 15, 6, 1]',
-            '[1, 5, 15, 20, 15, 5, 1]',
-            '[1, 6, 15, 15, 6, 1]',
-            '[1, 6, 16, 21, 16, 6, 1]',
-          ],
-          0,
+          '[1, 6, 15, 20, 15, 6, 1]',
           'Each interior entry adds its two neighbors above: 1 + 5, 5 + 10, 10 + 10, and so on.',
         ),
         choose(
@@ -6873,7 +6420,7 @@ print(next_pascal_row([1, 5, 10, 10, 5, 1], 1000))`,
           2,
           'Excluding the item gives C(6, 3); including it gives C(6, 2).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def next_pascal_row(previous, modulus):
     result = [1 % modulus]
@@ -6886,13 +6433,7 @@ row = [1]
 for _ in range(4):
     row = next_pascal_row(row, 1000)
 print(row)`,
-          [
-            '[1, 3, 3, 1]',
-            '[1, 5, 10, 10, 5, 1]',
-            '[1, 4, 4, 1]',
-            '[1, 4, 6, 4, 1]',
-          ],
-          3,
+          '[1, 4, 6, 4, 1]',
           'Four steps from row 0 reach row 4, whose entries are C(4, 0) through C(4, 4).',
         ),
       ],
@@ -6917,7 +6458,7 @@ print(next_pascal_row([1, 4, 6, 4, 1], 6))`,
           'The true row is 1, 5, 10, 10, 5, 1; modulo 6, the tens become 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def next_pascal_row(previous, modulus):
     result = [1 % modulus]
@@ -6927,16 +6468,10 @@ print(next_pascal_row([1, 4, 6, 4, 1], 6))`,
     return result
 
 print(next_pascal_row([1, 3, 3, 1], 4))`,
-          [
-            '[1, 4, 6, 4, 1]',
-            '[1, 0, 2, 0, 1]',
-            '[1, 0, 6, 0, 1]',
-            '[0, 0, 2, 0, 0]',
-          ],
-          1,
+          '[1, 0, 2, 0, 1]',
           'Row 4 is 1, 4, 6, 4, 1, which leaves 1, 0, 2, 0, 1 modulo 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def next_pascal_row(previous, modulus):
     result = [1 % modulus]
@@ -6946,8 +6481,7 @@ print(next_pascal_row([1, 3, 3, 1], 4))`,
     return result
 
 print(next_pascal_row([0, 0], 1))`,
-          ['[1, 0, 1]', '[1, 1, 1]', '[0, 1, 0]', '[0, 0, 0]'],
-          3,
+          '[0, 0, 0]',
           'Modulo 1 every value, including the boundary 1, is 0.',
         ),
         choose(
@@ -6961,10 +6495,9 @@ print(next_pascal_row([0, 0], 1))`,
           1,
           'Division modulo 12 can fail, but addition modulo any positive m is always valid.',
         ),
-        choose(
+        typeNumber(
           'C(10, 5) = 252. If every row is reduced modulo 10, what is the entry for C(10, 5)?',
-          ['252', '2', '25', '5'],
-          1,
+          2,
           'Reducing during addition gives the same residue as reducing the exact count: 252 % 10 = 2.',
         ),
       ],
@@ -6991,7 +6524,7 @@ print(add_counting_item([1, 3, 3, 1], 100))`,
           'Row 3 becomes the first four entries of row 4: each count adds the old count one position to its left.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def add_counting_item(previous, modulus):
     dp = previous[:]
@@ -7000,18 +6533,16 @@ print(add_counting_item([1, 3, 3, 1], 100))`,
     return dp
 
 print(add_counting_item([1, 2, 1, 0], 100))`,
-          ['[1, 3, 4, 4]', '[1, 2, 1, 0]', '[1, 3, 3, 1]', '[1, 4, 6, 4]'],
-          2,
+          '[1, 3, 3, 1]',
           'Downward: index 3 gets 0 + 1, index 2 gets 1 + 2, index 1 gets 2 + 1.',
         ),
-        predictOutput(
+        typeOutput(
           'This loop updates upward. What does it print?',
           `dp = [1, 2, 1, 0]
 for k in range(1, len(dp)):
     dp[k] = dp[k] + dp[k - 1]
 print(dp)`,
-          ['[1, 3, 4, 4]', '[1, 3, 3, 1]', '[1, 2, 1, 0]', '[1, 4, 6, 4]'],
-          0,
+          '[1, 3, 4, 4]',
           'Index 2 reads the already updated 3 instead of 2, so the counts grow too fast.',
         ),
         choose(
@@ -7060,7 +6591,7 @@ print(row)`,
           'After five items the entries are C(5, 0), C(5, 1), and C(5, 2), without storing the rest of row 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def add_counting_item(previous, modulus):
     dp = previous[:]
@@ -7072,16 +6603,10 @@ row = [1, 0, 0, 0]
 for _ in range(6):
     row = add_counting_item(row, 1000)
 print(row)`,
-          [
-            '[1, 6, 15, 20]',
-            '[1, 6, 15, 20, 15, 6, 1]',
-            '[1, 6, 6, 6]',
-            '[6, 15, 20, 15]',
-          ],
-          0,
+          '[1, 6, 15, 20]',
           'Six items give C(6, 0) through C(6, 3); the list stays four entries long.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def add_counting_item(previous, modulus):
     dp = previous[:]
@@ -7093,8 +6618,7 @@ row = [1, 0, 0]
 for _ in range(5):
     row = add_counting_item(row, 4)
 print(row)`,
-          ['[1, 5, 10]', '[0, 1, 2]', '[1, 1, 10]', '[1, 1, 2]'],
-          3,
+          '[1, 1, 2]',
           'C(5, 1) = 5 and C(5, 2) = 10 leave 1 and 2 modulo 4.',
         ),
         choose(
@@ -7108,7 +6632,7 @@ print(row)`,
           2,
           'range(len(dp) - 1, 0, -1) excludes 0, which is correct because the empty selection always counts once.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def add_counting_item(previous, modulus):
     dp = previous[:]
@@ -7119,13 +6643,7 @@ print(row)`,
 a = [1, 4, 6]
 b = add_counting_item(a, 10)
 print(a, b)`,
-          [
-            '[1, 5, 0] [1, 5, 0]',
-            '[1, 4, 6] [1, 5, 10]',
-            '[1, 4, 6] [1, 5, 0]',
-            '[1, 4, 6] [1, 4, 6]',
-          ],
-          2,
+          '[1, 4, 6] [1, 5, 0]',
           'The copy is updated: 6 + 4 = 10 leaves 0 modulo 10, and 4 + 1 = 5. a is unchanged.',
         ),
       ],
@@ -7154,7 +6672,7 @@ print(choose_trace(4, 2))`,
           'Each line is the start of the next Pascal row. After four items, dp[2] = C(4, 2) = 6.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def choose_mod(n, k, modulus):
     if k < 0 or k > n:
@@ -7168,11 +6686,10 @@ print(choose_trace(4, 2))`,
     return dp[k]
 
 print(choose_mod(7, 3, 1000))`,
-          ['21', '210', '35', '7'],
-          2,
+          '35',
           'C(7, 3) = 35. 210 counts ordered selections.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def choose_mod(n, k, modulus):
     if k < 0 or k > n:
@@ -7186,8 +6703,7 @@ print(choose_mod(7, 3, 1000))`,
     return dp[k]
 
 print(choose_mod(10, 3, 7))`,
-          ['120', '1', '3', '0'],
-          1,
+          '1',
           'C(10, 3) = 120 = 17 × 7 + 1.',
         ),
         choose(
@@ -7238,7 +6754,7 @@ print(choose_mod(8, 6, 1000), choose_mod(5, 6, 7), choose_mod(0, 0, 7))`,
           'C(8, 6) is computed as C(8, 2) = 28 with a three-entry table. 6 of 5 is impossible, and C(0, 0) is the empty selection.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def choose_mod(n, k, modulus):
     if k < 0 or k > n:
@@ -7252,11 +6768,10 @@ print(choose_mod(8, 6, 1000), choose_mod(5, 6, 7), choose_mod(0, 0, 7))`,
     return dp[k]
 
 print(choose_mod(9, 7, 1000), choose_mod(9, 2, 1000))`,
-          ['36 36', '36 72', '63 36', '7 2'],
-          0,
+          '36 36',
           'Leaving out 2 of 9 is the same as choosing 7, so both are C(9, 2) = 36.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def choose_mod(n, k, modulus):
     if k < 0 or k > n:
@@ -7270,14 +6785,12 @@ print(choose_mod(9, 7, 1000), choose_mod(9, 2, 1000))`,
     return dp[k]
 
 print(choose_mod(4, -1, 5), choose_mod(4, 4, 5), choose_mod(0, 0, 1))`,
-          ['0 1 1', '1 1 0', '0 0 0', '0 1 0'],
-          3,
+          '0 1 0',
           'k = -1 is impossible. C(4, 4) = 1. Modulo 1, even the empty selection’s count is 0.',
         ),
-        choose(
+        typeNumber(
           'For C(1000, 997), how many entries does the table have after symmetry?',
-          ['998', '4', '1001', '3'],
-          1,
+          4,
           'min(997, 3) = 3, so the table holds dp[0] through dp[3].',
         ),
         choose(
@@ -7332,7 +6845,7 @@ print(choose_mod(6, 2, 10))`,
           2,
           'An inverse modulo 12 exists only for values coprime to 12.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def choose_mod(n, k, modulus):
     if k < 0 or k > n:
@@ -7346,8 +6859,7 @@ print(choose_mod(6, 2, 10))`,
     return dp[k]
 
 print(choose_mod(12, 6, 8))`,
-          ['924', '0', '6', '4'],
-          3,
+          '4',
           'C(12, 6) = 924 = 115 × 8 + 4, computed without any division.',
         ),
         choose(
@@ -7361,7 +6873,7 @@ print(choose_mod(12, 6, 8))`,
           0,
           'Each of the 500 items updates at most 3 entries.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `from math import comb
 
@@ -7377,8 +6889,7 @@ def choose_mod(n, k, modulus):
     return dp[k]
 
 print(choose_mod(20, 10, 7), comb(20, 10) % 7)`,
-          ['184756 5', '5 5', '5 0', '0 5'],
-          1,
+          '5 5',
           'Reducing during every addition gives the same residue as reducing the exact count 184756.',
         ),
       ],
@@ -7693,17 +7204,15 @@ print(bin(20), bin(20 & -20))`,
           '20 is 10100 in binary, so its lowest set bit is 100, which is 4. Odd numbers end in a 1 bit.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(24 & -24, 9 & -9, 32 & -32)`,
-          ['8 1 32', '24 9 32', '16 1 32', '8 9 16'],
-          0,
+          '8 1 32',
           '24 = 11000 keeps 1000 = 8; 9 is odd; 32 is already a single bit.',
         ),
-        choose(
+        typeNumber(
           'What is lowbit(40)?',
-          ['40', '32', '8', '2'],
-          2,
+          8,
           '40 is 101000 in binary, and its lowest set bit is 1000 = 8.',
         ),
         choose(
@@ -7712,16 +7221,10 @@ print(bin(20), bin(20 & -20))`,
           1,
           '4 = 100, 12 = 1100, and 20 = 10100 all end in exactly two zero bits.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print([i & -i for i in range(1, 9)])`,
-          [
-            '[1, 2, 3, 4, 5, 6, 7, 8]',
-            '[1, 1, 1, 1, 1, 1, 1, 1]',
-            '[1, 2, 2, 4, 4, 4, 4, 8]',
-            '[1, 2, 1, 4, 1, 2, 1, 8]',
-          ],
-          3,
+          '[1, 2, 1, 4, 1, 2, 1, 8]',
           'Odd numbers give 1, numbers ending in 10 give 2, and the powers of two give themselves.',
         ),
       ],
@@ -7748,20 +7251,18 @@ print(bin(20), bin(20 & -20))`,
           2,
           'lowbit(12) = 4, so the block holds the four positions ending at 12.',
         ),
-        choose(
+        typeNumber(
           'Values 3, 1, 4, 1, 5, 9 sit at internal positions 1 through 6. What does tree[6] store?',
-          ['9', '14', '23', '5'],
-          1,
+          14,
           'lowbit(6) = 2, so tree[6] sums positions 5 and 6: 5 + 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `index = 0
 for step in range(3):
     index = index + (index & -index)
 print(index)`,
-          ['3', '1', '8', '0'],
-          3,
+          '0',
           '0 & -0 is 0, so adding it never moves the index.',
         ),
         choose(
@@ -7798,7 +7299,7 @@ print(path)`,
           'tree[13] covers 13, tree[12] covers 9 through 12, and tree[8] covers 1 through 8.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `end = 7
 path = []
@@ -7806,11 +7307,10 @@ while end > 0:
     path.append(end)
     end -= end & -end
 print(path)`,
-          ['[7, 6, 4]', '[7, 6, 5, 4, 3, 2, 1]', '[7, 8]', '[7, 3, 1]'],
-          0,
+          '[7, 6, 4]',
           '7 = 111 in binary; clearing one low bit at a time gives 6 and then 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `end = 16
 path = []
@@ -7818,8 +7318,7 @@ while end > 0:
     path.append(end)
     end -= end & -end
 print(path)`,
-          ['[16, 8, 4, 2, 1]', '[16, 15]', '[16]', '[]'],
-          2,
+          '[16]',
           'tree[16] already covers positions 1 through 16, so one block is enough.',
         ),
         choose(
@@ -7862,14 +7361,13 @@ print([fenwick_prefix(tree, end) for end in range(7)])`,
           'This tree stores the values 4, 1, 3, 2, 6, 5. Each entry is the sum of the first end values.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${fenwickPrefix}
 
 tree = [0, 4, 5, 3, 10, 6, 11]
 print(fenwick_prefix(tree, 3), fenwick_prefix(tree, 6))`,
-          ['3 11', '8 21', '8 11', '10 21'],
-          1,
+          '8 21',
           'end = 3 adds tree[3] + tree[2] = 8; end = 6 adds tree[6] + tree[4] = 21.',
         ),
         choose(
@@ -7883,7 +7381,7 @@ print(fenwick_prefix(tree, 3), fenwick_prefix(tree, 6))`,
           3,
           'Half-open [0, 4) has four values, stored at internal positions 1 through 4.',
         ),
-        predictOutput(
+        typeOutput(
           'The second function starts one position too far. What does this program print?',
           `${fenwickPrefix}
 
@@ -7892,18 +7390,16 @@ def shifted_prefix(tree, end):
 
 tree = [0, 4, 5, 3, 10, 6, 11]
 print(fenwick_prefix(tree, 3), shifted_prefix(tree, 3))`,
-          ['8 8', '10 8', '8 10', '3 10'],
-          2,
+          '8 10',
           'Starting at internal 4 includes public index 3, which [0, 3) excludes.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${fenwickPrefix}
 
 tree = [0, 5, 3, 0, 6]
 print(fenwick_prefix(tree, 4), fenwick_prefix(tree, 2), fenwick_prefix(tree, 0))`,
-          ['6 3 0', '14 8 5', '6 5 0', '6 3 5'],
-          0,
+          '6 3 0',
           'tree[4] already holds the whole prefix of four values, tree[2] the first two, and end = 0 reads nothing.',
         ),
       ],
@@ -7930,7 +7426,7 @@ print(path)`,
           'Position 3 lies in tree[3] (just 3), tree[4] (1 through 4), and tree[8] (1 through 8).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `n = 8
 internal = 5
@@ -7939,11 +7435,10 @@ while internal <= n:
     path.append(internal)
     internal += internal & -internal
 print(path)`,
-          ['[5, 4, 0]', '[5, 6, 7, 8]', '[5, 6, 8]', '[5, 8]'],
-          2,
+          '[5, 6, 8]',
           '5 + 1 = 6, then 6 + 2 = 8; the next jump would pass n.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `n = 6
 internal = 1
@@ -7952,8 +7447,7 @@ while internal <= n:
     path.append(internal)
     internal += internal & -internal
 print(path)`,
-          ['[1, 2, 4]', '[1, 2, 4, 8]', '[1, 2, 3, 4, 5, 6]', '[1]'],
-          0,
+          '[1, 2, 4]',
           'The jump from 4 lands on 8, past n = 6, so the walk stops.',
         ),
         choose(
@@ -7991,22 +7485,16 @@ print(fenwick_add(tree, 2, 5))`,
           'Public index 2 is internal 3. The walk updates tree[3] and tree[4]; the next index, 8, is past the end.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${fenwickAdd}
 
 tree = [0, 4, 5, 3, 10, 6, 11]
 print(fenwick_add(tree, 0, -4))`,
-          [
-            '[0, 0, 5, 3, 10, 6, 11]',
-            '[0, 0, 1, 3, 6, 6, 11]',
-            '[-4, 4, 5, 3, 10, 6, 11]',
-            '[0, 0, 1, -1, 6, 2, 7]',
-          ],
-          1,
+          '[0, 0, 1, 3, 6, 6, 11]',
           'Public index 0 is internal 1, contained in tree[1], tree[2], and tree[4].',
         ),
-        predictOutput(
+        typeOutput(
           'This version forgets the + 1. What does it print for public index 2?',
           `def wrong_add(tree, index, delta):
     result = tree[:]
@@ -8018,13 +7506,7 @@ print(fenwick_add(tree, 0, -4))`,
 
 tree = [0, 4, 5, 3, 10, 6, 11]
 print(wrong_add(tree, 2, 5))`,
-          [
-            '[0, 4, 5, 8, 15, 6, 11]',
-            '[0, 4, 5, 3, 10, 6, 11]',
-            '[0, 9, 10, 3, 15, 6, 11]',
-            '[0, 4, 10, 3, 15, 6, 11]',
-          ],
-          3,
+          '[0, 4, 10, 3, 15, 6, 11]',
           'Internal 2 is public index 1, so the change lands on the wrong value.',
         ),
         choose(
@@ -8038,15 +7520,14 @@ print(wrong_add(tree, 2, 5))`,
           2,
           'The walk adds lowbit(0) = 0 each time, so the loop never ends.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${fenwickAdd}
 
 old = [0, 7]
 new = fenwick_add(old, 0, -2)
 print(old, new)`,
-          ['[0, 5] [0, 5]', '[0, 7] [0, 5]', '[0, 7] [0, 7]', '[0, 7] [-2, 7]'],
-          1,
+          '[0, 7] [0, 5]',
           'The function changes a copy, so old keeps its original value.',
         ),
       ],
@@ -8069,32 +7550,20 @@ print(build_tree([2, 1, 4, 3]))`,
           'tree[2] covers the first two values (3), tree[3] only the third (4), and tree[4] all four (10).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${fenwickBuild}
 
 print(build_tree([1, 2, 3, 4, 5]))`,
-          [
-            '[0, 1, 3, 6, 10, 15]',
-            '[0, 1, 2, 3, 4, 5]',
-            '[0, 1, 3, 3, 10, 5]',
-            '[0, 1, 3, 3, 10, 15]',
-          ],
-          2,
+          '[0, 1, 3, 3, 10, 5]',
           'Blocks: 1 → 1, 2 → 1 + 2, 3 → 3, 4 → 1 + 2 + 3 + 4, 5 → 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${fenwickBuild}
 
 print(build_tree([5, 5, 5, 5, 5, 5, 5, 5]))`,
-          [
-            '[0, 5, 10, 15, 20, 25, 30, 35, 40]',
-            '[0, 5, 10, 5, 20, 5, 10, 5, 40]',
-            '[0, 5, 5, 5, 5, 5, 5, 5, 5]',
-            '[0, 5, 10, 5, 20, 5, 10, 5, 20]',
-          ],
-          1,
+          '[0, 5, 10, 5, 20, 5, 10, 5, 40]',
           'Each tree[i] holds lowbit(i) copies of 5.',
         ),
         choose(
@@ -8126,13 +7595,12 @@ print(range_sums([3, 1, 5, 2, 4], [("sum", 1, 4), ("sum", 2, 2), ("sum", 0, 5)])
           '[1, 4) holds 1, 5, 2. The empty range gives 0, and [0, 5) is the whole list.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${fenwickRangeSums}
 
 print(range_sums([4, -2, 7, 1], [("sum", 0, 2), ("sum", 1, 4)]))`,
-          ['[2, 6]', '[2, 5]', '[4, 6]', '[9, 6]'],
-          0,
+          '[2, 6]',
           '[0, 2) holds 4 and -2; [1, 4) holds -2, 7, and 1.',
         ),
         choose(
@@ -8146,13 +7614,12 @@ print(range_sums([4, -2, 7, 1], [("sum", 0, 2), ("sum", 1, 4)]))`,
           2,
           'Inclusive 2 through 5 is the half-open range [2, 6).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${fenwickRangeSums}
 
 print(range_sums([9, 9], [("sum", 1, 1), ("sum", 0, 0)]))`,
-          ['[9, 9]', '[9, 0]', '[0, 9]', '[0, 0]'],
-          3,
+          '[0, 0]',
           'Both ranges are empty, so each is the difference of two equal prefixes.',
         ),
         choose(
@@ -8184,23 +7651,21 @@ print(range_sums([2, 1, 4, 3], operations))`,
           'The total starts at 10. Index 1 becomes 6, so [0, 2) sums to 8. Index 3 becomes 0, so [2, 4) sums to 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${fenwickRangeSums}
 
 operations = [("add", 0, 4), ("sum", 0, 3), ("add", 2, -1), ("sum", 1, 3)]
 print(range_sums([1, 1, 1], operations))`,
-          ['[3, 2]', '[7, 2]', '[7, 1]', '[7, 6]'],
-          2,
+          '[7, 1]',
           'The values become 5, 1, 1, summing to 7; then index 2 drops to 0, leaving 1 in [1, 3).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${fenwickRangeSums}
 
 print(range_sums([7, 8], [("add", 1, 0)]))`,
-          ['[0]', '[15]', 'None', '[]'],
-          3,
+          '[]',
           'Only sum operations produce answers, and there are none.',
         ),
         choose(
@@ -8246,22 +7711,20 @@ for count in [1, 3, 4, 5, 9]:
           'Exact powers of two are kept; any other count rounds up to the next power.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${leafSize}
 
 print(leaf_size(6), leaf_size(16), leaf_size(17))`,
-          ['6 16 17', '8 32 32', '8 16 32', '8 16 17'],
-          2,
+          '8 16 32',
           '6 rounds up to 8, 16 is already a power of two, and 17 needs 32.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${leafSize}
 
 print(leaf_size(0), leaf_size(2))`,
-          ['1 2', '0 2', '1 4', '0 4'],
-          0,
+          '1 2',
           'size starts at 1 and never drops below it; 2 is already a power of two.',
         ),
         choose(
@@ -8300,26 +7763,19 @@ print(tree[size:])`,
           'Five values need eight leaves; the three unused leaves hold infinity.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${leafLayout}
 
 size, tree = minimum_leaf_layout([6, 1])
 print(tree)`,
-          [
-            '[6, 1, inf, inf]',
-            '[inf, inf, 6, 1]',
-            '[inf, 6, 1, inf]',
-            '[inf, inf, inf, 6, 1]',
-          ],
-          1,
+          '[inf, inf, 6, 1]',
           'size is 2, so the leaves start at index 2 in a list of four entries.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print(min(3, float("inf")), min(float("inf"), float("inf")))`,
-          ['3 inf', 'inf inf', '3 3', '0 inf'],
-          0,
+          '3 inf',
           'Infinity never wins a minimum against a real value.',
         ),
         choose(
@@ -8333,10 +7789,9 @@ print(tree)`,
           2,
           'A node mixing real leaves and padding would report 0, a value not in the array.',
         ),
-        choose(
+        typeNumber(
           'For a segment tree of sums, which padding value is neutral?',
-          ['Infinity', '1', '-1', '0'],
-          3,
+          0,
           'x + 0 = x, just as min(x, infinity) = x for minima.',
         ),
       ],
@@ -8358,13 +7813,12 @@ print(6 // 2, 7 // 2)`,
         explanation: 'Nodes 6 and 7 are siblings: both have parent 3.',
       },
       questions: [
-        choose(
+        typeNumber(
           'With size 8, which node is the parent of leaf 13?',
-          ['7', '12', '6', '5'],
-          2,
+          6,
           '13 // 2 = 6; node 6 has children 12 and 13.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `size = 8
 node = size + 3
@@ -8373,8 +7827,7 @@ while node:
     path.append(node)
     node //= 2
 print(path)`,
-          ['[11, 5, 2, 1]', '[3, 1]', '[11, 6, 3, 1]', '[11, 5, 2, 1, 0]'],
-          0,
+          '[11, 5, 2, 1]',
           'Public index 3 is leaf 11; halving climbs through its ancestors to the root.',
         ),
         choose(
@@ -8417,51 +7870,37 @@ print(build_minimum_parents([inf, inf, inf, inf, 6, 2, 8, 5], 4))`,
           'Node 3 = min(8, 5) and node 2 = min(6, 2) are built before the root min(2, 5).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${buildParents}
 
 inf = float("inf")
 print(build_minimum_parents([inf, inf, inf, inf, 7, 3, 9, inf], 4))`,
-          [
-            '[inf, 3, 3, 9, 7, 3, 9, inf]',
-            '[inf, 3, 7, 9, 7, 3, 9, inf]',
-            '[inf, 3, 3, inf, 7, 3, 9, inf]',
-            '[3, 3, 3, 9, 7, 3, 9, inf]',
-          ],
-          0,
+          '[inf, 3, 3, 9, 7, 3, 9, inf]',
           'The padding leaf loses to 9, so node 3 holds 9.',
         ),
-        predictOutput(
+        typeOutput(
           'This loop builds parents upward from node 1. What does it print?',
           `inf = float("inf")
 tree = [inf, inf, inf, inf, 7, 3, 9, 4]
 for node in range(1, 4):
     tree[node] = min(tree[2 * node], tree[2 * node + 1])
 print(tree[1])`,
-          ['3', '7', 'inf', '4'],
-          2,
+          'inf',
           'Node 1 is computed while nodes 2 and 3 still hold their starting infinity.',
         ),
-        choose(
+        typeNumber(
           'After building a minimum tree on [4, 8, 1, 6, 3], what is tree[1]?',
-          ['4', '3', 'inf', '1'],
-          3,
+          1,
           'The root holds the minimum of every real value; padding is infinity.',
         ),
-        predictOutput(
+        typeOutput(
           'This builds a sum tree the same way. What does it print?',
           `tree = [0, 0, 0, 0, 1, 2, 3, 4]
 for node in range(3, 0, -1):
     tree[node] = tree[2 * node] + tree[2 * node + 1]
 print(tree)`,
-          [
-            '[0, 1, 3, 7, 1, 2, 3, 4]',
-            '[0, 10, 3, 7, 1, 2, 3, 4]',
-            '[10, 3, 7, 1, 2, 3, 4]',
-            '[0, 10, 1, 2, 3, 4, 3, 7]',
-          ],
-          1,
+          '[0, 10, 3, 7, 1, 2, 3, 4]',
           'Nodes 3 and 2 sum their leaves to 7 and 3, then the root sums them to 10.',
         ),
       ],
@@ -8484,22 +7923,20 @@ print(query_nodes(8, 1, 7))`,
           'Leaf 9 is position 1 and leaf 14 is position 6. Node 5 covers positions 2–3 and node 6 covers 4–5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${queryNodes}
 
 print(query_nodes(8, 0, 8))`,
-          ['[8, 9, 10, 11, 12, 13, 14, 15]', '[1]', '[2, 3]', '[]'],
-          1,
+          '[1]',
           'The whole array is exactly node 1’s interval, so the boundaries meet at the root.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${queryNodes}
 
 print(query_nodes(8, 2, 5))`,
-          ['[10, 11, 12]', '[5, 12]', '[12, 5]', '[10, 6]'],
-          2,
+          '[12, 5]',
           'Right boundary 13 is odd, so leaf 12 (position 4) is taken; node 5 then covers positions 2 and 3.',
         ),
         choose(
@@ -8539,24 +7976,22 @@ print(query_minimum(tree, size, 1, 1))`,
           'The whole range has minimum 3, positions 2 and 3 have minimum 6, and [1, 1) is empty.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${queryMinimum}
 
 size, tree = build([7, 2, 9, 4])
 print(query_minimum(tree, size, 2, 3), query_minimum(tree, size, 0, 1))`,
-          ['2 2', '9 7', '4 7', '9 2'],
-          1,
+          '9 7',
           'Each range holds a single position: index 2 is 9 and index 0 is 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${queryMinimum}
 
 size, tree = build([7, 2, 9, 4])
 print(query_minimum(tree, size, 3, 3), query_minimum(tree, size, 0, 3))`,
-          ['inf 2', 'None 7', 'None 2', '4 2'],
-          2,
+          'None 2',
           '[3, 3) is empty. [0, 3) holds 7, 2, and 9.',
         ),
         choose(
@@ -8570,14 +8005,13 @@ print(query_minimum(tree, size, 3, 3), query_minimum(tree, size, 0, 3))`,
           0,
           'The true answer is 8, but both prefixes report 1, and minima cannot be subtracted.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${queryMinimum}
 
 size, tree = build([5, 1, 4])
 print(query_minimum(tree, size, 2, 4))`,
-          ['inf', '1', 'None', '4'],
-          3,
+          '4',
           'The range includes the padding leaf, but min(4, infinity) is 4.',
         ),
       ],
@@ -8607,13 +8041,12 @@ print(tree)`,
           'Leaf 6 changes from 1 to 8, so node 3 becomes min(8, 9) = 8 and the root becomes min(4, 8) = 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${rangeMinima}
 
 print(range_minima([6, 3, 5, 8], [("min", 0, 4), ("set", 1, 9), ("min", 0, 4)]))`,
-          ['[3, 3]', '[3, 9]', '[3, 5]', '[3, 6]'],
-          2,
+          '[3, 5]',
           'After index 1 becomes 9, the smallest value left is 5.',
         ),
         choose(
@@ -8622,13 +8055,12 @@ print(range_minima([6, 3, 5, 8], [("min", 0, 4), ("set", 1, 9), ("min", 0, 4)]))
           0,
           'Leaf 13 has ancestors 6, 3, and 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${rangeMinima}
 
 print(range_minima([5], [("set", 0, 7), ("min", 0, 1)]))`,
-          ['[12]', '[5]', '[None]', '[7]'],
-          3,
+          '[7]',
           'set replaces the value 5 with 7; it does not add.',
         ),
         choose(
@@ -8654,22 +8086,20 @@ print(range_minima([8, 3, 6, 1, 9], [("min", 3, 5), ("min", 4, 4), ("min", 0, 1)
           '[3, 5) holds 1 and 9; [4, 4) is empty; [0, 1) holds only 8.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${rangeMinima}
 
 print(range_minima([2, 7, 5, 4, 6], [("min", 1, 3), ("min", 2, 5)]))`,
-          ['[5, 4]', '[2, 4]', '[5, 5]', '[7, 4]'],
-          0,
+          '[5, 4]',
           '[1, 3) holds 7 and 5; [2, 5) holds 5, 4, and 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${rangeMinima}
 
 print(range_minima([], [("min", 0, 0)]))`,
-          ['[]', '[inf]', '[None]', '[0]'],
-          2,
+          '[None]',
           'The empty query is answered before the tree is ever read.',
         ),
         choose(
@@ -8678,14 +8108,13 @@ print(range_minima([], [("min", 0, 0)]))`,
           1,
           'Half-open ranges include left and exclude right.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${rangeMinima}
 
 operations = [("min", 1, 1), ("set", 2, 1), ("min", 0, 2), ("min", 2, 3)]
 print(range_minima([5, 5, 5], operations))`,
-          ['[None, 1, 1]', '[5, 5, 1]', '[None, 5, 5]', '[None, 5, 1]'],
-          3,
+          '[None, 5, 1]',
           'The update at index 2 is outside [0, 2) but inside [2, 3).',
         ),
       ],
@@ -8714,7 +8143,7 @@ print(build([3, 8, 2], max, float("-inf"))[1])`,
           'The same code builds a minimum tree or a maximum tree depending on the combine and identity passed in.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `def build(values, combine, identity):
     size = 1
@@ -8727,13 +8156,7 @@ print(build([3, 8, 2], max, float("-inf"))[1])`,
     return tree
 
 print(build([3, 8, 2], max, float("-inf")))`,
-          [
-            '[-inf, 8, 8, 2, 3, 8, 2, -inf]',
-            '[-inf, 8, 3, 2, 3, 8, 2, -inf]',
-            '[-inf, 2, 3, 2, 3, 8, 2, -inf]',
-            '[inf, 8, 8, 2, 3, 8, 2, inf]',
-          ],
-          0,
+          '[-inf, 8, 8, 2, 3, 8, 2, -inf]',
           'The padding leaf is -infinity, so node 3 keeps 2 and the root keeps 8.',
         ),
         choose(
@@ -8783,12 +8206,11 @@ print(parents[3], parents[parents[3]])`,
           'Vertex 3’s parent is 1, and 1’s parent is 2, so two lookups find 3’s grandparent.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `parents = [-1, 0, 0, 2, 2]
 print(parents[4], parents[parents[4]])`,
-          ['2 0', '0 2', '2 2', '4 2'],
-          0,
+          '2 0',
           'Vertex 4’s parent is 2, and 2’s parent is the root 0.',
         ),
         choose(
@@ -8808,12 +8230,11 @@ print(parents[4], parents[parents[4]])`,
           1,
           'Any acyclic assignment of parents is a valid forest, whatever the numbering.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `parents = [1, -1, 1, 0]
 print(parents[3], parents[parents[3]], parents[parents[parents[3]]])`,
-          ['0 1 1', '1 0 -1', '0 1 -1', '0 -1 -1'],
-          2,
+          '0 1 -1',
           'From 3 the chain goes to 0, then 1, then past the root to -1.',
         ),
       ],
@@ -8834,15 +8255,14 @@ print(parents[root_parent])`,
           'The root has no parent, yet parents[-1] silently returns 1, a made-up "grandparent".',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `parents = [-1, 0, 0, 1]
 print(parents[parents[0]])`,
-          ['-1', '0', '1', 'An IndexError is raised'],
-          2,
+          '1',
           'parents[0] is -1, and parents[-1] is the last entry, 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `parents = [-1, 0, 0, 1]
 v = 0
@@ -8850,23 +8270,16 @@ above = parents[v]
 if above != -1:
     above = parents[above]
 print(above)`,
-          ['-1', '1', '0', '3'],
-          0,
+          '-1',
           'The guard stops at the root, so the missing grandparent stays -1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `parents = [-1, 0, 1]
 row = parents[:]
 row[2] = -1
 print(parents, row)`,
-          [
-            '[-1, 0, -1] [-1, 0, -1]',
-            '[-1, 0, 1] [-1, 0, 1]',
-            '[-1, 0, -1] [-1, 0, 1]',
-            '[-1, 0, 1] [-1, 0, -1]',
-          ],
-          3,
+          '[-1, 0, 1] [-1, 0, -1]',
           'parents[:] makes a separate list, so only row changes.',
         ),
         choose(
@@ -8900,39 +8313,26 @@ print(doubled_jumps([-1, 0, 1, 2, 3, 4]))`,
           'On a chain, each vertex’s two-step ancestor is the vertex two positions earlier.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${doubledJumps}
 
 print(doubled_jumps([-1, 0, 0, 1, 2]))`,
-          [
-            '[-1, -1, -1, 0, 0]',
-            '[-1, 0, 0, 1, 2]',
-            '[-1, -1, 0, 0, 1]',
-            '[0, 0, 0, 0, 0]',
-          ],
-          0,
+          '[-1, -1, -1, 0, 0]',
           'Vertices 3 and 4 have grandparent 0; vertices 1 and 2 have none.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${doubledJumps}
 
 chain = [-1, 0, 1, 2, 3, 4, 5]
 print(doubled_jumps(doubled_jumps(chain)))`,
-          [
-            '[-1, -1, 0, 1, 2, 3, 4]',
-            '[-1, -1, -1, -1, 0, 1, 2]',
-            '[-1, -1, -1, 0, 1, 2, 3]',
-            '[-1, -1, -1, -1, -1, 0, 1]',
-          ],
-          1,
+          '[-1, -1, -1, -1, 0, 1, 2]',
           'Doubling twice gives four-step ancestors: vertex 6 reaches 2.',
         ),
-        choose(
+        typeNumber(
           'Row j jumps 2^j edges. How far does row 5 jump?',
-          ['5', '10', '32', '25'],
-          2,
+          32,
           'Each row doubles the previous distance: 1, 2, 4, 8, 16, 32.',
         ),
         choose(
@@ -8963,51 +8363,32 @@ print([-1 if a == -1 else previous[a] for a in previous])`,
           'The unguarded row claims the root 0 has a two-step ancestor 1; the guarded row keeps -1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version has no -1 check. What does it print?',
           `previous = [-1, 0, 0, 2]
 print([previous[a] for a in previous])`,
-          [
-            '[-1, -1, -1, 0]',
-            '[-1, 0, 0, 2]',
-            '[2, -1, -1, 0]',
-            '[2, 2, 2, 0]',
-          ],
-          2,
+          '[2, -1, -1, 0]',
           'The root’s -1 reads previous[-1] = 2, inventing an ancestor.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${doubledJumps}
 
 print(doubled_jumps([-1, 0, 0, 2]))`,
-          [
-            '[2, -1, -1, 0]',
-            '[-1, -1, -1, 0]',
-            '[-1, 0, 0, 0]',
-            '[-1, -1, -1, -1]',
-          ],
-          1,
+          '[-1, -1, -1, 0]',
           'Only vertex 3 has a grandparent, 0; every other entry stays missing.',
         ),
-        choose(
+        typeNumber(
           'Vertex v has up[2][v] = -1. What is up[3][v]?',
-          ['-1', 'up[2][-1]', 'v', '0'],
-          0,
+          -1,
           'If no ancestor exists 4 steps up, none exists 8 steps up.',
         ),
-        predictOutput(
+        typeOutput(
           'This forest has two roots. What does the program print?',
           `${doubledJumps}
 
 print(doubled_jumps([-1, 0, -1, 2, 3]))`,
-          [
-            '[-1, -1, -1, 2, 2]',
-            '[-1, -1, -1, -1, 3]',
-            '[-1, 0, -1, 2, 3]',
-            '[-1, -1, -1, -1, 2]',
-          ],
-          3,
+          '[-1, -1, -1, -1, 2]',
           'Only vertex 4 is two steps below anything: 4 → 3 → 2.',
         ),
       ],
@@ -9031,24 +8412,22 @@ print(jump_ancestor(table, 7, 5))`,
           '5 = 101 in binary: one step takes 7 to 6, then a four-step jump takes 6 to 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${liftingTable}
 
 table = lifting_table([-1, 0, 1, 2, 3, 4, 5, 6], 3)
 print(jump_ancestor(table, 7, 6))`,
-          ['1', '6', '0', '3'],
-          0,
+          '1',
           '6 = 110: a two-step jump takes 7 to 5, then a four-step jump takes 5 to 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${liftingTable}
 
 table = lifting_table([-1, 0, 1, 2, 3, 4, 5, 6], 3)
 print(jump_ancestor(table, 7, 3), jump_ancestor(table, 5, 0))`,
-          ['4 -1', '4 5', '3 5', '5 4'],
-          1,
+          '4 5',
           'Three steps from 7 reach 4; zero steps leave 5 where it is.',
         ),
         choose(
@@ -9092,14 +8471,13 @@ print(jump_ancestor(table, 7, 100))`,
           'Vertex 2 has only two ancestors, so the loop stops at -1. 100 >= 8 is rejected before any lookup.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${liftingTable}
 
 table = lifting_table([-1, 0, 1, 2, 3, 4, 5, 6], 3)
 print(jump_ancestor(table, 3, 3), jump_ancestor(table, 3, 4))`,
-          ['0 0', '0 -1', '-1 -1', '1 -1'],
-          1,
+          '0 -1',
           'Vertex 3 is exactly three steps below the root, so four steps go past it.',
         ),
         choose(
@@ -9124,14 +8502,13 @@ print(jump_ancestor(table, 3, 3), jump_ancestor(table, 3, 4))`,
           3,
           'The forest is acyclic, so a path cannot revisit a vertex.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${liftingTable}
 
 table = lifting_table([-1, 0, 1, 2, 3, 4, 5, 6], 3)
 print(jump_ancestor(table, 6, 0), jump_ancestor(table, 0, 1))`,
-          ['6 -1', '5 -1', '6 0', '-1 -1'],
-          0,
+          '6 -1',
           'Zero steps return the vertex itself; the root has no parent.',
         ),
       ],
@@ -9159,31 +8536,23 @@ for row in up:
           '5 needs 3 bits, so there are rows for 1, 2, and 4 steps. No vertex here is 4 steps deep.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `print((5).bit_length(), (8).bit_length(), (1).bit_length())`,
-          ['3 4 1', '2 3 0', '3 3 1', '5 8 1'],
-          0,
+          '3 4 1',
           '5 = 101 has 3 bits, 8 = 1000 has 4, and 1 has 1.',
         ),
-        choose(
+        typeNumber(
           'A forest has 1,000 vertices. How many rows does the table need?',
-          ['1,000', '10', '500', '32'],
-          1,
+          10,
           'Distances up to 999 fit in 10 bits, since 2^10 = 1024.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `parents = [-1, 0, 1, 1, 2]
 previous = parents[:]
 print([-1 if parent == -1 else previous[parent] for parent in previous])`,
-          [
-            '[-1, -1, 0, 0, 1]',
-            '[-1, 0, 1, 1, 2]',
-            '[-1, -1, 1, 1, 2]',
-            '[0, 0, 0, 0, 1]',
-          ],
-          0,
+          '[-1, -1, 0, 0, 1]',
           'Row 1 holds two-step ancestors: 2 and 3 reach 0, and 4 reaches 1.',
         ),
         choose(
@@ -9209,22 +8578,20 @@ print(kth_ancestors([-1, 0, 1, 2, 3, 4], [(5, 3), (5, 5), (4, 1), (2, 0)]))`,
           'On the chain 5 → 4 → 3 → 2 → 1 → 0, three steps from 5 reach 2 and five steps reach the root.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${kthAncestors}
 
 print(kth_ancestors([2, 2, -1, 0, 3], [(4, 2), (4, 3), (1, 1)]))`,
-          ['[3, 0, 2]', '[0, 2, 2]', '[0, -1, 2]', '[2, 0, 2]'],
-          1,
+          '[0, 2, 2]',
           'The chain is 4 → 3 → 0 → 2, and 1’s parent is 2.',
         ),
-        predictOutput(
+        typeOutput(
           'This forest has two roots. What does the program print?',
           `${kthAncestors}
 
 print(kth_ancestors([-1, 0, -1, 2, 3], [(4, 2), (4, 3), (1, 2)]))`,
-          ['[2, -1, -1]', '[2, 0, -1]', '[3, 2, 0]', '[2, -1, 0]'],
-          0,
+          '[2, -1, -1]',
           '4 → 3 → 2 reaches root 2 in two steps; a third step leaves the tree. Vertex 1 is one step below its root.',
         ),
         choose(
@@ -9261,28 +8628,21 @@ print(kth_ancestors([-1], [(0, 0), (0, 1), (0, 10**30)]))`,
           'Zero steps stay at the root; one step or a huge number of steps leave the tree.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${kthAncestors}
 
 print(kth_ancestors([-1, 0, 1], [(2, 0), (2, 2), (2, 3), (2, 10**18)]))`,
-          [
-            '[2, 0, 0, -1]',
-            '[-1, 0, -1, -1]',
-            '[2, 0, -1, -1]',
-            '[2, 1, -1, -1]',
-          ],
-          2,
+          '[2, 0, -1, -1]',
           'Vertex 2 is two steps below the root, so 3 or more steps return -1.',
         ),
-        predictOutput(
+        typeOutput(
           'This table is built without the -1 check. What does it print for the root’s two-step ancestor?',
           `parents = [-1, 0, 1]
 previous = parents[:]
 row1 = [previous[parent] for parent in previous]
 print(row1[0])`,
-          ['-1', '1', '0', '2'],
-          1,
+          '1',
           'previous[-1] is 1, so the root appears to have a two-step ancestor.',
         ),
         choose(
@@ -9322,18 +8682,12 @@ print(reversed_adjacency(4, [(0, 1), (0, 2), (2, 3), (3, 0)]))`,
           'Each target collects its original sources: 0 was entered from 3, and 1 and 2 from 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${reversedAdjacency}
 
 print(reversed_adjacency(3, [(1, 0), (2, 0), (0, 2)]))`,
-          [
-            '[[2], [0], [0]]',
-            '[[1, 2], [], [0]]',
-            '[[0], [0], [2]]',
-            '[[2], [], [0, 1]]',
-          ],
-          1,
+          '[[1, 2], [], [0]]',
           'Vertex 0 had edges from 1 and 2, and vertex 2 had an edge from 0.',
         ),
         choose(
@@ -9358,18 +8712,12 @@ print(reversed_adjacency(3, [(1, 0), (2, 0), (0, 2)]))`,
           1,
           'The original target v stores its sources as outgoing neighbors.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${reversedAdjacency}
 
 print(reversed_adjacency(3, [(2, 1), (1, 0)]))`,
-          [
-            '[[], [2], [1]]',
-            '[[1], [2], []]',
-            '[[0], [1], [2]]',
-            '[[1, 2], [], []]',
-          ],
-          1,
+          '[[1], [2], []]',
           'The chain 2 → 1 → 0 becomes 0 → 1 → 2.',
         ),
       ],
@@ -9389,32 +8737,20 @@ print(reversed_adjacency(4, [(1, 1), (0, 1), (0, 1)]))`,
           'Vertex 1 keeps its self-loop and both copies of the edge from 0. Vertices 2 and 3 keep empty lists.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${reversedAdjacency}
 
 print(reversed_adjacency(3, [(2, 2), (0, 2)]))`,
-          [
-            '[[2], [], [0]]',
-            '[[], [], [0]]',
-            '[[], [], [2, 0]]',
-            '[[0], [], [2]]',
-          ],
-          2,
+          '[[], [], [2, 0]]',
           'Both edges end at 2, so reverse[2] lists 2 itself and then 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `reverse = [[]] * 3
 reverse[1].append(0)
 print(reverse)`,
-          [
-            '[[0], [0], [0]]',
-            '[[], [0], []]',
-            '[[0], [], []]',
-            '[[], [], [0]]',
-          ],
-          0,
+          '[[0], [0], [0]]',
           '[[]] * 3 repeats one list three times, so appending through any slot changes all of them.',
         ),
         choose(
@@ -9454,22 +8790,20 @@ print(dfs_finish_order([[1, 2], [3], [], []]))`,
           'Discovery order is 0, 1, 3, 2, but 3 finishes first, then 1, then 2, and the root 0 last.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${finishOrder}
 
 print(dfs_finish_order([[2], [0], []]))`,
-          ['[0, 2, 1]', '[2, 1, 0]', '[2, 0, 1]', '[1, 0, 2]'],
-          2,
+          '[2, 0, 1]',
           'From root 0, vertex 2 finishes before 0. Root 1 starts later and finds 0 already seen.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${finishOrder}
 
 print(dfs_finish_order([[1], [2], [0]]))`,
-          ['[0, 1, 2]', '[2, 1, 0]', '[1, 2, 0]', '[2, 0, 1]'],
-          1,
+          '[2, 1, 0]',
           'The search goes 0 → 1 → 2, finds 0 already seen, and finishes in reverse.',
         ),
         choose(
@@ -9514,13 +8848,12 @@ print(order[:3], len(order))`,
           3,
           'next_index counts how many of the vertex’s neighbors have been examined.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${finishOrder}
 
 print(dfs_finish_order([[2, 2], [1], [0]]))`,
-          ['[2, 0, 1]', '[0, 2, 1]', '[2, 2, 0, 1]', '[2, 1, 0]'],
-          0,
+          '[2, 0, 1]',
           'The duplicate edge to 2 and the self-loop at 1 find seen vertices, so nothing is pushed twice.',
         ),
         choose(
@@ -9566,16 +8899,15 @@ print(collect_reverse_components(reverse, [3, 2, 1, 0]))`,
           'The original edges are 0 ↔ 1, 1 → 2, and 2 ↔ 3. Starting from 0 collects {0, 1}; the next unseen root, 2, collects {2, 3}.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The original edges are 0 → 1, 1 → 0, and 2 → 0, with finishing order [1, 0, 2]. What does this print?',
           `${collectComponents}
 
 print(collect_reverse_components([[1, 2], [0], []], [1, 0, 2]))`,
-          ['[[0, 1, 2]]', '[[0], [1], [2]]', '[[0, 1], [2]]', '[[1], [0, 2]]'],
-          2,
+          '[[0, 1], [2]]',
           'Root 2 has no reversed edges, so it is alone; root 0 then collects 1.',
         ),
-        predictOutput(
+        typeOutput(
           'This version walks the finishing order forward instead of reversed. What does it print?',
           `def wrong_components(reverse, order):
     seen = [False] * len(reverse)
@@ -9597,8 +8929,7 @@ print(collect_reverse_components([[1, 2], [0], []], [1, 0, 2]))`,
     return sorted(groups)
 
 print(wrong_components([[1, 2], [0], []], [1, 0, 2]))`,
-          ['[[0, 1], [2]]', '[[0, 1, 2]]', '[[0], [1], [2]]', '[[1], [0, 2]]'],
-          1,
+          '[[0, 1, 2]]',
           'Starting from 1 reaches 0 and then 2, merging a vertex that cannot be reached back.',
         ),
         choose(
@@ -9639,13 +8970,12 @@ print(collect_reverse_components([[], [], []], [0, 1, 2]))`,
         explanation: 'With no edges, every vertex is its own component.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${collectComponents}
 
 print(collect_reverse_components([[0]], [0]))`,
-          ['[]', '[[0, 0]]', '[[0]]', '[0]'],
-          2,
+          '[[0]]',
           'The self-loop leads back to a seen vertex, so the component is just [0].',
         ),
         choose(
@@ -9659,12 +8989,11 @@ print(collect_reverse_components([[0]], [0]))`,
           1,
           'Every vertex belongs to exactly one SCC, possibly of size one.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `groups = [[3, 2], [1]]
 print(sorted([sorted(group) for group in groups]))`,
-          ['[[3, 2], [1]]', '[[1], [3, 2]]', '[[2, 3], [1]]', '[[1], [2, 3]]'],
-          3,
+          '[[1], [2, 3]]',
           'Each group is sorted first, then the groups are ordered by their first elements.',
         ),
         choose(
@@ -9709,18 +9038,12 @@ print(scc_groups(4, [(0, 1), (1, 2), (2, 1), (2, 3)]))`,
           3,
           '0, 1, and 2 lie on one cycle; 3 cannot reach back.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${sccGroups}
 
 print(scc_groups(4, [(0, 1), (1, 2), (2, 3)]))`,
-          [
-            '[[0, 1, 2, 3]]',
-            '[[0], [1], [2], [3]]',
-            '[[0, 1], [2, 3]]',
-            '[[3], [2], [1], [0]]',
-          ],
-          1,
+          '[[0], [1], [2], [3]]',
           'A one-way chain has no cycle, so every vertex is its own component.',
         ),
         choose(
@@ -9734,18 +9057,12 @@ print(scc_groups(4, [(0, 1), (1, 2), (2, 3)]))`,
           2,
           'Strong connectivity requires paths both ways.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${sccGroups}
 
 print(scc_groups(5, [(0, 1), (1, 0), (3, 4), (4, 3), (1, 3)]))`,
-          [
-            '[[0, 1], [2], [3, 4]]',
-            '[[0, 1, 3, 4], [2]]',
-            '[[0, 1], [3, 4]]',
-            '[[0], [1], [2], [3], [4]]',
-          ],
-          0,
+          '[[0, 1], [2], [3, 4]]',
           'The edge 1 → 3 joins the two cycles in one direction only; isolated 2 is its own group.',
         ),
       ],
@@ -9765,18 +9082,12 @@ print(scc_groups(5, [(0, 1), (1, 2), (2, 0), (3, 2), (3, 4), (4, 3)]))`,
           '0, 1, 2 form one cycle and 3, 4 another; the edge 3 → 2 goes one way only.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${sccGroups}
 
 print(scc_groups(6, [(0, 1), (1, 2), (2, 0), (2, 3), (3, 4), (4, 5), (5, 3)]))`,
-          [
-            '[[0, 1, 2, 3, 4, 5]]',
-            '[[0, 1, 2], [3], [4], [5]]',
-            '[[0, 1, 2], [3, 4, 5]]',
-            '[[0], [1], [2], [3, 4, 5]]',
-          ],
-          2,
+          '[[0, 1, 2], [3, 4, 5]]',
           'Two separate cycles are joined by the one-way edge 2 → 3.',
         ),
         choose(
@@ -9801,18 +9112,12 @@ print(scc_groups(6, [(0, 1), (1, 2), (2, 0), (2, 3), (3, 4), (4, 5), (5, 3)]))`,
           3,
           'Each pass visits every vertex once and examines every edge once.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${sccGroups}
 
 print(scc_groups(3, [(0, 0), (0, 1), (0, 1), (1, 2)]))`,
-          [
-            '[[0], [1], [2]]',
-            '[[0, 1], [2]]',
-            '[[0, 1, 2]]',
-            '[[0, 0], [1], [2]]',
-          ],
-          0,
+          '[[0], [1], [2]]',
           'A self-loop and duplicate edges create no path back from 1 to 0.',
         ),
       ],
@@ -9848,19 +9153,13 @@ print(condensed_edges(groups, 5, edges))`,
           2,
           'Paths both ways mean every vertex of A and B is mutually reachable.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           `${condense}
 
 edges = [(0, 1), (1, 0), (0, 2), (1, 2), (2, 3)]
 print(condensed_edges([[0, 1], [2], [3]], 4, edges))`,
-          [
-            '[(0, 1), (0, 1), (1, 2)]',
-            '[(0, 1), (1, 2)]',
-            '[(0, 0), (0, 1), (1, 2)]',
-            '[(0, 2), (1, 2), (2, 3)]',
-          ],
-          1,
+          '[(0, 1), (1, 2)]',
           'Edges inside {0, 1} vanish, and the two edges into vertex 2 become one group edge.',
         ),
         choose(

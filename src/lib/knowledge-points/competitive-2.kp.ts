@@ -1,4 +1,10 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeNumber,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 /** Joins program lines so multi-line Python stays readable in source. */
 const lines = (...source: string[]) => source.join('\n');
@@ -981,7 +987,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each append adds one entry at the right. The second "dry" is a new action, so the stack grows to four entries.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'stack = [3]',
@@ -989,8 +995,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'stack.append(3)',
             'print(stack)',
           ),
-          ['[3, 8]', '[3, 3, 8]', '[3, 8, 3]', '[8, 3, 3]'],
-          2,
+          '[3, 8, 3]',
           'Each append adds to the right end, and the repeated 3 is kept as its own entry.',
         ),
         choose(
@@ -999,7 +1004,7 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A push appends at the newest end; the earlier entries keep their positions.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'moves = []',
@@ -1008,13 +1013,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'print(len(moves))',
             'print(moves)',
           ),
-          [
-            "3\n['up', 'up', 'left']",
-            "2\n['up', 'left']",
-            "3\n['left', 'up', 'up']",
-            "1\n['left']",
-          ],
-          0,
+          "3\n['up', 'up', 'left']",
           'Three pushes add three entries in arrival order; equal values are not merged.',
         ),
         choose(
@@ -1053,7 +1052,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The append changes only the copy, so before keeps two entries while after has the new top 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'def push_entry(stack, value):',
@@ -1065,11 +1064,10 @@ export const knowledgePoints: KnowledgePointModule = {
             'newer = push_entry(history, "b")',
             'print(history)',
           ),
-          ["['a']", "['a', 'b']", "['b']", "['b', 'a']"],
-          1,
+          "['a', 'b']",
           'result is another name for history, so the append changes the caller’s list too.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'def push_entry(stack, value):',
@@ -1083,13 +1081,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'print(first)',
             'print(second)',
           ),
-          [
-            '[4, 4]\n[4, 4, 9]',
-            '[4]\n[4, 9]',
-            '[4, 9]\n[4, 9]',
-            '[4, 4]\n[4, 9]',
-          ],
-          3,
+          '[4, 4]\n[4, 9]',
           'Each call copies the unchanged base [4] before appending, so the two results are independent.',
         ),
         choose(
@@ -1131,18 +1123,17 @@ export const knowledgePoints: KnowledgePointModule = {
           'Index -1 names the rightmost entry, 2. The list is unchanged after the read.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'stack = ["x", "y", "z"]',
             'print(stack[-1])',
             'print(len(stack))',
           ),
-          ['x\n3', 'z\n3', 'z\n2', 'y\n3'],
-          1,
+          'z\n3',
           'stack[-1] is the newest entry z, and reading it leaves all three entries in place.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'stack = [5]',
@@ -1151,8 +1142,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'print(stack[-1])',
             'print(stack[0])',
           ),
-          ['8\n5', '5\n8', '8\n1', '1\n5'],
-          0,
+          '8\n5',
           '8 was pushed last, so it is at index -1; the oldest entry 5 stays at index 0.',
         ),
         choose(
@@ -1161,7 +1151,7 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'stack[-1] only reads the rightmost entry; pop() removes it, stack[0] is the oldest, and stack[len(stack)] is out of range.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'stack = [3, 6]',
@@ -1169,8 +1159,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'second = stack[-1]',
             'print(first, second, len(stack))',
           ),
-          ['6 3 0', '3 3 2', '6 6 2', '6 3 1'],
-          2,
+          '6 6 2',
           'Peeking does not remove anything, so both reads see 6 and the length stays 2.',
         ),
       ],
@@ -1196,7 +1185,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '[0] is nonempty, so its real top 0 is returned. Only the empty list reaches return None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'def peek_entry(stack):',
@@ -1207,8 +1196,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'print(peek_entry([5, 0]))',
             'print(peek_entry([]))',
           ),
-          ['0\nNone', '5\nNone', 'None\nNone', '0\n0'],
-          0,
+          '0\nNone',
           'The first stack is nonempty, so its top 0 is returned; only the empty list gives None.',
         ),
         choose(
@@ -1233,7 +1221,7 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'An empty list is falsy. The other tests index an empty list or mistake a real entry for emptiness.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'def peek_or(stack, default):',
@@ -1244,8 +1232,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'print(peek_or([], -1))',
             'print(peek_or([-1, 4], 0))',
           ),
-          ['0\n4', '-1\n-1', 'None\n4', '-1\n4'],
-          3,
+          '-1\n4',
           'The empty stack returns the supplied default -1; the nonempty stack returns its top 4.',
         ),
       ],
@@ -1270,7 +1257,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'save was pushed last, so pop() removes and returns it; open and type stay in order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'stack = [1, 2, 3]',
@@ -1278,19 +1265,17 @@ export const knowledgePoints: KnowledgePointModule = {
             'stack.append(9)',
             'print(stack)',
           ),
-          ['[1, 2, 3, 9]', '[2, 3, 9]', '[1, 2, 9]', '[9, 1, 2]'],
-          2,
+          '[1, 2, 9]',
           'pop() removes 3 from the right end, then append puts 9 in that position.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'stack = ["a", "b", "c"]',
             'print(stack.pop())',
             'print(stack.pop())',
           ),
-          ['c\nb', 'a\nb', 'c\nc', 'b\na'],
-          0,
+          'c\nb',
           'Each pop removes the current newest entry: first c, then b.',
         ),
         choose(
@@ -1299,7 +1284,7 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Last in, first out: 1 leaves first, then 7, then 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'stack = [6, 6, 2]',
@@ -1307,8 +1292,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'stack.pop()',
             'print(stack)',
           ),
-          ['[]', '[6]', '[6, 6]', '[2]'],
-          1,
+          '[6]',
           'The first pop removes 2 and the second removes one 6; the bottom 6 remains.',
         ),
       ],
@@ -1335,7 +1319,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The nonempty copy loses its top 8. The empty copy fails the check and is returned unchanged instead of raising.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'def undo_one(stack):',
@@ -1349,13 +1333,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'twice = undo_one(once)',
             'print(once, twice, steps)',
           ),
-          [
-            '[] [] []',
-            "['cut'] [] ['cut']",
-            "[] [] ['cut']",
-            "[] None ['cut']",
-          ],
-          2,
+          "[] [] ['cut']",
           'The first undo empties a copy; the second sees an empty list and returns it. steps itself is never changed.',
         ),
         choose(
@@ -1369,7 +1347,7 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'It pops only a nonempty stack. The second pops only an empty one, the loop removes every entry, and the last still pops an empty list.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'stack = [1, 2]',
@@ -1380,8 +1358,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '        removed += 1',
             'print(removed, stack)',
           ),
-          ['4 []', '3 []', '2 [1]', '2 []'],
-          3,
+          '2 []',
           'Only two entries exist; the last two undos find an empty stack and are skipped.',
         ),
         choose(
@@ -1412,25 +1389,23 @@ export const knowledgePoints: KnowledgePointModule = {
           'blue is undone first, then green, then red. black is the only action still active.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             replayLoop('["a", "b", "c", "UNDO", "UNDO", "d"]'),
             'print(history)',
           ),
-          ["['c', 'd']", "['a', 'b', 'd']", "['a', 'd']", "['d']"],
-          2,
+          "['a', 'd']",
           'The two undos remove c and then b, the newest active actions; d is pushed onto the remaining a.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             replayLoop('["x", "y", "UNDO", "z", "UNDO"]'),
             'print(history)',
             'print(len(history))',
           ),
-          ["['x']\n1", "['y']\n1", "['x', 'z']\n2", '[]\n0'],
-          0,
+          "['x']\n1",
           'Each undo removes the action pushed just before it, y and then z, leaving only x.',
         ),
         choose(
@@ -1439,15 +1414,14 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A front removal deletes draft, the oldest action, instead of the latest action review.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             replayLoop('["cut", "paste", "UNDO", "bold"]'),
             'print(len(history))',
             'print(history[-1])',
           ),
-          ['3\nbold', '2\nbold', '2\npaste', '1\nbold'],
-          1,
+          '2\nbold',
           'The undo removes paste, so the active actions are cut and bold, with bold on top.',
         ),
       ],
@@ -1469,14 +1443,13 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first undo and the third find an empty history and are ignored; plant is undone, and water is the only active action.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             countedReplay('["a", "UNDO", "UNDO", "b", "UNDO", "UNDO"]'),
             'print(history, ignored)',
           ),
-          ['[] 3', "['b'] 2", '[] 1', '[] 2'],
-          3,
+          '[] 2',
           'a and b are each undone once; the undo right after each of those finds nothing, so two are ignored.',
         ),
         choose(
@@ -1501,7 +1474,7 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Only that input undoes while the history is empty; the others always have an action to remove.',
         ),
-        predictOutput(
+        typeOutput(
           'This history must never lose its base entry. What is printed?',
           lines(
             'history = ["base"]',
@@ -1513,8 +1486,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '        history.append(command)',
             'print(history)',
           ),
-          ["['top']", "['base', 'top']", "['base']", "['base', 'base', 'top']"],
-          1,
+          "['base', 'top']",
           'The check refuses to pop the last remaining entry, so both undos are ignored and top is pushed onto base.',
         ),
       ],
@@ -1590,15 +1562,14 @@ export const knowledgePoints: KnowledgePointModule = {
           'Indices 0 and 2 both hold 6, yet they remain separate pending positions with separate answer slots.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'values = [4, 9, 2]',
             'pending = [0, 2]',
             'print([values[index] for index in pending])',
           ),
-          ['[0, 2]', '[4, 9]', '[9, 2]', '[4, 2]'],
-          3,
+          '[4, 2]',
           'Each stored index is looked up in values: index 0 gives 4 and index 2 gives 2.',
         ),
         choose(
@@ -1612,7 +1583,7 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Pending entries are positions; equal measurements at different positions still need separate answers.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'values = [7, 3, 7]',
@@ -1621,13 +1592,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'answer[pending.pop()] = 10',
             'print(answer)',
           ),
-          [
-            '[10, None, None]',
-            '[None, None, 10]',
-            '[None, 10, None]',
-            '[10, 10, None]',
-          ],
-          2,
+          '[None, 10, None]',
           'pop() removes index 1, the newest pending position, so the answer is written into slot 1.',
         ),
         choose(
@@ -1662,7 +1627,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The comprehension visits indices 0, 2 and 3 in stack order and reads their values. An empty stack has no pending values.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'def pending_values(values, pending):',
@@ -1670,11 +1635,10 @@ export const knowledgePoints: KnowledgePointModule = {
             '',
             'print(pending_values([3, 9, 4, 9], [1, 3]))',
           ),
-          ['[9]', '[1, 3]', '[9, 9]', '[3, 4]'],
-          2,
+          '[9, 9]',
           'Both pending positions hold 9; the comprehension keeps one value per index, so 9 appears twice.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'values = [2, 6, 1]',
@@ -1683,8 +1647,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    pending.append(index)',
             'print(pending[-1], values[pending[-1]])',
           ),
-          ['1 2', '2 1', '0 2', '2 6'],
-          1,
+          '2 1',
           'The scan pushes indices 0, 1, 2 in order, so the top is index 2, whose value is 1.',
         ),
         choose(
@@ -1698,7 +1661,7 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Later indices are pushed later and removals happen only at the top, so the remaining indices stay increasing.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'def pending_values(values, pending):',
@@ -1706,8 +1669,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '',
             'print(pending_values(["a", "b", "c"], [0, 2]))',
           ),
-          ["['a', 'b', 'c']", '[0, 2]', "['b']", "['a', 'c']"],
-          3,
+          "['a', 'c']",
           'Index 0 reads "a" and index 2 reads "c"; index 1 is not pending, so "b" is skipped.',
         ),
       ],
@@ -1761,7 +1723,7 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The top is not smaller than 5, and the stack is nonincreasing, so nothing below can be smaller.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'values = [4, 2, 2]',
@@ -1770,11 +1732,10 @@ export const knowledgePoints: KnowledgePointModule = {
             '    pending.pop()',
             'print(pending)',
           ),
-          ['[0, 1]', '[]', '[0]', '[0, 1, 2]'],
-          2,
+          '[0]',
           'Both 2s are below 3 and are popped; 4 is not, so only index 0 remains.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'values = [5, 2]',
@@ -1785,8 +1746,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    count += 1',
             'print(count, pending)',
           ),
-          ['1 [0]', '2 []', '2 [0]', '0 [0, 1]'],
-          1,
+          '2 []',
           'Both values are below 10, so both entries pop; the pending check then stops the loop on the empty stack.',
         ),
       ],
@@ -1810,7 +1770,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only the 1 is strictly below 4. Both 4s stay pending because 4 < 4 is false.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This loop uses <= instead of <. What does it print?',
           lines(
             'values = [8, 4, 4, 1]',
@@ -1819,8 +1779,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    pending.pop()',
             'print(pending)',
           ),
-          ['[0, 1, 2]', '[0]', '[0, 1]', '[]'],
-          1,
+          '[0]',
           'With <=, both equal 4s also pop, wrongly treating 4 as greater than 4.',
         ),
         choose(
@@ -1845,7 +1804,7 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'and stops at a false left operand, so an empty stack is never indexed.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'values = [3, 3, 3]',
@@ -1855,8 +1814,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'pending.append(2)',
             'print(pending)',
           ),
-          ['[2]', '[0, 2]', '[0, 1, 2]', '[1, 2]'],
-          2,
+          '[0, 1, 2]',
           'No pending 3 is strictly below the new 3, so nothing pops and index 2 joins the stack.',
         ),
       ],
@@ -1890,10 +1848,9 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'An index is pushed only when the scan reaches it, so after one pop it is gone for good.',
         ),
-        choose(
+        typeNumber(
           'A scan over 6 values performs 4 pops in total. How many push and pop operations happened altogether?',
-          ['6', '10', '24', '36'],
-          1,
+          10,
           'Each of the 6 indices is pushed once, and 4 pops are added: 6 + 4 = 10.',
         ),
         predictOutput(
@@ -1932,30 +1889,26 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only the 1 is ever resolved. Five pushes minus one pop leaves four pending indices, including both 4s.',
       },
       questions: [
-        choose(
+        typeNumber(
           'A scan pushes 8 indices and pops 5 of them. How many indices are still pending at the end?',
-          ['13', '5', '8', '3'],
           3,
           'Every push not matched by a pop remains: 8 − 5 = 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(budgetScan('[2, 2, 2]'), 'print(pops, len(pending))'),
-          ['2 1', '0 3', '3 0', '1 2'],
-          1,
+          '0 3',
           'Equal values never pop each other under <, so all three indices stay pending.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(budgetScan('[9, 7, 8, 1, 10]'), 'print(pops, len(pending))'),
-          ['4 1', '3 2', '5 0', '4 0'],
-          0,
+          '4 1',
           '8 resolves 7, and 10 resolves 1, 8 and 9; four pops leave only index 4 pending.',
         ),
-        choose(
+        typeNumber(
           'At the end of a scan the stack holds 2 indices, and 7 pops happened. How many values were scanned?',
-          ['5', '7', '9', '14'],
-          2,
+          9,
           'Each scanned index is pushed once, so n = pops + remaining = 7 + 2 = 9.',
         ),
       ],
@@ -1975,23 +1928,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '7 resolves index 0 at once. 5 resolves the 1 and then the 3 but not 7, so 7 and the final 5 have no greater value to their right.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(nextGreater('[3, 3, 5]'), 'print(answer)'),
-          ['[3, 5, None]', '[5, None, None]', '[5, 5, 5]', '[5, 5, None]'],
-          3,
+          '[5, 5, None]',
           'The equal 3 does not resolve the first 3; 5 later resolves both.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(nextGreater('[1, 4, 2, 6]'), 'print(answer)'),
-          [
-            '[4, 6, 6, None]',
-            '[4, 2, 6, None]',
-            '[4, 6, 6, 6]',
-            '[2, 6, 6, None]',
-          ],
-          0,
+          '[4, 6, 6, None]',
           '4 answers index 0 immediately; 6 later answers both 2 and 4, which were waiting on the stack.',
         ),
         choose(
@@ -2062,16 +2008,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           '8 would have popped the smaller 3 before being pushed, so a smaller value never sits below a larger one.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(nextGreater('[2, 2, 2]'), 'print(answer)'),
-          [
-            '[2, 2, None]',
-            '[2, 2, 2]',
-            '[None, None, 2]',
-            '[None, None, None]',
-          ],
-          3,
+          '[None, None, None]',
           'No value is strictly greater than an equal 2, so every index stays pending and keeps None.',
         ),
       ],
@@ -2164,10 +2104,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'Index 1 has children at 3 and 4 (values 9 and 5). Index 4’s parent is (4 − 1) // 2 = 1, which holds 4.',
       },
       questions: [
-        choose(
+        typeNumber(
           'What is the parent index of index 5?',
-          ['2', '3', '4', '1'],
-          0,
+          2,
           '(5 − 1) // 2 = 2.',
         ),
         choose(
@@ -2176,15 +2115,14 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The formulas give 5 and 6, but index 6 does not exist in a 6-entry list, so only 5 is a child.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'heap = [2, 6, 3, 8, 7, 4]',
             'child = 5',
             'print(heap[(child - 1) // 2])',
           ),
-          ['6', '4', '3', '2'],
-          2,
+          '3',
           'Index 5’s parent is (5 − 1) // 2 = 2, which holds 3.',
         ),
         predictOutput(
@@ -2218,15 +2156,14 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first list is not sorted, but every child is at least its parent. In the second, 8 sits below its parent 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             isMinHeap,
             'print(is_min_heap([1, 5, 2]))',
             'print(is_min_heap([3, 1, 4]))',
           ),
-          ['False\nFalse', 'True\nTrue', 'False\nTrue', 'True\nFalse'],
-          3,
+          'True\nFalse',
           '[1, 5, 2] keeps both children at least 1 even though it is unsorted; in [3, 1, 4] the child 1 is below its parent 3.',
         ),
         choose(
@@ -2246,11 +2183,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A heap such as [1, 5, 2] decreases from 5 to 2 between siblings, yet satisfies every parent–child rule.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(isMinHeap, 'print(is_min_heap([7]))', 'print(is_min_heap([]))'),
-          ['True\nTrue', 'False\nFalse', 'True\nFalse', 'False\nTrue'],
-          0,
+          'True\nTrue',
           'With fewer than two entries the loop has no child to check, so both lists are valid heaps.',
         ),
       ],
@@ -2276,18 +2212,17 @@ export const knowledgePoints: KnowledgePointModule = {
           'heapify returns None; the list itself now has its minimum 2 at index 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'import heapq',
             'values = [5, 1, 4]',
             'print(heapq.heapify(values))',
           ),
-          ['[1, 5, 4]', '[1, 4, 5]', 'None', '1'],
-          2,
+          'None',
           'heapify works in place and returns None, so printing its return value prints None.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'import heapq',
@@ -2295,8 +2230,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'heapq.heapify(heap)',
             'print(heap[0], len(heap))',
           ),
-          ['9 4', '1 4', '1 3', '4 4'],
-          1,
+          '1 4',
           'heapify moves the minimum 1 to index 0 and keeps all four entries.',
         ),
         choose(
@@ -2345,7 +2279,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The copy is reordered, so data keeps its order. The empty list returns None without reading an index.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'import heapq',
@@ -2354,11 +2288,10 @@ export const knowledgePoints: KnowledgePointModule = {
             'heapq.heapify(heap)',
             'print(data[0])',
           ),
-          ['7', '3', '5', 'None'],
-          1,
+          '3',
           'heap and data name the same list, so heapify reorders data too and its first entry becomes 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'import heapq',
@@ -2367,8 +2300,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'heapq.heapify(heap)',
             'print(data[0], heap[0])',
           ),
-          ['3 3', '7 7', '7 3', '3 7'],
-          2,
+          '7 3',
           'Only the copy is reordered, so data still starts with 7 while the heap’s root is 3.',
         ),
         choose(
@@ -2416,7 +2348,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '1 is smaller than every existing value, so heappush moves it up to the root.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'import heapq',
@@ -2424,11 +2356,10 @@ export const knowledgePoints: KnowledgePointModule = {
             'heapq.heappush(heap, 7)',
             'print(heap[0])',
           ),
-          ['7', '2', '6', '8'],
-          1,
+          '2',
           '7 is not smaller than the minimum 2, so 2 stays at the root.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'import heapq',
@@ -2437,8 +2368,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    heapq.heappush(heap, value)',
             'print(heap[0])',
           ),
-          ['5', '3', '1', '9'],
-          2,
+          '1',
           'Each push keeps the heap rule, so the overall minimum 1 ends at the root.',
         ),
         choose(
@@ -2452,11 +2382,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'heappush moves the new value up until its parent is no larger; append leaves it wherever it lands.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines('heap = [2, 4, 3]', 'heap.append(1)', 'print(heap[0])'),
-          ['2', '1', '4', '3'],
-          0,
+          '2',
           'append only adds 1 at the end; nothing moves it to the root, so heap[0] is still 2 and the heap rule is broken.',
         ),
       ],
@@ -2481,7 +2410,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The pushed 1 is the minimum and leaves first; the repaired heap then gives up 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'import heapq',
@@ -2491,11 +2420,10 @@ export const knowledgePoints: KnowledgePointModule = {
             'print(heapq.heappop(heap))',
             'print(heapq.heappop(heap))',
           ),
-          ['4\n7', '6\n4', '4\n6', '9\n7'],
-          2,
+          '4\n6',
           'Pops return the two smallest values present, 4 and then the newly pushed 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'import heapq',
@@ -2503,17 +2431,15 @@ export const knowledgePoints: KnowledgePointModule = {
             'heapq.heappush(heap, 3)',
             'print(heapq.heappop(heap), len(heap))',
           ),
-          ['3 0', '3 1', 'None 0', '0 3'],
-          0,
+          '3 0',
           'The push supplies an entry, so the pop is safe; it returns 3 and leaves the heap empty.',
         ),
-        choose(
+        typeNumber(
           'A heap holds 2 and 8. After pushing 1, what does the next heappop return?',
-          ['2', '1', '8', 'None'],
           1,
           'heappop always returns the current minimum, and the newly pushed 1 is smaller than 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'import heapq',
@@ -2524,8 +2450,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    order.append(heapq.heappop(heap))',
             'print(order)',
           ),
-          ['[1, 3, 6]', '[1, 6, 6, 3]', '[6, 1, 6, 3]', '[1, 3, 6, 6]'],
-          3,
+          '[1, 3, 6, 6]',
           'Each pop takes the current minimum, so the values come out ascending and both 6s are kept.',
         ),
       ],
@@ -2556,7 +2481,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '2 leaves first. After 1 and 7 arrive, the heap holds 8, 5, 1 and 7, so 1 and then 5 leave, and 7 becomes the minimum.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'import heapq',
@@ -2568,11 +2493,10 @@ export const knowledgePoints: KnowledgePointModule = {
             '    taken.append(heapq.heappop(heap))',
             'print(taken)',
           ),
-          ['[1, 4, 6]', '[4, 1, 6]', '[6, 1, 8]', '[4, 6, 8]'],
-          1,
+          '[4, 1, 6]',
           'After 6 arrives the minimum is 4; after 1 arrives it is 1; after 8 arrives the heap holds 9, 6, 8, so 6 leaves.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'import heapq',
@@ -2583,8 +2507,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'heapq.heappush(heap, 4)',
             'print(heapq.heappop(heap), heap[0])',
           ),
-          ['3 4', '5 4', '4 9', '4 5'],
-          3,
+          '4 5',
           '3 is removed first. Then 4 joins 5 and 9, so 4 is popped and 5 becomes the root.',
         ),
         choose(
@@ -2598,9 +2521,8 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Re-sorting costs at least O(n) per change, even when only one item is new, while a heap update costs only O(log n).',
         ),
-        choose(
+        typeNumber(
           'After several pushes and pops, heap is [2, 7, 3, 9]. Which value will the next heappop return?',
-          ['9', '7', '2', '3'],
           2,
           'The root heap[0] is always a minimum, and heappop returns it.',
         ),
@@ -2628,7 +2550,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Cost 1 leaves first. The two cost-3 tasks tie, so their names decide: "dust" comes before "paint".',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'import heapq',
@@ -2640,16 +2562,10 @@ export const knowledgePoints: KnowledgePointModule = {
             '    names.append(heapq.heappop(heap)[1])',
             'print(names)',
           ),
-          [
-            "['z', 'a', 'b']",
-            "['z', 'b', 'a']",
-            "['a', 'b', 'z']",
-            "['b', 'a', 'z']",
-          ],
-          0,
+          "['z', 'a', 'b']",
           'Cost 1 comes first; the cost-2 tie is broken by name, and "a" is smaller than "b".',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'import heapq',
@@ -2663,13 +2579,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    names.append(heapq.heappop(heap)[2])',
             'print(names)',
           ),
-          [
-            "['y', 'w', 'x']",
-            "['y', 'x', 'w']",
-            "['x', 'y', 'w']",
-            "['x', 'w', 'y']",
-          ],
-          1,
+          "['y', 'x', 'w']",
           'Arrival numbers are unique, so the equal costs leave in arrival order and the names are never compared.',
         ),
         choose(
@@ -2722,7 +2632,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Three pops give the three smallest values, keeping both 3s. With one item and k = 5, the loop stops when the heap is empty.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'import heapq',
@@ -2738,8 +2648,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'print(smallest([5, 1, 8], 0))',
             'print(smallest([], 2))',
           ),
-          ['[]\n[]', '[1]\n[]', '[1, 5, 8]\n[]', '[]\nNone'],
-          0,
+          '[]\n[]',
           'k = 0 stops before any pop, and an empty heap stops at once; both return an empty list.',
         ),
         choose(
@@ -2748,7 +2657,7 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'heapify is O(n), and each of the k pops is O(log n).',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'import heapq',
@@ -2763,8 +2672,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '',
             'print(smallest([6, 2, 6, 2], 3))',
           ),
-          ['[2, 6]', '[2, 6, 6]', '[2, 2, 6]', '[2, 2]'],
-          2,
+          '[2, 2, 6]',
           'Duplicates are separate heap entries, so the three smallest are 2, 2 and 6.',
         ),
         choose(
@@ -2802,23 +2710,21 @@ export const knowledgePoints: KnowledgePointModule = {
           'p and then i are followed from the root. The node reached has two children, n and t, so "pin" and "pit" continue from here.',
       },
       questions: [
-        choose(
+        typeNumber(
           'How many child steps does following "lake" from the root take?',
-          ['1', '3', '4', 'One per node in the trie'],
-          2,
+          4,
           'Each character is one edge, so a 4-letter string takes exactly 4 steps.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'root = {"c": {"a": {"t": {}, "r": {}}, "o": {}}}',
             'print(list(root["c"].keys()))',
           ),
-          ["['a', 'o']", "['c']", "['t', 'r']", "['a', 't', 'r', 'o']"],
-          0,
+          "['a', 'o']",
           'The node for "c" has only its direct children a and o; t and r sit one level deeper.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'root = {"d": {"o": {"g": {}}}}',
@@ -2827,8 +2733,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    node = node[letter]',
             'print("g" in node, "o" in node)',
           ),
-          ['False True', 'True True', 'False False', 'True False'],
-          3,
+          'True False',
           'After following d and o, the node’s only child is g; o was the edge used to get here, not a child of this node.',
         ),
         choose(
@@ -2863,15 +2768,14 @@ export const knowledgePoints: KnowledgePointModule = {
           '"su" follows two existing edges. "sum" fails at m because the u node has only n. The empty string takes no steps.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             hasPath,
             'print(has_path({"a": {"b": {}}}, "abc"))',
             'print(has_path({}, ""))',
           ),
-          ['False\nTrue', 'True\nTrue', 'False\nFalse', 'True\nFalse'],
-          0,
+          'False\nTrue',
           '"abc" fails at c because the b node is empty; the empty string needs no steps, even in an empty trie.',
         ),
         predictOutput(
@@ -2949,7 +2853,7 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Inserting "river" created the path for "riv", but no end mark was set there.',
         ),
-        predictOutput(
+        typeOutput(
           'This trie holds "go" and "gone". What does the program print?',
           lines(
             containsWord,
@@ -2959,13 +2863,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'trie = {"end": False, "children": {"g": {"end": False, "children": {"o": o}}}}',
             'print(contains_word(trie, "go"), contains_word(trie, "gon"), contains_word(trie, "gone"))',
           ),
-          [
-            'True True True',
-            'True False True',
-            'False False True',
-            'True False False',
-          ],
-          1,
+          'True False True',
           '"go" and "gone" end at marked nodes. "gon" has a path but its final node is not marked.',
         ),
         choose(
@@ -2979,15 +2877,14 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Separate fields keep node data apart from the edges, so no character can be mistaken for the mark.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             containsWord,
             'root = {"end": True, "children": {}}',
             'print(contains_word(root, ""), contains_word(root, "a"))',
           ),
-          ['False False', 'True True', 'False True', 'True False'],
-          3,
+          'True False',
           'The empty word follows no edges, so its mark is the root’s end, which is True; "a" has no path.',
         ),
       ],
@@ -3012,7 +2909,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '"tea" reuses the t and e nodes and adds a beside n. "te" was never inserted, so the e node stays unmarked.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             insertWord,
@@ -3021,8 +2918,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'a = root["children"]["a"]',
             'print(a["end"], len(a["children"]))',
           ),
-          ['False 1', 'True 1', 'True 0', 'False 2'],
-          1,
+          'True 1',
           'Inserting "a" reuses the existing a node and marks it; its child n is still there.',
         ),
         predictOutput(
@@ -3085,13 +2981,12 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two words pass through a. No node exists for "ay", so the answer is 0. The root counts all three words.',
       },
       questions: [
-        choose(
+        typeNumber(
           '"go" is inserted twice and "gone" once. What count is stored at the node for "go"?',
-          ['1', '2', '3', '4'],
-          2,
+          3,
           'All three occurrences pass through the go node: two end there and one continues to gone.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             prefixCount,
@@ -3101,8 +2996,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'trie = {"count": 3, "children": {"a": a, "b": b}}',
             'print(prefix_count(trie, "ax"), prefix_count(trie, "b"), prefix_count(trie, "c"))',
           ),
-          ['1 1 0', '2 1 0', '1 1 3', '1 0 0'],
-          0,
+          '1 1 0',
           'The ax and b nodes each count one word; there is no c child, so that query returns 0.',
         ),
         choose(
@@ -3116,15 +3010,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The empty prefix follows no edges, so it ends at the root, which every insertion passes through.',
         ),
-        choose(
+        typeNumber(
           'A prefix query hits a missing child halfway through the prefix. What should it return?',
-          [
-            'The count of the last node reached',
-            '0',
-            'The root’s count',
-            'None',
-          ],
-          1,
+          0,
           'No inserted word contains the full prefix, so the number of words starting with it is 0.',
         ),
       ],
@@ -3148,7 +3036,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'All four insertions pass the root. Three of them, "ink" twice and "in", pass through the node for "in".',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             countingInsert,
@@ -3157,11 +3045,10 @@ export const knowledgePoints: KnowledgePointModule = {
             't = root["children"]["t"]',
             'print(t["count"], t["children"]["o"]["count"], t["children"]["e"]["count"])',
           ),
-          ['3 2 1', '2 1 1', '3 1 1', '3 2 2'],
-          0,
+          '3 2 1',
           'All three words pass t; "to" twice passes o, and only "tea" passes e.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             countingInsert,
@@ -3169,8 +3056,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    insert(root, word)',
             'print(root["count"], root["children"]["a"]["count"])',
           ),
-          ['1 1', '2 1', '2 2', '1 0'],
-          1,
+          '2 1',
           'Both insertions add 1 at the root, including the empty word; only "a" reaches the a node.',
         ),
         choose(
@@ -3184,15 +3070,9 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Only insertions ending exactly at that node add to it, so it counts copies of "re" alone.',
         ),
-        choose(
+        typeNumber(
           'After 50 insertions, some repeated and one of them empty, what is the root’s count?',
-          [
-            'The number of distinct words',
-            '49, excluding the empty word',
-            'The number of root children',
-            '50',
-          ],
-          3,
+          50,
           'Every insertion, repeated or empty, adds 1 at the root.',
         ),
       ],
@@ -3219,11 +3099,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           '"dog" adds 3 nodes, "dot" adds t, "do" adds none, and "dig" adds i and g: 6 in all.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(trieBuilder('["a", "a", "ab"]'), 'print(created)'),
-          ['3', '2', '4', '1'],
-          1,
+          '2',
           'The first "a" creates one node, the repeat creates none, and "ab" adds b.',
         ),
         choose(
@@ -3332,14 +3211,13 @@ export const knowledgePoints: KnowledgePointModule = {
           'All four occurrences start with "go"; only "gone" continues with n; nothing continues with x; the root counts every insertion.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             countTrie('["red", "re", "rest", "red"]'),
             'print(starts_with("re"), starts_with("red"), starts_with("res"))',
           ),
-          ['3 2 1', '4 1 1', '4 2 1', '2 2 1'],
-          2,
+          '4 2 1',
           'All four start with "re", the two "red" occurrences both count, and only "rest" starts with "res".',
         ),
         choose(
@@ -3348,20 +3226,18 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The query walks five edges and reads one count; the number of stored words does not matter.',
         ),
-        choose(
+        typeNumber(
           'Words ["", "a", "ab"] are inserted with counts. What does the empty-prefix query return?',
-          ['3', '2', '0', '1'],
-          0,
+          3,
           'Every insertion, including the empty word, adds 1 at the root.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             countTrie('["x", "y", "x"]'),
             'print(starts_with("x"), starts_with("z"))',
           ),
-          ['1 0', '2 None', '3 0', '2 0'],
-          3,
+          '2 0',
           'The repeated "x" passes the x node twice, and the missing z child gives 0.',
         ),
       ],
@@ -3387,24 +3263,21 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only exponent 0 has an answer known without further work. Exponent 1 still needs one multiplication by the base.',
       },
       questions: [
-        choose(
+        typeNumber(
           'Which exponent is the base case for computing base ** exponent with a nonnegative integer exponent?',
-          ['1', 'Every even exponent', '0', 'The largest exponent'],
-          2,
+          0,
           'Any base to the power 0 is 1, so exponent 0 needs no further work.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(baseAnswer, 'print(base_answer(2), base_answer(0))'),
-          ['None 1', '1 1', 'None 0', '2 1'],
-          0,
+          'None 1',
           'Exponent 2 is not the base case, so it gets None; exponent 0 returns the known answer 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'print(0 ** 0, 5 ** 0)',
-          ['0 1', '1 1', '0 0', '1 5'],
-          1,
+          '1 1',
           'Python, like this course’s convention, defines every zero exponent as 1, including 0 ** 0.',
         ),
         choose(
@@ -3442,7 +3315,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'For 0 the function returns at once and never prints "needs work". For 4 the test fails, so the later lines run.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'def check(n):',
@@ -3453,11 +3326,10 @@ export const knowledgePoints: KnowledgePointModule = {
             '',
             'print(check(0))',
           ),
-          ['done', 'working on 0\ndone', 'working on 0\nmore', 'more'],
-          0,
+          'done',
           'The base test matches and returns "done" before the print line is reached.',
         ),
-        predictOutput(
+        typeOutput(
           'This function shrinks its argument before testing it. What does it print?',
           lines(
             'def step(n):',
@@ -3468,8 +3340,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '',
             'print(step(0))',
           ),
-          ['base', '0', '-1', 'None'],
-          2,
+          '-1',
           'The step turns 0 into −1 before the test, so the base case is missed; testing first would have returned "base".',
         ),
         choose(
@@ -3483,7 +3354,7 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The base input must be recognized before anything changes it.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'def power_step(exponent):',
@@ -3493,8 +3364,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '',
             'print(power_step(0), power_step(9))',
           ),
-          ['0 4', '1 4.5', '1 None', '1 4'],
-          3,
+          '1 4',
           '0 returns the base answer 1; 9 skips the test and returns the halved argument 4.',
         ),
       ],
@@ -3521,13 +3391,12 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each halving rounds down, so 13 becomes 6, then 3, then 1, and finally the base case 0.',
       },
       questions: [
-        choose(
+        typeNumber(
           'For exponent 7, what is the next argument after integer halving?',
-          ['3', '3.5', '4', '14'],
-          0,
+          3,
           '7 // 2 rounds down to 3; integer halving never produces a fraction.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'exponent = 20',
@@ -3537,13 +3406,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    arguments.append(exponent)',
             'print(arguments)',
           ),
-          [
-            '[20, 10, 5, 2, 1]',
-            '[10, 5, 2, 1, 0]',
-            '[20, 10, 5, 2, 1, 0]',
-            '[20, 10, 5, 3, 2, 1, 0]',
-          ],
-          2,
+          '[20, 10, 5, 2, 1, 0]',
           'The list starts with 20 and ends with the base case 0; 5 // 2 rounds down to 2.',
         ),
         choose(
@@ -3557,7 +3420,7 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'exponent // 2 is always smaller for positive values; the others stall at 1 or grow.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'exponent = 5',
@@ -3565,8 +3428,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    exponent = (exponent + 1) // 2',
             'print(exponent)',
           ),
-          ['0', '3', '2', '1'],
-          3,
+          '1',
           'At 1, (1 + 1) // 2 is 1 again, so this step stalls and never reaches the base case 0.',
         ),
       ],
@@ -3587,11 +3449,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '7 goes 3, 1, 0 in three steps; 8 needs one more because it goes 4, 2, 1, 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(halvingSteps, 'print(halving_steps(1000))'),
-          ['500', '9', '10', '1000'],
-          2,
+          '10',
           '1000 halves through 500, 250, 125, 62, 31, 15, 7, 3, 1 and 0: ten steps.',
         ),
         choose(
@@ -3600,7 +3461,7 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Doubling e adds only one more halving step, which is logarithmic growth.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'e = 16',
@@ -3615,8 +3476,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    halves += 1',
             'print(down, halves)',
           ),
-          ['16 4', '5 16', '8 5', '16 5'],
-          3,
+          '16 5',
           'Subtracting 1 takes 16 steps, while halving goes 8, 4, 2, 1, 0 in five steps.',
         ),
         choose(
@@ -3652,13 +3512,12 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'half is 3 ** 2 = 9, and 9 * 9 = 81 = 3 ** 4.',
       },
       questions: [
-        choose(
+        typeNumber(
           'half is 2 ** 3 = 8. What is 2 ** 6?',
-          ['16', '64', '48', '11'],
-          1,
+          64,
           '2 ** 6 is (2 ** 3) * (2 ** 3) = 8 * 8 = 64.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'def combine_even(half):',
@@ -3666,25 +3525,22 @@ export const knowledgePoints: KnowledgePointModule = {
             '',
             'print(combine_even(5), combine_even(1))',
           ),
-          ['10 2', '25 2', '10 1', '25 1'],
-          3,
+          '25 1',
           'Combining squares the half-result: 5 * 5 = 25 and 1 * 1 = 1.',
         ),
-        choose(
+        typeNumber(
           'For exponent 10, which smaller exponent does half use?',
-          ['9', '10', '5', '20'],
-          2,
+          5,
           'half is base ** (10 // 2) = base ** 5, and squaring it gives base ** 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'base = -2',
             'half = base ** 2',
             'print(half * half, base ** 4)',
           ),
-          ['16 16', '-16 16', '16 -16', '-16 -16'],
-          0,
+          '16 16',
           'half is 4, and 4 * 4 = 16, which matches (−2) ** 4 because the exponent is even.',
         ),
       ],
@@ -3706,21 +3562,19 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both use half = 2 ** 3 = 8. Exponent 7 is odd, so 64 is multiplied by 2 once more.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(combinePower, 'print(combine_power(3, 5, 9))'),
-          ['81', '243', '729', '27'],
-          1,
+          '243',
           'half is 3 ** 2 = 9; 9 * 9 = 81 covers four factors, and the odd exponent adds one more 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             combinePower,
             'print(combine_power(10, 3, 10), combine_power(10, 2, 10))',
           ),
-          ['100 100', '1000 1000', '1000 100', '100 1000'],
-          2,
+          '1000 100',
           'Both have half = 10. Exponent 3 is odd and gets an extra factor of 10; exponent 2 does not.',
         ),
         choose(
@@ -3767,11 +3621,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each call halves the exponent until the base case returns 1; the odd exponents 5 and 3 each pick up an extra factor on the way back.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(powerFunction, 'print(power(2, 10), power(5, 0))'),
-          ['1024 1', '1024 0', '512 1', '20 1'],
-          0,
+          '1024 1',
           '2 ** 10 is 1024, and any exponent 0 hits the base case and returns 1.',
         ),
         predictOutput(
@@ -3804,7 +3657,7 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Only progress toward a base case guarantees that the chain of calls ends.',
         ),
-        predictOutput(
+        typeOutput(
           'This version forgets the odd factor. What does it print?',
           lines(
             'def power(base, exponent):',
@@ -3815,8 +3668,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '',
             'print(power(2, 3), power(2, 4))',
           ),
-          ['8 16', '1 1', '4 16', '8 8'],
-          1,
+          '1 1',
           'Without the odd factor, power(2, 1) returns 1 * 1 = 1, and every larger call only squares that 1.',
         ),
       ],
@@ -3834,16 +3686,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Exponent 0 returns 1 without printing. Exponent 1 makes 1 · 1 · 2 = 2, exponent 2 makes 2 · 2 = 4, and exponent 5 makes 4 · 4 · 2 = 32.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(tracedPower, 'power(3, 4)'),
-          [
-            '4 81\n2 9\n1 3',
-            '1 3\n2 9\n4 81',
-            '1 3\n2 6\n4 12',
-            '1 3\n2 9\n3 27\n4 81',
-          ],
-          1,
+          '1 3\n2 9\n4 81',
           'The calls are 4, 2, 1, 0. Results print as calls finish, deepest first: 3, then 9, then 81.',
         ),
         choose(
@@ -3857,11 +3703,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Every other call is still waiting for a smaller call; the base case has nothing to wait for.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(tracedPower, 'power(5, 3)'),
-          ['3 125\n1 5', '1 5\n2 25\n3 125', '1 5\n3 25', '1 5\n3 125'],
-          3,
+          '1 5\n3 125',
           '3 // 2 is 1, so there is no exponent-2 call. Exponent 1 gives 5, and exponent 3 gives 5 · 5 · 5 = 125.',
         ),
         choose(
@@ -3890,11 +3735,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'depth counts the calls in the chain. 8 goes 4, 2, 1, 0; 10⁹ needs 30 halvings plus the base-case call.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(callDepth, 'print(depth(1000))'),
-          ['10', '11', '1000', '500'],
-          1,
+          '11',
           '1000 takes ten halvings to reach 0, and the base-case call adds one more.',
         ),
         choose(
@@ -3964,7 +3808,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'left is removed before right is tried, so each branch is the parent plus one choice, and the parent is restored at the end.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'working = [0]',
@@ -3973,16 +3817,10 @@ export const knowledgePoints: KnowledgePointModule = {
             '    print(working)',
             '    working.pop()',
           ),
-          [
-            '[0, 1]\n[0, 1, 2]\n[0, 1, 2, 3]',
-            '[0, 1]\n[0, 2]\n[0, 3]',
-            '[1]\n[2]\n[3]',
-            '[0, 1]\n[0, 2]\n[0, 2, 3]',
-          ],
-          1,
+          '[0, 1]\n[0, 2]\n[0, 3]',
           'Each value is appended to the parent [0], printed, and removed before the next value.',
         ),
-        predictOutput(
+        typeOutput(
           'This loop forgets the pop. What is printed?',
           lines(
             'working = ["s"]',
@@ -3990,13 +3828,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    working.append(value)',
             '    print(working)',
           ),
-          [
-            "['s', 'a']\n['s', 'b']",
-            "['a']\n['b']",
-            "['s', 'a']\n['s', 'a', 'b']",
-            "['s', 'a', 'b']\n['s', 'a', 'b']",
-          ],
-          2,
+          "['s', 'a']\n['s', 'a', 'b']",
           'a is never removed, so the second branch wrongly inherits it.',
         ),
         choose(
@@ -4041,7 +3873,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each inner pop restores [first], and each outer pop restores the empty path, so b starts as cleanly as a did.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'path = [9]',
@@ -4053,11 +3885,10 @@ export const knowledgePoints: KnowledgePointModule = {
             '    path.pop()',
             'print(path, len(path))',
           ),
-          ['[9] 1', '[9, 2, 4] 3', '[] 0', '[9, 1, 2] 3'],
-          0,
+          '[9] 1',
           'Every append is matched by a pop, so the path returns to its starting value [9].',
         ),
-        predictOutput(
+        typeOutput(
           'The inner pop is missing. What is printed?',
           lines(
             'path = []',
@@ -4068,8 +3899,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    path.pop()',
             'print(path)',
           ),
-          ['[]', "['p', 'q']", "['q']", "['p', 'q', 'r']"],
-          1,
+          "['p', 'q']",
           'Each outer pop removes r instead of a, so p and q are both left behind.',
         ),
         choose(
@@ -4118,7 +3948,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'results holds the path list itself, so it shows the path’s current contents [2, 7], not the [2, 5] it held when saved.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'path = []',
@@ -4129,8 +3959,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    path.pop()',
             'print(saved)',
           ),
-          ['[[1], [2]]', '[[], []]', '[[1, 2], [1, 2]]', '[[2], [2]]'],
-          1,
+          '[[], []]',
           'Both entries are the same path list, which is empty after the final pop.',
         ),
         choose(
@@ -4144,7 +3973,7 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Appending a list stores that list object, so later changes to it are visible through results.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'path = ["a"]',
@@ -4153,8 +3982,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'print(first)',
             'print(len(first))',
           ),
-          ["['a', 'b']\n2", "['a']\n1", "['b']\n1", "['a']\n2"],
-          0,
+          "['a', 'b']\n2",
           'first and path name one list, so the append is visible through first.',
         ),
         choose(
@@ -4192,7 +4020,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each copy freezes the path as it was, so both solutions survive while the working path returns to empty.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'path = [4]',
@@ -4201,11 +4029,10 @@ export const knowledgePoints: KnowledgePointModule = {
             'path.pop(0)',
             'print(snapshot, path)',
           ),
-          ['[4, 6] [6]', '[6] [6]', '[4] [6]', '[4] [4, 6]'],
-          2,
+          '[4] [6]',
           'The snapshot was taken before either change, so it keeps [4] while path becomes [6].',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'def save_path(paths, current):',
@@ -4218,8 +4045,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'current.append(8)',
             'print(saved)',
           ),
-          ['[[0], [3, 1]]', '[[0], [3, 1, 8]]', '[[3, 1]]', '[[0, 3, 1]]'],
-          0,
+          '[[0], [3, 1]]',
           'The saved entry is a copy of current, so the later append does not reach it.',
         ),
         choose(
@@ -4267,13 +4093,12 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two more indices are needed, and indices 3, 4 and 5 are still available.',
       },
       questions: [
-        choose(
+        typeNumber(
           'n = 10 and the next usable index is 7. How many indices remain?',
-          ['7', '4', '3', '17'],
-          2,
+          3,
           'Indices 7, 8 and 9 remain: 10 − 7 = 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'n = 8',
@@ -4282,25 +4107,22 @@ export const knowledgePoints: KnowledgePointModule = {
             'chosen = 3',
             'print(k - chosen, n - start)',
           ),
-          ['2 2', '3 2', '2 3', '5 2'],
-          0,
+          '2 2',
           'Two more are needed (5 − 3), and indices 6 and 7 remain (8 − 6).',
         ),
-        choose(
+        typeNumber(
           'A selection needs k = 4 entries and has chosen 1. How many more must it pick?',
-          ['4', '5', '1', '3'],
           3,
           'It still needs k − chosen = 4 − 1 = 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'n = 7',
             'start = 4',
             'print(list(range(start, n)), n - start)',
           ),
-          ['[4, 5, 6, 7] 4', '[4, 5, 6] 3', '[5, 6] 2', '[0, 1, 2, 3] 4'],
-          1,
+          '[4, 5, 6] 3',
           'range(start, n) stops before n, so indices 4, 5 and 6 remain: n − start = 3.',
         ),
       ],
@@ -4323,14 +4145,13 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first branch needs 3 but only 2 remain. The second needs exactly the 2 that remain. The third needs nothing more.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             canComplete,
             'print(can_complete(5, 3, 0, 3), can_complete(5, 3, 1, 3))',
           ),
-          ['True True', 'False False', 'True False', 'False True'],
-          3,
+          'False True',
           'The first needs 3 with only 2 left; the second needs 2 with 2 left, which is feasible.',
         ),
         choose(
@@ -4389,16 +4210,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each path starts after its previous index, so [1, 0] is never produced, and the six pairs appear in lexicographic order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(combinations('path.copy()'), 'print(combinations(3, 2))'),
-          [
-            '[[0, 1], [0, 2], [1, 2]]',
-            '[[0, 1], [1, 0], [0, 2], [2, 0], [1, 2], [2, 1]]',
-            '[[0, 1], [1, 2]]',
-            '[[0, 1], [0, 2], [1, 2], [2, 2]]',
-          ],
-          0,
+          '[[0, 1], [0, 2], [1, 2]]',
           'Each pair appears once in increasing order; visit(index + 1) prevents reversed and repeated indices.',
         ),
         predictOutput(
@@ -4408,15 +4223,14 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'There are C(5, 3) = 10 increasing triples; 60 would count every ordering.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             combinations('path.copy()'),
             'print(combinations(3, 0))',
             'print(combinations(2, 3))',
           ),
-          ['[]\n[]', '[[]]\n[[]]', '[[]]\n[]', '[]\n[[]]'],
-          2,
+          '[[]]\n[]',
           'Choosing zero indices has one answer, the empty selection. Choosing 3 of 2 indices has none.',
         ),
         choose(
@@ -4471,7 +4285,7 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Printing happens at each leaf, and each pop restores the empty parent before the next index is tried.',
         ),
-        predictOutput(
+        typeOutput(
           'This search forgets the pop. What is printed?',
           lines(
             'path = []',
@@ -4488,8 +4302,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'visit(0, 3, 1)',
             'print(result)',
           ),
-          ['[[0], [1], [2]]', '[[0], [0, 1], [0, 1, 2]]', '[[0]]', '[]'],
-          2,
+          '[[0]]',
           'After [0] is saved, 0 is never removed, so the path is too long at every later check and nothing else is saved.',
         ),
         choose(
@@ -4532,17 +4345,15 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both versions find the same 10 combinations, but the pruned search never enters the 6 dead prefixes, such as [3] or [0, 4], that leave too few indices.',
       },
       questions: [
-        choose(
+        typeNumber(
           'n = 6, k = 4, and the path already holds 1 index. What is the largest index the pruned loop tries next?',
-          ['5', '4', '3', '2'],
-          2,
+          3,
           'needed = 3, so the loop is range(start, 6 − 3 + 1) = range(start, 4), whose last index is 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(countVisits, 'print(visits(4, 2, False), visits(4, 2, True))'),
-          ['10 10', '11 10', '11 6', '16 10'],
-          1,
+          '11 10',
           'Without pruning the search also enters the dead prefix [3]; pruning skips just that one call.',
         ),
         choose(
@@ -4598,19 +4409,13 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Going left at 50 sets the upper bound 50, and the latest right turn at 25 sets the lower bound 25.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             insideBounds,
             'print(inside(7, None, 8), inside(7, 7, None), inside(-3, None, None))',
           ),
-          [
-            'True True True',
-            'False False True',
-            'True False False',
-            'True False True',
-          ],
-          3,
+          'True False True',
           '7 is below 8; 7 equals its lower bound, which fails; with no bounds any key fits.',
         ),
         choose(
@@ -4644,19 +4449,13 @@ export const knowledgePoints: KnowledgePointModule = {
           '5 equals its lower bound, so it fails. With no bounds, 5 fits. 0 lies strictly between −1 and 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             insideBounds,
             'print(inside(9, 2, 9), inside(2, 2, 9), inside(3, 2, 9))',
           ),
-          [
-            'True True True',
-            'False False True',
-            'True False True',
-            'False True True',
-          ],
-          1,
+          'False False True',
           'Both bounds are strict, so 9 and 2 fail by equality; only 3 lies strictly inside.',
         ),
         choose(
@@ -4676,11 +4475,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'It must be strictly above 4 and has no upper limit, so only 100 qualifies.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(insideBounds, 'print(inside(0, None, 0), inside(-5, None, 0))'),
-          ['True True', 'False False', 'False True', 'True False'],
-          2,
+          'False True',
           '0 equals the upper bound and fails; −5 is strictly below it.',
         ),
       ],
@@ -4716,19 +4514,13 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Every left descendant is below 15, so a larger target can only be on the right.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             searchBranch,
             'print(branch(-2, -5), branch(0, 0), branch(3, 4))',
           ),
-          [
-            'right found left',
-            'left left right',
-            'left found right',
-            'right found right',
-          ],
-          2,
+          'left found right',
           '−5 is smaller than −2, 0 equals 0, and 4 is larger than 3.',
         ),
         choose(
@@ -4742,16 +4534,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The ordering rule covers the whole right subtree, so nothing there is smaller.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(searchBranch, 'print([branch(50, t) for t in [10, 50, 70]])'),
-          [
-            "['right', 'found', 'left']",
-            "['left', 'left', 'right']",
-            "['left', 'right', 'right']",
-            "['left', 'found', 'right']",
-          ],
-          3,
+          "['left', 'found', 'right']",
           '10 goes left, 50 is found, and 70 goes right.',
         ),
       ],
@@ -4787,7 +4573,7 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The ordering rule still holds at every node; only the path length grows.',
         ),
-        predictOutput(
+        typeOutput(
           'Each key below is the left child of the one before it. What is printed?',
           lines(
             searchBranch,
@@ -4796,13 +4582,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    made.append(branch(key, 30))',
             'print(made)',
           ),
-          [
-            "['right', 'right', 'found']",
-            "['left', 'found']",
-            "['left', 'left', 'found']",
-            "['found']",
-          ],
-          2,
+          "['left', 'left', 'found']",
           '30 is below 50 and 40, so the search goes left twice and then finds it.',
         ),
         choose(
@@ -4850,13 +4630,12 @@ export const knowledgePoints: KnowledgePointModule = {
           '3 starts the candidate, 12 is above the limit, 8 improves it, and 5 is smaller than 8.',
       },
       questions: [
-        choose(
+        typeNumber(
           'best = 6, limit = 9, and the next key is 9. What is best afterwards?',
-          ['6', '9', 'None', '15'],
-          1,
+          9,
           '9 is at most the limit and larger than 6, so it becomes the new best.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             improveFloor,
@@ -4865,18 +4644,16 @@ export const knowledgePoints: KnowledgePointModule = {
             '    best = improve_floor(best, key, 10)',
             'print(best)',
           ),
-          ['11', '10', '15', 'None'],
-          3,
+          'None',
           'Every key is above 10, so none qualifies and best stays None.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             improveFloor,
             'print(improve_floor(7, 13, 10), improve_floor(7, 2, 10))',
           ),
-          ['13 2', '7 2', '7 7', 'None 7'],
-          2,
+          '7 7',
           '13 exceeds the limit and 2 is smaller than 7, so best stays 7 both times.',
         ),
         choose(
@@ -4911,7 +4688,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '−4 qualifies first, −9 is smaller, and 2 exceeds the limit −1. Starting at 0 would have hidden the answer, since 0 is larger than every qualifying key.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version starts best at 0. What does it print?',
           lines(
             'best = 0',
@@ -4920,18 +4697,16 @@ export const knowledgePoints: KnowledgePointModule = {
             '        best = key',
             'print(best)',
           ),
-          ['-4', '0', '-9', '2'],
-          1,
+          '0',
           'No qualifying key beats 0, so the program reports 0, a key that was never stored.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             improveFloor,
             'print(improve_floor(None, 5, 5), improve_floor(None, 6, 5))',
           ),
-          ['5 None', '5 5', 'None None', '5 6'],
-          0,
+          '5 None',
           '5 qualifies and replaces None; 6 exceeds the limit, so best stays None.',
         ),
         choose(
@@ -5004,7 +4779,7 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Each search follows one path. 33 passes 30, then goes left at 40 into None after visiting it.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             sampleTree,
@@ -5012,13 +4787,7 @@ export const knowledgePoints: KnowledgePointModule = {
             treeContains,
             'print(contains(tree, 40), contains(tree, 10), contains(tree, 12))',
           ),
-          [
-            'True True True',
-            'True False False',
-            'False True False',
-            'True True False',
-          ],
-          3,
+          'True True False',
           '40 and 10 are stored. 12 goes left at 20, right at 10, then left at 15 into None.',
         ),
         choose(
@@ -5063,7 +4832,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'For 17: 20 is too big, 10 qualifies, then 15 improves it. For 30: 20 then 30 qualify. For 3: every key on the path is too big.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             sampleTree,
@@ -5071,8 +4840,7 @@ export const knowledgePoints: KnowledgePointModule = {
             treeFloor,
             'print(floor(tree, 39), floor(tree, 12))',
           ),
-          ['40 15', '30 10', '30 15', '20 10'],
-          1,
+          '30 10',
           'For 39, 20 and 30 qualify but 40 does not. For 12, 10 qualifies and 15 is too big.',
         ),
         choose(
@@ -5147,7 +4915,7 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The chain has height n, and a search may walk all of it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             searchSteps,
@@ -5156,8 +4924,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    chain = (key, None, chain)',
             'print(steps(chain, 8), steps(chain, 0))',
           ),
-          ['8 1', '8 8', '7 0', '1 8'],
-          0,
+          '8 1',
           '8 is at the bottom of the chain. 0 is smaller than the root 1, whose left child is None, so that search ends after one step.',
         ),
         choose(
@@ -5205,15 +4972,14 @@ export const knowledgePoints: KnowledgePointModule = {
           'The left child is a real leaf with key 0; only the right child is absent.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'node = (3, None, (-1, None, None))',
             'key, left, right = node',
             'print(left, right[0])',
           ),
-          ['None -1', '-1 None', 'None None', '3 -1'],
-          0,
+          'None -1',
           'The left child is absent, and the right child is a real node whose key is −1.',
         ),
         choose(
@@ -5265,24 +5031,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only the real right child is listed. An absent node has no children at all.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             existingChildren,
             'print(len(existing_children((4, (2, (1, None, None), None), (6, None, None)))))',
           ),
-          ['3', '4', '2', '1'],
-          2,
+          '2',
           'Only the direct children 2 and 6 are listed; the grandchild 1 is not.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             existingChildren,
             'print([child[0] for child in existing_children((10, (5, None, None), (15, None, None)))])',
           ),
-          ['[15, 5]', '[5, 15]', '[10, 5, 15]', '[5]'],
-          1,
+          '[5, 15]',
           'The children keep left-to-right order, and the parent’s own key is not included.',
         ),
         choose(
@@ -5339,7 +5103,7 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The child pushed second sits on top, so the left child must be pushed after the right.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'pending = []',
@@ -5347,11 +5111,10 @@ export const knowledgePoints: KnowledgePointModule = {
             '    pending.append(child)',
             'print(pending.pop(), pending.pop())',
           ),
-          ['A B', 'B A', 'A A', 'B B'],
-          1,
+          'B A',
           'B was pushed last, so it is popped first.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'pending = ["x"]',
@@ -5362,8 +5125,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    pending.append(left)',
             'print(pending)',
           ),
-          ["['x', None, 'L']", "['L', 'x']", "['x', 'L', None]", "['x', 'L']"],
-          3,
+          "['x', 'L']",
           'The absent right child is skipped, and L goes on top of the existing work.',
         ),
         choose(
@@ -5390,7 +5152,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'After 1, the left child 2 is on top; its child 4 is pushed above 3, so the whole left subtree finishes before 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             preorderLoop(
@@ -5398,16 +5160,10 @@ export const knowledgePoints: KnowledgePointModule = {
             ),
             'print(order)',
           ),
-          [
-            '[5, 3, 1, 4, 8]',
-            '[5, 8, 3, 4, 1]',
-            '[1, 3, 4, 5, 8]',
-            '[5, 3, 8, 1, 4]',
-          ],
-          0,
+          '[5, 3, 1, 4, 8]',
           'The root comes first, then the entire left subtree 3, 1, 4, then the right child 8.',
         ),
-        predictOutput(
+        typeOutput(
           'This loop pushes the left child first. What does it print?',
           lines(
             'tree = (1, (2, (4, None, None), None), (3, None, None))',
@@ -5422,8 +5178,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '        stack.append(right)',
             'print(order)',
           ),
-          ['[1, 2, 4, 3]', '[1, 3, 2, 4]', '[4, 2, 3, 1]', '[1, 2, 3, 4]'],
-          1,
+          '[1, 3, 2, 4]',
           'The right child ends on top, so 3 is visited before the left subtree.',
         ),
         choose(
@@ -5437,7 +5192,7 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Everything pushed while handling the left subtree sits above right, so it all comes off first.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'tree = (1, (2, None, None), (3, None, None))',
@@ -5450,13 +5205,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '        stack.append(left)',
             '    print(key, [node[0] for node in stack])',
           ),
-          [
-            '1 [2, 3]\n3 [2]\n2 []',
-            '1 [3, 2]\n3 [2]\n2 []',
-            '1 [3, 2]\n2 [3]\n3 []',
-            '1 [2, 3]\n2 [3]\n3 []',
-          ],
-          2,
+          '1 [3, 2]\n2 [3]\n3 []',
           'After 1, the stack is [3, 2] with 2 on top; popping 2 leaves [3]; then 3 is popped.',
         ),
       ],
@@ -5481,20 +5230,18 @@ export const knowledgePoints: KnowledgePointModule = {
           'The taller child decides each result: 4 + 1, then a leaf’s 0 + 1, then 3 + 1.',
       },
       questions: [
-        choose(
+        typeNumber(
           'The left child has height 3 and the right child is absent. What is the parent’s height?',
-          ['3', '4', '1', '0'],
-          1,
+          4,
           'The absent child counts as 0, so the height is 1 + max(3, 0) = 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             combineHeight,
             'print(combine_height(1, 1), combine_height(4, 2))',
           ),
-          ['3 7', '2 4', '1 5', '2 5'],
-          3,
+          '2 5',
           '1 + max(1, 1) = 2 and 1 + max(4, 2) = 5.',
         ),
         choose(
@@ -5503,7 +5250,7 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Both children are absent and count as height 0, which gives the leaf height 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'def wrong_height(left_height, right_height):',
@@ -5511,8 +5258,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '',
             'print(wrong_height(2, 2), 1 + max(2, 2))',
           ),
-          ['3 3', '5 5', '5 3', '3 5'],
-          2,
+          '5 3',
           'Adding counts nodes from both subtrees, which no single downward path contains; the max gives the true height 3.',
         ),
       ],
@@ -5538,7 +5284,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'd and c are leaves. b can be combined once d is known, and a only after both b and c.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             combineHeight,
@@ -5551,8 +5297,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'r = combine_height(x, y)',
             'print(r)',
           ),
-          ['3', '6', '4', '5'],
-          2,
+          '4',
           'The longest path is r, y, p, s: four nodes.',
         ),
         choose(
@@ -5572,7 +5317,7 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Each node comes after all of its children: d before b, and b and c before a.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             combineHeight,
@@ -5581,8 +5326,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    height = combine_height(height, 0)',
             'print(height)',
           ),
-          ['3', '0', '8', '4'],
-          3,
+          '4',
           'Each step adds one parent above the previous chain, so four nodes give height 4.',
         ),
       ],
@@ -5647,7 +5391,7 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A subtree count needs the children’s counts first; the others flow from the root downward.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'children = [[1, 2, 3], [], [4], [], []]',
@@ -5662,19 +5406,12 @@ export const knowledgePoints: KnowledgePointModule = {
             'fill(0)',
             'print(sizes)',
           ),
-          [
-            '[4, 1, 2, 1, 1]',
-            '[5, 0, 1, 0, 0]',
-            '[5, 1, 2, 1, 1]',
-            '[1, 1, 2, 1, 1]',
-          ],
-          2,
+          '[5, 1, 2, 1, 1]',
           'Vertex 2 owns itself and 4; the root adds 1 + 1 + 2 + 1 = 5.',
         ),
-        choose(
+        typeNumber(
           'Root 0 has children 1 and 2. Vertex 1 has 4 descendants, and vertex 2 is a leaf. What is the size of vertex 0’s subtree?',
-          ['6', '5', '8', '7'],
-          3,
+          7,
           'Vertex 1’s subtree has 5 vertices, vertex 2’s has 1, and the root adds itself: 7.',
         ),
       ],
@@ -5695,11 +5432,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Child 2 was pushed last, so its subtree finishes first. The root’s completion event was pushed before every child event, so it is popped last.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(eventSizes('[[1], [2], []]'), 'print(sizes)'),
-          ['[1, 2, 3]', '[3, 2, 1]', '[3, 1, 1]', '[1, 1, 1]'],
-          1,
+          '[3, 2, 1]',
           'In the chain 0 → 1 → 2, vertex 2 finishes first with 1, then 1 with 2, then the root with 3.',
         ),
         choose(
@@ -5802,13 +5538,12 @@ export const knowledgePoints: KnowledgePointModule = {
           'Four vertices give four lists before any edge exists; vertex 3’s list is simply empty.',
       },
       questions: [
-        choose(
+        typeNumber(
           'A graph has vertices 0 through 6 and only two edges. How many neighbor lists does its adjacency list contain?',
-          ['2', '4', '6', '7'],
-          3,
+          7,
           'There is one list per vertex, and 0 through 6 is seven vertices, whatever the edges are.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'graph = [[] for _ in range(3)]',
@@ -5816,13 +5551,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'print(graph)',
             'print(len(graph[0]), len(graph[1]))',
           ),
-          [
-            '[[], [2], []]\n0 1',
-            '[[2]]\n1 1',
-            '[[], [2], []]\n1 1',
-            '[[2], [], []]\n0 1',
-          ],
-          0,
+          '[[], [2], []]\n0 1',
           'Only vertex 1’s list receives the neighbor; the other lists stay empty but present.',
         ),
         choose(
@@ -5836,7 +5565,7 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Every vertex keeps its own index; having no neighbors just means an empty list.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'graph = [[] for _ in range(4)]',
@@ -5845,8 +5574,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'graph[2].append(0)',
             'print([len(neighbors) for neighbors in graph])',
           ),
-          ['[2, 1]', '[2, 0, 1, 0]', '[1, 1, 1]', '[2, 0, 1]'],
-          1,
+          '[2, 0, 1, 0]',
           'There is one length per vertex, including the empty lists of vertices 1 and 3.',
         ),
       ],
@@ -5871,11 +5599,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'All three entries of shared are one list, so the single append shows up three times.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines('graph = [[]] * 2', 'graph[1].append(0)', 'print(graph)'),
-          ['[[], [0]]', '[[0], [0]]', '[[0], []]', '[[], []]'],
-          1,
+          '[[0], [0]]',
           'Both entries are the same list, so appending through graph[1] changes graph[0] too.',
         ),
         choose(
@@ -5884,7 +5611,7 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The comprehension creates a new list on every iteration; [] * n is just an empty list.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'graph = [[] for _ in range(3)]',
@@ -5892,14 +5619,12 @@ export const knowledgePoints: KnowledgePointModule = {
             'graph[2].append(0)',
             'print(graph[0], graph[2])',
           ),
-          ['[1, 0] [1, 0]', '[] [0, 1]', '[1] [0]', '[] [1, 0]'],
-          3,
+          '[] [1, 0]',
           'The lists are independent, so only vertex 2 changes, keeping its neighbors in append order.',
         ),
-        choose(
+        typeNumber(
           'After graph = [[]] * 4 and graph[0].append(3), how many vertices appear to have neighbor 3?',
-          ['4', '1', '0', '3'],
-          0,
+          4,
           'All four indices name one shared list, so every vertex appears to have neighbor 3.',
         ),
       ],
@@ -5924,7 +5649,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The repeated edge 0 → 1 is stored twice, and 2 → 0 adds 0 only to vertex 2’s list.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'graph = [[] for _ in range(3)]',
@@ -5932,13 +5657,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    graph[u].append(v)',
             'print(graph)',
           ),
-          [
-            '[[1], [2, 0], [1]]',
-            '[[], [2, 0], [1]]',
-            '[[], [0, 2], [1]]',
-            '[[1], [0, 2], [1]]',
-          ],
-          1,
+          '[[], [2, 0], [1]]',
           'Each edge adds only its destination to its source’s list, in input order; nothing is added to vertex 0.',
         ),
         choose(
@@ -5963,7 +5682,7 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A directed edge is one-way; reaching 0 from 1 would need a separate edge 1 → 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'graph = [[] for _ in range(2)]',
@@ -5971,8 +5690,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    graph[u].append(v)',
             'print(graph, len(graph[1]))',
           ),
-          ['[[1], [1, 1]] 2', '[[1], []] 0', '[[], [1, 0]] 2', '[[1], [1]] 1'],
-          3,
+          '[[1], [1]] 1',
           'The self-loop 1 → 1 adds 1 once to graph[1]; 0 → 1 adds 1 to graph[0].',
         ),
       ],
@@ -5996,7 +5714,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The append goes into the copy of vertex 1’s list, so original is unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version copies only the outer list. What does it print?',
           lines(
             'def add_directed(graph, u, v):',
@@ -6008,11 +5726,10 @@ export const knowledgePoints: KnowledgePointModule = {
             'add_directed(original, 0, 1)',
             'print(original)',
           ),
-          ['[[], []]', '[[1], []]', '[[1], [1]]', '[[], [1]]'],
-          1,
+          '[[1], []]',
           'result[0] is the same inner list as original[0], so the append changes the caller’s graph.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             addDirected,
@@ -6021,13 +5738,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'b = add_directed(original, 2, 1)',
             'print(a, b)',
           ),
-          [
-            '[[2, 2], [], []] [[2, 2], [], [1]]',
-            '[[2], [], []] [[2], [], [1]]',
-            '[[2, 2], [], []] [[2], [], [1]]',
-            '[[2], [], []] [[2], [], []]',
-          ],
-          2,
+          '[[2, 2], [], []] [[2], [], [1]]',
           'Each call copies the unchanged original, so a keeps the parallel edge and b does not see it.',
         ),
         choose(
@@ -6068,22 +5779,15 @@ export const knowledgePoints: KnowledgePointModule = {
           'Vertex 1 touches both edges, so its degree is 2; vertex 3 touches none.',
       },
       questions: [
-        choose(
+        typeNumber(
           'How many entries does one undirected edge between different vertices add to the adjacency lists?',
-          ['1', '2', '0', 'n'],
-          1,
+          2,
           'One entry at each endpoint.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(undirectedBuild(3, '[(2, 0), (0, 1)]'), 'print(graph)'),
-          [
-            '[[2, 1], [0], [0]]',
-            '[[1], [], [0]]',
-            '[[2, 1], [], [0]]',
-            '[[1, 2], [0], [0]]',
-          ],
-          0,
+          '[[2, 1], [0], [0]]',
           'Vertex 0 gains 2 and then 1, in edge order; vertices 1 and 2 each gain 0.',
         ),
         predictOutput(
@@ -6096,10 +5800,9 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Vertex 0 is an endpoint of all three edges, and each other vertex of one.',
         ),
-        choose(
+        typeNumber(
           'An undirected graph has 5 edges between distinct vertices. What is the total length of all neighbor lists?',
-          ['5', '25', '10', '4'],
-          2,
+          10,
           'Each edge contributes two entries, one per endpoint.',
         ),
       ],
@@ -6121,27 +5824,24 @@ export const knowledgePoints: KnowledgePointModule = {
           'The self-loop puts both of its ends in vertex 0’s list. The repeated edge adds a second pair beside the first.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(addUndirected, 'print(add_undirected([[], []], 1, 1))'),
-          ['[[], [1]]', '[[1], [1]]', '[[], [1, 1]]', '[[], []]'],
-          2,
+          '[[], [1, 1]]',
           'Both appends target vertex 1’s list, so 1 appears there twice.',
         ),
-        choose(
+        typeNumber(
           'An undirected graph has edges {0, 1}, {0, 1} and {2, 2}. What is the total length of all neighbor lists?',
-          ['3', '4', '5', '6'],
-          3,
+          6,
           'Three edges, each counted with two ends, give 6 entries.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             undirectedBuild(2, '[(0, 1), (1, 0)]'),
             'print(len(graph[0]), len(graph[1]))',
           ),
-          ['1 1', '2 2', '2 0', '4 4'],
-          1,
+          '2 2',
           '(1, 0) is the same undirected edge again, so it adds a second pair rather than being merged.',
         ),
         choose(
@@ -6177,7 +5877,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The same edges give symmetric lists when undirected and one-way lists when directed; isolated vertex 3 exists in both.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             makeNeighbors,
@@ -6185,13 +5885,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'print(make_neighbors(3, edges, True))',
             'print(make_neighbors(3, edges, False))',
           ),
-          [
-            '[[], [], [0, 1]]\n[[2], [2], [0, 1]]',
-            '[[2], [2], [0, 1]]\n[[], [], [0, 1]]',
-            '[[], [], [0, 1]]\n[[2], [2], []]',
-            '[[2], [2], []]\n[[2], [2], [0, 1]]',
-          ],
-          0,
+          '[[], [], [0, 1]]\n[[2], [2], [0, 1]]',
           'Directed, only vertex 2 has outgoing entries. Undirected, 0 and 1 also list 2.',
         ),
         choose(
@@ -6205,15 +5899,14 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'n says the graph has five vertices; three of them are isolated but still exist.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             makeNeighbors,
             'graph = make_neighbors(6, [(1, 2)], False)',
             'print(len(graph), graph[5])',
           ),
-          ['2 []', '6 []', '3 None', '6 [5]'],
-          1,
+          '6 []',
           'Six lists are allocated from n, and vertex 5 touches no edge, so its list is empty.',
         ),
         choose(
@@ -6244,15 +5937,14 @@ export const knowledgePoints: KnowledgePointModule = {
           'Directed, vertex 1 has no outgoing edges and the self-loop counts once. Undirected, each copy of {0, 1} reaches 1, and the self-loop counts twice.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             makeNeighbors,
             'graph = make_neighbors(3, [(0, 2), (1, 2), (2, 2)], False)',
             'print([len(x) for x in graph])',
           ),
-          ['[1, 1, 3]', '[1, 1, 4]', '[1, 1, 1]', '[1, 1, 2]'],
-          1,
+          '[1, 1, 4]',
           'Vertex 2 is an end of both ordinary edges and both ends of its self-loop: 4 entries.',
         ),
         choose(
@@ -6261,7 +5953,7 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Every edge, including a self-loop, contributes two entries.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             makeNeighbors,
@@ -6270,8 +5962,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'undirected = make_neighbors(3, edges, False)',
             'print(sum([len(x) for x in directed]), sum([len(x) for x in undirected]))',
           ),
-          ['3 3', '6 3', '6 6', '3 6'],
-          3,
+          '3 6',
           'Three directed edges give 3 entries; as undirected edges they give twice that.',
         ),
         choose(
@@ -6310,7 +6001,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both appends to bad go into its one shared list, which every vertex then shows.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'bad = [[]] * 2',
@@ -6318,8 +6009,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    bad[u].append(v)',
             'print(bad, len(bad[1]))',
           ),
-          ['[[1], []] 0', '[[1], [1]] 1', '[[1], [1]] 2', '[[], [1]] 1'],
-          1,
+          '[[1], [1]] 1',
           'The directed edge is appended once, but both indices show the same list.',
         ),
         choose(
@@ -6339,7 +6029,7 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Allocating the lists is O(n), and each edge costs a constant number of appends.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'good = [[] for _ in range(5)]',
@@ -6348,8 +6038,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    good[v].append(0)',
             'print(len(good[0]), len(good[4]))',
           ),
-          ['4 4', '1 1', '4 1', '5 1'],
-          2,
+          '4 1',
           'Vertex 0 is joined to four vertices; vertex 4 only to 0.',
         ),
       ],
@@ -6373,11 +6062,10 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'The second 1 is already in seen, so it adds no work.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(discoverLoop('{0}', '[0]', '[3, 3, 0, 4]'), 'print(pending)'),
-          ['[0, 3, 3, 0, 4]', '[0, 3, 4]', '[3, 4]', '[0, 3, 3, 4]'],
-          1,
+          '[0, 3, 4]',
           'The repeated 3 and the start 0 are already in seen, so only 3 and 4 are added once.',
         ),
         choose(
@@ -6402,7 +6090,7 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A seen vertex has already been scheduled once, which is all it needs.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'seen = set()',
@@ -6415,8 +6103,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '        pushes += 1',
             'print(pushes, len(seen))',
           ),
-          ['5 3', '3 5', '2 3', '3 3'],
-          3,
+          '3 3',
           'Only the first occurrence of each of 5, 2 and 7 is pushed.',
         ),
       ],
@@ -6434,7 +6121,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Vertex 1 is still waiting when 2 is processed, and it is not in seen yet, so it is pushed a second time.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version marks on push. What does it print?',
           lines(
             'graph = [[1, 2], [], [1]]',
@@ -6450,14 +6137,12 @@ export const knowledgePoints: KnowledgePointModule = {
             '            pushed.append(neighbor)',
             'print(pushed)',
           ),
-          ['[1, 2, 1]', '[1, 2]', '[2, 1]', '[1]'],
-          1,
+          '[1, 2]',
           '1 is marked when it is first pushed, so the edge from 2 finds it in seen.',
         ),
-        choose(
+        typeNumber(
           'Vertices 4, 5 and 6 all have an edge to 9, and seen is updated only at pop time. If 4, 5 and 6 are expanded before 9 is popped, how many copies of 9 can be pending?',
-          ['1', '0', '3', '9'],
-          2,
+          3,
           'Each of the three expansions sees 9 as unseen and pushes it.',
         ),
         predictOutput(
@@ -6499,26 +6184,19 @@ export const knowledgePoints: KnowledgePointModule = {
           '1 was pushed last, so it is taken first. An empty stack has no next vertex.',
       },
       questions: [
-        choose(
+        typeNumber(
           'Pending is [0, 4, 2], oldest first. Which vertex does a depth-first stack take next?',
-          ['0', '4', '2', 'The smallest label'],
           2,
           'A stack takes the newest entry, which is at the right end.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             takeDepthFirst,
             'print(take_depth_first([5]))',
             'print(take_depth_first([7, 0]))',
           ),
-          [
-            '(5, [])\n(0, [7])',
-            '(5, [5])\n(0, [7])',
-            '(None, [])\n(7, [0])',
-            '(5, [])\n(7, [0])',
-          ],
-          0,
+          '(5, [])\n(0, [7])',
           'The newest entry is removed each time; vertex 0 is a real vertex, not an empty marker.',
         ),
         predictOutput(
@@ -6614,15 +6292,14 @@ export const knowledgePoints: KnowledgePointModule = {
           '1 was already seen, and the second 4 is skipped because 4 was marked at its first occurrence.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             unseenNeighbors,
             'print(unseen_neighbors([2, 2], set()))',
             'print(unseen_neighbors([3], {3}))',
           ),
-          ['[2, 2]\n[]', '[2]\n[3]', '[2]\n[]', '[]\n[]'],
-          2,
+          '[2]\n[]',
           'The parallel edge yields 2 once; 3 is already discovered, so it yields nothing.',
         ),
         choose(
@@ -6636,14 +6313,13 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A vertex is marked before it is expanded, so its own self-loop finds it already seen.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             unseenNeighbors,
             'print(unseen_neighbors([5, 0, 5, 0, 6], {6}))',
           ),
-          ['[5, 0, 6]', '[0, 5]', '[5, 5, 0, 0]', '[5, 0]'],
-          3,
+          '[5, 0]',
           'First occurrences of 5 and 0 are kept in order; repeats and the seen 6 are skipped.',
         ),
         choose(
@@ -6676,15 +6352,14 @@ export const knowledgePoints: KnowledgePointModule = {
           'When 2 is expanded, its edge to 0 is ignored, the stack empties, and the search stops.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'expanded = []',
             dfsLoop('[[1, 0], [0, 1]]', 0, 'expanded.append(vertex)'),
             'print(expanded)',
           ),
-          ['[0, 1]', '[0, 1, 0, 1]', '[0]', '[0, 0, 1, 1]'],
-          0,
+          '[0, 1]',
           'The self-loops and the edge back to 0 all point to seen vertices, so each vertex is expanded once.',
         ),
         predictOutput(
@@ -6740,21 +6415,19 @@ export const knowledgePoints: KnowledgePointModule = {
           'The cycle 0 → 1 → 2 → 0 ends because 0 is already seen. Vertex 4 points into 3, but nothing reachable points to 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(dfsLoop('[[1], [], [1]]'), 'print(len(seen), 2 in seen)'),
-          ['3 True', '2 False', '2 True', '1 False'],
-          1,
+          '2 False',
           'From 0 only 1 is reachable; the edge 2 → 1 cannot be followed backward.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             dfsLoop('[[2], [0], [1], [0]]', 1),
             'print(len(seen), 3 in seen)',
           ),
-          ['4 True', '3 True', '2 False', '3 False'],
-          3,
+          '3 False',
           'From 1 the search reaches 0 and 2; vertex 3 only has an edge out, so nothing leads to it.',
         ),
         choose(
@@ -6798,26 +6471,24 @@ export const knowledgePoints: KnowledgePointModule = {
           '2 was pushed after 1, so 2 and its branch through 4 finish before 1 is popped.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'order = []',
             dfsLoop('[[1, 2, 3], [], [], []]', 0, 'order.append(vertex)'),
             'print(order)',
           ),
-          ['[0, 1, 2, 3]', '[0, 3, 2, 1]', '[3, 2, 1, 0]', '[0, 1, 3, 2]'],
-          1,
+          '[0, 3, 2, 1]',
           'All three neighbors are pushed in order, so they come off newest first: 3, 2, 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'order = []',
             dfsLoop('[[2, 1], [3], [], [0]]', 0, 'order.append(vertex)'),
             'print(order)',
           ),
-          ['[0, 2, 1, 3]', '[0, 1, 2, 3]', '[0, 1, 3, 2]', '[0, 2, 3, 1]'],
-          2,
+          '[0, 1, 3, 2]',
           '1 is pushed last, so its branch through 3 runs first; 3’s edge to 0 is ignored, then 2 is popped.',
         ),
         choose(
@@ -6831,20 +6502,14 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The stack returns the most recently pushed entry.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'order = []',
             dfsLoop('[[1, 4], [2], [], [], [3]]', 0, 'order.append(vertex)'),
             'print(order)',
           ),
-          [
-            '[0, 4, 3, 1, 2]',
-            '[0, 1, 2, 4, 3]',
-            '[0, 1, 4, 2, 3]',
-            '[0, 4, 1, 3, 2]',
-          ],
-          0,
+          '[0, 4, 3, 1, 2]',
           '4 is on top, and its branch to 3 finishes before 1 and its child 2 are expanded.',
         ),
       ],
@@ -6872,15 +6537,14 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Each reached vertex is handled once and each of its entries scanned once.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'scanned = 0',
             dfsLoop('[[1, 2], [2], [1], []]', 0, '', 'scanned += 1'),
             'print(len(seen), scanned)',
           ),
-          ['3 4', '4 4', '3 3', '4 3'],
-          0,
+          '3 4',
           'Vertices 0, 1 and 2 are reached, and their four entries are each scanned once; 3 is never reached.',
         ),
         choose(
@@ -6929,13 +6593,12 @@ export const knowledgePoints: KnowledgePointModule = {
           'pop(0) takes the oldest entry from the left, and the new 5 waits at the right behind 3 and 1.',
       },
       questions: [
-        choose(
+        typeNumber(
           'Pending is [6, 2, 9], oldest first. Which vertex does a queue take next?',
-          ['6', '2', '9', 'The smallest, 2'],
-          0,
+          6,
           'A queue takes the oldest entry, at the left.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'pending = [4]',
@@ -6946,8 +6609,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'order.append(pending.pop(0))',
             'print(order)',
           ),
-          ['[1, 7, 4]', '[4, 7, 1]', '[4, 7, 8]', '[1, 8, 7]'],
-          1,
+          '[4, 7, 1]',
           'Entries leave in arrival order: 4, 7, and then 1, which arrived before 8.',
         ),
         choose(
@@ -6961,11 +6623,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'First in, first out.',
         ),
-        predictOutput(
+        typeOutput(
           'A queue takes pending[0], and a stack would take pending[-1]. What is printed?',
           lines('pending = [5, 8, 2]', 'print(pending[0], pending[-1])'),
-          ['2 5', '5 8', '8 2', '5 2'],
-          3,
+          '5 2',
           'The queue’s next vertex is the oldest, 5; a stack’s would be the newest, 2.',
         ),
       ],
@@ -6987,7 +6648,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'popleft removes the oldest vertex 0. The empty queue is detected before popleft is called.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'from collections import deque',
@@ -6995,8 +6656,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'queue.append(4)',
             'print(queue.popleft(), list(queue))',
           ),
-          ['4 [2, 9]', '2 [9, 4]', '9 [2, 4]', '2 [4, 9]'],
-          1,
+          '2 [9, 4]',
           'popleft removes the oldest entry 2; the rest stay in arrival order.',
         ),
         choose(
@@ -7016,11 +6676,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Each pop(0) moves every remaining entry, while popleft takes constant time.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(takeBreadthFirst, 'print(take_breadth_first([7]))'),
-          ['(7, [7])', '(None, [])', '(7, None)', '(7, [])'],
-          3,
+          '(7, [])',
           'The only vertex is removed, leaving an empty remainder.',
         ),
       ],
@@ -7045,15 +6704,14 @@ export const knowledgePoints: KnowledgePointModule = {
           '0 is already seen, and the second 5 is skipped because the first 5 was marked when it was queued.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             queueNeighbors,
             'pending, seen = queue_neighbors([], {0}, [1, 1, 1])',
             'print(pending)',
           ),
-          ['[1, 1, 1]', '[1]', '[]', '[0, 1]'],
-          1,
+          '[1]',
           'The first 1 is queued and marked; the parallel copies find it already seen.',
         ),
         choose(
@@ -7118,15 +6776,14 @@ export const knowledgePoints: KnowledgePointModule = {
           '7 and 8 keep their places at the front; the new 9 and 10 join behind them.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             queueNeighbors,
             'pending, seen = queue_neighbors([3], {0, 3}, [1, 2])',
             'print(pending)',
           ),
-          ['[1, 2, 3]', '[3, 1, 2]', '[1, 2]', '[3, 2, 1]'],
-          1,
+          '[3, 1, 2]',
           'The waiting 3 stays first, and the new neighbors follow in their supplied order.',
         ),
         choose(
@@ -7178,20 +6835,18 @@ export const knowledgePoints: KnowledgePointModule = {
           'The source has distance 0, so its newly found neighbors 1 and 3 get 1; vertex 2 stays undiscovered.',
       },
       questions: [
-        choose(
+        typeNumber(
           'A vertex at distance 4 discovers a neighbor for the first time. What distance does the neighbor get?',
-          ['4', '8', '5', '3'],
-          2,
+          5,
           'One more edge than the vertex it was found from: 4 + 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             assignNextLayer,
             'print(assign_next_layer([0, 1, -1, -1], 1, [2, 0, 3]))',
           ),
-          ['[0, 1, 2, 2]', '[2, 1, 2, 2]', '[0, 1, 2, 3]', '[0, 1, 1, 1]'],
-          0,
+          '[0, 1, 2, 2]',
           '2 and 3 are new and get 1 + 1; the source 0 is already assigned and keeps 0.',
         ),
         choose(
@@ -7205,14 +6860,13 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Real distances are never negative, so −1 safely marks vertices not yet reached.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             assignNextLayer,
             'print(assign_next_layer([-1, 0, -1], 1, [1, 2, 2]))',
           ),
-          ['[-1, 1, 1]', '[-1, 0, 2]', '[1, 0, 1]', '[-1, 0, 1]'],
-          3,
+          '[-1, 0, 1]',
           'The self-loop finds vertex 1 already at 0; 2 gets 1 the first time, and the repeat is skipped.',
         ),
       ],
@@ -7240,14 +6894,13 @@ export const knowledgePoints: KnowledgePointModule = {
           'Vertex 3 already has its shortest distance 1. The careless version replaces it with 3, the length of a longer route.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             assignNextLayer,
             'print(assign_next_layer([0, 1, 1, -1], 2, [1, 3]))',
           ),
-          ['[0, 2, 1, 2]', '[0, 1, 1, 2]', '[0, 1, 1, -1]', '[0, 2, 1, -1]'],
-          1,
+          '[0, 1, 1, 2]',
           'Vertex 1 keeps its distance 1; only the undiscovered 3 is assigned 1 + 1.',
         ),
         choose(
@@ -7261,7 +6914,7 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The route through a distance-3 vertex is longer than the one already found.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'def careless(distances, vertex, neighbors):',
@@ -7272,8 +6925,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '',
             'print(careless([0, 1, -1], 1, [0, 2]))',
           ),
-          ['[0, 1, 2]', '[0, 2, 2]', '[2, 1, 2]', '[1, 1, 2]'],
-          2,
+          '[2, 1, 2]',
           'Without the check, the edge back to the source overwrites its distance 0 with 2.',
         ),
         choose(
@@ -7307,23 +6959,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '1 and 3 are one edge away, 2 is two, and 4 is three. Vertex 5 has an edge to 0 but none leading to it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(bfsDistances('[[1], [2], [0], [1]]'), 'print(distance)'),
-          ['[0, 1, 2, 1]', '[0, 1, 2, -1]', '[0, 1, 2, 3]', '[0, 1, 1, -1]'],
-          1,
+          '[0, 1, 2, -1]',
           'The cycle 0 → 1 → 2 → 0 gives distances 0, 1, 2; vertex 3 only has an edge out.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(bfsDistances('[[1, 2], [3], [3], [4], []]'), 'print(distance)'),
-          [
-            '[0, 1, 1, 2, 3]',
-            '[0, 1, 2, 3, 4]',
-            '[0, 1, 1, 3, 4]',
-            '[0, 1, 1, 2, 2]',
-          ],
-          0,
+          '[0, 1, 1, 2, 3]',
           '3 is first reached from 1 at distance 2, and 4 from 3 at distance 3.',
         ),
         choose(
@@ -7337,11 +6982,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'The fewest-edge guarantee assumes unit costs; unequal weights need a different algorithm.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(bfsDistances('[[1], [2], [], [0]]', 3), 'print(distance)'),
-          ['[0, 1, 2, -1]', '[3, 2, 1, 0]', '[1, 2, 3, -1]', '[1, 2, 3, 0]'],
-          3,
+          '[1, 2, 3, 0]',
           'The source is 3, at distance 0; then 0, 1 and 2 follow at 1, 2 and 3.',
         ),
       ],
@@ -7383,10 +7027,9 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           '2 was queued before 1, so it leaves first; 3 is discovered from 2 at distance 2 and leaves after 1.',
         ),
-        choose(
+        typeNumber(
           'The queue currently holds vertices with distances [3, 3, 4], front first. The front vertex is dequeued and discovers a new vertex. What distance does that vertex get?',
-          ['3', '5', '4', '2'],
-          2,
+          4,
           'The next vertex expanded has distance 3, so anything it discovers gets 4.',
         ),
         choose(
@@ -7443,15 +7086,14 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Each vertex is queued at most once, and each list entry is scanned once.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'scanned = 0',
             bfsDistances('[[1, 2, 2], [2], [1]]', 0, '', 'scanned += 1'),
             'print(len([d for d in distance if d >= 0]), scanned)',
           ),
-          ['3 5', '4 5', '5 5', '3 3'],
-          0,
+          '3 5',
           'Three vertices are reached, and their five entries are each scanned once.',
         ),
         choose(
@@ -7497,11 +7139,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Vertex 2 is the destination of two edges, from 0 and from 1. Vertex 3 has an edge out but none in.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(incomingCounts, 'print(incoming_counts([[1], [2], [0]]))'),
-          ['[1, 1, 1]', '[0, 1, 1]', '[1, 1, 0]', '[3, 0, 0]'],
-          0,
+          '[1, 1, 1]',
           'In the cycle 0 → 1 → 2 → 0, every vertex is the destination of exactly one edge.',
         ),
         choose(
@@ -7515,20 +7156,14 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'graph[4] lists edges leaving 4; its indegree depends on the other vertices’ lists.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             incomingCounts,
             'graph = [[3], [3], [3], []]',
             'print(incoming_counts(graph), [len(x) for x in graph])',
           ),
-          [
-            '[1, 1, 1, 0] [0, 0, 0, 3]',
-            '[0, 0, 0, 1] [1, 1, 1, 0]',
-            '[0, 0, 0, 3] [1, 1, 1, 0]',
-            '[0, 0, 0, 3] [1, 1, 1, 3]',
-          ],
-          2,
+          '[0, 0, 0, 3] [1, 1, 1, 0]',
           'Three edges enter 3, while each of 0, 1 and 2 has one edge out.',
         ),
         choose(
@@ -7561,30 +7196,26 @@ export const knowledgePoints: KnowledgePointModule = {
           'The two parallel edges from 0 and the self-loop at 1 all enter vertex 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(incomingCounts, 'print(incoming_counts([[2, 2], [2], []]))'),
-          ['[0, 0, 2]', '[0, 0, 3]', '[0, 0, 1]', '[2, 1, 0]'],
-          1,
+          '[0, 0, 3]',
           'Both parallel edges from 0 count, plus the edge from 1.',
         ),
-        choose(
+        typeNumber(
           'A graph has 7 directed edges, some parallel and one a self-loop. What do all the indegrees sum to?',
-          ['7', '6', '14', 'The number of vertices'],
-          0,
+          7,
           'Every edge, parallel or self-loop, adds exactly 1 at its destination.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(incomingCounts, 'print(incoming_counts([[], [1], [0]]))'),
-          ['[0, 1, 1]', '[1, 0, 0]', '[1, 1, 0]', '[0, 0, 0]'],
-          2,
+          '[1, 1, 0]',
           'The self-loop gives vertex 1 a count of 1, and the edge 2 → 0 gives vertex 0 a count of 1.',
         ),
-        choose(
+        typeNumber(
           'Vertex 5 has a self-loop 5 → 5 and no other incoming edges. What is its indegree?',
-          ['0, since a vertex cannot wait for itself', '2', 'Undefined', '1'],
-          3,
+          1,
           'The self-loop is one edge entering 5.',
         ),
       ],
@@ -7604,11 +7235,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only vertices 1, 2 and 4 have no remaining prerequisites.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(readyVertices, 'print(ready_vertices([3, 1, 0, 0]))'),
-          ['[0, 1]', '[2, 3]', '[2]', '[3, 2]'],
-          1,
+          '[2, 3]',
           'Vertices 2 and 3 have count 0, and the comprehension lists them in index order.',
         ),
         choose(
@@ -7622,11 +7252,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Nothing will ever release a zero-indegree vertex later, so all of them must start ready.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(readyVertices, 'print(ready_vertices([0, 0, 0]))'),
-          ['[0, 1, 2]', '[0]', '[]', '[0, 0, 0]'],
-          0,
+          '[0, 1, 2]',
           'With no edges, every vertex is ready; the list holds vertex numbers, not counts.',
         ),
         predictOutput(
@@ -7670,15 +7299,14 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Without a cycle, some remaining vertex would have no remaining prerequisite.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             incomingCounts,
             readyVertices,
             'print(ready_vertices(incoming_counts([[1], [0], [0]])))',
           ),
-          ['[]', '[0, 1]', '[2]', '[0]'],
-          2,
+          '[2]',
           '0 and 1 wait for each other in a cycle; only 2, which nothing points to, is ready.',
         ),
         choose(
@@ -7721,28 +7349,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'One prerequisite is removed, and one still remains.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(releaseEdges, 'print(release_edges([0, 1, 1], [1, 2]))'),
-          [
-            '([0, 0, 0], [1, 2])',
-            '([0, 1, 1], [])',
-            '([0, 0, 0], [])',
-            '([0, 0, 0], [2, 1])',
-          ],
-          0,
+          '([0, 0, 0], [1, 2])',
           'Both destinations drop from 1 to 0 and become ready in edge order.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(releaseEdges, 'print(release_edges([0, 3, 0], [1, 1]))'),
-          [
-            '([0, 2, 0], [])',
-            '([0, 0, 0], [1])',
-            '([0, 1, 0], [])',
-            '([0, 1, 0], [1])',
-          ],
-          2,
+          '([0, 1, 0], [])',
           'The two parallel edges each subtract 1, leaving 1 still blocked at count 1.',
         ),
         choose(
@@ -7771,19 +7387,13 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first edge to 1 leaves it at 1. The edge to 2 releases 2, and the second edge to 1 releases 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(releaseEdges, 'print(release_edges([0, 2, 2], [2, 1, 2]))'),
-          [
-            '([0, 1, 0], [2])',
-            '([0, 1, 0], [2, 1])',
-            '([0, 0, 0], [2, 1])',
-            '([0, 1, 1], [])',
-          ],
-          0,
+          '([0, 1, 0], [2])',
           '2 receives two decrements and reaches 0; 1 receives one and stays blocked at 1.',
         ),
-        predictOutput(
+        typeOutput(
           'This version appends on every decrement. What does it print?',
           lines(
             'def careless(indegrees, outgoing):',
@@ -7796,13 +7406,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '',
             'print(careless([0, 2], [1, 1]))',
           ),
-          [
-            '([0, 0], [1])',
-            '([0, 1], [1])',
-            '([0, 0], [1, 1])',
-            '([0, 0], [])',
-          ],
-          2,
+          '([0, 0], [1, 1])',
           'Vertex 1 is appended after both decrements, so it would be scheduled twice, the first time too early.',
         ),
         choose(
@@ -7844,11 +7448,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '0 and 3 start ready. Vertex 1 waits for both, so it is released by 3; then 4 and 2 follow.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           kahn(4, '[(2, 0), (2, 1), (1, 0), (3, 2)]'),
-          ['[3, 2, 1, 0]', '[0, 1, 2, 3]', '[3, 2, 0, 1]', '[2, 3, 1, 0]'],
-          0,
+          '[3, 2, 1, 0]',
           'Only 3 starts ready. 2 follows, then 1, and 0 must wait for both 2 and 1.',
         ),
         choose(
@@ -7862,11 +7465,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A prerequisite must be scheduled before what depends on it.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           kahn(3, '[]'),
-          ['[]', '[0, 1, 2]', '[2, 1, 0]', 'None'],
-          1,
+          '[0, 1, 2]',
           'With no edges every vertex starts ready, and the queue releases them in index order.',
         ),
         choose(
@@ -7890,23 +7492,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both chain starts, 0 and 2, are queued at once, so the two chains interleave.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version seeds the queue with vertex 0 only. What does it print?',
           kahn(4, '[(0, 1), (2, 3)]', 'print(order)', 'deque([0])'),
-          ['[0, 1, 2, 3]', '[0, 2, 1, 3]', '[0, 1]', '[0]'],
-          2,
+          '[0, 1]',
           'Vertex 2 is never queued, so the second chain is never processed.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           kahn(5, '[(4, 0), (1, 3)]'),
-          [
-            '[1, 2, 4, 3, 0]',
-            '[4, 1, 0, 3, 2]',
-            '[1, 2, 4, 0, 3]',
-            '[0, 1, 2, 3, 4]',
-          ],
-          0,
+          '[1, 2, 4, 3, 0]',
           '1, 2 and 4 start ready. 1 releases 3, then 4 releases 0, so 3 leaves before 0.',
         ),
         choose(
@@ -7920,10 +7515,9 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A vertex enters the queue later only when an edge into it is released; 2 has no such edge.',
         ),
-        choose(
+        typeNumber(
           'With only the edges 0 → 2 and 1 → 2, how many valid topological orders exist?',
-          ['1', '3', '0', '2'],
-          3,
+          2,
           '[0, 1, 2] and [1, 0, 2]; 2 must come last, but 0 and 1 may go in either order.',
         ),
       ],
@@ -7941,23 +7535,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'After 0, vertex 1 still waits for 2 and 2 waits for 1, so only one of four vertices is processed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           kahn(3, '[(0, 1), (1, 2), (2, 0)]', completeOrNone),
-          ['[]\nNone', '[0, 1, 2]\n[0, 1, 2]', '[0]\nNone', '[]\n[]'],
-          0,
+          '[]\nNone',
           'Every vertex lies on the cycle, so none is ever ready.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           kahn(4, '[(0, 1), (2, 2), (1, 3)]', completeOrNone),
-          [
-            '[0, 1, 2, 3]\n[0, 1, 2, 3]',
-            '[0, 1, 3]\n[0, 1, 3]',
-            '[0, 1, 3]\nNone',
-            '[0, 2, 1, 3]\nNone',
-          ],
-          2,
+          '[0, 1, 3]\nNone',
           'The self-loop keeps 2 blocked forever, so three of four vertices are processed and the result is None.',
         ),
         choose(
@@ -7999,20 +7586,18 @@ export const knowledgePoints: KnowledgePointModule = {
           'The candidate 3 + 4 = 7 beats 12, but it does not beat 5.',
       },
       questions: [
-        choose(
+        typeNumber(
           'u has distance 9, and the edge u → v has weight 3. What candidate distance does v get?',
-          ['3', '27', '12', '6'],
-          2,
+          12,
           'Distances add along a route: 9 + 3 = 12.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(relaxDistance, 'print(relax(10, 4, 6), relax(10, 4, 5))'),
-          ['10 9', '10 10', '9 9', '6 5'],
-          0,
+          '10 9',
           '4 + 6 = 10 ties the current distance and is not kept; 4 + 5 = 9 improves it.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             relaxDistance,
@@ -8021,8 +7606,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    best = relax(best, source_distance, weight)',
             'print(best)',
           ),
-          ['14', '17', '20', '12'],
-          3,
+          '12',
           'The candidates are 14, 17 and 12; each relaxation keeps the smallest seen so far.',
         ),
         choose(
@@ -8056,11 +7640,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'None is replaced by any candidate. A zero-weight edge gives a route as long as its start, which does not beat an equal distance.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(relaxDistance, 'print(relax(None, 2, 2), relax(4, 2, 2))'),
-          ['None 4', '4 4', '4 2', '2 4'],
-          1,
+          '4 4',
           'The first candidate 4 replaces None; the second only ties 4, so 4 is kept.',
         ),
         choose(
@@ -8085,11 +7668,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Zero weights never shorten a route, so the ordering argument still holds.',
         ),
-        predictOutput(
+        typeOutput(
           'A negative weight breaks Dijkstra’s guarantee. What does this program print?',
           lines(relaxDistance, 'print(relax(None, 5, -3), relax(4, 5, -3))'),
-          ['8 4', '2 4', 'None 4', '2 2'],
-          3,
+          '2 2',
           'A route through a vertex at distance 5 ends at 2: with a negative weight, extending a route can shorten it.',
         ),
       ],
@@ -8119,7 +7701,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both proposals for vertex 1 stay in the heap. The current one, (4, 1), comes out first; (9, 1) is stale.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'import heapq',
@@ -8130,8 +7712,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    heapq.heappush(heap, (proposal, 2))',
             'print(len(heap), heap[0])',
           ),
-          ['1 (5, 2)', '3 (5, 2)', '3 (10, 2)', '1 (10, 2)'],
-          1,
+          '3 (5, 2)',
           'Every improvement adds an entry, so three entries for vertex 2 remain, with the smallest at the root.',
         ),
         choose(
@@ -8181,14 +7762,13 @@ export const knowledgePoints: KnowledgePointModule = {
           'Vertex 2’s best is now 7, so the entry claiming 12 is stale.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             isCurrent,
             'print(is_current((3, 0), [3, 8]), is_current((6, 1), [3, 8]))',
           ),
-          ['True True', 'False False', 'True False', 'False True'],
-          2,
+          'True False',
           '(3, 0) matches distance[0]; (6, 1) does not match distance[1] = 8.',
         ),
         choose(
@@ -8255,7 +7835,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Distance 2 is smallest; between the two distance-2 entries, vertex 1 comes before vertex 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             'import heapq',
@@ -8264,8 +7844,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '    heapq.heappush(heap, entry)',
             'print(heapq.heappop(heap))',
           ),
-          ['(4, 2)', '(6, 0)', '(1, 7)', '(1, 0)'],
-          2,
+          '(1, 7)',
           'The heap returns the smallest distance, 1, whatever the vertex number.',
         ),
         choose(
@@ -8321,21 +7900,19 @@ export const knowledgePoints: KnowledgePointModule = {
           '(2, 0) is popped first but stale, so (4, 0) is the answer. A heap holding only stale work gives None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             nextEntry,
             'print(next_entry([(1, 1), (2, 0), (3, 1)], [2, 3]))',
           ),
-          ['(1, 1)', '(2, 0)', '(3, 1)', 'None'],
-          1,
+          '(2, 0)',
           '(1, 1) is stale because distance[1] is 3; the next entry (2, 0) matches.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(nextEntry, 'print(next_entry([(5, 0), (6, 0)], [4, 9]))'),
-          ['(5, 0)', '(6, 0)', '(4, 0)', 'None'],
-          3,
+          'None',
           'Neither entry matches distance[0] = 4, so no usable proposal remains.',
         ),
         choose(
@@ -8386,26 +7963,19 @@ export const knowledgePoints: KnowledgePointModule = {
           'The route 0 → 2 → 1 costs 3 and beats the direct edge of weight 4; vertex 3 is then reached through 1 at cost 4. Vertex 4 is unreachable.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             dijkstra('[[(1, 2), (2, 7)], [(2, 3)], [], []]'),
             'print(distance)',
           ),
-          [
-            '[0, 2, 7, None]',
-            '[0, 2, 5, None]',
-            '[0, 2, 5, 0]',
-            '[0, 2, 3, None]',
-          ],
-          1,
+          '[0, 2, 5, None]',
           '0 → 1 → 2 costs 2 + 3 = 5, which beats the direct edge of weight 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(dijkstra('[[(1, 0)], [(2, 0)], [(0, 0)]]'), 'print(distance)'),
-          ['[0, 0, 0]', '[0, None, None]', '[0, 1, 2]', 'None'],
-          0,
+          '[0, 0, 0]',
           'Zero-weight edges are allowed, and crossing them adds nothing to the distance.',
         ),
         choose(
@@ -8419,11 +7989,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Cycles and unreachable vertices are fine; negative weights are not.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(dijkstra('[[(1, 5), (1, 2)], []]'), 'print(distance)'),
-          ['[0, 5]', '[0, 7]', '[0, 2, 5]', '[0, 2]'],
-          3,
+          '[0, 2]',
           'Both parallel edges are relaxed, and the cheaper one gives distance 2.',
         ),
       ],
@@ -8522,17 +8091,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The zero-weight edge keeps vertex 2 at 4. The second graph is rejected even though its negative edge starts at a vertex the source never reaches.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             shortestCosts,
             'print(shortest_costs(3, [(0, 1, 3), (1, 0, 0), (0, 1, 1), (1, 2, 2)], 0))',
           ),
-          ['[0, 3, 5]', '[0, 1, 3]', '[0, 1, 2]', '[0, 0, 2]'],
-          1,
+          '[0, 1, 3]',
           'The cheaper parallel edge gives 1 its distance 1, and 2 follows at 1 + 2 = 3; the zero-weight edge back to 0 changes nothing.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             shortestCosts,
@@ -8541,13 +8109,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'except ValueError as error:',
             '    print("rejected:", error)',
           ),
-          [
-            '[0, 2, None]',
-            '[0, 2, -1]',
-            'rejected: negative weight',
-            '[0, 2, 0]',
-          ],
-          2,
+          'rejected: negative weight',
           'Weights are checked while the graph is built, before any search, so the unreachable negative self-loop is still rejected.',
         ),
         choose(
@@ -8600,15 +8162,14 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A root is the one vertex in its set that points to itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             findRoot,
             'parent = [1, 1, 1, 2]',
             'print(find_root(parent, 3), find_root(parent, 0))',
           ),
-          ['2 1', '1 0', '1 1', '3 0'],
-          2,
+          '1 1',
           '3 climbs to 2 and then to 1; 0 climbs straight to 1. Vertex 1 points to itself.',
         ),
         predictOutput(
@@ -8622,10 +8183,9 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           '4 and 1 both reach root 0, while 3 reaches root 2.',
         ),
-        choose(
+        typeNumber(
           'parent = [0, 1, 2, 3]. How many sets are there?',
-          ['1', '2', '3', '4'],
-          3,
+          4,
           'Every vertex is its own parent, so each is a root of a one-vertex set.',
         ),
       ],
@@ -8647,11 +8207,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '5 climbs through 4, 3, 2 and 1 to reach 0: five links. The root needs none.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(countHops, 'print(hops([0, 0, 1, 2], 3))'),
-          ['1', '2', '3', '4'],
-          2,
+          '3',
           '3 → 2 → 1 → 0 follows three links.',
         ),
         choose(
@@ -8665,11 +8224,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Python allows only about 1,000 nested calls by default.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(countHops, 'print(hops(list(range(6)), 4))'),
-          ['4', '1', '6', '0'],
-          3,
+          '0',
           'Every vertex in list(range(6)) is its own parent, so 4 is already a root.',
         ),
         choose(
@@ -8700,23 +8258,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '4, 3 and 1 lie on the path to root 2 and now point straight at it. Vertex 0 hangs off 1 but was not on the path, so it still points to 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(compressPath, 'print(compress([0, 0, 1, 2], 3))'),
-          ['[0, 0, 1, 2]', '[0, 0, 0, 0]', '[3, 0, 1, 2]', '[0, 0, 0, 2]'],
-          1,
+          '[0, 0, 0, 0]',
           '3, 2 and 1 are all on the path to root 0, so each now points to 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(compressPath, 'print(compress([0, 0, 1, 2, 2], 3))'),
-          [
-            '[0, 0, 0, 0, 0]',
-            '[0, 0, 1, 0, 2]',
-            '[0, 0, 0, 2, 2]',
-            '[0, 0, 0, 0, 2]',
-          ],
-          3,
+          '[0, 0, 0, 0, 2]',
           'Only 3, 2 and 1 are on the searched path. Vertex 4 hangs off 2 and keeps its parent.',
         ),
         choose(
@@ -8763,7 +8314,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Before compression vertex 4 is four links from the root; afterwards it and every vertex on its path are one link away.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             countHops,
@@ -8771,16 +8322,10 @@ export const knowledgePoints: KnowledgePointModule = {
             'parent = compress([0, 0, 1, 2], 3)',
             'print(hops(parent, 3), parent)',
           ),
-          [
-            '3 [0, 0, 0, 0]',
-            '1 [0, 0, 0, 0]',
-            '1 [0, 0, 1, 2]',
-            '0 [0, 0, 0, 0]',
-          ],
-          1,
+          '1 [0, 0, 0, 0]',
           'Every vertex on the path now points at the root 0, so 3 needs one link.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'def find_halving(parent, vertex):',
@@ -8792,13 +8337,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'parent = [0, 0, 1, 2, 3]',
             'print(find_halving(parent, 4), parent)',
           ),
-          [
-            '0 [0, 0, 0, 0, 0]',
-            '0 [0, 0, 1, 2, 3]',
-            '0 [0, 0, 0, 2, 2]',
-            '2 [0, 0, 0, 2, 2]',
-          ],
-          2,
+          '0 [0, 0, 0, 2, 2]',
           '4 jumps to its grandparent 2, then 2 jumps to its grandparent 0; vertex 3 is skipped and keeps its parent.',
         ),
         choose(
@@ -8835,31 +8374,19 @@ export const knowledgePoints: KnowledgePointModule = {
           'Root 2’s set has size 1 and root 0’s has size 2, so 2 is attached under 0, whose size becomes 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             joinRoots,
             'print(join_roots([0, 1, 1, 1], [1, 3, 1, 1], 0, 1))',
           ),
-          [
-            '([0, 0, 1, 1], [4, 3, 1, 1])',
-            '([1, 1, 1, 1], [1, 4, 1, 1])',
-            '([1, 1, 1, 1], [4, 4, 1, 1])',
-            '([0, 1, 1, 1], [1, 4, 1, 1])',
-          ],
-          1,
+          '([1, 1, 1, 1], [1, 4, 1, 1])',
           'Root 0’s set is smaller (1 against 3), so 0 goes under 1, and size[1] becomes 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(joinRoots, 'print(join_roots([0, 1], [1, 1], 1, 0))'),
-          [
-            '([0, 0], [2, 1])',
-            '([1, 1], [2, 2])',
-            '([1, 1], [1, 2])',
-            '([0, 1], [1, 1])',
-          ],
-          2,
+          '([1, 1], [1, 2])',
           'The sizes tie, so the first root, 1, survives and 0 is attached under it.',
         ),
         choose(
@@ -8903,16 +8430,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Joining root 0 with itself changes nothing. Joining it with root 2 attaches the smaller set and adds the sizes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(joinRoots, 'print(join_roots([1, 1], [1, 2], 1, 1))'),
-          [
-            '([1, 1], [1, 4])',
-            '([1, 1], [1, 2])',
-            '([1, 1], [2, 2])',
-            '([0, 1], [1, 2])',
-          ],
-          1,
+          '([1, 1], [1, 2])',
           'Both arguments are the same root, so both arrays are returned unchanged.',
         ),
         choose(
@@ -8970,18 +8491,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The repeated edge (2, 1) and the self-loop (5, 5) connect vertices already together. (4, 1) joins two sets.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(dsuRun(4, '[(0, 1), (1, 0), (2, 3), (0, 2)]'), 'print(counts)'),
-          ['[3, 2, 1, 0]', '[3, 3, 2, 1]', '[3, 3, 2, 2]', '[4, 3, 2, 1]'],
-          1,
+          '[3, 3, 2, 1]',
           'The repeated edge (1, 0) changes nothing; the other three edges each merge two sets.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(dsuRun(3, '[(2, 2), (0, 0)]'), 'print(counts)'),
-          ['[2, 1]', '[3, 2]', '[2, 2]', '[3, 3]'],
-          3,
+          '[3, 3]',
           'A self-loop’s endpoints share a root, so neither edge merges anything.',
         ),
         choose(
@@ -9019,14 +8538,13 @@ export const knowledgePoints: KnowledgePointModule = {
           '0 and 4 are joined through 1 and 3; vertex 2 never received an edge. The set holding 4 has four members.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             dsuRun(6, '[(0, 5), (1, 2), (2, 5)]'),
             'print(find(1) == find(0), find(3) == find(4), size[find(5)])',
           ),
-          ['True False 4', 'True True 4', 'False False 3', 'True False 3'],
-          0,
+          'True False 4',
           '0, 5, 1 and 2 end up in one set of size 4; 3 and 4 never received an edge.',
         ),
         choose(
@@ -9040,11 +8558,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'DSU tracks which vertices share a component, nothing about routes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(dsuRun(3, '[(0, 1)]'), 'print(size[1], size[find(1)])'),
-          ['2 2', '2 1', '1 2', '1 1'],
-          2,
+          '1 2',
           'Vertex 1 was attached under root 0; its own size entry is stale, and the true size is read at the root.',
         ),
         choose(
@@ -9160,14 +8677,13 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Tuples compare field by field, starting with u.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             'edges = [(0, 1, 3), (0, 1, 3), (1, 2, 1)]',
             'print(len(sorted(edges, key=lambda edge: edge[2])))',
           ),
-          ['2', '1', '6', '3'],
-          3,
+          '3',
           'Sorting keeps every occurrence, including the duplicate edge.',
         ),
         choose(
@@ -9274,16 +8790,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '1 and 2 are in different components, so the edge is accepted and the components merge. 3 and 2 already share label 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(acceptEdge, 'print(accept([0, 1, 1, 3], 1, 2))'),
-          [
-            '(True, [0, 1, 1, 3])',
-            '(False, [0, 1, 1, 3])',
-            '(True, [0, 0, 0, 3])',
-            '(False, [1, 1, 1, 3])',
-          ],
-          1,
+          '(False, [0, 1, 1, 3])',
           '1 and 2 both carry label 1, so the edge would close a cycle and the labels are unchanged.',
         ),
         choose(
@@ -9297,16 +8807,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Both ends are the same vertex, so they trivially share a component.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(acceptEdge, 'print(accept([5, 5, 7, 7, 9], 4, 0))'),
-          [
-            '(True, [9, 9, 7, 7, 9])',
-            '(True, [5, 5, 7, 7, 5])',
-            '(False, [5, 5, 7, 7, 9])',
-            '(True, [9, 5, 7, 7, 9])',
-          ],
-          0,
+          '(True, [9, 9, 7, 7, 9])',
           'Labels 9 and 5 differ, so the edge is accepted and every 5 is relabelled 9, the label of u = 4.',
         ),
         choose(
@@ -9337,7 +8841,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '(1, 0) is rejected because the first edge already merged 0 and 1. (1, 3) joins the two remaining components.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             acceptEdge,
@@ -9348,16 +8852,10 @@ export const knowledgePoints: KnowledgePointModule = {
             '    results.append(accepted)',
             'print(results)',
           ),
-          [
-            '[True, True, True]',
-            '[True, True, False]',
-            '[True, False, True]',
-            '[False, True, True]',
-          ],
-          1,
+          '[True, True, False]',
           'The first two edges join all three vertices, so (2, 0) would close a triangle.',
         ),
-        predictOutput(
+        typeOutput(
           'This check never merges labels. What does it print?',
           lines(
             'def accept_no_merge(labels, u, v):',
@@ -9366,13 +8864,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'labels = [0, 1, 2]',
             'print([accept_no_merge(labels, u, v) for u, v in [(0, 1), (1, 2), (0, 2)]])',
           ),
-          [
-            '[True, True, False]',
-            '[True, False, False]',
-            '[False, False, False]',
-            '[True, True, True]',
-          ],
-          3,
+          '[True, True, True]',
           'The labels never change, so the third edge is wrongly accepted and the selection contains a cycle.',
         ),
         choose(
@@ -9409,30 +8901,27 @@ export const knowledgePoints: KnowledgePointModule = {
           'Three edges span four vertices. Two edges leave two components. One vertex is already spanned.',
       },
       questions: [
-        choose(
+        typeNumber(
           'A forest on 9 vertices must become a spanning tree. How many edges must be accepted?',
-          ['9', '8', '10', '18'],
-          1,
+          8,
           'Nine separate vertices need eight merges to become one component.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             completedCost,
             'print(completed_cost(3, [4, -1]), completed_cost(3, [4]))',
           ),
-          ['3 None', '3 4', 'None None', '5 None'],
-          0,
+          '3 None',
           'Two edges span three vertices, and negative costs are allowed; one edge does not.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             completedCost,
             'print(completed_cost(0, []), completed_cost(2, []))',
           ),
-          ['None None', '0 0', 'None 0', '0 None'],
-          3,
+          '0 None',
           'An empty graph needs no edges; two vertices need one.',
         ),
         choose(
@@ -9472,11 +8961,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A cycle wastes an edge, so the remaining edges cannot reach every vertex.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           acceptedCount(5, '[(0, 1), (2, 3), (1, 0), (3, 4), (4, 2)]'),
-          ['5 True', '4 True', '3 False', '2 False'],
-          2,
+          '3 False',
           '(1, 0) and (4, 2) close cycles, so only three edges join the five vertices, leaving two components.',
         ),
         choose(
@@ -9490,11 +8978,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Without cycles, every edge merges two components, so n − 1 edges leave exactly one.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           acceptedCount(3, '[(0, 1), (0, 1), (1, 2)]'),
-          ['3 False', '2 True', '3 True', '2 False'],
-          1,
+          '2 True',
           'The repeated (0, 1) is rejected; the other two edges span all three vertices.',
         ),
       ],
@@ -9517,11 +9004,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Weights 1 and 2 join 1, 2 and 3; the weight-3 edge would close a cycle; weight 4 brings in vertex 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           kruskal(3, '[(0, 1, 5), (1, 2, 3), (0, 2, 4)]'),
-          ['[3, 4, 5] 12', '[3, 4] 7', '[3, 5] 8', '[4, 5] 9'],
-          1,
+          '[3, 4] 7',
           'Edges 3 and 4 connect all three vertices; the weight-5 edge would close a cycle.',
         ),
         choose(
@@ -9535,11 +9021,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The endpoints are already connected by chosen edges.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           kruskal(3, '[(0, 1, 2), (0, 1, -1), (1, 2, 0), (2, 0, 5)]'),
-          ['[-1, 0, 2] 1', '[0, 2] 2', '[-1, 0] -1', '[-1, 2] 1'],
-          2,
+          '[-1, 0] -1',
           'The cheaper parallel edge −1 and the edge 0 span all three vertices; the other two edges would close cycles.',
         ),
         choose(
@@ -9573,14 +9058,13 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first graph keeps two components. A single vertex costs 0. The negative self-loop is rejected, and the cheaper parallel edge 2 is chosen.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           lines(
             minimumLinkCost,
             'print(minimum_link_cost(3, [(0, 1, 1), (1, 1, -9), (0, 1, 4)]), minimum_link_cost(0, []))',
           ),
-          ['-8 0', '1 0', 'None 0', 'None None'],
-          2,
+          'None 0',
           'Vertex 2 has no edge, so three vertices cannot be spanned; an empty graph costs 0.',
         ),
         choose(
@@ -9594,14 +9078,13 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A spanning tree on 5 vertices needs 4 edges, so none exists.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           lines(
             minimumLinkCost,
             'print(minimum_link_cost(2, [(1, 0, 7), (0, 1, 7), (0, 1, 9)]))',
           ),
-          ['7', '14', '23', '9'],
-          0,
+          '7',
           'One edge of weight 7 joins the two vertices; every other parallel edge is rejected.',
         ),
         choose(
