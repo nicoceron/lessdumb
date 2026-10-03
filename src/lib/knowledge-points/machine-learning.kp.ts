@@ -3703,4 +3703,892 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'ml-neural-layers': [
+    {
+      title: 'Compute a dense layer as X @ W + b',
+      explanation: [
+        'A dense layer gives every output neuron one weight per input plus a bias. For a batch X shaped (batch, inputs), weights W shaped (inputs, outputs), and bias b shaped (outputs,), the layer computes Z = X @ W + b, shaped (batch, outputs). Broadcasting adds b to every row.',
+        'The layer has inputs * outputs weights plus outputs biases. Each column of W holds one neuron’s weights, so column j of Z is that neuron’s weighted sum for every row.',
+      ],
+      example: {
+        code: 'import numpy as np\nX = np.array([[1.0, 0.0, 2.0], [0.0, 1.0, 1.0]])\nW = np.array([[1.0, -1.0], [2.0, 0.0], [0.5, 1.0]])\nb = np.array([0.0, 1.0])\nZ = X @ W + b\nprint(Z.shape)\nprint(Z.tolist())',
+        output: '(2, 2)\n[[2.0, 2.0], [2.5, 2.0]]',
+        explanation:
+          'Two rows with three inputs pass through two neurons. Row 1, neuron 1: 1*1 + 0*2 + 2*0.5 + 0 = 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nX = np.zeros((10, 3))\nW = np.zeros((3, 4))\nb = np.zeros(4)\nprint((X @ W + b).shape)',
+          ['(3, 4)', '(10, 3)', '(10, 4)', '(4, 10)'],
+          2,
+          'The shared size 3 is summed over, leaving 10 rows and 4 neuron outputs.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nX = np.array([[2.0, 1.0]])\nW = np.array([[1.0, 0.0, -1.0], [3.0, 1.0, 2.0]])\nb = np.array([0.5, 0.0, 1.0])\nprint((X @ W + b).tolist())',
+          [
+            '[[5.5, 1.0, 1.0]]',
+            '[[5.0, 1.0, 0.0]]',
+            '[[2.5, 1.0, 0.0]]',
+            '[[5.5, 1.0, 3.0]]',
+          ],
+          0,
+          'Neuron 1: 2*1 + 1*3 + 0.5 = 5.5. Neuron 3: 2*(-1) + 1*2 + 1 = 1.',
+        ),
+        choose(
+          'A dense layer maps 100 input features to 64 neurons. How many parameters does it have?',
+          ['164', '6,400', '6,464', '6,500'],
+          2,
+          '100 * 64 weights plus one bias per neuron: 6,400 + 64.',
+        ),
+        choose(
+          'A batch X has shape (32, 20) and the layer has 5 neurons. What shape must W have?',
+          ['(32, 5)', '(5, 20)', '(20, 32)', '(20, 5)'],
+          3,
+          'W needs one row per input feature and one column per neuron so that X @ W is (32, 5).',
+        ),
+      ],
+    },
+    {
+      title: 'Apply an activation function elementwise',
+      explanation: [
+        'After the weighted sum, a layer applies an activation to every entry. ReLU keeps positive values and replaces negatives with 0: np.maximum(0, Z). The sigmoid squeezes each value into the interval from 0 to 1.',
+        'ReLU is the usual choice for hidden layers. A neuron whose pre-activation is negative outputs exactly 0 for that row.',
+      ],
+      example: {
+        code: 'import numpy as np\nz = np.array([[-1.5, 0.0, 2.0]])\nprint(np.maximum(0, z).tolist())\nprint((1 / (1 + np.exp(-z))).round(3).tolist())',
+        output: '[[0.0, 0.0, 2.0]]\n[[0.182, 0.5, 0.881]]',
+        explanation:
+          'ReLU zeroes the negative entry and keeps 2.0. The sigmoid maps the same three values into (0, 1), with 0 mapped to 0.5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nX = np.array([[1.0, 2.0], [-1.0, 0.0]])\nW = np.array([[2.0, -1.0], [1.0, 1.0]])\nb = np.array([0.0, -2.0])\nprint(np.maximum(0, X @ W + b).tolist())',
+          [
+            '[[4.0, -1.0], [-2.0, -1.0]]',
+            '[[4.0, 0.0], [0.0, 0.0]]',
+            '[[4.0, 1.0], [0.0, 0.0]]',
+            '[[4.0, 0.0], [2.0, 1.0]]',
+          ],
+          1,
+          'The pre-activations are [[4, -1], [-2, -1]]; ReLU replaces the three negatives with 0.',
+        ),
+        choose(
+          'What does ReLU return for an input of -3?',
+          ['-3', '3', '0', '0.5'],
+          2,
+          'ReLU is max(0, value), so any negative input becomes 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nz = np.array([-4.0, 4.0])\nprint(np.maximum(0, z).tolist(), (1 / (1 + np.exp(-z))).round(2).tolist())',
+          [
+            '[0.0, 4.0] [0.02, 0.98]',
+            '[0.0, 4.0] [0.0, 1.0]',
+            '[4.0, 4.0] [0.02, 0.98]',
+            '[-4.0, 4.0] [0.02, 0.98]',
+          ],
+          0,
+          'ReLU clips -4 to 0. The sigmoid approaches but never reaches 0 or 1.',
+        ),
+        choose(
+          'A hidden ReLU neuron outputs 0 for a row. What do you know about its pre-activation for that row?',
+          [
+            'It was exactly 1',
+            'It was 0 or negative',
+            'It was positive',
+            'Its weights are all zero',
+          ],
+          1,
+          'ReLU outputs 0 exactly when its input is not positive.',
+        ),
+      ],
+    },
+    {
+      title: 'Put nonlinear activations between stacked layers',
+      explanation: [
+        'Stacking linear layers without activations gains nothing: (X @ W1) @ W2 equals X @ (W1 @ W2), a single linear layer. Biases do not change this; the stack stays one affine map.',
+        'A nonlinear activation such as ReLU between the layers breaks that collapse, which is what lets a deeper network represent curved, nonlinear relationships.',
+      ],
+      example: {
+        code: 'import numpy as np\nX = np.array([[1.0, 2.0], [3.0, -1.0]])\nW1 = np.array([[1.0, -1.0], [0.5, 2.0]])\nW2 = np.array([[2.0], [1.0]])\nprint(((X @ W1) @ W2).tolist(), (X @ (W1 @ W2)).tolist())\nprint((np.maximum(0, X @ W1) @ W2).tolist())',
+        output: '[[7.0], [0.0]] [[7.0], [0.0]]\n[[7.0], [5.0]]',
+        explanation:
+          'Without an activation, two layers give exactly the same output as their single combined matrix. With ReLU in between, the second row changes, so the stack is no longer one linear map.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nW1 = np.array([[2.0, 0.0], [0.0, 3.0]])\nW2 = np.array([[1.0], [1.0]])\nprint((W1 @ W2).tolist())',
+          ['[[2.0], [3.0]]', '[[5.0]]', '[[2.0, 3.0]]', '[[1.0], [1.0]]'],
+          0,
+          'The two layers combine into a single (2, 1) weight matrix: scale the inputs by 2 and 3 and add them.',
+        ),
+        choose(
+          'A network has ten dense layers with no activation functions. What can it represent?',
+          [
+            'Any nonlinear function, given enough layers',
+            'Only what a single linear layer can represent',
+            'Nothing, because it cannot be trained',
+            'Only binary outputs',
+          ],
+          1,
+          'The ten matrices multiply into one, so the whole network is one linear (affine) map.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nx = np.array([[-2.0], [2.0]])\nW1 = np.array([[1.0]])\nW2 = np.array([[1.0]])\nprint(((x @ W1) @ W2).ravel().tolist(), (np.maximum(0, x @ W1) @ W2).ravel().tolist())',
+          [
+            '[0.0, 2.0] [0.0, 2.0]',
+            '[-2.0, 2.0] [-2.0, 2.0]',
+            '[-2.0, 2.0] [0.0, 2.0]',
+            '[2.0, 2.0] [0.0, 2.0]',
+          ],
+          2,
+          'ravel flattens the column into a list. The linear stack passes -2 through unchanged; ReLU in between turns it into 0.',
+        ),
+        choose(
+          'Why do hidden layers usually use an activation such as ReLU?',
+          [
+            'It turns the outputs into probabilities',
+            'It reduces the number of parameters',
+            'It keeps the layers from collapsing into one linear map',
+            'It makes training data unnecessary',
+          ],
+          2,
+          'Nonlinearity between layers is what gives depth its extra modelling power.',
+        ),
+      ],
+    },
+    {
+      title: 'Match the output layer to the task',
+      explanation: [
+        'The last layer must produce the kind of prediction the task needs. Regression uses one unit with no activation, so any number is possible. Binary classification uses one sigmoid unit, read as the probability of class 1.',
+        'Multiclass classification with exactly one correct class uses one unit per class followed by softmax: exp(score) / sum of exp(scores). Every output is positive, they add up to 1, and adding the same constant to every score leaves them unchanged.',
+      ],
+      example: {
+        code: 'import numpy as np\nscores = np.array([2.0, 1.0, 0.1])\np = np.exp(scores) / np.exp(scores).sum()\nprint(p.round(3).tolist(), round(float(p.sum()), 3))',
+        output: '[0.659, 0.242, 0.099] 1.0',
+        explanation:
+          'Softmax turns three raw scores into three probabilities that sum to 1, keeping their order.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nfor scores in [np.array([1.0, 2.0, 3.0]), np.array([101.0, 102.0, 103.0])]:\n    p = np.exp(scores) / np.exp(scores).sum()\n    print(p.round(3).tolist())',
+          [
+            '[0.167, 0.333, 0.5]\n[0.33, 0.333, 0.337]',
+            '[0.09, 0.245, 0.665]\n[1.0, 1.0, 1.0]',
+            '[0.09, 0.245, 0.665]\n[0.0, 0.0, 1.0]',
+            '[0.09, 0.245, 0.665]\n[0.09, 0.245, 0.665]',
+          ],
+          3,
+          'Adding 100 to every score multiplies each exp by the same factor, which cancels in the division.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nscores = np.array([0.0, 0.0, 0.0, 0.0])\np = np.exp(scores) / np.exp(scores).sum()\nprint(p.tolist())',
+          [
+            '[0.0, 0.0, 0.0, 0.0]',
+            '[0.25, 0.25, 0.25, 0.25]',
+            '[1.0, 1.0, 1.0, 1.0]',
+            '[0.5, 0.5, 0.5, 0.5]',
+          ],
+          1,
+          'Equal scores give equal probabilities, and four of them must add up to 1.',
+        ),
+        choose(
+          'A model predicts which one of 10 digits an image shows. Which output layer fits?',
+          [
+            'One sigmoid unit',
+            'One unit with no activation',
+            '10 ReLU units',
+            '10 units followed by softmax',
+          ],
+          3,
+          'Exactly one of ten classes is correct, so the outputs should be ten probabilities that sum to 1.',
+        ),
+        choose(
+          'A model predicts a house price in dollars. Which output layer fits?',
+          [
+            'One unit with no activation',
+            'One sigmoid unit',
+            'Softmax over price ranges',
+            'One ReLU unit followed by a sigmoid',
+          ],
+          0,
+          'A price is an unrestricted number, so the output must not be squeezed into a probability range.',
+        ),
+      ],
+    },
+  ],
+  'ml-backpropagation': [
+    {
+      title: 'Chain derivatives from the loss back to a weight',
+      explanation: [
+        'Backpropagation applies the chain rule. For a prediction p = w*x + b and loss L = (p - y)**2, first find how the loss changes with the prediction, dL/dp = 2*(p - y). Then multiply by how the prediction changes with each parameter: dp/dw = x and dp/db = 1.',
+        'So dL/dw = 2*(p - y)*x and dL/db = 2*(p - y). The upstream value 2*(p - y) is computed once and reused for every parameter that feeds into p.',
+      ],
+      example: {
+        code: 'x, y, w, b = 3.0, 4.0, 2.0, 1.0\np = w * x + b\nupstream = 2 * (p - y)\nprint(p, upstream, upstream * x, upstream * 1)',
+        output: '7.0 6.0 18.0 6.0',
+        explanation:
+          'The prediction overshoots by 3, so dL/dp = 6. The weight gradient multiplies by x = 3, and the bias gradient by 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'x, y, w, b = 2.0, 5.0, 1.0, 0.0\np = w * x + b\nupstream = 2 * (p - y)\nprint(upstream * x, upstream)',
+          ['-12.0 -6.0', '-6.0 -12.0', '12.0 6.0', '-6.0 -6.0'],
+          0,
+          'The prediction 2 is 3 below the target, so dL/dp = -6, and the weight gradient adds a factor of x = 2.',
+        ),
+        choose(
+          'For p = w*x + b, which factor turns dL/dp into dL/dw?',
+          ['b', 'y', 'x', '1'],
+          2,
+          'Changing w by a small amount changes p by x times that amount.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'x, y, w, b = 4.0, 9.0, 2.0, 1.0\np = w * x + b\nupstream = 2 * (p - y)\nprint(upstream * x, upstream)',
+          ['8.0 2.0', '36.0 9.0', '-8.0 -2.0', '0.0 0.0'],
+          3,
+          'The prediction 9 equals the target, so the loss is at its minimum and both gradients are 0.',
+        ),
+        choose(
+          'Why is 2*(p - y) called the upstream gradient?',
+          [
+            'It is computed after the parameters are updated',
+            'It is the loss’s sensitivity to p, reused by every parameter that feeds into p',
+            'It is always positive',
+            'It is the learning rate',
+          ],
+          1,
+          'Each parameter’s gradient multiplies this shared value by its own local derivative.',
+        ),
+      ],
+    },
+    {
+      title: 'Multiply by each activation’s local derivative',
+      explanation: [
+        'The forward pass computes and stores every intermediate value; the backward pass walks the same steps in reverse, multiplying the incoming gradient by each step’s local derivative at the stored value.',
+        'ReLU’s local derivative is 1 where its input was positive and 0 elsewhere, so it blocks gradient for inactive neurons. The sigmoid’s is s*(1 - s), at most 0.25. For a sigmoid output with log loss, the chain simplifies to dL/dz = p - y.',
+      ],
+      example: {
+        code: 'import math\nx, y, w = 1.0, 1.0, 0.0\nz = w * x\np = 1 / (1 + math.exp(-z))\nloss = -math.log(p)\ndp = -1 / p\ndz = dp * p * (1 - p)\nprint(p, round(loss, 3), dz, dz * x)',
+        output: '0.5 0.693 -0.5 -0.5',
+        explanation:
+          'The loss derivative -1/p times the sigmoid derivative p*(1 - p) gives dz = -(1 - p) = p - y = -0.5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nz = np.array([0.0, 2.0])\ns = 1 / (1 + np.exp(-z))\nprint((s * (1 - s)).round(3).tolist())',
+          ['[0.5, 0.881]', '[0.25, 0.105]', '[0.0, 0.105]', '[1.0, 1.0]'],
+          1,
+          'The sigmoid’s slope is largest, 0.25, at z = 0 and shrinks as z moves away from 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nz = np.array([-1.0, 0.5, 3.0, -0.2])\nupstream = np.array([4.0, 4.0, 4.0, 4.0])\nprint((upstream * (z > 0)).tolist())',
+          [
+            '[4.0, 4.0, 4.0, 4.0]',
+            '[0.0, 2.0, 12.0, 0.0]',
+            '[0.0, 4.0, 4.0, 0.0]',
+            '[4.0, 0.0, 0.0, 4.0]',
+          ],
+          2,
+          'z > 0 is True (1) only where ReLU was active, so gradient passes through those two entries and is blocked elsewhere.',
+        ),
+        choose(
+          'Why does the forward pass keep its intermediate values?',
+          [
+            'The backward pass evaluates each local derivative at them',
+            'They are needed to compute the next batch',
+            'They replace the weights after training',
+            'They are the final predictions for every layer',
+          ],
+          0,
+          'Derivatives such as s*(1 - s) or the ReLU mask depend on the values computed going forward.',
+        ),
+        choose(
+          'A ReLU neuron’s pre-activation is negative for every training row. What gradient reaches its incoming weights?',
+          [
+            'Zero, so they stop changing',
+            'A very large value',
+            'Exactly 0.25',
+            'The same as for an active neuron',
+          ],
+          0,
+          'ReLU’s local derivative is 0 for negative inputs, so no gradient flows back through it.',
+        ),
+      ],
+    },
+    {
+      title: 'Check a gradient with finite differences',
+      explanation: [
+        'A derivative is a slope, so you can estimate it numerically: nudge the parameter by a small h in both directions and compute (L(w + h) - L(w - h)) / (2*h). This finite-difference estimate should closely match the gradient from backpropagation.',
+        'Gradient checking is slow, because it needs two loss evaluations per parameter, so it is used to test a gradient implementation, not to train.',
+      ],
+      example: {
+        code: 'x, y, w = 3.0, 2.0, 1.0\n\ndef loss(w):\n    return (w * x - y) ** 2\n\nh = 0.001\nnumeric = (loss(w + h) - loss(w - h)) / (2 * h)\nanalytic = 2 * (w * x - y) * x\nprint(round(numeric, 4), analytic)',
+        output: '6.0 6.0',
+        explanation:
+          'Both methods give a slope of 6, so the analytic formula is implemented correctly.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def loss(w):\n    return w ** 2\n\nh = 0.001\nw = 3.0\nprint(round((loss(w + h) - loss(w - h)) / (2 * h), 3))',
+          ['3.0', '9.0', '6.0', '0.006'],
+          2,
+          'The slope of w**2 at w = 3 is 2*3 = 6, and the symmetric difference recovers it.',
+        ),
+        choose(
+          'A gradient check gives 6.0 numerically, but your backpropagation code gives 3.0. What is the most likely conclusion?',
+          [
+            'The numeric estimate is always wrong',
+            'The learning rate is too large',
+            'The loss has no minimum',
+            'The backpropagation code has a bug, such as a missing factor',
+          ],
+          3,
+          'A large mismatch points to the analytic gradient; here it is off by exactly a factor of 2.',
+        ),
+        predictOutput(
+          'The code under test forgot the factor 2. What does this program print?',
+          'x, y, w = 2.0, 1.0, 1.0\n\ndef loss(w):\n    return (w * x - y) ** 2\n\nh = 0.001\nnumeric = (loss(w + h) - loss(w - h)) / (2 * h)\nbuggy = (w * x - y) * x\nprint(round(numeric, 3), buggy)',
+          ['4.0 2.0', '2.0 2.0', '4.0 4.0', '1.0 2.0'],
+          0,
+          'The true slope is 2*(2 - 1)*2 = 4; the buggy formula returns half of it, which the check exposes.',
+        ),
+        choose(
+          'Why is finite differencing not used to train large networks?',
+          [
+            'It gives the wrong sign',
+            'It needs extra loss evaluations for every parameter, which is far too slow',
+            'It only works for ReLU networks',
+            'It cannot handle a bias',
+          ],
+          1,
+          'Backpropagation gets all gradients in one backward pass; finite differences need two passes per parameter.',
+        ),
+      ],
+    },
+    {
+      title: 'Run forward, backward, then update',
+      explanation: [
+        'One training step has three parts: a forward pass computes predictions and the loss, backpropagation computes the gradients, and the optimizer updates the parameters with them. Backpropagation itself changes nothing; the update is a separate step.',
+        'For a batch, the per-row gradients are averaged. In matrix form, with P = X @ W and dP the loss gradient for each prediction, the weight gradient is X.T @ dP, where X.T is X with rows and columns swapped.',
+      ],
+      example: {
+        code: 'x, y = 2.0, 10.0\nw, b = 1.0, 0.0\nfor step in range(3):\n    p = w * x + b\n    loss = (p - y) ** 2\n    grad = 2 * (p - y)\n    w, b = w - 0.05 * grad * x, b - 0.05 * grad\n    print(step, loss)',
+        output: '0 64.0\n1 16.0\n2 4.0',
+        explanation:
+          'Each step computes the loss, backpropagates, and updates w and b. The loss falls by a factor of 4 per step.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nX = np.array([[1.0, 2.0], [3.0, 0.0]])\ny = np.array([[1.0], [2.0]])\nW = np.array([[0.5], [0.5]])\nP = X @ W\ndP = 2 * (P - y) / len(X)\nprint(P.tolist(), (X.T @ dP).tolist())',
+          [
+            '[[1.5], [1.5]] [[1.0], [-1.0]]',
+            '[[1.5], [1.5]] [[0.5], [-0.5]]',
+            '[[1.5], [1.5]] [[-1.0], [1.0]]',
+            '[[1.0], [2.0]] [[0.0], [0.0]]',
+          ],
+          2,
+          'dP is [[0.5], [-0.5]]. The first weight gets 1*0.5 + 3*(-0.5) = -1; the second gets 2*0.5 + 0*(-0.5) = 1.',
+        ),
+        choose(
+          'What is the difference between backpropagation and an optimizer step?',
+          [
+            'Backpropagation updates weights; the optimizer computes gradients',
+            'Backpropagation computes gradients; the optimizer uses them to update the parameters',
+            'They are two names for the same calculation',
+            'The optimizer runs before the forward pass',
+          ],
+          1,
+          'Computing the direction and taking the step are separate operations.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'x, y = 1.0, 3.0\nw = 0.0\nfor step in range(2):\n    p = w * x\n    grad = 2 * (p - y) * x\n    w = w - 0.25 * grad\n    print(step, (p - y) ** 2, w)',
+          [
+            '0 9.0 1.5\n1 2.25 2.25',
+            '0 9.0 1.5\n1 0.0 3.0',
+            '0 9.0 -1.5\n1 20.25 -3.75',
+            '0 3.0 1.5\n1 1.5 2.25',
+          ],
+          0,
+          'The loss is printed from the forward pass before each update: 9 at w = 0, then 2.25 at w = 1.5.',
+        ),
+        choose(
+          'In which order does one training step run?',
+          [
+            'Update, forward pass, backward pass',
+            'Backward pass, forward pass, update',
+            'Forward pass, backward pass, update',
+            'Forward pass, update, backward pass',
+          ],
+          2,
+          'The backward pass needs the forward pass’s values, and the update needs the gradients.',
+        ),
+      ],
+    },
+  ],
+  'ml-training-deep-networks': [
+    {
+      title: 'See why gradients vanish or explode with depth',
+      explanation: [
+        'Backpropagating through many layers multiplies many local factors. If they are typically below 1, the product shrinks toward 0 and early layers barely learn (vanishing gradients); if above 1, it grows huge (exploding gradients).',
+        'The sigmoid’s derivative is at most 0.25, so deep sigmoid stacks vanish quickly. ReLU’s derivative is 1 for active units, and careful initialization keeps each layer’s signal scale near 1; residual connections and normalization also help.',
+      ],
+      example: {
+        code: 'print(0.5 ** 10, round(1.5 ** 10, 2))',
+        output: '0.0009765625 57.67',
+        explanation:
+          'Ten layers that each halve the gradient shrink it about a thousandfold; ten that each multiply it by 1.5 grow it nearly sixtyfold.',
+      },
+      questions: [
+        predictOutput(
+          'Each of five sigmoid layers contributes its largest possible derivative. What does this program print?',
+          'print(0.25 ** 5)',
+          ['1.25', '0.0009765625', '0.25', '0.03125'],
+          1,
+          'Even at the best case of 0.25 per layer, five layers shrink the gradient about a thousandfold.',
+        ),
+        choose(
+          'Why do deep stacks of ReLU layers suffer less from vanishing gradients than stacks of sigmoids?',
+          [
+            'ReLU outputs are always between 0 and 1',
+            'ReLU has no weights',
+            'ReLU makes the loss convex',
+            'ReLU’s derivative is 1 for active units instead of at most 0.25',
+          ],
+          3,
+          'Multiplying by 1 keeps the gradient’s size, while multiplying by 0.25 per layer shrinks it fast.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'grad = 1.0\nfor layer in range(8):\n    grad = grad * 2.0\nprint(grad)',
+          ['16.0', '2.0', '256.0', '10.0'],
+          2,
+          'Eight factors of 2 multiply the gradient by 2**8 = 256, which is how gradients explode with depth.',
+        ),
+        choose(
+          'Training loss of a 50-layer network suddenly becomes NaN after a few steps. What is a likely cause?',
+          [
+            'Exploding gradients producing huge updates',
+            'Too few training rows',
+            'An overly strong dropout rate at inference',
+            'A missing validation set',
+          ],
+          0,
+          'Huge gradients make weights overflow, which shows up as an infinite or NaN loss.',
+        ),
+      ],
+    },
+    {
+      title: 'Limit update size with clipping and learning-rate schedules',
+      explanation: [
+        'Norm clipping rescales a gradient vector whose length, np.linalg.norm(g), exceeds a limit: g * min(1, limit / norm). The direction is kept and only oversized gradients shrink.',
+        'A learning-rate schedule changes the step size during training, for example halving it every 10 epochs, so early steps make fast progress and later steps settle in. Neither technique fixes overfitting, which is a generalization problem rather than a numerical one.',
+      ],
+      example: {
+        code: 'import numpy as np\ngradient = np.array([6.0, -8.0])\nlimit = 5.0\nnorm = np.linalg.norm(gradient)\nclipped = gradient * min(1.0, limit / norm)\nprint(float(norm), clipped.tolist())',
+        output: '10.0 [3.0, -4.0]',
+        explanation:
+          'The norm is 10, twice the limit, so the vector is halved: same direction, length 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\ngradient = np.array([1.0, 2.0, 2.0])\nnorm = float(np.linalg.norm(gradient))\nfor limit in [1.0, 5.0]:\n    print(limit, (gradient * min(1.0, limit / norm)).round(3).tolist())',
+          [
+            '1.0 [1.0, 1.0, 1.0]\n5.0 [1.0, 2.0, 2.0]',
+            '1.0 [0.333, 0.667, 0.667]\n5.0 [1.667, 3.333, 3.333]',
+            '1.0 [0.333, 0.667, 0.667]\n5.0 [1.0, 2.0, 2.0]',
+            '1.0 [1.0, 2.0, 2.0]\n5.0 [1.0, 2.0, 2.0]',
+          ],
+          2,
+          'The norm is 3. A limit of 1 scales the vector by 1/3; a limit of 5 leaves it alone, because clipping never enlarges.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'for epoch in [0, 9, 10, 25]:\n    print(epoch, 0.1 * 0.5 ** (epoch // 10))',
+          [
+            '0 0.1\n9 0.05\n10 0.025\n25 0.0125',
+            '0 0.1\n9 0.1\n10 0.05\n25 0.025',
+            '0 0.1\n9 0.1\n10 0.05\n25 0.0125',
+            '0 0.05\n9 0.05\n10 0.025\n25 0.0125',
+          ],
+          1,
+          'epoch // 10 counts completed blocks of 10 epochs, and each block halves the rate.',
+        ),
+        choose(
+          'What does gradient norm clipping preserve?',
+          [
+            'The gradient’s length',
+            'The gradient’s direction',
+            'The loss value',
+            'The learning rate',
+          ],
+          1,
+          'Every entry is multiplied by the same factor, so the vector points the same way.',
+        ),
+        choose(
+          'Validation loss rises while training loss keeps falling. Will gradient clipping fix this?',
+          [
+            'Yes, because clipping prevents all instability',
+            'Yes, if the limit is very small',
+            'No; this is overfitting, which needs regularization, more data, or early stopping',
+            'No, because clipping only works for ReLU',
+          ],
+          2,
+          'Clipping addresses numerical blow-ups, not a generalization gap.',
+        ),
+      ],
+    },
+    {
+      title: 'Drop activations while training, not while predicting',
+      explanation: [
+        'Dropout randomly zeroes a fraction p of a layer’s activations at each training step, so the network cannot rely on any single unit. The kept activations are divided by 1 - p, which keeps each unit’s expected value unchanged.',
+        'At prediction time, dropout is switched off and the full network is used, with no rescaling needed. Frameworks therefore distinguish a training mode from an inference mode.',
+      ],
+      example: {
+        code: 'import numpy as np\na = np.array([2.0, 4.0, 6.0, 8.0])\nmask = np.array([1.0, 0.0, 1.0, 0.0])\np_drop = 0.5\nprint((a * mask / (1 - p_drop)).tolist())\nprint(a.tolist())',
+        output: '[4.0, 0.0, 12.0, 0.0]\n[2.0, 4.0, 6.0, 8.0]',
+        explanation:
+          'In training, half the units are dropped by this mask and the rest are doubled. At inference, the activations pass through unchanged.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\na = np.array([3.0, 3.0, 3.0, 3.0])\nmask = np.array([1.0, 1.0, 1.0, 0.0])\np_drop = 0.25\nprint((a * mask / (1 - p_drop)).tolist())',
+          [
+            '[3.0, 3.0, 3.0, 0.0]',
+            '[4.0, 4.0, 4.0, 4.0]',
+            '[2.25, 2.25, 2.25, 0.0]',
+            '[4.0, 4.0, 4.0, 0.0]',
+          ],
+          3,
+          'Kept values are divided by 0.75, giving 4.0; the dropped one is 0. The mean stays 3.',
+        ),
+        choose(
+          'How does standard dropout behave when the trained model makes predictions?',
+          [
+            'It keeps dropping the same fraction of units',
+            'It is switched off, and the full network is used',
+            'It drops every unit',
+            'It doubles every activation',
+          ],
+          1,
+          'Dropout is a training-time regularizer; inference uses every unit.',
+        ),
+        choose(
+          'Why are kept activations divided by 1 - p during training?',
+          [
+            'So their expected value matches inference, when nothing is dropped',
+            'To make the loss smaller',
+            'To speed up the backward pass',
+            'Because dropped units would otherwise be negative',
+          ],
+          0,
+          'Without the rescaling, the layer’s output would be smaller in training than at inference.',
+        ),
+        choose(
+          'A model’s evaluation scores vary from run to run on the same data. What is a likely cause?',
+          [
+            'The validation set is too large',
+            'The learning rate schedule is too slow',
+            'The weights were initialized carefully',
+            'Evaluation was left in training mode, so dropout is still active',
+          ],
+          3,
+          'Active dropout makes each forward pass random, so predictions change between runs.',
+        ),
+      ],
+    },
+    {
+      title:
+        'Normalize with batch statistics, then switch to running statistics',
+      explanation: [
+        'Batch normalization standardizes each feature of a layer’s input using the current batch’s mean and variance, then applies a learned scale and shift. This keeps activation scales steady from layer to layer, which stabilizes training.',
+        'At inference, batches may be tiny or single rows, so the layer uses running averages of the mean and variance collected during training. Using the wrong mode changes predictions, just as with dropout.',
+      ],
+      example: {
+        code: 'import numpy as np\nbatch = np.array([2.0, 4.0, 6.0, 8.0])\nnormed = (batch - batch.mean()) / np.sqrt(batch.var() + 1e-5)\nprint(normed.round(3).tolist())\nrunning_mean, running_var = 4.0, 4.0\nprint(((np.array([6.0]) - running_mean) / np.sqrt(running_var + 1e-5)).round(3).tolist())',
+        output: '[-1.342, -0.447, 0.447, 1.342]\n[1.0]',
+        explanation:
+          'In training, the batch’s own mean 5 and variance 5 are used (the tiny 1e-5 avoids division by zero). At inference, a single 6.0 is normalized with the stored running mean and variance of 4.',
+      },
+      questions: [
+        predictOutput(
+          'Each column is one feature. What does this program print?',
+          'import numpy as np\nbatch = np.array([[1.0, 10.0], [3.0, 30.0]])\nprint(((batch - batch.mean(axis=0)) / batch.std(axis=0)).tolist())',
+          [
+            '[[-1.0, -1.0], [1.0, 1.0]]',
+            '[[-1.0, 1.0], [-1.0, 1.0]]',
+            '[[0.1, 1.0], [0.1, 1.0]]',
+            '[[-10.0, -10.0], [10.0, 10.0]]',
+          ],
+          0,
+          'Each column is standardized with its own mean and standard deviation, so both features end up on the same scale.',
+        ),
+        choose(
+          'Which statistics does a batch-normalization layer use when predicting a single row?',
+          [
+            'The mean and variance of that single row',
+            'The statistics of the test set',
+            'Running averages collected during training',
+            'No statistics; it is skipped',
+          ],
+          2,
+          'One row has no meaningful batch statistics, so the stored running averages are used.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nrunning_mean, running_var = 10.0, 25.0\nrows = np.array([20.0, 5.0])\nprint(((rows - running_mean) / np.sqrt(running_var)).tolist())',
+          ['[0.4, -0.2]', '[1.0, -1.0]', '[2.0, -1.0]', '[2.0, 1.0]'],
+          2,
+          'Inference uses the stored mean 10 and standard deviation 5: (20 - 10) / 5 = 2 and (5 - 10) / 5 = -1.',
+        ),
+        choose(
+          'Why does batch normalization help train deep networks?',
+          [
+            'It removes the need for a loss function',
+            'It keeps each layer’s inputs at a steady scale, which stabilizes gradients',
+            'It replaces backpropagation',
+            'It prevents overfitting entirely',
+          ],
+          1,
+          'Steady activation scales keep gradients from shrinking or growing as they pass through layers.',
+        ),
+      ],
+    },
+  ],
+  'ml-keras-workflow': [
+    {
+      title: 'Stack layers and count their parameters',
+      explanation: [
+        'In Keras, a Sequential model is a list of layers applied in order: an input of n features, then Dense layers such as Dense(8, activation="relu"), ending in an output layer that suits the task. model.summary() lists each layer’s parameter count, inputs * units + units.',
+        'When a model needs branches, several inputs, or several outputs, the Functional API connects layers as a graph instead of a single stack. TensorFlow does not run in this browser, so the programs here compute the same quantities with plain Python and NumPy.',
+      ],
+      example: {
+        code: 'layers = [4, 8, 3]\ntotal = 0\nfor i in range(len(layers) - 1):\n    params = layers[i] * layers[i + 1] + layers[i + 1]\n    print(params)\n    total += params\nprint(total)',
+        output: '40\n27\n67',
+        explanation:
+          'A stack of 4 inputs, Dense(8), and Dense(3) has 4*8 + 8 = 40 and 8*3 + 3 = 27 parameters: 67 in total, as model.summary() would report.',
+      },
+      questions: [
+        predictOutput(
+          'The model has 10 inputs, Dense(16), and Dense(1). What does this program print?',
+          'layers = [10, 16, 1]\ntotal = 0\nfor i in range(len(layers) - 1):\n    total += layers[i] * layers[i + 1] + layers[i + 1]\nprint(total)',
+          ['176', '177', '193', '160'],
+          2,
+          '10*16 + 16 = 176 and 16*1 + 1 = 17, which sum to 193.',
+        ),
+        choose(
+          'A model takes an image and a text caption as two separate inputs. Which Keras style is needed?',
+          [
+            'A Sequential model, because it is shorter',
+            'The Functional API, which connects layers as a graph',
+            'A single Dense layer',
+            'No model; Keras accepts one input only',
+          ],
+          1,
+          'Two inputs form two branches, which a single linear stack cannot express.',
+        ),
+        choose(
+          'A Sequential model ends with Dense(3, activation="softmax"). What does each prediction contain?',
+          [
+            'Three probabilities that add up to 1',
+            'One probability between 0 and 1',
+            'Three unrestricted numbers',
+            'The index of the predicted class',
+          ],
+          0,
+          'Three softmax units output a probability for each of three mutually exclusive classes.',
+        ),
+        choose(
+          'Which layer list builds a binary classifier on 20 features?',
+          [
+            'Input(20), Dense(16, relu), Dense(2, relu)',
+            'Input(20), Dense(16, relu), Dense(20, softmax)',
+            'Input(20), Dense(16, sigmoid), Dense(16, relu)',
+            'Input(20), Dense(16, relu), Dense(1, sigmoid)',
+          ],
+          3,
+          'One sigmoid output unit gives the probability of the positive class.',
+        ),
+      ],
+    },
+    {
+      title: 'Compile with an optimizer and a loss that fits the labels',
+      explanation: [
+        'model.compile(optimizer="adam", loss=..., metrics=["accuracy"]) fixes how the model will train. The loss must match both the output layer and the label format: one sigmoid unit with 0/1 labels uses "binary_crossentropy"; softmax with integer class labels uses "sparse_categorical_crossentropy"; softmax with one-hot label vectors uses "categorical_crossentropy"; a numeric output uses "mse".',
+        'The two categorical losses compute the same quantity, minus the log of the probability given to the true class; they differ only in how the label is written. Metrics are reported but not optimized.',
+      ],
+      example: {
+        code: 'import numpy as np\np = np.array([0.1, 0.2, 0.7])\none_hot = np.array([0.0, 0.0, 1.0])\nlabel = 2\nprint(round(float(-(one_hot * np.log(p)).sum()), 3), round(float(-np.log(p[label])), 3))',
+        output: '0.357 0.357',
+        explanation:
+          'The one-hot form and the integer form pick out the same probability, 0.7, so both losses are -log(0.7).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\none_hot = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]])\nprint(np.argmax(one_hot, axis=1).tolist())',
+          ['[1, 1, 1]', '[0, 1, 2]', '[1, 0, 2]', '[2, 0, 1]'],
+          2,
+          'np.argmax finds the position of the 1 in each row, converting one-hot vectors to integer labels.',
+        ),
+        choose(
+          'Labels are integers 0 to 9 and the output is Dense(10, softmax). Which loss fits without converting the labels?',
+          [
+            'binary_crossentropy',
+            'sparse_categorical_crossentropy',
+            'categorical_crossentropy',
+            'mse',
+          ],
+          1,
+          'The sparse variant accepts integer labels; the plain categorical loss expects one-hot vectors.',
+        ),
+        predictOutput(
+          'p[np.arange(2), labels] picks each row’s probability for its true class. What does this program print?',
+          'import numpy as np\np = np.array([[0.8, 0.1, 0.1], [0.2, 0.2, 0.6]])\nlabels = np.array([0, 1])\nlosses = -np.log(p[np.arange(2), labels])\nprint(losses.round(3).tolist())',
+          ['[0.223, 0.511]', '[0.223, 1.609]', '[2.303, 1.609]', '[0.8, 0.2]'],
+          1,
+          'Row 1 gave its true class 0.8, a small loss; row 2 gave its true class only 0.2, a loss of -log(0.2) ≈ 1.609.',
+        ),
+        choose(
+          'A model predicts delivery time in minutes. Which compile setting fits?',
+          [
+            'A sigmoid output with binary_crossentropy',
+            'A softmax output with categorical_crossentropy',
+            'A linear output with mse',
+            'Any output with accuracy as the loss',
+          ],
+          2,
+          'A numeric target needs an unrestricted output and a regression loss.',
+        ),
+      ],
+    },
+    {
+      title: 'Fit in epochs and mini-batches with validation data',
+      explanation: [
+        'model.fit(X, y, epochs=5, batch_size=32, validation_data=(X_val, y_val)) trains with mini-batch gradient descent. One epoch is one pass over all training rows; each batch of 32 rows is one parameter update, so an epoch has ceil(rows / batch_size) updates.',
+        'fit returns a History whose history dictionary lists the loss and val_loss for every epoch. validation_split=0.2 instead holds out the last 20% of the rows before shuffling, which misleads if the rows are sorted.',
+      ],
+      example: {
+        code: 'import math\nn, batch_size, epochs = 1000, 32, 5\nsteps = math.ceil(n / batch_size)\nprint(steps, steps * epochs)',
+        output: '32 160',
+        explanation:
+          'math.ceil rounds up: 1,000 rows make 31 full batches and one partial batch, so 32 updates per epoch and 160 over five epochs.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import math\nsteps = math.ceil(50000 / 128)\nprint(steps, steps * 10)',
+          ['390 3900', '391 3910', '128 1280', '50000 500000'],
+          1,
+          '50,000 / 128 is 390.6, which rounds up to 391 updates per epoch.',
+        ),
+        choose(
+          'What is one epoch?',
+          [
+            'One parameter update',
+            'One batch of 32 rows',
+            'One pass over every training row',
+            'One evaluation on the test set',
+          ],
+          2,
+          'An epoch covers the whole training set once, usually in many mini-batch updates.',
+        ),
+        choose(
+          'Training rows are sorted so that every positive example comes last. You call fit with validation_split=0.2. What goes wrong?',
+          [
+            'The validation data come from the last 20% of rows, so they are almost all positive',
+            'Keras raises an error for sorted data',
+            'Validation rows are drawn at random, so nothing goes wrong',
+            'The model trains on the validation rows',
+          ],
+          0,
+          'validation_split takes the final rows before shuffling, so shuffle the data first or pass validation_data.',
+        ),
+        predictOutput(
+          'This dictionary has the shape of a History. What does this program print?',
+          'history = {"loss": [0.9, 0.6, 0.4, 0.3, 0.25], "val_loss": [0.95, 0.7, 0.55, 0.58, 0.62]}\nval = history["val_loss"]\nbest = 0\nfor epoch in range(len(val)):\n    if val[epoch] < val[best]:\n        best = epoch\nprint(best + 1, val[best])',
+          ['5 0.25', '5 0.62', '3 0.55', '2 0.7'],
+          2,
+          'Validation loss is lowest in the third epoch; training loss keeps falling after that, a sign of overfitting.',
+        ),
+      ],
+    },
+    {
+      title: 'Stop early, then evaluate once on the test set',
+      explanation: [
+        'Callbacks run during fit. EarlyStopping(monitor="val_loss", patience=2, restore_best_weights=True) stops after val_loss fails to improve for 2 epochs in a row and restores the weights from the best epoch.',
+        'After training, model.evaluate(X_test, y_test) reports the loss and metrics on the untouched test set, once. model.predict(X) returns the output layer’s values, such as probabilities, which you turn into labels yourself.',
+      ],
+      example: {
+        code: 'val_loss = [0.70, 0.55, 0.50, 0.52, 0.51, 0.53, 0.56]\npatience = 2\nbest, best_epoch, waited = val_loss[0], 0, 0\nfor epoch in range(1, len(val_loss)):\n    if val_loss[epoch] < best:\n        best, best_epoch, waited = val_loss[epoch], epoch, 0\n    else:\n        waited += 1\n        if waited >= patience:\n            print("stop after epoch", epoch)\n            break\nprint("restore epoch", best_epoch)',
+        output: 'stop after epoch 4\nrestore epoch 2',
+        explanation:
+          'Epochs 3 and 4 fail to beat 0.50, so patience runs out at epoch 4, and the weights from epoch 2 are restored. break leaves the loop early.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'val_loss = [0.8, 0.6, 0.62, 0.59, 0.61, 0.63, 0.65]\npatience = 2\nbest, best_epoch, waited = val_loss[0], 0, 0\nfor epoch in range(1, len(val_loss)):\n    if val_loss[epoch] < best:\n        best, best_epoch, waited = val_loss[epoch], epoch, 0\n    else:\n        waited += 1\n        if waited >= patience:\n            print("stop after epoch", epoch)\n            break\nprint("restore epoch", best_epoch)',
+          [
+            'stop after epoch 2\nrestore epoch 1',
+            'stop after epoch 6\nrestore epoch 3',
+            'stop after epoch 4\nrestore epoch 3',
+            'stop after epoch 5\nrestore epoch 3',
+          ],
+          3,
+          'Epoch 3 improves to 0.59 and resets the count, so epochs 4 and 5 use up the patience.',
+        ),
+        choose(
+          'What does restore_best_weights=True add to EarlyStopping?',
+          [
+            'Training continues for extra epochs',
+            'The final model uses the weights from the epoch with the best monitored value',
+            'The test set is used as validation data',
+            'The learning rate is reset',
+          ],
+          1,
+          'Without it, the model keeps the weights from the last, already-worse epoch.',
+        ),
+        choose(
+          'Where should X_test be used in a Keras workflow?',
+          [
+            'Once, in model.evaluate after training and tuning are finished',
+            'As validation_data for EarlyStopping',
+            'In every epoch to choose the learning rate',
+            'Merged into the training data',
+          ],
+          0,
+          'Any use that guides training turns the test set into validation data.',
+        ),
+        predictOutput(
+          'predict returned these sigmoid outputs. What does this program print?',
+          'import numpy as np\nprobs = np.array([[0.2], [0.8], [0.5], [0.49]])\nprint([int(p >= 0.5) for p in probs[:, 0]])',
+          [
+            '[0, 1, 0, 0]',
+            '[0, 1, 1, 1]',
+            '[0.2, 0.8, 0.5, 0.49]',
+            '[0, 1, 1, 0]',
+          ],
+          3,
+          'predict returns probabilities; a threshold of 0.5 turns them into labels, with 0.5 itself counted as positive.',
+        ),
+      ],
+    },
+  ],
 };
