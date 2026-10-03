@@ -7,6 +7,7 @@ import {
   MAX_RECENT_ATTEMPTS,
   type EvidenceUpdate,
   type ImplicitCredit,
+  type Placement,
   type Attempt,
   type AttemptInput,
   type LessonAttempt,
@@ -15,6 +16,7 @@ import {
 } from './learning';
 import { defaultCatalog, type CurriculumCatalog } from './curriculum';
 import { mergeQuizzes, type Quiz } from './quiz';
+import { mergeDiagnostics } from './placement';
 import {
   evidenceIdFor,
   findQuestion,
@@ -40,10 +42,11 @@ export interface QueuedCard extends AnkiCard {
 }
 /**
  * Version 2 adds knowledge-point lesson attempts, cooldowns and task XP;
- * version 3 adds quizzes; version 4 adds implicit review credit.
+ * version 3 adds quizzes; version 4 adds implicit review credit; version 5
+ * adds placement diagnostics.
  */
 export interface LearnerState {
-  version: 4;
+  version: 5;
   progress: Progress;
   dailyGoal: number;
   /** Optional for backward compatibility with existing saved accounts. */
@@ -55,7 +58,7 @@ export interface LearnerState {
 }
 export function createState(): LearnerState {
   return {
-    version: 4,
+    version: 5,
     progress: emptyProgress(),
     dailyGoal: 50,
     activeCourseId: 'python-foundations',
@@ -134,8 +137,8 @@ const reviewRewardKey = (attempt: Attempt) =>
 
 /** A saved state from an earlier schema: before quizzes, or before knowledge points. */
 export type LegacyLearnerState = Omit<LearnerState, 'version' | 'progress'> & {
-  version: 1 | 2 | 3;
-  progress: Omit<Progress, 'version'> & { version: 1 | 2 | 3 };
+  version: 1 | 2 | 3 | 4;
+  progress: Omit<Progress, 'version'> & { version: 1 | 2 | 3 | 4 };
 };
 
 /**
@@ -148,14 +151,14 @@ export function migrateState(
   catalog: CurriculumCatalog = defaultCatalog,
 ): LearnerState {
   const progress = normalizeProgress(
-    state.progress.version === 4
+    state.progress.version === 5
       ? (state.progress as Progress)
-      : { ...state.progress, version: 4 },
+      : { ...state.progress, version: 5 },
     catalog,
   );
-  if (state.version === 4 && progress === state.progress)
+  if (state.version === 5 && progress === state.progress)
     return state as LearnerState;
-  return { ...state, version: 4, progress };
+  return { ...state, version: 5, progress };
 }
 
 /** Converts legacy evidence for skills now taught through knowledge points. */
@@ -209,6 +212,22 @@ export function normalizeProgress(
     if (next !== state) (skills ??= { ...progress.skills })[skill.id] = next;
   }
   return skills ? { ...progress, skills } : progress;
+}
+
+/** A demotion or confirmation outlasts the bare placement it ends. */
+function mergePlacement(
+  left?: Placement,
+  right?: Placement,
+): Placement | undefined {
+  if (!left || !right) return left ?? right;
+  const settled = (placement: Placement) =>
+    placement.demotedAt ?? placement.confirmedAt ?? placement.at;
+  if (left.at !== right.at) return right.at > left.at ? right : left;
+  if (left.demotedAt !== undefined || right.demotedAt !== undefined)
+    return (left.demotedAt ?? Infinity) <= (right.demotedAt ?? Infinity)
+      ? left
+      : right;
+  return settled(right) > settled(left) ? right : left;
 }
 
 /** The more recent implicit credit; on a tie, the later due date. */
@@ -403,6 +422,10 @@ export function mergeStates(
   ])
     attemptsById.set(attempt.id, attempt);
   const quizzes = mergeQuizzes(local.progress.quizzes, remote.progress.quizzes);
+  const diagnostics = mergeDiagnostics(
+    local.progress.diagnostics,
+    remote.progress.diagnostics,
+  );
   const xp = reconcileXp(
     local.progress,
     remote.progress,
@@ -616,12 +639,15 @@ export function mergeStates(
       const {
         lessonAttempt: _attempt,
         implicitCredit: _credit,
+        placement: _placement,
         ...rest
       } = latest;
+      const placement = mergePlacement(a.placement, b.placement);
       return [
         id,
         {
           ...rest,
+          ...(placement ? { placement } : {}),
           ...(implicitCredit ? { implicitCredit } : {}),
           ...(lessonAttempt ? { lessonAttempt } : {}),
           ...(lessonFailedAt !== undefined ? { lessonFailedAt } : {}),
@@ -694,7 +720,12 @@ export function mergeStates(
   // Reconciliation itself can complete mastery when devices supplied different answers.
   for (const [id, progress] of Object.entries(skills)) {
     const definition = skillById[id];
-    if (definition && hasLessonEvidence(definition, progress.questionIds)) {
+    // Placement earns no cards, even once its first review confirms it.
+    if (
+      definition &&
+      hasLessonEvidence(definition, progress.questionIds) &&
+      (!progress.placement || progress.placement.demotedAt !== undefined)
+    ) {
       for (const card of definition.flashcards) {
         if (!cards.has(card.id))
           cards.set(card.id, {
@@ -723,6 +754,7 @@ export function mergeStates(
       skills,
       ...xp,
       ...(quizzes.length ? { quizzes } : {}),
+      ...(diagnostics.length ? { diagnostics } : {}),
       attempts: xp.attempts.slice(-MAX_RECENT_ATTEMPTS),
       lastActivityDate,
       streak: activitySource.progress.streak,

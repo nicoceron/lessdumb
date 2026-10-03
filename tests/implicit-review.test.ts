@@ -423,7 +423,7 @@ describe('implicit credit persistence', () => {
       version: 3,
       progress: { ...createState().progress, version: 3 },
     };
-    expect(parseStateUpdate({ state: v3, revision: 0 }).state.version).toBe(4);
+    expect(parseStateUpdate({ state: v3, revision: 0 }).state.version).toBe(5);
   });
 
   it('keeps credit from one device when merging with a stale one', () => {

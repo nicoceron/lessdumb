@@ -289,8 +289,8 @@ describe('quiz persistence', () => {
       progress: { ...createState().progress, version: 2 },
     };
     const migrated = parseStateUpdate({ state: v2, revision: 0 }).state;
-    expect(migrated.version).toBe(4);
-    expect(migrated.progress.version).toBe(4);
+    expect(migrated.version).toBe(5);
+    expect(migrated.progress.version).toBe(5);
     expect(migrated.progress.quizzes).toBeUndefined();
   });
 

@@ -21,6 +21,7 @@ import {
 } from './lesson-plan';
 import { earnedXp, lessonXp, REVIEW_XP } from './xp';
 import type { Quiz } from './quiz';
+import type { Diagnostic } from './placement';
 import {
   acquisitionMemory,
   legacyMemory,
@@ -100,6 +101,28 @@ export interface SkillProgress {
   lessonRewarded?: boolean;
   /** The latest implicit review credit this skill received from a dependent. */
   implicitCredit?: ImplicitCredit;
+  /** Placed out of by a diagnostic: conditional until its first review. */
+  placement?: Placement;
+}
+
+/**
+ * A placement counts as mastery for unlocking. Its first review confirms it;
+ * a wrong answer before then returns the skill to learning from the start.
+ */
+export interface Placement {
+  at: number;
+  diagnosticId: string;
+  confirmedAt?: number;
+  demotedAt?: number;
+}
+
+/** A placed skill whose first review has not yet confirmed or failed it. */
+export function placementPending(state?: SkillProgress): boolean {
+  return (
+    !!state?.placement &&
+    state.placement.confirmedAt === undefined &&
+    state.placement.demotedAt === undefined
+  );
 }
 
 /**
@@ -144,7 +167,7 @@ export interface Attempt {
 }
 
 export interface Progress {
-  version: 4;
+  version: 5;
   skills: Record<string, SkillProgress>;
   totalXp: number;
   dailyXp: Record<string, number>;
@@ -154,6 +177,8 @@ export interface Progress {
   timeZone: string;
   /** Recent quizzes, oldest first; quiz XP is recorded on them. */
   quizzes?: Quiz[];
+  /** Recent placement diagnostics, oldest first. */
+  diagnostics?: Diagnostic[];
 }
 
 export interface AttemptInput {
@@ -236,7 +261,7 @@ export function emptyProgress(
   // Validate the zone at creation rather than failing only after the first answer.
   dateKey(_now, timeZone);
   return {
-    version: 4,
+    version: 5,
     skills: {},
     totalXp: 0,
     dailyXp: {},
@@ -591,6 +616,8 @@ function creditable(
     state.reviewQuestionIds.length === 0 &&
     state.consecutiveCorrect > 0 &&
     state.implicitCredit?.day !== today &&
+    // A placement waits for its own first review.
+    !placementPending(state) &&
     dateKey(
       legacyMemory(state, time).lastReviewAt,
       progress.timeZone || 'UTC',
@@ -945,6 +972,20 @@ export function applyAttempt(
     if (wasMastered)
       state.memory = reviewMemory(legacyMemory(old, time), time, 'fail');
     state.questionIds = state.questionIds.filter((id) => id !== evidenceId);
+    // An unconfirmed placement was never learned here: the whole lesson
+    // returns, not just the missed point.
+    if (placementPending(old)) {
+      for (const id of lessonSteps(item).map((step) => step.id)) {
+        state.evidenceUpdates![id] = {
+          at: time,
+          sequence: state.attempts,
+          correct: false,
+        };
+      }
+      const steps = new Set(lessonSteps(item).map((step) => step.id));
+      state.questionIds = state.questionIds.filter((id) => !steps.has(id));
+      state.placement = { ...old.placement!, demotedAt: time };
+    }
     state.reviewQuestionIds = [];
     state.reviewHadHint = false;
     state.intervalDays = 0;
@@ -1012,6 +1053,8 @@ export function applyAttempt(
       // A wrong answer ends a cycle, so a completed review has no misses.
       xp = earnedXp(REVIEW_XP, 0, true);
       outcome = 'review-passed';
+      if (placementPending(old))
+        state.placement = { ...old.placement!, confirmedAt: time };
     }
   }
   // Assisted answers never postpone retrieval; a later independent completion
