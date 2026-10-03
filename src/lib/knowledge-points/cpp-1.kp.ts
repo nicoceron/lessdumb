@@ -33,7 +33,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'An int can hold negative whole numbers, and it prints with its sign.',
         ),
         choose(
-          'Which declaration is safe to read on the next line?',
+          'Inside main, which declaration is safe to read on the next line?',
           ['int total;', 'int total = 0;', 'int total[];', 'int;'],
           1,
           'Only the initialized declaration has a defined value to read.',
@@ -43,8 +43,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Always 0',
             'Always -1',
-            'An indeterminate value that must not be read',
-            'The value from the previous run',
+            'An indeterminate value; never read it',
+            'The value left over from the previous run',
           ],
           2,
           'Local scalars have no automatic initial value; reading one is undefined behavior.',
@@ -308,7 +308,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '1 % 4',
           ],
           2,
-          'Only the third converts before dividing. 1 / 4 is 0 before any cast, and 1 % 4 is the remainder 1.',
+          'Only static_cast<double>(1) / 4 converts before dividing. 1 / 4 is 0 before any cast, and 1 % 4 is the remainder 1.',
         ),
       ],
     },
@@ -420,8 +420,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is the comparison written in parentheses in std::cout << (a == b);?',
           [
-            'They turn the comparison result into an int',
-            'Without them, << would apply first and the code would not compile',
+            'They turn the comparison result into an int before printing',
+            'Otherwise << binds first, and it does not compile',
             'They make == compare values instead of names',
             'They are only a style choice with no effect',
           ],
@@ -583,7 +583,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does the guard compare a with max - b instead of checking whether a + b is greater than max?',
           [
-            'Computing a + b would already overflow, which is undefined',
+            'Computing a + b could itself overflow',
             'Subtraction is faster than addition',
             'An int sum cannot be compared with max',
             'max - b is shorter to write',
@@ -813,8 +813,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It prints 1, the position of High',
             'It prints High, the enumerator name',
-            'It does not compile: Level does not convert to int',
-            'It prints Level::High in full',
+            'It does not compile',
+            'It prints Level::High, its qualified name',
           ],
           2,
           'std::cout has no way to print a scoped enumeration, because it does not convert implicitly to int.',
@@ -871,7 +871,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Basic is neither Pro nor Plus, so the last branch gives 1 seat.',
         ),
         choose(
-          'Someone adds Signal::Fast to the enum above but leaves the speed chain unchanged. What speed does Signal::Fast get?',
+          'Someone adds Fast to Signal but leaves the speed chain unchanged. What speed does Signal::Fast get?',
           [
             'A compile error',
             '0, from the first branch',
@@ -880,6 +880,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           3,
           'Fast fails the Stop and Slow tests, so it falls into the last branch: the chain must be updated deliberately.',
+          'enum class Signal { Stop, Slow, Go, Fast };\nint speed = s == Signal::Stop ? 0 : s == Signal::Slow ? 30 : 60;',
         ),
       ],
     },
@@ -1318,7 +1319,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does std::cout << value print a letter when value is a std::uint8_t holding 72?',
           [
-            'std::uint8_t is usually unsigned char, so << prints it as a character',
+            'It is usually unsigned char, printed as a character',
             'std::cout prints every unsigned value as a character',
             '72 is out of range for std::uint8_t',
             'std::uint8_t can store only letters',
@@ -1353,7 +1354,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What does this program print?',
           '#include <iostream>\n#include <type_traits>\nint main() {\n  std::cout << std::is_same_v<char, signed char> << std::is_same_v<int, signed int> << "\\n";\n}',
           '01',
-          'char and signed char are always three distinct character types, while signed int is just int.',
+          'char, signed char, and unsigned char are three distinct types, so the first test is 0, while signed int is just int.',
         ),
         choose(
           'On a platform where int and long are both 4 bytes, what is std::is_same_v<int, long>?',
@@ -1587,9 +1588,9 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'Which literal equals 15?',
-          ['0x15', '0b15', '0xF0', '0b1111'],
+          ['0x15', '0b15', '0b1110', '0b1111'],
           3,
-          'Binary 1111 is 8 + 4 + 2 + 1. 0x15 is 21, 0xF0 is 240, and 0b15 is not a valid literal.',
+          'Binary 1111 is 8 + 4 + 2 + 1. 0x15 is 21, 0b1110 is 14, and 0b15 is not a valid literal.',
         ),
       ],
     },
@@ -2220,7 +2221,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What is wrong with int r = flag ? 42 : "none";?',
           [
             'It always yields 42',
-            'The two results have unrelated types, so it does not compile',
+            'Its two result types are incompatible',
             'It yields the text none converted to an int',
             'Nothing; ?: accepts any two types',
           ],
@@ -2617,7 +2618,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'It compiles and sets balance to 0',
             'It compiles but changes only a copy',
             'It compiles and returns the old balance',
-            'It does not compile: account refers to a const Account',
+            'It does not compile: account is const',
           ],
           3,
           'Assigning to a member through a const reference is rejected by the compiler.',
@@ -2910,7 +2911,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'count != 0 is evaluated twice',
             '&& evaluates its operands from right to left',
             'It is always false',
-            'The division runs before the check and can divide by zero',
+            'It can divide by zero before the check runs',
           ],
           3,
           'The left operand is always evaluated first, so the division happens even when count is 0.',
@@ -3069,7 +3070,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It appends 4 and the size grows by one',
             'It replaces the last element with 4',
-            'It does not compile: a std::array has a fixed size',
+            'It fails to compile: the size is fixed',
             'It inserts 4 at the front',
           ],
           2,
@@ -3475,7 +3476,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '7 / 2 is integer division, so its type is int and it selects the first overload.',
         ),
         choose(
-          'Which pair of declarations is a valid overload set?',
+          'Which pair declares two distinct overloads of f?',
           [
             'int f(int); double f(int);',
             'int f(int x); int f(int y);',
@@ -3483,7 +3484,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'double f(int); double f(int);',
           ],
           2,
-          'Only the third pair differs in parameter types; parameter names and return types do not count.',
+          'Only int f(int); int f(double); differs in parameter types; parameter names and return types do not count.',
         ),
       ],
     },
@@ -3515,8 +3516,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why do int f(int) and double f(int) fail to compile together?',
           [
-            'Two functions cannot both return numbers',
-            'Only the return types differ, and that cannot pick an overload',
+            'Two functions named f cannot both return numbers',
+            'Return types alone cannot pick an overload',
             'double f(int) needs a cast in its body',
             'Only one function may ever be named f',
           ],
@@ -3615,7 +3616,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'int f(int a, int b = 1);',
           ],
           3,
-          'Only the last one gives defaults to trailing parameters alone.',
+          'Only int f(int a, int b = 1); gives defaults to trailing parameters alone.',
         ),
         typeOutput(
           'What does this complete C++20 program print?',
@@ -3764,7 +3765,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'References must be declared outside main',
             'int& is not a valid type',
-            'A reference must be bound to an object when it is declared',
+            'A reference needs an object to bind to',
             'r is a reserved name',
           ],
           2,
@@ -3881,7 +3882,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'int& parameters can never be changed',
             'The change is lost when the function returns',
-            'Callers expect a read-only query, so the hidden change surprises them',
+            'Callers expect a read-only query, not a change',
             'The program will not compile',
           ],
           2,
@@ -3965,8 +3966,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Assign the other object to it',
             'Declare it again with the same name',
-            'Write r = &other;',
-            'It cannot; a reference is bound once, at initialization',
+            'Write r = &other; to store the new address',
+            'It cannot; a reference never rebinds',
           ],
           3,
           'Every later assignment goes to the original object, never rebinding the reference.',
@@ -4138,7 +4139,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'ref changes x to 4; copy is independent and becomes 13.',
         ),
         choose(
-          'f returns int&. What is value after int value = f(x);?',
+          'f takes int& v and returns v as an int&. What is value after int value = f(x);?',
           [
             'Another name for x, bound by the call',
             'An independent int copied from x',
@@ -4340,7 +4341,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'p is a pointer and r is a reference to a. How does p = &b; differ from r = b;?',
           [
             'Both make the name refer to b',
-            "p = &b changes where p points; r = b copies b's value into a",
+            'p moves to b; r = b copies b into a',
             'Both copy the value of b',
             'p = &b copies b into the object p pointed to',
           ],
@@ -4405,7 +4406,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'a becomes 5',
             'It does not compile: p points to const int',
             'p is moved to address 5',
-            'It compiles but has no effect',
+            'It compiles, but the write to a is ignored',
           ],
           1,
           'Through a pointer to const the pointed-to int can be read but not assigned.',
@@ -4635,7 +4636,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A function returns a std::span over a std::array that is a local variable of that function. What is wrong?',
           [
             'Nothing; the span keeps the array alive',
-            'The array is destroyed at return, so the span dangles',
+            'The span dangles once the array dies',
             'Spans cannot be returned from functions',
             'The span copies the array, wasting memory',
           ],
@@ -4798,7 +4799,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'A copy of the characters',
             'A null-terminated buffer of its own',
             'The std::string it was made from',
-            'Nothing; it refers to characters stored elsewhere',
+            'Nothing; it borrows the characters',
           ],
           3,
           'A view only borrows: it holds a pointer and a length.',
@@ -4905,9 +4906,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'After std::string owned(view);, what happens to owned if the characters the view refers to change later?',
           [
-            'owned changes along with them',
+            'owned changes along with the characters',
             'owned becomes an empty string',
-            'owned keeps its own copy and is unaffected',
+            'It keeps its own copy, unaffected',
             'owned dangles like the view',
           ],
           2,
@@ -4932,7 +4933,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What is wrong with reading v after this line?',
           [
             'v copies the string, wasting memory',
-            'The temporary string dies at the end of the statement, so v dangles',
+            'The temporary dies at the semicolon, so v dangles',
             'string_view cannot be made from a std::string',
             'Nothing; v keeps the string alive',
           ],
@@ -4991,7 +4992,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '1.5, the value in seconds',
             '1, the whole seconds',
             '1500000, the microseconds',
-            '1500, the number of millisecond ticks',
+            '1500, in milliseconds',
           ],
           3,
           "count() never converts; it reports the ticks of the duration's own unit.",
@@ -5063,7 +5064,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why is long long a good type for a millisecond count?',
           [
             'count() always returns a double',
-            'Counts grow fast and can exceed a 32-bit int after a few weeks',
+            'Counts can exceed a 32-bit int within weeks',
             'long long is required for negative durations',
             'int values cannot be printed',
           ],
@@ -5105,7 +5106,7 @@ export const knowledgePoints: KnowledgePointModule = {
             's becomes 2 seconds, truncated',
             's becomes 3 seconds, rounded',
             's becomes 2.7 seconds, exactly',
-            'It does not compile without duration_cast',
+            'It does not compile',
           ],
           3,
           'Implicit conversion is allowed only when it is exact, as when going to a finer unit.',
@@ -5561,7 +5562,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Calls a function named value',
             'Assigns x after the body has run',
-            'Initializes the member value from x before the body runs',
+            'Initializes the member value from x',
             'Declares a new local variable named value',
           ],
           2,
@@ -5623,7 +5624,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What is wrong with this struct?',
           [
             'Members cannot be initialized from other members',
-            'end is declared first, so it reads length before length is initialized',
+            'end is initialized first, from an unset length',
             'Nothing, because the initializer list order is used',
             'length must be listed first in the initializer list',
           ],
@@ -5791,7 +5792,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why are locals destroyed in the reverse order of construction?',
           [
             'The order is chosen at random by the compiler',
-            'A later object may depend on an earlier one, which must outlive it',
+            'Later objects may depend on earlier ones',
             'The compiler sorts the objects by their size',
             'So that output appears in reverse order',
           ],
@@ -5875,7 +5876,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'The borrower cannot be constructed',
             'References must always be declared last',
             'It wastes memory on an extra copy',
-            'The owner dies first while the borrower still needs it',
+            'The owner dies while still borrowed',
           ],
           3,
           "Reverse destruction order would end the owner's lifetime while the borrower still refers to it.",
@@ -5913,7 +5914,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'A global variable named count',
             "Every Counter object's count member",
-            'The count member of the object add was called on',
+            'The count of the object it is called on',
             'A local copy of count inside add',
           ],
           2,
@@ -6016,7 +6017,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'v must be declared private first',
             'read must return void instead of int',
-            'read is not const, so a const Box cannot call it',
+            'read is not a const member function',
             'const objects cannot have any members',
           ],
           2,
@@ -6050,7 +6051,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'It compiles and peek increments reading',
             'It compiles, but the change is lost',
             'It compiles, and peek returns the old value',
-            'It does not compile: a const member function cannot modify reading',
+            'It does not compile: peek is const',
           ],
           3,
           'Members are read-only inside a const member function.',
@@ -6063,7 +6064,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'a saved 2; one more tick makes the reading 3.',
         ),
         choose(
-          'Given const Meter m{5};, which member functions can be called on m?',
+          'Meter has int peek() const and void tick(). Given const Meter m{5};, which can be called on m?',
           [
             'Both peek and tick, since m exists',
             'Only tick, which is not const',
@@ -6094,7 +6095,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'a is set to 2 + 5.',
         ),
         choose(
-          'With Gauge a{1}; and const Gauge b{2};, which call does not compile?',
+          'Gauge has int read() const and void set(int v). With Gauge a{1}; and const Gauge b{2};, which call does not compile?',
           ['a.read()', 'a.set(3)', 'b.read()', 'b.set(3)'],
           3,
           'set is not const, so it cannot be called on the const object b.',
@@ -6131,7 +6132,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           1,
           'Through const Tally& only const member functions are allowed, and add modifies the object.',
-          'int reset(const Tally& t) {\n  t.add(-t.value());\n  return t.value();\n}',
+          'struct Tally {\n  int total;\n  void add(int x) { total += x; }\n  int value() const { return total; }\n};\nint reset(const Tally& t) {\n  t.add(-t.value());\n  return t.value();\n}',
         ),
         typeOutput(
           'What does this complete C++20 program print?',
@@ -6213,8 +6214,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'A team removes const from every getter. What breaks?',
           [
             'The getters become slower',
-            'Objects can no longer be copied',
-            'Functions taking const T& can no longer call them',
+            'Objects of the type can no longer be copied',
+            'Calls through const T& stop compiling',
             'Nothing breaks',
           ],
           2,
@@ -6244,7 +6245,7 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'Gauge is the class above. What happens with g.level_ = 50; in main?',
+          'What happens with g.level_ = 50; in main?',
           [
             'level_ becomes 50',
             'It does not compile: level_ is private',
@@ -6253,6 +6254,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           1,
           "Only Gauge's own member functions can access its private members.",
+          'class Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(10);\n  g.level_ = 50;\n}',
         ),
         typeOutput(
           'What does this complete C++20 program print?',
@@ -6264,8 +6266,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'How do struct and class differ in C++?',
           [
             'Only classes can have member functions',
-            'Only structs can have constructors',
-            'Struct members default to public, class members to private',
+            'Only structs can have constructors and destructors',
+            'struct defaults to public, class to private',
             'They do not differ at all',
           ],
           2,
@@ -6286,7 +6288,7 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         typeOutput(
-          'This uses the Gauge class from the example. What does the program print?',
+          'What does this program print?',
           '#include <iostream>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n    if (level_ < 0) level_ = 0;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(5);\n  g.add(2);\n  g.add(-10);\n  g.add(1);\n  std::cout << g.level() << "\\n";\n}',
           '1',
           'The level goes 2, then is raised from -8 to 0, then becomes 1.',
@@ -6303,10 +6305,11 @@ export const knowledgePoints: KnowledgePointModule = {
             'The compiler checks the cap at every call',
             'An int member cannot exceed the cap',
             'The destructor corrects any bad level',
-            'Every change goes through add, which enforces the cap',
+            'Only add changes it, and add clamps it',
           ],
           3,
           'The state is private, so add is the only way in, and add checks the rule.',
+          'class Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n    if (level_ < 0) level_ = 0;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};',
         ),
       ],
     },
@@ -6329,11 +6332,11 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first withdrawal leaves 20; the second asks for more than 20 and is refused.',
         ),
         choose(
-          'Why does Account offer balance() instead of making balance_ public?',
+          'Account keeps balance_ private, offers int balance() const, and changes it only in withdraw, which checks the amount. Why not make balance_ public?',
           [
             'Because int members cannot be public',
             'To make the program run faster',
-            'So callers can read it while every change must pass through withdraw',
+            'Every change must go through withdraw’s check',
             'Because const functions must return members',
           ],
           2,
@@ -6412,7 +6415,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Three, one before each return',
             'One, at the end of the function',
             'Two, before the early returns',
-            'None; the destructor releases on every path',
+            'None; the destructor does it',
           ],
           3,
           'Every way out of the scope destroys the owner.',
@@ -6604,15 +6607,16 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'Owner is the struct above. What happens with Owner a; Owner b = a;?',
+          'What happens with Owner a; Owner b = a;?',
           [
             'b becomes a second owner of the resource',
             'b starts out empty, owning nothing',
             'a is moved into b, leaving a empty',
-            'It does not compile: the copy constructor is deleted',
+            'It does not compile: copying is deleted',
           ],
           3,
           'Copying needs the copy constructor, which no longer exists.',
+          'struct Owner {\n  Owner() = default;\n  Owner(const Owner&) = delete;\n  Owner& operator=(const Owner&) = delete;\n};',
         ),
         typeOutput(
           'What does this complete C++20 program print?',
@@ -6699,9 +6703,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why delete the copies instead of trusting everyone not to copy an owner?',
           [
-            'Copies are too slow',
+            'Copies are too slow for objects that own resources',
             'Deleted functions run faster',
-            'Deleting copies turns a double release into a compile error',
+            'A double release becomes a compile error',
             'Copying is undefined for every struct',
           ],
           2,
@@ -6779,7 +6783,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Never, because 0 is a safe default',
             'Only when the new value is 0',
             'Only when the guard object is copied',
-            'Whenever the setting was not 0 before the change',
+            'Whenever the old value was not 0',
           ],
           3,
           'The goal is to undo the change, which means returning to the previous value.',
@@ -6855,7 +6859,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What does std::make_unique<int>(7) return?',
           [
             'An int holding 7',
-            'A std::unique_ptr<int> owning a new int holding 7',
+            'A std::unique_ptr<int> owning 7',
             'A raw pointer that must be deleted',
             'A reference to a temporary 7',
           ],
@@ -7166,7 +7170,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Is a moved-from standard container guaranteed to be empty?',
           [
             'Yes, always',
-            'No, only valid with an unspecified value',
+            'No; it is valid but unspecified',
             'Only a std::vector',
             'Only if it was empty before',
           ],
@@ -7207,7 +7211,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'b becomes a second owner of the int',
             'a becomes null and b owns the int',
             'b gets its own copy of the int',
-            'It does not compile: a unique_ptr cannot be copied',
+            'It does not compile',
           ],
           3,
           'Copying is deleted for unique_ptr; ownership can only be moved.',
@@ -7245,7 +7249,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Reads the old value',
             'Returns 0',
             'Moves the value back into a',
-            'Undefined behavior, because a is null',
+            'Undefined behavior: a is null',
           ],
           3,
           'a no longer owns anything; there is no object to read.',
@@ -7280,8 +7284,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'p is a unique_ptr variable and consume takes std::unique_ptr<int> by value. Why does consume(p) not compile?',
           [
-            'consume needs a raw pointer',
-            'p would have to be copied, which unique_ptr forbids',
+            'consume needs a raw pointer, such as p.get()',
+            'p would be copied, which is forbidden',
             'p is null',
             'Functions cannot take a unique_ptr',
           ],
@@ -7481,7 +7485,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'expired() always returns false here',
             'expired() is not a member of weak_ptr',
-            'The object can expire between the check and the read',
+            'It can expire between check and read',
             'lock() makes a fresh copy of the int',
           ],
           2,
@@ -7548,7 +7552,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'unique_ptr has no constructor without it',
             'It deletes other afterwards',
-            'other.data has a name, so without it a copy is attempted',
+            'Without it, a copy is attempted',
             'It is optional and only documents intent',
           ],
           2,
@@ -7620,21 +7624,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Move assignment gives b the 3 (its old 4 is freed) and empties a.',
         ),
         choose(
-          'Why does Pack b = a; fail to compile for the Pack above?',
+          'Why does Pack b = a; fail to compile?',
           [
             'Pack has no constructor at all',
             'b must be declared as a reference',
             'a is const',
-            'Pack holds a unique_ptr, so it cannot be copied',
+            'Its unique_ptr cannot be copied',
           ],
           3,
           'The generated copy constructor would have to copy the unique_ptr, which is not allowed.',
+          'struct Pack {\n  std::unique_ptr<int> item;\n};\nPack a{std::make_unique<int>(6)};\nPack b = a;',
         ),
         choose(
-          "Which members does Pack's compiler-generated move constructor move?",
+          "Which members does a struct's compiler-generated move constructor move?",
           [
             'Only the first declared member',
-            'Every member, each with its own move operation',
+            'Every member, using its own move',
             'None of them; it copies instead',
             'Only the members that are unique_ptrs',
           ],
@@ -7795,7 +7800,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'They share the same storage',
             'copy is empty until it is written',
-            'copy has its own elements with the same values',
+            'copy has its own equal elements',
             'copy refers to original',
           ],
           2,
@@ -7904,7 +7909,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Shares the vector between both records',
             'Fails to compile',
-            'Copies the vector, so the records are independent',
+            'Gives each record its own vector',
             "Leaves the copy's vector empty",
           ],
           2,
@@ -7935,7 +7940,7 @@ export const knowledgePoints: KnowledgePointModule = {
           "A class holds a std::vector, and its author adds a destructor that frees the vector's storage by hand. What goes wrong?",
           [
             'Nothing; the extra delete is just safety',
-            'The vector frees the storage again, so it is freed twice',
+            'The storage is freed twice',
             'The vector leaks its storage instead',
             'The class can no longer be copied',
           ],
@@ -7947,7 +7952,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Write all five special member functions for every class',
             'Never use classes',
-            'Let resource-owning members do the work and declare no special members',
+            'Declare none; let the members manage resources',
             'Delete the copy operations of every class',
           ],
           2,
@@ -7993,7 +7998,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             "Its old elements followed by b's",
             'The same storage as b',
-            "A copy of b's elements, replacing its old ones",
+            "Only a copy of b's elements",
             "Only b's first element",
           ],
           2,
@@ -8023,7 +8028,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A hand-written copy assignment frees its own storage first and then copies from other. What happens with x = x;?',
           [
-            'Nothing unusual',
+            'Nothing; self-assignment is skipped',
             'It frees the data before copying it',
             'It copies the data twice',
             'It does not compile',
@@ -8061,7 +8066,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'b = a; where b already exists',
           ],
           3,
-          'Only the last one gives a new value to an object that already exists.',
+          'Only b = a; on an existing b gives a new value to an object that already exists; the others create b.',
         ),
         typeOutput(
           'What does this complete C++20 program print?',
@@ -8181,7 +8186,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why swap entire objects rather than their members one by one?',
           [
             'Member swaps do not compile',
-            "Whole swaps keep each object's members consistent",
+            'Whole swaps keep members consistent',
             'Whole swaps copy more data',
             'Swapping members one by one is faster',
           ],
@@ -8293,7 +8298,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'It rejects index 0',
             'size() cannot be compared with an index',
             'It is correct as written',
-            'It allows i == v.size(), one past the last element',
+            'It allows i == v.size(), past the end',
           ],
           3,
           'The last valid index is size() - 1.',
@@ -8331,7 +8336,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Only a pointer to a string literal',
             'A fixed buffer of 16 characters',
-            'A copy of its characters, in memory it manages',
+            'Its own copy of the characters',
             'Nothing; it borrows its characters',
           ],
           2,
@@ -8395,7 +8400,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'std::string cannot store \\0',
             'The compiler removes \\0 from literals',
-            'Building from a plain literal stops at the first \\0',
+            'Construction stops at the first \\0',
             'size() skips \\0 characters',
           ],
           2,
@@ -8592,7 +8597,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'find already returns a bool',
             'find cannot be used in a condition',
             'It is correct as written',
-            'A match at 0 reads as false and npos as true',
+            'Position 0 is false; npos is true',
           ],
           3,
           'The position converts to bool, which says nothing about whether a match exists.',
@@ -8701,7 +8706,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'ec is always zero after parsing',
             'ptr holds the parsed value itself',
-            'A numeric prefix parses fine even with junk after it',
+            'A prefix like 12x still parses',
             'It is never needed for integers',
           ],
           2,
@@ -8872,7 +8877,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'size() becomes 5, with zeros',
             'Five zeros are added at the end',
             'Nothing at all until the next push',
-            'capacity() becomes at least 5, and size() stays 0',
+            'Only capacity(), to at least 5',
           ],
           3,
           'reserve affects room, not contents.',
@@ -8940,7 +8945,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why reserve before pushing back 1000 elements whose count is known?',
           [
             'It is required before push_back',
-            'It avoids repeated reallocations while the vector grows',
+            'It avoids repeated reallocations',
             'It sets every element to zero',
             'It makes size() return 1000 immediately',
           ],
@@ -9062,7 +9067,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It stores a copy of the element',
             'It owns the element it refers to',
-            '*it reaches the element and ++it moves to the next one',
+            '*it reads the element; ++it moves on',
             'It can only move backward, never forward',
           ],
           2,
@@ -9134,7 +9139,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Erases the last element instead',
             'Nothing; the call is ignored',
             'Throws an out-of-range exception',
-            'Undefined behavior: the position is out of range',
+            'Undefined behavior: no bounds check',
           ],
           3,
           'erase does not check its argument.',
@@ -9217,7 +9222,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'The bytes between the two iterators',
             'The elements equal to *first',
             'The capacity of the container',
-            'The increments needed to get from first to last',
+            'The ++ steps from first to last',
           ],
           3,
           'It counts positions, not bytes or values.',
@@ -9253,7 +9258,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why not subtract iterators that come from two different vectors?',
           [
             'Subtraction of iterators is never allowed',
-            'They belong to different ranges, so the result is undefined',
+            'The result is undefined',
             'It returns a distance in bytes',
             'It always returns 0',
           ],
@@ -9330,7 +9335,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It is kept as a backup copy',
             'It is shared by the old and new block',
-            'The elements move to new storage and the old block is freed',
+            'It is freed after the elements move',
             'Nothing happens to it',
           ],
           2,
@@ -9454,15 +9459,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both zeros are erased and 3, 7 remain.',
         ),
         choose(
-          'Why does the loop increment it only in the else branch?',
+          'Why does this loop increment it only in the else branch?',
           [
             '++it is never allowed after an erase',
             'To skip every other element on purpose',
-            'The returned iterator already points at the next element',
+            'erase already returns the next element',
             'It makes the loop run noticeably faster',
           ],
           2,
           'Incrementing after an erase would skip the element that moved into place.',
+          'for (auto it = v.begin(); it != v.end();) {\n  if (*it < 0) {\n    it = v.erase(it);\n  } else {\n    ++it;\n  }\n}',
         ),
       ],
     },
@@ -9539,6 +9545,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           2,
           'erase shifts later elements down without reordering them.',
+          'for (auto it = v.begin(); it != v.end();) {\n  if (*it < 0) {\n    it = v.erase(it);\n  } else {\n    ++it;\n  }\n}',
         ),
       ],
     },
@@ -9755,12 +9762,12 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which hand-written test matches a < b for pairs?',
           [
             'a.first < b.first && a.second < b.second',
-            'a.second < b.second || a.first < b.first',
+            'a.first < b.first || (a.first == b.first && a.second > b.second)',
             'a.first < b.first || (a.first == b.first && a.second < b.second)',
             'a.first + a.second < b.first + b.second',
           ],
           2,
-          'Only this one compares the seconds just when the firsts tie.',
+          'Only this test compares the seconds, with <, just when the firsts tie.',
         ),
       ],
     },
@@ -9905,7 +9912,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Returns low only',
             'Returns an array of two ints',
-            'Builds a pair with first = low and second = high',
+            'Returns the pair (low, high)',
             'Does not compile without make_pair',
           ],
           2,
@@ -10219,7 +10226,7 @@ int main() {
 int main() {
   std::cout << std::to_string(2.5) << "\\n";
 }`,
-          ['2.5', '2', '2.50', '2.500000'],
+          ['2.5', '2.50000', '2.50', '2.500000'],
           3,
           'std::to_string writes a double with six digits after the decimal point.',
         ),
@@ -10241,7 +10248,7 @@ int main() {
           [
             'count was negative, so its digits were hidden',
             'std::string cannot store digit characters',
-            '+= converted 7 to the char with code 7 and appended that one character',
+            '+= appended the char with code 7',
             '+= appended the address of count',
           ],
           2,
@@ -10303,7 +10310,7 @@ int main() {
         choose(
           'What does std::reverse(v.begin(), v.end()) return?',
           [
-            'Nothing; it rearranges the elements of v itself',
+            'Nothing; it reorders v itself',
             'A reversed copy of v',
             'An iterator to the new first element',
             'The number of swaps it made',
@@ -10527,7 +10534,7 @@ int main() {
             'std::reverse cannot change a std::string',
             'std::abs only works on a copy',
             'Comparing a string with itself does not compile',
-            'Reversing digits in place would leave no unreversed text to compare against',
+            'In place, no unreversed text would remain',
           ],
           3,
           'After an in-place reverse, both sides of the comparison would be the same reversed text.',

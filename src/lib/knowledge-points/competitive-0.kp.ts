@@ -121,7 +121,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why must the bounds test come before grid[r][c] in the same condition?',
           [
             'Python sorts the parts of an and expression.',
-            'Comparisons are faster than indexing.',
+            'Comparisons are faster than indexing, so the cheap test should run first.',
             'Negative indexes always raise IndexError.',
             'and stops at the first false part, so the invalid read never happens.',
           ],
@@ -132,7 +132,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A search on a 4-row grid reads grid[r][c] for the up move from row 0 without a bounds check. What happens?',
           [
             'It reads row 3, so a false move across the top border can be followed.',
-            'It raises IndexError and the search stops.',
+            'It raises IndexError at row -1, and the search crashes on the first up move.',
             'It reads row 0 again, which is harmless.',
             'Python skips the read because the index is negative.',
           ],
@@ -220,7 +220,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'land_neighbors is called on a water cell surrounded by land. What should it return?',
           [
-            'An empty list, because the cell itself is water.',
+            'An empty list, because the function returns nothing for a cell that is water.',
             'The land neighbors; the function filters neighbors, not the cell itself.',
             'An IndexError.',
             'The water cell itself.',
@@ -317,7 +317,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Two neighbors can both push it before it is popped the first time.',
             'The stack removes the oldest entry first.',
             'Water cells are pushed too.',
-            'The bounds test allows negative indexes.',
+            'The bounds test lets a negative index wrap around to a cell on the far edge.',
           ],
           0,
           'Until the first pop, the cell is not marked, so every neighbor that sees it pushes another copy.',
@@ -407,9 +407,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'What changes when a recursive flood fill is rewritten with a pending list?',
           [
             'Diagonal cells become neighbors.',
-            'The seen set is no longer needed.',
+            'The seen set is no longer needed, because the list never holds the same cell twice.',
             'Pending cells live in a list instead of nested calls, so depth is not limited.',
-            'The fill can now cross water.',
+            'The list visits cells in a different order, so the island size changes.',
           ],
           2,
           'Only the bookkeeping for pending work moves; the neighbor rules and the discovered set are unchanged.',
@@ -442,7 +442,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'So diagonal land joins the same island.',
             'So a later scan position on an already counted island does not start a new fill.',
-            'So water cells are skipped.',
+            'So a fill can stop as soon as it reaches a cell that belongs to an earlier island.',
             'So the largest island is found first.',
           ],
           1,
@@ -691,7 +691,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Addition is slower than OR.',
             'If k is already present, the addition carries into a higher position.',
             'Addition clears position 0.',
-            'It only works for k below 8.',
+            'For k of 32 or more, the sum overflows a machine word and turns negative.',
           ],
           1,
           'For example 4 + 4 = 8 moves the member from position 2 to position 3; 4 | 4 stays 4.',
@@ -818,7 +818,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'To remove positions that mask does not contain.',
             'To make the result even.',
-            'To add the lowest position back.',
+            'To add back the lowest position that the subtraction removed.',
             'To keep the result above zero.',
           ],
           0,
@@ -981,7 +981,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Item 6 holds the value needed to reach the target, but it is not in the selection mask. Can a submask use it?',
           [
-            'Yes, if no selected item works.',
+            'Yes, once the selected items alone cannot reach the target.',
             'Yes, because its value matches.',
             'Only after the walk reaches 0.',
             'No; every submask uses only selected positions.',
@@ -1013,7 +1013,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'With 18 items and a selection of 6, how many masks does each method examine?',
           [
-            'Walk: 2¹⁸; full loop: 2⁶',
+            'Walk: 2¹⁸ = 262,144; full loop: 2⁶ = 64',
             'Walk: 2⁶ = 64; full loop: 2¹⁸ = 262,144',
             'Both examine 2⁶ = 64',
             'Both examine 2¹⁸ = 262,144',
