@@ -4,7 +4,7 @@ Correctness review of the generated knowledge-point questions (CEN-110), one sec
 
 ## Automated checks
 
-`tests/question-quality.test.ts` runs with `npm test` and checks every knowledge-point choice question in the catalog for giveaways that the executed-output tests cannot see:
+`tests/question-quality.test.ts` runs with `npm test` and checks knowledge-point questions for giveaways that the executed-output tests cannot see. The choice checks apply to `choice` questions; the prompt checks (duplicates and missing context) also apply to typed `text` and `numeric` questions:
 
 - **Length tell.** Per course, how often the correct choice is the strictly longest, and how often it is the strictly shortest. Conceptual and output questions are counted separately, because an output's length is fixed by its program. With four choices and lengths unrelated to the key, either tell occurs about 21% of the time here (ties never count). A course fails above 40%: "pick the longest" would then beat chance by more than 15 points, which for a group of 40 or more questions is over three standard deviations, so a fair course does not fail by accident. Limiting the shortest share as well keeps a fix from trimming every key into the opposite tell. Lengths are measured as rendered: `$…$` math counts roughly as KaTeX displays it, and backtick code spans lose their backticks.
 - **Far-longer key.** A key of 8 or more characters that is more than 1.8 times longer than every distractor fails on its own.
@@ -17,20 +17,20 @@ Two candidate checks were left out because they were not reliable. Matching word
 
 ### Rates per course
 
-Conceptual questions whose correct choice is the strictly longest, before (raw text, October 3 catalog) and after (rendered text, this branch):
+CEN-111 (#36) then turned 4,207 questions into typed answers, which have no choices, so the "after" columns cover only the choice questions that remain. "Before" is the October 3 catalog, measured on raw text, when every question was a choice. "After" is this branch merged with main, measured on rendered text.
 
-| Course                   | Conceptual | Longest key before | Longest key after | Shortest key after | Output questions: longest key after |
-| ------------------------ | ---------: | -----------------: | ----------------: | -----------------: | ----------------------------------: |
-| Python foundations       |        214 |              22.2% |             22.4% |               8.9% |                         5.0% of 480 |
-| Quantitative foundations |        406 |              18.9% |             16.7% |               4.9% |                         10.0% of 70 |
-| Python for Data Analysis |        101 |              52.5% |             22.8% |               6.9% |                         8.4% of 191 |
-| Machine Learning         |        256 |              73.0% |             20.3% |               4.7% |                         4.3% of 208 |
-| Data Systems             |        291 |              71.1% |             26.5% |               3.1% |                          8.9% of 45 |
-| Competitive Programming  |        804 |              44.2% |             35.6% |               6.2% |                         4.4% of 939 |
-| Rust                     |        664 |              41.4% |             23.6% |              13.7% |                         5.0% of 933 |
-| C++                      |        698 |              49.5% |             21.6% |              15.0% |                        4.0% of 1240 |
+| Course                   | Conceptual before → now | Longest key before | Longest key now | Shortest key now | Output choice questions now: longest key |
+| ------------------------ | ----------------------: | -----------------: | --------------: | ---------------: | ---------------------------------------: |
+| Python foundations       |               212 → 214 |              22.2% |           22.4% |             8.9% |                                 0% of 16 |
+| Quantitative foundations |               403 → 238 |              18.9% |           24.8% |             5.0% |                                  0% of 3 |
+| Python for Data Analysis |               101 → 101 |              52.5% |           22.8% |             6.9% |                                  0% of 2 |
+| Machine Learning         |               256 → 256 |              73.0% |           20.3% |             4.7% |                               16.7% of 6 |
+| Data Systems             |               291 → 291 |              71.1% |           26.5% |             3.1% |                                  0% of 1 |
+| Competitive Programming  |               804 → 698 |              44.2% |           35.8% |             6.2% |                               2.9% of 69 |
+| Rust                     |               664 → 664 |              41.4% |           23.6% |            13.7% |                              16.0% of 50 |
+| C++                      |               681 → 698 |              49.5% |           21.6% |            15.0% |                              11.5% of 26 |
 
-Six courses failed the 40% limit before; none does now. Two files are still above a third and are worth a later pass: `competitive-3.kp.ts` (124 of 244, 50.8%, though its keys are at most 1.37 times the longest distractor) and `rust-1.kp.ts` (132 of 358, 36.9%).
+Six courses failed the 40% limit before; none does now. The typed-answer conversion removed many of Competitive Programming's balanced conceptual questions, which pushed its remaining ones back to 40.7%. Another 63 distractors in `competitive-3.kp.ts` brought it to 35.8%. Output choice groups are now below the 40-question minimum, so the limit applies to them only if they grow. Two files are still above a third and are worth a later pass: `competitive-3.kp.ts` (89 of 219, 40.6%), whose remaining longest keys are within 1.4 times the longest distractor, and `rust-1.kp.ts` (132 of 358, 36.9%).
 
 ### Other flags
 
@@ -46,7 +46,7 @@ The far-longer keys were spread across Data Systems (63), Machine Learning (41),
 
 ### How the flagged questions were fixed
 
-822 questions were edited, all line-local: Data Systems 148, Machine Learning 152, Rust 147, C++ 245, Competitive Programming 78, Python for Data Analysis 32, Quantitative foundations 15, Python foundations 5. No correct-choice index changed, and no executed question's code or correct output changed. The usual fix made the key terser and rewrote one or two flat distractors ("Never", "Nothing", "It is not risky") into specific misconceptions of similar length. Competitive Programming, reviewed separately, got distractor edits only, except one positional explanation. Rewrites in the TeX-converted courses keep `$…$` math and `\$` for dollars.
+Compared with current main, 855 questions differ, all by line-local edits: C++ 241, Machine Learning 152, Data Systems 148, Rust 146, Competitive Programming 121, Python for Data Analysis 31, Quantitative foundations 14, Python foundations 2. Edits to questions that CEN-111 later made typed were dropped in the merge, except fixes to their prompts or explanations. No correct-choice index changed, and no executed question's code or correct output changed. The usual fix made the key terser and rewrote one or two flat distractors ("Never", "Nothing", "It is not risky") into specific misconceptions of similar length. Competitive Programming was reviewed separately, so it got distractor edits only, apart from one positional explanation and three keys that were shortened (`cp-fenwick-update-walk-kp1-q4`, `cp-lifting-query-bits-kp2-q3`, `cp-scc-reverse-components-kp2-q4`). Rewrites in the TeX-converted courses keep `$…$` math and `\$` for dollars.
 
 Outside the Rust and C++ review, these edits also fixed:
 

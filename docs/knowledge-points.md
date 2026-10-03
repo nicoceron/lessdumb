@@ -56,13 +56,8 @@ Keep an output or value question as a choice when typing it would be ambiguous o
 #### Choice questions
 
 - **Four or more distinct choices.** Distractors are the answers a learner with a specific misconception would give: an off-by-one count, the unsorted order, the quoted string, the integer-division result. Never pad with filler such as "Compilation fails" or "The function never returns" unless that is genuinely a plausible answer to that program.
-<<<<<<< HEAD
 - **No giveaways.** Keep choices similar in length and form; do not make the correct answer the longest, the shortest, or the most hedged one, and do not repeat it in the prompt. `tests/question-quality.test.ts` fails a course whose correct choice is the longest (or shortest) in more than 40% of its conceptual questions, and any key more than 1.8 times longer than every distractor.
-- **Output questions use `predictOutput`.** The code must be a complete program, and the correct choice must be exactly what it prints. Catalog tests run every such program and every worked example and compare the output, so a wrong key fails the build.
-=======
-- **No giveaways.** Keep choices similar in length and form; do not make the correct answer the longest or most hedged one. Vary the correct position.
 - **Output questions use `typeOutput` or `predictOutput`.** The code must be a complete program, and the accepted answer or correct choice must be exactly what it prints. Catalog tests run every such program and every worked example and compare the output, so a wrong key fails the build.
->>>>>>> origin/main
 - **Conceptual questions use `choose`.** Ask about a decision or consequence, not a restatement of the explanation's wording.
 - Explanations say why the answer is right, in one or two sentences. There are no hints: the worked example is the support. Name a choice by its content, never by position ("the third", "the last one"): choices are shuffled.
 - Prompts are plain questions. Do not template them from the skill title.
