@@ -174,6 +174,8 @@ export default function LearningSession({
   const [presentation, setPresentation] = useState(0);
   // Answers already given on this question's lesson step in this attempt.
   const [stepAnswers, setStepAnswers] = useState(0);
+  // The point's teaching starts open for its first question, then folds away.
+  const [teachingOpen, setTeachingOpen] = useState(true);
   // The authored index of the selected choice, whatever position it shows at.
   const [selected, setSelected] = useState<number | null>(null);
   const [code, setCode] = useState('');
@@ -235,11 +237,12 @@ export default function LearningSession({
     ];
     setQuestionId(q.id);
     setPresentation(presentationOf(state.progress, q.id));
-    setStepAnswers(
+    const answered =
       nextMode === 'learn' && answers
         ? answers.correct.length + answers.incorrect
-        : 0,
-    );
+        : 0;
+    setStepAnswers(answered);
+    setTeachingOpen(answered === 0);
     setSelected(null);
     setCode(q.type === 'code' ? q.starterCode : '');
     setFeedback(null);
@@ -534,12 +537,12 @@ export default function LearningSession({
         <>
           {point && mode === 'learn' && (
             <PointTeaching
-              key={`${question?.id}-${presentation}`}
               title={point.title}
               explanation={point.explanation}
               example={point.example}
               language={codeLanguage(point.example.language ?? courseLanguage)}
-              open={stepAnswers === 0}
+              open={teachingOpen}
+              onOpenChange={setTeachingOpen}
             />
           )}
           {question && (
@@ -587,12 +590,14 @@ function PointTeaching({
   example,
   language,
   open,
+  onOpenChange,
 }: {
   title: string;
   explanation: string[];
   example: LessonExample;
   language: CodeLanguage;
   open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   return (
     <Card className="lesson-paper lesson-point gap-0">
@@ -600,7 +605,8 @@ function PointTeaching({
       <Accordion
         type="single"
         collapsible
-        defaultValue={open ? 'point' : undefined}
+        value={open ? 'point' : ''}
+        onValueChange={(value) => onOpenChange(value === 'point')}
       >
         <AccordionItem value="point" className="border-0">
           <AccordionTrigger>Explanation and worked example</AccordionTrigger>
@@ -689,6 +695,7 @@ function QuestionCard({
             <Button
               variant="outline"
               key={index}
+              data-choice={index}
               onClick={() => onSelect(index)}
               disabled={!!feedback}
               aria-pressed={selected === index}
