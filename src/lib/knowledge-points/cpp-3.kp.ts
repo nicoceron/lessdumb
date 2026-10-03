@@ -10403,6 +10403,2366 @@ const protocols: KnowledgePointModule = {
   ],
 };
 
+const riskChecks: KnowledgePointModule = {
+  'cpp-book-imbalance': [
+    {
+      title: 'Imbalance is (bid − ask) / (bid + ask), computed in double',
+      explanation: [
+        'Book imbalance compares the size resting on each side: (bid_size - ask_size) / (bid_size + ask_size). It runs from -1 (everything on the ask side) through 0 (balanced) to +1 (everything on the bid side).',
+        'The sizes are integers, so convert to double before dividing; integer division would truncate every value strictly between -1 and 1 to 0.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int bid_size = 3;
+            int ask_size = 1;
+            double imbalance = (static_cast<double>(bid_size) - ask_size) / (static_cast<double>(bid_size) + ask_size);
+            std::cout << imbalance << "\\n";
+          }
+        `),
+        output: '0.5',
+        explanation:
+          'The difference 2 divided by the total 4 gives 0.5: the book leans toward the bid.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int bid_size = 1;
+              int ask_size = 3;
+              double imbalance = (static_cast<double>(bid_size) - ask_size) / (static_cast<double>(bid_size) + ask_size);
+              std::cout << imbalance << "\\n";
+            }
+          `),
+          ['0.5', '-0.5', '-2', '0'],
+          1,
+          'The ask side is larger, so the imbalance is negative: -2 / 4.',
+        ),
+        predictOutput(
+          'The first value uses int division, the second double. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int bid_size = 3;
+              int ask_size = 1;
+              int truncated = (bid_size - ask_size) / (bid_size + ask_size);
+              double exact = (static_cast<double>(bid_size) - ask_size) / (static_cast<double>(bid_size) + ask_size);
+              std::cout << truncated << " " << exact << "\\n";
+            }
+          `),
+          ['0.5 0.5', '0 0', '0 0.5', '1 0.5'],
+          2,
+          'Integer division truncates 2 / 4 to 0; converting first keeps 0.5.',
+        ),
+        predictOutput(
+          'Only the bid side has size. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int bid_size = 8;
+              int ask_size = 0;
+              double imbalance = (static_cast<double>(bid_size) - ask_size) / (static_cast<double>(bid_size) + ask_size);
+              std::cout << imbalance << "\\n";
+            }
+          `),
+          ['8', '0', 'inf', '1'],
+          3,
+          'All the size is on the bid side, the +1 end of the scale.',
+        ),
+        choose(
+          'What does an imbalance close to +1 mean?',
+          [
+            'Almost all displayed size is on the bid side',
+            'Almost all displayed size is on the ask side',
+            'Both sides are equal',
+            'The spread is 1 tick',
+          ],
+          0,
+          'The numerator approaches the total when the ask size is small.',
+        ),
+      ],
+    },
+    {
+      title: 'Define the empty-book case and reject negative sizes',
+      explanation: [
+        'When both sides are 0 the denominator is 0. Division by zero is undefined behavior in C++ (on typical IEEE hardware 0.0 / 0.0 gives NaN, which then poisons later arithmetic), so the contract must say what an empty book reports; here it is 0, a neutral imbalance.',
+        'Negative sizes are invalid input and are rejected before any arithmetic.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int bid_size = 0;
+            int ask_size = 0;
+            if (bid_size < 0) {
+              std::cout << "invalid\\n";
+            } else if (ask_size < 0) {
+              std::cout << "invalid\\n";
+            } else if (bid_size + ask_size == 0) {
+              std::cout << 0 << "\\n";
+            } else {
+              std::cout << (static_cast<double>(bid_size) - ask_size) / (static_cast<double>(bid_size) + ask_size) << "\\n";
+            }
+          }
+        `),
+        output: '0',
+        explanation:
+          'The empty book is handled before the division, using the contract’s value 0.',
+      },
+      questions: [
+        predictOutput(
+          'A negative bid size arrives. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int bid_size = -2;
+              int ask_size = 5;
+              if (bid_size < 0) {
+                std::cout << "invalid\\n";
+              } else if (ask_size < 0) {
+                std::cout << "invalid\\n";
+              } else if (bid_size + ask_size == 0) {
+                std::cout << 0 << "\\n";
+              } else {
+                std::cout << (static_cast<double>(bid_size) - ask_size) / (static_cast<double>(bid_size) + ask_size) << "\\n";
+              }
+            }
+          `),
+          ['-2.33333', 'invalid', '0', '1'],
+          1,
+          'The negative size is rejected before it can produce a value outside -1 to 1.',
+        ),
+        choose(
+          'Without the zero check, what happens for an empty book?',
+          [
+            'The result is 0',
+            'An exception is thrown',
+            'It divides by zero: undefined in C++, and NaN on typical IEEE hardware',
+            'The result is 1',
+          ],
+          2,
+          'Both the numerator and the denominator are 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int bid_size = 5;
+              int ask_size = 5;
+              if (bid_size < 0) {
+                std::cout << "invalid\\n";
+              } else if (ask_size < 0) {
+                std::cout << "invalid\\n";
+              } else if (bid_size + ask_size == 0) {
+                std::cout << 0 << "\\n";
+              } else {
+                std::cout << (static_cast<double>(bid_size) - ask_size) / (static_cast<double>(bid_size) + ask_size) << "\\n";
+              }
+            }
+          `),
+          ['1', '0', 'invalid', '0.5'],
+          1,
+          'Equal sizes give a difference of 0, a balanced book.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int bid_size = 2;
+              int ask_size = 6;
+              if (bid_size < 0) {
+                std::cout << "invalid\\n";
+              } else if (ask_size < 0) {
+                std::cout << "invalid\\n";
+              } else if (bid_size + ask_size == 0) {
+                std::cout << 0 << "\\n";
+              } else {
+                std::cout << (static_cast<double>(bid_size) - ask_size) / (static_cast<double>(bid_size) + ask_size) << "\\n";
+              }
+            }
+          `),
+          ['0.5', '-4', 'invalid', '-0.5'],
+          3,
+          'The difference -4 over the total 8 is -0.5.',
+        ),
+      ],
+    },
+  ],
+  'cpp-notional-limit': [
+    {
+      title: 'Widen before multiplying',
+      explanation: [
+        'Notional in ticks is price_ticks * quantity. With two int operands the multiplication happens in int, which overflows past about 2.1 billion on common platforms, and signed overflow is undefined behavior.',
+        'Convert one operand first, as in static_cast<long long>(price_ticks) * quantity, so the multiplication itself is done in long long. Converting the product afterwards is too late: the overflow has already happened.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int price_ticks = 2000000000;
+            int quantity = 2;
+            long long notional = static_cast<long long>(price_ticks) * quantity;
+            std::cout << notional << "\\n";
+          }
+        `),
+        output: '4000000000',
+        explanation:
+          'The cast makes the multiplication a long long one, so 4 billion fits.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int price_ticks = 125;
+              int quantity = 4;
+              long long notional = static_cast<long long>(price_ticks) * quantity;
+              std::cout << notional << "\\n";
+            }
+          `),
+          ['129', '500', '125', '4'],
+          1,
+          'Notional is price times quantity: 125 * 4.',
+        ),
+        choose(
+          'price is 2000000000 and quantity is 2, both int. What is wrong with this line?',
+          [
+            'Nothing; the result is stored in a long long',
+            'price * quantity is computed in int and overflows before the conversion, which is undefined behavior',
+            'A long long cannot hold 4 billion',
+            'The conversion happens twice',
+          ],
+          1,
+          'The type of the variable receiving the result does not change how the multiplication is done.',
+          cpp(`
+            long long notional = price * quantity;
+          `),
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int price_ticks = 50000;
+              int quantity = 50000;
+              long long notional = static_cast<long long>(price_ticks) * quantity;
+              std::cout << notional << "\\n";
+            }
+          `),
+          ['-1794967296', '250000000', '2500000000', 'Overflow'],
+          2,
+          'Widened first, 50000 * 50000 = 2.5 billion fits in long long.',
+        ),
+        choose(
+          'Which expression computes the notional without int overflow?',
+          [
+            'static_cast<long long>(price * quantity)',
+            'static_cast<long long>(price) * quantity',
+            '(long long)(price * quantity)',
+            'price * quantity * 1LL',
+          ],
+          1,
+          'Only converting an operand before the first multiplication moves it to long long; in the last option price * quantity runs first, in int.',
+        ),
+      ],
+    },
+    {
+      title: 'Compare against the limit, inclusive and validated',
+      explanation: [
+        'A notional limit accepts an order when its notional does not exceed the limit: notional <= limit, so an order exactly at the limit passes. Prices, quantities and limits below 0 are invalid input and are rejected first.',
+        'Compute the notional in long long, then compare it with a long long limit.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int price_ticks = 100;
+            int quantity = 3;
+            long long limit = 300;
+            long long notional = static_cast<long long>(price_ticks) * quantity;
+            if (price_ticks < 0) {
+              std::cout << "invalid\\n";
+            } else if (quantity < 0) {
+              std::cout << "invalid\\n";
+            } else if (limit < 0) {
+              std::cout << "invalid\\n";
+            } else if (notional <= limit) {
+              std::cout << "accept\\n";
+            } else {
+              std::cout << "reject\\n";
+            }
+          }
+        `),
+        output: 'accept',
+        explanation:
+          'The notional is exactly 300, which does not exceed the limit.',
+      },
+      questions: [
+        predictOutput(
+          'The quantity rises to 4. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int price_ticks = 100;
+              int quantity = 4;
+              long long limit = 300;
+              long long notional = static_cast<long long>(price_ticks) * quantity;
+              if (price_ticks < 0) {
+                std::cout << "invalid\\n";
+              } else if (quantity < 0) {
+                std::cout << "invalid\\n";
+              } else if (limit < 0) {
+                std::cout << "invalid\\n";
+              } else if (notional <= limit) {
+                std::cout << "accept\\n";
+              } else {
+                std::cout << "reject\\n";
+              }
+            }
+          `),
+          ['accept', 'reject', 'invalid', '400'],
+          1,
+          '400 exceeds the 300 limit.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int price_ticks = 2000000000;
+              int quantity = 2;
+              long long limit = 4000000000;
+              long long notional = static_cast<long long>(price_ticks) * quantity;
+              if (price_ticks < 0) {
+                std::cout << "invalid\\n";
+              } else if (quantity < 0) {
+                std::cout << "invalid\\n";
+              } else if (limit < 0) {
+                std::cout << "invalid\\n";
+              } else if (notional <= limit) {
+                std::cout << "accept\\n";
+              } else {
+                std::cout << "reject\\n";
+              }
+            }
+          `),
+          ['reject', 'invalid', 'accept', 'overflow'],
+          2,
+          'Computed in long long, the notional is exactly 4 billion, which equals the limit.',
+        ),
+        predictOutput(
+          'A negative quantity arrives. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int price_ticks = 100;
+              int quantity = -1;
+              long long limit = 300;
+              long long notional = static_cast<long long>(price_ticks) * quantity;
+              if (price_ticks < 0) {
+                std::cout << "invalid\\n";
+              } else if (quantity < 0) {
+                std::cout << "invalid\\n";
+              } else if (limit < 0) {
+                std::cout << "invalid\\n";
+              } else if (notional <= limit) {
+                std::cout << "accept\\n";
+              } else {
+                std::cout << "reject\\n";
+              }
+            }
+          `),
+          ['invalid', 'accept', 'reject', '-100'],
+          0,
+          'Without validation, -100 would pass the limit check; the quantity check rejects it first.',
+        ),
+        choose(
+          'A limit says notional "may not exceed 300 ticks". Should an order with notional exactly 300 pass?',
+          [
+            'No; it must be strictly below 300',
+            'Only if the price is even',
+            'It depends on the time of day',
+            'Yes; not exceeding 300 means <= 300',
+          ],
+          3,
+          'The wording sets an inclusive bound, so the check is notional <= limit.',
+        ),
+      ],
+    },
+  ],
+  'cpp-position-bound': [
+    {
+      title: 'Check the position the trade would leave',
+      explanation: [
+        'A position limit applies to where the position will be, not where it is now: next = position + delta, where buys add and sells subtract. A trade from a position that is within the limit can still end outside it.',
+        'Compute next in long long, then allow the trade only if -limit <= next <= limit.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int position = 4;
+            int delta = 3;
+            int limit = 10;
+            long long next = static_cast<long long>(position) + delta;
+            std::cout << next << " ";
+            if (next > limit) {
+              std::cout << "blocked\\n";
+            } else if (next < -static_cast<long long>(limit)) {
+              std::cout << "blocked\\n";
+            } else {
+              std::cout << "allowed\\n";
+            }
+          }
+        `),
+        output: '7 allowed',
+        explanation:
+          'The trade would leave a position of 7, inside the range -10 to 10.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int position = 8;
+              int delta = 3;
+              int limit = 10;
+              long long next = static_cast<long long>(position) + delta;
+              std::cout << next << " ";
+              if (next > limit) {
+                std::cout << "blocked\\n";
+              } else if (next < -static_cast<long long>(limit)) {
+                std::cout << "blocked\\n";
+              } else {
+                std::cout << "allowed\\n";
+              }
+            }
+          `),
+          ['11 allowed', '11 blocked', '8 allowed', '3 allowed'],
+          1,
+          'The current position 8 is fine, but the trade would take it to 11.',
+        ),
+        predictOutput(
+          'A sell deepens a short position. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int position = -8;
+              int delta = -3;
+              int limit = 10;
+              long long next = static_cast<long long>(position) + delta;
+              std::cout << next << " ";
+              if (next > limit) {
+                std::cout << "blocked\\n";
+              } else if (next < -static_cast<long long>(limit)) {
+                std::cout << "blocked\\n";
+              } else {
+                std::cout << "allowed\\n";
+              }
+            }
+          `),
+          ['-11 allowed', '-5 allowed', '-11 blocked', '11 blocked'],
+          2,
+          'A short position of -11 breaks the lower bound -10.',
+        ),
+        predictOutput(
+          'A large sell flips a long position to short. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int position = 9;
+              int delta = -15;
+              int limit = 10;
+              long long next = static_cast<long long>(position) + delta;
+              std::cout << next << " ";
+              if (next > limit) {
+                std::cout << "blocked\\n";
+              } else if (next < -static_cast<long long>(limit)) {
+                std::cout << "blocked\\n";
+              } else {
+                std::cout << "allowed\\n";
+              }
+            }
+          `),
+          ['-6 blocked', '24 blocked', '9 allowed', '-6 allowed'],
+          3,
+          'The sell is large, but the resulting position -6 is within the limit.',
+        ),
+        choose(
+          'Why check position + delta instead of the current position alone?',
+          [
+            'The limit applies to the position after the trade; the current one may be fine while the result is not',
+            'The current position is always zero',
+            'delta is always positive',
+            'It is the same check',
+          ],
+          0,
+          'Risk is about the state the trade would create.',
+        ),
+      ],
+    },
+    {
+      title: 'Check both bounds and widen before adding',
+      explanation: [
+        'A symmetric limit bounds long and short positions alike. Testing only next <= limit lets unbounded short positions through.',
+        'Computing position + delta in int can overflow near the int range, and the shortcut std::abs(next) <= limit fails for the most negative int, whose magnitude does not fit in an int. Widening to long long before adding, and comparing against -static_cast<long long>(limit), avoids both problems.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int position = -8;
+            int delta = -5;
+            int limit = 10;
+            long long next = static_cast<long long>(position) + delta;
+            bool upper_only = next <= limit;
+            bool both = next <= limit && next >= -static_cast<long long>(limit);
+            std::cout << upper_only << " " << both << "\\n";
+          }
+        `),
+        output: '1 0',
+        explanation:
+          'A position of -13 passes a check of the upper bound alone, but fails the full symmetric check.',
+      },
+      questions: [
+        predictOutput(
+          'The position starts at the largest int. What is printed?',
+          cpp(`
+            #include <iostream>
+            #include <limits>
+            int main() {
+              int position = std::numeric_limits<int>::max();
+              int delta = 1;
+              int limit = 10;
+              long long next = static_cast<long long>(position) + delta;
+              bool both = next <= limit && next >= -static_cast<long long>(limit);
+              std::cout << next << " " << both << "\\n";
+            }
+          `),
+          ['-2147483648 1', '2147483648 0', '2147483648 1', '0 0'],
+          1,
+          'Widened before adding, the sum is a true 2147483648, which is far above the limit.',
+        ),
+        predictOutput(
+          'The position sits exactly on the lower bound. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int position = -10;
+              int delta = 0;
+              int limit = 10;
+              long long next = static_cast<long long>(position) + delta;
+              bool upper_only = next <= limit;
+              bool both = next <= limit && next >= -static_cast<long long>(limit);
+              std::cout << upper_only << " " << both << "\\n";
+            }
+          `),
+          ['1 0', '0 1', '1 1', '0 0'],
+          2,
+          'Both bounds are inclusive, so -10 is allowed.',
+        ),
+        choose(
+          'Why not test std::abs(position + delta) <= limit using int arithmetic?',
+          [
+            'std::abs only works on doubles',
+            'The int sum can overflow, and std::abs of the most negative int is not representable',
+            'It is equivalent and fine',
+            'abs makes the check one-sided',
+          ],
+          1,
+          'Both the addition and the absolute value can leave the int range.',
+        ),
+        choose(
+          'A risk check only tests next <= limit. Which trades slip through?',
+          [
+            'Buys that push the position above limit',
+            'Trades of size 0',
+            'None',
+            'Sells that push the position below -limit',
+          ],
+          3,
+          'Without the lower bound, short positions can grow without limit.',
+        ),
+      ],
+    },
+  ],
+  'cpp-risk': [
+    {
+      title: 'An event is expired when now >= deadline',
+      explanation: [
+        'Orders and quotes often carry a deadline. The contract must define the boundary exactly; here an event is expired when now >= deadline, so at the deadline itself it has already expired.',
+        'The comparison produces a bool, which prints as 1 or 0.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            long long deadline = 100;
+            long long now = 100;
+            bool expired = now >= deadline;
+            std::cout << expired << "\\n";
+          }
+        `),
+        output: '1',
+        explanation: 'At exactly the deadline, now >= deadline is true.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long deadline = 100;
+              long long now = 99;
+              bool expired = now >= deadline;
+              std::cout << expired << "\\n";
+            }
+          `),
+          ['1', '0', '99', '-1'],
+          1,
+          'One unit before the deadline the event is still live.',
+        ),
+        predictOutput(
+          'Three times around the deadline are checked. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long deadline = 100;
+              std::cout << (99 >= deadline) << " " << (100 >= deadline) << " " << (101 >= deadline) << "\\n";
+            }
+          `),
+          ['0 0 1', '1 1 1', '0 1 1', '0 1 0'],
+          2,
+          'Only the time before the deadline is live; the deadline itself counts as expired.',
+        ),
+        predictOutput(
+          'Two possible contracts are compared at the boundary. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long deadline = 100;
+              long long now = 100;
+              std::cout << (now >= deadline) << " " << (now > deadline) << "\\n";
+            }
+          `),
+          ['1 0', '1 1', '0 0', '0 1'],
+          0,
+          'The two definitions disagree exactly at the deadline.',
+        ),
+        choose(
+          'An order is valid "until 10:00:00", and a message stamped exactly 10:00:00 arrives. Why must the contract say whether it is still valid?',
+          [
+            'Times can never be exactly equal',
+            'Both definitions agree at the boundary',
+            'The clock decides at run time',
+            'Only the definition decides the boundary case: >= and > give different answers there',
+          ],
+          3,
+          'Boundaries are where off-by-one disagreements between systems appear.',
+        ),
+      ],
+    },
+    {
+      title: 'Decide expiry from supplied event times',
+      explanation: [
+        'Code that decides expiry by sleeping and then reading the wall clock gives different answers on a slow or busy machine, so tests of the exact boundary become flaky. Pass the event time in as a value instead: the same inputs then give the same answer on every run.',
+        'With supplied times, tests can probe deadline - 1, deadline and deadline + 1 exactly. A deadline is often computed as sent time plus a time-to-live.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            long long deadline = 50;
+            long long first_event = 49;
+            long long second_event = 50;
+            std::cout << (first_event >= deadline) << (second_event >= deadline) << "\\n";
+          }
+        `),
+        output: '01',
+        explanation:
+          'The event times come from the data, so the result is the same on every run: 49 is live and 50 is expired.',
+      },
+      questions: [
+        predictOutput(
+          'A message sent at 1000 lives for 250 units. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long sent = 1000;
+              long long ttl = 250;
+              long long now = 1249;
+              long long deadline = sent + ttl;
+              std::cout << deadline << " " << (now >= deadline) << "\\n";
+            }
+          `),
+          ['1250 1', '1250 0', '1249 0', '250 1'],
+          1,
+          'The deadline is 1250, and 1249 is one unit before it.',
+        ),
+        choose(
+          'A test sleeps for 100 ms and then checks that an order with a 100 ms lifetime has expired. Why is the test flaky?',
+          [
+            'Sleeping is not allowed in C++',
+            '100 ms is too short to measure',
+            'Sleep and clock timing vary, so the check can land just before or just after the boundary',
+            'The order never expires',
+          ],
+          2,
+          'Real time is not exact enough to test an exact boundary.',
+        ),
+        predictOutput(
+          'Three logged events are checked against one deadline. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long deadline = 60;
+              long long a = 40;
+              long long b = 60;
+              long long c = 75;
+              int expired = (a >= deadline) + (b >= deadline) + (c >= deadline);
+              std::cout << expired << "\\n";
+            }
+          `),
+          ['1', '2', '3', '0'],
+          1,
+          'Each true comparison counts as 1: the events at 60 and 75 are expired.',
+        ),
+        choose(
+          'Which inputs make good boundary tests for "expired when now >= deadline"?',
+          [
+            'Only a time long after the deadline',
+            'A random time on each run',
+            'The current wall-clock time',
+            'deadline - 1, deadline and deadline + 1',
+          ],
+          3,
+          'Those three values pin down exactly where the answer changes.',
+        ),
+      ],
+    },
+  ],
+};
+
+const pipelines: KnowledgePointModule = {
+  'cpp-backpressure': [
+    {
+      title: 'A bounded queue accepts work only while below capacity',
+      explanation: [
+        'A pipeline stage with a bounded queue can accept new work only while queue.size() < capacity. When the queue is full it must refuse; the producer then knows to slow down, retry later or drop the item deliberately. That refusal signal is backpressure.',
+        'Without it, a fast producer either grows the queue without bound or loses work silently.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <deque>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::deque<int> queue;
+            std::size_t capacity = 2;
+            int accepted = 0;
+            int refused = 0;
+            std::vector<int> incoming = {5, 6, 7};
+            for (std::size_t i = 0; i < incoming.size(); ++i) {
+              if (queue.size() < capacity) {
+                queue.push_back(incoming[i]);
+                accepted += 1;
+              } else {
+                refused += 1;
+              }
+            }
+            std::cout << accepted << " " << refused << " " << queue.back() << "\\n";
+          }
+        `),
+        output: '2 1 6',
+        explanation:
+          '5 and 6 fill the queue; 7 is refused, so 6 is the last item queued.',
+      },
+      questions: [
+        predictOutput(
+          'Four items arrive at a queue of capacity 3. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <deque>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::deque<int> queue;
+              std::size_t capacity = 3;
+              int accepted = 0;
+              int refused = 0;
+              std::vector<int> incoming = {1, 2, 3, 4};
+              for (std::size_t i = 0; i < incoming.size(); ++i) {
+                if (queue.size() < capacity) {
+                  queue.push_back(incoming[i]);
+                  accepted += 1;
+                } else {
+                  refused += 1;
+                }
+              }
+              std::cout << accepted << " " << refused << " " << queue.back() << "\\n";
+            }
+          `),
+          ['4 0 4', '3 1 3', '3 1 4', '1 3 1'],
+          1,
+          'Three items fit; the fourth is refused, so 3 stays the last item.',
+        ),
+        predictOutput(
+          'The queue has capacity 0. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <deque>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::deque<int> queue;
+              std::size_t capacity = 0;
+              int accepted = 0;
+              int refused = 0;
+              std::vector<int> incoming = {1, 2, 3};
+              for (std::size_t i = 0; i < incoming.size(); ++i) {
+                if (queue.size() < capacity) {
+                  queue.push_back(incoming[i]);
+                  accepted += 1;
+                } else {
+                  refused += 1;
+                }
+              }
+              std::cout << accepted << " " << refused << "\\n";
+            }
+          `),
+          ['3 0', '1 2', '0 3', '0 0'],
+          2,
+          'Nothing fits in a zero-capacity queue, so every item is refused.',
+        ),
+        choose(
+          'What makes a full queue apply backpressure?',
+          [
+            'It tells the producer the item was not accepted, so the producer can slow down or retry',
+            'It silently grows beyond its capacity',
+            'It drops the oldest item and reports success',
+            'It blocks the consumer',
+          ],
+          0,
+          'Backpressure is a signal that travels back to the producer.',
+        ),
+        predictOutput(
+          'A queue of capacity 3 already holds 3 items. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <deque>
+            #include <iostream>
+            int main() {
+              std::deque<int> queue = {4, 5, 6};
+              std::size_t capacity = 3;
+              std::cout << (queue.size() < capacity) << "\\n";
+            }
+          `),
+          ['1', '0', '3', '-1'],
+          1,
+          'The queue is full, so the check that allows a push is false.',
+        ),
+      ],
+    },
+    {
+      title: 'Report acceptance to the producer',
+      explanation: [
+        'A push operation that returns nothing, or always reports success, leaves the producer unable to react to a full queue: items vanish without a trace. Make acceptance part of the contract, for example a bool result from try_push, or a bool out-parameter as below.',
+        'The producer can then count, retry or deliberately drop refused items, and the loss is visible.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <deque>
+          #include <iostream>
+          void offer(std::deque<int>& queue, std::size_t capacity, int item, bool& accepted) {
+            accepted = false;
+            if (queue.size() < capacity) {
+              queue.push_back(item);
+              accepted = true;
+            }
+          }
+          int main() {
+            std::deque<int> queue;
+            bool ok = false;
+            int lost = 0;
+            offer(queue, 1, 10, ok);
+            if (!ok) lost += 1;
+            offer(queue, 1, 20, ok);
+            if (!ok) lost += 1;
+            std::cout << queue.size() << " " << lost << "\\n";
+          }
+        `),
+        output: '1 1',
+        explanation:
+          'The second offer is refused, and because offer reports it, the producer records one lost item.',
+      },
+      questions: [
+        choose(
+          'What is wrong with this push contract?',
+          [
+            'It reports success even when the item was discarded',
+            'It never adds any items',
+            'It throws when the queue is full',
+            'Nothing',
+          ],
+          0,
+          'The producer cannot tell an accepted item from a dropped one.',
+          cpp(`
+            bool try_push(std::deque<int>& queue, std::size_t capacity, int item) {
+              if (queue.size() < capacity) queue.push_back(item);
+              return true;
+            }
+          `),
+        ),
+        predictOutput(
+          'Three items are offered to a queue of capacity 2. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <deque>
+            #include <iostream>
+            void offer(std::deque<int>& queue, std::size_t capacity, int item, bool& accepted) {
+              accepted = false;
+              if (queue.size() < capacity) {
+                queue.push_back(item);
+                accepted = true;
+              }
+            }
+            int main() {
+              std::deque<int> queue;
+              bool ok = false;
+              int lost = 0;
+              offer(queue, 2, 1, ok);
+              if (!ok) lost += 1;
+              offer(queue, 2, 2, ok);
+              if (!ok) lost += 1;
+              offer(queue, 2, 3, ok);
+              if (!ok) lost += 1;
+              std::cout << queue.size() << " " << lost << "\\n";
+            }
+          `),
+          ['3 0', '1 2', '2 1', '2 0'],
+          2,
+          'Two items fit; the third is refused and counted as lost.',
+        ),
+        choose(
+          'Which reactions to a refused item are reasonable for a producer?',
+          [
+            'Pretend it was accepted',
+            'Slow down, retry later, or drop it while recording the loss',
+            'Push it anyway beyond the capacity',
+            'Restart the consumer',
+          ],
+          1,
+          'Any of those keeps the loss visible and the capacity respected.',
+        ),
+        predictOutput(
+          'This version compares with <= instead of <. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <deque>
+            #include <iostream>
+            void offer(std::deque<int>& queue, std::size_t capacity, int item, bool& accepted) {
+              accepted = false;
+              if (queue.size() <= capacity) {
+                queue.push_back(item);
+                accepted = true;
+              }
+            }
+            int main() {
+              std::deque<int> queue;
+              bool ok = false;
+              offer(queue, 2, 1, ok);
+              offer(queue, 2, 2, ok);
+              offer(queue, 2, 3, ok);
+              std::cout << queue.size() << "\\n";
+            }
+          `),
+          ['2', '3', '1', '0'],
+          1,
+          'With <= a queue holding 2 items still accepts one more, exceeding the capacity.',
+        ),
+      ],
+    },
+  ],
+  'cpp-idempotent-message': [
+    {
+      title: 'insert(id).second says whether the id is new',
+      explanation: [
+        'Messages can be delivered more than once. A std::set<int> of processed message ids makes handling idempotent: seen.insert(id) returns a pair whose .second is true only if id was not already in the set. Apply the message only in that case, and a redelivery changes nothing.',
+        'The set keeps each id once, so its size is the number of distinct messages handled.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <set>
+          #include <vector>
+          int main() {
+            std::vector<int> ids = {4, 8, 4, 9, 8};
+            std::set<int> seen;
+            int applied = 0;
+            for (std::size_t i = 0; i < ids.size(); ++i)
+              if (seen.insert(ids[i]).second) applied += 1;
+            std::cout << applied << " " << seen.size() << "\\n";
+          }
+        `),
+        output: '3 3',
+        explanation:
+          'The second deliveries of 4 and 8 are recognized and skipped.',
+      },
+      questions: [
+        predictOutput(
+          'Each message adds its amount to a balance. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <set>
+            #include <vector>
+            int main() {
+              std::vector<int> ids = {1, 2, 1};
+              std::vector<int> amounts = {5, 7, 5};
+              std::set<int> seen;
+              int balance = 0;
+              for (std::size_t i = 0; i < ids.size(); ++i)
+                if (seen.insert(ids[i]).second) balance += amounts[i];
+              std::cout << balance << "\\n";
+            }
+          `),
+          ['17', '12', '5', '7'],
+          1,
+          'Message 1 arrives twice but is applied once: 5 + 7.',
+        ),
+        predictOutput(
+          'The same id is inserted twice. What is printed?',
+          cpp(`
+            #include <iostream>
+            #include <set>
+            int main() {
+              std::set<int> seen;
+              bool first = seen.insert(3).second;
+              bool second = seen.insert(3).second;
+              std::cout << first << second << "\\n";
+            }
+          `),
+          ['11', '01', '10', '00'],
+          2,
+          'The first insert adds 3; the second finds it already present.',
+        ),
+        choose(
+          'What does `seen.insert(id).second` tell you?',
+          [
+            'The position of id in the set',
+            'How many times id has been seen',
+            'Whether the set is sorted',
+            'Whether id was newly inserted (true) or already present (false)',
+          ],
+          3,
+          'insert returns an iterator and a bool that reports whether insertion happened.',
+        ),
+        predictOutput(
+          'One handler deduplicates and one does not. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <set>
+            #include <vector>
+            int main() {
+              std::vector<int> ids = {4, 8, 4, 9, 8};
+              std::set<int> seen;
+              int naive = 0;
+              int deduplicated = 0;
+              for (std::size_t i = 0; i < ids.size(); ++i) {
+                naive += 10;
+                if (seen.insert(ids[i]).second) deduplicated += 10;
+              }
+              std::cout << naive << " " << deduplicated << "\\n";
+            }
+          `),
+          ['50 30', '30 50', '50 50', '30 30'],
+          0,
+          'The naive handler applies all five deliveries; the deduplicating one applies three distinct messages.',
+        ),
+      ],
+    },
+    {
+      title: 'Retries must reuse the same identity',
+      explanation: [
+        'Deduplication only works if a retry carries the same id as the original message. If the sender generates a fresh id for every retry, each copy looks new and is applied again.',
+        'Ids must also be remembered for as long as retries can arrive; forgetting them too early lets a late retry through a second time.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <set>
+          #include <vector>
+          int main() {
+            std::vector<int> retried_ids = {100, 100, 100};
+            std::set<int> seen;
+            int balance = 0;
+            for (std::size_t i = 0; i < retried_ids.size(); ++i)
+              if (seen.insert(retried_ids[i]).second) balance += 25;
+            std::cout << balance << "\\n";
+          }
+        `),
+        output: '25',
+        explanation:
+          'All three deliveries reuse id 100, so the payment is applied once.',
+      },
+      questions: [
+        predictOutput(
+          'The sender gives each retry a fresh id. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <set>
+            #include <vector>
+            int main() {
+              std::vector<int> retried_ids = {200, 201, 202};
+              std::set<int> seen;
+              int balance = 0;
+              for (std::size_t i = 0; i < retried_ids.size(); ++i)
+                if (seen.insert(retried_ids[i]).second) balance += 25;
+              std::cout << balance << "\\n";
+            }
+          `),
+          ['25', '75', '0', '50'],
+          1,
+          'Every retry looks like a new message, so the same payment is applied three times.',
+        ),
+        choose(
+          'Each retry of a message gets a new random id. What does a deduplicating consumer do?',
+          [
+            'Applies the message once',
+            'Rejects every copy',
+            'Applies every retry, because each id looks new',
+            'Applies it exactly twice',
+          ],
+          2,
+          'Deduplication can only recognize ids it has seen before.',
+        ),
+        choose(
+          'The consumer forgets ids after one minute, but retries can arrive for five minutes. What can happen?',
+          [
+            'A late retry is applied a second time',
+            'Nothing',
+            'The set throws an exception',
+            'All retries are rejected',
+          ],
+          0,
+          'Once an id is forgotten, its next delivery looks new.',
+        ),
+        predictOutput(
+          'A map remembers the amount first applied for each id. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <map>
+            #include <vector>
+            int main() {
+              std::vector<int> ids = {7, 7};
+              std::vector<int> amounts = {30, 99};
+              std::map<int, int> processed;
+              for (std::size_t i = 0; i < ids.size(); ++i) processed.emplace(ids[i], amounts[i]);
+              std::cout << processed[7] << " " << processed.size() << "\\n";
+            }
+          `),
+          ['99 1', '30 2', '30 1', '129 1'],
+          2,
+          'emplace does nothing for an existing key, so the first amount for id 7 is kept.',
+        ),
+      ],
+    },
+  ],
+  'cpp-replay-events': [
+    {
+      title: 'Apply logged events in their recorded order',
+      explanation: [
+        'An event log records operations such as "set to 5" and "add 2". Replaying applies them to an initial state one by one, in the recorded order; each kind of event has one fixed meaning.',
+        'Because nothing else affects the state, replaying the same log from the same initial state always produces the same result.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          void apply(int& state, char kind, int value) {
+            if (kind == '=') state = value;
+            if (kind == '+') state += value;
+          }
+          int main() {
+            int state = 0;
+            apply(state, '=', 5);
+            apply(state, '+', 2);
+            apply(state, '+', 3);
+            std::cout << state << "\\n";
+          }
+        `),
+        output: '10',
+        explanation: 'The state is set to 5, then raised by 2 and by 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            void apply(int& state, char kind, int value) {
+              if (kind == '=') state = value;
+              if (kind == '+') state += value;
+            }
+            int main() {
+              int state = 4;
+              apply(state, '+', 6);
+              apply(state, '=', 1);
+              apply(state, '+', 2);
+              std::cout << state << "\\n";
+            }
+          `),
+          ['12', '3', '1', '13'],
+          1,
+          'The set to 1 discards the earlier 10, and then 2 is added.',
+        ),
+        predictOutput(
+          'The log also has subtraction events. What is printed?',
+          cpp(`
+            #include <iostream>
+            void apply(int& state, char kind, int value) {
+              if (kind == '=') state = value;
+              if (kind == '+') state += value;
+              if (kind == '-') state -= value;
+            }
+            int main() {
+              int state = 0;
+              apply(state, '=', 10);
+              apply(state, '-', 4);
+              apply(state, '+', 1);
+              std::cout << state << "\\n";
+            }
+          `),
+          ['15', '5', '7', '11'],
+          2,
+          '10 - 4 + 1 = 7.',
+        ),
+        choose(
+          'Why does replaying the same log always give the same state?',
+          [
+            'The compiler caches the result',
+            'All events commute',
+            'It does not; replays vary',
+            'Each event is applied in the recorded order with a fixed meaning, and nothing else changes the state',
+          ],
+          3,
+          'Same inputs, same steps, same order: the result is determined.',
+        ),
+        predictOutput(
+          'Two replicas start from different states and replay the same log. What is printed?',
+          cpp(`
+            #include <iostream>
+            void apply(int& state, char kind, int value) {
+              if (kind == '=') state = value;
+              if (kind == '+') state += value;
+            }
+            int main() {
+              int replica_a = 3;
+              int replica_b = 100;
+              apply(replica_a, '=', 5);
+              apply(replica_a, '+', 2);
+              apply(replica_b, '=', 5);
+              apply(replica_b, '+', 2);
+              std::cout << replica_a << " " << replica_b << "\\n";
+            }
+          `),
+          ['10 107', '7 7', '7 107', '5 5'],
+          1,
+          'The leading set overrides the different starting values, so both replicas end at 7.',
+        ),
+      ],
+    },
+    {
+      title: 'Order matters for events that do not commute',
+      explanation: [
+        '"Set to 5, then add 2" ends at 7, but "add 2, then set to 5" ends at 5. Because set and add do not commute, the order of the log is part of its data.',
+        'Sorting or regrouping events before replay, for example by value, can change the final state; replay must follow the recorded order.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          void apply(int& state, char kind, int value) {
+            if (kind == '=') state = value;
+            if (kind == '+') state += value;
+          }
+          int main() {
+            int a = 0;
+            apply(a, '=', 5);
+            apply(a, '+', 2);
+            int b = 0;
+            apply(b, '+', 2);
+            apply(b, '=', 5);
+            std::cout << a << " " << b << "\\n";
+          }
+        `),
+        output: '7 5',
+        explanation:
+          'The same two events in opposite orders give different states.',
+      },
+      questions: [
+        predictOutput(
+          'Two additions are applied in opposite orders. What is printed?',
+          cpp(`
+            #include <iostream>
+            void apply(int& state, char kind, int value) {
+              if (kind == '=') state = value;
+              if (kind == '+') state += value;
+            }
+            int main() {
+              int a = 0;
+              apply(a, '+', 2);
+              apply(a, '+', 5);
+              int b = 0;
+              apply(b, '+', 5);
+              apply(b, '+', 2);
+              std::cout << a << " " << b << "\\n";
+            }
+          `),
+          ['7 5', '5 7', '7 7', '2 5'],
+          2,
+          'Additions commute, so their order does not change the sum.',
+        ),
+        choose(
+          'A tool sorts a log by value before replaying it. When can that change the final state?',
+          [
+            'Whenever the log mixes events that do not commute, such as set and add',
+            'Never',
+            'Only when values are negative',
+            'Only when the log is empty',
+          ],
+          0,
+          'Moving a set before or after an add changes what the add applies to.',
+        ),
+        predictOutput(
+          'The log is replayed in recorded order and in order of value. What is printed?',
+          cpp(`
+            #include <iostream>
+            void apply(int& state, char kind, int value) {
+              if (kind == '=') state = value;
+              if (kind == '+') state += value;
+            }
+            int main() {
+              int recorded = 0;
+              apply(recorded, '=', 3);
+              apply(recorded, '+', 4);
+              apply(recorded, '=', 10);
+              apply(recorded, '+', 1);
+              int sorted = 0;
+              apply(sorted, '+', 1);
+              apply(sorted, '=', 3);
+              apply(sorted, '+', 4);
+              apply(sorted, '=', 10);
+              std::cout << recorded << " " << sorted << "\\n";
+            }
+          `),
+          ['10 11', '11 10', '18 18', '11 11'],
+          1,
+          'In recorded order the last set is followed by +1; sorted, the set to 10 comes last.',
+        ),
+        choose(
+          'Which pair of events gives the same result in either order?',
+          [
+            'set 3 and add 4',
+            'set 3 and set 4',
+            'add 3 and set 4',
+            'add 3 and add 4',
+          ],
+          3,
+          'Only the two additions commute; any pair with a set depends on order.',
+        ),
+      ],
+    },
+  ],
+  'cpp-architecture': [
+    {
+      title: 'Replay only the events after the snapshot',
+      explanation: [
+        'A snapshot saves the state after the first `included` events of the log. Recovery starts from the snapshot and replays only events included, included + 1, …, size - 1.',
+        'Replaying from event 0 on top of the snapshot applies the first events twice.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> deltas = {3, 4, 5};
+            int snapshot = 7;
+            std::size_t included = 2;
+            int state = snapshot;
+            for (std::size_t i = included; i < deltas.size(); ++i) state += deltas[i];
+            std::cout << state << "\\n";
+          }
+        `),
+        output: '12',
+        explanation:
+          'The snapshot 7 already contains 3 + 4, so only the last delta 5 is replayed.',
+      },
+      questions: [
+        predictOutput(
+          'This recovery replays the whole log onto the snapshot. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> deltas = {3, 4, 5};
+              int snapshot = 7;
+              int state = snapshot;
+              for (std::size_t i = 0; i < deltas.size(); ++i) state += deltas[i];
+              std::cout << state << "\\n";
+            }
+          `),
+          ['12', '19', '7', '24'],
+          1,
+          'The deltas 3 and 4 are counted twice: once in the snapshot and once in the replay.',
+        ),
+        predictOutput(
+          'The snapshot already includes every event. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> deltas = {1, 2};
+              int snapshot = 3;
+              std::size_t included = 2;
+              int state = snapshot;
+              for (std::size_t i = included; i < deltas.size(); ++i) state += deltas[i];
+              std::cout << state << "\\n";
+            }
+          `),
+          ['6', '0', '3', '5'],
+          2,
+          'Nothing is left to replay, so the state is the snapshot.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> deltas = {10, -4, 6};
+              int snapshot = 10;
+              std::size_t included = 1;
+              int state = snapshot;
+              for (std::size_t i = included; i < deltas.size(); ++i) state += deltas[i];
+              std::cout << state << "\\n";
+            }
+          `),
+          ['22', '2', '16', '12'],
+          3,
+          'The snapshot holds the first delta; replaying -4 and 6 gives 12.',
+        ),
+        choose(
+          'What does included = 2 record about a snapshot?',
+          [
+            'The snapshot already reflects events 0 and 1',
+            'Events 2 and later are in the snapshot',
+            'The snapshot is two events old',
+            'Two snapshots exist',
+          ],
+          0,
+          'included is the boundary: events before it are inside the saved state.',
+        ),
+      ],
+    },
+    {
+      title: 'Validate the snapshot boundary before replaying',
+      explanation: [
+        'included can never exceed the number of events in the log. If it does, the snapshot claims events the log does not have, because the log was truncated or the snapshot came from a different log. Report that before replaying.',
+        'Without the check the replay loop simply runs zero times and returns the snapshot as if everything were consistent.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> deltas = {1, 2, 3};
+            int snapshot = 6;
+            std::size_t included = 5;
+            if (included > deltas.size()) {
+              std::cout << "inconsistent snapshot\\n";
+            } else {
+              int state = snapshot;
+              for (std::size_t i = included; i < deltas.size(); ++i) state += deltas[i];
+              std::cout << state << "\\n";
+            }
+          }
+        `),
+        output: 'inconsistent snapshot',
+        explanation: 'The snapshot claims 5 events, but the log only has 3.',
+      },
+      questions: [
+        predictOutput(
+          'The snapshot includes exactly all three events. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> deltas = {2, 2, 2};
+              int snapshot = 6;
+              std::size_t included = 3;
+              if (included > deltas.size()) {
+                std::cout << "inconsistent snapshot\\n";
+              } else {
+                int state = snapshot;
+                for (std::size_t i = included; i < deltas.size(); ++i) state += deltas[i];
+                std::cout << state << "\\n";
+              }
+            }
+          `),
+          ['inconsistent snapshot', '6', '12', '0'],
+          1,
+          'included equal to the log length is valid: nothing remains to replay.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> deltas = {1, 2, 3};
+              int snapshot = 10;
+              std::size_t included = 4;
+              if (included > deltas.size()) {
+                std::cout << "inconsistent snapshot\\n";
+              } else {
+                int state = snapshot;
+                for (std::size_t i = included; i < deltas.size(); ++i) state += deltas[i];
+                std::cout << state << "\\n";
+              }
+            }
+          `),
+          ['10', '6', 'inconsistent snapshot', '0'],
+          2,
+          'Four included events cannot come from a three-event log.',
+        ),
+        choose(
+          'Without the check, what does the replay loop do when included is larger than the log?',
+          [
+            'It runs zero times and silently returns the snapshot as if it were current',
+            'It throws an exception',
+            'It reads past the end of the log',
+            'It replays from event 0',
+          ],
+          0,
+          'The loop condition is false from the start, so the inconsistency goes unnoticed.',
+        ),
+        choose(
+          'When could a snapshot claim more events than the log contains?',
+          [
+            'Never',
+            'When the events are sorted',
+            'When the snapshot is empty',
+            'When the log was truncated, or the snapshot belongs to a different log',
+          ],
+          3,
+          'Either way, state and log disagree and recovery must stop.',
+        ),
+      ],
+    },
+  ],
+};
+
+const determinism: KnowledgePointModule = {
+  'cpp-tie-break-order': [
+    {
+      title: 'Add the id to the key to break price ties',
+      explanation: [
+        'Sorting orders by price alone leaves equal-price orders in an unspecified order: std::sort is not stable, so ties can come out differently on another library or with another input order. If the priority contract is "lower price first, then lower order id", the sort key must include both.',
+        'A std::pair<int, int> (in <utility>) holds .first and .second and compares by .first, then by .second. Sorting (price, id) pairs with std::sort therefore gives exactly that total order, with no tie left to chance.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <algorithm>
+          #include <cstddef>
+          #include <iostream>
+          #include <utility>
+          #include <vector>
+          int main() {
+            std::vector<std::pair<int, int>> orders = {{100, 8}, {100, 3}, {101, 1}};
+            std::sort(orders.begin(), orders.end());
+            for (std::size_t i = 0; i < orders.size(); ++i) std::cout << orders[i].second << " ";
+            std::cout << "\\n";
+          }
+        `),
+        output: '3 8 1',
+        explanation:
+          'Both orders at 100 come before 101, and between them the lower id 3 wins.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <algorithm>
+            #include <iostream>
+            #include <utility>
+            #include <vector>
+            int main() {
+              std::vector<std::pair<int, int>> orders = {{100, 2}, {99, 7}};
+              std::sort(orders.begin(), orders.end());
+              std::cout << orders.front().second << "\\n";
+            }
+          `),
+          ['2', '7', '99', '100'],
+          1,
+          'The lower price comes first, whatever the ids are.',
+        ),
+        predictOutput(
+          'Three orders share one price. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <utility>
+            #include <vector>
+            int main() {
+              std::vector<std::pair<int, int>> orders = {{50, 9}, {50, 2}, {50, 5}};
+              std::sort(orders.begin(), orders.end());
+              for (std::size_t i = 0; i < orders.size(); ++i) std::cout << orders[i].second << " ";
+              std::cout << "\\n";
+            }
+          `),
+          ['9 2 5', '9 5 2', '2 5 9', '5 2 9'],
+          2,
+          'With equal prices, the ids decide the order.',
+        ),
+        choose(
+          'Two orders share price 100. After std::sort with this comparator, which comes first?',
+          [
+            'The one that arrived first',
+            'The one with the lower id',
+            'Unspecified: std::sort may put either one first',
+            'The one with the larger size',
+          ],
+          2,
+          'The comparator treats them as equal, and std::sort does not preserve the order of equal elements.',
+          cpp(`
+            std::sort(orders.begin(), orders.end(), [](const auto& a, const auto& b) {
+              return a.first < b.first;
+            });
+          `),
+        ),
+        choose(
+          'Which comparator implements "lower price first, then lower id"?',
+          [
+            'return a.first < b.first;',
+            'return a.first != b.first ? a.first < b.first : a.second < b.second;',
+            'return a.second < b.second;',
+            'return a.first <= b.first;',
+          ],
+          1,
+          'It compares ids only when prices tie; <= is not a valid strict ordering for std::sort.',
+        ),
+      ],
+    },
+    {
+      title: 'Encode mixed directions in the key',
+      explanation: [
+        'Bids are prioritized by highest price first, then earliest (lowest) id: the two fields sort in opposite directions. Sorting the pairs descending would also reverse the ids.',
+        'One way is to build the key (-price, id) and sort ascending: negating the price puts the highest price first, while ids still ascend among equal prices.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <algorithm>
+          #include <cstddef>
+          #include <iostream>
+          #include <utility>
+          #include <vector>
+          int main() {
+            std::vector<std::pair<int, int>> bids = {{100, 8}, {102, 5}, {100, 3}};
+            std::vector<std::pair<int, int>> keys(bids.size());
+            for (std::size_t i = 0; i < bids.size(); ++i) keys[i] = {-bids[i].first, bids[i].second};
+            std::sort(keys.begin(), keys.end());
+            for (std::size_t i = 0; i < keys.size(); ++i) std::cout << keys[i].second << " ";
+            std::cout << "\\n";
+          }
+        `),
+        output: '5 3 8',
+        explanation:
+          'The highest bid 102 (id 5) comes first; at 100 the earlier id 3 precedes 8.',
+      },
+      questions: [
+        predictOutput(
+          'These bids are sorted without negating the price. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <utility>
+            #include <vector>
+            int main() {
+              std::vector<std::pair<int, int>> bids = {{100, 8}, {102, 5}, {100, 3}};
+              std::sort(bids.begin(), bids.end());
+              for (std::size_t i = 0; i < bids.size(); ++i) std::cout << bids[i].second << " ";
+              std::cout << "\\n";
+            }
+          `),
+          ['5 3 8', '3 8 5', '8 3 5', '5 8 3'],
+          1,
+          'Ascending order puts the lowest bid first, the opposite of bid priority.',
+        ),
+        predictOutput(
+          'Asks are prioritized by lowest price, then lowest id. What is printed?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <utility>
+            #include <vector>
+            int main() {
+              std::vector<std::pair<int, int>> asks = {{105, 4}, {103, 9}, {103, 2}};
+              std::sort(asks.begin(), asks.end());
+              for (std::size_t i = 0; i < asks.size(); ++i) std::cout << asks[i].second << " ";
+              std::cout << "\\n";
+            }
+          `),
+          ['2 9 4', '9 2 4', '4 9 2', '2 4 9'],
+          0,
+          'For asks both fields ascend, so the plain pair order is already the priority order.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <algorithm>
+            #include <cstddef>
+            #include <iostream>
+            #include <utility>
+            #include <vector>
+            int main() {
+              std::vector<std::pair<int, int>> bids = {{99, 1}, {101, 7}, {101, 4}};
+              std::vector<std::pair<int, int>> keys(bids.size());
+              for (std::size_t i = 0; i < bids.size(); ++i) keys[i] = {-bids[i].first, bids[i].second};
+              std::sort(keys.begin(), keys.end());
+              for (std::size_t i = 0; i < keys.size(); ++i) std::cout << keys[i].second << " ";
+              std::cout << "\\n";
+            }
+          `),
+          ['7 4 1', '1 4 7', '4 7 1', '4 1 7'],
+          2,
+          'Both 101 bids lead, the earlier id 4 first; the 99 bid comes last.',
+        ),
+        choose(
+          'Why negate the price instead of sorting the pairs in descending order?',
+          [
+            'Negative numbers sort faster',
+            'Descending order would also reverse the ids, putting later orders first at equal prices',
+            'std::sort cannot sort in descending order',
+            'It makes the prices unique',
+          ],
+          1,
+          'Only the price should be reversed; the id must keep ascending.',
+        ),
+      ],
+    },
+  ],
+  'cpp-integer-money': [
+    {
+      title: 'Count money in integer ticks',
+      explanation: [
+        'A double stores binary fractions, so most decimal amounts are only approximated: 0.1 is stored as a nearby value, and 0.1 + 0.2 == 0.3 is false. Sums of such amounts drift.',
+        'Storing amounts as integer counts of the smallest unit (cents, or price ticks) makes every addition and multiplication exact, as long as the values stay within the integer type’s range.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int a_cents = 10;
+            int b_cents = 20;
+            std::cout << a_cents + b_cents << " " << (a_cents + b_cents == 30) << " " << (0.1 + 0.2 == 0.3) << "\\n";
+          }
+        `),
+        output: '30 1 0',
+        explanation:
+          'The integer cents add exactly; the doubles do not quite reach the stored 0.3.',
+      },
+      questions: [
+        predictOutput(
+          'A fill of 4 lots at 125 ticks pays a 3-tick fee. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int price_ticks = 125;
+              int size = 4;
+              int fee_ticks = 3;
+              long long total = static_cast<long long>(price_ticks) * size + fee_ticks;
+              std::cout << total << "\\n";
+            }
+          `),
+          ['500', '503', '128', '1503'],
+          1,
+          'The notional 500 plus the fee 3, all in ticks, is exact.',
+        ),
+        predictOutput(
+          'The same amounts are added as cents and as doubles. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int cents = 10 + 20 + 30;
+              double dollars = 0.1 + 0.2 + 0.3;
+              std::cout << (cents == 60) << " " << (dollars == 0.6) << "\\n";
+            }
+          `),
+          ['1 1', '1 0', '0 0', '0 1'],
+          1,
+          'The integer sum is exact; the double sum lands slightly above the stored 0.6.',
+        ),
+        choose(
+          'Why does `0.1 + 0.2 == 0.3` evaluate to false?',
+          [
+            '== never works on doubles',
+            '0.3 is rounded down to 0',
+            '0.1 and 0.2 are stored as nearby binary fractions, so their sum differs slightly from the stored 0.3',
+            'The addition overflows',
+          ],
+          2,
+          'None of the three decimals is exactly representable in binary.',
+        ),
+        predictOutput(
+          'A balance in cents is printed as dollars and cents. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int balance_cents = 1234;
+              balance_cents += 99;
+              std::cout << balance_cents / 100 << "." << balance_cents % 100 << "\\n";
+            }
+          `),
+          ['12.133', '13.3', '1333', '13.33'],
+          3,
+          '1234 + 99 = 1333 cents, which is 13 dollars and 33 cents.',
+        ),
+      ],
+    },
+    {
+      title: 'Convert tick scales before mixing amounts',
+      explanation: [
+        'Integers are exact only when every amount uses the same unit. A price in cents (1/100) and a fee in units of 1/10000 cannot be added directly: 250 cents plus 75 fee units is not 325 of anything.',
+        'Convert to the finer unit first (cents times 100), and keep the unit in each variable’s name so mismatches are visible.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            long long price_cents = 250;
+            long long fee_units = 75;
+            long long total_units = price_cents * 100 + fee_units;
+            std::cout << total_units << "\\n";
+          }
+        `),
+        output: '25075',
+        explanation:
+          '2.50 is 25000 units of 1/10000, and the 0.0075 fee is 75 more.',
+      },
+      questions: [
+        predictOutput(
+          'The first total mixes units, the second converts first. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long price_cents = 250;
+              long long fee_units = 75;
+              std::cout << price_cents + fee_units << " " << price_cents * 100 + fee_units << "\\n";
+            }
+          `),
+          ['25075 325', '325 25075', '325 325', '25075 25075'],
+          1,
+          'Adding without conversion gives 325, which matches neither unit.',
+        ),
+        predictOutput(
+          'A total in units of 1/10000 is split back into cents and leftover units. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long total_units = 25075;
+              std::cout << total_units / 100 << " " << total_units % 100 << "\\n";
+            }
+          `),
+          ['2 5075', '25 75', '250 75', '250 0'],
+          2,
+          '100 units make a cent: 250 whole cents and 75 units left over.',
+        ),
+        choose(
+          'A price is in cents and a fee is in units of 1/10000. What must happen before adding them?',
+          [
+            'Divide the fee by 100 and drop the remainder',
+            'Convert both to double',
+            'Add them directly; integers are exact',
+            'Convert the price to 1/10000 units by multiplying by 100',
+          ],
+          3,
+          'Moving to the finer unit loses nothing, while dropping the remainder would.',
+        ),
+        predictOutput(
+          'One price is in quarter-ticks (0.25 each), the other in cents. Are they equal?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              long long price_quarters = 401;
+              long long other_cents = 10025;
+              std::cout << (price_quarters * 25 == other_cents) << "\\n";
+            }
+          `),
+          ['0', '1', '401', '10025'],
+          1,
+          '401 quarters is 100.25, which is 10025 cents; converted to one unit, they compare equal.',
+        ),
+      ],
+    },
+  ],
+  'cpp-seeded-engine': [
+    {
+      title: 'The same engine and seed give the same sequence',
+      explanation: [
+        'std::mt19937 (in <random>) is a pseudo-random engine whose algorithm the C++ standard specifies completely. Seeded with the same value, it produces the same sequence on every conforming implementation; calling engine() returns the next value.',
+        'Two engines with equal seeds therefore stay in lockstep, while different seeds give different sequences. A default-constructed engine uses a fixed default seed, so it is reproducible too.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          #include <random>
+          int main() {
+            std::mt19937 first(42);
+            std::mt19937 second(42);
+            int same = 0;
+            for (int i = 0; i < 5; ++i)
+              if (first() == second()) same += 1;
+            std::cout << same << "\\n";
+          }
+        `),
+        output: '5',
+        explanation:
+          'Both engines start from the same seed, so all five draws match.',
+      },
+      questions: [
+        predictOutput(
+          'The engines use different seeds. How many of the first five draws match?',
+          cpp(`
+            #include <iostream>
+            #include <random>
+            int main() {
+              std::mt19937 first(1);
+              std::mt19937 second(2);
+              int same = 0;
+              for (int i = 0; i < 5; ++i)
+                if (first() == second()) same += 1;
+              std::cout << same << "\\n";
+            }
+          `),
+          ['5', '0', 'It changes from run to run', '1'],
+          1,
+          'Different seeds start different sequences, and the specified algorithm makes the result the same on every run.',
+        ),
+        predictOutput(
+          'Both engines are default-constructed. What is printed?',
+          cpp(`
+            #include <iostream>
+            #include <random>
+            int main() {
+              std::mt19937 first;
+              std::mt19937 second;
+              int same = 0;
+              for (int i = 0; i < 3; ++i)
+                if (first() == second()) same += 1;
+              std::cout << same << "\\n";
+            }
+          `),
+          ['0', '1', '3', 'It changes from run to run'],
+          2,
+          'A default-constructed engine always uses the same default seed.',
+        ),
+        choose(
+          'The standard requires the 10000th value of a default-constructed std::mt19937 to be 4123659995. What does that guarantee?',
+          [
+            'Every conforming library produces the same mt19937 sequence',
+            'The value is random on each run',
+            'mt19937 is safe for cryptography',
+            'Distributions give the same results everywhere',
+          ],
+          0,
+          'The engine algorithm is fixed by the standard, so its output is portable.',
+        ),
+        choose(
+          'A simulation seeds std::mt19937 with the current time and does not log the seed. Why can a failing run not be reproduced?',
+          [
+            'mt19937 ignores its seed',
+            'Time-based seeds overflow',
+            'It can always be reproduced',
+            'The seed differs on every run and was not recorded',
+          ],
+          3,
+          'Reproducing a run needs the exact seed it used.',
+        ),
+      ],
+    },
+    {
+      title: 'Record engine and seed; distributions may differ',
+      explanation: [
+        'Copying an engine copies its whole state, so the copy continues with exactly the values the original would produce next. To replay a run, record the engine type, the seed and how values were drawn.',
+        'Distributions such as std::uniform_int_distribution are not specified step by step, so the same engine and seed can give different distribution results on different standard libraries. For results that must match everywhere, derive values from the raw engine output yourself, for example engine() % 6 + 1 for a die (slightly biased, but portable).',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          #include <random>
+          int main() {
+            std::mt19937 engine(7);
+            engine();
+            engine();
+            std::mt19937 copy = engine;
+            int same = 0;
+            for (int i = 0; i < 4; ++i)
+              if (engine() == copy()) same += 1;
+            std::cout << same << "\\n";
+          }
+        `),
+        output: '4',
+        explanation:
+          'The copy is taken after two draws, so it continues from exactly the same point as the original.',
+      },
+      questions: [
+        predictOutput(
+          'The copy is taken first, and the original then draws once more. How many of the next four draws match?',
+          cpp(`
+            #include <iostream>
+            #include <random>
+            int main() {
+              std::mt19937 engine(7);
+              std::mt19937 copy = engine;
+              engine();
+              int same = 0;
+              for (int i = 0; i < 4; ++i)
+                if (engine() == copy()) same += 1;
+              std::cout << same << "\\n";
+            }
+          `),
+          ['4', '0', '3', '1'],
+          1,
+          'The two engines are now one step apart, so each comparison pairs different positions in the sequence.',
+        ),
+        predictOutput(
+          'Two engines seeded 99 roll dice from raw output. How many of ten rolls match?',
+          cpp(`
+            #include <iostream>
+            #include <random>
+            int main() {
+              std::mt19937 first(99);
+              std::mt19937 second(99);
+              int same = 0;
+              for (int i = 0; i < 10; ++i)
+                if (first() % 6 + 1 == second() % 6 + 1) same += 1;
+              std::cout << same << "\\n";
+            }
+          `),
+          ['0', '6', '10', 'It depends on the library'],
+          2,
+          'The raw engine outputs are identical, and so is the arithmetic on them.',
+        ),
+        choose(
+          'Two machines draw std::uniform_int_distribution<int>(1, 6) from std::mt19937(42). Which statement is true?',
+          [
+            'The engine outputs match, but the distribution’s results may differ between standard libraries',
+            'Both always match',
+            'Neither matches',
+            'Only the first value matches',
+          ],
+          0,
+          'The engine is fully specified; the distribution’s algorithm is left to each library.',
+        ),
+        choose(
+          'What must a bug report include so a random simulation can be replayed?',
+          [
+            'Only the seed',
+            'The engine type, the seed, and how values were drawn from it',
+            'Only the time of the run',
+            'The CPU model',
+          ],
+          1,
+          'The same seed in a different engine, or drawn through a different distribution, gives different values.',
+        ),
+      ],
+    },
+  ],
+  'cpp-determinism': [
+    {
+      title: 'Deduplicate, check, then mutate',
+      explanation: [
+        'A risk-event handler combines the earlier pieces in a fixed order: skip an event whose id was already seen; compute the next position in long long; and assign it only if it stays within -limit to limit. The position is only ever assigned an accepted value, so a rejected event leaves it untouched.',
+        'The result then depends only on the event sequence, the starting position and the limit.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <set>
+          #include <vector>
+          int main() {
+            std::vector<int> ids = {1, 1, 2, 3};
+            std::vector<int> deltas = {3, 3, 9, -2};
+            int limit = 5;
+            std::set<int> seen;
+            int position = 0;
+            for (std::size_t i = 0; i < ids.size(); ++i) {
+              if (seen.insert(ids[i]).second) {
+                long long next = static_cast<long long>(position) + deltas[i];
+                if (next >= -static_cast<long long>(limit) && next <= limit) position = static_cast<int>(next);
+              }
+            }
+            std::cout << position << "\\n";
+          }
+        `),
+        output: '1',
+        explanation:
+          'Event 1 moves the position to 3, its duplicate is skipped, event 2 would reach 12 and is rejected, and event 3 brings it to 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <set>
+            #include <vector>
+            int main() {
+              std::vector<int> ids = {1, 2, 3};
+              std::vector<int> deltas = {4, 4, -6};
+              int limit = 5;
+              std::set<int> seen;
+              int position = 0;
+              for (std::size_t i = 0; i < ids.size(); ++i) {
+                if (seen.insert(ids[i]).second) {
+                  long long next = static_cast<long long>(position) + deltas[i];
+                  if (next >= -static_cast<long long>(limit) && next <= limit) position = static_cast<int>(next);
+                }
+              }
+              std::cout << position << "\\n";
+            }
+          `),
+          ['2', '-2', '8', '4'],
+          1,
+          'The second event would reach 8 and is rejected, so the last event starts from 4.',
+        ),
+        predictOutput(
+          'The handler counts each outcome. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <set>
+            #include <vector>
+            int main() {
+              std::vector<int> ids = {7, 7, 8, 9};
+              std::vector<int> deltas = {2, 2, -9, 1};
+              int limit = 3;
+              std::set<int> seen;
+              int position = 0;
+              int accepted = 0;
+              int duplicates = 0;
+              int rejected = 0;
+              for (std::size_t i = 0; i < ids.size(); ++i) {
+                if (seen.insert(ids[i]).second) {
+                  long long next = static_cast<long long>(position) + deltas[i];
+                  if (next >= -static_cast<long long>(limit) && next <= limit) {
+                    position = static_cast<int>(next);
+                    accepted += 1;
+                  } else {
+                    rejected += 1;
+                  }
+                } else {
+                  duplicates += 1;
+                }
+              }
+              std::cout << accepted << " " << duplicates << " " << rejected << " " << position << "\\n";
+            }
+          `),
+          ['3 0 1 5', '1 1 2 2', '2 1 1 3', '2 1 1 -4'],
+          2,
+          '7 is accepted (2), its copy is a duplicate, 8 would reach -7 and is rejected, and 9 reaches exactly 3.',
+        ),
+        choose(
+          'What is wrong with this handler?',
+          [
+            'Nothing',
+            'A rejected delta has already been applied to position',
+            'It checks the limit twice',
+            'It rejects valid events',
+          ],
+          1,
+          'The state is mutated before the check, so rejection would need an undo that is missing.',
+          cpp(`
+            position += delta;
+            if (position > limit || position < -limit) {
+              // reject the event
+            }
+          `),
+        ),
+        choose(
+          'Why is this handler deterministic?',
+          [
+            'It uses a mutex',
+            'It sorts the events first',
+            'It reads the clock',
+            'Its result depends only on the event sequence, the starting position and the limit',
+          ],
+          3,
+          'No hidden input such as time or thread scheduling affects the outcome.',
+        ),
+      ],
+    },
+    {
+      title: 'A rejected event’s id is still consumed',
+      explanation: [
+        'In this handler the id is recorded before the risk check, so a rejected event is marked as seen too. A redelivery of that same event is skipped as a duplicate rather than re-evaluated, even if the position has moved and it would now fit.',
+        'That implements the contract "each event id gets exactly one decision". It keeps replays consistent: the same log always yields the same accept and reject decisions.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <set>
+          #include <vector>
+          int main() {
+            std::vector<int> ids = {5, 6, 5};
+            std::vector<int> deltas = {9, -4, 9};
+            int limit = 5;
+            std::set<int> seen;
+            int position = 0;
+            for (std::size_t i = 0; i < ids.size(); ++i) {
+              if (seen.insert(ids[i]).second) {
+                long long next = static_cast<long long>(position) + deltas[i];
+                if (next >= -static_cast<long long>(limit) && next <= limit) position = static_cast<int>(next);
+              }
+            }
+            std::cout << position << "\\n";
+          }
+        `),
+        output: '-4',
+        explanation:
+          'Event 5 is rejected but its id is recorded, so its redelivery is skipped even though -4 + 9 = 5 would now fit.',
+      },
+      questions: [
+        predictOutput(
+          'This variant records an id only when its event is accepted. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <set>
+            #include <vector>
+            int main() {
+              std::vector<int> ids = {5, 6, 5};
+              std::vector<int> deltas = {9, -4, 9};
+              int limit = 5;
+              std::set<int> seen;
+              int position = 0;
+              for (std::size_t i = 0; i < ids.size(); ++i) {
+                if (seen.count(ids[i]) == 0) {
+                  long long next = static_cast<long long>(position) + deltas[i];
+                  if (next >= -static_cast<long long>(limit) && next <= limit) {
+                    position = static_cast<int>(next);
+                    seen.insert(ids[i]);
+                  }
+                }
+              }
+              std::cout << position << "\\n";
+            }
+          `),
+          ['-4', '5', '9', '1'],
+          1,
+          'The rejected event 5 was not recorded, so its redelivery is evaluated again and now fits.',
+        ),
+        choose(
+          'Which contract does recording the id before the risk check implement?',
+          [
+            'Each event id receives exactly one decision, accept or reject',
+            'Rejected events are retried until they are accepted',
+            'Only accepted ids are remembered',
+            'Ids are ignored',
+          ],
+          0,
+          'Recording first makes the first decision final for that id.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <set>
+            #include <vector>
+            int main() {
+              std::vector<int> ids = {1, 2, 1};
+              std::vector<int> deltas = {2, 6, 2};
+              int limit = 5;
+              std::set<int> seen;
+              int position = 0;
+              for (std::size_t i = 0; i < ids.size(); ++i) {
+                if (seen.insert(ids[i]).second) {
+                  long long next = static_cast<long long>(position) + deltas[i];
+                  if (next >= -static_cast<long long>(limit) && next <= limit) position = static_cast<int>(next);
+                }
+              }
+              std::cout << position << "\\n";
+            }
+          `),
+          ['4', '8', '2', '10'],
+          2,
+          'Event 1 is accepted, event 2 would reach 8 and is rejected, and the redelivered event 1 is a duplicate.',
+        ),
+        choose(
+          'Why does one decision per id help when the same log is replayed later?',
+          [
+            'It makes replays faster',
+            'It lets replays skip the risk check',
+            'It does not matter for replays',
+            'Replays reach the same accept and reject decisions, so the final state matches',
+          ],
+          3,
+          'Decisions depend only on the log, not on how often an event was redelivered.',
+        ),
+      ],
+    },
+  ],
+};
+
 export const knowledgePoints: KnowledgePointModule = {
   ...threads,
   ...signals,
@@ -10415,4 +12775,7 @@ export const knowledgePoints: KnowledgePointModule = {
   ...orderBook,
   ...ringBuffers,
   ...protocols,
+  ...riskChecks,
+  ...pipelines,
+  ...determinism,
 };
