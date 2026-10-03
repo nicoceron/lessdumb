@@ -1258,7 +1258,7 @@ const skills: Skill[] = [
     'da-grouping',
     'Name summary measures',
     'Build a compact table containing multiple explicit group statistics.',
-    ['da-groupby'],
+    ['da-groupby', 'math-median'],
     [
       'A useful grouped summary often needs several measures, such as revenue total and observation count. Named aggregation makes the output contract readable: table.groupby("shop").agg(total=("revenue", "sum"), records=("revenue", "size")). Each output name maps to an input column and reduction.',
       'Choose statistics based on their meaning, not habit. mean is sensitive to extreme values; median describes the middle value. A sum measures total activity and can hide differences in group size, so include counts when comparing groups.',
@@ -1618,7 +1618,12 @@ const skills: Skill[] = [
     'da-analysis',
     'Explore evidence carefully',
     'Compare descriptive statistics, unusual values, and the limits of association.',
-    ['da-aggregations', 'da-categories'],
+    [
+      'da-aggregations',
+      'da-categories',
+      'math-percentiles',
+      'math-correlation',
+    ],
     [
       'Exploratory analysis begins with data quality and distributions. Check observation counts, missing counts, and group coverage before interpreting an average. value_counts() summarizes category frequencies; describe() provides common numerical summaries such as count, mean, minimum, quartiles, and maximum.',
       'Mean and median answer different questions when extreme values exist. For [2, 3, 4, 51], the median is 3.5 and the mean is 15. A difference between them is a reason to inspect the distribution and observations, not automatically to delete the largest value.',
