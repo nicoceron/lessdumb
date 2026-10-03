@@ -29,7 +29,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 
 - **Learn:** see your active course with its progress and estimated completion date (remaining lesson XP ÷ your daily XP goal), total, today's, and this week's XP, up to five next tasks in scheduler order (due reviews and ready lessons, including prerequisites from other courses), and a dated history of completed lessons and reviews with earned/possible XP.
 - **Courses:** choose your active course from eight courses and 721 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
-- **Lessons:** each lesson is one page that grows as you work, as in Math Academy: the introduction, then for each knowledge point its explanation, a worked example, and its questions, then the code exercise. Answered questions stay on the page with their explanations, so you can scroll back and reread while you solve. Reviews stack their questions on one page the same way.
+- **Lessons:** each lesson is one page that grows as you work, as in Math Academy: the introduction, then for each knowledge point its explanation, a worked example, and its questions, then the code exercise. Answered questions stay on the page with their explanations, so you can scroll back and reread while you solve. Reviews stack their questions on one page the same way. Reviews and quizzes also mix in multistep problems: one scenario whose two to four parts each need a different earlier idea ([how they count](docs/learning-design.md#multistep-problems)).
 - **Account menu:** the avatar menu opens the knowledge graph, flashcards, code lab, and settings, and signs you in or out.
 - **Knowledge graph:** inspect prerequisites, see mastery, availability, and your average answer time per skill, search skills, and explore their connections.
 - **Flashcards:** receive recall cards after mastery and correction cards after mistakes, with math typeset; connect Anki or export a tab-separated deck.
@@ -199,6 +199,7 @@ src/components/workspace-header.tsx  Learn/Courses tabs and the account menu
 src/components/learn-dashboard.tsx   Learn: course, XP, tasks, and history
 src/components/courses-page.tsx      Courses: course sequence and numbered units
 src/components/learning-session.tsx  One-page lessons and reviews, language-aware grading
+src/components/multistep-problem.tsx A multistep problem's card: setup once, then its parts
 src/components/secondary-pages.tsx   Flashcards, settings, account Dialog, Code lab
 src/components/code-editor.tsx  CodeMirror editor, loaded with one grammar on demand
 src/components/ui/              shadcn/ui source components
@@ -213,6 +214,7 @@ src/lib/courses/                Course, unit, skill, exercise, and card definiti
 src/lib/knowledge-points/       Knowledge points and their practice questions
 src/lib/learning.ts             Mastery evidence, task selection, review, XP, streaks
 src/lib/remediation.ts          Weak-prerequisite refreshes after a failed lesson
+src/lib/multistep.ts            Multistep problem IDs, parts, and the points they apply
 src/lib/quiz.ts                 Quizzes: weakest and stalest skills first, 8–14 questions
 src/lib/dashboard.ts            Task queue, XP summaries, completion estimate, history
 src/lib/xp.ts                   XP scale for lessons and reviews
