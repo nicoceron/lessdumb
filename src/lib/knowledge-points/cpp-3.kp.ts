@@ -168,8 +168,8 @@ const threads: KnowledgePointModule = {
           'What happens at the second call to join()?',
           [
             'It returns at once, because the worker already finished',
-            'It runs the empty lambda a second time',
-            'It throws std::system_error, because worker is no longer joinable',
+            'It runs the empty lambda a second time on a new thread',
+            'It throws std::system_error: worker is no longer joinable',
             'It blocks forever waiting for a worker that will not run',
           ],
           2,
@@ -274,8 +274,8 @@ const threads: KnowledgePointModule = {
         choose(
           'What can be said about result after join()?',
           [
-            'It is always 2',
-            'It is always 14',
+            'It is always 2, because the worker copied level first',
+            'It is always 14, because main writes before the worker reads',
             'Nothing: main’s write to level races with the worker’s read',
             'It is 0, because the worker runs only after join()',
           ],
@@ -469,10 +469,10 @@ const threads: KnowledgePointModule = {
         choose(
           'Which design lets two workers produce a combined count without a data race and without a mutex?',
           [
-            'Both workers add into one shared int',
+            'Both workers add into one shared int as soon as they finish',
             'Each worker writes its own int; main adds them after joining both',
             'Each worker reads the other’s int while it runs',
-            'main adds the two ints before joining the workers',
+            'main adds the two ints right away, then joins the workers later',
           ],
           1,
           'Separate outputs never conflict, and reading them after the joins orders the reads after the writes.',
@@ -509,10 +509,10 @@ const threads: KnowledgePointModule = {
         choose(
           'Which pair of accesses is a data race?',
           [
-            'Two threads read limit at the same time',
-            'One thread writes x while another reads x, with no join or lock between them',
+            'Two threads read limit at the same time, with no lock at all',
+            'One thread writes x while another reads x, with nothing ordering them',
             'One thread writes x while another writes y',
-            'A worker writes x, main joins it, then main reads x',
+            'A worker writes x, main joins that worker, and then main reads x',
           ],
           1,
           'A race needs a conflicting pair (at least one write) on the same object with nothing ordering them.',
@@ -560,10 +560,10 @@ const threads: KnowledgePointModule = {
         choose(
           'Three workers read the same `const int threshold` and each writes its own result. What protection does threshold need?',
           [
-            'A mutex around every read of threshold',
+            'A mutex around every read of threshold by every worker',
             'None, because no thread writes threshold while they run',
             'Each worker must capture threshold by reference',
-            'An atomic, because three threads read it',
+            'An atomic, because three threads read it at the same time',
           ],
           1,
           'Concurrent reads of an object that nobody writes are not a data race.',
@@ -648,8 +648,8 @@ const threads: KnowledgePointModule = {
         choose(
           'A std::thread and a std::jthread are both still joinable when they are destroyed. What happens?',
           [
-            'Both call std::terminate',
-            'Both join automatically',
+            'Both call std::terminate, because neither one was joined first',
+            'Both join automatically in their destructors',
             'The std::thread joins; the std::jthread detaches',
             'The std::thread calls std::terminate; the std::jthread joins',
           ],
@@ -710,8 +710,8 @@ const threads: KnowledgePointModule = {
           'What is wrong with this order of declarations?',
           [
             'Nothing: the jthread joins before anything is destroyed',
-            'result is destroyed before worker joins, so the worker may write to a dead object',
-            'A default-constructed jthread cannot be assigned a new worker',
+            'result dies before worker joins, so the worker may write to a dead object',
+            'A default-constructed jthread cannot be given a worker by assignment later',
             'result is copied into the worker, so the write is lost',
           ],
           1,
@@ -746,7 +746,7 @@ const threads: KnowledgePointModule = {
         choose(
           'A jthread’s worker adds into an int named total. Where should total be declared?',
           [
-            'After the jthread, so it is destroyed first',
+            'After the jthread in the same scope, so total is destroyed first',
             'Inside the worker lambda',
             'Before the jthread in the same scope, or in an enclosing scope',
             'Anywhere, because a jthread copies everything it uses',
@@ -818,8 +818,8 @@ const threads: KnowledgePointModule = {
           [
             'Only when unlock() is called on it',
             'Right after the next statement',
-            'When its scope ends, including when an exception leaves the scope',
-            'When the thread that created it finishes',
+            'When its scope ends, by any path, including an exception',
+            'When the thread that created it finishes running its function',
           ],
           2,
           'lock_guard has no unlock member; its destructor unlocks when the scope is left by any path.',
@@ -827,10 +827,10 @@ const threads: KnowledgePointModule = {
         choose(
           'What does the lock_guard protect in this worker?',
           [
-            'The update total += 1',
-            'Nothing: it unlocks at its own closing brace, before the update',
+            'The update total += 1, which follows the guard in the lambda',
+            'Nothing: it unlocks at its closing brace, before the update',
             'Every access to total in the program',
-            'The whole lambda body',
+            'The whole lambda body, because the guard is created inside it',
           ],
           1,
           'The guard lives only inside the inner braces, so the mutex is already released when total is updated.',
@@ -911,9 +911,9 @@ const threads: KnowledgePointModule = {
         choose(
           'Why does this not protect total?',
           [
-            'lock_guard needs an explicit unlock call',
+            'lock_guard needs an explicit unlock call before the lambda returns',
             'total must be captured by value',
-            'Each worker locks its own separate mutex, so they never exclude each other',
+            'Each worker locks a different mutex, so neither excludes the other',
             'A mutex can only protect global variables',
           ],
           2,
@@ -929,7 +929,7 @@ const threads: KnowledgePointModule = {
             'The read is safe, because only writers need the lock',
             'The read waits automatically for the writers',
             'The read always sees the oldest balance',
-            'The read races with the writes, so the program has undefined behavior',
+            'The read races with the writes: undefined behavior',
           ],
           3,
           'A read that does not take m is not ordered with the writes, so a write and the read form a data race.',
@@ -1068,10 +1068,10 @@ const threads: KnowledgePointModule = {
         choose(
           'Two threads run this lambda. Why can the final total be less than 2000?',
           [
-            'The lock is released too late',
-            'Both threads can read the same old total before either writes, so increments are lost',
-            'A lock_guard cannot be created inside a loop',
-            'seen is shared between the two threads',
+            'The lock is held too long, so the other thread times out',
+            'Both threads can read the same old total before either writes',
+            'A lock_guard cannot be created inside a loop body like this one',
+            'seen is a single variable shared by both of the threads',
           ],
           1,
           'The read of total happens before the lock, so the read-modify-write is split; that read also races with the other thread’s write.',
@@ -1090,8 +1090,8 @@ const threads: KnowledgePointModule = {
           [
             'It ends at exactly 2000',
             'It ends at exactly 1000',
-            'It ends somewhere between 1000 and 2000',
-            'Nothing: the program has a data race and undefined behavior',
+            'It ends somewhere between 1000 and 2000, depending on timing',
+            'Nothing: it has a data race, so behavior is undefined',
           ],
           3,
           'In practice the total is often below 2000, but a data race means the language promises nothing at all.',
@@ -1197,10 +1197,10 @@ const threads: KnowledgePointModule = {
         choose(
           'Why does each worker sum into `local` before locking?',
           [
-            'local is atomic, so it needs no lock',
+            'local is atomic, so updating it needs no lock at all',
             'It removes the need for the mutex altogether',
-            'It forces the workers to run one after the other',
-            'Only the final merge touches shared state, so the lock is taken once per worker',
+            'It forces the workers to run one after the other, avoiding races',
+            'Only the final merge touches shared state, so it locks once per worker',
           ],
           3,
           'local is private to its thread; only the merge into total needs mutual exclusion.',
@@ -1208,7 +1208,7 @@ const threads: KnowledgePointModule = {
         choose(
           'Two threads call this on different ranges. What is true?',
           [
-            'The result is correct, but one worker waits while the other runs its whole loop',
+            'Correct, but one worker waits while the other runs its whole loop',
             'The result can lose updates, because the loop is not atomic',
             'It deadlocks, because the lock is held across a loop',
             'It is faster than summing into a local first',
@@ -1309,9 +1309,9 @@ const threads: KnowledgePointModule = {
         choose(
           'Which statement describes `std::scoped_lock lock(m1, m2);`?',
           [
-            'It locks m1 and then m2, always in that order',
+            'It locks m1 and then m2, always in exactly the order written',
             'It locks whichever mutex is free and skips the other',
-            'It acquires both without deadlocking against other scoped_locks and releases both at scope exit',
+            'It takes both without deadlock and releases both at scope exit',
             'It must be followed by unlock() on each mutex',
           ],
           2,
@@ -1418,8 +1418,8 @@ const threads: KnowledgePointModule = {
         choose(
           'Why must the auditor lock both mutexes too?',
           [
-            'Reads never need locks; only the transfer does',
-            'Without both locks it could read during the transfer, and its reads would race with the writes',
+            'Reads never need locks; only the transfer that writes does',
+            'Otherwise it could read mid-transfer, racing with the writes',
             'scoped_lock refuses to lock a single mutex',
             'Locking both forces the audit to run before the transfer',
           ],
@@ -1508,7 +1508,7 @@ const threads: KnowledgePointModule = {
           [
             'Nothing; unlocking twice is harmless',
             'It unlocks m a second time, letting two threads in',
-            'It throws std::system_error, because the lock no longer owns m',
+            'It throws std::system_error: the lock no longer owns m',
             'It locks m again',
           ],
           2,
@@ -1523,7 +1523,7 @@ const threads: KnowledgePointModule = {
           'A unique_lock that is not currently holding its mutex goes out of scope. What does its destructor do?',
           [
             'Nothing, because it unlocks only a mutex it owns',
-            'It unlocks the mutex anyway',
+            'It unlocks the mutex anyway, whether or not it owns it',
             'It throws std::system_error',
             'It locks and then unlocks the mutex',
           ],
@@ -1593,10 +1593,10 @@ const threads: KnowledgePointModule = {
         choose(
           'Two threads run this with different amounts. What can go wrong?',
           [
-            'Nothing, because every access to total holds m',
+            'Nothing, because every read and write of total happens while holding m',
             'A unique_lock cannot be locked again after unlock()',
             'It deadlocks at the second lock()',
-            'One thread’s addition can be overwritten, because total may change while the lock is released',
+            'total can change while unlocked, and the write then overwrites that change',
           ],
           3,
           'Both threads can read the same total, release the lock, and then each write its own seen + amount; one addition is lost.',
@@ -1651,7 +1651,7 @@ const threads: KnowledgePointModule = {
           'Why does add_square use std::unique_lock instead of std::lock_guard?',
           [
             'lock_guard cannot lock a std::mutex',
-            'unique_lock can start unlocked and lock later within its scope',
+            'unique_lock can start unlocked and lock later',
             'unique_lock makes computing squared atomic',
             'lock_guard cannot be used inside a lambda',
           ],
@@ -1761,8 +1761,8 @@ const signals: KnowledgePointModule = {
           'Why is the condition checked in a while loop around cv.wait(lock) rather than in an if?',
           [
             'A loop makes wait return sooner',
-            'An if would keep the mutex locked while waiting',
-            'wait can return without a matching change, so the condition must be checked again',
+            'An if would keep the mutex locked during the whole wait, blocking the producer',
+            'wait can return with the condition still false, so it must be rechecked',
             'The loop is what calls notify_one',
           ],
           2,
@@ -1817,8 +1817,8 @@ const signals: KnowledgePointModule = {
         choose(
           'What happens in this program?',
           [
-            'wait returns at once, because the notification was stored',
-            'wait can block forever: the notification came before anyone waited and there is no state to check',
+            'wait returns at once, because the earlier notification was stored for it',
+            'wait can block forever: the early notification is lost and no state records it',
             'It throws, because notify_one was called without a lock',
             'It does not compile without a predicate',
           ],
@@ -1868,7 +1868,7 @@ const signals: KnowledgePointModule = {
           'What should a waiting thread check before deciding that data is available?',
           [
             'That cv.wait has returned',
-            'The shared state, such as a count or flag, while holding the mutex',
+            'The guarded state, such as a count or flag, under the mutex',
             'That notify_one has been called at least once',
             'Nothing, because cv.wait returns only after a notification',
           ],
@@ -1983,9 +1983,9 @@ const signals: KnowledgePointModule = {
           'The consumer locks m and waits with `while (!ready) cv.wait(lock);`. What is wrong with this producer?',
           [
             'It should call notify_all',
-            'It must notify before it sets ready',
+            'It must notify first and set ready afterwards, so no wakeup is missed',
             'Nothing, because notify_one synchronizes the write',
-            'It writes ready without locking m, which races with the consumer’s read',
+            'It writes ready without locking m, racing with the consumer’s read',
           ],
           3,
           'The consumer reads ready under m; a write without m is an unsynchronized conflicting access.',
@@ -2053,8 +2053,8 @@ const signals: KnowledgePointModule = {
         choose(
           'What can the consumer observe with this producer?',
           [
-            'Always the final payload',
-            'ready set to true while payload still holds its old value',
+            'Always the final payload, because ready is set under the lock',
+            'ready true while payload still holds its old value',
             'ready false forever',
             'A compile error',
           ],
@@ -2233,8 +2233,8 @@ const signals: KnowledgePointModule = {
           [
             'lock_guard cannot lock a std::mutex',
             'unique_lock is always faster',
-            'lock_guard would notify automatically',
-            'wait must unlock and later relock the mutex, which lock_guard cannot do',
+            'lock_guard would notify the waiting thread automatically on unlock',
+            'wait must unlock and relock the mutex, and lock_guard cannot',
           ],
           3,
           'Only unique_lock exposes unlock and lock, which wait uses around the blocking interval.',
@@ -2244,7 +2244,7 @@ const signals: KnowledgePointModule = {
           [
             'The mutex is locked again, but the condition must still be checked',
             'The mutex is unlocked and the condition is true',
-            'The mutex is locked and the condition is guaranteed true',
+            'The mutex is locked again and the condition is guaranteed to be true',
             'The thread that notified has finished',
           ],
           0,
@@ -2294,9 +2294,9 @@ const signals: KnowledgePointModule = {
           'The consumer waits using mutex other; the producer sets ready under mutex m. What is wrong?',
           [
             'Nothing, any mutex works with a condition variable',
-            'The consumer’s reads of ready are not ordered with the producer’s write, so they race and can miss the change',
+            'Its reads of ready are not ordered with the producer’s write, so they race',
             'cv.wait only accepts the first mutex it was ever used with',
-            'The producer must lock other instead of m when it notifies',
+            'The producer must lock other instead of m when it sets ready and notifies',
           ],
           1,
           'The condition must be read and written under one mutex, and that mutex must be the one passed to wait.',
@@ -2347,7 +2347,7 @@ const signals: KnowledgePointModule = {
           [
             'The producer proceeds, because wait releases every mutex the thread holds',
             'wait releases log_m because it was locked first',
-            'The producer blocks on log_m, so the condition never changes and both threads are stuck',
+            'The producer blocks on log_m, so the condition never changes',
             'The program does not compile',
           ],
           2,
@@ -2470,10 +2470,10 @@ const signals: KnowledgePointModule = {
         choose(
           'A consumer waits with `while (queue.empty()) cv.wait(lock);`. The producer’s last item is taken by another consumer, and then the producer stops for good. What happens to this consumer?',
           [
-            'It wakes up when the producer thread ends',
+            'It wakes up automatically when the producer thread ends and is joined',
             'It receives the last item as well',
             'It throws when the producer’s thread object is destroyed',
-            'It sleeps forever, because no item will arrive and nothing else ends the wait',
+            'It sleeps forever: no item will arrive and nothing else ends the wait',
           ],
           3,
           'Its condition can only become true through a new item, so without a closed flag nothing can release it.',
@@ -2481,8 +2481,8 @@ const signals: KnowledgePointModule = {
         choose(
           'After `while (!closed && queue.empty()) cv.wait(lock);` ends, how should the consumer tell data from shutdown?',
           [
-            'If closed is true, stop, even if items remain',
-            'If the queue is not empty, take an item; otherwise it is closed and empty, so stop',
+            'If closed is true, stop at once, even if some items remain in the queue',
+            'Take an item if one is queued; otherwise it is closed and empty, so stop',
             'Always take queue.front()',
             'Check whether notify_all was called',
           ],
@@ -2777,8 +2777,8 @@ const atomics: KnowledgePointModule = {
           'Is main’s read of payload safe?',
           [
             'Yes, because ready is atomic',
-            'Yes, because payload is written before ready',
-            'No: payload is a plain int, and nothing orders main’s read after the worker’s write',
+            'Yes, because the worker writes payload before it stores ready',
+            'No: payload is plain, and nothing orders main’s read after the write',
             'No, because ready.store must be the first statement',
           ],
           2,
@@ -3273,9 +3273,9 @@ const atomics: KnowledgePointModule = {
         choose(
           'What does std::memory_order_relaxed give up compared with the default ordering?',
           [
-            'Atomicity: relaxed increments can be lost',
+            'Atomicity: concurrent relaxed increments can be lost under contention',
             'The single modification order of that atomic',
-            'Ordering of other memory around the operation; the operation itself stays atomic',
+            'Ordering of other memory around it; the operation stays atomic',
             'Nothing; relaxed is simply faster',
           ],
           2,
@@ -3465,9 +3465,9 @@ const atomics: KnowledgePointModule = {
         choose(
           'Why can this counter finish below 2000 when two threads run worker?',
           [
-            'store needs memory_order_relaxed',
+            'store needs memory_order_relaxed to avoid losing increments',
             'Atomics cannot be used inside loops',
-            'total must be joined before it is read',
+            'total must be joined before it is read, or the count looks low',
             'Each load-then-store pair can overwrite another thread’s increment',
           ],
           3,
@@ -3566,7 +3566,7 @@ const atomics: KnowledgePointModule = {
           [
             'The final total',
             'Whether there is a data race on local',
-            'How often the shared atomic is touched; the total is the same',
+            'How often the shared atomic is touched',
             'The order in which the workers finish',
           ],
           2,
@@ -3575,9 +3575,9 @@ const atomics: KnowledgePointModule = {
         choose(
           'Worker A handles indices [0, 50) and worker B handles [50, 100). Which statement is true?',
           [
-            'Index 50 is counted twice',
+            'Index 50 is counted twice, once by each worker',
             'Index 50 is skipped',
-            'Index 100 is counted by B',
+            'Index 100 is counted by B as its last element',
             'Every index from 0 to 99 is counted exactly once',
           ],
           3,
@@ -3661,7 +3661,7 @@ const ordering: KnowledgePointModule = {
           [
             'payload is 9',
             'payload is still 0',
-            'Nothing: the write comes after the release, so reading payload races with it',
+            'Nothing: that write comes after the release, so reading payload races',
             'payload is 9, because acquire waits for all of the writer’s writes',
           ],
           2,
@@ -3733,9 +3733,9 @@ const ordering: KnowledgePointModule = {
         choose(
           'The reader never checks flag before reading payload. Is the read of payload safe?',
           [
-            'Yes, the acquire load already synchronized',
+            'Yes, the acquire load synchronized with the writer when it ran',
             'Yes, as long as payload is an int',
-            'No: unless the load returned the released value, nothing orders the payload write before the read',
+            'No: only an acquire that reads the released value orders the payload',
             'No, because an acquire load cannot be saved in a variable',
           ],
           2,
@@ -3781,7 +3781,7 @@ const ordering: KnowledgePointModule = {
           [
             'That it has been written',
             'That it is still 0',
-            'That the writer has finished',
+            'That the writer has already finished its work',
             'Nothing yet; it must not read the payload',
           ],
           3,
@@ -3868,8 +3868,8 @@ const ordering: KnowledgePointModule = {
         choose(
           'Which statement about memory_order_seq_cst is correct?',
           [
-            'It makes racing accesses to plain variables safe',
-            'All seq_cst operations appear in one order that every thread agrees on',
+            'It makes racing accesses to nearby plain variables safe as well',
+            'All seq_cst operations fit one order that every thread agrees on',
             'It lets the compiler skip atomicity for speed',
             'It is weaker than acquire for loads',
           ],
@@ -3938,7 +3938,7 @@ const ordering: KnowledgePointModule = {
         choose(
           'Two threads each run `counter.fetch_add(1); total = total + 1;` where counter is an atomic and total a plain int. Which statement is true?',
           [
-            'total ends at 2, because fetch_add is seq_cst',
+            'total ends at 2, because fetch_add is seq_cst and orders everything',
             'Both total and counter may end at 1',
             'The updates to total race; only counter is guaranteed to reach 2',
             'The program does not compile',
@@ -3950,9 +3950,9 @@ const ordering: KnowledgePointModule = {
           'A team replaces the mutex around a shared std::string with a seq_cst atomic counter incremented before each access. What changes?',
           [
             'Nothing is lost; seq_cst orders the string accesses too',
-            'The string accesses now race, because the counter does not keep the threads apart',
+            'The string accesses race: the counter does not keep threads apart',
             'The string becomes atomic',
-            'The accesses now run in counter order',
+            'The string accesses now run one at a time, in counter order',
           ],
           1,
           'Incrementing a counter does not exclude other threads from the string the way a lock does.',
@@ -3984,9 +3984,9 @@ const ordering: KnowledgePointModule = {
         choose(
           'When is memory_order_relaxed enough instead of the default seq_cst?',
           [
-            'When the atomic only counts something and no other data depends on its value',
+            'When it only counts something and no other data depends on it',
             'Whenever the atomic is an int',
-            'When the atomic announces that a buffer is ready',
+            'When the atomic announces to readers that a filled buffer is ready',
             'Never, because relaxed loses increments',
           ],
           0,
@@ -4057,9 +4057,9 @@ const ordering: KnowledgePointModule = {
         choose(
           'Why is compare_exchange_weak normally used in a loop?',
           [
-            'It always fails on the first try',
+            'It always fails on the first try and succeeds on the second',
             'It does not update expected when it fails',
-            'It can fail spuriously even when the value matches, so it must be retried',
+            'It can fail spuriously even when the value matches',
             'It succeeds only with memory_order_relaxed',
           ],
           2,
@@ -4068,8 +4068,8 @@ const ordering: KnowledgePointModule = {
         choose(
           'When is compare_exchange_strong the better choice?',
           [
-            'For a single attempt whose failure means something, with no loop around it',
-            'Inside a retry loop that recomputes desired',
+            'For one attempt whose failure means something, with no loop',
+            'Inside a retry loop that recomputes desired on every attempt',
             'Never; weak is always better',
             'When expected is a constant',
           ],
@@ -4124,9 +4124,9 @@ const ordering: KnowledgePointModule = {
         choose(
           'Two threads run this at once. What can go wrong?',
           [
-            'Nothing, because the loop retries until it succeeds',
+            'Nothing, because the loop keeps retrying until the exchange succeeds',
             'The loop can never succeed',
-            'After a failure, the retry can store a total computed from a stale value, losing the other thread’s addition',
+            'A retry can store a sum computed from a stale value, losing an addition',
             'It deadlocks',
           ],
           2,
@@ -4288,7 +4288,7 @@ const futures: KnowledgePointModule = {
           'What does future::get() do if the asynchronous call has not finished yet?',
           [
             'Returns a default value of 0',
-            'Throws, because the result is missing',
+            'Throws std::future_error, because the result is missing',
             'Blocks until the result is ready, then returns it',
             'Starts a second copy of the task',
           ],
@@ -4360,7 +4360,7 @@ const futures: KnowledgePointModule = {
           'Code calls `std::async(work)` with no launch policy and assumes work starts on another thread at once. Why is that wrong?',
           [
             'Without a policy, async always runs work immediately on the caller',
-            'The implementation may choose deferred, so work might not run until get() and then on the caller',
+            'The implementation may defer work until get(), then run it on the caller',
             'Without a policy async never runs the work',
             'async without a policy throws',
           ],
@@ -4460,7 +4460,7 @@ const futures: KnowledgePointModule = {
           'How does a thread obtain the value another thread passes to promise.set_value?',
           [
             'By reading the promise object directly',
-            'By joining the thread that set it',
+            'By joining the thread that set it, which returns the value',
             'From the return value of set_value',
             'Through the future returned by get_future(), using get()',
           ],
@@ -4514,8 +4514,8 @@ const futures: KnowledgePointModule = {
           'What happens when set_value is called a second time on the same promise?',
           [
             'The future’s value is replaced',
-            'The second value is queued for a second get()',
-            'std::future_error is thrown, because the promise is already satisfied',
+            'The second value is queued and delivered by a second get()',
+            'std::future_error is thrown: the promise is already satisfied',
             'Nothing; the call is ignored',
           ],
           2,
@@ -4524,7 +4524,7 @@ const futures: KnowledgePointModule = {
         choose(
           'A promise is destroyed without set_value ever being called. What does get() on its future do?',
           [
-            'Blocks forever',
+            'Blocks forever, since no value will ever arrive',
             'Throws std::future_error reporting a broken promise',
             'Returns 0',
             'Returns the last value set on any promise',
@@ -4536,9 +4536,9 @@ const futures: KnowledgePointModule = {
           'What is wrong with this code?',
           [
             'Nothing; both reads get the same value',
-            'The second get() waits for a second set_value',
+            'The second get() blocks until a second set_value arrives',
             'get() must be called on the promise instead',
-            'A std::future can be read only once; the second get() is invalid',
+            'A std::future can be read once; the second get() is invalid',
           ],
           3,
           'get() releases the shared state, so the future is no longer valid afterwards.',
@@ -4659,7 +4659,7 @@ const futures: KnowledgePointModule = {
           'Where should the try block go to handle an exception thrown inside a std::async task?',
           [
             'Inside the task only; the caller can never see it',
-            'Around the std::async call itself',
+            'Around the std::async call itself, where the task is started',
             'Nowhere; std::async terminates the program',
             'Around the call to get(), where the exception is rethrown',
           ],
@@ -4671,7 +4671,7 @@ const futures: KnowledgePointModule = {
           [
             'It terminates the program at once',
             'It stays stored in the future and is discarded with it',
-            'It is rethrown when the future is destroyed',
+            'It is rethrown in the caller when the future is destroyed',
             'It is printed to the console',
           ],
           1,
@@ -4849,8 +4849,8 @@ const futures: KnowledgePointModule = {
           'What is wrong with this code?',
           [
             'Nothing; f and s both read the value',
-            'share() copies the value, so s.get() fails',
-            'After share(), f no longer refers to the result, so f.get() is invalid',
+            'share() copies the value into s, so it is s.get() that fails instead',
+            'After share(), f no longer holds the result, so f.get() is invalid',
             's must be read before f',
           ],
           2,
@@ -4940,10 +4940,10 @@ const futures: KnowledgePointModule = {
         choose(
           'A team wants to send a new price to waiting threads every second. Is a promise with a shared_future a good fit?',
           [
-            'Yes, call set_value every second',
+            'Yes, call set_value every second with the newest price',
             'Yes, as long as each thread copies the shared_future',
             'No, because shared_future cannot cross threads',
-            'No: a promise can be fulfilled only once, so it delivers a single value',
+            'No: a promise is fulfilled once, so it sends one value',
           ],
           3,
           'A second set_value throws; a stream of values needs a queue.',
@@ -5060,10 +5060,10 @@ const memoryModels: KnowledgePointModule = {
         choose(
           'Why should the page size be a named input rather than the literal 4096 repeated through the code?',
           [
-            '4096 is the page size on every system',
+            '4096 is the page size on every system, so the literal is always right',
             'Literals cannot be used with %',
             'Named values make % faster',
-            'Page sizes differ between systems and configurations, so the model must state its own',
+            'Page sizes differ between systems, so the model must state its own',
           ],
           3,
           'A model is only correct for the page size it assumes, and that assumption should be explicit.',
@@ -5460,7 +5460,7 @@ const memoryModels: KnowledgePointModule = {
         choose(
           'A programmer rounds with `bytes / alignment * alignment`. What goes wrong for 13 bytes and alignment 8?',
           [
-            'It gives 16, which is correct',
+            'It gives 16, the next multiple of 8, which is correct',
             'It gives 8, smaller than the 13 bytes requested',
             'It gives 13 unchanged',
             'It divides by zero',
@@ -5543,8 +5543,8 @@ const memoryModels: KnowledgePointModule = {
           'Why compare `bytes > max - extra` instead of computing bytes + extra and checking whether the sum is too big?',
           [
             'Signed overflow would throw an exception',
-            'The comparison is faster but otherwise the same',
-            'Unsigned addition wraps, so a too-big sum can already look small and valid',
+            'The comparison is faster to compute but gives the same answer',
+            'Unsigned addition wraps, so a too-big sum can look small',
             'max - extra can overflow',
           ],
           2,
@@ -5758,7 +5758,7 @@ const memoryModels: KnowledgePointModule = {
           'A test calls parse(line) twice with the same line and gets different results. Which cause fits?',
           [
             'parse keeps per-call scratch data in a static local',
-            'parse uses an ordinary local variable',
+            'parse uses an ordinary local variable for its scratch data',
             'parse takes line by value',
             'parse is called from main',
           ],
@@ -5770,7 +5770,7 @@ const memoryModels: KnowledgePointModule = {
           [
             'A running sum used only during one call',
             'A temporary buffer for formatting one message',
-            'A counter that hands out unique request IDs for the whole run',
+            'A counter handing out unique request IDs for the run',
             'The loop index of a search',
           ],
           2,
@@ -5856,9 +5856,9 @@ const memoryModels: KnowledgePointModule = {
           'Why is summing a vector in index order usually faster than visiting the same elements in random order?',
           [
             'Random order changes the sum',
-            'Index order skips bounds checks',
+            'Index order lets the compiler skip all bounds checks on each access',
             'The compiler cannot add numbers out of order',
-            'Sequential addresses use whole cache lines and are easy to prefetch',
+            'Sequential addresses fill whole cache lines and prefetch well',
           ],
           3,
           'Neighbouring elements arrive in the same cache line, and a predictable stride lets the hardware fetch ahead.',
@@ -5894,9 +5894,9 @@ const memoryModels: KnowledgePointModule = {
           'left holds {1, 2}. What is wrong with this code?',
           [
             'p points at right[0], so total gains 3',
-            'p points one past the end of left, and dereferencing it is undefined',
+            'p is one past the end of left; dereferencing it is undefined',
             'p wraps around to left[0]',
-            'Nothing; index 2 is valid for two elements',
+            'Nothing; left.data() + 2 still points inside left’s storage',
           ],
           1,
           'left.data() + 2 is the one-past-the-end position: valid to form, invalid to read.',
@@ -5909,8 +5909,8 @@ const memoryModels: KnowledgePointModule = {
           'Two vectors a and b happen to be adjacent in memory. Is `a.data() + a.size()` a valid way to reach b’s first element?',
           [
             'Yes, if the addresses match',
-            'Yes, because vectors are contiguous',
-            'No: a pointer into a may only move within a’s elements and its one-past-the-end position',
+            'Yes, because vector storage is contiguous, so stepping across is fine',
+            'No: a pointer into a may only stay within a and one past its end',
             'Only for vectors of int',
           ],
           2,
@@ -6032,7 +6032,7 @@ const memoryModels: KnowledgePointModule = {
             'Integer division drops the partial last line',
             'It overcounts by one line',
             'It divides by the wrong value',
-            'It is correct for every byte count',
+            'It is already correct for every possible byte count',
           ],
           0,
           'The truncated quotient ignores the remainder bytes, which still need a line.',
@@ -6120,8 +6120,8 @@ const memoryModels: KnowledgePointModule = {
         choose(
           'A model reports 1 line for a 16-byte object without saying where the object starts. What is missing?',
           [
-            'The starting offset: an object that crosses a line boundary touches 2 lines',
-            'Nothing: 16 bytes always fit one 64-byte line',
+            'The starting offset: a range that crosses a boundary touches 2 lines',
+            'Nothing: 16 bytes always fit in one 64-byte line wherever they start',
             'The CPU frequency',
             'The number of threads',
           ],
@@ -6250,7 +6250,7 @@ const memoryModels: KnowledgePointModule = {
             '4, a valid cell in row 1',
             '6, which is past the end of the 6-element vector',
             '3, the first cell of row 1',
-            '6, which wraps around to cell 0',
+            '6, which wraps around to cell 0 of the vector',
           ],
           1,
           '1 * 3 + 3 is 6, one past the last valid index 5.',
@@ -6313,8 +6313,8 @@ const memoryModels: KnowledgePointModule = {
           'Why check c < cols even when r * cols + c is less than cells.size()?',
           [
             'It prevents integer overflow',
-            'operator[] needs it in order to throw',
-            'An oversized column index silently reads a cell from the next row',
+            'operator[] needs the check in order to throw std::out_of_range',
+            'An oversized column silently reads a cell in the next row',
             'It is not needed in that case',
           ],
           2,
@@ -6403,7 +6403,7 @@ const memoryModels: KnowledgePointModule = {
           [
             'When a loop scans one field across all records',
             'Never; SoA is always faster',
-            'When records have only one field',
+            'When records have only one field, so there is nothing to split',
             'When each step uses most fields of one record together',
           ],
           3,
@@ -6466,7 +6466,7 @@ const memoryModels: KnowledgePointModule = {
           'A new order is added to prices but not to sizes. What goes wrong next?',
           [
             'sizes grows automatically to match',
-            'Nothing, because the missing size counts as 0',
+            'Nothing, because the missing size is read as 0 by the loop',
             'A loop bounded by prices.size() reads past the end of sizes',
             'The new price is ignored',
           ],
@@ -6575,7 +6575,7 @@ const layout: KnowledgePointModule = {
           [
             'Its member values are rounded to multiples of 64',
             'The CPU’s cache line is 64 bytes',
-            'Every object of the type starts at an address that is a multiple of 64',
+            'Every object of the type starts at a multiple of 64',
             'Accesses to it are atomic',
           ],
           2,
@@ -6585,9 +6585,9 @@ const layout: KnowledgePointModule = {
           'Why can `struct alignas(1) Pair { int a; int b; };` not lower Pair’s alignment below int’s?',
           [
             'alignas(1) is applied only at run time',
-            'alignas may only make alignment stricter; a weaker request is ill-formed',
+            'alignas can only make alignment stricter; weaker is ill-formed',
             'alignas accepts only 64',
-            'It can; Pair becomes 1-byte aligned',
+            'It can; Pair becomes 1-byte aligned and its ints may be misaligned',
           ],
           1,
           'An alignment specifier may not request less than the entity would need without it.',
@@ -6621,10 +6621,10 @@ const layout: KnowledgePointModule = {
         choose(
           'A program declares `struct alignas(64) Slot` and claims this proves the CPU’s cache line is 64 bytes. What is wrong?',
           [
-            'Nothing; alignas reads the cache line size',
+            'Nothing; alignas reads the cache line size from the CPU',
             'alignas(64) is invalid',
             'Cache lines are always 32 bytes',
-            'alignas states the program’s choice; it does not measure the hardware',
+            'alignas states the program’s choice; it measures nothing',
           ],
           3,
           'The number is an assumption written into the code.',
@@ -6730,7 +6730,7 @@ const layout: KnowledgePointModule = {
         choose(
           'Two threads write to different ints that sit in the same 64-byte cache line. Is that a data race?',
           [
-            'No: they are different objects; it can be slow but it is not incorrect',
+            'No: they are different objects; it can be slow but not wrong',
             'Yes: sharing a cache line makes it a data race',
             'Yes, unless both ints are atomic',
             'No, because ints are always written in one instruction',
@@ -6741,9 +6741,9 @@ const layout: KnowledgePointModule = {
         choose(
           'What does putting two counters in separate alignas(64) structs change?',
           [
-            'Correctness, by preventing data races',
+            'Correctness, by preventing data races between the two counters',
             'The values the counters hold',
-            'Only performance, by keeping them off a shared 64-byte line',
+            'Only performance, by keeping them off one shared line',
             'Nothing at all on any machine',
           ],
           2,
@@ -6752,10 +6752,10 @@ const layout: KnowledgePointModule = {
         choose(
           'Why can false sharing slow two threads that never touch each other’s variable?',
           [
-            'The threads must take turns holding a lock',
+            'The threads must take turns holding a hidden lock on the line',
             'Each variable is copied on every read',
             'The compiler inserts a mutex',
-            'Each write forces the shared cache line to move between their cores',
+            'Each write makes the shared line move between their cores',
           ],
           3,
           'Coherence works per line, so writes to neighbours keep invalidating the other core’s copy.',
@@ -6794,10 +6794,10 @@ const layout: KnowledgePointModule = {
         choose(
           'Two threads both increment the same plain int, which lives in its own alignas(64) struct. What is true?',
           [
-            'It is still a data race: padding separates objects, not accesses to one object',
+            'Still a data race: padding separates objects, not accesses',
             'The padding makes the increments safe',
             'It is safe because no cache line is shared',
-            'It is safe on machines with 64-byte lines only',
+            'It is safe, but only on machines whose cache lines are 64 bytes',
           ],
           0,
           'Both threads access the very same int without synchronization.',
@@ -6838,7 +6838,7 @@ const layout: KnowledgePointModule = {
         choose(
           'When should you add alignas padding to per-thread counters?',
           [
-            'Always, to make counters correct',
+            'Always, because padding is what makes counters correct',
             'Instead of using atomics',
             'Only in single-threaded code',
             'When a measurement shows false sharing costs time',
@@ -6907,7 +6907,7 @@ const layout: KnowledgePointModule = {
         choose(
           'Why must sizeof(T) be a multiple of alignof(T)?',
           [
-            'So the struct fits in one cache line',
+            'So the struct always fits in exactly one cache line',
             'So every element of a T array is correctly aligned',
             'Because sizeof counts cache lines',
             'It need not be',
@@ -6973,9 +6973,9 @@ const layout: KnowledgePointModule = {
         choose(
           'A test asserts sizeof(Slot) == 64, and the author concludes the hot loop is faster. What is missing?',
           [
-            'A timing measurement of the workload on the target machine',
+            'A timing of the workload on the target machine',
             'Nothing; the size proves the speedup',
-            'A check that alignof(Slot) is 32',
+            'A check that alignof(Slot) is 32 rather than 64',
             'A larger alignas value',
           ],
           0,
@@ -6984,8 +6984,8 @@ const layout: KnowledgePointModule = {
         choose(
           'What is a cost of padding every counter to 64 bytes?',
           [
-            'Data races between counters',
-            'More memory use, which can evict other hot data from the cache',
+            'Data races between neighbouring counters that share padding',
+            'More memory, which can push other hot data out of the cache',
             'Slower compile times only',
             'Counters can no longer be atomic',
           ],
@@ -6997,8 +6997,8 @@ const layout: KnowledgePointModule = {
           [
             'sizeof(Slot) % 64 == 0',
             'alignof(Slot) == 64',
-            'The program still prints the same totals',
-            'Timing the real workload before and after, over several runs',
+            'The program still prints the same totals after the change',
+            'Timing the real workload before and after, several times',
           ],
           3,
           'Only a measurement of the workload can show a speedup.',
@@ -7080,9 +7080,9 @@ const layout: KnowledgePointModule = {
         choose(
           'Two counters are 8 bytes apart. Do they share a 64-byte line?',
           [
-            'Always, because 8 is less than 64',
+            'Always, because 8 bytes is far less than one 64-byte line',
             'Never',
-            'It depends on where they start: offsets 56 and 64 straddle a boundary',
+            'It depends on where they start: 56 and 64 straddle a line',
             'Only if both are atomic',
           ],
           2,
@@ -7154,8 +7154,8 @@ const layout: KnowledgePointModule = {
           'The model shows that two per-thread counters share a line. What does that prove?',
           [
             'That the program has a data race',
-            'That they share a line in this layout model; whether it costs time needs measurement',
-            'That the program runs twice as slowly',
+            'Only that they share a line in the model; any cost needs measuring',
+            'That the program runs twice as slowly as a padded version would',
             'Nothing about the layout',
           ],
           1,
@@ -7247,9 +7247,9 @@ const measurement: KnowledgePointModule = {
         choose(
           'A log line says "request took 1700000000123 ns". What most likely went wrong?',
           [
-            'A single clock reading, time since an epoch, was reported instead of a difference',
-            'The request really was that slow',
-            'The unit should have been microseconds',
+            'A single clock reading (time since an epoch), not a difference',
+            'The request really was that slow, and the number is right',
+            'The unit should have been microseconds, not nanoseconds',
             'Nothing',
           ],
           0,
@@ -7437,8 +7437,8 @@ const measurement: KnowledgePointModule = {
         choose(
           'Why is the median a better summary than the mean for latency samples with one 950 ms outlier?',
           [
-            'One extreme sample barely moves the median but pulls the mean far up',
-            'The median is always smaller than the mean',
+            'One extreme sample barely moves the median but drags the mean',
+            'The median is always smaller than the mean, so it looks better',
             'The mean cannot be computed for latencies',
             'The median ignores half of the samples',
           ],
@@ -7514,7 +7514,7 @@ const measurement: KnowledgePointModule = {
             'Returns 0',
             'Throws std::out_of_range',
             'Reads past the end, which is undefined behavior',
-            'Returns NaN',
+            'Returns NaN, since there is no middle value',
           ],
           2,
           'The index is 0 but there is no element 0, and operator[] does not check.',
@@ -7664,9 +7664,9 @@ const measurement: KnowledgePointModule = {
           'A dashboard reports "p99 = 9 ms" computed from 4 samples. What should accompany it?',
           [
             'Nothing more',
-            'The mean of the samples',
+            'The mean of the samples, so readers can see the typical latency',
             'The CPU model',
-            'The sample count and percentile rule; with 4 samples, p99 is just the maximum',
+            'The sample count and the rule; with 4 samples, p99 is the max',
           ],
           3,
           'Without the count and rule, readers cannot tell how much the number means.',
@@ -7763,7 +7763,12 @@ const measurement: KnowledgePointModule = {
         ),
         choose(
           'With p == 0, what is rank - 1 as a std::size_t?',
-          ['A huge number, because 0 - 1 wraps around', '-1', '0', '3'],
+          [
+            'A huge number, because 0 - 1 wraps around',
+            '-1, the index before the first sample',
+            '0, since rank 0 is clamped to the first sample',
+            '3, the index of the largest sample',
+          ],
           0,
           'Unsigned arithmetic cannot go negative; it wraps to the maximum value.',
         ),
@@ -7917,10 +7922,10 @@ const measurement: KnowledgePointModule = {
         choose(
           'A report turns 1,000 loop visits into "1 microsecond" by assuming 1 ns per visit. What is wrong?',
           [
-            'Nothing',
-            'It presents an assumption as a measurement; time must be measured',
-            'It should assume 2 ns per visit',
-            'Visits cannot be counted',
+            'Nothing; 1 ns per visit is a safe estimate',
+            'It presents an assumption as a measurement',
+            'It should assume 2 ns per visit instead',
+            'Visits cannot be counted reliably at all',
           ],
           1,
           'Keep the count as work and report time only from a real measurement.',
@@ -7943,10 +7948,10 @@ const measurement: KnowledgePointModule = {
         choose(
           'Two loops both make 1,000,000 visits, and one runs 4 times faster. What explains this?',
           [
-            'One of the counts must be wrong',
-            'Counting changes the speed',
-            'Different memory access patterns, such as contiguous versus strided',
-            'Nothing can explain it',
+            'One of the two visit counts must be wrong, since time follows work',
+            'Counting the visits itself changes the speed',
+            'Different access patterns, contiguous versus strided',
+            'Nothing can explain it when the counts match',
           ],
           2,
           'Equal work can still differ in cache behavior.',
@@ -8042,9 +8047,9 @@ const orderBook: KnowledgePointModule = {
           'What does `levels[price] += size` do when price has no level yet?',
           [
             'Creates the level with size 0, then adds size to it',
-            'Throws std::out_of_range',
-            'Does nothing',
-            'Adds size to the nearest existing price',
+            'Throws std::out_of_range because the key is missing',
+            'Does nothing, because the price has no level yet',
+            'Adds size to the nearest existing price level',
           ],
           0,
           'operator[] value-initializes a missing mapped int to 0 before the addition.',
@@ -8145,10 +8150,10 @@ const orderBook: KnowledgePointModule = {
         choose(
           'Why is an order of size 0 rejected rather than added?',
           [
-            'Adding 0 throws an exception',
-            'Size 0 means a market order',
-            'It would double the level',
-            'Adding it would create a price level that shows no liquidity',
+            'Adding 0 throws an exception from the map',
+            'Size 0 means a market order, not a resting one',
+            'It would double the size of the existing level',
+            'It would create a level that shows no liquidity',
           ],
           3,
           'An empty level misrepresents the book; there is nothing to show at that price.',
@@ -8247,10 +8252,10 @@ const orderBook: KnowledgePointModule = {
         choose(
           'Why might a cancel ask for more than the level currently holds?',
           [
-            'The book always double counts',
-            'Cancels add size to the level',
-            'It cannot happen',
-            'Part of the order may already have traded, so less is resting than the cancel names',
+            'The book double counts every order it receives',
+            'Cancels add size to the level instead of removing it',
+            'It cannot happen with a correctly working book',
+            'Some of the order may already have traded',
           ],
           3,
           'Fills and cancels race in real markets, so over-cancels must be handled.',
@@ -8333,10 +8338,10 @@ const orderBook: KnowledgePointModule = {
         choose(
           'Sizes are stored as unsigned, and code computes available - cancelled with available = 3 and cancelled = 9. What is the result?',
           [
-            '-6',
-            '0',
-            'A huge positive number, because unsigned subtraction wraps around',
-            'A compile error',
+            '-6, the same as with signed sizes',
+            '0, because unsigned values cannot go below zero',
+            'A huge positive number, since unsigned math wraps',
+            'A compile error for mixing the two sizes',
           ],
           2,
           'Unsigned arithmetic is modular, so the "negative" result wraps to a value near the maximum.',
@@ -8344,7 +8349,7 @@ const orderBook: KnowledgePointModule = {
         choose(
           'Which statement about the over-cancel contract is right?',
           [
-            'Clamping to 0 and rejecting are both valid; the code must follow the one that is stated',
+            'Clamping and rejecting are both valid; code must follow the stated one',
             'Over-cancels must always produce negative levels',
             'Over-cancels should sometimes be clamped and sometimes ignored, at random',
             'The level must be deleted and recreated',
@@ -8424,10 +8429,10 @@ const orderBook: KnowledgePointModule = {
         choose(
           'Why is the best ask at begin() but the best bid at rbegin()?',
           [
-            'Asks are stored in reverse',
-            'std::map sorts ascending; the best ask is the lowest price and the best bid the highest',
-            'rbegin() is faster than begin()',
-            'Bids are kept unsorted',
+            'Asks are stored in reverse order, so begin() is their top',
+            'Keys sort ascending; best ask is lowest, best bid is highest',
+            'rbegin() is faster than begin() for maps of bids',
+            'Bids are kept unsorted, so the last one inserted is best',
           ],
           1,
           'Both sides use the same ascending map; they differ in which end is best.',
@@ -8462,10 +8467,10 @@ const orderBook: KnowledgePointModule = {
         choose(
           'What does `bids.rbegin()->first` do on an empty map?',
           [
-            'Returns 0',
-            'Throws std::out_of_range',
-            'Dereferences an iterator with no element behind it: undefined behavior',
-            'Returns the lowest possible int',
+            'Returns 0, the value of an empty level',
+            'Throws std::out_of_range for the empty map',
+            'It reads a missing element: undefined behavior',
+            'Returns the lowest possible int as a sentinel',
           ],
           2,
           'An empty map has no last element, and iterators do not check.',
@@ -8680,10 +8685,10 @@ const orderBook: KnowledgePointModule = {
         choose(
           'If an empty bid side were treated as price 0, what would a book with best ask 105 report?',
           [
-            'A spread of 105, which looks like a very wide market instead of a missing side',
-            'A spread of 0',
-            'A spread of -105',
-            'No spread',
+            'A spread of 105 that looks like a wide market',
+            'A spread of 0, since one side is missing',
+            'A spread of -105, a crossed book',
+            'No spread, because 0 is never a price',
           ],
           0,
           'The invented 0 turns "no data" into a plausible-looking but false number.',
@@ -8890,10 +8895,10 @@ const ringBuffers: KnowledgePointModule = {
         choose(
           'Why reject current == capacity, even though (current + 1) % capacity would be a valid slot?',
           [
-            'current itself is not a slot of the ring, so the caller’s state is already wrong',
-            'It is not necessary',
-            'It would divide by zero',
-            'The result would be negative',
+            'current is not a slot, so the state is already wrong',
+            'It is not necessary, since the result is in range',
+            'It would divide by zero when current equals capacity',
+            'The result would be negative for the last slot',
           ],
           0,
           'Silently wrapping an impossible index hides a bug elsewhere.',
@@ -8981,10 +8986,10 @@ const ringBuffers: KnowledgePointModule = {
         choose(
           'After 3 pushes into an empty ring of capacity 3, write is 0 again. Why keep a separate count?',
           [
-            'The count is only for statistics',
-            'write must never return to 0',
-            'write is the same when the ring is empty and when it is full, so the count tells them apart',
-            'count replaces the storage',
+            'The count is only kept for statistics and logging',
+            'write must never return to 0 while items remain',
+            'write is the same when empty and when full',
+            'count replaces the storage once the ring is full',
           ],
           2,
           'Position alone is ambiguous after a full lap.',
@@ -9112,8 +9117,8 @@ const ringBuffers: KnowledgePointModule = {
         choose(
           'Why advance write only after a push is accepted?',
           [
-            'write must always lead count',
-            'It saves one modulo operation',
+            'write must always lead count by one slot',
+            'It saves one modulo operation per rejected push',
             'It does not matter when write advances',
             'A rejected push must leave the ring exactly as it was',
           ],
@@ -9356,10 +9361,10 @@ const ringBuffers: KnowledgePointModule = {
         choose(
           'What does `count -= 1` do to a std::size_t count that is already 0?',
           [
-            'It stays 0',
-            'It becomes -1',
-            'It wraps to the largest std::size_t value, so the ring looks full',
-            'It throws',
+            'It stays 0, because size_t cannot go lower',
+            'It becomes -1, an empty marker',
+            'It wraps to the largest std::size_t value',
+            'It throws std::underflow_error',
           ],
           2,
           'Unsigned arithmetic wraps around instead of going negative.',
@@ -9367,10 +9372,10 @@ const ringBuffers: KnowledgePointModule = {
         choose(
           'After an item is popped, what happens to its slot?',
           [
-            'It is cleared to 0',
-            'It keeps the old value until a later push overwrites it',
-            'It is freed',
-            'It is erased from the vector',
+            'It is cleared to 0 so stale data cannot leak',
+            'It keeps its old value until a push overwrites it',
+            'It is freed and later reallocated',
+            'It is erased from the vector, shrinking it',
           ],
           1,
           'Popping only moves read and count; the storage itself is untouched.',
@@ -9455,9 +9460,9 @@ const ringBuffers: KnowledgePointModule = {
         choose(
           'Why does the producer store write with memory_order_release after filling the slot?',
           [
-            'To make the slot write atomic',
-            'To wake the consumer up',
-            'So a consumer that acquires the new write value also sees the slot’s contents',
+            'To make the slot write itself atomic',
+            'To wake the consumer up as soon as possible',
+            'So an acquiring consumer also sees the slot',
             'So the producer can read write again later',
           ],
           2,
@@ -9466,10 +9471,10 @@ const ringBuffers: KnowledgePointModule = {
         choose(
           'The consumer loads write with memory_order_relaxed instead of acquire. What breaks?',
           [
-            'Nothing',
-            'The consumer can see the new index without the slot’s write being visible, so reading the slot races',
-            'The loop never ends',
-            'The producer deadlocks',
+            'Nothing; relaxed loads still see every earlier write',
+            'Reading the slot can race with the producer’s write',
+            'The loop never ends because relaxed values never update',
+            'The producer deadlocks waiting for an acquire',
           ],
           1,
           'Without acquire there is no synchronizes-with edge, so the plain slot read is unordered with the write.',
@@ -9480,7 +9485,7 @@ const ringBuffers: KnowledgePointModule = {
             'store is faster, and correctness does not matter here',
             'fetch_add cannot be used on std::size_t',
             'The consumer also writes to write',
-            'Only the single producer ever modifies write, so there is no competing update',
+            'Only the single producer ever modifies write',
           ],
           3,
           'With one writer there is no lost-update race to guard against.',
@@ -9602,10 +9607,10 @@ const ringBuffers: KnowledgePointModule = {
         choose(
           'Why does the producer wait while write - read == capacity?',
           [
-            'Every slot then holds an item the consumer has not read, so writing would overwrite one',
-            'The ring is empty',
+            'Every slot still holds an unread item',
+            'The ring is empty, so there is nothing to send',
             'The consumer is waiting for the producer',
-            'To keep write below capacity',
+            'To keep write below capacity so the index never wraps',
           ],
           0,
           'The positions differ by capacity exactly when all slots are occupied.',
@@ -9613,10 +9618,10 @@ const ringBuffers: KnowledgePointModule = {
         choose(
           'Two producer threads share this ring, each doing load write, fill the slot, store write + 1. What goes wrong?',
           [
-            'Nothing; the atomics make it safe',
-            'The consumer reads every item twice',
-            'It deadlocks immediately',
-            'Both can load the same position and fill the same slot, losing an item',
+            'Nothing; the atomics make two producers safe',
+            'The consumer reads every item twice in a row',
+            'It deadlocks immediately on the first push',
+            'Both can fill the same slot, losing an item',
           ],
           3,
           'The protocol relies on a single writer per index; multiple producers need a different design.',
@@ -9763,7 +9768,7 @@ const protocols: KnowledgePointModule = {
           [
             'memcpy cannot copy two bytes',
             'It always produces the big-endian value',
-            'The result depends on the host’s byte order, so it differs between machines',
+            'The result depends on the host’s byte order',
             'A std::uint16_t cannot hold 65535',
           ],
           2,
@@ -9862,10 +9867,10 @@ const protocols: KnowledgePointModule = {
         choose(
           'Why check bytes.size() >= 2 before decoding the length?',
           [
-            'The length is always at least 2',
-            'std::span requires it',
-            'It is only a performance hint',
-            'Reading bytes[1] of a 1-byte buffer is out of bounds',
+            'The length field is always at least 2',
+            'std::span requires two bytes to exist',
+            'It is only a performance hint for the parser',
+            'bytes[1] of a 1-byte buffer is out of bounds',
           ],
           3,
           'span’s operator[] does not check, so the program must.',
@@ -9960,9 +9965,9 @@ const protocols: KnowledgePointModule = {
         choose(
           'A frame header says 60000 bytes follow, but only 10 have arrived. What should the parser do?',
           [
-            'Read 60000 bytes anyway',
+            'Read all 60000 bytes anyway, as the header says',
             'Shrink the length to 10 and parse',
-            'Treat the frame as incomplete (or invalid) and read nothing past the buffer',
+            'Treat it as incomplete; read nothing past the end',
             'Treat the 10 bytes as the whole payload',
           ],
           2,
@@ -10062,7 +10067,7 @@ const protocols: KnowledgePointModule = {
           'Every message’s checksum is valid. Does that prove no message was lost?',
           [
             'Yes, a valid checksum covers the whole stream',
-            'No: checksums validate each payload, while only sequence numbers reveal a missing message',
+            'No: only sequence numbers reveal a missing message',
             'Yes, if the checksums are strong enough',
             'No, because checksums are never reliable',
           ],
@@ -10127,10 +10132,10 @@ const protocols: KnowledgePointModule = {
         choose(
           'What does received - expected give for unsigned values received = 8 and expected = 10?',
           [
-            '-2',
-            '2',
-            'A huge number, because unsigned subtraction wraps around',
-            '0',
+            '-2, the signed difference',
+            '2, the distance between them',
+            'A huge number: unsigned math wraps',
+            '0, because the result is clamped',
           ],
           2,
           'Unsigned subtraction is modular, which is why the comparison must come first.',
@@ -10161,10 +10166,10 @@ const protocols: KnowledgePointModule = {
         choose(
           'Why is a duplicate (received < expected) not counted as a gap?',
           [
-            'It is an old message that was already processed or skipped; nothing new is missing',
+            'It is an old message; nothing new is missing',
             'It means the stream restarted',
             'Duplicates are always fatal errors',
-            'Unsigned numbers cannot be compared',
+            'Unsigned sequence numbers cannot be compared safely',
           ],
           0,
           'Gaps are about numbers that never arrived, not ones that arrive again.',
@@ -10282,10 +10287,10 @@ const protocols: KnowledgePointModule = {
         choose(
           'Why must the inner loop test end < input.size() before input[end] == input[i]?',
           [
-            'Otherwise the last run would read one past the end of the view',
-            'The comparison is faster that way',
+            'Otherwise the last run reads past the end of the view',
+            'The comparison runs faster when it comes second',
             'It only matters for letters',
-            'The order of the two tests does not matter',
+            'The order of the two tests does not matter with &&',
           ],
           0,
           '&& stops at the first false test, so the bounds check protects the read.',
@@ -10373,8 +10378,8 @@ const protocols: KnowledgePointModule = {
           'Why is "a2b1" a wrong encoding of "aba"?',
           [
             'Counts must come before characters',
-            'b must be listed first',
-            'It describes how often each character occurs, not the runs; decoding it gives "aab"',
+            'b must be listed first because it is the odd one out',
+            'It counts characters, not runs; it decodes to "aab"',
             'It is correct; RLE counts every occurrence',
           ],
           2,
@@ -10540,10 +10545,10 @@ const riskChecks: KnowledgePointModule = {
         choose(
           'Without the zero check, what happens for an empty book?',
           [
-            'The result is 0',
-            'An exception is thrown',
-            'It divides by zero: undefined in C++, and NaN on typical IEEE hardware',
-            'The result is 1',
+            'The result is 0, since there is no size',
+            'A std::domain_error exception is thrown',
+            'A division by zero: undefined, often NaN',
+            'The result is 1, since both sides are equal',
           ],
           2,
           'Both the numerator and the denominator are 0.',
@@ -10636,8 +10641,8 @@ const riskChecks: KnowledgePointModule = {
         choose(
           'price is 2000000000 and quantity is 2, both int. What is wrong with this line?',
           [
-            'Nothing; the result is stored in a long long',
-            'price * quantity is computed in int and overflows before the conversion, which is undefined behavior',
+            'Nothing; the long long target makes the multiplication wide',
+            'price * quantity overflows in int before it is converted',
             'A long long cannot hold 4 billion',
             'The conversion happens twice',
           ],
@@ -10903,10 +10908,10 @@ const riskChecks: KnowledgePointModule = {
         choose(
           'Why check position + delta instead of the current position alone?',
           [
-            'The limit applies to the position after the trade; the current one may be fine while the result is not',
-            'The current position is always zero',
-            'delta is always positive',
-            'It is the same check',
+            'The limit applies to the position after the trade',
+            'The current position is always zero at that point',
+            'delta is always positive for a buy or a sell',
+            'It is the same check written differently',
           ],
           0,
           'Risk is about the state the trade would create.',
@@ -10977,10 +10982,10 @@ const riskChecks: KnowledgePointModule = {
         choose(
           'Why not test std::abs(position + delta) <= limit using int arithmetic?',
           [
-            'std::abs only works on doubles',
-            'The int sum can overflow, and std::abs of the most negative int is not representable',
-            'It is equivalent and fine',
-            'abs makes the check one-sided',
+            'std::abs only works on doubles, so the int is converted first',
+            'The sum can overflow, and abs(INT_MIN) does not fit',
+            'It is equivalent to the two-sided check',
+            'abs makes the check one-sided again',
           ],
           1,
           'Both the addition and the absolute value can leave the int range.',
@@ -11066,10 +11071,10 @@ const riskChecks: KnowledgePointModule = {
         choose(
           'An order is valid "until 10:00:00", and a message stamped exactly 10:00:00 arrives. Why must the contract say whether it is still valid?',
           [
-            'Times can never be exactly equal',
-            'Both definitions agree at the boundary',
-            'The clock decides at run time',
-            'Only the definition decides the boundary case: >= and > give different answers there',
+            'Times can never be exactly equal in practice',
+            'Both definitions agree exactly at the boundary',
+            'The clock decides at run time which one applies',
+            'Only the definition decides it: >= and > differ there',
           ],
           3,
           'Boundaries are where off-by-one disagreements between systems appear.',
@@ -11117,10 +11122,10 @@ const riskChecks: KnowledgePointModule = {
         choose(
           'A test sleeps for 100 ms and then checks that an order with a 100 ms lifetime has expired. Why is the test flaky?',
           [
-            'Sleeping is not allowed in C++',
-            '100 ms is too short to measure',
-            'Sleep and clock timing vary, so the check can land just before or just after the boundary',
-            'The order never expires',
+            'Sleeping is not allowed inside a C++ test',
+            '100 ms is too short for a clock to measure',
+            'Real timing varies around the boundary',
+            'The order never expires while the test sleeps',
           ],
           2,
           'Real time is not exact enough to test an exact boundary.',
@@ -11254,7 +11259,7 @@ const pipelines: KnowledgePointModule = {
         choose(
           'What makes a full queue apply backpressure?',
           [
-            'It tells the producer the item was not accepted, so the producer can slow down or retry',
+            'It tells the producer the item was refused',
             'It silently grows beyond its capacity',
             'It drops the oldest item and reports success',
             'It blocks the consumer',
@@ -11319,9 +11324,9 @@ const pipelines: KnowledgePointModule = {
           'What is wrong with this push contract?',
           [
             'It reports success even when the item was discarded',
-            'It never adds any items',
-            'It throws when the queue is full',
-            'Nothing',
+            'It never adds any items to the queue',
+            'It throws when the queue is already full',
+            'Nothing; a full queue is the producer’s problem',
           ],
           0,
           'The producer cannot tell an accepted item from a dropped one.',
@@ -11365,10 +11370,10 @@ const pipelines: KnowledgePointModule = {
         choose(
           'Which reactions to a refused item are reasonable for a producer?',
           [
-            'Pretend it was accepted',
-            'Slow down, retry later, or drop it while recording the loss',
-            'Push it anyway beyond the capacity',
-            'Restart the consumer',
+            'Pretend it was accepted and move on',
+            'Slow down, retry, or record it as dropped',
+            'Push it anyway beyond the capacity limit',
+            'Restart the consumer so it drains faster',
           ],
           1,
           'Any of those keeps the loss visible and the capacity respected.',
@@ -11470,10 +11475,10 @@ const pipelines: KnowledgePointModule = {
         choose(
           'What does `seen.insert(id).second` tell you?',
           [
-            'The position of id in the set',
-            'How many times id has been seen',
-            'Whether the set is sorted',
-            'Whether id was newly inserted (true) or already present (false)',
+            'The position of id within the set',
+            'How many times id has been inserted so far',
+            'Whether the set is still sorted after the insert',
+            'Whether id was newly inserted or already present',
           ],
           3,
           'insert returns an iterator and a bool that reports whether insertion happened.',
@@ -11553,10 +11558,10 @@ const pipelines: KnowledgePointModule = {
         choose(
           'Each retry of a message gets a new random id. What does a deduplicating consumer do?',
           [
-            'Applies the message once',
-            'Rejects every copy',
-            'Applies every retry, because each id looks new',
-            'Applies it exactly twice',
+            'Applies the message once, as intended',
+            'Rejects every copy as a duplicate',
+            'Applies every retry, since each id is new',
+            'Applies it exactly twice, then stops',
           ],
           2,
           'Deduplication can only recognize ids it has seen before.',
@@ -11565,7 +11570,7 @@ const pipelines: KnowledgePointModule = {
           'The consumer forgets ids after one minute, but retries can arrive for five minutes. What can happen?',
           [
             'A late retry is applied a second time',
-            'Nothing',
+            'Nothing, since the retry already happened',
             'The set throws an exception',
             'All retries are rejected',
           ],
@@ -11665,10 +11670,10 @@ const pipelines: KnowledgePointModule = {
         choose(
           'Why does replaying the same log always give the same state?',
           [
-            'The compiler caches the result',
-            'All events commute',
-            'It does not; replays vary',
-            'Each event is applied in the recorded order with a fixed meaning, and nothing else changes the state',
+            'The compiler caches the result of the first replay',
+            'All events commute, so order never matters',
+            'It does not; replays vary from run to run',
+            'Each event applies in recorded order with a fixed meaning',
           ],
           3,
           'Same inputs, same steps, same order: the result is determined.',
@@ -11751,8 +11756,8 @@ const pipelines: KnowledgePointModule = {
         choose(
           'A tool sorts a log by value before replaying it. When can that change the final state?',
           [
-            'Whenever the log mixes events that do not commute, such as set and add',
-            'Never',
+            'Whenever set and add events are mixed',
+            'Never, because sorting keeps every event',
             'Only when values are negative',
             'Only when the log is empty',
           ],
@@ -11973,10 +11978,10 @@ const pipelines: KnowledgePointModule = {
         choose(
           'Without the check, what does the replay loop do when included is larger than the log?',
           [
-            'It runs zero times and silently returns the snapshot as if it were current',
-            'It throws an exception',
+            'It runs zero times, hiding the problem',
+            'It throws an exception for the bad index',
             'It reads past the end of the log',
-            'It replays from event 0',
+            'It replays the whole log from event 0',
           ],
           0,
           'The loop condition is false from the start, so the inconsistency goes unnoticed.',
@@ -11984,10 +11989,10 @@ const pipelines: KnowledgePointModule = {
         choose(
           'When could a snapshot claim more events than the log contains?',
           [
-            'Never',
-            'When the events are sorted',
-            'When the snapshot is empty',
-            'When the log was truncated, or the snapshot belongs to a different log',
+            'Never, since snapshots are taken from the log',
+            'When the events are sorted before saving',
+            'When the snapshot is empty or brand new',
+            'The log was cut short, or is a different log',
           ],
           3,
           'Either way, state and log disagree and recovery must stop.',
@@ -12064,10 +12069,10 @@ const determinism: KnowledgePointModule = {
         choose(
           'Two orders share price 100. After std::sort with this comparator, which comes first?',
           [
-            'The one that arrived first',
-            'The one with the lower id',
+            'The one that arrived first, as in the input',
+            'The one with the lower id, since ids differ',
             'Unspecified: std::sort may put either one first',
-            'The one with the larger size',
+            'The one with the larger size in the order',
           ],
           2,
           'The comparator treats them as equal, and std::sort does not preserve the order of equal elements.',
@@ -12080,10 +12085,10 @@ const determinism: KnowledgePointModule = {
         choose(
           'Which comparator implements "lower price first, then lower id"?',
           [
-            'return a.first < b.first;',
+            'return a.first < b.first || a.second < b.second;',
             'return a.first != b.first ? a.first < b.first : a.second < b.second;',
-            'return a.second < b.second;',
-            'return a.first <= b.first;',
+            'return a.first != b.first ? a.first > b.first : a.second < b.second;',
+            'return a.first == b.first ? a.first < b.first : a.second < b.second;',
           ],
           1,
           'It compares ids only when prices tie; <= is not a valid strict ordering for std::sort.',
@@ -12180,8 +12185,8 @@ const determinism: KnowledgePointModule = {
         choose(
           'Why negate the price instead of sorting the pairs in descending order?',
           [
-            'Negative numbers sort faster',
-            'Descending order would also reverse the ids, putting later orders first at equal prices',
+            'Negative numbers sort faster than positive ones do',
+            'Descending order would also put later ids first at a tie',
             'std::sort cannot sort in descending order',
             'It makes the prices unique',
           ],
@@ -12246,9 +12251,9 @@ const determinism: KnowledgePointModule = {
         choose(
           'Why does `0.1 + 0.2 == 0.3` evaluate to false?',
           [
-            '== never works on doubles',
+            '== never works on doubles, only on integers',
             '0.3 is rounded down to 0',
-            '0.1 and 0.2 are stored as nearby binary fractions, so their sum differs slightly from the stored 0.3',
+            '0.1 and 0.2 are stored as nearby binary fractions',
             'The addition overflows',
           ],
           2,
@@ -12325,7 +12330,7 @@ const determinism: KnowledgePointModule = {
             'Divide the fee by 100 and drop the remainder',
             'Convert both to double',
             'Add them directly; integers are exact',
-            'Convert the price to 1/10000 units by multiplying by 100',
+            'Multiply the cents by 100 to get 1/10000 units',
           ],
           3,
           'Moving to the finer unit loses nothing, while dropping the remainder would.',
@@ -12412,10 +12417,10 @@ const determinism: KnowledgePointModule = {
         choose(
           'The standard requires the 10000th value of a default-constructed std::mt19937 to be 4123659995. What does that guarantee?',
           [
-            'Every conforming library produces the same mt19937 sequence',
-            'The value is random on each run',
-            'mt19937 is safe for cryptography',
-            'Distributions give the same results everywhere',
+            'Every conforming library gives the same mt19937 sequence',
+            'The value is random and different on each run',
+            'mt19937 is safe to use for cryptography',
+            'Distributions built on it give the same results everywhere',
           ],
           0,
           'The engine algorithm is fixed by the standard, so its output is portable.',
@@ -12423,10 +12428,10 @@ const determinism: KnowledgePointModule = {
         choose(
           'A simulation seeds std::mt19937 with the current time and does not log the seed. Why can a failing run not be reproduced?',
           [
-            'mt19937 ignores its seed',
-            'Time-based seeds overflow',
-            'It can always be reproduced',
-            'The seed differs on every run and was not recorded',
+            'mt19937 ignores the seed it is given',
+            'Time-based seeds overflow the engine state',
+            'It can always be reproduced from the time',
+            'The seed changes every run and was not saved',
           ],
           3,
           'Reproducing a run needs the exact seed it used.',
@@ -12500,10 +12505,10 @@ const determinism: KnowledgePointModule = {
         choose(
           'Two machines draw std::uniform_int_distribution<int>(1, 6) from std::mt19937(42). Which statement is true?',
           [
-            'The engine outputs match, but the distribution’s results may differ between standard libraries',
-            'Both always match',
-            'Neither matches',
-            'Only the first value matches',
+            'The engine outputs match; distribution results may not',
+            'Both always match, because the engine and seed are the same',
+            'Neither matches across the two machines',
+            'Only the first value matches on both',
           ],
           0,
           'The engine is fully specified; the distribution’s algorithm is left to each library.',
@@ -12511,10 +12516,10 @@ const determinism: KnowledgePointModule = {
         choose(
           'What must a bug report include so a random simulation can be replayed?',
           [
-            'Only the seed',
-            'The engine type, the seed, and how values were drawn from it',
-            'Only the time of the run',
-            'The CPU model',
+            'Only the seed, since every engine uses it the same way',
+            'The engine type, the seed, and how values were drawn',
+            'Only the time of the run and the machine',
+            'The CPU model and compiler version',
           ],
           1,
           'The same seed in a different engine, or drawn through a different distribution, gives different values.',
@@ -12621,10 +12626,10 @@ const determinism: KnowledgePointModule = {
         choose(
           'What is wrong with this handler?',
           [
-            'Nothing',
-            'A rejected delta has already been applied to position',
-            'It checks the limit twice',
-            'It rejects valid events',
+            'Nothing; the rejection branch handles it',
+            'A rejected delta is already in position',
+            'It checks the limit twice for every event',
+            'It rejects valid events at the limit',
           ],
           1,
           'The state is mutated before the check, so rejection would need an undo that is missing.',
@@ -12638,10 +12643,10 @@ const determinism: KnowledgePointModule = {
         choose(
           'Why is this handler deterministic?',
           [
-            'It uses a mutex',
-            'It sorts the events first',
-            'It reads the clock',
-            'Its result depends only on the event sequence, the starting position and the limit',
+            'It uses a mutex around the position',
+            'It sorts the events before applying them',
+            'It reads the clock once per event',
+            'Only the events, start and limit affect it',
           ],
           3,
           'No hidden input such as time or thread scheduling affects the outcome.',
@@ -12713,7 +12718,7 @@ const determinism: KnowledgePointModule = {
         choose(
           'Which contract does recording the id before the risk check implement?',
           [
-            'Each event id receives exactly one decision, accept or reject',
+            'Each event id gets exactly one decision',
             'Rejected events are retried until they are accepted',
             'Only accepted ids are remembered',
             'Ids are ignored',
@@ -12750,10 +12755,10 @@ const determinism: KnowledgePointModule = {
         choose(
           'Why does one decision per id help when the same log is replayed later?',
           [
-            'It makes replays faster',
-            'It lets replays skip the risk check',
-            'It does not matter for replays',
-            'Replays reach the same accept and reject decisions, so the final state matches',
+            'It makes every replay faster',
+            'It lets replays skip the risk check entirely',
+            'It does not matter for replays at all',
+            'Replays reach the same decisions every time',
           ],
           3,
           'Decisions depend only on the log, not on how often an event was redelivered.',
