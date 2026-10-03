@@ -1,5 +1,5 @@
 import type { Skill } from '../../curriculum';
-import { choice, exercise, skill } from './shared';
+import { choice, exercise, skill, withLargeCase } from './shared';
 
 export const competitiveAdvanced: Skill[] = [
   skill(
@@ -582,26 +582,33 @@ assert sessions == [(5, 9), (0, 2), (2, 5)]`,
     'cp-bitmasks',
     'cp-strategy',
     'Encode subsets with bits',
-    'Represent membership by bit position and enumerate small subset spaces.',
-    ['cp-bit-set-clear', 'cp-enumeration'],
+    'Update a selection mask and enumerate only its submasks.',
+    ['cp-bit-set-clear', 'cp-bit-submask-step', 'cp-enumeration'],
     [
-      'For n indexed items, a nonnegative integer mask encodes a subset: bit i is one exactly when item i is selected. Test membership with mask & (1 << i), add membership with |, and toggle it with ^. The zero mask is the empty subset. Different indices remain distinct even when their item values are equal.',
-      'Enumerate all masks with range(1 << n). To sum the selected values, scan indices and add values whose bits are set. The invariant is that the partial total includes exactly the selected indices examined so far. Negative item values are fine because masks encode membership, not numeric magnitude.',
-      'Scanning n bits for each of 2ⁿ masks costs O(n·2ⁿ) time and O(1) auxiliary storage when only a count is returned. This lesson’s function accepts at most 18 items, keeping exhaustive work practical. Python integers are not fixed-width; when using ~mask as a finite-set complement, restrict it with ((1 << n) - 1) & ~mask.',
+      'For n indexed items, a nonnegative integer mask encodes a selection: bit i is one exactly when item i is selected. Test membership with mask & (1 << i). Set a bit with mask | (1 << i) and clear it with mask & ~(1 << i); both are idempotent, so repeating a change leaves the mask unchanged. The zero mask is the empty selection, and equal values at different indices stay distinct items.',
+      'The subsets of the current selection are exactly the submasks of its mask. Start at sub = mask, process it, stop after processing zero, and otherwise step with sub = (sub - 1) & mask. The walk visits each of the 2ᵏ submasks of a k-item selection once, in decreasing order, and never a subset that uses an unselected item. To score a submask, scan the item positions and add the values whose bits are set; negative values are fine because the mask records membership, not magnitude.',
+      'Looping over range(1 << n) and discarding masks outside the selection costs 2ⁿ steps per query even when only k items are selected. With 20 items and at most 10 selected, the submask walk takes at most 1,024 steps where the full range takes 1,048,576. Python integers are not fixed-width, so a complement used as a finite set must be restricted with ((1 << n) - 1) & ~mask.',
     ],
-    `values = [2, -1, 2]
+    `values = [4, -1, 3, 2]
+mask = 0
+for index in [0, 2, 3]:
+    mask |= 1 << index
+mask &= ~(1 << 3)
 matches = []
-for mask in range(1 << len(values)):
+sub = mask
+while True:
     total = 0
-    for index, value in enumerate(values):
-        if mask & (1 << index):
-            total += value
-    if total == 2:
-        matches.append(mask)
-print(matches)
-print(5 & (1 << 2) != 0)`,
-    '[1, 4]\nTrue',
-    'Masks 1 and 4 select the first or third item independently. Mask 5 has bit two set because its binary representation is 101.',
+    for position in range(len(values)):
+        if sub & (1 << position):
+            total += values[position]
+    if total == 7:
+        matches.append(sub)
+    if sub == 0:
+        break
+    sub = (sub - 1) & mask
+print(bin(mask), matches)`,
+    '0b101 [5]',
+    'Setting items 0, 2, and 3 and then clearing item 3 leaves mask 0b101. Its submasks are 5, 4, 1, and 0, and only 5 (items 0 and 2) sums to 7.',
     [
       choice(
         'Which expression tests whether index i belongs to mask?',
@@ -611,57 +618,89 @@ print(5 & (1 << 2) != 0)`,
         'Construct a mask with just bit i set.',
       ),
       choice(
-        'How many indexed subsets does a list of four items have, including the empty subset?',
-        ['4', '8', '16', '24'],
-        2,
-        'Each of four indices has two independent membership choices, giving 2⁴ subsets.',
-        'Count the binary decisions.',
+        'Which expression removes item 2 from mask = 0b0110 and leaves the other bits alone?',
+        ['mask ^ (1 << 3)', 'mask | (1 << 2)', 'mask - 2', 'mask & ~(1 << 2)'],
+        3,
+        'The complement of the single bit keeps every other position, and AND clears position 2.',
+        'Build a mask that has every bit except position 2.',
       ),
       choice(
-        'For values [0, 0], how many indexed subsets sum to zero?',
-        ['0', '1', '2', '4'],
-        3,
-        'Empty, first-only, second-only, and both indices all sum to zero and are distinct subsets.',
-        'Equal values do not collapse distinct indices.',
+        'Mask 0b1011 selects three items. How many submasks does the walk sub = (sub - 1) & mask visit, counting the mask and zero?',
+        ['3', '8', '11', '16'],
+        1,
+        'Each of the three selected items is either in or out of a submask, giving 2³ = 8.',
+        'Only selected bits can vary.',
       ),
       exercise(
-        'Implement subset_count(values, target). values contains at most 18 integers, which may be negative, zero, or repeated. Return the number of indexed subsets whose sum equals target. Include the empty subset, and count equal-valued items at different indices independently. Enumerate bitmasks.',
-        'def subset_count(values, target):\n    # Visit every mask, including zero.\n    pass\n',
-        `def subset_count(values, target):
-    count = 0
-    for mask in range(1 << len(values)):
-        total = 0
-        for index, value in enumerate(values):
-            if mask & (1 << index):
-                total += value
-        if total == target:
-            count += 1
-    return count`,
-        `assert subset_count([], 0) == 1, "Include the empty subset."
-assert subset_count([], 5) == 0
-assert subset_count([0, 0], 0) == 4
-assert subset_count([2, 2], 2) == 2, "Count indexed choices separately."
-assert subset_count([2, -1, 2], 2) == 2
-assert subset_count([-3, 1, 2], 0) == 2
-assert subset_count([1, 2, 3, 4], 5) == 2
-assert subset_count([5, 7], 1) == 0
-assert subset_count([1] * 10, 3) == 120`,
-        'Every n-bit mask identifies one indexed subset exactly once, so counting matching mask sums neither omits nor duplicates a choice.',
-        'Loop over range(1 << len(values)); test each bit and count totals equal to target.',
+        'Implement selection_counts(values, changes, target). values holds at most 20 integers, which may be negative, zero, or repeated. The selection starts empty. Each change (index, present) sets item index in the selection mask when present is True and clears it when False; repeating a change has no effect. At most 10 items are selected at any time. After each change, count the submasks of the current selection whose selected values sum to target, including the empty submask, and return the counts in change order. Preserve both lists. Walk submasks with (sub - 1) & mask: a hidden case with 20 items and 200 changes must finish within 3 seconds.',
+        `def selection_counts(values, changes, target):
+    # Keep one mask; after each change, walk its submasks.
+    pass`,
+        `def selection_counts(values, changes, target):
+    mask = 0
+    counts = []
+    for index, present in changes:
+        if present:
+            mask |= 1 << index
+        else:
+            mask &= ~(1 << index)
+        count = 0
+        sub = mask
+        while True:
+            total = 0
+            for position, value in enumerate(values):
+                if sub & (1 << position):
+                    total += value
+            if total == target:
+                count += 1
+            if sub == 0:
+                break
+            sub = (sub - 1) & mask
+        counts.append(count)
+    return counts`,
+        withLargeCase(
+          `assert selection_counts([], [], 0) == []
+assert selection_counts([5], [(0, True)], 0) == [1], "The empty submask sums to zero."
+assert selection_counts([5], [(0, True), (0, True)], 5) == [1, 1], "Setting a set bit changes nothing."
+assert selection_counts([2, 2], [(0, True), (1, True)], 2) == [1, 2], "Equal values at different indices are distinct items."
+assert selection_counts([3, -1, 4, 1], [(0, True), (2, True), (1, True), (0, False)], 3) == [1, 1, 2, 1], "Count only submasks of the current selection."
+assert selection_counts([1, 2, 3], [(1, False), (2, True)], 0) == [1, 1], "Clearing an absent item changes nothing."
+assert selection_counts([0, 0, 0], [(0, True), (1, True), (2, True)], 0) == [2, 4, 8]
+values = [1] * 20
+changes = [(index, True) for index in range(10)]
+assert selection_counts(values, changes, 3)[-1] == 120
+assert values == [1] * 20 and changes == [(index, True) for index in range(10)], "Preserve both lists."`,
+          `_values = _numbers(20, -60, 60, 701)
+_selected = set()
+_changes = []
+for _pick in _numbers(1000, 0, 19, 702):
+    if _pick in _selected:
+        _selected.discard(_pick)
+        _changes.append((_pick, False))
+    elif len(_selected) < 10:
+        _selected.add(_pick)
+        _changes.append((_pick, True))
+    if len(_changes) == 200:
+        break
+_result, _seconds = _timed(selection_counts, _values, _changes, 40)
+assert _checksum(_result) == 666043684648720918, "The 200-change case returned wrong counts."
+_check_time(_seconds, "The 200-change case", "Walk only the submasks of the current selection instead of every mask below 1 << 20.")`,
+        ),
+        'Set and clear keep one mask equal to the current selection, and the submask walk visits each subset of that selection exactly once, so every count neither omits nor repeats a choice.',
+        'Update the mask with | or & ~. Then start at sub = mask, count matching totals, stop after zero, and step with (sub - 1) & mask.',
       ),
     ],
     [
       [
-        'What does bit i in a subset mask mean?',
-        'Bit i is one exactly when indexed item i is selected.',
+        'How do you visit every subset of a selection mask exactly once?',
+        'Start at sub = mask, process it, stop after zero, and otherwise step with sub = (sub - 1) & mask.',
       ],
       [
-        'What is the cost of scanning n items for every subset mask?',
-        'O(n·2ⁿ) time; it is appropriate only for small n.',
+        'Why walk submasks instead of every mask below 1 << n?',
+        'A k-item selection has only 2ᵏ submasks; scanning all 2ⁿ masks wastes work on subsets that use unselected items.',
       ],
     ],
   ),
-
   skill(
     'cp-geometry',
     'cp-strategy',

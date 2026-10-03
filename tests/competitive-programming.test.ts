@@ -205,12 +205,9 @@ describe('competitive programming in the shared knowledge graph', () => {
         // A concept never depends on the application it prepares.
         expect(ancestors(id).has(topic)).toBe(false);
       });
-      // Two concepts are not used by their application yet; their
-      // applications need rewriting before an edge would be honest.
+      // Every concept is used by its application, so none is a dead end.
       for (const stage of stages)
-        expect(ancestors(topic).has(stage)).toBe(
-          !['cp-grid-component', 'cp-bit-submask-step'].includes(stage),
-        );
+        expect(ancestors(topic).has(stage), stage).toBe(true);
       expect(skillById[topic]).toMatchObject({
         topicId: topic,
         stage: 4,

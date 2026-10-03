@@ -1,5 +1,5 @@
 import type { Skill } from '../../curriculum';
-import { choice, exercise, skill } from './shared';
+import { choice, exercise, skill, withLargeCase } from './shared';
 
 export const competitiveStructures: Skill[] = [
   skill(
@@ -1107,109 +1107,122 @@ assert source == [[1], []], "Preserve the graph."`,
     'cp-grids',
     'cp-graphs',
     'Treat cells as graph vertices',
-    'Apply breadth-first search with explicit bounds and movement rules.',
-    ['cp-grid-passability', 'cp-bfs'],
+    'Scan every cell and flood-fill each newly found land component.',
+    ['cp-grid-component'],
     [
-      'A grid is an implicit graph: a passable cell is a vertex, and allowed moves create edges. For four-direction movement, neighbors differ by one row or one column. Diagonal cells are not neighbors under this contract, even if they touch at a corner.',
-      'Check 0 ≤ row < rows and 0 ≤ column < columns before indexing a neighbor. Negative Python indices wrap around instead of reporting an out-of-bounds move, so skipping this check can invent edges across a border. Also reject blocked cells and mark passable cells as discovered when they enter the queue.',
-      'For unit-cost moves, BFS finds the fewest moves between cells. Use -1 when either endpoint is blocked or the destination is unreachable. A rectangular R-by-C grid has at most four outgoing moves per cell, so time and auxiliary space are O(RC). The grid itself can remain unchanged.',
+      'A grid is an implicit graph: each land cell is a vertex, and two land cells share an edge when they differ by one row or one column. Cells that touch only at a corner are not neighbors under the four-direction contract, so they belong to different islands unless another land route joins them.',
+      'One flood fill from a land cell reaches exactly its island. To find every island, scan the cells in row order and start a new flood fill only from land that no earlier search discovered. Share one discovered set across all searches: a cell claimed by an earlier island is never counted again, so the number of searches started is the number of islands, and each search’s discovered-cell count is that island’s size.',
+      'Check 0 ≤ row < rows and 0 ≤ column < columns before indexing a neighbor, because a negative index wraps to the opposite border. Use an explicit stack so a long island cannot exceed Python’s recursion limit. Each cell is discovered at most once and has at most four neighbors, so an R-by-C grid takes O(RC) time even when one island covers most of it; restarting a search from every land cell would repeat whole islands and take O((RC)²) time.',
     ],
-    `from collections import deque
-grid = ["..#", "...", "#.."]
-rows, columns = len(grid), len(grid[0])
-distance = [[-1] * columns for _ in range(rows)]
-distance[0][0] = 0
-queue = deque([(0, 0)])
-while queue:
-    row, column = queue.popleft()
-    for dr, dc in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-        nr, nc = row + dr, column + dc
-        if 0 <= nr < rows and 0 <= nc < columns:
-            if grid[nr][nc] == "." and distance[nr][nc] == -1:
-                distance[nr][nc] = distance[row][column] + 1
-                queue.append((nr, nc))
-print(distance[2][2])`,
-    '4',
-    'Only in-bounds, passable, unseen cells become queued vertices; the bottom-right cell is four moves away.',
+    `grid = [[1, 1, 0, 0],
+        [0, 1, 0, 1],
+        [1, 0, 0, 1]]
+rows, cols = len(grid), len(grid[0])
+seen = set()
+sizes = []
+for row in range(rows):
+    for col in range(cols):
+        if grid[row][col] == 1 and (row, col) not in seen:
+            seen.add((row, col))
+            pending = [(row, col)]
+            size = 0
+            while pending:
+                r, c = pending.pop()
+                size += 1
+                for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:
+                    if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1 and (nr, nc) not in seen:
+                        seen.add((nr, nc))
+                        pending.append((nr, nc))
+            sizes.append(size)
+print(sizes)`,
+    '[3, 2, 1]',
+    'The scan starts searches at (0, 0), (1, 3), and (2, 0). Each search claims its whole island, so later cells of the same island are skipped.',
     [
       choice(
-        'From cell (2, 3), which cell is a four-direction neighbor?',
-        ['(3, 4)', '(2, 5)', '(1, 3)', '(0, 3)'],
-        2,
-        'Only (1, 3) changes exactly one coordinate by one.',
-        'A permitted move is one unit horizontally or vertically.',
+        'In the grid [[1, 0], [0, 1]], how many four-direction islands are there?',
+        ['1', '2', '4', '0'],
+        1,
+        'The two land cells touch only at a corner, which is not a move, so each is its own island.',
+        'Diagonal contact is not an edge.',
       ),
       choice(
-        'Why check nr >= 0 before reading grid[nr][nc]?',
+        'Why does the scan share one discovered set across all flood fills?',
         [
-          'Python negative indexing can wrap to the last row.',
-          'BFS requires row labels to be positive.',
-          'All negative indices raise IndexError immediately.',
-          'The check automatically removes blocked cells.',
+          'So the largest island is always found first.',
+          'So diagonal cells join the same island.',
+          'So each island is counted once, when the scan first reaches it.',
+          'So the grid can be modified in place.',
         ],
-        0,
-        'An unchecked -1 row accesses the final row and would create an unintended wraparound move.',
-        'Array indexing behavior is not a grid movement rule.',
+        2,
+        'Cells claimed by an earlier search are skipped, so only the first cell the scan meets on each island starts a search.',
+        'Ask what stops a second search from starting on the same island.',
       ),
       choice(
-        'What should the distance be when start and finish are the same passable cell?',
-        ['-1', '1', 'The number of grid cells', '0'],
-        3,
-        'No movement is needed to reach a cell already occupied.',
-        'Distance counts moves, not visited cells.',
+        'What is the running time of the shared-discovery scan on an R-by-C grid?',
+        ['O(R + C)', 'O(RC)', 'O((RC)²)', 'O(RC log RC)'],
+        1,
+        'Every cell is scanned once and discovered at most once, and each discovery checks at most four neighbors.',
+        'Count how often one cell can be discovered.',
       ),
       exercise(
-        'Implement shortest_walk(grid, start, finish). grid is [] or a nonempty rectangular list of nonempty strings containing only "." (passable) and "#" (blocked). For a nonempty grid, start and finish are valid (row, column) tuples. Return the minimum number of four-direction unit moves between them, or -1 for an empty grid, blocked endpoint, or unreachable finish. Preserve grid; diagonals and border wraparound are forbidden.',
-        `from collections import deque
-
-def shortest_walk(grid, start, finish):
+        'Implement island_summary(grid). grid is [] or a rectangular list of equal-length rows containing 0 (water) and 1 (land). An island is a maximal group of land cells joined by up, down, left, or right moves; diagonal contact does not join cells. Return (island_count, largest_island_size), or (0, 0) when there is no land. Preserve grid. Share one discovered set across iterative flood fills: a hidden 400-by-400 grid must finish within 3 seconds.',
+        `def island_summary(grid):
+    # Scan every cell; flood-fill land that no earlier search discovered.
     pass`,
-        `from collections import deque
-
-def shortest_walk(grid, start, finish):
-    if not grid:
-        return -1
-    rows, columns = len(grid), len(grid[0])
-    sr, sc = start
-    fr, fc = finish
-    if grid[sr][sc] == "#" or grid[fr][fc] == "#":
-        return -1
-    distance = [[-1] * columns for _ in range(rows)]
-    distance[sr][sc] = 0
-    queue = deque([(sr, sc)])
-    while queue:
-        row, column = queue.popleft()
-        if (row, column) == finish:
-            return distance[row][column]
-        for dr, dc in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-            nr, nc = row + dr, column + dc
-            if 0 <= nr < rows and 0 <= nc < columns:
-                if grid[nr][nc] == "." and distance[nr][nc] == -1:
-                    distance[nr][nc] = distance[row][column] + 1
-                    queue.append((nr, nc))
-    return -1`,
-        `assert shortest_walk([], (0, 0), (0, 0)) == -1, "An empty grid has no route."
-assert shortest_walk(["."], (0, 0), (0, 0)) == 0, "No moves are needed at the destination."
-assert shortest_walk(["..#", "...", "#.."], (0, 0), (2, 2)) == 4
-assert shortest_walk([".#", "#."], (0, 0), (1, 1)) == -1, "Diagonal contact is not a move."
-assert shortest_walk([".#."], (0, 0), (0, 2)) == -1, "Do not wrap across a blocked border."
-assert shortest_walk(["#.", ".."], (0, 0), (1, 1)) == -1, "A blocked start is invalid."
-assert shortest_walk(["..", ".#"], (0, 0), (1, 1)) == -1, "A blocked finish is invalid."
-source = ["...", "..."]
-assert shortest_walk(source, (1, 0), (0, 2)) == 3
-assert source == ["...", "..."], "Preserve the grid."`,
-        'The grid supplies neighbors on demand; a separate distance matrix supplies discovery state and shortest move counts.',
-        'Check endpoint passability, then BFS from start. Check bounds before reading each potential neighbor.',
+        `def island_summary(grid):
+    rows = len(grid)
+    cols = len(grid[0]) if grid else 0
+    seen = set()
+    count = 0
+    largest = 0
+    for row in range(rows):
+        for col in range(cols):
+            if grid[row][col] != 1 or (row, col) in seen:
+                continue
+            count += 1
+            seen.add((row, col))
+            pending = [(row, col)]
+            size = 0
+            while pending:
+                r, c = pending.pop()
+                size += 1
+                for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:
+                    if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1 and (nr, nc) not in seen:
+                        seen.add((nr, nc))
+                        pending.append((nr, nc))
+            largest = max(largest, size)
+    return count, largest`,
+        withLargeCase(
+          `assert island_summary([]) == (0, 0), "An empty grid has no islands."
+assert island_summary([[0, 0], [0, 0]]) == (0, 0), "Water alone has no islands."
+assert island_summary([[1]]) == (1, 1)
+assert island_summary([[1, 0], [0, 1]]) == (2, 1), "Diagonal contact does not join cells."
+assert island_summary([[1, 1, 0, 0], [0, 1, 0, 1], [1, 0, 0, 1]]) == (3, 3)
+assert island_summary([[1, 0, 1]]) == (2, 1), "Do not wrap across a border."
+assert island_summary([[1], [0], [1]]) == (2, 1)
+ring = [[1, 1, 1], [1, 0, 1], [1, 1, 1]]
+assert island_summary(ring) == (1, 8), "Land around water is still one island."
+assert ring == [[1, 1, 1], [1, 0, 1], [1, 1, 1]], "Preserve the grid."
+snake = [[1] * 60 if r % 2 == 0 else ([0] * 59 + [1] if r % 4 == 1 else [1] + [0] * 59) for r in range(60)]
+assert island_summary(snake) == (1, 1830), "Use an explicit stack for a long island."`,
+          `_cells = _numbers(160000, 0, 99, 171)
+_grid = [[1 if _cells[r * 400 + c] < 66 else 0 for c in range(400)] for r in range(400)]
+_result, _seconds = _timed(island_summary, _grid)
+assert _result == (2075, 100907), "The 400-by-400 grid returned the wrong summary."
+_check_time(_seconds, "The 400-by-400 grid", "Share one discovered set so each land cell is searched once, instead of restarting a search from every land cell.")`,
+        ),
+        'A shared discovered set schedules each land cell exactly once across all searches, so the scan is O(RC) and every search it starts is a new island.',
+        'Scan cells in row order. At undiscovered land, count an island and flood-fill it with a stack, marking cells when you schedule them.',
       ),
     ],
     [
       [
-        'What checks define a valid four-direction grid move?',
-        'One coordinate changes by one; the destination is in bounds, passable, and not already discovered.',
+        'How do you count the islands in a grid?',
+        'Scan every cell and start a flood fill only from land no earlier search discovered; each search started is one island.',
       ],
       [
-        'Why can unchecked negative grid indices create a false path in Python?',
-        'Negative indices wrap to the final row or column rather than representing an out-of-bounds cell.',
+        'Why can unchecked negative grid indices join cells that are not adjacent?',
+        'Negative indices wrap to the final row or column, inventing a move across the border.',
       ],
     ],
   ),
