@@ -96,12 +96,20 @@ export function typeNumber(
   };
 }
 
-/** Authoring helper for a short typed answer such as a name or keyword. */
+/**
+ * Authoring helper for a short typed answer such as a name or keyword. The
+ * first answer is shown after answering; the others are synonyms. Any case,
+ * wrapping quotes, and trailing punctuation are accepted unless the question
+ * is `caseSensitive` or `exact`.
+ */
 export function typeText(
   prompt: string,
   answers: string[],
   explanation: string,
-  options: Pick<TextQuestion, 'ignoreCase' | 'code'> = {},
+  options: Pick<
+    TextQuestion,
+    'ignoreCase' | 'caseSensitive' | 'exact' | 'code'
+  > = {},
 ): Omit<TextQuestion, 'id'> {
   return {
     type: 'text',
