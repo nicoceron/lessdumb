@@ -21,10 +21,17 @@ export type KnowledgePointModule = Record<string, KnowledgePointDraft[]>;
 
 // Each course keeps its knowledge points in `*.kp.ts` files beside this one,
 // so independently authored courses never edit a shared registry.
-const modules = import.meta.glob<KnowledgePointModule>('./*.kp.ts', {
-  eager: true,
-  import: 'knowledgePoints',
-});
+let modules: Record<string, KnowledgePointModule> = {};
+try {
+  modules = import.meta.glob<KnowledgePointModule>('./*.kp.ts', {
+    eager: true,
+    import: 'knowledgePoints',
+  });
+} catch {
+  // Vite (app, Vitest) expands the glob at build time. Other TypeScript
+  // loaders, such as Playwright's for browser specs that import the catalog,
+  // have no glob and see skills without knowledge points.
+}
 
 const registry = new Map<
   string,

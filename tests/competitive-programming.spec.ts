@@ -4,6 +4,7 @@ import { applyAttempt, coursePath } from '../src/lib/learning';
 import { createState, type LearnerState } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
 import { replaceCode as writeCode } from './helpers/editor';
+import { chooseCourse, expectActiveCourse } from './helpers/navigation';
 
 const origin = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 const courseId = 'competitive-programming';
@@ -53,13 +54,7 @@ test('a saved contest goal exposes its complete graph and navigates both referen
 }) => {
   await account(page);
   await page.goto('/courses');
-  const card = page.locator('.ma-catalog-card').filter({
-    has: page.getByRole('heading', {
-      name: 'Competitive Programming',
-      exact: true,
-    }),
-  });
-  await card.getByRole('button', { name: 'Set learning goal' }).click();
+  await chooseCourse(page, 'Competitive Programming');
   await expect(
     page.getByRole('link', { name: 'USACO Guide', exact: true }),
   ).toHaveAttribute('href', 'https://usaco.guide/');
@@ -71,7 +66,7 @@ test('a saved contest goal exposes its complete graph and navigates both referen
     .toBe(courseId);
   await page.goto('/');
   await page.reload();
-  await expect(page.getByLabel('CURRENT COURSE')).toHaveValue(courseId);
+  await expectActiveCourse(page, 'Competitive Programming');
   await page.goto(`/graph?course=${courseId}`);
   await expect(page.getByLabel('Graph course')).toHaveValue(courseId);
   await expect(page.locator('.graph-node')).toHaveCount(

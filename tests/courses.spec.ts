@@ -4,6 +4,11 @@ import { applyAttempt, coursePath } from '../src/lib/learning';
 import { createState } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
 import { replaceCode } from './helpers/editor';
+import {
+  chooseCourse,
+  expectActiveCourse,
+  openFromMenu,
+} from './helpers/navigation';
 const origin = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 async function ready(page: Page) {
   await expect(page.getByText('Preparing your learning space…')).toHaveCount(0);
@@ -59,23 +64,12 @@ test('course goals persist and the graph exposes prerequisites across subjects',
 }) => {
   await page.goto('/courses');
   await ready(page);
-  const course = page.locator('.ma-catalog-card').filter({
-    has: page.getByRole('heading', { name: 'Machine Learning', exact: true }),
-  });
-  await course.getByRole('button', { name: 'Set learning goal' }).click();
-  await expect(course.getByRole('button', { name: 'Selected' })).toBeVisible();
+  await chooseCourse(page, 'Machine Learning');
   await page.goto('/');
-  await expect(page.getByLabel('CURRENT COURSE')).toHaveValue(
-    'machine-learning',
-  );
+  await expectActiveCourse(page, 'Machine Learning');
   await page.reload();
-  await expect(page.getByLabel('CURRENT COURSE')).toHaveValue(
-    'machine-learning',
-  );
-  await page
-    .getByRole('navigation', { name: 'Main navigation' })
-    .getByRole('link', { name: 'Knowledge graph', exact: true })
-    .click();
+  await expectActiveCourse(page, 'Machine Learning');
+  await openFromMenu(page, 'Knowledge graph');
   await expect(page.getByLabel('Graph course')).toHaveValue('machine-learning');
   const target = Object.values(skillById).find(
     (s) =>
@@ -143,10 +137,7 @@ for (const id of ['da-arrays', 'ml-linear-regression']) {
           .getByRole('button', { name: 'Continue', exact: true })
           .click();
     }
-    await page
-      .getByRole('navigation', { name: 'Main navigation' })
-      .getByRole('link', { name: /Flashcards/ })
-      .click();
+    await openFromMenu(page, /Flashcards/);
     await expect(
       page
         .getByRole('button', { name: /BREAKTHROUGH/ })
@@ -198,10 +189,7 @@ test('data-systems scenarios teach and earn cards without a code exercise', asyn
   await expect(page.getByRole('button', { name: 'Run & check' })).toHaveCount(
     0,
   );
-  await page
-    .getByRole('navigation', { name: 'Main navigation' })
-    .getByRole('link', { name: /Flashcards/ })
-    .click();
+  await openFromMenu(page, /Flashcards/);
   await expect(page.getByRole('button', { name: /BREAKTHROUGH/ })).toHaveCount(
     2,
   );
@@ -270,10 +258,7 @@ test('leaving a lesson cancels its real Python worker and locks submitted hints'
     'contenteditable',
     'false',
   );
-  await page
-    .getByRole('navigation', { name: 'Main navigation' })
-    .getByRole('link', { name: /Flashcards/ })
-    .click();
+  await openFromMenu(page, /Flashcards/);
   release();
   await expect
     .poll(() => page.evaluate(() => (window as any).__pythonWorkersTerminated))

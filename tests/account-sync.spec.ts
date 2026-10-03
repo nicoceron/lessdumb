@@ -142,13 +142,13 @@ test('confirmed sign-out discards the old workspace even when the next session l
       body: JSON.stringify({ code: 'SESSION_UNAVAILABLE' }),
     }),
   );
-  await page.getByRole('button', { name: 'Open account', exact: true }).click();
+  await page.getByRole('button', { name: 'Account menu', exact: true }).click();
   const revoked = page.waitForResponse(
     (response) =>
       response.url().endsWith('/api/auth/sign-out') &&
       response.status() === 200,
   );
-  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Sign out', exact: true }).click();
   await revoked;
   await expect(
     page.getByRole('heading', {
