@@ -47,15 +47,15 @@ Before CEN-126, the 207 KB `code-block` chunk was mostly CodeMirror: `src/lib/co
 | ------------------------ | -------------------------: | ----------------------: | -----------: |
 | Python foundations       |               45 → 30 → 77 |             10 → 9 → 13 |    3 → 3 → 6 |
 | Quantitative foundations |                 7 → 8 → 51 |               3 → 2 → 8 |    2 → 2 → 4 |
-| Python for Data Analysis |               48 → 39 → 44 |              15 → 8 → 8 |    2 → 3 → 3 |
-| Machine Learning         |               89 → 56 → 84 |              10 → 9 → 9 |    3 → 6 → 6 |
+| Python for Data Analysis |               48 → 39 → 46 |              15 → 8 → 8 |    2 → 3 → 3 |
+| Machine Learning         |               89 → 56 → 85 |              10 → 9 → 9 |    3 → 6 → 6 |
 | Data Systems             |               42 → 33 → 34 |               7 → 7 → 7 |    3 → 3 → 3 |
 | Competitive Programming  |            683 → 373 → 444 |              20 → 9 → 9 |  9 → 28 → 27 |
 | Rust                     |            145 → 227 → 265 |           124 → 15 → 18 |  1 → 17 → 17 |
 | C++                      |            200 → 296 → 404 |           116 → 12 → 12 |  3 → 30 → 32 |
-| **Catalog**              |  **1,259 → 1,062 → 1,403** |                         |              |
+| **Catalog**              |  **1,259 → 1,062 → 1,406** |                         |              |
 
-"Now" adds the nodes that teach what lessons used without teaching: Python idioms (CEN-81), the mathematics layer for ML (CEN-82, below), Rust basics (CEN-84), C++ basics (CEN-85), and the last constructs from the audit (CEN-114, below). The catalog now has 720 skills. For Python: 24 skills for constructs that lessons used without teaching, such as tuples, unpacking, built-ins, truthiness, sorting keys, sets, imports, heaps, and classes. Every skill whose lesson, example, questions, or solution uses one of them now names it directly, and prerequisites that became implied were removed. Writing knowledge points for every foundation skill also exposed three missing edges, now added: `strings` repeats text with `*` from `numbers`, `lists` relies on `==` from `comparisons` for membership and equality, and `parameters` uses the `is None` default idiom from `truthiness`.
+"Now" adds the nodes that teach what lessons used without teaching: Python idioms (CEN-81), the mathematics layer for ML (CEN-82, below), Rust basics (CEN-84), C++ basics (CEN-85), the last constructs from the audit (CEN-114, below), and NumPy `np.exp` and `np.log` (CEN-162, below). The catalog now has 721 skills. For Python: 24 skills for constructs that lessons used without teaching, such as tuples, unpacking, built-ins, truthiness, sorting keys, sets, imports, heaps, and classes. Every skill whose lesson, example, questions, or solution uses one of them now names it directly, and prerequisites that became implied were removed. Writing knowledge points for every foundation skill also exposed three missing edges, now added: `strings` repeats text with `*` from `numbers`, `lists` relies on `==` from `comparisons` for membership and equality, and `parameters` uses the `is None` default idiom from `truthiness`.
 
 For Rust, 17 basics were added, and every lesson using them now depends on them. Redundant edges fell from 523 to 0. Rust and C++ gained edges because the old generators chained each skill to the previous one and omitted most real uses: 55% of Rust's and 52% of C++'s previous-skill edges were false, and dozens of skills used constructs taught only later. Competitive Programming no longer injects `parameters` into every node or chains every concept to its sibling; 231 of its removed edges named skills that are no longer ancestors at all.
 
@@ -126,6 +126,16 @@ The other gaps needed no new skill:
 - `std::count_if` is taught by the first knowledge point of `cpp-lambda-predicate`, its only user.
 - `cpp-elapsed-duration` subtracts `steady_clock` time points and reports with `duration_cast`. Its exercise takes time points, its knowledge points were rewritten to match, and it depends on `cpp-chrono` and `cpp-if-branches` instead of `cpp-arithmetic` and `cpp-conditional-operator`.
 
+## NumPy exponentials and logarithms (CEN-162)
+
+Machine Learning lessons call NumPy's `np.exp` and `np.log` on arrays (sigmoid and softmax layers, cross-entropy losses, attention weights), and round array results with `.round(k)`, but no skill taught them: `math-exp-log` covers only the scalar `math.exp` and `math.log`. A new data-analysis skill closes the gap:
+
+| New skill    | Course                   | Teaches                                                                                                               | Prerequisites                      | Direct dependents  |
+| ------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------ |
+| `da-exp-log` | Python for Data Analysis | `np.exp` and `np.log` entry by entry, `array.round(k)`, sums of logs, and `np.log(0)` giving `-inf`, not `ValueError` | `da-vectorization`, `math-exp-log` | `ml-neural-layers` |
+
+A knowledge point in an existing NumPy skill would not fit the graph. The natural host, `da-vectorization`, is the second skill of the course, so it would have to require `math-exp-log` and put logarithms in front of every data-analysis learner; and `ml-neural-layers` already reaches it through `da-broadcasting`, so no machine-learning skill could depend on it directly. `da-exp-log` sits in the NumPy unit after `da-broadcasting`, with three knowledge points, an exercise, and two cards. `ml-neural-layers` is the first lesson that calls the functions and names it directly. `ml-backpropagation`, `ml-keras-workflow`, and `ml-attention` call them too and reach `da-exp-log` through `ml-neural-layers`, so a direct edge from them would be redundant. Python for Data Analysis now has 25 skills and 46 edges; its longest in-course chain is still 8 and its median ready count 3.
+
 ## Known gaps
 
 Edges cannot fix content. These items are the backlog for new concept nodes and lesson rewrites.
@@ -134,7 +144,7 @@ Edges cannot fix content. These items are the backlog for new concept nodes and 
 
 **Closed since the audit:**
 
-- Python teaches decorators and `functools.cache` (`decorators`, required by `cp-memoization`). `ml-ensembles` no longer transposes with `zip(*rows)`, and `ml-deployment-monitoring` no longer subtracts `dict.keys()` from a set. Quantitative foundations teaches `math.exp` and `math.log` (`math-exp-log`, required by `ml-logistic-regression` and reached by every other ML lesson that calls them), and `ml-data-splits` depends on `number-builtins` for `sum()`.
+- Python teaches decorators and `functools.cache` (`decorators`, required by `cp-memoization`). `ml-ensembles` no longer transposes with `zip(*rows)`, and `ml-deployment-monitoring` no longer subtracts `dict.keys()` from a set. Quantitative foundations teaches `math.exp` and `math.log` (`math-exp-log`, required by `ml-logistic-regression` and reached by every other ML lesson that calls them), and `ml-data-splits` depends on `number-builtins` for `sum()`. Python for Data Analysis teaches `np.exp`, `np.log`, and `array.round` (`da-exp-log`, required by `ml-neural-layers` and reached by every later ML lesson that calls them, CEN-162).
 - C++ teaches generic lambdas, `decltype` and `std::decay_t`, `mutable` lambdas, `std::abs`, `std::to_string`, and `std::reverse` in two new topics, and `cpp-optional`, `cpp-tie-break-order`, `cpp-callbacks`, `cpp-testing`, `cpp-protocol`, and `cpp-property-test` depend on them. `std::count_if` is taught by `cpp-lambda-predicate`, its only user, and `cpp-elapsed-duration` now uses the `std::chrono` skills.
 
 - C++ teaches the basics lessons used without teaching: logical operators and `?:`, range-for with `std::array`, `break`/`continue`, `char`, `sizeof`, fixed-width integers, type traits, bit operations, member functions and `const`, pairs and structured bindings, and `std::chrono`. `cpp-arithmetic` teaches `%`, `cpp-while-progress` uses a real `while`, and `cpp-functions` no longer sums a vector before vectors are taught.

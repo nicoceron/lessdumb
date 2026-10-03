@@ -28,7 +28,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 ## What you can do
 
 - **Learn:** see your active course with its progress and estimated completion date (remaining lesson XP ÷ your daily XP goal), total, today's, and this week's XP, up to five next tasks in scheduler order (due reviews and ready lessons, including prerequisites from other courses), and a dated history of completed lessons and reviews with earned/possible XP.
-- **Courses:** choose your active course from eight courses and 720 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
+- **Courses:** choose your active course from eight courses and 721 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
 - **Lessons:** each lesson is one page that grows as you work, as in Math Academy: the introduction, then for each knowledge point its explanation, a worked example, and its questions, then the code exercise. Answered questions stay on the page with their explanations, so you can scroll back and reread while you solve. Reviews stack their questions on one page the same way.
 - **Account menu:** the avatar menu opens the knowledge graph, flashcards, code lab, and settings, and signs you in or out.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
@@ -44,13 +44,13 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 | ------------------------ | ------: | ---------------: | --------: | -------------------: | ---------: |
 | Python foundations       |      49 |              168 |       694 |                   49 |         98 |
 | Quantitative foundations |      37 |              119 |       476 |                   11 |         74 |
-| Python for Data Analysis |      24 |               73 |       292 |                   24 |         48 |
+| Python for Data Analysis |      25 |               76 |       304 |                   25 |         50 |
 | Machine Learning         |      29 |              116 |       464 |                   21 |         58 |
 | Data Systems             |      28 |               84 |       336 |                    0 |         56 |
 | Competitive Programming  |     192 |              438 |     1,743 |                  192 |        384 |
 | Rust                     |     145 |              398 |     1,597 |                  145 |        290 |
 | C++                      |     216 |              549 |     1,938 |                  216 |        432 |
-| **Total**                | **720** |        **1,945** | **7,540** |              **658** |  **1,440** |
+| **Total**                | **721** |        **1,948** | **7,552** |              **659** |  **1,442** |
 
 Questions are the knowledge points' practice questions; the four-question lessons they replaced were deleted (CEN-117). The browser keeps only the graph index in memory and downloads a unit's lessons when one of them opens ([how content is loaded](docs/knowledge-graph.md#how-the-browser-loads-the-catalog)).
 
