@@ -315,6 +315,7 @@ describe('course page', () => {
       '1.1.2',
       '1.1.3',
       '1.1.4',
+      '1.1.5',
     ]);
     expect(first.topics[1].skills[0].number).toBe('1.2.1');
     expect(outline.reduce((n, unit) => n + unit.total, 0)).toBe(

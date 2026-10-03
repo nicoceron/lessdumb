@@ -52,6 +52,12 @@ pre {
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+.inline-code {
+  padding: 0.05em 0.3em;
+  border-radius: 4px;
+  background: var(--muted, #eef2f6);
+  font-size: 0.9em;
+}
 ::selection {
   background: #d9eafd;
 }

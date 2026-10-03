@@ -62,7 +62,7 @@ describe('worked lesson examples', () => {
       expect(steps[2].output, id).toBe(skillById[id].lesson.example.output);
     }
     expect(workedExampleSteps(skillById['rust-main']).at(-1)?.output).toBe(
-      '"hello, Rust"',
+      'hello, Rust',
     );
   });
 

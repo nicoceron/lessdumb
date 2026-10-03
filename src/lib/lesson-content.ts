@@ -825,13 +825,13 @@ const walkthroughs: Record<string, AuthoredStep[]> = {
     {
       title: 'Find the entry point',
       explanation:
-        'Execution starts in main, which calls greeting() while evaluating the argument for println!. The helper’s position above main does not make it run first.',
+        'Execution starts in main, whose only statement calls greet(). The helper’s position above main does not make it run first, and without that call it would never run.',
       lines: [5, 7],
     },
     {
-      title: 'Return the string, then format it',
+      title: 'Run the called function',
       explanation:
-        'greeting() returns its final string expression. The {:?} placeholder uses Debug formatting, so the displayed string includes quote marks. This differs from Python print() on a string.',
+        'The call runs greet’s body, where println! prints the quoted text, without its quote marks, as one line. Then greet finishes and main ends.',
       lines: [1, 3],
     },
   ],
@@ -839,13 +839,13 @@ const walkthroughs: Record<string, AuthoredStep[]> = {
     {
       title: 'Fill the placeholders in order',
       explanation:
-        'main calls label("tasks", 3). Inside label, the first {} receives name and the second receives count, producing the string tasks: 3.',
+        'main calls progress(3, 5). Inside progress, the first {} receives done and the second receives total, producing the text 3 of 5 done.',
       lines: [1, 3],
     },
     {
       title: 'Return before printing',
       explanation:
-        'format! creates the String and the helper returns it as its final expression. println! then displays that returned String using Debug formatting, which retains its surrounding quotes.',
+        'format! builds a String and the helper returns it as its final expression. println! then prints that returned String with {}, so no quote marks appear.',
       lines: [5, 7],
     },
   ],
