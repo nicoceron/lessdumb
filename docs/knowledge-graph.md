@@ -37,7 +37,7 @@ Gzipped JavaScript (gzip level 9), measured with `npm run build`: the dashboard'
 | Any lesson, at most (C++, with KaTeX)        | +725 KB |         +273 KB |
 | Code editor, added when the exercise appears |  +22 KB | +156 to +171 KB |
 
-Before CEN-126, the 207 KB `code-block` chunk was mostly CodeMirror: `src/lib/code-language.ts` imported the Python, Rust, and C++ editor grammars statically, so every lesson downloaded them with the shared session code even before an editor appeared. Shiki itself already loaded lazily. Unit chunks range from 5 KB to 63 KB (Rust's Model values and failures unit); course chunks were 62 KB to 342 KB. Since CEN-162, the first C++, Rust, and data-analysis lessons also download their course's generator chunk, 5 to 8 KB more than the table shows.
+Before CEN-126, the 207 KB `code-block` chunk was mostly CodeMirror: `src/lib/code-language.ts` imported the Python, Rust, and C++ editor grammars statically, so every lesson downloaded them with the shared session code even before an editor appeared. Shiki itself already loaded lazily. Unit chunks range from 5 KB to 63 KB (Rust's Model values and failures unit); course chunks were 62 KB to 342 KB. Since CEN-162, the first C++ and Rust lessons also download their course's generator chunk, 7 to 8 KB more than the table shows.
 
 ## Before and after
 
