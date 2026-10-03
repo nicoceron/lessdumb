@@ -119,7 +119,7 @@ const nodes = [
           'The system must be fast',
           'The system should scale forever',
           'Use whatever is newest',
-          'Read one record by ID at 500 requests per second, with p95 below 150 ms',
+          'Read one record by ID at 500 requests per second, with 95% answered within 150 ms',
         ],
         3,
         'A specific operation, load, and response target can be measured and tested.',
@@ -146,7 +146,8 @@ const nodes = [
     ['ds-workloads'],
     [
       'Throughput measures completed work per unit of time. Response time measures how long a request takes from the caller’s perspective. A service can complete many requests per second while a minority of users experience very slow responses.',
-      'A percentile describes a boundary in the response-time distribution. A p95 target concerns the slower tail beyond most requests, unlike an average. Also specify reliability and the load under which the target should hold; an unloaded benchmark does not establish behavior at peak demand.',
+      'A percentile describes a boundary in the response-time distribution: the p95 is the time within which 95% of requests finish, so only the slowest 5% take longer. Unlike an average, it exposes the slow tail. Also specify the load under which the target should hold; an unloaded benchmark does not establish behavior at peak demand.',
+      'Reliability targets separate faults from failures. A fault is one component misbehaving, such as a broken disk or a crashed process; a failure is the service as a whole not delivering what it promised. Fault-tolerant designs keep faults from becoming failures.',
     ],
     'Two services both average 80 ms. One has p99 of 130 ms; the other has p99 of 2 seconds.',
     'Inspect the tail distribution instead of declaring the services equivalent.',
@@ -297,6 +298,7 @@ const nodes = [
     [
       'A distributed system uses communicating processes on different nodes. It can add capacity, geographic proximity, or fault tolerance, but also introduces partial failures and uncertain network delays. Distribution is a response to requirements, not proof that a design is better.',
       'Managed services transfer some operational responsibilities to a provider; they do not remove responsibility for data modeling, access control, budgets, or recovery expectations. A simple single-node system can be appropriate when its capacity and recovery plan meet the workload.',
+      'A replica is a live copy of the data on another node, kept up to date as changes happen; it helps when a node is lost. Replicas also copy mistakes, such as an accidental deletion, so recovering from those needs backups: separate copies taken at earlier points in time.',
     ],
     'A community directory fits on one server. Its owners can tolerate a short recovery window and have tested backups.',
     'Start with the simplest design that meets the measured capacity and recovery requirements.',
@@ -554,7 +556,7 @@ const nodes = [
       q(
         'Two rows contain different addresses for the same organizer after an incomplete update. What is this?',
         [
-          'Guaranteed serializability',
+          'A successful join',
           'An update anomaly caused by duplicated facts',
           'A beneficial compression ratio',
           'A primary-key lookup',
@@ -604,7 +606,7 @@ const nodes = [
     [
       q(
         'In a graph model, what usually represents an entity?',
-        ['An edge label only', 'A disk sector', 'A node', 'A percentile'],
+        ['An edge label only', 'A disk sector', 'A node', 'A column header'],
         2,
         'Nodes represent entities, while edges represent relationships between them.',
         'Separate things from connections.',
@@ -891,7 +893,7 @@ const nodes = [
     ['ds-btrees', 'ds-relational'],
     [
       'A secondary index provides access through a field other than the primary key. A composite index orders several fields together. The order of those fields matters because it determines which groups and ranges are contiguous.',
-      'Design indexes from representative queries and verify their effect. Every additional index adds storage and write maintenance. An index that covers the needed fields may avoid a separate record lookup, but larger entries can increase index size.',
+      'Design indexes from representative queries and verify their effect with the query plan, the engine’s report of which access path a query uses, and with measurements. Every additional index adds storage and write maintenance. An index that covers the needed fields may avoid a separate record lookup, but larger entries can increase index size.',
     ],
     'Requests find workshops for one city and then restrict their start date.',
     'Consider an ordered index on (city, start_date) and test the target query.',
@@ -1486,7 +1488,7 @@ const nodes = [
     ['ds-replication-lag', 'ds-conflicts'],
     [
       'In a fixed replica set of size N, a write may wait for W replicas and a read may wait for R. When R + W > N, the responding sets must overlap, provided they are drawn from that same replica set.',
-      'Overlap is a useful building block, not a complete proof of linearizable behavior. Concurrent writes, version selection, failed writes, and alternative replica placement can complicate the result. State the assumptions before turning a quorum inequality into a guarantee.',
+      'Overlap is a useful building block, not a complete proof of linearizable behavior: acting as if there were a single copy, so every read after a completed write sees it. Concurrent writes, version selection, failed writes, and alternative replica placement can complicate the result. State the assumptions before turning a quorum inequality into a guarantee.',
     ],
     'A record has N = 5 replicas. A completed write reached W = 3, and a read receives R = 3 responses from that same set.',
     'The response sets must overlap in at least one replica.',
@@ -1527,7 +1529,7 @@ const nodes = [
         'What can smaller acknowledgment thresholds trade for better availability?',
         [
           'A greater chance of stale or incomplete observations',
-          'Guaranteed global serializability',
+          'A guarantee that no write ever fails',
           'A proof that clocks agree',
           'Perfectly current reads with no protocol',
         ],
@@ -1556,7 +1558,7 @@ const nodes = [
     ['ds-key-values', 'ds-replication'],
     [
       'Sharding distributes different parts of a dataset across nodes. Replication copies the same part to multiple nodes. A deployment can combine both: each shard owns a subset of keys and has replicas of that subset.',
-      'The partition key determines which records travel together. It affects load distribution, query routing, and whether related work stays local. Choose it from access patterns and the largest expected tenants or entities, not only from the current number of records.',
+      'The partition key determines which records travel together. It affects load distribution, query routing, and whether related work stays local. Choose it from access patterns and the largest expected tenants (customer organizations whose data is grouped together) or entities, not only from the current number of records.',
     ],
     'Workshop records are assigned to shards by organizer ID. Each shard has two replicas.',
     'Understand organizer ID as the ownership boundary and replicas as extra copies within that boundary.',
@@ -1630,7 +1632,7 @@ const nodes = [
     'Compare locality, distribution, and routing stability.',
     ['ds-partitioning'],
     [
-      'Range sharding assigns ordered intervals of keys to shards. It preserves locality for range queries, but sequential new keys can concentrate writes in one interval. Hash sharding spreads different keys according to a deterministic hash and usually gives up useful original-key ordering.',
+      'Range sharding assigns ordered intervals of keys to shards. It preserves locality for range queries, but sequential new keys can concentrate writes in one interval. Hash sharding spreads different keys according to a deterministic hash, a function that turns a key into a number unrelated to the key’s order and always gives the same number for the same key; it usually gives up useful original-key ordering.',
       'A distributed routing hash must produce the same result wherever it is used. A process-randomized language hash is not necessarily suitable. Distribution across many distinct keys also does not guarantee balanced traffic when one key is unusually popular.',
     ],
     'New measurements have increasing timestamps, and all newest timestamps fall in the final key range.',
@@ -1856,7 +1858,7 @@ const nodes = [
     ['ds-key-values'],
     [
       'A transaction groups operations so the database can apply defined guarantees. Atomicity means the transaction’s changes succeed as a unit or are undone when it aborts. Durability concerns whether a committed result survives the failures covered by the storage guarantee.',
-      'An application still defines its own valid-state rules and must use the database’s constraints and transactions correctly. A transaction is not a promise that every business rule is automatically known. External effects, such as sending a message, may need additional coordination.',
+      'An application still defines its own valid-state rules and must express them through the database’s constraints (rules the database checks on every write, such as a unique email) and transactions. A transaction is not a promise that every business rule is automatically known. External effects, such as sending a message, may need additional coordination.',
     ],
     'Rescheduling a booking removes its old room assignment and inserts the new assignment.',
     'Commit both database changes together or abort both.',
@@ -1993,7 +1995,7 @@ const nodes = [
       ],
       [
         'Does snapshot isolation automatically prevent all concurrency anomalies?',
-        'No. It provides a coherent snapshot but can still allow conflicts such as write skew.',
+        'No. It provides a coherent snapshot, but two transactions can each act on their own snapshot and together break a rule.',
       ],
     ],
   ),

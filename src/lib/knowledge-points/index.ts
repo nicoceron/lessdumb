@@ -5,6 +5,8 @@ import { knowledgePoints as competitive1 } from './competitive-1.kp';
 import { knowledgePoints as competitive2 } from './competitive-2.kp';
 import { knowledgePoints as competitive3 } from './competitive-3.kp';
 import { knowledgePoints as cpp1 } from './cpp-1.kp';
+import { knowledgePoints as dataAnalysis } from './data-analysis.kp';
+import { knowledgePoints as dataSystems } from './data-systems.kp';
 import { knowledgePoints as machineLearning } from './machine-learning.kp';
 import { knowledgePoints as pythonFoundations } from './python-foundations.kp';
 import { knowledgePoints as quantitativeFoundations } from './quantitative-foundations.kp';
@@ -20,6 +22,8 @@ const modules: Record<string, KnowledgePointModule> = {
   'competitive-2.kp.ts': competitive2,
   'competitive-3.kp.ts': competitive3,
   'cpp-1.kp.ts': cpp1,
+  'data-analysis.kp.ts': dataAnalysis,
+  'data-systems.kp.ts': dataSystems,
   'machine-learning.kp.ts': machineLearning,
   'python-foundations.kp.ts': pythonFoundations,
   'quantitative-foundations.kp.ts': quantitativeFoundations,

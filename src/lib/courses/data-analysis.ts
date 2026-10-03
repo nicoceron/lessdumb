@@ -519,7 +519,7 @@ const skills: Skill[] = [
     ['da-series'],
     [
       'pandas arithmetic aligns labels, rather than blindly matching positions. If two Series list the same locations in different orders, addition still combines values for the same location. This is useful when independently collected datasets share stable identifiers.',
-      'When a label exists on only one side, ordinary addition produces a missing result for it. .add(other, fill_value=0) can treat that absent side as zero when this matches the business meaning. Missing measurements are not automatically zero; make that decision explicitly.',
+      'When a label exists on only one side, ordinary addition produces a missing result for it, shown as NaN (“not a number”). .add(other, fill_value=0) can treat that absent side as zero when this matches the business meaning. Missing measurements are not automatically zero; make that decision explicitly.',
       '.reindex([...]) requests labels in a specific order and inserts missing values for absent labels. Alignment and reindexing are about identity, not sorting values. When you deliberately want positional NumPy operations, first verify order before converting to arrays.',
     ],
     'import pandas as pd\na = pd.Series([4, 8], index=["red", "blue"])\nb = pd.Series([3, 7], index=["blue", "red"])\nprint((a + b).reindex(["red", "blue"]).tolist())\nprint(a.reindex(["blue", "red"]).tolist())',
@@ -854,7 +854,7 @@ const skills: Skill[] = [
     ['da-dataframes'],
     [
       'Duplicate rows depend on the question: two identical full rows are one kind of duplicate, while two rows with the same event_id may disagree on other fields. .duplicated(subset=["event_id"]) checks the chosen key rather than every column.',
-      '.drop_duplicates(subset=["event_id"], keep="first") keeps the first occurrence of each key; keep="last" keeps the last. Sorting by a trusted version or timestamp before deduplication can make that choice meaningful. Input order alone does not prove which observation is correct.',
+      '.drop_duplicates(subset=["event_id"], keep="first") keeps the first occurrence of each key; keep="last" keeps the last. Sorting by a trusted version or timestamp first, for example with .sort_values("version"), can make that choice meaningful. Input order alone does not prove which observation is correct.',
       'Validate the key after cleaning with table["event_id"].is_unique, and record how many rows were removed. Deduplication avoids counting an event twice, but conflicting records may require investigation rather than automatic removal. A missing identifier also requires a separate policy.',
     ],
     'import pandas as pd\nrecords = pd.DataFrame({"id": [1, 2, 1], "version": [1, 1, 2], "count": [4, 5, 6]})\nlatest = records.sort_values("version").drop_duplicates("id", keep="last").sort_values("id")\nprint(latest["count"].tolist())\nprint(latest["id"].is_unique)',
@@ -993,7 +993,7 @@ const skills: Skill[] = [
     ['da-missing-values'],
     [
       'A categorical variable takes values from a defined set, such as low, medium, high. pandas Categorical can record allowed categories and whether their order matters. Alphabetical order is not necessarily the meaningful order of a severity or size scale.',
-      'An ordered categorical dtype makes sorting follow the specified category order. pd.Categorical(values, categories=["low", "medium", "high"], ordered=True) records that scale. Values outside the allowed set become missing; inspect them instead of assuming the conversion validated everything.',
+      'An ordered categorical dtype makes sorting with .sort_values() follow the specified category order. pd.Categorical(values, categories=["low", "medium", "high"], ordered=True) records that scale. Values outside the allowed set become missing (newer pandas versions also warn); check them first with .isin(allowed) instead of assuming the conversion validated everything.',
       'pd.get_dummies(series, dtype=int) creates one indicator column per category, with one or zero showing membership. This encoding is useful when downstream calculations require separate category indicators. A category code such as 0, 1, 2 is an internal representation, not automatically a numerical distance.',
     ],
     'import pandas as pd\nseverity = pd.Series(pd.Categorical(["high", "low", "medium"], categories=["low", "medium", "high"], ordered=True))\nprint(severity.sort_values().tolist())\nprint(pd.get_dummies(severity, dtype=int)["high"].tolist())',
@@ -1625,9 +1625,9 @@ const skills: Skill[] = [
       'math-correlation',
     ],
     [
-      'Exploratory analysis begins with data quality and distributions. Check observation counts, missing counts, and group coverage before interpreting an average. value_counts() summarizes category frequencies; describe() provides common numerical summaries such as count, mean, minimum, quartiles, and maximum.',
+      'Exploratory analysis begins with data quality and distributions. Check observation counts, missing counts, and group coverage before interpreting an average. value_counts() summarizes category frequencies; describe() provides common numerical summaries such as count, mean, minimum, the values a quarter, half, and three quarters of the way through the sorted data, and maximum.',
       'Mean and median answer different questions when extreme values exist. For [2, 3, 4, 51], the median is 3.5 and the mean is 15. A difference between them is a reason to inspect the distribution and observations, not automatically to delete the largest value.',
-      'Correlation summarizes linear association, not causation. Shared trends, selection, and confounding variables can create association. For a report, state what was measured, how many observations support it, and which assumptions remain; choose a plot that matches the variable types rather than presenting a statistic without context.',
+      'Correlation, x.corr(y), summarizes how closely two columns follow a straight line, from −1 to 1. It measures linear association, not causation. Shared trends, selection, and confounding variables can create association. For a report, state what was measured, how many observations support it, and which assumptions remain; choose a plot that matches the variable types rather than presenting a statistic without context.',
     ],
     'import pandas as pd\nvalues = pd.Series([2, 3, 4, 51])\nprint(float(values.mean()))\nprint(float(values.median()))\nprint(values.describe()[["count", "min", "max"]].tolist())',
     '15.0\n3.5\n[4.0, 2.0, 51.0]',

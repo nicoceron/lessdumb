@@ -27,7 +27,11 @@ import {
 } from '../src/lib/learning';
 import { skills } from '../src/lib/curriculum';
 import { earnedXp, lessonXp, REVIEW_XP } from '../src/lib/xp';
-import { masterSkill } from './helpers/mastery';
+import {
+  lessonAnswerIds,
+  masterSkill,
+  masterSkillState,
+} from './helpers/mastery';
 
 const baseURL = 'http://localhost:4321';
 const secret = 'test-only-secret-with-more-than-thirty-two-characters';
@@ -285,17 +289,10 @@ describe('versioned per-account progress', () => {
     second.dailyGoal = 25;
     second.activeCourseId = secondSkill.courseId;
     second.anki.deck = 'Second learner';
-    for (const question of secondSkill.questions) {
-      second = recordLearningAnswer(second, {
-        skillId: secondSkill.id,
-        questionId: question.id,
-        correct: true,
-        mode: 'learn',
-      });
-    }
+    second = masterSkillState(second, secondSkill.id);
     second = recordLearningAnswer(second, {
       skillId: secondSkill.id,
-      questionId: secondSkill.questions[0].id,
+      questionId: lessonAnswerIds(secondSkill.id)[0],
       correct: false,
       mode: 'learn',
     });

@@ -14,6 +14,7 @@ import {
 import {
   createState,
   mergeStates,
+  migrateState,
   recordLearningAnswer,
   type LearnerState,
 } from '../src/lib/state';
@@ -80,11 +81,13 @@ describe('recording learning answers against current state', () => {
   const systemsSkill = skills.find(
     (candidate) => candidate.id === 'ds-workloads',
   )!;
+  // The questions that pass the systems skill's lesson, in order.
+  const systemsPath = lessonAnswerIds(systemsSkill.id);
 
   it('preserves a concurrent unrelated attempt, its cards, and current account preferences', () => {
     const unrelated = recordLearningAnswer(baseline(), {
       skillId: systemsSkill.id,
-      questionId: systemsSkill.questions[0].id,
+      questionId: systemsPath[0],
       correct: false,
       mode: 'learn',
     });
@@ -181,7 +184,7 @@ describe('recording learning answers against current state', () => {
     const latest = recordLearningAnswer(first, {
       attemptId: 'd2ea41e2-ad99-48e6-b3a8-29ffb90a1e46',
       skillId: systemsSkill.id,
-      questionId: systemsSkill.questions[0].id,
+      questionId: systemsPath[0],
       correct: false,
       mode: 'learn',
     });
@@ -201,20 +204,25 @@ describe('recording learning answers against current state', () => {
 
   it('adds the actual authored mastery cards when a choice-only systems skill becomes mastered', () => {
     expect(systemsSkill.questions.every((q) => q.type === 'choice')).toBe(true);
+    expect(
+      systemsSkill.knowledgePoints!.every((point) =>
+        point.questions.every((q) => q.type === 'choice'),
+      ),
+    ).toBe(true);
     let current = baseline();
-    for (const question of systemsSkill.questions.slice(0, -1)) {
+    for (const questionId of systemsPath.slice(0, -1)) {
       current = recordLearningAnswer(current, {
         skillId: systemsSkill.id,
-        questionId: question.id,
+        questionId,
         correct: true,
         mode: 'learn',
       });
     }
     expect(current.cards).toHaveLength(0);
-    const lastQuestion = systemsSkill.questions.at(-1)!;
+    const lastQuestionId = systemsPath.at(-1)!;
     const mastered = recordLearningAnswer(current, {
       skillId: systemsSkill.id,
-      questionId: lastQuestion.id,
+      questionId: lastQuestionId,
       correct: true,
       mode: 'learn',
     });
@@ -231,7 +239,7 @@ describe('recording learning answers against current state', () => {
     );
     const repeated = recordLearningAnswer(mastered, {
       skillId: systemsSkill.id,
-      questionId: lastQuestion.id,
+      questionId: lastQuestionId,
       correct: true,
       mode: 'learn',
     });
@@ -398,8 +406,12 @@ describe('device progress reconciliation', () => {
     expect(combined.progress.skills[legacySkill.id].dueAt).toBe(
       start + questions.length + 86_400_000,
     );
+    // The legacy evidence is already current for its own catalog. The server
+    // validates against the full catalog, where this skill has knowledge
+    // points, and applies exactly the migration a client would.
+    expect(migrateState(combined, legacyCatalog)).toEqual(combined);
     expect(parseStateUpdate({ state: combined, revision: 0 }).state).toEqual(
-      combined,
+      migrateState(combined),
     );
     expect(mergeStates(combined, combined, legacyCatalog)).toEqual(combined);
   });
