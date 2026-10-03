@@ -264,6 +264,33 @@ describe('implicit review credit', () => {
     ).toEqual([]);
   });
 
+  it('leaves a skill alone while it waits for a remedial review, and ignores practice timed before its last review', () => {
+    const learned = masterSkill(base, 'variables', NOW + 1000);
+    // A quiz-style miss on print-output: due now, latest answer wrong.
+    const missed = {
+      ...learned,
+      skills: {
+        ...learned.skills,
+        'print-output': {
+          ...getSkillState(learned, 'print-output'),
+          dueAt: LATER,
+          consecutiveCorrect: 0,
+        },
+      },
+    };
+    expect(
+      applyImplicitCredit(missed, skillById.variables, LATER + DAY_MS).credited,
+    ).toEqual([]);
+    // Practice timed before print-output's last review gives no credit.
+    expect(
+      implicitDueAt(
+        getSkillState(learned, 'print-output'),
+        1,
+        before.memory!.lastReviewAt - DAY_MS,
+      ),
+    ).toBeNull();
+  });
+
   it('credits from completed reviews and correct quiz answers, not from partial cycles', () => {
     const learned = masterSkill(base, 'variables', NOW + 1000);
     const due = getSkillState(learned, 'variables').dueAt!;

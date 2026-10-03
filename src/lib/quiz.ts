@@ -253,6 +253,7 @@ function remediate(state: SkillProgress, at: number): SkillProgress {
     dueAt: Math.min(state.dueAt ?? at, at),
     reviewQuestionIds: [],
     reviewHadHint: false,
+    consecutiveCorrect: 0,
   };
 }
 

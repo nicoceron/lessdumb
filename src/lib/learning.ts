@@ -571,8 +571,9 @@ export const NEARLY_DUE_MS = DAY_MS;
 
 /**
  * Whether a prerequisite can take implicit credit now: mastered, unlocked,
- * scheduled, not mid-way through its own review, not credited today, and not
- * learned or reviewed earlier today (its own check comes first).
+ * scheduled, not mid-way through its own review, not credited today, not
+ * learned or reviewed earlier today (its own check comes first), and not
+ * waiting on a remedial review after its latest direct answer was wrong.
  */
 function creditable(
   progress: Progress,
@@ -588,6 +589,7 @@ function creditable(
     !!state &&
     state.dueAt !== null &&
     state.reviewQuestionIds.length === 0 &&
+    state.consecutiveCorrect > 0 &&
     state.implicitCredit?.day !== today &&
     dateKey(
       legacyMemory(state, time).lastReviewAt,
@@ -610,6 +612,9 @@ export function implicitDueAt(
 ): { dueAt: number; basis: number } | null {
   if (state.dueAt === null) return null;
   const memory = legacyMemory(state, time);
+  // Practice timed before the last real review (a stale clock or an
+  // offline replay) adds nothing to it.
+  if (time <= memory.lastReviewAt) return null;
   const full = reviewMemory(memory, time, 'pass').dueAt;
   const gain = full - state.dueAt;
   if (gain <= 0) return null;

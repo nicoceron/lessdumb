@@ -157,7 +157,10 @@ test('Learn shows the active course, XP, frontier tasks, and dated history', asy
   await expect(items).toHaveCount(taskHistory(state.progress).length);
   await expect(items.nth(0)).toContainText(skillById[latest].title);
   await expect(items.nth(0)).toContainText(/Completed @ \d{1,2}:\d{2} [AP]M/);
-  const reviewItem = items.filter({ hasText: 'Review' });
+  // Match the task type, not a "+ reviewed N prerequisites" note.
+  const reviewItem = items.filter({
+    has: page.locator('.ma-task-type', { hasText: /^Review$/ }),
+  });
   await expect(reviewItem).toContainText('Your first output');
   await expect(reviewItem).toContainText(`/${REVIEW_XP} XP`);
 
