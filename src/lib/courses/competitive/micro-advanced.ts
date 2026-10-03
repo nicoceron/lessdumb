@@ -811,7 +811,7 @@ def _run():
     return [query_minimum(_tree, _size, min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(90000)]
 _result, _seconds = _timed(_run)
 assert _checksum(_result) == 440794444201648162, "90,000 queries on a 131,072-leaf tree returned wrong minima."
-_check_time(_seconds, "90,000 queries on a 131,072-leaf tree","Consume boundary nodes while moving upward instead of scanning the leaves.")`,
+_check_time(_seconds, "90,000 queries on a 131,072-leaf tree", "Consume boundary nodes while moving upward instead of scanning the leaves.")`,
     ),
     demonstration:
       'print(query_minimum([float("inf"), 1, 3, 1, 8, 3, 6, 1], 4, 0, 3))',

@@ -742,7 +742,7 @@ for _pick in _numbers(3000, 0, 19, 702):
         break
 _result, _seconds = _timed(selection_counts, _values, _changes, 40)
 assert _checksum(_result) == 1292453565480001866, "The 500-change case returned wrong counts."
-_check_time(_seconds, "The 500-change case","Walk only the submasks of the current selection instead of every mask below 1 << 20.")`,
+_check_time(_seconds, "The 500-change case", "Walk only the submasks of the current selection instead of every mask below 1 << 20.")`,
         ),
         'Set and clear keep one mask equal to the current selection, and the submask walk visits each subset of that selection exactly once, so every count neither omits nor repeats a choice.',
         'Update the mask with | or & ~. Then start at sub = mask, count matching totals, stop after zero, and step with (sub - 1) & mask.',
@@ -1452,7 +1452,7 @@ _ys = _numbers(200000, 0, 200000, 404)
 _operations = [("add", min(_xs[i], 199999), _ys[i] % 2001 - 1000) if _kinds[i] else ("sum", min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(200000)]
 _result, _seconds = _timed(range_sums, _values, _operations)
 assert _checksum(_result) == 207961389645802781, "The 200,000-operation case returned wrong sums."
-_check_time(_seconds, "The 200,000-operation case","Walk the Fenwick tree in O(log n) per operation instead of re-adding each range.")`,
+_check_time(_seconds, "The 200,000-operation case", "Walk the Fenwick tree in O(log n) per operation instead of re-adding each range.")`,
         ),
         'Fenwick blocks preserve their sums under point additions. Prefix queries partition the requested prefix into disjoint stored blocks, and subtraction yields the range.',
         'Use index + 1 for updates, end for prefix queries, and i & -i to move between blocks.',
@@ -1607,7 +1607,7 @@ _zs = _numbers(120000, -10**9, 10**9, 415)
 _operations = [("set", min(_xs[i], 199999), _zs[i]) if _kinds[i] else ("min", min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(120000)]
 _result, _seconds = _timed(range_minima, _values, _operations)
 assert _checksum(_result) == 19758530507032262, "The 120,000-operation case returned wrong minima."
-_check_time(_seconds, "The 120,000-operation case","Combine O(log n) boundary nodes per query instead of scanning the whole range.")`,
+_check_time(_seconds, "The 120,000-operation case", "Combine O(log n) boundary nodes per query instead of scanning the whole range.")`,
         ),
         'Each assignment restores the ancestor-minimum invariant. The query collects disjoint tree intervals covering exactly the requested half-open range.',
         'Use infinity for padding, rebuild parents after a set, and move query endpoints upward while consuming odd boundaries.',
@@ -1732,7 +1732,7 @@ _parents = [-1] + [max(-1, vertex - _back[vertex]) for vertex in range(1, 100000
 _queries = list(zip(_numbers(100000, 0, 99999, 422), _numbers(100000, 0, 100000, 423)))
 _result, _seconds = _timed(kth_ancestors, _parents, _queries)
 assert _checksum(_result) == 1356393175373117166, "The 100,000-query case returned wrong ancestors."
-_check_time(_seconds, "The 100,000-query case","Jump by powers of two from a doubling table instead of stepping one parent at a time.")`,
+_check_time(_seconds, "The 100,000-query case", "Jump by powers of two from a doubling table instead of stepping one parent at a time.")`,
         ),
         'Each doubling row composes two existing jumps, guarding the -1 sentinel. Query bits select disjoint jump lengths; k >= n has no ancestor in an acyclic forest.',
         'Store the parent row first, compose each row through the previous row, then consume k bits while the current vertex exists.',
