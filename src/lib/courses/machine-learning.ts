@@ -156,7 +156,7 @@ const curriculum = [
     'ml-project',
     'Protect train and test sets',
     'Match your split to the future predictions you need to make.',
-    ['ml-learning-tasks', 'slicing'],
+    ['ml-learning-tasks', 'slicing', 'number-builtins'],
     [
       'Training data fits parameters. Validation data guides choices you make about the model, such as which features to include or how flexible it should be. A final test set estimates performance after those choices are finished. Repeatedly changing a model based on test results turns the test set into another validation set.',
       'The split must reflect deployment. For forecasting, train on earlier observations and evaluate on later ones. If several rows belong to one person, keep that person in a single partition when the goal is generalization to new people. Stratification can preserve class proportions for an ordinary independent classification split; it does not fix time or group leakage.',
@@ -411,7 +411,12 @@ const curriculum = [
     'ml-models',
     'Turn scores into probabilities',
     'Use logistic scores and thresholds for binary classification.',
-    ['ml-linear-regression', 'math-probability', 'math-sigmoid'],
+    [
+      'ml-linear-regression',
+      'math-probability',
+      'math-sigmoid',
+      'math-exp-log',
+    ],
     [
       'Binary logistic regression forms a linear score and applies the sigmoid: $\\text{probability} = \\frac{1}{1 + \\exp(-\\text{score})}$. A score of zero maps to probability 0.5. Positive scores map above 0.5 and negative scores below it. Despite its name, logistic regression is commonly used for classification.',
       'A probability estimate and a class decision are separate outputs. A threshold converts probabilities into labels, for example positive when $p \\ge 0.7$. Raising the threshold reduces the set of predicted positives; lowering it expands that set. Select a threshold using validation data and error costs. A probability-shaped output also needs calibration checks before being trusted as a frequency estimate.',
@@ -644,19 +649,19 @@ const curriculum = [
       'A random forest bags decision trees and also samples candidate features at splits, promoting diversity. Boosting instead adds models sequentially to improve remaining errors or gradients of a loss. More models do not automatically eliminate bias, leakage, or poor data. Validate the ensemble against baselines and monitor its compute cost as well as its predictive metric.',
     ],
     {
-      code: 'predictions = [[2, 8], [4, 10], [3, 9]]\ncombined = [sum(column) / len(column) for column in zip(*predictions)]\nprint(combined)',
+      code: 'predictions = [[2, 8], [4, 10], [3, 9]]\ncombined = [sum(model[j] for model in predictions) / len(predictions) for j in range(2)]\nprint(combined)',
       output: '[3.0, 9.0]',
       explanation:
-        'The ensemble averages the three model predictions separately for each observation.',
+        'For each observation j, the ensemble averages model[j] across the three models: (2 + 4 + 3) / 3 and (8 + 10 + 9) / 3.',
     },
     [
       exercise(
         'Define ensemble_mean(predictions). The input is a nonempty list of equal-length numeric prediction lists. Return the mean prediction for each observation as a list.',
         'def ensemble_mean(predictions):\n    pass\n',
-        'def ensemble_mean(predictions):\n    return [sum(column) / len(column) for column in zip(*predictions)]',
+        'def ensemble_mean(predictions):\n    count = len(predictions)\n    return [sum(model[j] for model in predictions) / count for j in range(len(predictions[0]))]',
         'assert ensemble_mean([[2, 8], [4, 10], [3, 9]]) == [3, 9]\nassert ensemble_mean([[5, 1]]) == [5, 1]\nassert ensemble_mean([[], []]) == []\nassert ensemble_mean([[0, 10, -4], [2, 2, 4]]) == [1, 6, 0]',
-        'Transpose the model-by-observation predictions and average each observation column.',
-        'zip(*predictions) groups predictions for the same observation.',
+        'Each observation j collects model[j] from every model, and the ensemble averages those values.',
+        'Loop j over the positions of the first model’s list, and average model[j] across the models.',
       ),
     ],
     [
@@ -1115,7 +1120,7 @@ const curriculum = [
       'Monitor input quality, latency, failures, prediction distributions, and eventual outcomes when labels arrive. Covariate shift changes input distributions; concept drift changes the relationship between inputs and targets. An input-distribution change is a warning to investigate, not automatic proof that predictions got worse. Re-evaluate with new representative labels, compare subgroup performance, and keep a rollback path for a bad release.',
     ],
     {
-      code: 'expected = {"distance_km", "rain"}\nrecord = {"distance_km": 8, "rain": 0}\nmissing = sorted(expected - record.keys())\nprint(missing)\nprint(len(missing) == 0)',
+      code: 'required = ["distance_km", "rain"]\nrecord = {"distance_km": 8, "rain": 0}\nmissing = [name for name in required if name not in record]\nprint(missing)\nprint(len(missing) == 0)',
       output: '[]\nTrue',
       explanation:
         'A schema check catches absent required inputs before a prediction pipeline receives them.',
@@ -1124,10 +1129,10 @@ const curriculum = [
       exercise(
         'Define missing_features(record, required). Return a sorted list of required feature names absent from record. Ignore extra keys.',
         'def missing_features(record, required):\n    pass\n',
-        'def missing_features(record, required):\n    return sorted(set(required) - record.keys())',
+        'def missing_features(record, required):\n    return sorted(set([name for name in required if name not in record]))',
         'assert missing_features({"a": 1}, ["a", "b", "c"]) == ["b", "c"]\nassert missing_features({"a": 1, "extra": 2}, ["a"]) == []\nassert missing_features({}, ["z", "a", "a"]) == ["a", "z"]\nassert missing_features({"a": None}, ["a"]) == [], "Presence and value validation are separate checks."',
         'A missing-field check establishes presence; checking null values, types, and ranges is a separate validation step.',
-        'Take the required-name set minus existing dictionary keys, then sort.',
+        'Keep the required names that are not in record, drop duplicates with set(), then sort.',
       ),
     ],
     [

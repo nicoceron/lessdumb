@@ -161,11 +161,11 @@ function subjectCatalog(): CurriculumCatalog {
 describe('curriculum integrity', () => {
   it('provides a complete original Python graph with executable exercises', () => {
     expect(validateCurriculum()).toEqual([]);
-    expect(skills).toHaveLength(48);
+    expect(skills).toHaveLength(49);
     // One exercise per skill; choice practice lives in knowledge points,
     // whose output questions tests/knowledge-points.test.ts runs.
-    expect(skills.flatMap((skill) => skill.questions)).toHaveLength(48);
-    expect(allFlashcards).toHaveLength(96);
+    expect(skills.flatMap((skill) => skill.questions)).toHaveLength(49);
+    expect(allFlashcards).toHaveLength(98);
     expect(
       skills.every(
         (skill) =>
@@ -222,7 +222,7 @@ sys.exit(1 if failures else 0)
       'Native Python is required to verify curriculum solutions.',
     ).toBeUndefined();
     expect(result.status, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toEqual({ exercises: 48, failures: [] });
+    expect(JSON.parse(result.stdout)).toEqual({ exercises: 49, failures: [] });
   });
 
   it('verifies every displayed example produces its documented output', () => {
@@ -507,12 +507,12 @@ describe('mastery and the prerequisite frontier', () => {
       if (!task) break;
       progress = applyAttempt(progress, { ...task, correct: true }, NOW);
     }
-    expect(getStats(progress, NOW).mastered).toBe(48);
+    expect(getStats(progress, NOW).mastered).toBe(49);
     expect(nextTask(progress, NOW, 'python-foundations')).toBeNull();
     expect(answers).toBe(
       skills.reduce((sum, skill) => sum + lessonAnswerIds(skill.id).length, 0),
     );
-    expect(earnedFlashcards(progress)).toHaveLength(96);
+    expect(earnedFlashcards(progress)).toHaveLength(98);
   });
 });
 
@@ -682,7 +682,7 @@ describe('subject-specific catalogs and assessment policies', () => {
     expect(nextTask(fresh(), NOW, undefined, catalog)?.skillId).toBe(
       'fixture-addition',
     );
-    expect(skills).toHaveLength(48);
+    expect(skills).toHaveLength(49);
     const cyclic = {
       ...catalog,
       skills: [

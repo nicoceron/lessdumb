@@ -2,7 +2,22 @@
 
 lessdumb runs locally on Astro Node with Better Auth's SQLite adapter and publicly on Cloudflare Workers with Better Auth's D1 adapter. See [Cloudflare deployment](cloudflare.md) for setup and runtime details. Accounts use email and password, scrypt password hashes, HttpOnly SameSite=Lax session cookies, and Better Auth's origin/CSRF protections. Sign-up signs the learner in; signing out revokes the server session. Better Auth owns credentials and sessions. Workers uses its documented native scrypt password hook with the same format and parameters as the default hash.
 
-The MVP has no paid provider dependency. It does not send verification or password-reset emails. An email address serves as a login identifier and is not marked as verified. Production email delivery and recovery can be added using Better Auth's documented callbacks when an email provider is configured.
+## Email: password reset and verification
+
+Password reset and email verification use Better Auth's documented callbacks (`emailAndPassword.sendResetPassword`, `emailVerification.sendVerificationEmail` with `sendOnSignUp` and `autoSignInAfterVerification`). **Email is off by default.** It turns on only when the server has a mail transport and a sender: on Workers, the Cloudflare Email Service `EMAIL` binding plus the `EMAIL_FROM` variable ([turning email on](cloudflare.md#turn-on-email)). The Node server has no mail transport, so it always runs with email off.
+
+The server renders an "email enabled" flag into the app (`data-email` on the app shell) and the UI follows it:
+
+- **Email off:** no "Forgot password?" link, no "Verify your email" notice, no resend action. `/api/auth/request-password-reset`, `/reset-password`, `/reset-password/:token`, `/send-verification-email`, and `/verify-email` return HTTP 400 with `code: "EMAIL_NOT_ENABLED"` and a plain message, rather than pretending to send. Sign-up never sends anything; addresses stay unverified.
+- **Email on:** the sign-in dialog offers "Forgot password?", which emails a one-time reset link valid for 1 hour. The link passes through Better Auth's `/reset-password/:token` check and lands on `/reset-password?token=…`, where the learner chooses a new password. A successful reset revokes every existing session (`revokeSessionsOnPasswordReset`), so the learner signs in again with the new password. Sign-up sends a verification link valid for 24 hours. Verification never blocks signing in or learning (`requireEmailVerification: false`); until it is done, the account dialog shows an unobtrusive "Verify your email" notice with a "Resend link" action. The link marks the address verified, signs that browser in, and returns to `/?notice=email-verified`; an expired or forged link returns with `error=` and the app says so.
+
+`src/lib/server/mail.ts` has one `sendMail({ to, subject, text, html })`. It never throws: a missing transport or sender, a failed delivery, or a spent budget is logged and returned as a result, so sign-up and reset requests never fail because of email. Logs name only the recipient's domain. Real deliveries skip reserved names from RFC 2606 and RFC 6761 (`example.com`, `example.net`, `example.org`, and any `.test`, `.example`, `.invalid`, or `.localhost` domain), so test and smoke accounts never bounce.
+
+Two limits protect the Email Service quota (3,000 a month on Workers Paid): Better Auth allows 3 reset and 3 verification requests per client address per minute, and the D1 `email_budget` table (migration `0003`) caps real deliveries at 90 a day overall and 5 a day per recipient. The budget fails closed: if it cannot be checked, the message is held. Recipients are stored as SHA-256 hashes and rows expire after two days.
+
+## Account deletion
+
+Better Auth's `deleteUser` is enabled. The account dialog has a "Delete account" action that asks for the password; the server requires it for every deletion, however fresh the session (10 attempts per minute). A `beforeDelete` hook deletes the learner's `learner_state` row in SQLite or D1 first, then Better Auth deletes the user, accounts, and sessions. A failure in the hook leaves the account intact so the learner can retry. The browser then removes its cached copy of that account's progress and opens a fresh document with a confirmation. Guest progress on the device is not touched. The same email can register again as a new, empty account.
 
 ## Local development
 
@@ -24,9 +39,9 @@ The production server rejects a missing URL or signing secret. Use a persistent 
 
 ## API
 
-`/api/auth/*` mounts Better Auth's handler directly. The browser uses its documented React client through `src/lib/account.ts`: `authClient.signUp.email`, `authClient.signIn.email`, `authClient.useSession`, and `authClient.signOut`.
+`/api/auth/*` mounts Better Auth's handler directly. The browser uses its documented React client through `src/lib/account.ts`: `authClient.signUp.email`, `authClient.signIn.email`, `authClient.useSession`, `authClient.signOut`, `authClient.requestPasswordReset`, `authClient.resetPassword`, `authClient.sendVerificationEmail`, and `authClient.deleteUser`.
 
-Better Auth's database-backed limits remain enabled: general routes allow 100 requests per 60 seconds, sign-in and sign-up allow 10 each, and the documented `/get-session` custom rule allows 600 reads per 60 seconds for navigation, focus refreshes, and multiple tabs. The read quota is finite and separate from credential attempts. Without a trusted client-IP header, Better Auth uses its shared fallback bucket for each route; deployments behind a proxy should configure trusted IP handling according to its documentation.
+Better Auth's database-backed limits remain enabled: general routes allow 100 requests per 60 seconds, sign-in and sign-up allow 10 each, password-reset and verification requests allow 3 each, account deletion allows 10, and the documented `/get-session` custom rule allows 600 reads per 60 seconds for navigation, focus refreshes, and multiple tabs. The read quota is finite and separate from credential attempts. Without a trusted client-IP header, Better Auth uses its shared fallback bucket for each route; deployments behind a proxy should configure trusted IP handling according to its documentation.
 
 An initial failed session lookup (429, server error, or network failure) leaves ownership unresolved. The app offers an account retry and does not open or write a guest workspace. Better Auth retains previously validated session data on non-401 errors; a successful null response or HTTP 401 resolves unauthenticated ownership. Cached progress alone never establishes an authenticated account.
 
@@ -58,6 +73,8 @@ The schema permits up to 5,000 retained attempts for older clients and a 4 MiB s
 
 `npm test` includes real account/session persistence, per-account isolation, stale-cookie rejection, revision conflicts, schema validation, and progress reconciliation tests. `LESSDUMB_E2E_URL=http://127.0.0.1:4321 npm run test:e2e` runs browser tests against a running local server; these exercise failed cloud loads, retry behavior, and account switches in another tab. Browser tests create unique test accounts in that server's ignored database.
 
+`tests/mail.test.ts` covers disabled mail, reserved-domain skips, sender parsing, delivery failures, the budget, and message content. `tests/account-email.test.ts` drives the real Better Auth handler with email off (every email route refuses) and on, through an injected capturing transport (verification on sign-up, resend, invalid links, reset through the emailed link with session revocation and one-time tokens, unknown emails, failed delivery) and checks that deletion requires the password and removes the user, sessions, and progress. `tests/cloudflare-backend.test.ts` checks D1 progress deletion and the budget, including concurrent sends.
+
 The rate-limit regression uses the real Better Auth handler and SQLite: 600 session reads succeed and the next returns 429 with a retry header, while the eleventh credential attempt is still rejected. Adapter tests cover initial rate-limit, outage, and network errors, retained authenticated data, retry, and confirmed unauthenticated responses.
 
 The compiled endpoint suite uses injected transport for canonical harness selection, language mismatches, source-only forwarding, owner changes, compiler/runtime exit codes, malformed responses, source/body limits, cancellation, provider outages, rate limits, and concurrency. Separate live probes compiled and executed both languages successfully and verified compiler errors and assertion failures without executing learner code on the host.
@@ -68,6 +85,9 @@ The compiled endpoint suite uses injected transport for canonical harness select
 - [Better Auth SQLite adapter](https://better-auth.com/docs/adapters/sqlite)
 - [Better Auth programmatic migrations](https://better-auth.com/docs/concepts/database#programmatic-migrations)
 - [Better Auth email and password](https://better-auth.com/docs/authentication/email-password)
+- [Better Auth email verification](https://better-auth.com/docs/concepts/email)
+- [Better Auth user deletion](https://better-auth.com/docs/concepts/users-accounts#delete-user)
+- [Better Auth hooks](https://better-auth.com/docs/concepts/hooks)
 - [Better Auth security](https://better-auth.com/docs/reference/security)
 - [Better Auth client](https://better-auth.com/docs/concepts/client)
 - [Better Auth rate limits](https://better-auth.com/docs/concepts/rate-limit)

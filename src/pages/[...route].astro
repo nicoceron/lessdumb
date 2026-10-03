@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import App from '../components/App';
+import { emailEnabled } from '#request-backend';
 const page = Astro.params.route || 'today';
 const routes = [
   'today',
@@ -10,6 +11,7 @@ const routes = [
   'settings',
   'courses',
   'lab',
+  'reset-password',
 ];
 if (!routes.includes(page)) Astro.response.status = 404;
 ---
@@ -23,6 +25,7 @@ if (!routes.includes(page)) Astro.response.status = 404;
     transition:persist="lessdumb-app"
     page={routes.includes(page) ? page : '404'}
     routeKey={Astro.url.pathname + Astro.url.search}
+    emailEnabled={emailEnabled()}
   />
   <footer class="catalog-link">
     <a href="/catalog/">Browse the public course catalog</a>

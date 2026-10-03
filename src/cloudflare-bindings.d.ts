@@ -5,5 +5,8 @@ declare module 'cloudflare:workers' {
     DB: import('@cloudflare/workers-types').D1Database;
     BETTER_AUTH_URL: string;
     BETTER_AUTH_SECRET: string;
+    /** Optional Email Service binding; mail stays off without it. */
+    EMAIL?: import('./lib/server/cloudflare-mail').SendEmailBinding;
+    EMAIL_FROM?: string;
   };
 }

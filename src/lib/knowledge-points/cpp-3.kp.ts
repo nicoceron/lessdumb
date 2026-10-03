@@ -7190,111 +7190,120 @@ const layout: KnowledgePointModule = {
 const measurement: KnowledgePointModule = {
   'cpp-elapsed-duration': [
     {
-      title: 'Elapsed time is end minus start',
+      title: 'Elapsed time is a later time point minus an earlier one',
       explanation: [
-        'A duration is the difference between two readings of the same clock: elapsed = end - start, in that clock’s unit. A single reading is a point in time, not a duration.',
-        'Keep the unit attached to the number. 145 - 100 with nanosecond readings is 45 nanoseconds; converting to microseconds divides by 1000.',
+        'One steady_clock reading is a time_point: a position on that clock’s timeline, not an amount of time. Subtracting two time points of the same clock, end - start, gives the duration between them, and the duration carries its unit with it.',
+        'Convert only when you report: std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() gives whole microseconds and drops any remainder.',
       ],
       example: {
         language: 'cpp',
         code: cpp(`
+          #include <chrono>
           #include <iostream>
           int main() {
-            long long start_ns = 100;
-            long long end_ns = 145;
-            std::cout << end_ns - start_ns << " ns\\n";
+            std::chrono::steady_clock::time_point start{std::chrono::microseconds(100)};
+            std::chrono::steady_clock::time_point end = start + std::chrono::microseconds(45);
+            std::chrono::nanoseconds elapsed = end - start;
+            std::cout << std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() << " us\\n";
           }
         `),
-        output: '45 ns',
+        output: '45 us',
         explanation:
-          'Both readings are in nanoseconds, so their difference is 45 nanoseconds.',
+          'end is 45 microseconds after start, so their difference is a duration of 45 microseconds.',
       },
       questions: [
         predictOutput(
           'What does this program print?',
           cpp(`
+            #include <chrono>
             #include <iostream>
             int main() {
-              long long start_ns = 2000;
-              long long end_ns = 9500;
-              long long elapsed = end_ns - start_ns;
-              std::cout << elapsed << " ns = " << elapsed / 1000 << " us\\n";
+              std::chrono::steady_clock::time_point start{std::chrono::milliseconds(2000)};
+              std::chrono::steady_clock::time_point end{std::chrono::milliseconds(9500)};
+              std::chrono::nanoseconds elapsed = end - start;
+              std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() << " ms = "
+                        << std::chrono::duration_cast<std::chrono::seconds>(elapsed).count() << " s\\n";
             }
           `),
           [
-            '7500 ns = 7.5 us',
-            '7500 ns = 7 us',
-            '11500 ns = 11 us',
-            '7 ns = 7500 us',
+            '7500 ms = 7.5 s',
+            '7500 ms = 7 s',
+            '11500 ms = 11 s',
+            '7 ms = 7500 s',
           ],
           1,
-          'The difference is 7500 ns, and integer division by 1000 gives 7 whole microseconds.',
+          'The difference is 7500 ms, and duration_cast to whole seconds drops the remainder, leaving 7 s.',
         ),
         predictOutput(
-          'The readings are in milliseconds. What is printed?',
+          'Three time points mark two phases. What is printed?',
           cpp(`
+            #include <chrono>
             #include <iostream>
             int main() {
-              long long start_ms = 1200;
-              long long end_ms = 1250;
-              std::cout << end_ms - start_ms << " ms\\n";
+              std::chrono::steady_clock::time_point t0{std::chrono::milliseconds(10)};
+              std::chrono::steady_clock::time_point t1 = t0 + std::chrono::milliseconds(25);
+              std::chrono::steady_clock::time_point t2 = t1 + std::chrono::milliseconds(55);
+              std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " "
+                        << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " "
+                        << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t0).count() << "\\n";
             }
           `),
-          ['1250 ms', '-50 ms', '50 ms', '2450 ms'],
-          2,
-          'The duration is the difference of the two readings: 50 ms.',
+          ['35 90 125', '25 80 55', '10 35 90', '25 55 80'],
+          3,
+          'Each phase is the difference of its own end and start, and the total is t2 - t0.',
         ),
         choose(
           'A log line says "request took 1700000000123 ns". What most likely went wrong?',
           [
-            'A single clock reading (time since an epoch), not a difference',
-            'The request really was that slow, and the number is right',
-            'The unit should have been microseconds, not nanoseconds',
-            'Nothing',
+            'A single time point, time since the clock’s epoch, was logged instead of end - start',
+            'The request really took that long',
+            'The unit should have been microseconds',
+            'duration_cast rounded the value up',
           ],
           0,
           'The number looks like a timestamp, about 53 years after 1970 in nanoseconds, not an interval.',
         ),
         predictOutput(
-          'Three readings mark two phases. What is printed?',
+          'start was recorded in milliseconds and end in microseconds. What is printed?',
           cpp(`
+            #include <chrono>
             #include <iostream>
             int main() {
-              long long t0 = 10;
-              long long t1 = 35;
-              long long t2 = 90;
-              std::cout << t1 - t0 << " " << t2 - t1 << " " << t2 - t0 << "\\n";
+              std::chrono::steady_clock::time_point start{std::chrono::milliseconds(2)};
+              std::chrono::steady_clock::time_point end{std::chrono::microseconds(2500)};
+              std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us\\n";
             }
           `),
-          ['35 90 125', '25 80 55', '10 35 90', '25 55 80'],
-          3,
-          'Each phase is the difference of its own end and start; the total is t2 - t0.',
+          ['2498 us', '0 us', '500 us', '2500 us'],
+          2,
+          'Both time points store the clock’s own unit, so 2 ms and 2500 µs are compared correctly: 500 µs apart. Raw integers 2500 - 2 would have mixed units.',
         ),
       ],
     },
     {
-      title: 'Use a monotonic clock and reject negative intervals',
+      title: 'Use a monotonic clock and reject an end before the start',
       explanation: [
-        'Wall-clock time (std::chrono::system_clock) can jump backwards or forwards when the system clock is adjusted, so an interval measured with it can come out negative or wildly wrong. std::chrono::steady_clock never goes backwards and is the clock to use for durations.',
-        'Code that receives readings from elsewhere should still check that end >= start, treat a negative difference as an error, and convert both readings to one unit before subtracting.',
+        'std::chrono::system_clock follows the wall clock, adjustments included, so an interval timed with it can come out negative or far too large. std::chrono::steady_clock never goes backwards, so it is the clock for durations.',
+        'Time points that arrive from elsewhere, such as a log, carry no such promise. Time points of one clock compare like numbers, so check end < start and treat it as an error instead of reporting a negative duration.',
       ],
       example: {
         language: 'cpp',
         code: cpp(`
+          #include <chrono>
           #include <iostream>
           int main() {
-            long long start = 500;
-            long long end = 480;
+            std::chrono::steady_clock::time_point start{std::chrono::milliseconds(500)};
+            std::chrono::steady_clock::time_point end{std::chrono::milliseconds(480)};
             if (end < start) {
               std::cout << "invalid interval\\n";
             } else {
-              std::cout << end - start << "\\n";
+              std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "\\n";
             }
           }
         `),
         output: 'invalid interval',
         explanation:
-          'An end reading before the start cannot be a real duration, so it is reported instead of printing -20.',
+          'An end before the start cannot be a real duration, so it is reported instead of printing -20.',
       },
       questions: [
         choose(
@@ -7311,46 +7320,47 @@ const measurement: KnowledgePointModule = {
         predictOutput(
           'What does this program print?',
           cpp(`
+            #include <chrono>
             #include <iostream>
             int main() {
-              long long start = 700;
-              long long end = 700;
+              std::chrono::steady_clock::time_point start{std::chrono::milliseconds(700)};
+              std::chrono::steady_clock::time_point end = start;
               if (end < start) {
                 std::cout << "invalid interval\\n";
               } else {
-                std::cout << end - start << "\\n";
+                std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "\\n";
               }
             }
           `),
           ['invalid interval', '0', '1', '700'],
           1,
-          'Equal readings are a valid interval of length 0.',
+          'Equal time points are a valid interval of length 0.',
         ),
         choose(
           'Interval readings come from system_clock, and the clock is adjusted during the run. What can happen?',
           [
-            'A measured interval can be negative or far too large',
             'Nothing; system_clock never moves backwards',
             'The program stops',
             'The clock pauses until the adjustment finishes',
+            'A measured interval can be negative or far too large',
           ],
-          0,
+          3,
           'system_clock follows the wall clock, adjustments included.',
         ),
         predictOutput(
-          'start is in milliseconds and end in microseconds. What is printed?',
+          'What does this program print?',
           cpp(`
+            #include <chrono>
             #include <iostream>
             int main() {
-              long long start_ms = 2;
-              long long end_us = 2500;
-              long long start_us = start_ms * 1000;
-              std::cout << end_us - start_us << " us\\n";
+              std::chrono::steady_clock::time_point first = std::chrono::steady_clock::now();
+              std::chrono::steady_clock::time_point second = std::chrono::steady_clock::now();
+              std::cout << (second - first >= std::chrono::nanoseconds(0)) << " " << (second < first) << "\\n";
             }
           `),
-          ['500 us', '2498 us', '0 us', '2500 us'],
-          0,
-          'Converting the start to 2000 us first makes the difference meaningful: 500 us.',
+          ['0 1', '1 0', '1 1', '0 0'],
+          1,
+          'A later steady_clock reading is never earlier than an earlier one, so the difference is not negative.',
         ),
       ],
     },
