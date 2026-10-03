@@ -1,4 +1,4 @@
-import { choose, predictOutput, type KnowledgePointModule } from '.';
+import { choose, predictOutput, type KnowledgePointModule } from './authoring';
 
 export const knowledgePoints: KnowledgePointModule = {
   'ml-learning-tasks': [
