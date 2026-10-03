@@ -1845,4 +1845,653 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'math-functions': [
+    {
+      title: 'Evaluate a function at an input',
+      explanation: [
+        'A function is a rule that gives exactly one output for each allowed input. f(a) means: replace every x in the rule with a, then follow the order of operations. Put a negative input in parentheses when substituting, so that (−2)² is 4, not −4.',
+      ],
+      example: {
+        code: 'x = 4\nprint(3 * x - 2)\nx = -1\nprint(3 * x - 2)',
+        output: '10\n-5',
+        explanation:
+          'The same rule f(x) = 3x − 2 is applied to two inputs: f(4) = 10 and f(−1) = −5.',
+      },
+      questions: [
+        choose(
+          'f(x) = 2x² − 3. What is f(−2)?',
+          ['-11', '5', '13', '-7'],
+          1,
+          '(−2)² = 4, so f(−2) = 2 × 4 − 3 = 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'x = -3\nprint(x ** 2 + 1)',
+          ['-8', '7', '10', '-5'],
+          2,
+          'x holds −3, and (−3)² + 1 = 10.',
+        ),
+        choose(
+          'g(t) = 5 − t. What is g(8)?',
+          ['3', '13', '40', '-3'],
+          3,
+          'Substitute 8 for t: 5 − 8 = −3.',
+        ),
+        choose(
+          'h(x) = (x + 1)(x − 1). What is h(3)?',
+          ['8', '9', '6', '10'],
+          0,
+          '(3 + 1)(3 − 1) = 4 × 2 = 8.',
+        ),
+      ],
+    },
+    {
+      title: 'Decide whether a rule is a function',
+      explanation: [
+        'A rule is a function only if every input gives exactly one output. Different inputs may share an output, as x² gives 4 for both 2 and −2, but one input may never give two outputs. In a table of (input, output) pairs, a repeated input with different outputs breaks the rule.',
+      ],
+      example: worked(
+        'table A: (1, 5), (2, 5), (3, 7)\ntable B: (1, 5), (1, 6), (2, 7)',
+        'A is a function; B is not',
+        'In A two inputs share the output 5, which is allowed. In B the input 1 has two different outputs.',
+      ),
+      questions: [
+        choose(
+          'Which table describes a function?',
+          [
+            '(0, 1), (0, 2)',
+            '(2, 3), (4, 3), (6, 3)',
+            '(5, 1), (5, 5), (6, 0)',
+            '(1, 1), (2, 2), (1, 3)',
+          ],
+          1,
+          'Each input 2, 4, and 6 appears once; sharing the output 3 is allowed.',
+        ),
+        choose(
+          'Which rule gives more than one output for some input?',
+          ['y = x³', 'y = x − 7', 'y = ±√x', 'y = 10'],
+          2,
+          'For x = 9, ±√x gives both 3 and −3.',
+        ),
+        choose(
+          'f(2) = 9 and f(5) = 9. What does this show?',
+          [
+            'f is not a function',
+            'f must be constant',
+            'f(9) = 2',
+            'Two inputs share an output, which a function allows',
+          ],
+          3,
+          'Only one input with two outputs would break the definition.',
+        ),
+        choose(
+          'A lookup assigns each student ID exactly one grade. Is the grade a function of the student ID?',
+          [
+            'Yes, because each ID has one grade',
+            'No, because two students can share a grade',
+            'No, because IDs are labels',
+            'Only if every grade is different',
+          ],
+          0,
+          'Each input ID determines one output grade; shared grades are fine.',
+        ),
+      ],
+    },
+    {
+      title: 'Read the slope and intercept of a linear function',
+      explanation: [
+        'A linear function f(x) = mx + b has a straight-line graph. b = f(0) is where the line crosses the vertical axis, and the slope m = (change in output) / (change in input) between any two points. A positive m rises to the right, a negative m falls, and m = 0 is flat.',
+      ],
+      example: worked(
+        'points (2, 7) and (6, 15)\nm = (15 − 7) / (6 − 2) = 2\nb = 7 − 2 × 2',
+        'f(x) = 2x + 3',
+        'The slope comes from the two points; substituting one point into y = 2x + b gives b = 3.',
+      ),
+      questions: [
+        choose(
+          'A line passes through (0, 4) and (2, 10). What is its slope?',
+          ['6', '3', '2', '5'],
+          1,
+          'The output rises 6 over a run of 2.',
+        ),
+        choose(
+          'f(x) = −4x + 9. Where does its graph cross the vertical axis?',
+          ['(0, −4)', '(9, 0)', '(0, 9)', '(−4, 9)'],
+          2,
+          'At x = 0 the output is b = 9.',
+        ),
+        choose(
+          'A taxi charges 3 plus 2 per kilometer. Which function gives the fare for x kilometers?',
+          ['f(x) = 3x + 2', 'f(x) = 5x', 'f(x) = (3 + 2)x', 'f(x) = 2x + 3'],
+          3,
+          'The fixed charge is the intercept 3 and the per-kilometer rate is the slope 2.',
+        ),
+        choose(
+          'A line passes through (1, 8) and (5, 0). What is its slope?',
+          ['-2', '2', '-0.5', '8'],
+          0,
+          '(0 − 8) / (5 − 1) = −2; the line falls.',
+        ),
+      ],
+    },
+  ],
+  'math-exponentials': [
+    {
+      title: 'Multiply and divide powers of the same base',
+      explanation: [
+        'aⁿ means n factors of a. Multiplying powers of the same base pools the factors, so the exponents add: aᵐ × aⁿ = aᵐ⁺ⁿ. Dividing cancels factors, so they subtract: aᵐ / aⁿ = aᵐ⁻ⁿ. A power of a power multiplies them: (aᵐ)ⁿ = aᵐⁿ. In Python, a ** n computes aⁿ.',
+      ],
+      example: {
+        code: 'print(2 ** 3 * 2 ** 4)\nprint(2 ** 7)',
+        output: '128\n128',
+        explanation:
+          'Three factors of 2 times four more factors of 2 is seven factors of 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'print(3 ** 2 * 3 ** 3)',
+          ['729', '243', '45', '7776'],
+          1,
+          'The exponents add: 3⁵ = 243. Multiplying them would give 3⁶ = 729.',
+        ),
+        choose(
+          'Simplify 5⁸ / 5⁵.',
+          ['5¹³', '1³', '5³', '5⁴⁰'],
+          2,
+          'Dividing powers of the same base subtracts the exponents.',
+        ),
+        choose(
+          'Simplify (2³)⁴.',
+          ['2⁷', '2¹²', '8⁷', '2⁸¹'],
+          1,
+          'Four groups of three factors make twelve factors.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print((10 ** 2) ** 3)',
+          ['100000', '1000', '10000000000', '1000000'],
+          3,
+          '(10²)³ = 10⁶ = 1,000,000.',
+        ),
+      ],
+    },
+    {
+      title: 'Use zero and negative exponents',
+      explanation: [
+        'Subtracting exponents forces two definitions. aⁿ / aⁿ = 1 and also aⁿ⁻ⁿ = a⁰, so a⁰ = 1 for every nonzero a. Likewise a⁰ / aⁿ = a⁻ⁿ, so a⁻ⁿ = 1 / aⁿ: a negative exponent means a reciprocal, not a negative number.',
+      ],
+      example: {
+        code: 'print(7 ** 0)\nprint(2 ** -3)',
+        output: '1\n0.125',
+        explanation: '7⁰ = 1, and 2⁻³ = 1 / 2³ = 1 / 8 = 0.125.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'print(4 ** -1)',
+          ['-4', '0.25', '-0.25', '4'],
+          1,
+          '4⁻¹ = 1 / 4 = 0.25.',
+        ),
+        choose(
+          'What is 9⁰?',
+          ['0', '9', '1', 'Undefined'],
+          2,
+          'Any nonzero number to the power 0 is 1.',
+        ),
+        choose(
+          'Which value equals 2⁻⁴?',
+          ['1/16', '−16', '−1/16', '1/8'],
+          0,
+          '2⁻⁴ = 1 / 2⁴ = 1/16, a positive number.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print(10 ** -2 * 10 ** 3)',
+          ['0.1', '100000.0', '10', '10.0'],
+          3,
+          'The exponents add to 1, giving 10; the negative power makes the result a float.',
+        ),
+      ],
+    },
+    {
+      title: 'Recognize exponential growth and decay',
+      explanation: [
+        'f(x) = c × bˣ starts at f(0) = c and multiplies by b for each unit step in x. With b > 1 the output grows, adding more at each step; with 0 < b < 1 it decays toward 0 but never reaches it. Repeated percentage change is exponential: growing 10% per year multiplies by 1.1 each year.',
+      ],
+      example: worked(
+        'a population of 1,000 grows 50% per period\nafter 1 period: 1000 × 1.5 = 1500\nafter 2 periods: 1000 × 1.5² = 2250',
+        'f(t) = 1000 × 1.5ᵗ',
+        'Each period multiplies the current value by 1.5, so the second period adds more than the first.',
+      ),
+      questions: [
+        choose(
+          'A balance of 200 doubles every year. What is it after 3 years?',
+          ['800', '1600', '1200', '600'],
+          1,
+          '200 × 2³ = 1,600.',
+        ),
+        choose(
+          "A drug's amount halves every hour, starting from 80 mg. What remains after 4 hours?",
+          ['20 mg', '10 mg', '5 mg', '0 mg'],
+          2,
+          '80 × 0.5⁴ = 80 / 16 = 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print(64 * 0.5 ** 3)',
+          ['32.0', '96.0', '0.125', '8.0'],
+          3,
+          '** comes first: 0.5³ = 0.125, and 64 × 0.125 = 8.0.',
+        ),
+        choose(
+          'Which function decays toward 0 as x grows?',
+          ['f(x) = 3 × 2ˣ', 'f(x) = 5 × 0.8ˣ', 'f(x) = 2x + 1', 'f(x) = x²'],
+          1,
+          'Its base 0.8 lies between 0 and 1.',
+        ),
+      ],
+    },
+    {
+      title: 'Work with the number e',
+      explanation: [
+        'e ≈ 2.718 is the base of the natural exponential function eˣ, used throughout statistics and machine learning. eˣ is positive for every x, e⁰ = 1, and the usual rules apply: eᵃ × eᵇ = eᵃ⁺ᵇ and e⁻ˣ = 1 / eˣ. Large negative inputs give values near 0; large positive inputs grow very quickly.',
+      ],
+      example: worked(
+        'e² ≈ 7.389\ne⁻² = 1 / e²\ne³ × e⁻³ = e⁰',
+        '≈ 7.389, ≈ 0.135, 1',
+        'A negative exponent is the reciprocal, and opposite exponents cancel to e⁰ = 1.',
+      ),
+      questions: [
+        choose(
+          'What is e⁰?',
+          ['0', 'e', '1', '2.718'],
+          2,
+          'Any nonzero base to the power 0 is 1.',
+        ),
+        choose(
+          'e³ ≈ 20.09. What is e⁻³, approximately?',
+          ['−20.09', '0.050', '−0.050', '3'],
+          1,
+          'e⁻³ = 1 / e³ ≈ 1 / 20.09 ≈ 0.050.',
+        ),
+        choose(
+          'Which statement about eˣ is true?',
+          [
+            'It is negative for negative x',
+            'It equals 0 at x = 0',
+            'It decreases as x grows',
+            'It is positive for every x',
+          ],
+          3,
+          'A positive base raised to any power stays positive.',
+        ),
+        choose(
+          'Simplify e⁵ × e⁻².',
+          ['e³', 'e⁷', 'e⁻¹⁰', 'e^2.5'],
+          0,
+          'Add the exponents: 5 + (−2) = 3.',
+        ),
+      ],
+    },
+  ],
+  'math-logarithms': [
+    {
+      title: 'Read a logarithm as an exponent',
+      explanation: [
+        'log_b(x) asks which exponent turns b into x: log_b(x) = k exactly when bᵏ = x. So log₁₀(1000) = 3, log₂(1/8) = −3, and log_b(1) = 0 for every base. Logarithms exist only for positive x, because bᵏ is always positive.',
+      ],
+      example: worked(
+        'log₂(16): 2⁴ = 16\nlog₁₀(0.1): 10⁻¹ = 0.1\nlog₅(1): 5⁰ = 1',
+        '4, −1, 0',
+        'Each answer is the exponent that produces the input.',
+      ),
+      questions: [
+        choose('What is log₂(32)?', ['16', '5', '6', '64'], 1, '2⁵ = 32.'),
+        choose(
+          'What is log₁₀(0.001)?',
+          ['3', '0.001', '−3', '−1000'],
+          2,
+          '10⁻³ = 0.001.',
+        ),
+        choose(
+          'Which statement means the same as log₃(x) = 4?',
+          ['x = 4³', 'x = 3 × 4', 'x = 4 / 3', 'x = 3⁴'],
+          3,
+          'The log is the exponent on the base: 3⁴ = x.',
+        ),
+        choose(
+          'For which input is log₁₀(x) undefined?',
+          ['x = 0.5', 'x = 1', 'x = −10', 'x = 1000'],
+          2,
+          'No power of 10 is negative.',
+        ),
+      ],
+    },
+    {
+      title: 'Use the natural logarithm',
+      explanation: [
+        'ln(x) is the logarithm with base e, so it undoes eˣ: ln(eᵏ) = k, and e^(ln x) = x for x > 0. ln(1) = 0 and ln(e) = 1. ln is negative between 0 and 1, positive above 1, and increasing, so a larger input always has a larger log.',
+      ],
+      example: worked(
+        'ln(e⁴) = 4\nln(1) = 0\nln(0.5): 0.5 < 1',
+        '4, 0, and a negative number (≈ −0.693)',
+        'Reaching 0.5 from e needs a negative exponent.',
+      ),
+      questions: [
+        choose(
+          'What is ln(e⁻²)?',
+          ['2', '−2', 'e⁻²', '0.135'],
+          1,
+          'ln undoes the exponential, leaving the exponent.',
+        ),
+        choose(
+          'What is the sign of ln(0.2)?',
+          ['Positive', 'Zero', 'Negative', 'Undefined'],
+          2,
+          'Inputs between 0 and 1 have negative natural logs.',
+        ),
+        choose(
+          'What is e^(ln 7)?',
+          ['ln 7', 'e⁷', '1', '7'],
+          3,
+          'The exponential undoes ln.',
+        ),
+        choose(
+          'For positive a and b, ln(a) < ln(b). What follows?',
+          ['a < b', 'a > b', 'a = b', 'Nothing about a and b'],
+          0,
+          'ln is increasing, so it preserves order.',
+        ),
+      ],
+    },
+    {
+      title: 'Turn products into sums with log rules',
+      explanation: [
+        'Each exponent rule gives a log rule, in any base: log(xy) = log(x) + log(y), log(x / y) = log(x) − log(y), and log(xᵏ) = k log(x). There is no rule for log(x + y). These rules turn a product of many factors, such as many probabilities, into a sum.',
+      ],
+      example: worked(
+        'ln(0.5 × 0.2 × 0.1) = ln 0.5 + ln 0.2 + ln 0.1\n≈ −0.693 − 1.609 − 2.303',
+        '≈ −4.605, which is ln 0.01',
+        'The product 0.01 becomes a sum of three logs.',
+      ),
+      questions: [
+        choose(
+          'log₂(8) = 3 and log₂(4) = 2. What is log₂(32)?',
+          ['6', '5', '12', '1'],
+          1,
+          '32 = 8 × 4, so its log is 3 + 2 = 5.',
+        ),
+        choose(
+          'Which expression equals ln(a / b)?',
+          ['ln a / ln b', 'ln(a − b)', 'ln a − ln b', 'ln b − ln a'],
+          2,
+          'The log of a quotient is a difference of logs.',
+        ),
+        choose(
+          'log₁₀(x) = 2.5. What is log₁₀(x⁴)?',
+          ['6.5', '39.06', '2.5⁴', '10'],
+          3,
+          'The power comes down as a factor: 4 × 2.5 = 10.',
+        ),
+        choose(
+          'Which expression equals ln(2) + ln(3)?',
+          ['ln(5)', 'ln(6)', 'ln(2) × ln(3)', 'ln(1.5)'],
+          1,
+          'A sum of logs is the log of the product 2 × 3.',
+        ),
+      ],
+    },
+  ],
+  'math-sigmoid': [
+    {
+      title: 'Evaluate the sigmoid',
+      explanation: [
+        'σ(z) = 1 / (1 + e^(−z)). To evaluate it, compute e^(−z), add 1, and take the reciprocal. At z = 0, e⁰ = 1 and σ(0) = 1/2 exactly. In Python, e can be written as the number 2.718281828459045.',
+      ],
+      example: {
+        code: 'e = 2.718281828459045\nz = 0\nprint(1 / (1 + e ** -z))',
+        output: '0.5',
+        explanation:
+          'e ** -0 is 1.0, so the denominator is 2 and the output is 0.5.',
+      },
+      questions: [
+        choose(
+          'e^(−1) ≈ 0.368. What is σ(1)?',
+          ['0.368', '0.269', '0.731', '0.632'],
+          2,
+          '1 / (1 + 0.368) ≈ 0.731.',
+        ),
+        choose(
+          'e² ≈ 7.389. What is σ(−2)?',
+          ['0.881', '0.119', '0.135', '−0.881'],
+          1,
+          'For z = −2, e^(−z) = e² ≈ 7.389, so σ(−2) = 1 / 8.389 ≈ 0.119.',
+        ),
+        predictOutput(
+          'Here exp_neg_z holds e^(−z) for some score z. What does this program print?',
+          'exp_neg_z = 3.0\nprint(1 / (1 + exp_neg_z))',
+          ['0.75', '0.3333333333333333', '4.0', '0.25'],
+          3,
+          'The denominator is 1 + 3.0 = 4.0, and 1 / 4.0 = 0.25.',
+        ),
+        choose(
+          'For which score is σ(z) exactly 0.5?',
+          ['z = 0.5', 'z = 1', 'z = 0', 'z = −1'],
+          2,
+          'Only z = 0 makes e^(−z) = 1 and the denominator 2.',
+        ),
+      ],
+    },
+    {
+      title: "Use the sigmoid's range and symmetry",
+      explanation: [
+        'Because e^(−z) is always positive, the denominator 1 + e^(−z) is always greater than 1, so σ(z) always lies strictly between 0 and 1. The curve is symmetric around the point (0, 0.5): σ(−z) = 1 − σ(z), so knowing σ for positive scores gives it for negative ones.',
+      ],
+      example: worked(
+        'σ(1.5) ≈ 0.818\nσ(−1.5) = 1 − σ(1.5)',
+        'σ(−1.5) ≈ 0.182',
+        'Opposite scores give outputs that add up to 1.',
+      ),
+      questions: [
+        choose(
+          'σ(4) ≈ 0.982. What is σ(−4)?',
+          ['−0.982', '0.018', '0.982', '0.25'],
+          1,
+          'σ(−4) = 1 − 0.982 = 0.018.',
+        ),
+        choose(
+          'Which number can σ(z) output?',
+          ['0', '1', '0.9999', '−0.1'],
+          2,
+          'Outputs lie strictly between 0 and 1, so 0.9999 is possible but 0 and 1 are not.',
+        ),
+        choose(
+          'σ(a) = 0.3. What is σ(−a)?',
+          ['0.3', '−0.3', '3.33', '0.7'],
+          3,
+          'σ(−a) = 1 − σ(a) = 0.7.',
+        ),
+        choose(
+          'What is σ(z) + σ(−z)?',
+          ['1', '0', '0.5', '2σ(z)'],
+          0,
+          'The symmetry σ(−z) = 1 − σ(z) makes the sum 1.',
+        ),
+      ],
+    },
+    {
+      title: "Read the sigmoid's increasing, saturating shape",
+      explanation: [
+        'The sigmoid is increasing: a larger score always gives a larger output, so sigmoid outputs rank scores in the same order as the scores. The curve is steepest near z = 0. Far from 0 it flattens, or saturates, so even large changes in z barely change σ(z).',
+      ],
+      example: worked(
+        'σ(0) = 0.5 and σ(1) ≈ 0.731: a step of 1 adds ≈ 0.231\nσ(6) ≈ 0.9975 and σ(7) ≈ 0.9991: a step of 1 adds ≈ 0.0016',
+        'the same step in z matters far less in the flat tail',
+        'Near 0 the output responds strongly to the score; near 1 there is almost no room left to grow.',
+      ),
+      questions: [
+        choose(
+          'Scores are −1, 3, and 0.5. Which has the largest sigmoid output?',
+          ['−1', '3', '0.5', 'They are equal'],
+          1,
+          'The sigmoid is increasing, so the largest score wins.',
+        ),
+        choose(
+          'Where does a one-unit change in z change σ(z) the most?',
+          ['Near z = 10', 'Near z = −10', 'Near z = 0', 'The same everywhere'],
+          2,
+          'The curve is steepest at its center and flat in both tails.',
+        ),
+        choose(
+          'σ(a) > σ(b). What can you conclude?',
+          ['a < b', 'a = 2b', 'Nothing about a and b', 'a > b'],
+          3,
+          'An increasing function preserves order.',
+        ),
+        choose(
+          "A classifier's score rises from 9 to 12. Why does its sigmoid output barely change?",
+          [
+            'The curve has saturated near 1',
+            'The sigmoid decreases there',
+            'e^(−z) grows as z grows',
+            'Outputs above 0.5 are capped',
+          ],
+          0,
+          'e^(−9) and e^(−12) are both tiny, so both outputs are almost 1.',
+        ),
+      ],
+    },
+  ],
+  'math-softmax': [
+    {
+      title: 'Compute softmax probabilities',
+      explanation: [
+        'Softmax exponentiates each score, adds the exponentials, and divides each one by that total: pᵢ = e^(zᵢ) / (e^(z₁) + … + e^(zₖ)). The results are positive, sum to 1, and keep the order of the scores.',
+      ],
+      example: {
+        code: 'a = 1.0\nb = 3.0\nc = 4.0\ntotal = a + b + c\nprint(a / total, b / total, c / total)',
+        output: '0.125 0.375 0.5',
+        explanation:
+          'Here a, b, and c hold the exponentials of three scores. Dividing each by their total 8.0 gives probabilities that sum to 1.',
+      },
+      questions: [
+        predictOutput(
+          'a and b hold the exponentials of two scores. What does this program print?',
+          'a = 3.0\nb = 1.0\ntotal = a + b\nprint(a / total, b / total)',
+          ['3.0 1.0', '0.5 0.5', '0.75 0.25', '0.25 0.75'],
+          2,
+          'Each exponential is divided by the total 4.0, keeping the order of the scores.',
+        ),
+        choose(
+          'e¹ ≈ 2.72 and e⁰ = 1. What softmax probability goes to the first of the scores 1, 0, 0?',
+          ['0.333', '0.576', '0.731', '1.0'],
+          1,
+          '2.72 / (2.72 + 1 + 1) ≈ 0.576.',
+        ),
+        choose(
+          'Softmax gives three classes the probabilities 0.2, 0.5, and p. What is p?',
+          ['0.7', '0.5', '0.2', '0.3'],
+          3,
+          'Softmax probabilities sum to 1.',
+        ),
+        choose(
+          'Scores are 2, 5, and 1. Which class receives the largest softmax probability?',
+          ['The first', 'The second', 'The third', 'All are equal'],
+          1,
+          'A larger score has a larger exponential and so a larger share.',
+        ),
+      ],
+    },
+    {
+      title: 'Shift scores without changing softmax',
+      explanation: [
+        'Adding the same constant c to every score multiplies every exponential by e^c, and that common factor cancels in the division. Softmax therefore depends only on the differences between scores. Implementations subtract the largest score before exponentiating, so no exponential overflows and the result is unchanged.',
+      ],
+      example: worked(
+        'scores 1000, 1001\nsubtract the maximum: −1, 0\nexponentials e⁻¹ ≈ 0.368 and e⁰ = 1',
+        'probabilities ≈ 0.269 and 0.731',
+        'e¹⁰⁰⁰ is too large for a float, but after the shift both exponentials are small and the probabilities are the same.',
+      ),
+      questions: [
+        choose(
+          'The softmax of 2, 4, 7 is p. What is the softmax of 12, 14, 17?',
+          ['p + 10', '10p', 'p', 'Values that no longer sum to 1'],
+          2,
+          'Every score rose by 10, and the common factor e¹⁰ cancels.',
+        ),
+        choose(
+          'A stable implementation subtracts the maximum from the scores 5, 3, 5. Which scores does it exponentiate?',
+          ['5, 3, 5', '1, 0.6, 1', '−5, −3, −5', '0, −2, 0'],
+          3,
+          'Subtracting the maximum 5 from each score gives 0, −2, 0.',
+        ),
+        choose(
+          'Which two score lists give the same softmax?',
+          [
+            '1, 2 and 2, 4',
+            '1, 2 and 11, 12',
+            '1, 2 and 2, 1',
+            '1, 2 and −1, −2',
+          ],
+          1,
+          'Only 11, 12 keeps the same differences as 1, 2.',
+        ),
+        choose(
+          'Why is subtracting the maximum score safe?',
+          [
+            'The common factor e^(−max) cancels in the division',
+            'It makes every probability equal',
+            'It changes the ranking only slightly',
+            'Softmax ignores the largest score',
+          ],
+          0,
+          'Every exponential is multiplied by the same factor, which divides out.',
+        ),
+      ],
+    },
+    {
+      title: 'Connect two-class softmax to the sigmoid',
+      explanation: [
+        'With two scores z₁ and z₂, dividing the top and bottom of e^(z₁) / (e^(z₁) + e^(z₂)) by e^(z₁) gives 1 / (1 + e^(−(z₁ − z₂))) = σ(z₁ − z₂). A two-class softmax is the sigmoid of the score difference, so a binary model can output one sigmoid probability instead.',
+      ],
+      example: worked(
+        'scores 3 and 1\nsoftmax for class 1 = σ(3 − 1) = σ(2)',
+        '≈ 0.881 for class 1 and ≈ 0.119 for class 2',
+        'Only the difference 2 matters, and the second class receives the rest of the probability.',
+      ),
+      questions: [
+        choose(
+          'Two class scores are 0.5 and 0.5. What probability does softmax give the first class?',
+          ['0.62', '1', '0.5', '0.25'],
+          2,
+          'The difference is 0, and σ(0) = 0.5.',
+        ),
+        choose(
+          'σ(3) ≈ 0.953. The scores are 4 and 1. What is the first class’s softmax probability?',
+          ['0.047', '0.953', '0.982', '0.8'],
+          1,
+          'The probability is σ(4 − 1) = σ(3).',
+        ),
+        choose(
+          'Which expression equals the softmax probability of the first of two scores a and b?',
+          ['σ(a + b)', 'σ(a) / σ(b)', 'σ(a) − σ(b)', 'σ(a − b)'],
+          3,
+          'Dividing through by e^a leaves the sigmoid of a − b.',
+        ),
+        choose(
+          'A binary model outputs one sigmoid probability instead of a two-class softmax. What does it lose?',
+          [
+            'Nothing, because the two forms are equivalent',
+            'The ability to output probabilities',
+            'Probabilities that sum to 1',
+            'The ranking of the two classes',
+          ],
+          0,
+          'The second class gets 1 − p, exactly what the softmax would give it.',
+        ),
+      ],
+    },
+  ],
 };
