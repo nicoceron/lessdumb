@@ -3,6 +3,7 @@ import { migrateState, type LearnerState } from '../state';
 import { MAX_SAVED_QUIZZES } from '../quiz';
 import { activityTotals, type ActivityState } from '../activity';
 import { TYPED_RESPONSE_MAX_LENGTH } from '../typed-answer';
+import { MAX_VARIANT_SEED } from '../variants';
 
 /** The full current catalog plus every mastery/mistake card fits with headroom. */
 export const MAX_STATE_BODY_BYTES = 4 * 1024 * 1024;
@@ -429,12 +430,15 @@ function validateDiagnosticQuestion(
           'correct',
           'at',
           'elapsedMs',
+          'variant',
         ]
-      : ['skillId', 'questionId', 'presentation'],
+      : ['skillId', 'questionId', 'presentation', 'variant'],
   );
   string(question.skillId, `${path}.skillId`);
   string(question.questionId, `${path}.questionId`);
   number(question.presentation, `${path}.presentation`);
+  if (question.variant !== undefined)
+    number(question.variant, `${path}.variant`, 0, MAX_VARIANT_SEED);
   if (answered) {
     answer(question.answer, `${path}.answer`);
     boolean(question.correct, `${path}.correct`);
@@ -507,10 +511,13 @@ function validateQuiz(value: unknown, path: string): string {
       'answer',
       'correct',
       'answeredAt',
+      'variant',
     ]);
     string(question.skillId, `${at}.skillId`);
     string(question.questionId, `${at}.questionId`);
     number(question.presentation, `${at}.presentation`);
+    if (question.variant !== undefined)
+      number(question.variant, `${at}.variant`, 0, MAX_VARIANT_SEED);
     if (question.answer !== undefined && question.answer !== null)
       answer(question.answer, `${at}.answer`);
     if (question.correct !== undefined)
@@ -545,6 +552,7 @@ function validateAttempt(value: unknown, path: string): string {
     'quizId',
     'credited',
     'response',
+    'variant',
   ]);
   const id = string(attempt.id, `${path}.id`);
   string(attempt.skillId, `${path}.skillId`);
@@ -556,6 +564,8 @@ function validateAttempt(value: unknown, path: string): string {
   if (attempt.quizId !== undefined) string(attempt.quizId, `${path}.quizId`);
   if (attempt.response !== undefined)
     string(attempt.response, `${path}.response`, TYPED_RESPONSE_MAX_LENGTH);
+  if (attempt.variant !== undefined)
+    number(attempt.variant, `${path}.variant`, 0, MAX_VARIANT_SEED);
   if (attempt.credited !== undefined)
     strings(attempt.credited, `${path}.credited`, 100);
   isoTimestamp(attempt.at, `${path}.at`);

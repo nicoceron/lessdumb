@@ -1,10 +1,19 @@
 import type {
   CurriculumCatalog,
   GraphCatalog,
+  Question,
   QuestionRef,
   SkillOutline,
 } from './curriculum';
 import { defaultCatalog } from './catalog-index';
+import { contentOf, hasContent } from './content';
+import {
+  isGenerated,
+  isVariantSeed,
+  questionVariant,
+  variantKey,
+  variantSeed,
+} from './variants';
 import { assessmentType, encompassings } from './catalog-outline';
 import {
   evidenceIdFor,
@@ -19,6 +28,7 @@ import {
   reviewCycleComplete,
   reviewPointOrder,
   reviewRequirement,
+  stepFor,
   type LessonStepRef,
   type QuestionOf,
   type StepOf,
@@ -171,6 +181,8 @@ export interface Attempt {
   credited?: string[];
   /** What the learner typed, for a numeric or text question. */
   response?: string;
+  /** The seed of the variant asked, for a generated question. */
+  variant?: number;
 }
 
 export interface Progress {
@@ -201,6 +213,8 @@ export interface AttemptInput {
   writerId?: string;
   /** What the learner typed, for a typed question; kept on the attempt. */
   response?: string;
+  /** The variant shown, for a generated question; kept on the attempt. */
+  variant?: number;
 }
 
 export interface NextTask {
@@ -472,21 +486,117 @@ export function seenCounts(progress: Progress, skillId: string) {
   return counts;
 }
 
-/** Unseen variants first, then the least seen; never the same question twice in a row when avoidable. */
-function freshest<Q extends QuestionRef>(
+/**
+ * A learner never meets the same concrete question of a point within their
+ * last RECENT_VARIANTS attempts at that point, in any mode, while another
+ * question or variant remains.
+ */
+export const RECENT_VARIANTS = 3;
+/** Seeds a generated question tries when looking for a variant not yet seen. */
+const VARIANT_TRIES = 64;
+
+/** Answers on any of these questions of a skill, oldest first. */
+function attemptsOn(
+  progress: Progress,
+  skillId: string,
+  questionIds: Set<string>,
+): Attempt[] {
+  return progress.attempts.filter(
+    (attempt) =>
+      attempt.skillId === skillId && questionIds.has(attempt.questionId),
+  );
+}
+
+/**
+ * The question a point (or a code step) asks next. A question asked in the
+ * learner's last RECENT_VARIANTS attempts at the point waits while others
+ * remain; a generated question never waits, since it brings a variant those
+ * attempts did not show. Then unseen variants come first (an authored
+ * question not yet answered, or any generated one), then the least asked,
+ * never the same question twice in a row when avoidable, then authored
+ * order. Scheduling runs on outlines, so this uses only IDs and attempts.
+ */
+export function freshQuestion<Q extends QuestionRef>(
+  progress: Progress,
+  skillId: string,
   questions: Q[],
-  counts: Map<string, number>,
-  lastQuestionId: string | null,
   exclude: string[] = [],
 ): Q {
   const candidates = questions.filter((q) => !exclude.includes(q.id));
   const pool = candidates.length ? candidates : questions;
+  const asked = attemptsOn(
+    progress,
+    skillId,
+    new Set(questions.map((question) => question.id)),
+  );
+  const recent = new Set(
+    asked.slice(-RECENT_VARIANTS).map((attempt) => attempt.questionId),
+  );
+  const counts = new Map<string, number>();
+  for (const attempt of asked)
+    counts.set(attempt.questionId, (counts.get(attempt.questionId) ?? 0) + 1);
+  const last = progress.skills[skillId]?.lastQuestionId ?? null;
+  const count = (q: Q) => counts.get(q.id) ?? 0;
+  const stale = (q: Q) => !isGenerated(q) && recent.has(q.id);
+  const seen = (q: Q) => !isGenerated(q) && count(q) > 0;
   return [...pool].sort(
     (a, b) =>
-      (counts.get(a.id) ?? 0) - (counts.get(b.id) ?? 0) ||
-      Number(a.id === lastQuestionId) - Number(b.id === lastQuestionId) ||
+      Number(stale(a)) - Number(stale(b)) ||
+      Number(seen(a)) - Number(seen(b)) ||
+      count(a) - count(b) ||
+      Number(a.id === last) - Number(b.id === last) ||
       pool.indexOf(a) - pool.indexOf(b),
   )[0];
+}
+
+/**
+ * The seed of the variant a generated question asks next, or undefined for
+ * an authored question. Seeds follow the question's own sequence from the
+ * number of times the learner has answered it, so a reload shows the same
+ * variant until it is answered. With the skill's content loaded, the first
+ * variant in that sequence the learner has neither answered nor met in
+ * their last RECENT_VARIANTS attempts at the point is chosen, and failing
+ * that the first not met recently. Without content, seeds alone keep
+ * variants apart.
+ */
+export function chooseVariant(
+  progress: Progress,
+  skill: SkillOutline,
+  questionId: string,
+): number | undefined {
+  const step = stepFor(skill, evidenceIdFor(skill, questionId) ?? '');
+  const ref = step?.questions.find((question) => question.id === questionId);
+  if (!step || !ref || !isGenerated(ref)) return undefined;
+  const full = contentOf(skill);
+  const keyOf = (id: string, variant?: number) => {
+    const question = full && findQuestion(full, id);
+    return question && question.type !== 'code'
+      ? variantKey(questionVariant(question, variant))
+      : `${id}#${variant ?? ''}`;
+  };
+  const atPoint = attemptsOn(
+    progress,
+    skill.id,
+    new Set(step.questions.map((question) => question.id)),
+  );
+  const recent = new Set(
+    atPoint
+      .slice(-RECENT_VARIANTS)
+      .map((attempt) => keyOf(attempt.questionId, attempt.variant)),
+  );
+  const own = atPoint.filter((attempt) => attempt.questionId === questionId);
+  const seen = new Set(
+    own.map((attempt) => keyOf(attempt.questionId, attempt.variant)),
+  );
+  let fallback: number | undefined;
+  for (let k = 0; k < VARIANT_TRIES; k++) {
+    const seed = variantSeed(questionId, own.length + k);
+    const key = keyOf(questionId, seed);
+    if (recent.has(key)) continue;
+    if (!seen.has(key)) return seed;
+    fallback ??= seed;
+  }
+  return fallback ?? variantSeed(questionId, own.length);
 }
 
 function selectKnowledgePointQuestion(
@@ -495,14 +605,13 @@ function selectKnowledgePointQuestion(
   mode: 'learn' | 'review',
 ): QuestionRef {
   const state = getSkillState(progress, item.id);
-  const counts = seenCounts(progress, item.id);
   if (mode === 'learn' && !hasLessonEvidence(item, state.questionIds)) {
     const { current, attempt } = lessonState(progress, item);
     if (current)
-      return freshest(
+      return freshQuestion(
+        progress,
+        item.id,
         current.questions,
-        counts,
-        state.lastQuestionId,
         attempt?.steps[current.id]?.correct,
       );
   }
@@ -517,27 +626,36 @@ function selectKnowledgePointQuestion(
   const remaining = points.filter((point) => !covered.has(point.id));
   const pointsCovered = points.length - remaining.length;
   if (remaining.length && pointsCovered < requirement.points)
-    return freshest(remaining[0].questions, counts, state.lastQuestionId);
+    return freshQuestion(progress, item.id, remaining[0].questions);
   const code = item.questions.filter((question) => question.type === 'code');
   if (
     requirement.code &&
     code.length &&
     !answered.some((id) => code.some((q) => q.id === id))
   )
-    return freshest(code, counts, state.lastQuestionId);
-  return freshest(points[0].questions, counts, state.lastQuestionId);
+    return freshQuestion(progress, item.id, code);
+  return freshQuestion(progress, item.id, points[0].questions);
 }
 
 /**
  * The question to ask next. Scheduling needs only the outline; given a skill
- * with its content, the question comes back with its content too.
+ * with its content, the question comes back with its content too, and a
+ * generated question as the variant to ask (its `variant` is the seed to
+ * record with the answer).
  */
 export function selectQuestion<S extends SkillOutline>(
   progress: Progress,
   item: S,
   mode: 'learn' | 'review',
 ): QuestionOf<S> {
-  return pickQuestion(progress, item, mode) as QuestionOf<S>;
+  const question = pickQuestion(progress, item, mode);
+  // With content, a generated question comes back as the variant to ask.
+  if (!hasContent(item) || !isGenerated(question))
+    return question as QuestionOf<S>;
+  return questionVariant(
+    question as Question,
+    chooseVariant(progress, item, question.id),
+  ) as QuestionOf<S>;
 }
 
 function pickQuestion(
@@ -1154,6 +1272,9 @@ export function applyAttempt(
     ...(outcome ? { outcome } : {}),
     ...(input.response !== undefined && isTypedType(question.type)
       ? { response: input.response.slice(0, TYPED_RESPONSE_MAX_LENGTH) }
+      : {}),
+    ...(isGenerated(question) && isVariantSeed(input.variant)
+      ? { variant: input.variant }
       : {}),
   };
   const updated: Progress = {

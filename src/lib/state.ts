@@ -19,6 +19,7 @@ import { defaultCatalog, skillById } from './catalog-index';
 import { contentOf } from './content';
 import { plainProse } from './math-text';
 import { acceptedAnswer } from './typed-answer';
+import { questionVariant } from './variants';
 import { mergeQuizzes, type Quiz } from './quiz';
 import { mergeDiagnostics } from './placement';
 import {
@@ -89,7 +90,11 @@ export function recordLearningAnswer(
   const skill = contentOf(skillById[input.skillId]);
   if (!skill)
     throw new Error(`Load ${input.skillId} before recording its answers.`);
-  const question = findQuestion(skill, input.questionId)!;
+  // A generated question's card shows the variant that was missed.
+  const question = questionVariant(
+    findQuestion(skill, input.questionId)!,
+    progress.attempts.at(-1)?.variant,
+  );
   const cards = [...state.cards];
   const cardIds = new Set(cards.map((card) => card.id));
   const add = (card: QueuedCard) => {

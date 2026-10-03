@@ -15,6 +15,7 @@ import {
   activeQuiz,
   answerQuiz,
   finishQuiz,
+  planQuiz,
   quizDeadline,
   quizQuestion,
   quizStatus,
@@ -75,9 +76,15 @@ export default function QuizSession({
     if (!quizId && running) setQuizId(running.id);
   }, [quizId, running?.id]);
   const finished = quiz?.completedAt !== undefined;
-  // Questions and explanations are lesson content, loaded per course.
+  // Questions and explanations are lesson content, loaded per course. The
+  // next quiz's courses load before it starts, so each generated question
+  // gets a variant chosen against the ones the learner has already seen.
+  const status = quiz ? undefined : quizStatus(state.progress, courseId);
   const content = useCourseContent(
-    (quiz?.questions ?? []).map((slot) => skillById[slot.skillId]?.courseId),
+    (
+      quiz?.questions ??
+      (status?.kind === 'available' ? planQuiz(state.progress, courseId) : [])
+    ).map((slot) => skillById[slot.skillId]?.courseId),
   );
   useEffect(() => {
     if (!quiz || finished) return;
@@ -93,14 +100,13 @@ export default function QuizSession({
   }, [now, quiz?.id, finished]);
 
   if (!quiz) {
-    const status = quizStatus(state.progress, courseId);
-    if (status.kind !== 'available')
+    if (status?.kind !== 'available')
       return (
         <div className="empty-state">
           <ClipboardCheck size={38} />
           <h1>No quiz yet</h1>
           <p>
-            {status.kind === 'waiting'
+            {status?.kind === 'waiting'
               ? `Your next quiz unlocks after ${status.xpToGo} more XP of lessons and reviews.`
               : 'Quizzes draw on skills you have mastered in this course. Master a few more first.'}
           </p>
@@ -111,6 +117,8 @@ export default function QuizSession({
           </Button>
         </div>
       );
+    if (!content.ready)
+      return <ContentLoading error={content.error} retry={content.retry} />;
     const minutes = Math.round((status.questions * 90) / 60);
     return (
       <div className="lesson-workspace lesson-page">

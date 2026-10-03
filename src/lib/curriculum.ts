@@ -19,6 +19,13 @@ import {
 } from './catalog-outline';
 import { mathSpans, mathTextErrors, mathTextFields } from './math-text';
 import { typedQuestionErrors } from './typed-answer';
+import {
+  GENERATOR_SAMPLES,
+  MIN_DISTINCT_VARIANTS,
+  questionVariant,
+  sampleSeeds,
+  variantKey,
+} from './variants';
 export {
   assessmentPolicy,
   assessmentType,
@@ -51,7 +58,21 @@ interface QuestionBase {
   prompt: string;
   explanation: string;
   hint: string;
+  /**
+   * A generated question: each presentation asks a fresh seeded variant
+   * from `generate` (see `src/lib/variants.ts`). The fields above are the
+   * authored question that attempts without a recorded variant show.
+   */
+  generated?: true;
+  /** The seed of the variant this object shows, set by `questionVariant`. */
+  variant?: number;
 }
+
+/** What a generator returns for one seed: a question of its own type. */
+export type GeneratedFields<Q> = Omit<
+  Q,
+  'id' | 'generated' | 'generate' | 'variant'
+>;
 
 export interface ChoiceQuestion extends QuestionBase {
   type: 'choice';
@@ -60,6 +81,7 @@ export interface ChoiceQuestion extends QuestionBase {
   answer: number;
   /** The correct choice is exactly what `code` prints; catalog tests run it. */
   checksOutput?: boolean;
+  generate?: (seed: number) => GeneratedFields<ChoiceQuestion>;
 }
 
 /**
@@ -76,6 +98,7 @@ export interface NumericQuestion extends QuestionBase {
   tolerance?: number;
   /** Unit or format hint shown next to the input, e.g. `ms` or `to 2 decimals`. */
   unit?: string;
+  generate?: (seed: number) => GeneratedFields<NumericQuestion>;
 }
 
 /**
@@ -91,6 +114,7 @@ export interface TextQuestion extends QuestionBase {
   ignoreCase?: boolean;
   /** The single accepted answer is exactly what `code` prints; catalog tests run it. */
   checksOutput?: boolean;
+  generate?: (seed: number) => GeneratedFields<TextQuestion>;
 }
 
 /** A question the learner answers by typing rather than choosing. */
@@ -119,8 +143,12 @@ export type AnswerQuestion = ChoiceQuestion | TypedQuestion;
  */
 export type AssessmentType = 'choice' | 'code';
 
-/** A question's identity and kind: what scheduling and evidence need. */
-export type QuestionRef = Pick<Question, 'id' | 'type'>;
+/**
+ * A question's identity and kind: what scheduling and evidence need. A
+ * generated question never repeats a recent variant, so selection treats it
+ * as always fresh.
+ */
+export type QuestionRef = Pick<Question, 'id' | 'type' | 'generated'>;
 
 export interface Flashcard {
   id: string;
@@ -489,6 +517,13 @@ export function validateCurriculum(
       )
         errors.push(`${question.id}: code language must match its course.`);
     }
+    for (const question of item.questions)
+      if (question.generated || 'generate' in question)
+        errors.push(
+          `${question.id}: generated questions belong in knowledge points.`,
+        );
+    for (const question of points.flatMap((point) => point.questions))
+      errors.push(...generatedQuestionErrors(question, checkTex));
     // Prose marks math with $…$ or $$…$$; a literal dollar is written \$.
     for (const [location, text] of mathTextFields(item))
       for (const error of [
@@ -553,6 +588,108 @@ export function validateCurriculum(
     }
   }
   return errors;
+}
+
+/**
+ * The structural rules every concrete choice or typed question follows,
+ * authored or generated: four or more distinct choices and a valid answer
+ * index, a gradable typed answer, code for an output question, and closed
+ * `$…$` math in its prose.
+ */
+function answerQuestionErrors(
+  question: AnswerQuestion,
+  location: string,
+  checkTex?: (tex: string, displayMode: boolean) => string | undefined,
+): string[] {
+  const errors: string[] = [];
+  if (question.type === 'choice') {
+    if (
+      !Array.isArray(question.choices) ||
+      question.choices.length < 4 ||
+      new Set(question.choices.map((c) => c.trim())).size !==
+        question.choices.length
+    )
+      errors.push(`${location}: needs four or more distinct choices.`);
+    else if (
+      !Number.isInteger(question.answer) ||
+      question.answer < 0 ||
+      question.answer >= question.choices.length
+    )
+      errors.push(`${location}: invalid answer index.`);
+  }
+  if (
+    (question.type === 'choice' || question.type === 'text') &&
+    question.checksOutput &&
+    !question.code?.trim()
+  )
+    errors.push(`${location}: output questions need code to run.`);
+  if (!question.prompt?.trim() || !question.explanation?.trim())
+    errors.push(`${location}: needs a prompt and an explanation.`);
+  errors.push(
+    ...typedQuestionErrors({ ...question, id: location } as Question),
+  );
+  const prose = [
+    question.prompt ?? '',
+    question.explanation ?? '',
+    ...(question.type === 'choice' && !question.checksOutput
+      ? question.choices
+      : []),
+  ];
+  for (const text of prose)
+    for (const error of [
+      ...mathTextErrors(text),
+      ...mathSpans(text).map(({ tex, display }) => checkTex?.(tex, display)),
+    ])
+      if (error) errors.push(`${location}: ${error}`);
+  return errors;
+}
+
+/**
+ * A generated question samples its first GENERATOR_SAMPLES variants, the
+ * ones learners meet first. Each must be a well-formed question of the
+ * generator's own type, deterministic for its seed, and together they must
+ * offer at least MIN_DISTINCT_VARIANTS different questions.
+ */
+export function generatedQuestionErrors(
+  question: Question,
+  checkTex?: (tex: string, displayMode: boolean) => string | undefined,
+): string[] {
+  const generate = 'generate' in question ? question.generate : undefined;
+  if (!question.generated && !generate) return [];
+  if (question.type === 'code')
+    return [`${question.id}: code exercises cannot be generated.`];
+  if (!question.generated || typeof generate !== 'function')
+    return [`${question.id}: a generator needs both generated and generate.`];
+  const errors: string[] = [];
+  const keys = new Set<string>();
+  for (const seed of sampleSeeds(question.id)) {
+    const location = `${question.id} variant ${seed}`;
+    let instance: AnswerQuestion;
+    try {
+      instance = questionVariant(question, seed);
+      const call = generate as (seed: number) => object;
+      if (JSON.stringify(call(seed)) !== JSON.stringify(call(seed)))
+        errors.push(`${location}: the same seed must give the same question.`);
+    } catch (error) {
+      errors.push(`${location}: the generator threw ${String(error)}.`);
+      continue;
+    }
+    if (instance.type !== question.type)
+      errors.push(`${location}: must be a ${question.type} question.`);
+    if (
+      (instance.type === 'choice' || instance.type === 'text') &&
+      !!instance.checksOutput !==
+        !!(question as ChoiceQuestion | TextQuestion).checksOutput
+    )
+      errors.push(`${location}: must check output exactly when its base does.`);
+    errors.push(...answerQuestionErrors(instance, location, checkTex));
+    keys.add(variantKey(instance));
+  }
+  if (keys.size < MIN_DISTINCT_VARIANTS)
+    errors.push(
+      `${question.id}: only ${keys.size} distinct variants in ${GENERATOR_SAMPLES} seeds; needs ${MIN_DISTINCT_VARIANTS}.`,
+    );
+  return [...new Set(errors)].slice(0, 5);
 }
 
 /**

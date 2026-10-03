@@ -4,6 +4,7 @@ import type {
   CurriculumCatalog,
   GraphCatalog,
   Question,
+  QuestionRef,
   SkillOutline,
   Unit,
 } from './curriculum';
@@ -79,6 +80,11 @@ export function assessmentPolicy(
   );
 }
 
+/** A question's identity, kind, and whether it is generated. */
+function questionRef({ id, type, generated }: QuestionRef): QuestionRef {
+  return generated ? { id, type, generated } : { id, type };
+}
+
 /** A skill without its lesson content: what the graph index keeps. */
 export function outlineSkill(skill: SkillOutline): SkillOutline {
   return {
@@ -99,11 +105,11 @@ export function outlineSkill(skill: SkillOutline): SkillOutline {
       ? {
           knowledgePoints: skill.knowledgePoints.map((point) => ({
             id: point.id,
-            questions: point.questions.map(({ id, type }) => ({ id, type })),
+            questions: point.questions.map(questionRef),
           })),
         }
       : {}),
-    questions: skill.questions.map(({ id, type }) => ({ id, type })),
+    questions: skill.questions.map(questionRef),
     flashcards: skill.flashcards.map(({ id }) => ({ id })),
     ...(skill.assessment ? { assessment: skill.assessment } : {}),
     ...(skill.encompasses ? { encompasses: skill.encompasses } : {}),
@@ -149,7 +155,10 @@ type EncodedSkill = Omit<
   SkillOutline,
   'knowledgePoints' | 'questions' | 'flashcards'
 > & {
-  /** Each knowledge point's question types, one letter per question. */
+  /**
+   * Each knowledge point's question types, one letter per question, in
+   * upper case for a generated question.
+   */
   points?: string[];
   questions: [string, Question['type']][];
   cards: number;
@@ -202,7 +211,13 @@ export function encodeIndex(index: CatalogIndex): EncodedIndex {
         ...(knowledgePoints
           ? {
               points: knowledgePoints.map((point) =>
-                point.questions.map(({ type }) => typeLetters[type]).join(''),
+                point.questions
+                  .map(({ type, generated }) =>
+                    generated
+                      ? typeLetters[type].toUpperCase()
+                      : typeLetters[type],
+                  )
+                  .join(''),
               ),
             }
           : {}),
@@ -226,7 +241,10 @@ export function decodeIndex(encoded: EncodedIndex): CatalogIndex {
                 id: pointId(skill.id, p),
                 questions: [...types].map((letter, q) => ({
                   id: pointQuestionId(skill.id, p, q),
-                  type: letterTypes[letter],
+                  type: letterTypes[letter.toLowerCase()],
+                  ...(letter !== letter.toLowerCase()
+                    ? { generated: true as const }
+                    : {}),
                 })),
               })),
             }
