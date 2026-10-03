@@ -1,3 +1,6 @@
+import { cardBlocks, type CardBlock } from './card-text';
+import { parseMathText } from './math-text';
+
 /**
  * Browser-only AnkiConnect client. The application owns the durable card queue.
  * API reference: https://github.com/ankiultimate/anki-connect#supported-actions
@@ -13,9 +16,19 @@ export interface AnkiCard {
   id: string;
   skillId: string;
   skillName: string;
-  /** Plain text. HTML is escaped before it is sent to Anki. */
+  /**
+   * Plain text, shown as written, unless `format` says otherwise. HTML is
+   * escaped before it is sent to Anki.
+   */
   front: string;
   back: string;
+  /**
+   * `'prose'`: `front` and `back` are authored lesson prose (`$…$` math,
+   * backtick code spans, `\$` for a dollar) with code in fenced blocks, as
+   * mistake cards made since CEN-128 are (`src/lib/card-text.ts`). Absent:
+   * plain text, as mastery cards and older mistake cards are.
+   */
+  format?: 'prose';
   kind: 'mastery' | 'mistake';
 }
 
@@ -114,8 +127,50 @@ function escapeHtml(value: string): string {
   );
 }
 
+const lineBreaks = (html: string) =>
+  html.replace(/\r\n?/g, '\n').replace(/\n/g, '<br>');
+
 function textField(value: string): string {
-  return `<div class="lessdumb-text">${escapeHtml(value).replace(/\r\n?/g, '\n').replace(/\n/g, '<br>')}</div>`;
+  return `<div class="lessdumb-text">${lineBreaks(escapeHtml(value))}</div>`;
+}
+
+/**
+ * Authored prose as Anki HTML. Anki typesets math with MathJax, which
+ * recognizes `\(…\)` and `\[…\]` but not dollars, so `$…$` and `$$…$$` become
+ * those delimiters. `\$` is a plain dollar sign, which MathJax leaves alone.
+ * Code spans become `<code>`, which MathJax skips, so code is never typeset.
+ */
+export function ankiProseHtml(text: string): string {
+  return lineBreaks(
+    parseMathText(text)
+      .segments.map((segment) => {
+        if (segment.kind === 'code')
+          return `<code>${escapeHtml(segment.text)}</code>`;
+        if (segment.kind === 'text') return escapeHtml(segment.text);
+        // TeX treats a line break as a space; keep the math on one line.
+        const tex = escapeHtml(segment.tex.replace(/\s*\r?\n\s*/g, ' '));
+        return segment.display ? `\\[${tex}\\]` : `\\(${tex}\\)`;
+      })
+      .join(''),
+  );
+}
+
+/**
+ * Card blocks as Anki HTML. Prose goes in a `<div>`: MathJax skips `<pre>`
+ * and `<code>`, so math inside them would stay raw TeX. Code goes in a
+ * `<pre>` for that reason. Inline styles keep whitespace in any note type,
+ * including the Basic type a TSV import may use.
+ */
+function blocksField(blocks: CardBlock[], tabs?: boolean): string {
+  const text = (value: string) => (tabs ? value.replace(/\t/g, '    ') : value);
+  return blocks
+    .filter((block) => block.text.trim())
+    .map((block) =>
+      block.kind === 'code'
+        ? `<pre style="white-space:pre-wrap">${lineBreaks(escapeHtml(text(block.text)))}</pre>`
+        : `<div class="lessdumb-text" style="white-space:pre-wrap">${ankiProseHtml(text(block.text))}</div>`,
+    )
+    .join('');
 }
 
 /** An injective encoding makes arbitrary IDs safe in Anki tags and searches. */
@@ -131,8 +186,12 @@ export function ankiCardTag(id: string): string {
 
 function cardFields(card: AnkiCard): NoteFields {
   return {
-    Front: textField(card.front),
-    Back: textField(card.back),
+    Front: card.format
+      ? blocksField(cardBlocks(card.front))
+      : textField(card.front),
+    Back: card.format
+      ? blocksField(cardBlocks(card.back))
+      : textField(card.back),
     Skill: escapeHtml(card.skillName),
   };
 }
@@ -146,10 +205,16 @@ function cardTags(card: AnkiCard): string[] {
   ];
 }
 
-/** Anki's documented UTF-8 text import format, preserving Python whitespace. */
+/**
+ * Anki's documented UTF-8 text import format, preserving Python whitespace.
+ * Plain-text cards keep one `<pre>`; `format: 'prose'` cards use the
+ * AnkiConnect layout, so their math is typeset too.
+ */
 export function exportCardsTsv(cards: readonly AnkiCard[]): string {
-  const field = (text: string) =>
-    `<pre style="white-space:pre-wrap">${escapeHtml(text.replace(/\t/g, '    ')).replace(/\r\n?/g, '\n').replace(/\n/g, '<br>')}</pre>`;
+  const plain = (text: string) =>
+    `<pre style="white-space:pre-wrap">${lineBreaks(escapeHtml(text.replace(/\t/g, '    ')))}</pre>`;
+  const side = (card: AnkiCard, name: 'front' | 'back') =>
+    card.format ? blocksField(cardBlocks(card[name]), true) : plain(card[name]);
   const headers = [
     '#separator:Tab',
     '#html:true',
@@ -157,7 +222,9 @@ export function exportCardsTsv(cards: readonly AnkiCard[]): string {
     '#tags column:3',
   ];
   const rows = cards.map((card) =>
-    [field(card.front), field(card.back), cardTags(card).join(' ')].join('\t'),
+    [side(card, 'front'), side(card, 'back'), cardTags(card).join(' ')].join(
+      '\t',
+    ),
   );
   return [...headers, ...rows].join('\n') + '\n';
 }

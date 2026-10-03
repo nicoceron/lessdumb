@@ -8,7 +8,7 @@ import {
   Timer,
   X,
 } from 'lucide-react';
-import { courses, skillById } from '../lib/catalog-index';
+import { courses } from '../lib/catalog-index';
 import { choiceLetter, choiceOrder } from '../lib/choice-order';
 import { codeLanguage } from '../lib/code-language';
 import {
@@ -28,7 +28,7 @@ import { TypedAnswerInput } from './typed-answer';
 import { acceptedAnswer, gradeTyped } from '../lib/typed-answer';
 import type { AnswerQuestion } from '../lib/curriculum';
 import { Btn, ContentLoading } from './shared';
-import { useCourseContent } from './use-content';
+import { useSkillContent } from './use-content';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -76,15 +76,15 @@ export default function QuizSession({
     if (!quizId && running) setQuizId(running.id);
   }, [quizId, running?.id]);
   const finished = quiz?.completedAt !== undefined;
-  // Questions and explanations are lesson content, loaded per course. The
-  // next quiz's courses load before it starts, so each generated question
-  // gets a variant chosen against the ones the learner has already seen.
+  // Questions and explanations are lesson content, loaded per unit. The next
+  // quiz's units load before it starts, so each generated question gets a
+  // variant chosen against the ones the learner has already seen.
   const status = quiz ? undefined : quizStatus(state.progress, courseId);
-  const content = useCourseContent(
+  const content = useSkillContent(
     (
       quiz?.questions ??
       (status?.kind === 'available' ? planQuiz(state.progress, courseId) : [])
-    ).map((slot) => skillById[slot.skillId]?.courseId),
+    ).map((slot) => slot.skillId),
   );
   useEffect(() => {
     if (!quiz || finished) return;

@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { exportCardsTsv } from '../lib/anki';
+import { cardBlocks } from '../lib/card-text';
 import {
   authClient,
   NOTICE_PARAM,
@@ -26,12 +27,9 @@ import {
 import { type PythonResult } from '../lib/python';
 import type { CodeLanguage } from '../lib/curriculum';
 import { runCode } from '../lib/code-runner';
-import {
-  codeLanguage,
-  codeLanguageLabels,
-  editorLanguage,
-} from '../lib/code-language';
-import { type LearnerState } from '../lib/state';
+import { codeLanguage, codeLanguageLabels } from '../lib/code-language';
+import { type LearnerState, type QueuedCard } from '../lib/state';
+import { InlineText } from './inline-text';
 import { Pill, PageTitle, download } from './shared';
 import { Button } from './ui/button';
 import {
@@ -75,7 +73,46 @@ import {
   CodeBlockTitle,
 } from './reui/code-block/code-block';
 
-const CodeMirror = lazy(() => import('@uiw/react-codemirror'));
+const CodeEditor = lazy(() => import('./code-editor'));
+
+/**
+ * One side of a card. A mistake card made since CEN-128 is prose with code
+ * blocks: prose typesets its math, code stays as written. Older cards and
+ * mastery cards are plain text and show as written, TeX source included.
+ */
+function CardFace({
+  card,
+  side,
+}: {
+  card: QueuedCard;
+  side: 'front' | 'back';
+}) {
+  if (!card.format)
+    return (
+      <pre className="w-full flex-1 font-mono text-sm leading-relaxed break-words whitespace-pre-wrap">
+        {card[side]}
+      </pre>
+    );
+  const blocks = cardBlocks(card[side]);
+  return (
+    <span className="flex w-full flex-1 flex-col gap-3 text-sm leading-relaxed">
+      {blocks.map((block, index) =>
+        block.kind === 'code' ? (
+          <code
+            key={index}
+            className="block font-mono break-words whitespace-pre-wrap"
+          >
+            {block.text}
+          </code>
+        ) : (
+          <span key={index} className="block break-words whitespace-pre-wrap">
+            <InlineText text={block.text} />
+          </span>
+        ),
+      )}
+    </span>
+  );
+}
 
 export function Cards({
   state,
@@ -223,9 +260,10 @@ export function Cards({
                         )}
                       </span>
                     </span>
-                    <pre className="w-full flex-1 font-mono text-sm leading-relaxed break-words whitespace-pre-wrap">
-                      {flipped === card.id ? card.back : card.front}
-                    </pre>
+                    <CardFace
+                      card={card}
+                      side={flipped === card.id ? 'back' : 'front'}
+                    />
                     <span className="flex items-end justify-between gap-3 text-xs text-muted-foreground">
                       <span>{card.skillName}</span>
                       <span className="shrink-0 text-primary">
@@ -660,9 +698,9 @@ export function CodeLab({
                 </div>
               }
             >
-              <CodeMirror
+              <CodeEditor
+                language={language}
                 value={code}
-                extensions={[editorLanguage(language)]}
                 height="370px"
                 onChange={setCode}
                 editable={!busy}
