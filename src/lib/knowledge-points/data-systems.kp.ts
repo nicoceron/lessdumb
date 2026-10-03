@@ -1354,4 +1354,1301 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'ds-key-values': [
+    {
+      title: 'Look values up by key',
+      explanation: [
+        'A key-value store maps each key to a value, like a Python dictionary: putting a value stores it under a key, getting a key returns its value, and putting to an existing key replaces the old value.',
+        'A point lookup asks for one known key. It should find the value directly, without examining other records.',
+      ],
+      example: {
+        code: 'store = {}\nstore["w-17"] = "Data workshop"\nstore["w-18"] = "SQL basics"\nstore["w-17"] = "Data workshop (full)"\nprint(store["w-17"])\nprint(len(store))',
+        output: 'Data workshop (full)\n2',
+        explanation:
+          'The second put to w-17 replaces its value instead of adding a third entry, so the store still holds two keys.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'store = {"u1": "Ana", "u2": "Ben"}\nstore["u2"] = "Bo"\nprint(store["u2"])\nprint(len(store))',
+          ['Ben\n2', 'Bo\n3', 'Ben\n3', 'Bo\n2'],
+          3,
+          'Assigning to an existing key replaces its value; the number of keys stays 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'store = {"a": 1}\nprint(store.get("b", "missing"))',
+          ['None', 'missing', 'KeyError', '1'],
+          1,
+          'get returns the default when the key is absent, instead of raising an error.',
+        ),
+        choose(
+          'Which request is a point lookup?',
+          [
+            'Fetch the value stored under key order-552',
+            'Count every key in the store',
+            'Average all stored values',
+            'List every key between a-100 and a-200',
+          ],
+          0,
+          'It asks for one known key; the others examine many records.',
+        ),
+        choose(
+          'A client writes a value under a key that already exists. What does a key-value store do?',
+          [
+            'Keeps both values under the key',
+            'Rejects the write',
+            'Replaces the old value',
+            'Creates a second key with the same name',
+          ],
+          2,
+          'Each key maps to one value, so a new write replaces the old one.',
+        ),
+      ],
+    },
+    {
+      title: 'Make the data survive a restart',
+      explanation: [
+        'A dictionary lives in a process’s memory; when the process stops, its contents are gone. A durable store writes each change to disk before confirming it, often by appending it to a log file.',
+        'On restart, the store rebuilds its map by replaying the log from the beginning. Later entries for a key overwrite earlier ones, so the replay ends with each key’s latest value.',
+      ],
+      example: {
+        code: 'keys = ["w-17", "w-18", "w-17"]\nvalues = ["draft", "open", "full"]\nstore = {}\nfor i in range(len(keys)):\n    store[keys[i]] = values[i]\nprint(store)',
+        output: "{'w-17': 'full', 'w-18': 'open'}",
+        explanation:
+          'The log holds three writes in order. Replaying them leaves w-17 with its last value, full.',
+      },
+      questions: [
+        predictOutput(
+          'This program replays a log of writes. What does it print?',
+          'keys = ["a", "b", "a", "c"]\nvalues = [1, 2, 3, 4]\nstore = {}\nfor i in range(len(keys)):\n    store[keys[i]] = values[i]\nprint(store["a"])\nprint(len(store))',
+          ['1\n4', '3\n4', '1\n3', '3\n3'],
+          3,
+          'a is written twice, and the later value 3 wins; there are three distinct keys.',
+        ),
+        predictOutput(
+          'This program replays a log of writes. What does it print?',
+          'keys = ["x", "x", "x"]\nvalues = [5, 6, 7]\nstore = {}\nfor i in range(len(keys)):\n    store[keys[i]] = values[i]\nprint(store)',
+          ["{'x': 5}", "{'x': [5, 6, 7]}", "{'x': 7}", "{'x': 18}"],
+          2,
+          'Each replayed write replaces the previous value, so only the last one remains.',
+        ),
+        choose(
+          'A cache process restarts and all its entries are gone. Why is that acceptable for a cache but not for a system of record?',
+          [
+            'Cache entries can be rebuilt from the source; the system of record has no other source',
+            'Caches are faster',
+            'Systems of record are smaller',
+            'Systems of record never restart',
+          ],
+          0,
+          'Losing derived data costs time; losing authoritative data loses facts.',
+        ),
+        choose(
+          'A store confirms a write, and only afterwards saves it to disk. It crashes in between. What happens to that write?',
+          [
+            'It is saved twice',
+            'It is lost even though the client was told it succeeded',
+            'It is recovered from memory',
+            'Nothing, because confirmation saves it',
+          ],
+          1,
+          'Durability requires saving before confirming; otherwise a crash loses acknowledged work.',
+        ),
+      ],
+    },
+    {
+      title: 'Pay for indexes on writes',
+      explanation: [
+        'Without an index, finding records by anything other than how they are stored means scanning every record. An index is an extra structure that maps a lookup value to where the matching records live, so that lookup becomes fast.',
+        'Every write must also update each index it affects, and each index takes space. Point lookups, range queries and writes have different needs, so describe them separately before adding indexes.',
+      ],
+      example: scenario(
+        'Orders are stored by order_id. Support staff search by email 5,000 times a day across 1 million orders, and 200 new orders arrive per minute.',
+        'Add an index on email: each search stops scanning a million orders, at the cost of updating the index on each of the 200 writes per minute and some extra disk space.',
+        'The frequent search justifies the write and space cost here; a rarely used index would not.',
+      ),
+      questions: [
+        choose(
+          'A table has 3 indexes. One new row is inserted. How many index structures must also be updated?',
+          ['0', '1', '4', '3'],
+          3,
+          'Each index must include the new row, in addition to the table itself.',
+        ),
+        choose(
+          'With no index on email, how many of 2 million records might a lookup by email examine?',
+          ['Exactly 1', 'Up to all 2 million', 'About 20', 'Exactly half'],
+          1,
+          'Without an access path, the store has to check records one by one.',
+        ),
+        choose(
+          'A log table receives 50,000 inserts per second and is searched once a day. Why might several extra indexes hurt?',
+          [
+            'Each insert would also have to update every index',
+            'Indexes slow down the daily search',
+            'Indexes delete old rows',
+            'They cannot hurt',
+          ],
+          0,
+          'At that write rate, index maintenance multiplies the work for a rare benefit.',
+        ),
+        choose(
+          'Records are stored by id. Which request needs a different access path from “get record by id”?',
+          [
+            'Get record 42',
+            'Update record 42',
+            'All records created between 1 and 7 May',
+            'Delete record 42',
+          ],
+          2,
+          'It selects by creation date over a range, not by the stored key.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-lsm': [
+    {
+      title: 'Buffer writes and flush sorted runs',
+      explanation: [
+        'A log-structured (LSM) store collects writes in a sorted table in memory, the memtable. When it reaches its size limit, it is written to disk as an immutable sorted file called a run, and a fresh memtable starts.',
+        'Writes are fast because nothing on disk is overwritten in place; an update just writes a newer version. Each write is also appended to a log on disk, so a crash before a flush can be recovered by replaying it.',
+      ],
+      example: {
+        code: 'memtable_limit = 4\nwrites = 10\nflushed_runs = writes // memtable_limit\nin_memory = writes % memtable_limit\nprint(flushed_runs, in_memory)',
+        output: '2 2',
+        explanation:
+          'Ten writes fill the memtable twice, producing two runs on disk, and two writes wait in the current memtable.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'memtable_limit = 1000\nwrites = 4500\nprint(writes // memtable_limit, writes % memtable_limit)',
+          ['4.5 0', '5 500', '4 500', '4 0'],
+          2,
+          'Four full memtables have been flushed, and 500 writes remain in memory.',
+        ),
+        choose(
+          'Why are writes to an LSM store typically fast?',
+          [
+            'They skip saving anything to disk',
+            'They update every file in place',
+            'They are sorted in memory and appended, never rewriting old data in place',
+            'They store no data until read',
+          ],
+          2,
+          'Sequential appends and in-memory sorting avoid scattered in-place disk updates.',
+        ),
+        choose(
+          'A key is updated three times before the memtable is flushed. What does the memtable hold for it?',
+          [
+            'Only the latest value',
+            'All three values',
+            'The oldest value',
+            'Nothing until the flush',
+          ],
+          0,
+          'The memtable is a map from key to its current value.',
+        ),
+        choose(
+          'The process crashes while unflushed writes sit in the memtable. What recovers them?',
+          [
+            'Compaction',
+            'Replaying the log on disk',
+            'Reading the sorted runs',
+            'Nothing; they are always lost',
+          ],
+          1,
+          'Every write was appended to the log before it was confirmed.',
+        ),
+      ],
+    },
+    {
+      title: 'Read the newest version',
+      explanation: [
+        'Because updates write new versions, a key can appear in several runs. A read checks the memtable first, then the runs from newest to oldest, and the first version it finds wins.',
+        'A deletion is written as a special marker, a tombstone, that hides older versions until compaction removes them. Looking up a key that does not exist is costly: every run must be checked before giving up.',
+      ],
+      example: {
+        code: 'runs = [{"a": 1, "b": 2}, {"a": 5}, {"c": 9}]\nkey = "a"\nvalue = None\nfor run in runs:\n    if key in run:\n        value = run[key]\nprint(value)',
+        output: '5',
+        explanation:
+          'runs is listed from oldest to newest. Scanning in that order lets each newer version overwrite the older one, so the newest value of a wins.',
+      },
+      questions: [
+        predictOutput(
+          'runs is listed from oldest to newest. What does this program print?',
+          'runs = [{"x": 1}, {"y": 2}, {"x": 3, "y": 4}]\nkey = "y"\nvalue = None\nfor run in runs:\n    if key in run:\n        value = run[key]\nprint(value)',
+          ['2', 'None', '6', '4'],
+          3,
+          'The newest run holds y = 4, which replaces the older 2.',
+        ),
+        predictOutput(
+          'runs is listed from oldest to newest. What does this program print?',
+          'runs = [{"k": "old"}, {"j": "new"}]\nkey = "k"\nvalue = None\nfor run in runs:\n    if key in run:\n        value = run[key]\nprint(value)',
+          ['new', 'old', 'None', 'KeyError'],
+          1,
+          'Only the oldest run contains k, so its value is still the current one.',
+        ),
+        predictOutput(
+          'runs is listed from oldest to newest, and "DELETED" is a tombstone. What does this program print?',
+          'runs = [{"p": 10}, {"p": "DELETED"}]\nkey = "p"\nvalue = None\nfor run in runs:\n    if key in run:\n        value = run[key]\nprint(value)',
+          ['DELETED', '10', 'None', '[10, DELETED]'],
+          0,
+          'The tombstone is the newest version, so the read sees the deletion, not the old 10.',
+        ),
+        choose(
+          'Why can looking up a key that was never written cost more than looking up one in the memtable?',
+          [
+            'Missing keys are stored twice',
+            'The memtable is on disk',
+            'Every run must be checked before concluding the key is absent',
+            'Missing keys trigger a flush',
+          ],
+          2,
+          'A found key can stop early; an absent key has to be ruled out everywhere.',
+        ),
+      ],
+    },
+    {
+      title: 'Compact runs and count write amplification',
+      explanation: [
+        'Compaction merges runs in the background, keeping only the newest version of each key and dropping tombstoned keys, so reads check fewer files and disk space is reclaimed.',
+        'The cost is I/O: data is rewritten every time it is compacted. Write amplification is the bytes physically written divided by the bytes the application wrote, and it limits how fast the application can write.',
+      ],
+      example: {
+        code: 'app_writes_gb = 100\nlog_gb = 100\nflush_gb = 100\ncompaction_gb = 3 * 100\ndisk_writes_gb = log_gb + flush_gb + compaction_gb\nprint(disk_writes_gb / app_writes_gb)',
+        output: '5.0',
+        explanation:
+          'Each gigabyte is written to the log, flushed once, and rewritten by three compactions, so the disk writes five times what the application wrote.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'app_writes_gb = 50\ndisk_writes_gb = 400\nprint(disk_writes_gb / app_writes_gb)',
+          ['0.125', '8.0', '350', '450'],
+          1,
+          'Write amplification divides physical writes by logical writes.',
+        ),
+        choose(
+          'Runs hold a = 1 (oldest), a = 4 (newer), b = 2, and the newest run holds a tombstone for b. After a full compaction, what remains?',
+          [
+            'a = 4 only',
+            'a = 1, a = 4 and b = 2',
+            'a = 4 and b = 2',
+            'Nothing',
+          ],
+          0,
+          'Only the newest version of a survives, and b is deleted, so its tombstone and old value go.',
+        ),
+        choose(
+          'What does compaction trade?',
+          [
+            'Durability for speed',
+            'Background disk I/O for fewer files per read and reclaimed space',
+            'Fewer writes for slower reads',
+            'Nothing; it is free',
+          ],
+          1,
+          'Merging rewrites data, which costs I/O but simplifies later reads.',
+        ),
+        choose(
+          'A disk sustains 500 MB/s of writes and write amplification is 10. Roughly what application write rate can it absorb?',
+          ['5,000 MB/s', '500 MB/s', '10 MB/s', '50 MB/s'],
+          3,
+          'Each application megabyte costs 10 megabytes of disk writes: 500 ÷ 10.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-btrees': [
+    {
+      title: 'Find a key by walking pages',
+      explanation: [
+        'A B-tree stores keys in fixed-size pages arranged as a balanced tree. Each internal page holds sorted boundary keys and pointers to child pages; leaf pages hold the keys’ entries.',
+        'A lookup starts at the root page and, at each level, follows the child whose key range contains the key. Because neighbouring keys sit in neighbouring leaves, a range query reads one stretch of leaves.',
+      ],
+      example: scenario(
+        'Root page boundaries: [m]. Keys below m go to page L, others to page R. Page L has boundaries [c, h] and three children: below c, c up to h, and h or above. Look up the key k.',
+        'k is below m, so go to L; k is at least h, so take L’s third child, a leaf, and read k’s entry there.',
+        'Each level narrows the search to one child, so the lookup reads one page per level.',
+      ),
+      questions: [
+        choose(
+          'A root page has boundaries [100, 200] and children for keys below 100, 100–199, and 200 or above. Which child does a lookup for 150 follow?',
+          ['The first', 'All three', 'The third', 'The second'],
+          3,
+          '150 is at least 100 and below 200.',
+        ),
+        choose(
+          'A B-tree has 3 levels. How many pages does a point lookup read?',
+          ['1', '3', 'Every page', '2'],
+          1,
+          'One page per level, from the root down to a leaf.',
+        ),
+        choose(
+          'What do internal B-tree pages contain?',
+          [
+            'Boundary keys and pointers to child pages',
+            'Every value in the table',
+            'Only the newest writes',
+            'Unsorted copies of the keys',
+          ],
+          0,
+          'They route a lookup toward the right child.',
+        ),
+        choose(
+          'Why does a B-tree serve range queries such as keys 300–350 well?',
+          [
+            'Ranges are cached separately',
+            'Range queries skip the root',
+            'Keys in a range sit in neighbouring leaf pages',
+            'Sorting removes duplicates',
+          ],
+          2,
+          'Sorted leaves let the query find the start and read forward.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep the tree shallow with high fan-out',
+      explanation: [
+        'Each page can point to hundreds of children; this branching factor is the fan-out. With fan-out b, a tree of depth d reaches up to b ** d leaf pages, so depth grows very slowly as data grows.',
+        'Large pages hold more keys, which raises fan-out and keeps lookups to a few page reads even for billions of keys.',
+      ],
+      example: {
+        code: 'fanout = 500\ndepth = 4\nprint(fanout ** depth)',
+        output: '62500000000',
+        explanation:
+          'Four levels of 500-way pages address 62.5 billion leaves, so a lookup reads only four pages.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fanout = 100\ndepth = 3\nprint(fanout ** depth)',
+          ['300', '10000', '1000000', '100000000'],
+          2,
+          '100 × 100 × 100 leaves are reachable in three levels.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fanout = 200\nprint(fanout ** 2)\nprint(fanout ** 3)',
+          ['400\n600', '40000\n80000', '4000\n8000000', '40000\n8000000'],
+          3,
+          'Each extra level multiplies the reachable leaves by 200.',
+        ),
+        choose(
+          'With fan-out 200, two levels reach 40,000 leaves and three levels reach 8,000,000. A table needs 5,000,000 leaf pages. How many page reads does a lookup need?',
+          ['2', '3', '5', '200'],
+          1,
+          'Two levels are not enough, and three cover 8 million leaves.',
+        ),
+        choose(
+          'Why do B-trees use pages of several kilobytes rather than one key per page?',
+          [
+            'Many keys per page raise fan-out, so fewer levels must be read',
+            'Large pages never fill up',
+            'Disks require one key per page',
+            'It removes the need for a root page',
+          ],
+          0,
+          'Higher fan-out means a shallower tree and fewer page reads per lookup.',
+        ),
+      ],
+    },
+    {
+      title: 'Split pages and recover from crashes',
+      explanation: [
+        'B-trees update pages in place. When an insert hits a full page, the page splits into two half-full pages and the parent gains a new boundary key and pointer: a change spanning several pages.',
+        'A crash halfway through could leave a page that nothing points to, or a pointer to a page that was never written. Engines therefore record each intended change in a write-ahead log (WAL) on disk first, and replay it on restart.',
+      ],
+      example: scenario(
+        'A full leaf page holds keys 10–40, and key 25 is inserted.',
+        'Split the leaf into [10–20] and [25–40], add boundary 25 to the parent, and write the whole change to the WAL before touching the pages.',
+        'If the machine stops mid-split, the WAL says how to finish or undo it.',
+      ),
+      questions: [
+        choose(
+          'What happens when an insert targets a full leaf page?',
+          [
+            'The insert is rejected',
+            'The page splits and the parent gains a boundary key',
+            'The whole tree is rebuilt',
+            'The key goes to a random page',
+          ],
+          1,
+          'Splitting makes room while keeping keys sorted and the tree balanced.',
+        ),
+        choose(
+          'A crash happens after a new leaf page is written but before its parent is updated. What lets the engine repair this on restart?',
+          [
+            'Nothing; the tree is lost',
+            'Adding a second root',
+            'Replaying the write-ahead log',
+            'Deleting the parent page',
+          ],
+          2,
+          'The WAL recorded the full split, so it can be completed or undone.',
+        ),
+        choose(
+          'Why is a page split riskier than changing a value inside one page?',
+          [
+            'It changes several pages that must stay consistent with each other',
+            'It changes no pages',
+            'It always takes longer than a full scan',
+            'It deletes data',
+          ],
+          0,
+          'An interruption between the page writes leaves the tree inconsistent.',
+        ),
+        choose(
+          'How do a B-tree and an LSM store differ in handling an update to an existing key?',
+          [
+            'Both only append new files',
+            'Both overwrite the key in place',
+            'The LSM store overwrites in place; the B-tree appends',
+            'The B-tree overwrites the page in place; the LSM store writes a new version',
+          ],
+          3,
+          'B-trees modify pages; LSM stores leave old runs untouched and add newer versions.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-indexes': [
+    {
+      title: 'Add a secondary index for another lookup field',
+      explanation: [
+        'Rows are usually located by primary key. A secondary index is an extra sorted structure on another column, such as city or email, that maps each value to the keys of the matching rows, so queries on that column avoid a full scan.',
+        'Unlike a primary key, a secondary index’s values can repeat: many rows can share a city. An index helps most when a value selects few rows.',
+      ],
+      example: scenario(
+        'events(event_id primary key, city, starts_at). A frequent query asks for events in Quito.',
+        'Add an index on city: the lookup finds the Quito entries, then fetches those rows by event_id.',
+        'The index gives a second path into the same rows without changing how they are stored.',
+      ),
+      questions: [
+        choose(
+          'Which query benefits from a secondary index on email?',
+          [
+            'Find user 42 by primary key',
+            'Count all users',
+            'Read every user',
+            'Find the user with email x@y.com',
+          ],
+          3,
+          'It searches by a field other than the primary key.',
+        ),
+        choose(
+          'Why can a secondary index on city contain the same value many times?',
+          [
+            'Indexes always duplicate data',
+            'Many rows can share the same city',
+            'Cities are primary keys',
+            'It cannot',
+          ],
+          1,
+          'The indexed column is not unique, so one value maps to several rows.',
+        ),
+        choose(
+          'A secondary index lookup returns 3 matching primary keys, and the index stores only keys. What happens next?',
+          [
+            'The engine fetches the 3 rows by primary key',
+            'The query ends with keys only',
+            'The whole table is scanned',
+            'The index is rebuilt',
+          ],
+          0,
+          'The index points to rows; their other columns live in the table.',
+        ),
+        choose(
+          'Which column is a poor choice for a secondary index meant to find a few rows quickly?',
+          [
+            'email',
+            'order_number',
+            'is_active, which is true for 99% of rows',
+            'username',
+          ],
+          2,
+          'Looking up true still matches almost every row, so the index saves little.',
+        ),
+      ],
+    },
+    {
+      title: 'Order composite index fields to match queries',
+      explanation: [
+        'A composite index sorts by its first field, then by the second field within equal first values, like a phone book sorted by surname, then first name.',
+        'A query that fixes the first field and ranges over the second reads one contiguous slice. A query on the second field alone cannot use that order, because its values are scattered across every first-field group.',
+      ],
+      example: scenario(
+        'Index on (city, start_date). Query 1: city = Lima and start_date in June. Query 2: start_date in June, any city.',
+        'Query 1 reads one contiguous block of the index. Query 2 must look inside every city’s block; an index starting with start_date would suit it.',
+        'The leading field decides which questions the index order can answer directly.',
+      ),
+      questions: [
+        choose(
+          'An index is on (customer_id, created_at). Which query reads one contiguous range?',
+          [
+            'created_at in May, for all customers',
+            'customer_id = 7 and created_at in May',
+            'Rows whose created_at is a Monday',
+            'Any query on created_at alone',
+          ],
+          1,
+          'Fixing the leading field leaves created_at sorted within that customer.',
+        ),
+        choose(
+          'An index is on (last_name, first_name). Which lookup is efficient?',
+          [
+            'first_name = "Ana"',
+            'first_name starting with A',
+            'Every row with any name',
+            'last_name = "Ruiz"',
+          ],
+          3,
+          'The index is sorted by last name first, so one surname is a contiguous block.',
+        ),
+        choose(
+          'Queries filter on status = "open" and return rows ordered by due_date. Which index fits best?',
+          [
+            '(title, status)',
+            '(assignee)',
+            '(status, due_date)',
+            '(due_date, title)',
+          ],
+          2,
+          'Within status = open, the index already lists rows in due_date order.',
+        ),
+        choose(
+          'An index is on (country, city). Which query cannot use the index order well?',
+          [
+            'city = "Lima", in any country',
+            'country = "PE"',
+            'country = "PE" and city = "Lima"',
+            'country = "PE" and city from A to M',
+          ],
+          0,
+          'Without the leading country, Lima entries are spread across every country’s block.',
+        ),
+      ],
+    },
+    {
+      title: 'Verify the benefit against the cost',
+      explanation: [
+        'Each index speeds some reads and slows every write that touches its columns, and it takes storage. Confirm a proposed index with the engine’s query plan, its report of which access path a query will use, and by timing the target query under realistic load.',
+        'A covering index includes every column a query needs, so the engine can answer from the index alone, at the cost of larger index entries.',
+      ],
+      example: scenario(
+        'A table receives 3,000 inserts per second and already has 6 indexes. A report run twice a day wants a 7th index.',
+        'Measure insert cost with the 7th index; consider running the report on a copy instead.',
+        'A rarely run query may not justify slowing every insert.',
+      ),
+      questions: [
+        choose(
+          'A query needs only city and name. The index is on city and also stores name. What can the engine avoid?',
+          [
+            'Reading the index',
+            'Sorting by city',
+            'Fetching each full row from the table',
+            'Checking the query plan',
+          ],
+          2,
+          'The index covers the query, so the table rows are not needed.',
+        ),
+        choose(
+          'What confirms that a new index actually helps the slow query?',
+          [
+            'The query plan and a timing under realistic load',
+            'The index’s name',
+            'That it was created without errors',
+            'The number of columns it holds',
+          ],
+          0,
+          'The plan shows whether it is used; the timing shows whether it helps.',
+        ),
+        choose(
+          'A table has 10 indexes and inserts have become slow. Which first step is sound?',
+          [
+            'Add an 11th index',
+            'Find indexes no query uses and remove them',
+            'Remove the primary key',
+            'Turn off the write-ahead log',
+          ],
+          1,
+          'Unused indexes cost write work and give nothing back.',
+        ),
+        choose(
+          'Why can a covering index slow writes more than a narrow index?',
+          [
+            'It forbids writes during reads',
+            'It is rebuilt on every read',
+            'It cannot slow writes',
+            'Its entries are larger, so more data is written per change',
+          ],
+          3,
+          'Extra stored columns must be written and kept current too.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-columnar': [
+    {
+      title: 'Read only the columns a scan needs',
+      explanation: [
+        'A row-oriented layout stores all fields of a row together. A column-oriented layout stores each column’s values together, one file or block per column.',
+        'A scan that needs 2 of 50 columns reads only those 2 in a column layout, but whole rows in a row layout. Fetching or inserting one complete record, though, touches every column file.',
+      ],
+      example: scenario(
+        '1 billion sessions with 40 columns of about 8 bytes each. A report sums duration grouped by country.',
+        'A row layout reads about 320 GB; a column layout reads 2 columns, about 16 GB.',
+        'Only the columns the query uses are read, a twentieth of the data here.',
+      ),
+      questions: [
+        choose(
+          'A table has 100 equally sized columns, and a query uses 4. Roughly what fraction of the data does a column store read?',
+          ['40%', '100%', '25%', '4%'],
+          3,
+          'It reads 4 of 100 equal columns.',
+        ),
+        choose(
+          'Which request favours a row layout?',
+          [
+            'Average price over 5 years',
+            'Fetch every field of order 881',
+            'Count rows per country',
+            'Sum quantity by month',
+          ],
+          1,
+          'One complete record sits together in a row layout.',
+        ),
+        choose(
+          'A table holds 500 GB in 25 equally sized columns. How much does a scan of 3 columns read in a column store?',
+          ['60 GB', '500 GB', '20 GB', '3 GB'],
+          0,
+          'Each column is 20 GB, and the scan reads three of them.',
+        ),
+        choose(
+          'Inserting one new order touches how many column files in a 30-column column store?',
+          ['1', '15', '30', '0'],
+          2,
+          'Each column’s value goes to its own file.',
+        ),
+      ],
+    },
+    {
+      title: 'Compress similar values',
+      explanation: [
+        'Values in one column share a type and often repeat: country codes, status flags, sorted dates. Run-length encoding stores (PE, 5000) instead of 5,000 copies of PE; dictionary encoding stores each distinct string once and a small code per row.',
+        'Less data on disk means less to read, so compression speeds up scans as well as saving space.',
+      ],
+      example: scenario(
+        'A sorted country column holds PE four times, CL three times and CO five times.',
+        'Run-length encoded, it is (PE, 4), (CL, 3), (CO, 5): three pairs instead of twelve values.',
+        'Sorting puts equal values next to each other, forming long runs.',
+      ),
+      questions: [
+        choose(
+          'Run-length encode the column A A A B B A. How many (value, count) pairs result?',
+          ['2', '6', '3', '4'],
+          2,
+          'The runs are A×3, B×2 and A×1; the last A starts a new run.',
+        ),
+        choose(
+          'Why does sorting a column by value help run-length encoding?',
+          [
+            'Sorting removes values',
+            'Equal values become adjacent and form longer runs',
+            'Sorted data cannot be compressed',
+            'It changes the stored values',
+          ],
+          1,
+          'Fewer, longer runs need fewer pairs.',
+        ),
+        choose(
+          'Which column compresses best with dictionary encoding?',
+          [
+            'A status column with 4 distinct values across 10 million rows',
+            'Unique transaction IDs',
+            'Random 64-bit numbers',
+            'Free-text comments',
+          ],
+          0,
+          'Few distinct values mean a tiny dictionary and short codes.',
+        ),
+        choose(
+          'Why does compression make scans faster, not only smaller?',
+          [
+            'Compressed data needs no decoding',
+            'It skips rows',
+            'It removes columns',
+            'Less data has to be read from disk',
+          ],
+          3,
+          'Disk reads often dominate scan time, and compression shrinks them.',
+        ),
+      ],
+    },
+    {
+      title: 'Process values in batches and know the limits',
+      explanation: [
+        'Columnar engines apply each operation to a batch of values from one column at a time (vectorised execution), which keeps the CPU in tight loops instead of paying overhead per row.',
+        'The layout favours broad scans of few columns. Single-row lookups, frequent small updates and “fetch the whole record” requests suit row layouts better, so many systems keep an operational row store and copy data into a column store for analytics.',
+      ],
+      example: scenario(
+        'One app needs checkout (one order, all fields, 50 writes per second) and a quarterly revenue analysis over three years of orders.',
+        'Keep checkout in a row store and load orders into a columnar warehouse for the analysis.',
+        'Each workload gets the layout that matches its access pattern.',
+      ),
+      questions: [
+        choose(
+          'What does vectorised execution process in one step?',
+          [
+            'One whole row',
+            'A batch of values from one column',
+            'One byte',
+            'The entire table',
+          ],
+          1,
+          'Batches of same-typed values are processed in tight loops.',
+        ),
+        choose(
+          'A team moves order checkout to a column store because “columnar is faster”. What is the risk?',
+          [
+            'Scans become slower',
+            'Data can no longer be compressed',
+            'Nothing',
+            'Single-order writes and full-row reads become more expensive',
+          ],
+          3,
+          'Each order is spread across every column file.',
+        ),
+        choose(
+          'Which design serves both checkout and yearly analytics well?',
+          [
+            'A row store for checkout, copied into a column store for analytics',
+            'A column store for both',
+            'A row store for both, with no copy',
+            'Separate row stores per analyst',
+          ],
+          0,
+          'Each workload runs on the layout suited to it.',
+        ),
+        choose(
+          'A query reads 45 of a table’s 50 columns for every row. How much does a column layout help?',
+          [
+            'It reads about 10% of the data',
+            'It avoids reading the table',
+            'Little, because nearly every column is read anyway',
+            'It always doubles the speed',
+          ],
+          2,
+          'Column pruning only helps when many columns can be skipped.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-materialized': [
+    {
+      title: 'Store a query result as a view',
+      explanation: [
+        'A materialized view stores the result of a query, such as registrations per workshop, so reads fetch the stored answer instead of recomputing it every time.',
+        'It is derived data: its meaning comes from the source tables and the query that defines it, it can be rebuilt from them, and when it disagrees with the source, the source wins.',
+      ],
+      example: scenario(
+        'Registrations hold 2 million rows. A page shows the count per workshop 300 times per minute, and counting takes 4 seconds.',
+        'Store the counts per workshop in a materialized view; each page view then reads one small row.',
+        'The expensive count runs only when the view is refreshed, not on every read.',
+      ),
+      questions: [
+        choose(
+          'What does a materialized view store?',
+          [
+            'The source rows, authoritatively',
+            'Only the text of the query',
+            'The result of a query over source data',
+            'A backup of the whole database',
+          ],
+          2,
+          'It keeps the computed answer so reads can skip the computation.',
+        ),
+        choose(
+          'A view’s stored data is lost, but its source tables and definition remain. What follows?',
+          [
+            'It can be recomputed',
+            'The source is lost too',
+            'It can never be rebuilt',
+            'The view becomes authoritative',
+          ],
+          0,
+          'Re-running the defining query over the source rebuilds it.',
+        ),
+        choose(
+          'A count takes 5 seconds and is requested 600 times per minute. A view takes 5 seconds to refresh once per minute. How much counting work per minute does the view save?',
+          ['None', '5 seconds', '600 seconds', 'About 2,995 seconds'],
+          3,
+          '600 counts cost 3,000 seconds of work; the view costs 5 seconds plus cheap reads.',
+        ),
+        choose(
+          'A view and its source disagree about a workshop’s registrations. Which is right?',
+          ['The view', 'The source', 'Whichever is newer', 'Neither'],
+          1,
+          'The view is derived; the source is authoritative.',
+        ),
+      ],
+    },
+    {
+      title: 'Accept a freshness window with batch refresh',
+      explanation: [
+        'A batch refresh recomputes the whole view on a schedule. Between refreshes, the view misses changes: with a 10-minute schedule, a registration made just after a refresh started can stay invisible until the next refresh finishes.',
+        'Show readers the “as of” time of the data so the staleness is explicit, and keep decisions that need current data, such as selling the last seat, on the source.',
+      ],
+      example: scenario(
+        'A view refreshes every 10 minutes; each refresh reads the data as of its start and takes 2 minutes. One started at 12:00 and finished at 12:02.',
+        'At 12:09 the view reflects data up to 12:00. A change at 12:00:01 appears only when the 12:10 refresh finishes at 12:12.',
+        'The worst-case staleness is the refresh interval plus the refresh time: about 12 minutes.',
+      ),
+      questions: [
+        choose(
+          'A view refreshes every 15 minutes, starting at 09:00, 09:15 and so on, and each refresh takes about a minute. A change is made at 09:01. When does it first appear?',
+          [
+            'Immediately',
+            'At 09:01',
+            'When the 09:15 refresh finishes',
+            'Never',
+          ],
+          2,
+          'The 09:00 refresh read data from before the change; the next one includes it.',
+        ),
+        choose(
+          'A view refreshes every hour, and each refresh takes 10 minutes. What is the worst-case staleness?',
+          ['10 minutes', '60 minutes', '0 minutes', 'About 70 minutes'],
+          3,
+          'A change just after a refresh starts waits for the next start and its 10-minute run.',
+        ),
+        choose(
+          'Why show “as of 14:00” on a dashboard backed by a batch-refreshed view?',
+          [
+            'Readers can judge how stale the numbers are',
+            'It makes the refresh faster',
+            'It prevents stale data',
+            'It makes the view authoritative',
+          ],
+          0,
+          'Stating the data’s time makes the freshness window visible.',
+        ),
+        choose(
+          'Seat availability must never offer a seat already sold. Is a view refreshed every 10 minutes suitable for the final booking decision?',
+          [
+            'Yes, 10 minutes is short',
+            'No, the decision needs current data from the source',
+            'Yes, if it is labelled with its refresh time',
+            'Only outside peak hours',
+          ],
+          1,
+          'A stale count can show seats that were sold minutes ago.',
+        ),
+      ],
+    },
+    {
+      title: 'Maintain a view incrementally',
+      explanation: [
+        'Incremental maintenance applies each source change to the view: +1 when a registration is added and −1 when one is cancelled. The view stays fresh without rescanning the source.',
+        'The update path must handle every kind of change (inserts, deletes, edits), retries that deliver a change twice, and gaps where a change is lost. Keep a full rebuild from the source as the repair tool.',
+      ],
+      example: scenario(
+        'A count view is 120. Changes arrive: +1 (e-51), +1 (e-52), −1 (cancellation of e-40), then +1 (e-52 again, a retry).',
+        'The correct count is 121. Applying every message naively gives 122, because e-52 is counted twice; recording applied event IDs prevents that.',
+        'Incremental updates are only as correct as their handling of retries and deletions.',
+      ),
+      questions: [
+        choose(
+          'A count view shows 40. Changes arrive: +1, +1, −1, +1, each distinct. What should the view show?',
+          ['43', '40', '42', '44'],
+          2,
+          'Three additions and one removal net +2.',
+        ),
+        choose(
+          'The same insert event is delivered twice to a counter that applies every message. What happens?',
+          [
+            'Nothing',
+            'The count is one too low',
+            'The view is rebuilt',
+            'The count is one too high',
+          ],
+          3,
+          'The duplicate is counted as a second registration.',
+        ),
+        choose(
+          'An incremental view handles inserts only, but users can cancel registrations. What goes wrong?',
+          [
+            'Counts never decrease, so they drift above the truth',
+            'Counts drop to zero',
+            'Cancellations are blocked',
+            'Nothing',
+          ],
+          0,
+          'Every missed −1 leaves the view higher than the source.',
+        ),
+        choose(
+          'An incremental view is suspected of drifting. What is the safest repair?',
+          [
+            'Subtract an estimate of the error',
+            'Recompute it from the source and compare',
+            'Delete the source data',
+            'Refresh more often without checking',
+          ],
+          1,
+          'The source is authoritative, so a full rebuild gives the correct values.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-schema-evolution': [
+    {
+      title: 'Plan for old and new code running together',
+      explanation: [
+        'Data outlives code. Records written by version 1 of an application are still stored when version 2 deploys, and they are not rewritten automatically.',
+        'During a rolling deployment, servers are upgraded one at a time, so version 1 and version 2 run side by side, reading and writing the same data and messages. A rollback can put old code back in front of new data. A schema change must work in every combination.',
+      ],
+      example: scenario(
+        'Five servers upgrade one at a time over 30 minutes. Version 2 writes records with a new optional field, subtitle.',
+        'During the rollout, version 1 servers read version 2 records and version 2 servers read version 1 records; test both combinations.',
+        'A clean upgrade test with only version 2 would miss both mixed cases.',
+      ),
+      questions: [
+        choose(
+          'During a rolling deployment from version 3 to version 4, which reads can occur?',
+          [
+            'Only version 4 reading version 4 data',
+            'Only version 3 reading version 3 data',
+            'Version 3 and version 4 servers reading data written by either version',
+            'No reads, because deployments pause traffic',
+          ],
+          2,
+          'Both versions are live and share the same data.',
+        ),
+        choose(
+          'Why can old records remain long after the code that wrote them is gone?',
+          [
+            'Stored records are not rewritten when code changes',
+            'Databases rewrite all data on deploy',
+            'Old records are always deleted',
+            'They cannot',
+          ],
+          0,
+          'Deploying code changes how future data is written, not existing data.',
+        ),
+        choose(
+          'A deploy is rolled back from version 2 to version 1 after version 2 wrote new records. What must version 1 handle?',
+          [
+            'Only its own records',
+            'An empty database',
+            'Nothing new',
+            'Records written by version 2',
+          ],
+          3,
+          'The rollback removes the new code, not the data it wrote.',
+        ),
+        choose(
+          'Which plan is safest for renaming a field that every service uses?',
+          [
+            'Rename it everywhere in one deploy',
+            'Add the new field, write both, move readers over, then stop writing the old one',
+            'Delete the field and re-add it',
+            'Rename it only in the database',
+          ],
+          1,
+          'Each step keeps every running version able to read what the others write.',
+        ),
+      ],
+    },
+    {
+      title: 'Distinguish backward and forward compatibility',
+      explanation: [
+        'Backward compatibility: new code can read data written by old code. Version 2 reading a version 1 record finds no subtitle, so it needs a default.',
+        'Forward compatibility: old code can read data written by new code. Version 1 reading a version 2 record meets an unknown field, so it must ignore it, and ideally keep it when writing the record back.',
+      ],
+      example: scenario(
+        'Version 2 adds subtitle with a default of an empty string. Version 1 ignores fields it does not know.',
+        'Backward: version 2 reads a version 1 record and uses subtitle = "". Forward: version 1 reads a version 2 record and ignores subtitle.',
+        'Both directions are needed while both versions run.',
+      ),
+      questions: [
+        choose(
+          'Version 5 reads a record written by version 4. Which property is needed?',
+          [
+            'Forward compatibility',
+            'Neither',
+            'Backward compatibility',
+            'Normalisation',
+          ],
+          2,
+          'Newer code is reading older data.',
+        ),
+        choose(
+          'Version 4 reads a record written by version 5 that contains a field version 4 has never seen. Which property is needed?',
+          [
+            'Forward compatibility',
+            'Backward compatibility',
+            'Neither',
+            'Both are always required',
+          ],
+          0,
+          'Older code is reading data from the future version.',
+        ),
+        choose(
+          'Version 2 adds a required field with no default. What breaks?',
+          [
+            'Version 1 writing its own records',
+            'Nothing',
+            'Only forward compatibility',
+            'Version 2 reading old records that lack the field',
+          ],
+          3,
+          'Old records lack the field, and version 2 has no value to use.',
+        ),
+        choose(
+          'Version 1 reads a version 2 record, ignores the unknown field, and writes the record back without it. What is lost?',
+          [
+            'Nothing',
+            'The version 2 field’s value',
+            'The whole record',
+            'Version 1’s own fields',
+          ],
+          1,
+          'Ignoring is safe for reading; dropping on write loses newer data.',
+        ),
+      ],
+    },
+    {
+      title: 'Make changes that both directions survive',
+      explanation: [
+        'Usually safe: adding an optional field with a default, and stopping all use of a field before removing it. Keep field identities, names or numeric tags, stable and never reuse them.',
+        'Risky: adding a required field, renaming a field in one step, or changing a field’s type or meaning. Whatever a format promises, test the real reader and writer combinations.',
+      ],
+      example: scenario(
+        'Proposed change: store price as a decimal string instead of whole cents, under the same field name.',
+        'Unsafe in one step, because version 1 readers expect whole cents. Add price_decimal, write both, move readers over, then retire the cents field.',
+        'A new field lets old and new readers each find what they understand.',
+      ),
+      questions: [
+        choose(
+          'Which change is usually both backward and forward compatible?',
+          [
+            'Renaming a field',
+            'Changing a number field to text',
+            'Adding a required field',
+            'Adding an optional field with a default',
+          ],
+          3,
+          'Old readers ignore it and new readers fill in the default.',
+        ),
+        choose(
+          'Why not reuse a deleted field’s name for new data?',
+          [
+            'Old records and old readers still interpret the name the old way',
+            'Databases forbid reusing names',
+            'It saves no space',
+            'It is always fine',
+          ],
+          0,
+          'Old data would be misread as the new field.',
+        ),
+        choose(
+          'A field changes from “price in dollars” to “price in cents” with the same name and type. Why is this dangerous?',
+          [
+            'Formats reject it',
+            'It changes the field’s type',
+            'Readers cannot tell which unit a record uses',
+            'It is safe',
+          ],
+          2,
+          'The bytes look identical, so the meaning change is silent.',
+        ),
+        choose(
+          'What actually confirms that a change is compatible?',
+          [
+            'The format’s documentation alone',
+            'Tests pairing old readers with new writers and new readers with old writers',
+            'A code review',
+            'Deploying to every server at once',
+          ],
+          1,
+          'Only the real combinations show how actual readers behave.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-dataflow': [
+    {
+      title: 'Choose request-response or asynchronous messages',
+      explanation: [
+        'In request-response, the caller waits for another service to do the work and reply; if that service is slow or down, the caller is too. With asynchronous messaging, the producer places a message with a broker, a durable queue, and moves on; consumers process it later at their own pace.',
+        'The broker absorbs bursts and short outages, but delivery failures and duplicate deliveries still have to be handled.',
+      ],
+      example: scenario(
+        'Checkout calls the email service directly. The email service is down for 10 minutes.',
+        'Called directly, checkouts fail for 10 minutes. With a queue, checkouts succeed, 1,200 confirmation emails wait in the queue, and they are sent when the service returns.',
+        'Work that need not finish before replying to the user can be decoupled.',
+      ),
+      questions: [
+        choose(
+          'A producer sends 500 messages per second for one minute to a consumer that handles 300 per second. How many messages are queued at the end of the minute?',
+          ['200', '30,000', '12,000', '0'],
+          2,
+          'The queue grows by 200 per second for 60 seconds.',
+        ),
+        choose(
+          'Which task suits asynchronous messaging best?',
+          [
+            'Checking a password before login',
+            'Generating a PDF receipt after checkout',
+            'Showing the cart total the user is waiting for',
+            'Validating a card number on the form',
+          ],
+          1,
+          'The user does not need the receipt before checkout completes.',
+        ),
+        choose(
+          'What does a message broker NOT remove?',
+          [
+            'The need to handle failed and repeated deliveries',
+            'Buffering between producer and consumer',
+            'Decoupling of their timing',
+            'The ability to absorb bursts',
+          ],
+          0,
+          'Messages can still fail or arrive twice, so consumers must cope.',
+        ),
+        choose(
+          'With a queue between them, the consumer is down for 5 minutes. What happens?',
+          [
+            'The producer crashes',
+            'Messages are always lost',
+            'The broker processes them itself',
+            'Messages accumulate and are processed when the consumer returns',
+          ],
+          3,
+          'The durable queue holds the work until it can be done.',
+        ),
+      ],
+    },
+    {
+      title: 'Treat a timeout as an unknown outcome',
+      explanation: [
+        'When a call times out, the request may never have arrived, may have been processed with the reply lost, or may still be running. The caller cannot tell which.',
+        'Retrying is often right, but a blind retry of “charge $50” can charge twice. Setting a value is safe to repeat; adding to one is not.',
+      ],
+      example: scenario(
+        'A payment call times out after 5 seconds. The payment service had charged the card at 4.9 seconds, and the reply was lost.',
+        'A blind retry charges the card again. The retry must carry something that lets the service recognise it as the same payment.',
+        'The timeout looked like a failure, but the work had succeeded.',
+      ),
+      questions: [
+        choose(
+          'A “transfer $100” call times out. What do you know?',
+          [
+            'The transfer did not happen',
+            'The transfer may or may not have happened',
+            'The transfer happened',
+            'The account was closed',
+          ],
+          1,
+          'Silence cannot distinguish a lost request from a lost reply.',
+        ),
+        choose(
+          'Which operation is safe to retry blindly after a timeout?',
+          [
+            'Add $10 to the balance',
+            'Append a new comment',
+            'Send an SMS',
+            'Set the shipping address to “12 Elm St”',
+          ],
+          3,
+          'Setting the same value twice leaves the same result.',
+        ),
+        choose(
+          'Why is “increase the view count by 1” unsafe to retry after a timeout?',
+          [
+            'If the first attempt succeeded, the retry adds a second view',
+            'Increments always fail',
+            'Timeouts roll back increments',
+            'It is safe',
+          ],
+          0,
+          'The effect accumulates with each attempt that succeeds.',
+        ),
+        choose(
+          'A consumer crashes after applying a message but before acknowledging it to the broker. What does the broker usually do?',
+          [
+            'Delete the message',
+            'Mark it as applied',
+            'Deliver the message again',
+            'Return it to the producer',
+          ],
+          2,
+          'Without an acknowledgement, the broker assumes the work was not done.',
+        ),
+      ],
+    },
+    {
+      title: 'Make processing idempotent',
+      explanation: [
+        'An operation is idempotent if applying it twice has the same effect as applying it once. Setting a value is naturally idempotent; adding to it is not.',
+        'Make other operations safe by giving each one a stable ID and recording the IDs already applied, durably and together with the effect, then skipping any ID seen before.',
+      ],
+      example: scenario(
+        'Events e-1 (+1), e-2 (+1), e-2 again (redelivered), e-3 (+1) reach a counter that starts at 0.',
+        'Track applied IDs {e-1, e-2, e-3} and skip the repeat: the count is 3, not 4.',
+        'The repeated delivery is recognised by its ID, not by its contents.',
+      ),
+      questions: [
+        choose(
+          'Events arrive with IDs a, b, a, c, b. With duplicate detection by ID, how many are applied?',
+          ['5', '2', '4', '3'],
+          3,
+          'Only the distinct IDs a, b and c are applied.',
+        ),
+        choose(
+          'Which operation is naturally idempotent?',
+          [
+            'Add 1 to stock',
+            'Set the order status to “shipped”',
+            'Append a line to a log',
+            'Send an email',
+          ],
+          1,
+          'Setting the same status again changes nothing.',
+        ),
+        choose(
+          'A consumer keeps the set of applied IDs only in memory and restarts. What risk appears?',
+          [
+            'Redelivered messages are applied again',
+            'No risk',
+            'All messages are lost',
+            'IDs become duplicated',
+          ],
+          0,
+          'The memory of what was applied disappears with the process.',
+        ),
+        choose(
+          'Why should the record of an applied ID be saved together with the effect, not in a separate step?',
+          [
+            'Saving together is faster',
+            'IDs must be stored twice',
+            'A crash between the two steps could apply an effect without recording it, or the reverse',
+            'It does not matter',
+          ],
+          2,
+          'If the two can diverge, a retry is either applied twice or skipped wrongly.',
+        ),
+      ],
+    },
+  ],
 };
