@@ -21,7 +21,7 @@ export const knowledgePoints: KnowledgePointModule = {
 };
 ```
 
-Every skill with knowledge points needs **two to five points**, and every point needs **at least three interchangeable questions** that test the same idea with different values or situations. Learners see unseen variants first, and reviews draw fresh variants, so questions must not be near-duplicates a learner can pattern-match.
+Every skill with knowledge points needs **two to five points**, and every point needs **at least three interchangeable questions** that test the same idea with different values or situations. Learners see unseen variants first, and reviews draw fresh variants, so questions must not be near-duplicates a learner can pattern-match. Where fresh numbers matter, one question of a point can be a [generator](#generated-questions) that asks new numbers every time.
 
 ### Questions
 
@@ -78,6 +78,41 @@ Lesson prose is typeset with [KaTeX](https://katex.org/docs/supported): lesson p
 
 The catalog validator rejects unclosed, empty, or space-padded `$` delimiters, and a test renders every math span with KaTeX in strict mode, so a TeX typo fails CI. Competitive Programming keeps complexity notation such as O(n log n) as plain text.
 
+### Generated questions
+
+A learner who retries a lesson and then takes reviews and quizzes meets a point's questions many times, and could start recognizing answers instead of working them out. Where fresh numbers matter, turn one of a point's authored questions into a **generator**: a seeded function that returns a new concrete question of the same type each time it is asked, as Math Academy does.
+
+```ts
+// src/lib/knowledge-points/quantitative-foundations.gen.ts
+import { series, typeNumber, type GeneratorModule } from './authoring';
+
+export const generators: GeneratorModule = {
+  // math-mean: Compute an arithmetic mean
+  'math-mean-kp1-q2': (r) => {
+    const values = r.ints(4, 2, 60);
+    // …choose values whose mean is exact…
+    return typeNumber(`What is the mean of ${series(values)}?`, mean, `…`);
+  },
+};
+```
+
+- **One file per course, keyed by question ID.** Generators live in `src/lib/knowledge-points/<course>.gen.ts`, keyed by the ID of the authored question each one varies (`<skill>-kp<n>-q<m>`), and are registered next to the course's `*.kp.ts` files in `src/lib/content/<course>.ts` (`withKnowledgePoints(catalog, points, { '<course>.gen.ts': generators })`). They live apart from the points because the browser downloads lesson content as JSON and generators as code; the build attaches a course's generator modules to each of its unit chunks by these IDs (`scripts/catalog-index-plugin.mjs`), as the server does when it builds the curriculum. A key that names no choice or typed question of the course is a validation error, and a test fails if a `*.gen.ts` file is not registered.
+- **Prefer turning an existing question into a generator** over adding a point or a question. The authored question stays in its `*.kp.ts` file: it documents what the generator asks, and it is what attempts saved before the question became a generator show. A generator counts as one of the point's three or more questions; keep the others authored, so the point still offers different situations.
+- **Same type, same helpers.** A generator returns `typeNumber`, `typeOutput`, `typeText`, `choose`, or `predictOutput`, of the authored question's type, and an output generator checks output exactly when the authored one does. Every rule above applies to each variant: typed answers, choices, math, and complete programs.
+- **Draw every number from `r`, never from `Math.random`.** `r` (`src/lib/variants.ts`) is a small seeded PRNG (mulberry32): `r.int(min, max)`, `r.pick(items)`, `r.ints(count, min, max, distinct)`, `r.sample`, `r.shuffle`. The same seed always gives the same question, so a stored attempt can be rebuilt and graded again. A test fails if a generator calls `Math.random`.
+- **Compute answers exactly.** Prefer values whose answers are integers or short decimals: pick the answer first and build the question around it (choose the mean, then the values). Python semantics are in `authoring.ts`: `py()` prints a value as Python does, `pyFloat`, `pyDiv`, and `pyMod` follow its floats, `//`, and `%`. `num()` strips floating-point noise from prose, and `prose()`, `paren()`, `plus()`, `coef()`, `terms()`, and `poly()` write signed numbers and polynomials.
+- **Enough variety.** Among its first 50 variants (`GENERATOR_SAMPLES`), a generator must produce at least 12 different questions (`MIN_DISTINCT_VARIANTS`), so a learner's recent variants can always be avoided. Aim for dozens.
+- **Stand alone, and stay apart.** A variant must not reproduce another question of the same skill, prompt and code included; the quality test checks this. A choice generator must not make its key the longest or shortest choice in more than 40% of its variants.
+- **Edit with care.** Variant `k` of a question is whatever its generator returns for `variantSeed(id, k)`, so changing a generator changes what old attempts rebuild to, just as editing an authored question does. Keep IDs stable.
+
+How generators are checked:
+
+- The catalog validator (`generatedQuestionErrors` in `src/lib/curriculum.ts`) samples the first 50 variants of every generator and applies the structure rules to each: the authored question's type, four or more distinct choices and a valid answer index, a parseable finite numeric answer that reads back as itself, a nonempty text answer of at most three short lines, code for an output question, balanced `$…$` math that KaTeX renders, and the same question for the same seed.
+- `tests/knowledge-points.test.ts` runs a sample of every output generator's variants (0, 1, 2, 10, 25, and 49) through Pyodide, rustc, or clang++, with the authored programs, and compares each output with the generated answer.
+- `tests/question-quality.test.ts` applies its giveaway checks to the sampled variants.
+
+A generated question is asked as a variant number `k`: 0, 1, 2, … for each question, each seeding the generator with `variantSeed(id, k)`. The learner's attempt stores only that small number (`variant`), never the question, so states stay small; quiz questions and placement questions store it too. The lesson page, quiz results, and mistake cards rebuild what was asked from the question ID and the variant.
+
 ### Complete programs
 
 - **Python:** ordinary scripts. `numpy`, `pandas`, and `scikit-learn` are available.
@@ -101,6 +136,8 @@ A lesson is one page that grows as the learner works through it:
 Points passed during an attempt are provisional (`lessonAttempt` in the learner's state). They become mastery evidence together when the last step passes, so a failed attempt keeps nothing from that attempt. A failure records `lessonFailedAt` and the learner sees "Lesson failed — you'll see it again later" with a link back to Today, at the bottom of the page under everything they read and answered. The scheduler then offers any other available work first. The lesson returns once the learner completes another lesson or review, or four hours after the failure (`LESSON_RETRY_DELAY_MS`), whichever comes first. If nothing else is available it is offered anyway. Opening it directly is always allowed. The retry starts from the first point. Passing every point (and the code exercise, where required) masters the skill and schedules its first review one day later, as before.
 
 A due review asks one fresh question from each of several points, rotating which point comes first each cycle, plus code where the skill's policy requires it. For these skills a policy's `reviewAnswers` is the number of points reviewed (at most the number of points), and the code exercise is asked in addition. Knowledge-point questions, chosen or typed, satisfy a `choice` requirement. A wrong review answer records a lapse and removes evidence for that point only; the learn task that follows re-teaches just the missing point.
+
+Questions are chosen so that a learner never meets the same concrete question of a point within their last three attempts at it (`RECENT_VARIANTS`), in any mode, as long as another question or variant can be asked (`freshQuestion` and `chooseVariant` in `src/lib/learning.ts`; a lesson never asks again a question already answered correctly in the attempt). This holds across lessons, retries, reviews, and quizzes. An authored question asked in those three attempts waits; a generated question never waits, because it brings a variant they did not show. Then unseen variants come first: an authored question not yet answered, or any generated question, whose next variant is the first one the learner has neither answered nor met in those three attempts. A variant is fixed when the question is shown, so a reload shows the same one until it is answered. A point's two correct answers must still be on two different questions.
 
 Choices appear in a shuffled order each time a question is shown: the order is a deterministic function of the question and how many times the learner has answered it (`src/lib/choice-order.ts`), so a reload keeps the order and grading always uses the authored answer index.
 
