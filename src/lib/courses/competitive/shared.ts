@@ -115,7 +115,6 @@ export function exercise(
   solution: string,
   tests: string,
   explanation: string,
-  hint: string,
 ): Omit<CodeQuestion, 'id'> {
   return {
     type: 'code',
@@ -124,7 +123,6 @@ export function exercise(
     solution,
     tests,
     explanation,
-    hint,
   };
 }
 

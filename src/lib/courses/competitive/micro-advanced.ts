@@ -13,7 +13,6 @@ type Atom = {
   demonstration: string;
   output: string;
   reasoning: string;
-  hint: string;
   cards: [[string, string], [string, string]];
 };
 
@@ -41,7 +40,6 @@ function stages(original: string, unit: string, atoms: [Atom, Atom, Atom]) {
             atom.solution,
             atom.checks,
             atom.reasoning,
-            atom.hint,
           ),
         ],
         atom.cards,
@@ -71,7 +69,6 @@ stages('cp-binary-lifting', 'cp-range', [
     output: '[2, 2, -1]',
     reasoning:
       'The copied base row preserves the later-index root and missing-parent markers.',
-    hint: 'Use a full slice or list copy.',
     cards: [
       [
         'What does binary-lifting row zero represent?',
@@ -108,7 +105,6 @@ stages('cp-binary-lifting', 'cp-range', [
     output: '[-1, -1, 0, 1, 2]',
     reasoning:
       'Each entry follows the previous row twice, giving two-edge ancestors in this example.',
-    hint: 'For each first ancestor, return -1 if absent; otherwise lookup previous[first].',
     cards: [
       [
         'How is a doubling row formed?',
@@ -150,7 +146,6 @@ _check_time(_seconds, "50,000 queries on a 100,000-vertex chain", "Use one table
     output: '1',
     reasoning:
       'Distance three is one plus two; vertex four moves to three, then one.',
-    hint: 'Reject steps >= n, then consume low bits and use the matching row when set.',
     cards: [
       [
         'How are ancestor query jumps selected?',
@@ -185,7 +180,6 @@ stages('cp-scc', 'cp-range', [
     output: '[[], [0], [1]]',
     reasoning:
       'Each target stores its original sources as outgoing neighbors in the reversed graph.',
-    hint: 'Allocate distinct empty lists, then append source to reverse[target].',
     cards: [
       [
         'How is a directed graph reversed?',
@@ -217,7 +211,6 @@ stages('cp-scc', 'cp-range', [
     output: '[2, 1, 0]',
     reasoning:
       'The deepest vertex finishes first; the root is recorded only after its descendant chain completes.',
-    hint: 'Keep each next-neighbor index in the stack frame and append when no neighbors remain.',
     cards: [
       [
         'How does finishing order differ from discovery order?',
@@ -251,7 +244,6 @@ stages('cp-scc', 'cp-range', [
     output: '[[0, 1], [2, 3], [4]]',
     reasoning:
       'Reversed finishing order selects zero first, then two, then four, separating the three mutual-reachability groups.',
-    hint: 'Traverse reverse edges from each unseen root in reversed(order), with one shared seen list.',
     cards: [
       [
         'What order finds SCCs on the reversed graph?',
@@ -284,7 +276,6 @@ stages('cp-fenwick', 'cp-range', [
     demonstration: 'print([fenwick_block_size(i) for i in [5, 6, 8, 12]])',
     output: '[1, 2, 8, 4]',
     reasoning: 'The lowest set bit determines the internal block size.',
-    hint: 'Use bitwise AND between index and its negation.',
     cards: [
       ['What is lowbit(i)?', 'i & -i, the lowest set bit.'],
       [
@@ -313,7 +304,6 @@ stages('cp-fenwick', 'cp-range', [
     output: '15',
     reasoning:
       'At end five, the walk adds the final one-element block seven and the four-element block eight.',
-    hint: 'Add tree[end], then end -= end & -end until zero.',
     cards: [
       [
         'How does a Fenwick prefix query move?',
@@ -342,7 +332,6 @@ stages('cp-fenwick', 'cp-range', [
     output: '[0, 2, 5, 4, 13, 7]',
     reasoning:
       'The public index-two addition changes internal blocks three and four.',
-    hint: 'Copy, begin at index + 1, and advance by internal & -internal.',
     cards: [
       [
         'How does a Fenwick point update move?',
@@ -384,7 +373,6 @@ stages('cp-segment-tree', 'cp-range', [
     output: '4\n[8, 3, 6, inf]',
     reasoning:
       'Three real leaves need a four-leaf boundary; the unused fourth leaf is neutral infinity.',
-    hint: 'Double size until sufficient, allocate 2 * size entries, then fill the leaf slice.',
     cards: [
       [
         'What identity pads a range-minimum tree?',
@@ -416,7 +404,6 @@ stages('cp-segment-tree', 'cp-range', [
       'print(build_minimum_parents([float("inf")] * 4 + [8, 3, 6, 1], 4))',
     output: '[inf, 1, 3, 1, 8, 3, 6, 1]',
     reasoning: 'Child pairs build nodes two and three before the root minimum.',
-    hint: 'Use range(size - 1, 0, -1) and children 2*node and 2*node+1.',
     cards: [
       [
         'What is a minimum-tree parent invariant?',
@@ -461,7 +448,6 @@ _check_time(_seconds, "90,000 queries on a 131,072-leaf tree", "Consume boundary
     output: '3',
     reasoning:
       'The final leaf value one lies outside [0, 3), so it cannot dominate this query.',
-    hint: 'Consume odd boundaries before halving both indices.',
     cards: [
       [
         'What range convention does the minimum query use?',
@@ -495,7 +481,6 @@ stages('cp-gcd', 'cp-number-theory', [
     demonstration: 'print(is_common_divisor(18, 30, 6))',
     output: 'True',
     reasoning: 'Both remainders are zero.',
-    hint: 'Check a % divisor and b % divisor separately, then combine with and.',
     cards: [
       ['How do you test divisibility by positive d?', 'a % d == 0.'],
       [
@@ -523,7 +508,6 @@ stages('cp-gcd', 'cp-number-theory', [
     output: '(18, 12)',
     reasoning:
       'Subtracting one multiple of eighteen leaves twelve without changing common divisors.',
-    hint: 'Return b first and a % b second.',
     cards: [
       ['What is one Euclidean step?', '(a, b) -> (b, a % b), for b != 0.'],
       [
@@ -552,7 +536,6 @@ stages('cp-gcd', 'cp-number-theory', [
     output: '36',
     reasoning:
       'Exact division by the gcd reduces magnitude, and abs normalizes the result.',
-    hint: 'Return zero early; otherwise abs((a // divisor) * b).',
     cards: [
       ['How do you derive a nonzero-input lcm?', 'abs((a // gcd(a, b)) * b).'],
       ['What if either lcm input is zero?', 'Return zero before any division.'],
@@ -580,7 +563,6 @@ stages('cp-modular', 'cp-number-theory', [
     demonstration: 'print(product_residue(-2, 3, 5))',
     output: '4',
     reasoning: 'Negative six has normalized residue four modulo five.',
-    hint: 'Reduce operands, multiply, then reduce the product.',
     cards: [
       [
         'What residue range does positive Python modulus produce?',
@@ -612,7 +594,6 @@ stages('cp-modular', 'cp-number-theory', [
     output: '(3, 2, 2)',
     reasoning:
       'An odd factor enters result, the base becomes nine modulo seven, and five halves to two.',
-    hint: 'Test exponent % 2, reduce products, and return exponent // 2.',
     cards: [
       [
         'What happens for an odd exponent bit?',
@@ -644,7 +625,6 @@ stages('cp-modular', 'cp-number-theory', [
       'print(has_modular_inverse(3, 10))\nprint(has_modular_inverse(2, 10))',
     output: 'True\nFalse',
     reasoning: 'Three is coprime to ten, while two shares a factor.',
-    hint: 'Return gcd(value, modulus) == 1.',
     cards: [
       [
         'What is the modular inverse existence test?',
@@ -679,7 +659,6 @@ stages('cp-sieve', 'cp-number-theory', [
     output: '[False, False, True, True, True, True]',
     reasoning:
       'Zero and one are excluded; four is still a candidate until marking.',
-    hint: 'Allocate limit + 1 entries and guard whether index one exists.',
     cards: [
       [
         'Which sieve entries begin false?',
@@ -711,7 +690,6 @@ stages('cp-sieve', 'cp-number-theory', [
     output: '[9, 12, 15, 18]',
     reasoning:
       'Multiples below nine were covered by smaller factors, while eighteen remains inside the bound.',
-    hint: 'Use range(prime * prime, limit + 1, prime).',
     cards: [
       ['Where does sieve marking start for prime p?', 'At p squared.'],
       [
@@ -740,7 +718,6 @@ stages('cp-sieve', 'cp-number-theory', [
     output: '[2, 3, 4, 5]',
     reasoning:
       'Five is included because its square equals the bound. Four is a candidate, not a claim of primality.',
-    hint: 'Loop while candidate * candidate <= limit.',
     cards: [
       [
         'Why stop sieve factors at the square-root bound?',
@@ -775,7 +752,6 @@ stages('cp-combinatorics', 'cp-number-theory', [
     output: '[0, 1, None, 1, 0]',
     reasoning:
       'Empty and full selections count once; valid interior selections need Pascal transitions.',
-    hint: 'Check impossible k first, then the two boundaries.',
     cards: [
       [
         'What are binomial counting boundaries?',
@@ -804,7 +780,6 @@ stages('cp-combinatorics', 'cp-number-theory', [
     output: '[1, 4, 6, 4, 1]',
     reasoning:
       'Adjacent previous counts sum because include/exclude cases are disjoint.',
-    hint: 'Use adjacent sums for interior entries and 1 % modulus at both ends.',
     cards: [
       [
         'What is Pascal’s recurrence?',
@@ -836,7 +811,6 @@ stages('cp-combinatorics', 'cp-number-theory', [
     output: '[1, 4, 6]',
     reasoning:
       'Descending updates read old neighboring entries, maintaining the previous-row interpretation.',
-    hint: 'Copy, then use range(len(dp) - 1, 0, -1).',
     cards: [
       [
         'Which direction preserves a Pascal row in one list?',
@@ -871,7 +845,6 @@ stages('cp-intervals', 'cp-strategy', [
     output: 'False',
     reasoning:
       'A shared boundary belongs to only the right-hand interval under half-open semantics.',
-    hint: 'Compare the larger start with the smaller end using <.',
     cards: [
       [
         'When do nonempty half-open intervals overlap?',
@@ -899,7 +872,6 @@ stages('cp-intervals', 'cp-strategy', [
     output: '[(1, 4), (3, 6), (5, 8)]',
     reasoning:
       'The scan sees increasing starts, with deterministic equal-start ordering.',
-    hint: 'Use sorted rather than mutating sort.',
     cards: [
       [
         'Why sort intervals by start before merging?',
@@ -928,7 +900,6 @@ stages('cp-intervals', 'cp-strategy', [
     output: '[(1, 8)]',
     reasoning:
       'Adjacent half-open regions have a union representable as one half-open interval.',
-    hint: 'Test following[0] <= current[1], then keep the larger end.',
     cards: [
       [
         'When can sorted covered regions be merged?',
@@ -960,7 +931,6 @@ stages('cp-greedy', 'cp-strategy', [
     output: '[(1, 3), (3, 5), (0, 10)]',
     reasoning:
       'Shorter finishing boundaries appear before a long blocking interval.',
-    hint: 'Use a key returning (end, start).',
     cards: [
       [
         'What greedy order maximizes compatible activity count?',
@@ -992,7 +962,6 @@ stages('cp-greedy', 'cp-strategy', [
     output: '[False, True, True]',
     reasoning:
       'Equality is allowed because the preceding activity excludes its end.',
-    hint: 'Compare every start with last_end using >=.',
     cards: [
       [
         'When can a half-open activity follow another?',
@@ -1028,7 +997,6 @@ stages('cp-greedy', 'cp-strategy', [
     output: 'True',
     reasoning:
       'Replacing a finish of seven by three cannot invalidate any start at or after seven.',
-    hint: 'For each start, encode not(old-feasible) or new-feasible.',
     cards: [
       [
         'What does the scheduling exchange argument preserve?',
@@ -1062,7 +1030,6 @@ stages('cp-bitmasks', 'cp-strategy', [
     demonstration: 'print([contains_bit(10, bit) for bit in range(4)])',
     output: '[False, True, False, True]',
     reasoning: 'Ten has binary bits one and three set.',
-    hint: 'AND with 1 << position, then convert to bool.',
     cards: [
       ['How do you test set membership at bit k?', 'bool(mask & (1 << k)).'],
       [
@@ -1092,7 +1059,6 @@ stages('cp-bitmasks', 'cp-strategy', [
     output: '7\n1',
     reasoning:
       'OR adds missing membership, while AND with the complemented bit removes only that position.',
-    hint: 'Create bit = 1 << position, then use OR or AND with ~bit.',
     cards: [
       ['How is bit k set?', 'mask | (1 << k).'],
       ['How is bit k cleared?', 'mask & ~(1 << k).'],
@@ -1118,7 +1084,6 @@ stages('cp-bitmasks', 'cp-strategy', [
     output: '[5, 4, 1, 0]',
     reasoning:
       'Only bits zero and two are available; the four subsets appear once in descending order.',
-    hint: 'Append sub, stop at zero, otherwise assign (sub - 1) & mask.',
     cards: [
       ['What is the submask enumeration transition?', '(sub - 1) & mask.'],
       [
@@ -1148,7 +1113,6 @@ stages('cp-geometry', 'cp-strategy', [
     demonstration: 'print(displacement((2, 3), (7, 1)))',
     output: '(5, -2)',
     reasoning: 'Subtracting the origin gives horizontal and vertical changes.',
-    hint: 'Subtract a from b in the same coordinate order.',
     cards: [
       [
         'How is a directed displacement vector computed?',
@@ -1179,7 +1143,6 @@ stages('cp-geometry', 'cp-strategy', [
     output: '12',
     reasoning:
       'The vectors bound a triangle of area six, so the signed doubled area is twelve.',
-    hint: 'Multiply across the coordinates and subtract the reverse product.',
     cards: [
       ['What is the 2D cross product?', 'ux * vy - uy * vx.'],
       [
@@ -1207,7 +1170,6 @@ stages('cp-geometry', 'cp-strategy', [
     demonstration: 'print(turn((0, 0), (4, 0), (1, 3)))',
     output: '1',
     reasoning: 'The determinant is positive, giving a Cartesian left turn.',
-    hint: 'Build both displacements from a; classify the determinant relative to zero.',
     cards: [
       [
         'How is a three-point turn classified?',
@@ -1242,7 +1204,6 @@ stages('cp-memoization', 'cp-dynamic', [
     output: '[(3, 2), (3, 8)]',
     reasoning:
       'The same position with a different budget produces a different tuple. Repeated states keep equal keys.',
-    hint: 'Unpack each pair and construct a tuple of both values.',
     cards: [
       [
         'What belongs in a memoization key?',
@@ -1274,7 +1235,6 @@ stages('cp-memoization', 'cp-dynamic', [
     output: '[0, 1, None]',
     reasoning:
       'Zero is one completed route, negatives are impossible, and positive remainders still require transitions.',
-    hint: 'Check equality to zero before the negative comparison.',
     cards: [
       [
         'What is the counting base case at a completed empty suffix?',
@@ -1307,7 +1267,6 @@ stages('cp-memoization', 'cp-dynamic', [
     output: '21',
     reasoning:
       'Every dependency decreases t, and each completed sum is stored locally.',
-    hint: 'Initialize {0: 0}; cache t + solve(t - 1) only when t is absent.',
     cards: [
       [
         'Does caching solve an unfinished recursive cycle?',
@@ -1340,7 +1299,6 @@ stages('cp-knapsack', 'cp-dynamic', [
     demonstration: 'print(capacity_values(3))',
     output: '[0, 0, 0, 0]',
     reasoning: 'The empty subset is feasible under each bound.',
-    hint: 'Include both zero and capacity.',
     cards: [
       [
         'What does at-most-capacity dp[c] represent?',
@@ -1371,7 +1329,6 @@ stages('cp-knapsack', 'cp-dynamic', [
     demonstration: 'print(item_choice([0, 0, 5, 5, 5, 5], 5, 3, 7))',
     output: '12',
     reasoning: 'Taking the item leaves capacity two with previous value five.',
-    hint: 'Guard the weight, then compare previous[c] and previous[c - weight] + value.',
     cards: [
       [
         'What is the 0/1 take transition?',
@@ -1400,7 +1357,6 @@ stages('cp-knapsack', 'cp-dynamic', [
     output: '[0, 0, 5, 5, 5]',
     reasoning:
       'Capacity four reads the unchanged capacity-two value, preventing a second copy.',
-    hint: 'Copy first, then range(len(dp) - 1, weight - 1, -1).',
     cards: [
       [
         'Why descend in compressed 0/1 knapsack?',
@@ -1436,7 +1392,6 @@ stages('cp-subsequences', 'cp-dynamic', [
     output: 'True\nFalse',
     reasoning:
       'Gaps are allowed, but order and distinct positions are required.',
-    hint: 'Advance a matched index only when source matches the next wanted value.',
     cards: [
       [
         'What defines a subsequence?',
@@ -1467,7 +1422,6 @@ stages('cp-subsequences', 'cp-dynamic', [
     demonstration: 'print(tail_position([2, 5, 8], 5))',
     output: '1',
     reasoning: 'An equal five is found at its first position.',
-    hint: 'Return bisect_left(tails, value).',
     cards: [
       [
         'Which bisection preserves strict LIS?',
@@ -1499,7 +1453,6 @@ stages('cp-subsequences', 'cp-dynamic', [
     output: '[2, 5, 6]',
     reasoning:
       'Six improves the ending value for length three without adding a new length.',
-    hint: 'Copy, bisect_left, then replace or append.',
     cards: [
       [
         'Why prefer a smaller tail for the same length?',
@@ -1533,7 +1486,6 @@ stages('cp-tabulation', 'cp-dynamic', [
     demonstration: 'print(packet_table(3))',
     output: '[0, inf, inf, inf]',
     reasoning: 'Only total zero is initially reachable.',
-    hint: 'Allocate target + 1 infinities, then assign entry zero.',
     cards: [
       ['What is the empty-total minimum cost?', 'Zero.'],
       [
@@ -1562,7 +1514,6 @@ stages('cp-tabulation', 'cp-dynamic', [
     output: '3',
     reasoning:
       'The candidate costs one more packet; a better current optimum survives.',
-    hint: 'Compare current with previous + 1.',
     cards: [
       [
         'What is a minimum-cost relaxation?',
@@ -1593,7 +1544,6 @@ stages('cp-tabulation', 'cp-dynamic', [
     demonstration: 'print(one_three_table(6))',
     output: '[0, 1, 2, 1, 2, 3, 2]',
     reasoning: 'Both transitions read smaller totals already computed.',
-    hint: 'Use t - 1, then compare t - 3 when t >= 3.',
     cards: [
       [
         'What makes a tabulation order valid?',

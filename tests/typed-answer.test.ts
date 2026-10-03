@@ -70,7 +70,6 @@ const numeric = (
   prompt: 'How many?',
   answer,
   explanation: 'Count them.',
-  hint: 'Count them.',
   ...extra,
 });
 const text = (
@@ -82,7 +81,6 @@ const text = (
   prompt: 'What does it print?',
   answers,
   explanation: 'It prints that.',
-  hint: 'It prints that.',
   ...extra,
 });
 
@@ -234,7 +232,6 @@ describe('grading text answers', () => {
       choices: ['a', 'b', 'c', 'd'],
       answer: 2,
       explanation: '',
-      hint: '',
     };
     expect(gradeAnswer(choice, 2)).toBe(true);
     expect(gradeAnswer(choice, 1)).toBe(false);

@@ -49,7 +49,6 @@ source = ["x", "y", "#"]
 assert replay(source) == ["x"]
 assert source == ["x", "y", "#"], "Do not mutate the input."`,
         'The list contains exactly the currently active actions. Each undo changes only its right end.',
-        'Append ordinary strings; for "#", pop only if the result list is nonempty.',
       ),
     ],
     [
@@ -115,7 +114,6 @@ assert _checksum(_result) == 2138251954847895676, "The 200,000-value case return
 _check_time(_seconds, "The 200,000-value case", "Keep unresolved indices on a stack instead of scanning forward from every index.")`,
         ),
         'Indices allow the algorithm to place each answer at its original position when a later value resolves it.',
-        'While the current value is greater than the top pending value, pop its index and fill that answer.',
       ),
     ],
     [
@@ -192,7 +190,6 @@ assert _checksum(_result) == 2178764430499123940, "The 200,000-event case return
 _check_time(_seconds, "The 200,000-event case", "Keep the available prices in a heap instead of searching or re-sorting them for every event.")`,
         ),
         'heapify builds the starting heap from a copy, each arrival is one heappush, and each take is one heappop, so the minimum is always available in O(log n).',
-        'Heapify list(stock), then push on "add" and pop on "take", recording None when the heap is empty.',
       ),
     ],
     [
@@ -293,7 +290,6 @@ assert _checksum(_result) == 539032640718016891, "The 60,000-query case returned
 _check_time(_seconds, "The 60,000-query case", "Build the trie once and walk one path per prefix instead of comparing every word with every prefix.")`,
         ),
         'Incrementing every traversed node gives the count for precisely that prefix, so after one build each query follows only its own path; the root represents the empty prefix.',
-        'Insert each occurrence character by character while incrementing counts, then follow each queried prefix from the root.',
       ),
     ],
     [
@@ -374,7 +370,6 @@ _result, _calls = _python_calls(binary_power, 1, 10**9)
 assert _result == 1
 assert _calls >= 30, f"binary_power(1, 10**9) made {_calls} Python call(s). Compute it from a recursive half power: a 30-bit exponent needs about 30 calls, so ** and pow alone are not accepted."`,
         'The recursive result supplies the even portion of the power; the odd case contributes one additional base factor.',
-        'Return 1 at exponent 0; square one recursive result for exponent // 2, then multiply by base if the exponent is odd.',
       ),
     ],
     [
@@ -463,7 +458,6 @@ selections[0].append(99)
 assert selections[1:] == [[1], [2]], "Save independent lists, not aliases of the working path."`,
         ),
         'Increasing indices eliminate permutations of the same selection; append, recurse, and pop preserve the search invariant.',
-        'Track a path and next allowed index. Stop at length k, copy the path, and restore it after every branch.',
       ),
     ],
     [
@@ -551,7 +545,6 @@ assert _checksum(_result) == 49589883230479068, "100,000 searches in a 150,000-k
 _check_time(_seconds, "100,000 searches in a 150,000-key tree", "Follow one branch per comparison instead of visiting every node.")`,
         ),
         'A qualifying node replaces the best candidate, then only its right subtree can improve the answer.',
-        'Keep best=None and move one child at a time; update best whenever the current key is within the limit.',
       ),
     ],
     [
@@ -635,7 +628,6 @@ assert _checksum(_result) == 594500027001685296, "The 100,000-vertex tree return
 _check_time(_seconds, "The 100,000-vertex tree", "Combine finished child sizes in one postorder pass instead of searching every subtree separately.")`,
         ),
         'Completion events wait below child events on the stack, so every required child size exists before its parent is calculated.',
-        'Push a completion marker for a node, then its children. At completion, add one to the sum of the child sizes.',
       ),
     ],
     [
@@ -696,7 +688,6 @@ source = [(1, 0)]
 assert make_neighbors(2, source) == [[1], [0]]
 assert source == [(1, 0)], "Preserve the edge list."`,
         'Allocating the vertex lists first preserves isolated vertices; the directed flag determines whether reverse entries are added.',
-        'Create a fresh list for every vertex and append each edge according to the direction contract.',
       ),
     ],
     [
@@ -775,7 +766,6 @@ assert _result == 159287, "The 200,000-vertex graph returned the wrong count."
 _check_time(_seconds, "The 200,000-vertex graph", "Keep discovered vertices in a set so each membership test is constant time.")`,
         ),
         'The discovery set counts each reachable vertex once, while the stack records reachable work still to process.',
-        'Initialize seen with start. Add an unseen neighbor to seen before pushing it.',
       ),
     ],
     [
@@ -857,7 +847,6 @@ assert _checksum(_result) == 1412230198499059278, "The 100,000-vertex graph retu
 _check_time(_seconds, "The 100,000-vertex graph", "Expand each vertex once in queue order instead of relaxing every edge repeatedly.")`,
         ),
         'A FIFO queue finishes a distance layer before the next one, and the first discovered distance never needs revision for unit-cost edges.',
-        'Initialize all distances to -1, set source to 0, and enqueue a neighbor only while its distance is still -1.',
       ),
     ],
     [
@@ -954,7 +943,6 @@ assert _result == (2075, 100907), "The 400-by-400 grid returned the wrong summar
 _check_time(_seconds, "The 400-by-400 grid", "Share one discovered set so each land cell is searched once, instead of restarting a search from every land cell.")`,
         ),
         'A shared discovered set schedules each land cell exactly once across all searches, so the scan is O(RC) and every search it starts is a new island.',
-        'Scan cells in row order. At undiscovered land, count an island and flood-fill it with a stack, marking cells when you schedule them.',
       ),
     ],
     [
@@ -1066,7 +1054,6 @@ assert _valid(_result), "The 100,000-vertex graph returned an invalid order."
 _check_time(_seconds, "The 100,000-vertex graph", "Release each vertex once with indegree counts instead of rescanning the edges for a ready vertex.")`,
         ),
         'Zero remaining indegree means every prerequisite has been released. The final vertex count distinguishes a full order from a cyclic blockage.',
-        'Count indegrees, queue every zero, release each outgoing edge once, and reject an incomplete result.',
       ),
     ],
     [
@@ -1167,7 +1154,6 @@ assert _checksum(_result) == 2066851167642563454, "The 100,000-vertex graph retu
 _check_time(_seconds, "The 100,000-vertex graph", "Settle vertices in heap order instead of relaxing every edge in rounds.")`,
         ),
         'Validating all edges establishes the nonnegative precondition before exploration. Heap entries propose routes; the distance array decides which proposals are still current.',
-        'Build outgoing weighted lists, reject negative weights, then relax from matching minimum heap entries.',
       ),
     ],
     [
@@ -1257,7 +1243,6 @@ assert _checksum(_result) == 403053540933972930, "The 200,000-edge case returned
 _check_time(_seconds, "The 200,000-edge case", "Use union by size and path compression instead of relabeling or walking long parent chains.")`,
         ),
         'Only a union between different representatives joins two components; all other edge types leave the partition unchanged.',
-        'Start the count at n, compare roots for each edge, and decrement only after a successful root merge.',
       ),
     ],
     [
@@ -1351,7 +1336,6 @@ assert _result == 10005199259, "The 50,000-vertex graph returned the wrong cost.
 _check_time(_seconds, "The 50,000-vertex graph", "Join components with a disjoint-set forest instead of relabeling vertices.")`,
         ),
         'Sorted edge consideration plus successful DSU merges yields an acyclic minimum-cost forest; n-1 accepted edges certify that it spans every vertex.',
-        'Sort by weight, accept only edges joining different roots, accumulate their weights, and verify the final merge count.',
       ),
     ],
     [

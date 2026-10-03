@@ -12,7 +12,6 @@ const exercise = (
   solution: string,
   tests: string,
   explanation: string,
-  hint: string,
 ): Omit<CodeQuestion, 'id'> => ({
   type: 'code',
   prompt,
@@ -20,7 +19,6 @@ const exercise = (
   solution,
   tests,
   explanation,
-  hint,
 });
 
 function skill(
@@ -139,7 +137,6 @@ const curriculum = [
         'print("Hello, lessdumb!")\nprint("I can learn Python.")',
         'assert __lessdumb_output.strip() == "Hello, lessdumb!\\nI can learn Python.", "Print the two requested lines in order."',
         'Two print calls produce two lines. The exclamation mark and period are part of the strings.',
-        'Place each requested sentence in quotes inside print().',
       ),
     ],
     [
@@ -174,7 +171,6 @@ const curriculum = [
         'points = 10\npoints = points + 5',
         'assert points == 15, "points should hold 15 after the update."',
         'The reassignment uses the original points value and replaces it with 15.',
-        'Use points = points + 5 after your first assignment.',
       ),
     ],
     [
@@ -212,7 +208,6 @@ const curriculum = [
         'apples = 29\nbox_size = 6\nfull_boxes = apples // box_size\nleftover = apples % box_size',
         'assert full_boxes == 4, "There should be 4 complete boxes."\nassert leftover == 5, "There should be 5 apples left."',
         'Floor division counts complete boxes, and modulo counts what remains.',
-        'Use // for full boxes and % for leftovers.',
       ),
     ],
     [
@@ -250,7 +245,6 @@ const curriculum = [
         'name = "Lina"\nbadges = 4\nlabel = f"{name} has {badges} badges"',
         'assert label == "Lina has 4 badges", "Use the name and badge count in the requested message."',
         'The f-string inserts the string name and integer badges into one message.',
-        'Start your string with f and put the variable names in braces.',
       ),
     ],
     [
@@ -285,7 +279,6 @@ const curriculum = [
         'price_text = "2.5"\nquantity_text = "4"\ntotal = float(price_text) * int(quantity_text)',
         'assert total == 10.0, "Convert the text values before multiplying."\nassert isinstance(total, float), "total should be a float."',
         'A float price multiplied by an integer quantity gives a float total.',
-        'Use float(price_text) and int(quantity_text).',
       ),
     ],
     [
@@ -323,7 +316,6 @@ const curriculum = [
         'score = 60\npassed = score >= 60',
         'assert passed is True, "The score 60 must pass the inclusive boundary."',
         'The >= comparison includes exactly 60 and returns a boolean.',
-        'Use >= so the boundary score passes.',
       ),
     ],
     [
@@ -357,7 +349,6 @@ const curriculum = [
         'age = 16\nconsent = True\neligible = age >= 16 and consent',
         'assert eligible is True, "Both eligibility conditions hold."',
         'and combines the age check with consent.',
-        'Both requirements must hold, so use and.',
       ),
     ],
     [
@@ -392,7 +383,6 @@ const curriculum = [
         'number = 7\nif number % 2 == 0:\n    label = "even"\nelse:\n    label = "odd"',
         'assert label == "odd", "7 is odd because its remainder after division by 2 is 1."',
         'An even integer has remainder 0 when divided by 2.',
-        'Test number % 2 == 0, then write an else branch.',
       ),
     ],
     [
@@ -430,7 +420,6 @@ const curriculum = [
         'number = 14\nparity = "even" if number % 2 == 0 else "odd"',
         'assert parity == "even", "14 has remainder 0 when divided by 2."',
         'The condition number % 2 == 0 is True, so the expression produces "even".',
-        'Write parity = "even" if number % 2 == 0 else "odd".',
       ),
     ],
     [
@@ -467,7 +456,6 @@ const curriculum = [
         'temperatures = [18, 21, 19]\ncount = len(temperatures)',
         'assert temperatures == [18, 21, 19], "Keep all three temperatures in the requested order."\nassert count == 3, "count should contain the number of readings."',
         'The list keeps the order, and len() returns the number of readings.',
-        'Use square brackets for the list and len() for its length.',
       ),
     ],
     [
@@ -502,7 +490,6 @@ const curriculum = [
         'inbox = []\nscore = 0\nif inbox:\n    inbox_status = "new"\nelse:\n    inbox_status = "empty"\nif score is None:\n    score_status = "missing"\nelse:\n    score_status = "recorded"',
         'assert inbox_status == "empty", "An empty list is falsy."\nassert score_status == "recorded", "0 is a real score; only None means missing."',
         'The empty list takes the else branch, and is None keeps the legitimate score 0.',
-        'Use if inbox: for the list and if score is None: for the score.',
       ),
     ],
     [
@@ -540,7 +527,6 @@ const curriculum = [
         'readings = [12.5, 9.0, 14.25, 10.0]\nspread = max(readings) - min(readings)\naverage = round(sum(readings) / len(readings), 1)',
         'assert spread == 5.25, "14.25 - 9.0 is 5.25."\nassert average == 11.4, "The mean 11.4375 rounds to 11.4."',
         'max and min give the extremes, and round(…, 1) keeps one decimal place of the mean.',
-        'Use max(readings) - min(readings) and round(sum(readings) / len(readings), 1).',
       ),
     ],
     [
@@ -578,7 +564,6 @@ const curriculum = [
         'entry = "  Data Science 101 "\nkey = entry.strip().lower().replace(" ", "_")\nword_count = len(entry.split())',
         'assert key == "data_science_101", "Strip, lowercase, then replace spaces."\nassert word_count == 3, "split() finds three words."\nassert entry == "  Data Science 101 ", "Methods return new strings; entry stays the same."',
         'Each method returns a new string, so the calls chain from left to right; split() ignores the extra spaces.',
-        'Chain entry.strip().lower().replace(" ", "_") and use len(entry.split()).',
       ),
     ],
     [
@@ -613,7 +598,6 @@ const curriculum = [
         'names = ["Ivo", "Uma", "Zoe"]\nfirst = names[0]\nlast = names[-1]',
         'assert first == "Ivo", "The first item is at index 0."\nassert last == "Zoe", "The last item can be accessed with -1."',
         'Zero selects the first position, and negative one selects the final position.',
-        'Use names[0] and names[-1].',
       ),
     ],
     [
@@ -648,7 +632,6 @@ const curriculum = [
         'a = (9, 30)\nb = (10, 15)\nstart_hour = a[0]\nis_earlier = a < b',
         'assert start_hour == 9, "The hour is the first item."\nassert is_earlier is True, "9 < 10 decides the comparison."',
         'Index 0 holds the hour, and tuple comparison checks hours before minutes.',
-        'Use a[0] and a < b.',
       ),
     ],
     [
@@ -687,7 +670,6 @@ const curriculum = [
         'numbers = [3, 1, 5]\ndoubled = []\nfor number in numbers:\n    doubled.append(number * 2)',
         'assert doubled == [6, 2, 10], "Double each input value in its original order."',
         'append() adds one result to the end of the list during each iteration.',
-        'Inside your for loop, use doubled.append(number * 2).',
       ),
     ],
     [
@@ -722,7 +704,6 @@ const curriculum = [
         'sessions = [("Ada", 25), ("Lin", 40)]\nlabels = []\nfor name, minutes in sessions:\n    labels.append(f"{name}: {minutes}")',
         'assert labels == ["Ada: 25", "Lin: 40"], "Format each name with its minutes, in order."',
         'Unpacking gives both parts of each pair a readable name inside the loop.',
-        'Write for name, minutes in sessions: and append an f-string.',
       ),
     ],
     [
@@ -756,7 +737,6 @@ const curriculum = [
         'even_numbers = list(range(2, 11, 2))',
         'assert even_numbers == [2, 4, 6, 8, 10], "Include 10 by choosing a stop value after it."',
         'Using 11 as the excluded stop permits 10 to be included.',
-        'Start at 2, stop before 11, and step by 2.',
       ),
     ],
     [
@@ -791,7 +771,6 @@ const curriculum = [
         'items = ["pen", "cup"]\nprices = [2, 5]\nquantities = [3, 1]\ntotals = []\nlabels = []\nfor price, quantity in zip(prices, quantities):\n    totals.append(price * quantity)\nfor number, item in enumerate(items, 1):\n    labels.append(f"{number}. {item}")',
         'assert totals == [6, 5], "Multiply the price and quantity at each position."\nassert labels == ["1. pen", "2. cup"], "Number the items from 1."',
         'zip pairs matching prices and quantities, and enumerate(items, 1) numbers the items from 1.',
-        'Loop over zip(prices, quantities), then over enumerate(items, 1).',
       ),
     ],
     [
@@ -826,7 +805,6 @@ const curriculum = [
         'numbers = [-2, 5, 0, 3, -1]\ntotal_positive = 0\nfor number in numbers:\n    if number > 0:\n        total_positive += number',
         'assert total_positive == 8, "Only 5 and 3 should contribute."',
         'The total starts at zero and increases only for values greater than zero.',
-        'Place the update inside an if number > 0 block.',
       ),
     ],
     [
@@ -862,7 +840,6 @@ const curriculum = [
         'savings = 0\nweeks = 0\nwhile savings < 20:\n    savings += 7\n    weeks += 1',
         'assert savings == 21, "Stop at the first total reaching at least 20."\nassert weeks == 3, "It takes three additions of 7."',
         'The loop stops after savings progresses through 7, 14, and 21.',
-        'Use savings < 20 and update both savings and weeks inside the body.',
       ),
     ],
     [
@@ -900,7 +877,6 @@ const curriculum = [
         'limit = 50\nn = 1\nwhile True:\n    if n * n > limit:\n        break\n    n += 1\nfirst = n',
         'assert first == 8, "8 * 8 = 64 is the first square above 50."',
         'The loop increases n until n * n exceeds 50, then break leaves the loop with n at 8.',
-        'Inside while True, break when n * n > limit; otherwise add 1 to n.',
       ),
     ],
     [
@@ -938,7 +914,6 @@ const curriculum = [
         'original = [1, 2, 3]\nupdated = original.copy()\nupdated[0] = 9\nupdated.append(4)',
         'assert original == [1, 2, 3], "Do not modify the original list."\nassert updated == [9, 2, 3, 4], "Replace the first item, then append 4."\nassert updated is not original, "Create a separate list."',
         'copy() creates a distinct list so the changes do not affect the original.',
-        'Start with updated = original.copy().',
       ),
     ],
     [
@@ -976,7 +951,6 @@ const curriculum = [
         'grades = [5, 3, 5, 0, 2, 5]\ntally = [0] * 6\nfor grade in grades:\n    tally[grade] += 1',
         'assert tally == [1, 0, 1, 1, 0, 3], "Count each grade in the slot with its value."',
         'Six slots cover grades 0 to 5, and each grade increments its own slot.',
-        'Start with tally = [0] * 6 and use tally[grade] += 1 in the loop.',
       ),
     ],
     [
@@ -1008,7 +982,6 @@ const curriculum = [
         'board = [["a", "b", "c"], ["d", "e", "f"], ["g", "h", "i"]]\nflat = []\ncenter = board[1][1]\nboard[2][2] = "X"\nfor row in board:\n    for cell in row:\n        flat.append(cell)',
         'assert center == "e", "The middle cell is row 1, column 1."\nassert board[2] == ["g", "h", "X"], "Change only the bottom-right cell."\nassert flat == ["a", "b", "c", "d", "e", "f", "g", "h", "X"], "Visit the rows in order, then the cells in each row."',
         'Two indexes select one cell, and nested loops visit the grid row by row.',
-        'Use board[1][1], then board[2][2] = "X", then a loop over each row inside a loop over board.',
       ),
     ],
     [
@@ -1046,7 +1019,6 @@ const curriculum = [
         'values = [10, 20, 30, 40, 50]\nmiddle = values[1:4]\nreversed_values = values[::-1]',
         'assert middle == [20, 30, 40], "Select indices 1 through 3."\nassert reversed_values == [50, 40, 30, 20, 10], "Reverse the entire sequence."',
         'The stop 4 is excluded, while step -1 reverses all items.',
-        'Use [1:4] for the middle and [::-1] for the reverse.',
       ),
     ],
     [
@@ -1084,7 +1056,6 @@ const curriculum = [
         'inventory = {"apples": 3, "pears": 2}\ninventory["apples"] += 4\noranges = inventory.get("oranges", 0)',
         'assert inventory == {"apples": 7, "pears": 2}, "Add 4 to apples without changing pears."\nassert oranges == 0, "A missing fruit should default to zero."',
         'Dictionary assignment changes one key, and get() handles the missing fruit.',
-        'Use inventory["apples"] += 4 and inventory.get("oranges", 0).',
       ),
     ],
     [
@@ -1122,7 +1093,6 @@ const curriculum = [
         'scores = {"Ada": 80, "Bo": 55, "Cy": 60}\npassed_names = []\nfor name, score in scores.items():\n    if score >= 60:\n        passed_names.append(name)',
         'assert passed_names == ["Ada", "Cy"], "Include Ada and the boundary score for Cy."',
         'items() supplies the name alongside its score; the inclusive comparison selects Ada and Cy.',
-        'Unpack scores.items() into name and score, then test score >= 60.',
       ),
     ],
     [
@@ -1160,7 +1130,6 @@ const curriculum = [
         'tags = ["ai", "web", "ai", "data"]\nfeatured = ["data", "cloud", "web"]\nunique_count = len(set(tags))\nshared = set(tags) & set(featured)',
         'assert unique_count == 3, "ai, web and data are distinct."\nassert shared == {"web", "data"}, "Keep only the tags present in both lists."',
         'A set drops duplicate tags, and & keeps the members found in both sets.',
-        'Use len(set(tags)) and set(tags) & set(featured).',
       ),
     ],
     [
@@ -1195,7 +1164,6 @@ const curriculum = [
         'def greet(name):\n    print(f"Hello, {name}!")',
         'import io, contextlib\n_capture = io.StringIO()\nwith contextlib.redirect_stdout(_capture):\n    greet("Ada")\n    greet("Lin")\nassert _capture.getvalue().strip() == "Hello, Ada!\\nHello, Lin!", "The function must use each supplied name."',
         'The function formats its parameter into the greeting each time it is called.',
-        'Indent a print() statement beneath def and use an f-string.',
       ),
     ],
     [
@@ -1233,7 +1201,6 @@ const curriculum = [
         'def absolute_value(number):\n    if number < 0:\n        return -number\n    return number',
         'assert absolute_value(-7) == 7, "Handle a negative input."\nassert absolute_value(4) == 4, "Keep a positive input unchanged."\nassert absolute_value(0) == 0, "Zero is a valid boundary case."',
         'The conditional negates negative values; nonnegative values are returned directly.',
-        'Use an if for negative numbers and return on both paths.',
       ),
     ],
     [
@@ -1271,7 +1238,6 @@ const curriculum = [
         'def divide(a, b):\n    return a // b, a % b',
         'assert divide(17, 5) == (3, 2), "17 is 3 groups of 5 with 2 left."\nassert divide(4, 4) == (1, 0), "An exact division leaves 0."\nq, r = divide(9, 2)\nassert (q, r) == (4, 1), "The result must unpack into two names."',
         'Returning a // b, a % b builds a tuple that the caller can unpack.',
-        'Write return a // b, a % b.',
       ),
     ],
     [
@@ -1309,7 +1275,6 @@ const curriculum = [
         'def digit_sum(n):\n    if n == 0:\n        return 0\n    return n % 10 + digit_sum(n // 10)',
         'assert digit_sum(0) == 0, "The base case is 0."\nassert digit_sum(7) == 7, "A single digit is its own sum."\nassert digit_sum(1234) == 10, "1 + 2 + 3 + 4 is 10."\nassert digit_sum(9005) == 14, "Zeros add nothing."',
         'n // 10 removes the last digit, so every call moves toward the base case 0.',
-        'Return 0 when n == 0; otherwise return n % 10 + digit_sum(n // 10).',
       ),
     ],
     [
@@ -1347,7 +1312,6 @@ const curriculum = [
         'def total_cost(price, quantity=1, discount=0):\n    return price * quantity - discount',
         'assert total_cost(8) == 8, "Use the default quantity and discount."\nassert total_cost(8, 3) == 24, "Support positional quantity."\nassert total_cost(price=8, quantity=3, discount=5) == 19, "Support keyword arguments."',
         'Each input has one clear role; defaults supply a single item and no discount.',
-        'Return the product of price and quantity, then subtract discount.',
       ),
     ],
     [
@@ -1385,7 +1349,6 @@ const curriculum = [
         'words = ["sun", "moon", "planet", "a"]\nlong_lengths = [len(word) for word in words if len(word) >= 4]',
         'assert long_lengths == [4, 6], "Keep moon and planet, then calculate their lengths."',
         'The condition selects words first, and len(word) is the result placed in the list.',
-        'Use len(word) as the expression and len(word) >= 4 as the filter.',
       ),
     ],
     [
@@ -1423,7 +1386,6 @@ const curriculum = [
         'seats = [["."] * 4 for _ in range(3)]\nseats[1][2] = "X"',
         'assert seats == [[".", ".", ".", "."], [".", ".", "X", "."], [".", ".", ".", "."]], "Mark only row 1, column 2."\nassert seats[0] is not seats[2], "Each row must be its own list."',
         'The comprehension creates a new row for every row index, so marking one seat changes one row.',
-        'Use [["."] * 4 for _ in range(3)], then seats[1][2] = "X".',
       ),
     ],
     [
@@ -1461,7 +1423,6 @@ const curriculum = [
         'values = [3, -1, 2]\ntotal_sq = sum(v * v for v in values)\nhas_negative = any(v < 0 for v in values)',
         'assert total_sq == 14, "9 + 1 + 4 is 14."\nassert has_negative is True, "-1 is negative."',
         'sum adds each square as it is produced, and any stops at the first negative value.',
-        'Use sum(v * v for v in values) and any(v < 0 for v in values).',
       ),
     ],
     [
@@ -1499,7 +1460,6 @@ const curriculum = [
         'def parse_integer(text):\n    try:\n        return int(text)\n    except ValueError:\n        return None',
         'assert parse_integer("14") == 14, "Convert valid integer text."\nassert parse_integer("-3") == -3, "Handle negative integers."\nassert parse_integer("bad") is None, "Return None for invalid text."\nassert parse_integer("") is None, "An empty string is invalid too."',
         'Only the ValueError conversion failure becomes None; valid values are returned.',
-        'Place int(text) inside try and return None from except ValueError.',
       ),
     ],
     [
@@ -1537,7 +1497,6 @@ const curriculum = [
         'def count_words(words):\n    counts = {}\n    for word in words:\n        counts[word] = counts.get(word, 0) + 1\n    return counts',
         'assert count_words([]) == {}, "Handle an empty input."\nassert count_words(["a", "b", "a"]) == {"a": 2, "b": 1}, "Count repeated words."\nassert count_words(["Hi", "hi"]) == {"Hi": 1, "hi": 1}, "Case is significant."\n_original = ["x", "x", "y"]\nassert count_words(_original) == {"x": 2, "y": 1}\nassert _original == ["x", "x", "y"], "Keep the input unchanged."',
         'Each word updates one dictionary entry, and the result is returned after the loop.',
-        'Use counts[word] = counts.get(word, 0) + 1 inside a loop.',
       ),
     ],
     [
@@ -1575,7 +1534,6 @@ const curriculum = [
         'points = [40, 85, 62, 85]\nnames = ["Zoe", "ada", "Lin"]\nranked = sorted(points, reverse=True)\nnames.sort()',
         'assert ranked == [85, 85, 62, 40], "Sort the points from highest to lowest."\nassert points == [40, 85, 62, 85], "Do not change points."\nassert names == ["Lin", "Zoe", "ada"], "Sort names itself; capitals come first."',
         'sorted returns a new descending list, while sort reorders names in place.',
-        'Use sorted(points, reverse=True) and names.sort().',
       ),
     ],
     [
@@ -1614,7 +1572,6 @@ const curriculum = [
         'products = [("pen", 3), ("book", 12), ("cup", 3)]\nby_price = sorted(products, key=lambda p: p[1])\npriciest = max(products, key=lambda p: p[1])',
         'assert by_price == [("pen", 3), ("cup", 3), ("book", 12)], "Sort by price; pen stays ahead of cup."\nassert priciest == ("book", 12), "Return the whole product."',
         'A stable sort keeps pen before cup, and max returns the whole product with the largest key.',
-        'Use key=lambda p: p[1] with both sorted and max.',
       ),
     ],
     [
@@ -1652,7 +1609,6 @@ const curriculum = [
         'flags = 5 | (1 << 1)\nlow = 13 & 3\nhalf = 13 >> 1',
         'assert flags == 7, "5 is 101; turning on bit 1 gives 111."\nassert low == 1, "13 is 1101; its lowest two bits are 01."\nassert half == 6, "1101 shifted right is 110."',
         '| turns a bit on, & 3 keeps the last two bits, and >> 1 halves with floor division.',
-        'Use 5 | (1 << 1), 13 & 3 and 13 >> 1.',
       ),
     ],
     [
@@ -1690,7 +1646,6 @@ const curriculum = [
         'import math\nhypotenuse = math.sqrt(6 ** 2 + 8 ** 2)\nboxes = math.ceil(50 / 12)',
         'assert hypotenuse == 10.0, "sqrt(36 + 64) is 10.0."\nassert boxes == 5, "Four boxes hold 48, so 50 items need 5."\nassert isinstance(boxes, int), "ceil returns a whole number."',
         'sqrt finds the square root of 100, and ceil rounds 4.17 up to 5 boxes.',
-        'Use math.sqrt(6 ** 2 + 8 ** 2) and math.ceil(50 / 12).',
       ),
     ],
     [
@@ -1728,7 +1683,6 @@ const curriculum = [
         'from collections import Counter, deque\nvotes = ["yes", "no", "yes", "yes"]\nwaiting = ["Ana", "Ben"]\ntally = Counter(votes)\nyes_votes = tally["yes"]\nmaybe_votes = tally["maybe"]\nline = deque(waiting)\nline.append("Zed")\nserved = line.popleft()',
         'assert yes_votes == 3, "yes appears three times."\nassert maybe_votes == 0, "A missing key counts as 0."\nassert served == "Ana", "The first person waiting is served first."\nassert list(line) == ["Ben", "Zed"], "Zed joins at the back."',
         'Counter tallies the votes, and the deque serves people in the order they arrived.',
-        'Use Counter(votes) and deque(waiting), then append and popleft.',
       ),
     ],
     [
@@ -1766,7 +1720,6 @@ const curriculum = [
         'import heapq\ntimes = [42, 17, 30, 8]\nheapq.heapify(times)\nfirst_two = [heapq.heappop(times), heapq.heappop(times)]',
         'assert first_two == [8, 17], "Pop the smallest, then the next smallest."\nassert len(times) == 2, "Two times remain in the heap."\nassert times[0] == 30, "The heap keeps its smallest remaining item first."',
         'heapify arranges the list so that each heappop returns the current smallest time.',
-        'Call heapq.heapify(times), then heapq.heappop(times) twice.',
       ),
     ],
     [
@@ -1804,7 +1757,6 @@ const curriculum = [
         'from bisect import bisect_left, bisect_right\nprices = [10, 25, 50, 50, 80]\ncheaper = bisect_left(prices, 50)\nfifties = bisect_right(prices, 50) - bisect_left(prices, 50)',
         'assert cheaper == 2, "10 and 25 are below 50."\nassert fifties == 2, "50 appears twice."',
         'The left insertion point counts smaller items, and the gap between the two points counts copies.',
-        'Use bisect_left(prices, 50) and subtract it from bisect_right(prices, 50).',
       ),
     ],
     [
@@ -1842,7 +1794,6 @@ const curriculum = [
         'from functools import cache\n\n@cache\ndef count_paths(n):\n    if n <= 1:\n        return 1\n    return count_paths(n - 1) + count_paths(n - 2)',
         'assert hasattr(count_paths, "cache_info"), "Decorate count_paths with @cache."\nassert count_paths(1) == 1\nassert count_paths(4) == 5, "1+1+1+1, 1+1+2, 1+2+1, 2+1+1 and 2+2."\nassert count_paths(60) == 2504730781961, "Each smaller staircase should be computed once."',
         'With @cache, each count_paths(k) is computed once and reused, so the recursion makes about 60 calls instead of trillions.',
-        'Write from functools import cache at the top and @cache on the line above def count_paths.',
       ),
     ],
     [
@@ -1880,7 +1831,6 @@ const curriculum = [
         'class Book:\n    def __init__(self, title, pages=100):\n        self.title = title\n        self.pages = pages\n\nnovel = Book("Dune", 412)',
         'assert novel.title == "Dune" and novel.pages == 412, "Store both attributes."\nassert Book("Notes").pages == 100, "pages defaults to 100."\nassert Book(pages=5, title="Zine").title == "Zine", "Support keyword arguments."',
         '__init__ copies each parameter onto self, and the default fills in a missing page count.',
-        'Write def __init__(self, title, pages=100): and assign self.title and self.pages.',
       ),
     ],
     [
@@ -1918,7 +1868,6 @@ const curriculum = [
         'class RangeScaler:\n    def fit(self, values):\n        self.min_ = min(values)\n        self.max_ = max(values)\n        return self\n\n    def transform(self, x):\n        return (x - self.min_) / (self.max_ - self.min_)',
         'scaler = RangeScaler()\nassert scaler.fit([2, 6, 10]) is scaler, "fit returns the same object."\nassert scaler.min_ == 2 and scaler.max_ == 10, "Store the learned range."\nassert scaler.transform(6) == 0.5, "6 is halfway between 2 and 10."\nassert RangeScaler().fit([0, 4]).transform(1) == 0.25, "Chaining works after fit."',
         'fit learns the range and returns self; transform uses the learned attributes.',
-        'Store min(values) and max(values) on self in fit, return self, then use them in transform.',
       ),
     ],
     [

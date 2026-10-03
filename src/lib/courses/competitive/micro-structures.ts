@@ -37,7 +37,6 @@ function atom(spec: AtomicSkill): Skill {
           spec.solution,
           spec.tests,
           spec.lesson[1],
-          spec.summary,
         ),
       ],
       spec.cards,

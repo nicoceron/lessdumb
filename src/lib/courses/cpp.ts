@@ -4541,7 +4541,6 @@ const authored: Skill[] = topics.flatMap((topic, topicIndex) =>
         tests: atom.tests,
         contract: atom.tests,
         explanation: `${atom.definition} ${atom.rule}`,
-        hint: `${atom.rule} The lesson gives a runnable example of this exact operation.`,
       },
     ];
     return {

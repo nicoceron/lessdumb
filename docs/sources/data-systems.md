@@ -31,7 +31,7 @@ The source was inspected directly as a ZIP archive: `META-INF/container.xml` ide
 | Ownership and scale      | Split ownership by key; Choose hash or range routing; Diagnose uneven load; Move data without losing ownership                   | Chapter 7: sharding, partition keys, range/hash sharding, skew and hot spots, rebalancing and request routing                                       |
 | Transactional guarantees | Group changes into a transaction; Choose what readers may observe; Preserve concurrent updates; Protect a multi-record invariant | Chapter 8: atomicity/durability, isolation, snapshots, lost updates, conditional writes, write skew, serializability                                |
 
-The prose, examples, answer alternatives, explanations, hints, and cards are written for lessdumb. The source supplies the conceptual scope, while the course uses different scenarios and its own wording. Product-specific operational recommendations, legal conclusions, and vendor claims are not inferred from this reading material.
+The prose, examples, answer alternatives, explanations, and cards are written for lessdumb. The source supplies the conceptual scope, while the course uses different scenarios and its own wording. Product-specific operational recommendations, legal conclusions, and vendor claims are not inferred from this reading material.
 
 ## Graph and assessment design
 

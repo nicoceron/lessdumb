@@ -89,7 +89,6 @@ describe('card text with prose and code (CEN-128)', () => {
   it('stores authored prose, so math and escaped dollars survive', () => {
     const question: Question = {
       id: 'q',
-      hint: '',
       type: 'choice',
       prompt: 'A ticket costs \\$12. What is $12 \\times 5$?',
       choices: ['$60$', '$17$', '$65$', '$50$'],
@@ -106,7 +105,6 @@ describe('card text with prose and code (CEN-128)', () => {
   it('shows a typed answer as written, with its unit, never as math', () => {
     const numeric: Question = {
       id: 'n',
-      hint: '',
       type: 'numeric',
       prompt: 'A loop runs $n = 4$ times at $3$ ms each. How long in total?',
       answer: 12,
@@ -120,7 +118,6 @@ describe('card text with prose and code (CEN-128)', () => {
     ]);
     const text: Question = {
       id: 't',
-      hint: '',
       type: 'text',
       prompt: 'What does this print?',
       code: 'print("$5")',

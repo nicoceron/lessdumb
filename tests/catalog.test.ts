@@ -45,6 +45,44 @@ describe('connected course paths', () => {
       `${child.id}: prerequisite ${grandparent} is already implied by ${parent.id}.`,
     );
   });
+  it('rejects a hint on a question: lessons have none (CEN-127)', () => {
+    const skill = skills.find((s) => s.knowledgePoints && s.questions.length)!;
+    const point = skill.knowledgePoints![0];
+    const [question] = point.questions;
+    const exercise = skill.questions[0];
+    const registry = skills.map((s) =>
+      s.id === skill.id
+        ? {
+            ...s,
+            questions: [{ ...exercise, hint: 'Look again.' }],
+            knowledgePoints: [
+              {
+                ...point,
+                questions: [
+                  { ...question, hint: 'Look again.' },
+                  ...point.questions.slice(1),
+                ],
+              },
+              ...s.knowledgePoints!.slice(1),
+            ],
+          }
+        : s,
+    );
+    expect(validateCurriculum(registry)).toEqual(
+      expect.arrayContaining([
+        `${exercise.id}: questions have no hint; remove it.`,
+        `${question.id}: questions have no hint; remove it.`,
+      ]),
+    );
+    expect(
+      skills.some((s) =>
+        [
+          ...s.questions,
+          ...(s.knowledgePoints ?? []).flatMap((p) => p.questions),
+        ].some((q) => 'hint' in q),
+      ),
+    ).toBe(false);
+  });
   for (const course of courses.filter((c) => c.skillIds.length >= 20)) {
     it(`offers ${course.title} as a branching graph rather than a playlist`, () => {
       const members = new Set(course.skillIds);

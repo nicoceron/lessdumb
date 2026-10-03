@@ -1158,7 +1158,6 @@ const mathSkills: Skill[] = withTeachingOrder(
               solution: d.exercise.solution,
               tests: d.exercise.tests,
               explanation: d.summary,
-              hint: d.paragraphs[1],
             },
           ]
         : [],

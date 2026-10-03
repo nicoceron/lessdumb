@@ -28,7 +28,6 @@ assert _result == (1000000000000, 1000000000000000000000000, 40), "work_counts(1
 _check_time(_seconds, "work_counts(10**12)", "Compute the pair count with a formula instead of performing the scan.")`,
         ),
         'The hypothetical scan counts are n and n². Computing those formulas is cheap; this function itself takes O(log(n + 1)) time and O(1) additional space.',
-        'Use formulas for the first two counts, and repeatedly double a probe while it is smaller than n.',
       ),
     ],
     [
@@ -63,7 +62,6 @@ _check_time(_seconds, "work_counts(10**12)", "Compute the pair count with a form
         'def parse_readings(text):\n    tokens = text.split()\n    if not tokens:\n        return []\n    count = int(tokens[0])\n    return [int(token) for token in tokens[1:1 + count]]',
         'assert parse_readings("") == []\nassert parse_readings("  \\n\\t ") == []\nassert parse_readings("0") == []\nassert parse_readings("3\\n5 -2 8\\n") == [5, -2, 8]\nassert parse_readings(" 2\\t-7   0 ") == [-7, 0]\nassert parse_readings("1\\n42") == [42]\nassert parse_readings("4 1 1 1 1") == [1, 1, 1, 1]',
         'The empty case is handled before indexing tokens[0]. Converting the size marker and slicing the following tokens keeps format and payload separate.',
-        'Use tokens = text.split(); check for no tokens before reading the first one.',
       ),
     ],
     [
@@ -103,7 +101,6 @@ _check_time(_seconds, "work_counts(10**12)", "Compute the pair count with a form
         'def simulate_meter(commands, ceiling):\n    level = 0\n    peak = 0\n    for command in commands:\n        if command == "up":\n            level = min(ceiling, level + 2)\n        elif command == "down":\n            level = max(0, level - 1)\n        else:\n            level = 0\n        peak = max(peak, level)\n    return (level, peak)',
         'assert simulate_meter([], 8) == (0, 0)\nassert simulate_meter(["up", "up", "down"], 3) == (2, 3)\nassert simulate_meter(["down", "down"], 5) == (0, 0)\nassert simulate_meter(["up", "reset"], 10) == (0, 2)\nassert simulate_meter(["up", "reset", "up"], 0) == (0, 0)\nassert simulate_meter(["up", "up", "down", "reset", "up"], 3) == (2, 3)\nassert simulate_meter(["up", "up", "up", "down"], 20) == (5, 6)',
         'Two state variables are sufficient. The peak update happens after each clamped transition and never decreases.',
-        'Initialize both counters to zero; use min/max for the boundaries and keep peak separate from level.',
       ),
     ],
     [
@@ -138,7 +135,6 @@ _check_time(_seconds, "work_counts(10**12)", "Compute the pair count with a form
         'def smallest_pair_gap(values):\n    best = None\n    for i in range(len(values)):\n        for j in range(i + 1, len(values)):\n            gap = abs(values[i] - values[j])\n            if best is None or gap < best:\n                best = gap\n    return best',
         'assert smallest_pair_gap([]) is None\nassert smallest_pair_gap([9]) is None\nassert smallest_pair_gap([14, 3, 9, 11]) == 2\nassert smallest_pair_gap([8, 8, 14]) == 0\nassert smallest_pair_gap([-7, -2, 5]) == 5\nassert smallest_pair_gap([20, -5]) == 25\nvalues = [5, 1, 9]\nassert smallest_pair_gap(values) == 4\nassert values == [5, 1, 9], "Do not modify the input list."',
         'The loops visit every valid pair exactly once. None distinguishes no candidate from a legitimate gap of zero.',
-        'Start best at None, loop j from i + 1, and minimize abs(values[i] - values[j]).',
       ),
     ],
     [
@@ -173,7 +169,6 @@ _check_time(_seconds, "work_counts(10**12)", "Compute the pair count with a form
         'def order_jobs(jobs):\n    return sorted(jobs, key=lambda job: (job[0], -job[1]))',
         'assert order_jobs([]) == []\nassert order_jobs([(2, 7, "only")]) == [(2, 7, "only")]\nassert order_jobs([(4, 2, "oak"), (2, 3, "fern"), (4, 5, "pine")]) == [(2, 3, "fern"), (4, 5, "pine"), (4, 2, "oak")]\nassert order_jobs([(1, 3, "z"), (1, 3, "a")]) == [(1, 3, "z"), (1, 3, "a")]\nassert order_jobs([(-2, 1, "x"), (-2, 4, "y"), (0, 8, "z")]) == [(-2, 4, "y"), (-2, 1, "x"), (0, 8, "z")]\njobs = [(3, 1, "first"), (1, 9, "second")]\nassert order_jobs(jobs) == [(1, 9, "second"), (3, 1, "first")]\nassert jobs == [(3, 1, "first"), (1, 9, "second")]',
         'sorted creates a separate list. Its tuple key implements the requested tie-breaking rule, and equal keys retain their input order.',
-        'Use sorted with key=lambda job: (job[0], -job[1]); do not include the label as an extra tie-breaker.',
       ),
     ],
     [
@@ -214,7 +209,6 @@ assert _checksum(sorted(_result.items())) == 1332624839871332808, "The 200,000-l
 _check_time(_seconds, "The 200,000-label case", "Count every label in one pass with a dictionary instead of calling count() for each label.")`,
         ),
         'One scan maintains the frequency invariant; a scan over the u keys filters the map. Expected time is O(n + u), or O(n), with O(u) additional space.',
-        'Use get(label, 0) + 1 while counting, then keep dictionary entries whose count is at least two.',
       ),
     ],
     [
@@ -249,7 +243,6 @@ _check_time(_seconds, "The 200,000-label case", "Count every label in one pass w
         'def chain_values(nodes, head):\n    values = []\n    current = head\n    while current is not None:\n        value, current = nodes[current]\n        values.append(value)\n    return values',
         'assert chain_values({}, None) == []\nassert chain_values({"a": (7, None)}, "a") == [7]\nassert chain_values({0: (7, 1), 1: (8, None)}, 0) == [7, 8]\nassert chain_values({"a": (8, "c"), "b": (3, None), "c": (5, "b")}, "a") == [8, 5, 3]\nassert chain_values({"unused": (99, None), "head": (2, None)}, "head") == [2]\nnodes = {"p": (4, "q"), "q": (4, None)}\nassert chain_values(nodes, "p") == [4, 4]\nassert nodes == {"p": (4, "q"), "q": (4, None)}',
         'Reading the tuple advances current while preserving its value for the output. The explicit None check supports every valid ID, including zero.',
-        'Initialize current = head; unpack value, next_id from nodes[current], append the value, and advance.',
       ),
     ],
     [
@@ -284,7 +277,6 @@ _check_time(_seconds, "The 200,000-label case", "Count every label in one pass w
         'def letter_inventory(text):\n    counts = {}\n    for char in text:\n        if "A" <= char <= "Z":\n            char = char.lower()\n        if "a" <= char <= "z":\n            counts[char] = counts.get(char, 0) + 1\n    return counts',
         'assert letter_inventory("") == {}\nassert letter_inventory("123 !\\n") == {}\nassert letter_inventory("Cab? C!") == {"c": 2, "a": 1, "b": 1}\nassert letter_inventory("AaZz") == {"a": 2, "z": 2}\nassert letter_inventory("éİßA") == {"a": 1}\nassert letter_inventory("one TWO") == {"o": 2, "n": 1, "e": 1, "t": 1, "w": 1}\ntext = "Bee-2"\nassert letter_inventory(text) == {"b": 1, "e": 2}\nassert text == "Bee-2"',
         'The ASCII checks define the accepted alphabet before counting. Converting only A–Z avoids accidentally interpreting non-ASCII lowercase expansions as accepted input.',
-        'Check A <= char <= Z before lowercasing, then count only a <= char <= z.',
       ),
     ],
     [
@@ -327,7 +319,6 @@ assert _checksum(_result) == 1583528261156788488, "The 200,000-query case return
 _check_time(_seconds, "The 200,000-query case", "Answer each query from the prefix table instead of re-adding its range.")`,
         ),
         'The prefix invariant proves the subtraction formula. The result list preserves query order; preprocessing happens only once.',
-        'Start prefix at [0], append cumulative totals, and use prefix[right] - prefix[left] for each query.',
       ),
     ],
     [
@@ -370,7 +361,6 @@ assert _checksum(_result) == 1683390223532082913, "The 200,000-update case retur
 _check_time(_seconds, "The 200,000-update case", "Mark each update at its two boundaries and reconstruct once instead of looping over every range.")`,
         ),
         'Boundary changes add independently, including overlaps and negative deltas. A single prefix scan combines all currently active additions.',
-        'Allocate size + 1 zeros; add delta at left and subtract it at right, then accumulate only the first size entries.',
       ),
     ],
     [
@@ -417,7 +407,6 @@ assert _result == 10149814211, "The 200,000-value case returned the wrong count.
 _check_time(_seconds, "The 200,000-value case", "Count a whole block of partners per pointer move instead of testing every pair.")`,
         ),
         'Every counted block shares the same left endpoint, so advancing left prevents double counting. A too-large outer sum proves that the current right value has no remaining valid partner.',
-        'If the outer sum fits, add right - left and advance left; otherwise decrease right.',
       ),
     ],
     [
@@ -459,7 +448,6 @@ assert _result == 17021, "The 200,000-label case returned the wrong length."
 _check_time(_seconds, "The 200,000-label case", "Move both window boundaries forward with a frequency map instead of rescanning from every start.")`,
         ),
         'The frequency invariant ensures that len(counts) is the actual distinct count. Each right endpoint contributes its longest valid window, and taking their maximum covers the optimum.',
-        'Increment the incoming label, shrink while len(counts) is too large, and delete any outgoing label whose count becomes zero.',
       ),
     ],
     [
@@ -516,7 +504,6 @@ _check_time(_seconds, "The 100,000-search case", "Halve the candidate interval o
           ),
         ),
         'The half-open interval avoids special handling for an empty list. The invariant keeps all too-small values to the left and qualifying values on the right until one boundary remains.',
-        'Initialize high to len(values); move low past too-small midpoints, and set high to qualifying midpoints.',
       ),
     ],
     [
@@ -557,7 +544,6 @@ assert _result == 625574761, "The 50,000-load case returned the wrong capacity."
 _check_time(_seconds, "The 50,000-load case", "Binary-search the capacity with the greedy feasibility test instead of trying capacities one at a time.")`,
         ),
         'The greedy test decides feasibility in one scan. Binary search locates its false-to-true boundary between the largest item and the total sum; zero loads and extra allowed groups obey the same rule.',
-        'For a candidate capacity, start a new group only when adding the next load would overflow. Search from max(weights) to sum(weights), handling [] first.',
       ),
     ],
     [
@@ -598,7 +584,6 @@ assert _checksum(_result) == 365298159280422661, "The 250,000-value case returne
 _check_time(_seconds, "The 250,000-value case", "Map each distinct value to its rank with a dictionary instead of searching the sorted list for every value.")`,
         ),
         'The dictionary assigns one ordered rank per distinct value. Translating the original list, rather than returning the sorted list, preserves positions and repeated occurrences.',
-        'Build unique = sorted(set(values)); assign each entry its index, then look up every original value.',
       ),
     ],
     [
@@ -641,7 +626,6 @@ assert _result == 4646, "The 100,000-interval case returned the wrong overlap."
 _check_time(_seconds, "The 100,000-interval case", "Sort the boundary events once instead of counting active intervals at every endpoint.")`,
         ),
         'Every nonempty interval creates balanced activation and cancellation events. Sorting changes of -1 before +1 at ties respects the half-open convention and prevents endpoint-only overlap.',
-        'Ignore start == end; create (start, 1) and (end, -1), sort the tuples, and accumulate the largest active count.',
       ),
     ],
     [
