@@ -834,7 +834,7 @@ const sizeOnlyUnions = (n: number, pairs: string) =>
     '            a, b = b, a',
     '        parent[b] = a',
     '        size[a] += size[b]',
-    `print(max([hops(parent, v) for v in range(${n})]))`,
+    `print([hops(parent, v) for v in range(${n})])`,
   );
 
 const acceptEdge = lines(
@@ -9071,9 +9071,9 @@ export const knowledgePoints: KnowledgePointModule = {
           8,
           '[(0, 1), (2, 3), (4, 5), (6, 7), (0, 2), (4, 6), (0, 4)]',
         ),
-        output: '3',
+        output: '[0, 1, 1, 2, 1, 2, 2, 3]',
         explanation:
-          'Every merge joins two equal-sized sets, the worst case for depth, yet no vertex is more than 3 = log₂ 8 links from its root.',
+          'Every merge joins two equal-sized sets, the worst case for depth, yet the deepest vertex, 7, is only 3 = log₂ 8 links from its root.',
       },
       questions: [
         choose(
@@ -9094,11 +9094,11 @@ export const knowledgePoints: KnowledgePointModule = {
           'It fills a parent and a size entry for each vertex.',
         ),
         predictOutput(
-          'What does this program print?',
+          'How many links from the root is each vertex?',
           sizeOnlyUnions(4, '[(0, 1), (2, 3), (0, 2)]'),
-          ['3', '1', '4', '2'],
+          ['[0, 1, 2, 3]', '[0, 1, 1, 1]', '[0, 0, 1, 1]', '[0, 1, 1, 2]'],
           3,
-          'Vertex 3 sits under 2, which sits under 0: two links, which is log₂ 4.',
+          '1 and 2 hang directly under root 0, and 3 sits under 2: the deepest path is two links, which is log₂ 4.',
         ),
         choose(
           'Which combination gives DSU its near-constant amortized time?',
