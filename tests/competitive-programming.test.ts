@@ -73,6 +73,13 @@ describe('competitive programming in the shared knowledge graph', () => {
         'choice',
         'code',
       ]);
+      // Three options let a learner eliminate two and still guess half the time.
+      for (const question of skill.questions)
+        if (question.type === 'choice')
+          expect(
+            new Set(question.choices.map((choice) => choice.trim())).size,
+            question.id,
+          ).toBeGreaterThanOrEqual(4);
       expect(skill.assessment).toEqual({
         requiredTypes: ['code', 'choice'],
         reviewAnswers: 2,
