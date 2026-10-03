@@ -149,6 +149,7 @@ const SKILL_FIELDS = [
   'lessonAttempt',
   'lessonFailedAt',
   'lessonRewarded',
+  'implicitCredit',
 ];
 
 function validateSkill(value: unknown, path: string) {
@@ -195,6 +196,27 @@ function validateSkill(value: unknown, path: string) {
   if (skill.totalXp !== undefined) number(skill.totalXp, `${path}.totalXp`);
   if (skill.lessonRewarded !== undefined)
     boolean(skill.lessonRewarded, `${path}.lessonRewarded`);
+  if (skill.implicitCredit !== undefined) {
+    const at = `${path}.implicitCredit`;
+    const credit = object(skill.implicitCredit, at, [
+      'at',
+      'day',
+      'from',
+      'weight',
+      'basis',
+      'dueBefore',
+      'dueAt',
+    ]);
+    timestamp(credit.at, `${at}.at`);
+    date(credit.day, `${at}.day`);
+    string(credit.from, `${at}.from`);
+    const weight = number(credit.weight, `${at}.weight`, 0, 1, false);
+    if (weight <= 0) fail(`${at}.weight`, 'greater than 0');
+    timestamp(credit.basis, `${at}.basis`);
+    const before = timestamp(credit.dueBefore, `${at}.dueBefore`)!;
+    const after = timestamp(credit.dueAt, `${at}.dueAt`)!;
+    if (after < before) fail(`${at}.dueAt`, 'no earlier than dueBefore');
+  }
   if (skill.lessonFailedAt !== undefined)
     timestamp(skill.lessonFailedAt, `${path}.lessonFailedAt`);
   if (skill.lessonAttempt !== undefined) {
@@ -316,8 +338,8 @@ function validateProgress(value: unknown) {
     'timeZone',
     'quizzes',
   ]);
-  if (![1, 2, 3].includes(progress.version as number))
-    fail(`${path}.version`, '1, 2 or 3');
+  if (![1, 2, 3, 4].includes(progress.version as number))
+    fail(`${path}.version`, '1, 2, 3 or 4');
   if (progress.quizzes !== undefined) {
     const ids = array(
       progress.quizzes,
@@ -424,6 +446,7 @@ function validateAttempt(value: unknown, path: string): string {
     'reviewDueAt',
     'outcome',
     'quizId',
+    'credited',
   ]);
   const id = string(attempt.id, `${path}.id`);
   string(attempt.skillId, `${path}.skillId`);
@@ -433,6 +456,8 @@ function validateAttempt(value: unknown, path: string): string {
   if (!['learn', 'review', 'quiz'].includes(attempt.mode as string))
     fail(`${path}.mode`, 'learn, review or quiz');
   if (attempt.quizId !== undefined) string(attempt.quizId, `${path}.quizId`);
+  if (attempt.credited !== undefined)
+    strings(attempt.credited, `${path}.credited`, 100);
   isoTimestamp(attempt.at, `${path}.at`);
   number(attempt.xp, `${path}.xp`, 0, 10_000);
   if (attempt.reviewDueAt !== undefined)
@@ -469,8 +494,8 @@ export function parseStateUpdate(value: unknown): {
     'updatedAt',
   ]);
   // Version 1 accounts predate knowledge-point lessons; they migrate on read.
-  if (![1, 2, 3].includes(state.version as number))
-    fail('state.version', '1, 2 or 3');
+  if (![1, 2, 3, 4].includes(state.version as number))
+    fail('state.version', '1, 2, 3 or 4');
   number(state.dailyGoal, 'state.dailyGoal', 1, 10_000);
   if (state.activeCourseId !== undefined)
     string(state.activeCourseId, 'state.activeCourseId', 128);

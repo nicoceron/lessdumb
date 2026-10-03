@@ -447,6 +447,9 @@ function History({
                 )}
                 <span className="ma-completed-at">
                   Completed @ {formatClockTime(entry.at, timeZone)}
+                  {entry.credited
+                    ? ` · + reviewed ${entry.credited} prerequisite${entry.credited === 1 ? '' : 's'}`
+                    : ''}
                 </span>
               </li>
             ))}

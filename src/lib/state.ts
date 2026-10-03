@@ -6,6 +6,7 @@ import {
   isMastered,
   MAX_RECENT_ATTEMPTS,
   type EvidenceUpdate,
+  type ImplicitCredit,
   type Attempt,
   type AttemptInput,
   type LessonAttempt,
@@ -39,10 +40,10 @@ export interface QueuedCard extends AnkiCard {
 }
 /**
  * Version 2 adds knowledge-point lesson attempts, cooldowns and task XP;
- * version 3 adds quizzes.
+ * version 3 adds quizzes; version 4 adds implicit review credit.
  */
 export interface LearnerState {
-  version: 3;
+  version: 4;
   progress: Progress;
   dailyGoal: number;
   /** Optional for backward compatibility with existing saved accounts. */
@@ -54,7 +55,7 @@ export interface LearnerState {
 }
 export function createState(): LearnerState {
   return {
-    version: 3,
+    version: 4,
     progress: emptyProgress(),
     dailyGoal: 50,
     activeCourseId: 'python-foundations',
@@ -133,8 +134,8 @@ const reviewRewardKey = (attempt: Attempt) =>
 
 /** A saved state from an earlier schema: before quizzes, or before knowledge points. */
 export type LegacyLearnerState = Omit<LearnerState, 'version' | 'progress'> & {
-  version: 1 | 2;
-  progress: Omit<Progress, 'version'> & { version: 1 | 2 };
+  version: 1 | 2 | 3;
+  progress: Omit<Progress, 'version'> & { version: 1 | 2 | 3 };
 };
 
 /**
@@ -147,14 +148,14 @@ export function migrateState(
   catalog: CurriculumCatalog = defaultCatalog,
 ): LearnerState {
   const progress = normalizeProgress(
-    state.progress.version === 3
+    state.progress.version === 4
       ? (state.progress as Progress)
-      : { ...state.progress, version: 3 },
+      : { ...state.progress, version: 4 },
     catalog,
   );
-  if (state.version === 3 && progress === state.progress)
+  if (state.version === 4 && progress === state.progress)
     return state as LearnerState;
-  return { ...state, version: 3, progress };
+  return { ...state, version: 4, progress };
 }
 
 /** Converts legacy evidence for skills now taught through knowledge points. */
@@ -208,6 +209,18 @@ export function normalizeProgress(
     if (next !== state) (skills ??= { ...progress.skills })[skill.id] = next;
   }
   return skills ? { ...progress, skills } : progress;
+}
+
+/** The more recent implicit credit; on a tie, the later due date. */
+function latestCredit(
+  left?: ImplicitCredit,
+  right?: ImplicitCredit,
+): ImplicitCredit | undefined {
+  if (!left || !right) return left ?? right;
+  return right.at > left.at ||
+    (right.at === left.at && right.dueAt > left.dueAt)
+    ? right
+    : left;
 }
 
 /** One lesson attempt from two snapshots; any later failure discards it. */
@@ -573,6 +586,22 @@ export function mergeStates(
           reviewHadHint = false;
         }
       }
+      // Implicit credit from either device applies while no real review has
+      // happened since; a lapse or a later review supersedes it.
+      const implicitCredit = latestCredit(a.implicitCredit, b.implicitCredit);
+      if (
+        mastery === 1 &&
+        implicitCredit &&
+        memory &&
+        implicitCredit.basis === memory.lastReviewAt &&
+        // Direct practice since the credit (a review, a lesson, a quiz
+        // miss) decides the due date instead.
+        implicitCredit.at >= (lastPracticedAt ?? 0) &&
+        dueAt !== null &&
+        implicitCredit.dueAt > dueAt &&
+        reviewQuestionIds.length === 0
+      )
+        dueAt = implicitCredit.dueAt;
       let consecutiveCorrect = 0;
       for (const attempt of [...history].reverse()) {
         if (!attempt.correct || attempt.usedHint) break;
@@ -584,11 +613,16 @@ export function mergeStates(
           : Math.max(a.lessonFailedAt ?? 0, b.lessonFailedAt ?? 0);
       const lessonAttempt =
         mastery === 1 ? undefined : mergeLessonAttempt(a, b, lessonFailedAt);
-      const { lessonAttempt: _attempt, ...rest } = latest;
+      const {
+        lessonAttempt: _attempt,
+        implicitCredit: _credit,
+        ...rest
+      } = latest;
       return [
         id,
         {
           ...rest,
+          ...(implicitCredit ? { implicitCredit } : {}),
           ...(lessonAttempt ? { lessonAttempt } : {}),
           ...(lessonFailedAt !== undefined ? { lessonFailedAt } : {}),
           ...(a.lessonRewarded || b.lessonRewarded

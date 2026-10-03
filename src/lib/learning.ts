@@ -1,5 +1,6 @@
 import {
   defaultCatalog,
+  encompassings,
   type CurriculumCatalog,
   type Question,
   type Skill,
@@ -97,6 +98,26 @@ export interface SkillProgress {
   lessonFailedAt?: number;
   /** The skill's one-time lesson XP has been awarded. */
   lessonRewarded?: boolean;
+  /** The latest implicit review credit this skill received from a dependent. */
+  implicitCredit?: ImplicitCredit;
+}
+
+/**
+ * Partial review credit from practicing a skill that uses this one. It moves
+ * only the due date: FSRS memory changes through real reviews alone.
+ */
+export interface ImplicitCredit {
+  /** When the dependent's task succeeded. */
+  at: number;
+  /** The learner's calendar day of `at`; one credit per skill per day. */
+  day: string;
+  /** The dependent skill whose success gave the credit. */
+  from: string;
+  weight: number;
+  /** The memory's last real review when credited; a later review supersedes. */
+  basis: number;
+  dueBefore: number;
+  dueAt: number;
 }
 
 export type AttemptOutcome =
@@ -118,10 +139,12 @@ export interface Attempt {
   outcome?: AttemptOutcome;
   /** The quiz a quiz answer belongs to. */
   quizId?: string;
+  /** Prerequisites that this successful answer gave implicit review credit. */
+  credited?: string[];
 }
 
 export interface Progress {
-  version: 3;
+  version: 4;
   skills: Record<string, SkillProgress>;
   totalXp: number;
   dailyXp: Record<string, number>;
@@ -213,7 +236,7 @@ export function emptyProgress(
   // Validate the zone at creation rather than failing only after the first answer.
   dateKey(_now, timeZone);
   return {
-    version: 3,
+    version: 4,
     skills: {},
     totalXp: 0,
     dailyXp: {},
@@ -543,6 +566,128 @@ export function reviewsSinceLesson(progress: Progress): number {
   return count;
 }
 
+/** Due within this window counts as nearly due when compressing reviews. */
+export const NEARLY_DUE_MS = DAY_MS;
+
+/**
+ * Whether a prerequisite can take implicit credit now: mastered, unlocked,
+ * scheduled, not mid-way through its own review, not credited today, not
+ * learned or reviewed earlier today (its own check comes first), and not
+ * waiting on a remedial review after its latest direct answer was wrong.
+ */
+function creditable(
+  progress: Progress,
+  id: string,
+  today: string,
+  time: number,
+  catalog: CurriculumCatalog,
+  unlocked: (id: string) => boolean = (skillId) =>
+    isUnlocked(progress, skillId, catalog),
+): boolean {
+  const state = progress.skills[id];
+  return (
+    !!state &&
+    state.dueAt !== null &&
+    state.reviewQuestionIds.length === 0 &&
+    state.consecutiveCorrect > 0 &&
+    state.implicitCredit?.day !== today &&
+    dateKey(
+      legacyMemory(state, time).lastReviewAt,
+      progress.timeZone || 'UTC',
+    ) !== today &&
+    isMastered(progress, id, catalog) &&
+    unlocked(id)
+  );
+}
+
+/**
+ * The due date a successful task on a dependent gives a prerequisite: its
+ * weight times the interval a full successful review at `time` would add,
+ * so never later than that review would schedule.
+ */
+export function implicitDueAt(
+  state: SkillProgress,
+  weight: number,
+  time: number,
+): { dueAt: number; basis: number } | null {
+  if (state.dueAt === null) return null;
+  const memory = legacyMemory(state, time);
+  // Practice timed before the last real review (a stale clock or an
+  // offline replay) adds nothing to it.
+  if (time <= memory.lastReviewAt) return null;
+  const full = reviewMemory(memory, time, 'pass').dueAt;
+  const gain = full - state.dueAt;
+  if (gain <= 0) return null;
+  return {
+    dueAt: Math.min(full, state.dueAt + Math.round(weight * gain)),
+    basis: memory.lastReviewAt,
+  };
+}
+
+/**
+ * After skill `from` succeeds (a lesson, a review cycle, or a quiz answer),
+ * give each prerequisite it encompasses weighted implicit review credit.
+ * Direct prerequisites only; failures never call this.
+ */
+export function applyImplicitCredit(
+  progress: Progress,
+  from: Skill,
+  now: Now,
+  catalog: CurriculumCatalog = defaultCatalog,
+): { progress: Progress; credited: string[] } {
+  const time = timestamp(now);
+  const today = dateKey(time, progress.timeZone || 'UTC');
+  const skills = { ...progress.skills };
+  const credited: string[] = [];
+  for (const { id, weight } of encompassings(from)) {
+    if (!creditable(progress, id, today, time, catalog)) continue;
+    const state = skills[id];
+    const next = implicitDueAt(state, weight, time);
+    if (!next) continue;
+    skills[id] = {
+      ...state,
+      dueAt: next.dueAt,
+      implicitCredit: {
+        at: time,
+        day: today,
+        from: from.id,
+        weight,
+        basis: next.basis,
+        dueBefore: state.dueAt!,
+        dueAt: next.dueAt,
+      },
+    };
+    credited.push(id);
+  }
+  return credited.length
+    ? { progress: { ...progress, skills }, credited }
+    : { progress, credited };
+}
+
+/**
+ * How many other due or nearly due skills a successful review of `skill`
+ * would credit. Reviews that cover more of the queue go first.
+ */
+export function reviewCoverage(
+  progress: Progress,
+  skill: Skill,
+  now: Now,
+  catalog: CurriculumCatalog = defaultCatalog,
+  unlocked = unlockChecker(progress, catalog),
+): number {
+  const time = timestamp(now);
+  const today = dateKey(time, progress.timeZone || 'UTC');
+  return encompassings(skill).filter(({ id }) => {
+    const state = progress.skills[id];
+    return (
+      !!state &&
+      state.dueAt !== null &&
+      state.dueAt <= time + NEARLY_DUE_MS &&
+      creditable(progress, id, today, time, catalog, unlocked)
+    );
+  }).length;
+}
+
 export function nextTask(
   progress: Progress,
   now: Now = new Date(),
@@ -562,6 +707,15 @@ export function nextTask(
       getSkillState(progress, item.id).dueAt !== null &&
       getSkillState(progress, item.id).dueAt! <= time,
   );
+  const coverageCache = new Map<string, number>();
+  const coverage = (item: Skill) => {
+    if (!coverageCache.has(item.id))
+      coverageCache.set(
+        item.id,
+        reviewCoverage(progress, item, time, catalog, unlocked),
+      );
+    return coverageCache.get(item.id)!;
+  };
   due.sort((a, b) => {
     // Keep the selected course's due retrieval ahead of its supporting ancestors.
     if (courseId && a.courseId === courseId && b.courseId !== courseId)
@@ -571,6 +725,9 @@ export function nextTask(
     // Interleave due skills when several are available.
     if (a.id === lastSkill && b.id !== lastSkill) return 1;
     if (b.id === lastSkill && a.id !== lastSkill) return -1;
+    // Review compression: a review that also credits due prerequisites first.
+    const covered = coverage(b) - coverage(a);
+    if (covered) return covered;
     const left = getSkillState(progress, a.id),
       right = getSkillState(progress, b.id);
     return (
@@ -911,7 +1068,7 @@ export function applyAttempt(
       : {}),
     ...(outcome ? { outcome } : {}),
   };
-  return {
+  const updated: Progress = {
     ...progress,
     skills: { ...progress.skills, [item.id]: state },
     totalXp: progress.totalXp + xp,
@@ -921,7 +1078,20 @@ export function applyAttempt(
     },
     lastActivityDate: today,
     streak,
-    attempts: [...progress.attempts, attempt].slice(-MAX_RECENT_ATTEMPTS),
+  };
+  // A finished lesson or review also exercises the skills it uses.
+  const credit =
+    outcome === 'lesson-passed' || outcome === 'review-passed'
+      ? applyImplicitCredit(updated, item, time, catalog)
+      : { progress: updated, credited: [] };
+  return {
+    ...credit.progress,
+    attempts: [
+      ...progress.attempts,
+      credit.credited.length
+        ? { ...attempt, credited: credit.credited }
+        : attempt,
+    ].slice(-MAX_RECENT_ATTEMPTS),
   };
 }
 
