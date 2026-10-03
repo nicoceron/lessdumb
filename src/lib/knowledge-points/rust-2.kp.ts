@@ -3980,4 +3980,1661 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'rust-thread-move': [
+    {
+      title: 'Spawn a thread and join it for its result',
+      explanation: [
+        'std::thread::spawn(closure) starts a new thread that runs the closure and returns a JoinHandle at once. Main keeps running while the thread works.',
+        'handle.join() waits for the thread to finish and returns a Result holding the closure’s return value, or Err if the thread panicked; unwrap takes the value out. Without join, main might finish before the thread does.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let handle = std::thread::spawn(|| 6 * 7);\n    let answer = handle.join().unwrap();\n    println!("{}", answer);\n}',
+        output: '42',
+        explanation:
+          'The thread computes 42; join waits for it and hands the closure’s return value back to main.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let a = std::thread::spawn(|| 10 + 5);\n    let b = std::thread::spawn(|| 10 * 5);\n    let second = b.join().unwrap();\n    let first = a.join().unwrap();\n    println!("{} {}", first, second);\n}',
+          ['15 50', '50 15', '15 15', '50 50'],
+          0,
+          'Each handle returns its own thread’s result, whatever order the joins happen in.',
+        ),
+        choose(
+          'A thread’s closure returns a String. What does handle.join() return?',
+          [
+            'The String itself, with no wrapper around it',
+            'Nothing; join only waits for the thread',
+            'A Result holding the String, or Err if the thread panicked',
+            'An Option that is None while the thread still runs',
+          ],
+          2,
+          'join reports whether the thread finished normally, so the value comes wrapped in a Result.',
+        ),
+        choose(
+          'Why must main call join before using a value computed by a thread?',
+          [
+            'join waits for the thread, so its result exists',
+            'join starts the thread, which otherwise never runs',
+            'join copies the thread’s local variables into main',
+            'join makes the thread run on a faster core',
+          ],
+          0,
+          'The thread starts at spawn; join is the point where main waits for it and receives its result.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let handle = std::thread::spawn(|| {\n        let mut total = 0;\n        for n in 1..=4 {\n            total += n;\n        }\n        total\n    });\n    println!("before join");\n    println!("{}", handle.join().unwrap());\n}',
+          [
+            'before join\n10',
+            '10\nbefore join',
+            'before join\n4',
+            'before join',
+          ],
+          0,
+          'Only main prints. It prints its first line, then waits in join for the thread’s sum of 1 to 4.',
+        ),
+      ],
+    },
+    {
+      title: 'Move owned data into the thread',
+      explanation: [
+        'A spawned thread may keep running after the function that started it returns, so its closure is not allowed to borrow that function’s local variables.',
+        'Writing move || moves each captured value into the closure, and with it into the thread. The original binding can no longer be used; clone the value first if main still needs it.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let name = String::from("worker");\n    let handle = std::thread::spawn(move || format!("{} done", name));\n    println!("{}", handle.join().unwrap());\n}',
+        output: 'worker done',
+        explanation:
+          'name moves into the thread, which builds the message and returns it through join.',
+      },
+      questions: [
+        choose(
+          'Why is this program rejected?',
+          [
+            'Strings cannot be used by other threads at all',
+            'The thread might outlive text, so it cannot borrow it',
+            'len cannot be called inside a closure',
+            'spawn requires the closure to return ()',
+          ],
+          1,
+          'Without move, the closure borrows text, and spawn requires captures that stay valid for as long as the thread might run.',
+          'fn main() {\n    let text = String::from("abc");\n    let handle = std::thread::spawn(|| text.len());\n    println!("{}", handle.join().unwrap());\n}',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let text = String::from("hello");\n    let copy = text.clone();\n    let handle = std::thread::spawn(move || copy.len() * 10);\n    println!("{} {}", handle.join().unwrap(), text);\n}',
+          ['50 hello', '5 hello', 'hello 50', '50 hellohello'],
+          0,
+          'Only the clone moves into the thread, so main can still print text.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    for i in 1..=3 {\n        let result = std::thread::spawn(move || i * i).join().unwrap();\n        println!("{}", result);\n    }\n}',
+          ['1\n4\n9', '1\n2\n3', '9\n4\n1', '2\n4\n6'],
+          0,
+          'Each pass moves its own i into a new thread and joins it before the next pass starts.',
+        ),
+        choose(
+          'After let h = std::thread::spawn(move || name.len());, where name is a String, what can main do with name?',
+          [
+            'Read it, since the closure only calls len',
+            'Change it, and the thread sees the change',
+            'Use it again after join hands it back',
+            'Nothing; it was moved into the thread’s closure',
+          ],
+          3,
+          'move transfers ownership into the closure even if the body only reads the value.',
+        ),
+      ],
+    },
+  ],
+  'rust-scoped-threads': [
+    {
+      title: 'Scoped threads may borrow local data',
+      explanation: [
+        'std::thread::scope(|s| { ... }) creates a scope, and s.spawn(...) starts threads inside it. The scope does not return until every thread spawned in it has finished.',
+        'Because of that guarantee, scoped threads may borrow local variables directly, with no move and no clone. The value the closure passed to scope returns becomes the result of the whole scope call.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let values = [1, 2, 3, 4];\n    let total = std::thread::scope(|s| {\n        let handle = s.spawn(|| values.iter().sum::<i32>());\n        handle.join().unwrap()\n    });\n    println!("{} {}", total, values.len());\n}',
+        output: '10 4',
+        explanation:
+          'The thread borrows values to sum it; main still owns values afterwards.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let data = [3, 1, 4, 1, 5, 9];\n    let total = std::thread::scope(|s| {\n        let a = s.spawn(|| data[..3].iter().sum::<i32>());\n        let b = s.spawn(|| data[3..].iter().sum::<i32>());\n        a.join().unwrap() * 100 + b.join().unwrap()\n    });\n    println!("{}", total);\n}',
+          ['23', '1508', '815', '800'],
+          2,
+          'The two threads borrow different halves: 3 + 1 + 4 is 8 and 1 + 5 + 9 is 15.',
+        ),
+        choose(
+          'Why may a scoped thread borrow a local array when a std::thread::spawn thread may not?',
+          [
+            'Scoped threads copy every local variable they use',
+            'Scoped threads run on the same thread as main',
+            'The scope waits for its threads, so the borrow stays valid',
+            'spawn threads may not read any data at all',
+          ],
+          2,
+          'The borrowed data outlives every thread in the scope, which is exactly what borrowing requires.',
+        ),
+        choose(
+          'When does std::thread::scope(|s| { ... }) return?',
+          [
+            'Immediately after its last spawn call',
+            'As soon as the first thread finishes',
+            'Once every thread in it has finished',
+            'Only when the whole program returns',
+          ],
+          2,
+          'Waiting for all of its threads is what the scope promises.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let message = String::from("scoped");\n    let length = std::thread::scope(|s| s.spawn(|| message.len()).join().unwrap());\n    println!("{} {}", message, length);\n}',
+          ['6 scoped', 'scoped 7', 'scoped 6', '6'],
+          2,
+          'The thread only borrowed message, so main prints both the String and its length.',
+        ),
+      ],
+    },
+    {
+      title: 'Join scoped results in a fixed order',
+      explanation: [
+        'Several scoped threads may borrow the same data at once. They can finish in any order, but each result comes back through its own handle, so joining the handles in a fixed order gives the same output every run.',
+        'Threads that are never joined explicitly are still waited for when the scope ends.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let words = ["red", "green", "blue"];\n    let lengths = std::thread::scope(|s| {\n        let first = s.spawn(|| words[0].len());\n        let second = s.spawn(|| words[1].len());\n        let third = s.spawn(|| words[2].len());\n        [first.join().unwrap(), second.join().unwrap(), third.join().unwrap()]\n    });\n    println!("{} {} {}", lengths[0], lengths[1], lengths[2]);\n}',
+        output: '3 5 4',
+        explanation:
+          'Whichever thread finishes first, the array is filled from the handles in spawn order.',
+      },
+      questions: [
+        choose(
+          'The three threads in the example may finish in any order. Why is the output still fixed?',
+          [
+            'Scoped threads always finish in the order they were spawned',
+            'The scope sorts the results by finishing time',
+            'Results are collected by joining the handles in a fixed order',
+            'Each thread waits for the previous one to print',
+          ],
+          2,
+          'The order of the results comes from the code that joins, not from the timing of the threads.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let scores = [72, 95, 64, 88];\n    let summary = std::thread::scope(|s| {\n        let total = s.spawn(|| scores.iter().sum::<i32>());\n        let count = s.spawn(|| scores.len());\n        (total.join().unwrap(), count.join().unwrap())\n    });\n    println!("{} {}", summary.0, summary.1);\n}',
+          ['4 319', '319 3', '319 4', '72 4'],
+          2,
+          'Two threads read the same array at once; the tuple places the total first and the count second.',
+        ),
+        choose(
+          'A scope spawns threads but never calls join on them. What happens at the end of the scope?',
+          [
+            'The scope waits for them before returning',
+            'The threads are stopped where they are',
+            'The program exits without waiting',
+            'The compiler rejects the scope',
+          ],
+          0,
+          'A scope always joins its remaining threads automatically.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let name = String::from("ivy");\n    std::thread::scope(|s| {\n        s.spawn(|| println!("hello {}", name));\n    });\n    println!("bye {}", name);\n}',
+          ['bye ivy\nhello ivy', 'hello ivy\nbye ivy', 'bye ivy', 'hello ivy'],
+          1,
+          'The scope does not return until the thread has printed, so hello always comes first.',
+        ),
+      ],
+    },
+  ],
+  'rust-mutex': [
+    {
+      title: 'lock returns a guard with exclusive access',
+      explanation: [
+        'std::sync::Mutex<T> wraps a value. m.lock() waits until no one else holds the lock and returns a Result containing a guard; unwrap takes the guard. Through the guard, *guard reads or changes the value.',
+        'The lock is released when the guard is dropped: at the end of the statement for an unnamed guard, or at the end of the block for a guard stored in a variable. There is no separate unlock call.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let counter = std::sync::Mutex::new(0);\n    {\n        let mut guard = counter.lock().unwrap();\n        *guard += 5;\n    }\n    *counter.lock().unwrap() += 2;\n    println!("{}", counter.lock().unwrap());\n}',
+        output: '7',
+        explanation:
+          'The named guard releases the lock at the end of its block, so the next lock call can proceed.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn deposit(account: &std::sync::Mutex<i32>, amount: i32) {\n    *account.lock().unwrap() += amount;\n}\n\nfn main() {\n    let account = std::sync::Mutex::new(100);\n    deposit(&account, 50);\n    deposit(&account, -30);\n    println!("{}", account.lock().unwrap());\n}',
+          ['100', '120', '150', '70'],
+          1,
+          'deposit only needs a shared reference: the lock provides the exclusive access to change the value.',
+        ),
+        choose(
+          'What does m.lock() do while another thread holds the lock?',
+          [
+            'Returns Err immediately without waiting',
+            'Waits for the release, then returns a guard',
+            'Returns a copy of the protected value',
+            'Panics with a deadlock error message',
+          ],
+          1,
+          'lock blocks the calling thread until the mutex is free.',
+        ),
+        choose(
+          'When is a Mutex’s lock released?',
+          [
+            'When unlock is called on the Mutex',
+            'Only when the Mutex itself is dropped',
+            'After a fixed timeout',
+            'When the guard returned by lock is dropped',
+          ],
+          3,
+          'The guard represents the held lock; dropping it unlocks.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let log = std::sync::Mutex::new(String::from("a"));\n    log.lock().unwrap().push_str("b");\n    {\n        let mut entry = log.lock().unwrap();\n        entry.push_str("c");\n        entry.push_str("d");\n    }\n    println!("{}", log.lock().unwrap().len());\n}',
+          ['3', '4', '1', '2'],
+          1,
+          'Every change goes through a guard, and each guard ends before the next lock call.',
+        ),
+      ],
+    },
+    {
+      title: 'Share the Mutex with a thread, and unlock before joining',
+      explanation: [
+        'A spawned thread needs ownership of what it uses, so the Mutex goes inside an Arc and each thread receives an Arc clone. The Mutex makes sure only one thread changes the value at a time.',
+        'Release your own guard before waiting for a thread that needs the same lock. If main holds the guard while joining, the thread waits for main and main waits for the thread.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let shared = std::sync::Arc::new(std::sync::Mutex::new(10));\n    let worker = std::sync::Arc::clone(&shared);\n    let handle = std::thread::spawn(move || {\n        *worker.lock().unwrap() *= 3;\n    });\n    handle.join().unwrap();\n    println!("{}", shared.lock().unwrap());\n}',
+        output: '30',
+        explanation:
+          'The thread locks through its Arc clone. main locks only after join, when the thread is done.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let shared = std::sync::Arc::new(std::sync::Mutex::new(1));\n    for step in 1..=3 {\n        let worker = std::sync::Arc::clone(&shared);\n        std::thread::spawn(move || {\n            *worker.lock().unwrap() += step;\n        })\n        .join()\n        .unwrap();\n    }\n    println!("{}", shared.lock().unwrap());\n}',
+          ['6', '4', '7', '10'],
+          2,
+          'Each thread adds its step to the same protected value: 1 + 1 + 2 + 3.',
+        ),
+        choose(
+          'main holds let guard = shared.lock().unwrap(); and then joins a thread that also calls shared.lock(). What happens?',
+          [
+            'They wait for each other forever: a deadlock',
+            'The thread reads the value through main’s guard',
+            'lock returns Err inside the thread',
+            'join releases main’s guard automatically',
+          ],
+          0,
+          'The thread cannot get the lock until main drops its guard, and main does not continue until the thread ends.',
+        ),
+        choose(
+          'Why is the Mutex wrapped in an Arc before it is given to a spawned thread?',
+          [
+            'Arc is what makes the value changeable',
+            'A Mutex cannot be created without an Arc',
+            'Each thread needs its own handle to one Mutex',
+            'Arc lets every lock call skip the wait',
+          ],
+          2,
+          'Arc provides shared ownership; the Mutex inside provides the exclusive access.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let text = std::sync::Arc::new(std::sync::Mutex::new(String::from("go")));\n    let worker = std::sync::Arc::clone(&text);\n    std::thread::spawn(move || worker.lock().unwrap().push_str("!"))\n        .join()\n        .unwrap();\n    let final_text = text.lock().unwrap().clone();\n    println!("{} {}", final_text, std::sync::Arc::strong_count(&text));\n}',
+          ['go! 2', 'go 1', 'go! 1', 'go!! 1'],
+          2,
+          'The thread’s change is visible after join, and its Arc clone was dropped when the thread finished.',
+        ),
+      ],
+    },
+  ],
+  'rust-channels': [
+    {
+      title: 'send moves a message to the receiver',
+      explanation: [
+        'let (tx, rx) = std::sync::mpsc::channel(); makes a sender and a receiver. tx.send(value) moves the value into the channel, and rx.recv() waits for the next message and returns it in an Ok.',
+        'Messages from one sender arrive in the order they were sent. recv returns Err only once every sender is gone and no messages remain.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let (tx, rx) = std::sync::mpsc::channel();\n    let producer = std::thread::spawn(move || {\n        for n in 1..=3 {\n            tx.send(n * 10).unwrap();\n        }\n    });\n    let first = rx.recv().unwrap();\n    let second = rx.recv().unwrap();\n    producer.join().unwrap();\n    println!("{} {}", first, second);\n}',
+        output: '10 20',
+        explanation:
+          'The producer sends 10, 20, 30 in order; main receives the first two.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let (tx, rx) = std::sync::mpsc::channel();\n    std::thread::spawn(move || {\n        tx.send(String::from("first")).unwrap();\n        tx.send(String::from("second")).unwrap();\n    })\n    .join()\n    .unwrap();\n    let a = rx.recv().unwrap();\n    let b = rx.recv().unwrap();\n    println!("{} {}", b, a);\n}',
+          ['first second', 'second second', 'second first', 'first first'],
+          2,
+          'The messages queue up in send order; the program then prints them swapped.',
+        ),
+        choose(
+          'After tx.send(message), where message is a String, what can the sending thread do with message?',
+          [
+            'Read it, since send only borrows it',
+            'Change it, and the receiver sees the change',
+            'Nothing; send moved it into the channel',
+            'Send it again to deliver a second copy',
+          ],
+          2,
+          'send takes the value by ownership and hands it to the receiving side.',
+        ),
+        choose(
+          'What does rx.recv() do when no message has arrived yet but a sender still exists?',
+          [
+            'Returns Err immediately',
+            'Returns the previous message again',
+            'Returns Ok with a default value',
+            'Waits until a message arrives',
+          ],
+          3,
+          'While a sender exists, a message may still come, so recv blocks.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let (tx, rx) = std::sync::mpsc::channel();\n    std::thread::spawn(move || tx.send(5).unwrap()).join().unwrap();\n    let a = rx.recv();\n    let b = rx.recv();\n    println!("{} {}", a.is_ok(), b.is_ok());\n}',
+          ['true true', 'false false', 'true false', 'false true'],
+          2,
+          'The only sender was moved into the finished thread and dropped, so after the one message recv reports Err.',
+        ),
+      ],
+    },
+    {
+      title: 'Receive until every sender is gone',
+      explanation: [
+        'A for loop over the receiver, for msg in rx, keeps receiving until every sender has been dropped and the channel is empty. A sender that stays alive keeps such a loop waiting.',
+        'tx.clone() gives each producer its own sender. Each sender’s messages stay in order, but messages from different senders can interleave, so deterministic programs combine them with a sum or count, or join producers one at a time.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let (tx, rx) = std::sync::mpsc::channel();\n    let tx2 = tx.clone();\n    let a = std::thread::spawn(move || {\n        for n in [1, 2, 3] {\n            tx.send(n).unwrap();\n        }\n    });\n    let b = std::thread::spawn(move || {\n        for n in [10, 20] {\n            tx2.send(n).unwrap();\n        }\n    });\n    a.join().unwrap();\n    b.join().unwrap();\n    let mut total = 0;\n    let mut count = 0;\n    for value in rx {\n        total += value;\n        count += 1;\n    }\n    println!("{} messages, total {}", count, total);\n}',
+        output: '5 messages, total 36',
+        explanation:
+          'Both senders were moved into threads that have finished, so the loop ends after the five queued messages.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let (tx, rx) = std::sync::mpsc::channel();\n    let producer = std::thread::spawn(move || {\n        for word in ["a", "b", "c"] {\n            tx.send(word).unwrap();\n        }\n    });\n    let mut joined = String::new();\n    for word in rx {\n        joined.push_str(word);\n    }\n    producer.join().unwrap();\n    println!("{}", joined);\n}',
+          ['cba', 'abc', 'a', 'ab'],
+          1,
+          'One sender keeps its order, and the loop ends when the producer finishes and drops tx.',
+        ),
+        choose(
+          'A loop for msg in rx { ... } never ends. What is the likely cause?',
+          [
+            'The channel holds too many messages',
+            'for loops can never end on a receiver',
+            'A sender, like tx in main, is still alive',
+            'The receiver was cloned by mistake',
+          ],
+          2,
+          'The loop only ends when no sender could send again; one forgotten tx keeps it waiting.',
+        ),
+        choose(
+          'Two producer threads send into one channel at the same time. What does the receiver see?',
+          [
+            'Each sender’s messages in order, possibly interleaved',
+            'All of the first thread’s messages before the second’s',
+            'Messages sorted by value',
+            'A random order even within one sender',
+          ],
+          0,
+          'The channel preserves order per sender but not across senders.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let (tx, rx) = std::sync::mpsc::channel();\n    let tx2 = tx.clone();\n    std::thread::spawn(move || tx.send(4).unwrap()).join().unwrap();\n    std::thread::spawn(move || tx2.send(9).unwrap()).join().unwrap();\n    let total: i32 = rx.iter().sum();\n    println!("{}", total);\n}',
+          ['9', '13', '4', '49'],
+          1,
+          'Both senders are dropped with their threads, so the receiver’s iterator ends after the two messages.',
+        ),
+      ],
+    },
+  ],
+  'rust-atomic-load-store': [
+    {
+      title: 'store and load one shared integer',
+      explanation: [
+        'std::sync::atomic::AtomicU32 is an integer that can be read with load and written with store through a shared reference. Each access happens as one indivisible step, so threads sharing it never cause a data race.',
+        'Every atomic operation takes an Ordering. Ordering::Relaxed is enough when only this one value matters; it does not make other memory written earlier visible to other threads.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn main() {\n    let level = AtomicU32::new(3);\n    level.store(8, Ordering::Relaxed);\n    let seen = level.load(Ordering::Relaxed);\n    println!("{}", seen);\n}',
+        output: '8',
+        explanation:
+          'store replaces the value and load reads the current one; no mut binding is needed.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn reset(value: &AtomicU32) {\n    value.store(0, Ordering::Relaxed);\n}\n\nfn main() {\n    let value = AtomicU32::new(42);\n    let before = value.load(Ordering::Relaxed);\n    reset(&value);\n    println!("{} {}", before, value.load(Ordering::Relaxed));\n}',
+          ['0 0', '42 42', '42 0', '0 42'],
+          2,
+          'before is a plain copy read earlier; reset changes the atomic through a shared reference.',
+        ),
+        choose(
+          'Why can store change an AtomicU32 through a shared & reference?',
+          [
+            'Atomics allow indivisible changes through &',
+            'store quietly clones the atomic first',
+            'The compiler turns & into &mut for atomics',
+            'Changes made through & are invisible to others',
+          ],
+          0,
+          'Atomic types are designed so that concurrent loads and stores through shared references are safe.',
+        ),
+        choose(
+          'What do atomic loads and stores guarantee that plain unsynchronized reads and writes from several threads do not?',
+          [
+            'That threads see writes in the order of their thread ids',
+            'No data race: each access happens as one indivisible step',
+            'That the value never changes once stored',
+            'That all memory written before the store is visible too',
+          ],
+          1,
+          'Atomicity covers this one value. Publishing other memory needs stronger orderings than Relaxed.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'use std::sync::atomic::{AtomicBool, Ordering};\n\nfn main() {\n    let done = AtomicBool::new(false);\n    let before = done.load(Ordering::Relaxed);\n    done.store(true, Ordering::Relaxed);\n    println!("{} {}", before, done.load(Ordering::Relaxed));\n}',
+          ['true true', 'false false', 'false true', 'true false'],
+          2,
+          'AtomicBool works the same way as AtomicU32: the first load sees false, the second sees the stored true.',
+        ),
+      ],
+    },
+    {
+      title: 'Share an atomic between threads',
+      explanation: [
+        'A static atomic, such as static STATUS: AtomicU32 = AtomicU32::new(1);, lives for the whole program, so any thread may use it without moving or cloning anything.',
+        'After join, main sees every store the thread made. A load followed by a separate store is not one step, though: another thread’s store can land between them.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::sync::atomic::{AtomicU32, Ordering};\n\nstatic STATUS: AtomicU32 = AtomicU32::new(1);\n\nfn main() {\n    std::thread::spawn(|| STATUS.store(5, Ordering::Relaxed))\n        .join()\n        .unwrap();\n    println!("{}", STATUS.load(Ordering::Relaxed));\n}',
+        output: '5',
+        explanation:
+          'The thread stores into the static atomic; after join, main loads the new value.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::sync::atomic::{AtomicU32, Ordering};\n\nstatic LAST: AtomicU32 = AtomicU32::new(0);\n\nfn main() {\n    for id in [3, 7, 2] {\n        std::thread::spawn(move || LAST.store(id, Ordering::Relaxed))\n            .join()\n            .unwrap();\n    }\n    println!("{}", LAST.load(Ordering::Relaxed));\n}',
+          ['7', '2', '12', '3'],
+          1,
+          'Each thread is joined before the next starts, so the last store wins.',
+        ),
+        choose(
+          'Two threads each run let v = X.load(Relaxed); X.store(v + 1, Relaxed); on a shared atomic starting at 0. After both finish, what can X hold?',
+          [
+            '1 or 2, since a store can land between a load and a store',
+            'Always 2, because each access is atomic',
+            'Always 1, because the second store is ignored',
+            '0, because Relaxed stores may be discarded',
+          ],
+          0,
+          'Both threads may load 0 before either stores, and then both store 1.',
+        ),
+        choose(
+          'When is Ordering::Relaxed enough?',
+          [
+            'When the store must publish a buffer filled just before',
+            'Never; Relaxed allows half-written values',
+            'When no other data depends on this value',
+            'Only for values that fit in a single byte',
+          ],
+          2,
+          'Relaxed keeps each access atomic but makes no promise about other memory.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'use std::sync::atomic::{AtomicBool, Ordering};\n\nstatic DONE: AtomicBool = AtomicBool::new(false);\n\nfn main() {\n    let before = DONE.load(Ordering::Relaxed);\n    std::thread::spawn(|| DONE.store(true, Ordering::Relaxed))\n        .join()\n        .unwrap();\n    let after = DONE.load(Ordering::Relaxed);\n    println!("{} {}", before, after);\n}',
+          ['true true', 'false true', 'false false', 'true false'],
+          1,
+          'The thread sets the flag; the load after join sees it.',
+        ),
+      ],
+    },
+  ],
+  'rust-atomic-fetch': [
+    {
+      title: 'fetch_add updates in one step and returns the old value',
+      explanation: [
+        'x.fetch_add(n, ordering) adds n as a single indivisible step, so no other thread can slip in between reading and writing. It returns the value from before the addition.',
+        'Related methods work the same way: fetch_sub subtracts, and fetch_max keeps the larger value. Each returns the previous value.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn main() {\n    let tickets = AtomicU32::new(100);\n    let mine = tickets.fetch_add(1, Ordering::Relaxed);\n    let yours = tickets.fetch_add(1, Ordering::Relaxed);\n    println!("{} {} {}", mine, yours, tickets.load(Ordering::Relaxed));\n}',
+        output: '100 101 102',
+        explanation:
+          'Each call returns the number before its own increment, and the atomic ends two higher.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn main() {\n    let stock = AtomicU32::new(10);\n    let a = stock.fetch_sub(3, Ordering::Relaxed);\n    let b = stock.fetch_add(5, Ordering::Relaxed);\n    println!("{} {} {}", a, b, stock.load(Ordering::Relaxed));\n}',
+          ['7 12 12', '10 10 12', '10 7 12', '7 2 12'],
+          2,
+          'fetch_sub returns 10 and leaves 7; fetch_add returns 7 and leaves 12.',
+        ),
+        choose(
+          'What does fetch_add return?',
+          [
+            'The value after the addition',
+            'Nothing; it only updates',
+            'The value before the addition',
+            'true if the addition succeeded',
+          ],
+          2,
+          'Returning the previous value tells each caller exactly which value it replaced.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn main() {\n    let best = AtomicU32::new(40);\n    let a = best.fetch_max(25, Ordering::Relaxed);\n    let b = best.fetch_max(70, Ordering::Relaxed);\n    println!("{} {} {}", a, b, best.load(Ordering::Relaxed));\n}',
+          ['40 70 70', '40 40 70', '25 70 70', '40 25 70'],
+          1,
+          '25 does not beat 40, so the first call changes nothing; 70 does, and the second call returns the old 40.',
+        ),
+        choose(
+          'Why use fetch_add instead of a load followed by a store of the value plus one?',
+          [
+            'A thread could update between them, losing a count',
+            'load and store cannot be used on the same atomic',
+            'fetch_add needs no memory ordering argument',
+            'store cannot write a value larger than the old one',
+          ],
+          0,
+          'fetch_add makes the read and the write one indivisible operation.',
+        ),
+      ],
+    },
+    {
+      title: 'Concurrent increments add up exactly',
+      explanation: [
+        'When many threads call fetch_add on one atomic, every increment is counted, whatever order the threads run in. After joining them all, the total is exact.',
+        'Because each call returns the previous value, concurrent callers also receive distinct numbers, which makes fetch_add a simple source of unique ids.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::sync::atomic::{AtomicU32, Ordering};\n\nstatic HITS: AtomicU32 = AtomicU32::new(0);\n\nfn main() {\n    let mut handles = Vec::new();\n    for _ in 0..4 {\n        handles.push(std::thread::spawn(|| {\n            for _ in 0..1000 {\n                HITS.fetch_add(1, Ordering::Relaxed);\n            }\n        }));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", HITS.load(Ordering::Relaxed));\n}',
+        output: '4000',
+        explanation:
+          'Four threads add 1000 each. Interleaving changes nothing, because each increment is atomic.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::sync::atomic::{AtomicU32, Ordering};\n\nstatic TOTAL: AtomicU32 = AtomicU32::new(0);\n\nfn main() {\n    let mut handles = Vec::new();\n    for _ in 0..3 {\n        handles.push(std::thread::spawn(|| {\n            for _ in 0..250 {\n                TOTAL.fetch_add(2, Ordering::Relaxed);\n            }\n        }));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", TOTAL.load(Ordering::Relaxed));\n}',
+          ['750', '1500', '500', '1000'],
+          1,
+          'Three threads each add 2 a total of 250 times: 3 * 250 * 2.',
+        ),
+        choose(
+          'Four threads each run let id = NEXT.fetch_add(1, Ordering::Relaxed); on an atomic that starts at 0. What is guaranteed?',
+          [
+            'The first thread spawned always gets 0',
+            'Two threads may receive the same id',
+            'Every thread receives the value 4',
+            'Each gets a distinct id from 0 to 3',
+          ],
+          3,
+          'Each fetch_add sees a different previous value, but which thread gets which depends on timing.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'use std::sync::atomic::{AtomicU32, Ordering};\n\nstatic NEXT: AtomicU32 = AtomicU32::new(10);\n\nfn main() {\n    let mut handles = Vec::new();\n    for _ in 0..3 {\n        handles.push(std::thread::spawn(|| NEXT.fetch_add(1, Ordering::Relaxed)));\n    }\n    let mut sum = 0;\n    for handle in handles {\n        sum += handle.join().unwrap();\n    }\n    println!("{} {}", sum, NEXT.load(Ordering::Relaxed));\n}',
+          ['30 13', '36 13', '33 13', '33 12'],
+          2,
+          'The threads receive 10, 11, and 12 in some order, so their sum is fixed at 33, and NEXT ends at 13.',
+        ),
+        choose(
+          'Why is Relaxed enough for a hit counter that main reads only after joining every thread?',
+          [
+            'join makes the final count visible',
+            'Relaxed makes fetch_add skip atomicity',
+            'Counters must always use SeqCst',
+            'Relaxed makes the threads run in order',
+          ],
+          0,
+          'The counter publishes no other data, and joining a thread makes its effects visible to main.',
+        ),
+      ],
+    },
+  ],
+  'rust-compare-exchange': [
+    {
+      title: 'Store only if the value is what you expect',
+      explanation: [
+        'x.compare_exchange(expected, new, success, failure) checks and swaps in one step. If the current value equals expected, it stores new and returns Ok(previous). Otherwise it changes nothing and returns Err(actual).',
+        'The two orderings apply to the success and failure cases; Ordering::SeqCst for both is a safe default.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn main() {\n    let state = AtomicU32::new(0);\n    let first = state.compare_exchange(0, 1, Ordering::SeqCst, Ordering::SeqCst);\n    let second = state.compare_exchange(0, 2, Ordering::SeqCst, Ordering::SeqCst);\n    println!("{:?} {:?} {}", first, second, state.load(Ordering::SeqCst));\n}',
+        output: 'Ok(0) Err(1) 1',
+        explanation:
+          'The first call finds 0 and stores 1. The second expects 0 but finds 1, so it stores nothing.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn main() {\n    let slot = AtomicU32::new(5);\n    let a = slot.compare_exchange(5, 9, Ordering::SeqCst, Ordering::SeqCst);\n    let b = slot.compare_exchange(9, 3, Ordering::SeqCst, Ordering::SeqCst);\n    let c = slot.compare_exchange(9, 4, Ordering::SeqCst, Ordering::SeqCst);\n    println!("{:?} {:?} {:?}", a, b, c);\n}',
+          [
+            'Ok(9) Ok(3) Err(3)',
+            'Ok(5) Ok(9) Err(3)',
+            'Ok(5) Ok(9) Ok(3)',
+            'Ok(5) Err(9) Err(3)',
+          ],
+          1,
+          'Ok carries the replaced value. The third call expects 9, but the slot already holds 3.',
+        ),
+        choose(
+          'compare_exchange returns Err(7). What happened?',
+          [
+            'Nothing was stored; the value was 7',
+            'The new value was stored, and 7 was the old value',
+            'The atomic was reset to the value 7',
+            'The store will be retried automatically later',
+          ],
+          0,
+          'Err means the comparison failed, and it reports the value that was actually there.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn claim(lock: &AtomicU32, id: u32) -> String {\n    match lock.compare_exchange(0, id, Ordering::SeqCst, Ordering::SeqCst) {\n        Ok(_) => format!("{} claimed", id),\n        Err(owner) => format!("{} saw owner {}", id, owner),\n    }\n}\n\nfn main() {\n    let lock = AtomicU32::new(0);\n    println!("{}", claim(&lock, 7));\n    println!("{}", claim(&lock, 9));\n}',
+          [
+            '7 claimed\n9 claimed',
+            '7 saw owner 0\n9 saw owner 7',
+            '7 claimed\n9 saw owner 7',
+            '7 claimed\n9 saw owner 9',
+          ],
+          2,
+          'Only the first claim finds 0. The second finds 7 and reports it through Err.',
+        ),
+        choose(
+          'Why is if x.load(..) == 0 { x.store(1, ..) } weaker than x.compare_exchange(0, 1, ..)?',
+          [
+            'load results cannot be compared with ==',
+            'store always fails right after a load',
+            'Another thread can change x between the load and the store',
+            'compare_exchange skips the comparison to be faster',
+          ],
+          2,
+          'compare_exchange performs the check and the store as one atomic step.',
+        ),
+      ],
+    },
+    {
+      title: 'Retry in a loop to apply any update',
+      explanation: [
+        'To apply an arbitrary change atomically, read the current value, compute the new one, and call compare_exchange(current, new, ..). If it returns Err(actual), another thread got there first: recompute from actual and try again.',
+        'while let Err(actual) = ... { current = actual; } expresses this retry loop directly.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn add_capped(x: &AtomicU32, amount: u32, cap: u32) -> u32 {\n    let mut current = x.load(Ordering::SeqCst);\n    while let Err(actual) = x.compare_exchange(\n        current,\n        (current + amount).min(cap),\n        Ordering::SeqCst,\n        Ordering::SeqCst,\n    ) {\n        current = actual;\n    }\n    (current + amount).min(cap)\n}\n\nfn main() {\n    let level = AtomicU32::new(7);\n    println!("{} {}", add_capped(&level, 2, 10), add_capped(&level, 5, 10));\n}',
+        output: '9 10',
+        explanation:
+          'Each call computes the capped sum from the value it saw and stores it only if that value is still current.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::sync::atomic::{AtomicU32, Ordering};\n\nfn double(x: &AtomicU32) -> u32 {\n    let mut current = x.load(Ordering::SeqCst);\n    while let Err(actual) =\n        x.compare_exchange(current, current * 2, Ordering::SeqCst, Ordering::SeqCst)\n    {\n        current = actual;\n    }\n    current * 2\n}\n\nfn main() {\n    let x = AtomicU32::new(3);\n    double(&x);\n    println!("{} {}", double(&x), x.load(Ordering::SeqCst));\n}',
+          ['6 12', '6 6', '12 12', '12 24'],
+          2,
+          'The first call stores 6; the second doubles 6 to 12 and returns it.',
+        ),
+        choose(
+          'In a compare_exchange retry loop, what should happen after Err(actual)?',
+          [
+            'Store the new value anyway with store',
+            'Give up, since another thread owns the value',
+            'Retry with the same expected value as before',
+            'Recompute the new value from actual and try again',
+          ],
+          3,
+          'The update must be based on the value that is really there now.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'use std::sync::atomic::{AtomicU32, Ordering};\n\nstatic LEVEL: AtomicU32 = AtomicU32::new(0);\n\nfn add_capped(amount: u32, cap: u32) {\n    let mut current = LEVEL.load(Ordering::SeqCst);\n    while let Err(actual) = LEVEL.compare_exchange(\n        current,\n        (current + amount).min(cap),\n        Ordering::SeqCst,\n        Ordering::SeqCst,\n    ) {\n        current = actual;\n    }\n}\n\nfn main() {\n    let mut handles = Vec::new();\n    for _ in 0..4 {\n        handles.push(std::thread::spawn(|| add_capped(3, 10)));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", LEVEL.load(Ordering::SeqCst));\n}',
+          ['12', '10', '3', '9'],
+          1,
+          'The four updates of 3 would reach 12, but every update respects the cap, whatever order they run in.',
+        ),
+        choose(
+          'Why might the body of a compare_exchange retry loop run more than once?',
+          [
+            'Another thread changed the value after it was read',
+            'compare_exchange always fails on its first attempt',
+            'The loop must run once per thread in the program',
+            'SeqCst ordering requires two attempts',
+          ],
+          0,
+          'A retry happens only when the value moved underneath the computation.',
+        ),
+      ],
+    },
+  ],
+  'rust-acquire-release': [
+    {
+      title: 'A release store publishes earlier writes to an acquire load',
+      explanation: [
+        'Storing a flag with Ordering::Release and loading it with Ordering::Acquire forms a pair. Once the acquire load reads the value written by the release store, everything the writer did before that store is visible to the reader.',
+        'With Relaxed on both sides, the reader may see the flag yet still see old values of the data written before it.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};\n\nstatic DATA: AtomicU32 = AtomicU32::new(0);\nstatic READY: AtomicBool = AtomicBool::new(false);\n\nfn main() {\n    let writer = std::thread::spawn(|| {\n        DATA.store(42, Ordering::Relaxed);\n        READY.store(true, Ordering::Release);\n    });\n    while !READY.load(Ordering::Acquire) {}\n    println!("{}", DATA.load(Ordering::Relaxed));\n    writer.join().unwrap();\n}',
+        output: '42',
+        explanation:
+          'main waits until its acquire load sees true. That load synchronizes with the release store, so the earlier write of 42 is visible.',
+      },
+      questions: [
+        choose(
+          'In the example, what guarantees that main prints 42 rather than 0?',
+          [
+            'Its Acquire load read the value written by the Release store',
+            'DATA is written before READY in the source, so order is automatic',
+            'Relaxed loads always see the newest value',
+            'join is called at the end of main',
+          ],
+          0,
+          'The release/acquire pair is what carries the earlier write across threads; join happens too late to matter.',
+        ),
+        choose(
+          'Which ordering belongs on the store that announces that the data is ready?',
+          ['Acquire', 'Relaxed', 'None; stores take no ordering', 'Release'],
+          3,
+          'Release goes on the store that publishes; Acquire goes on the load that observes.',
+        ),
+        choose(
+          'Both the flag store and the flag load use Relaxed. What may the reader observe?',
+          [
+            'Nothing; the flag never changes',
+            'A compile error about missing orderings',
+            'The flag set, but stale data',
+            'Always the new data, only more slowly',
+          ],
+          2,
+          'Relaxed orders nothing but the flag itself, so the data writes are not guaranteed to be visible.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};\n\nstatic A: AtomicU32 = AtomicU32::new(0);\nstatic B: AtomicU32 = AtomicU32::new(0);\nstatic READY: AtomicBool = AtomicBool::new(false);\n\nfn main() {\n    let writer = std::thread::spawn(|| {\n        A.store(3, Ordering::Relaxed);\n        B.store(4, Ordering::Relaxed);\n        READY.store(true, Ordering::Release);\n    });\n    while !READY.load(Ordering::Acquire) {}\n    println!("{}", A.load(Ordering::Relaxed) * 10 + B.load(Ordering::Relaxed));\n    writer.join().unwrap();\n}',
+          ['0', '30', '7', '34'],
+          3,
+          'Both writes come before the release store, so both are visible after the acquire load sees true.',
+        ),
+      ],
+    },
+    {
+      title: 'The guarantee needs the acquire to see the release',
+      explanation: [
+        'Synchronization only happens when the Acquire load actually reads the value the Release store wrote. If the load still sees the old flag, the reader learns nothing and must not touch the data.',
+        'So a reader checks the flag first and reads the data only after seeing it set. Release belongs on stores and Acquire on loads.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};\n\nstatic DATA: AtomicU32 = AtomicU32::new(0);\nstatic READY: AtomicBool = AtomicBool::new(false);\n\nfn try_read() -> Option<u32> {\n    if READY.load(Ordering::Acquire) {\n        Some(DATA.load(Ordering::Relaxed))\n    } else {\n        None\n    }\n}\n\nfn main() {\n    let before = try_read();\n    std::thread::spawn(|| {\n        DATA.store(42, Ordering::Relaxed);\n        READY.store(true, Ordering::Release);\n    })\n    .join()\n    .unwrap();\n    println!("{:?} {:?}", before, try_read());\n}',
+        output: 'None Some(42)',
+        explanation:
+          'Before the writer runs, the flag is false and try_read refuses to read DATA. Afterwards it sees the flag and the data.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};\n\nstatic DATA: AtomicU32 = AtomicU32::new(0);\nstatic READY: AtomicBool = AtomicBool::new(false);\n\nfn try_read() -> Option<u32> {\n    if READY.load(Ordering::Acquire) {\n        Some(DATA.load(Ordering::Relaxed))\n    } else {\n        None\n    }\n}\n\nfn main() {\n    DATA.store(5, Ordering::Relaxed);\n    let first = try_read();\n    std::thread::spawn(|| {\n        DATA.store(9, Ordering::Relaxed);\n        READY.store(true, Ordering::Release);\n    })\n    .join()\n    .unwrap();\n    println!("{:?} {:?}", first, try_read());\n}',
+          ['Some(5) Some(9)', 'None Some(9)', 'None Some(5)', 'Some(5) None'],
+          1,
+          'Data written without setting the flag is never handed out; the reader waits for the published 9.',
+        ),
+        choose(
+          'A reader’s Acquire load of the flag returns false. What does it know about the data?',
+          [
+            'The data is ready, but the flag is stale',
+            'The data is certainly still zero',
+            'The writer has already finished',
+            'Nothing; it must not assume the data is ready',
+          ],
+          3,
+          'Only observing the released value creates the guarantee.',
+        ),
+        choose(
+          'Which pair of operations establishes the guarantee?',
+          [
+            'An Acquire store and a Release load',
+            'A Release store read by an Acquire load',
+            'Two Relaxed operations on the same flag',
+            'A Release store and any later Relaxed load',
+          ],
+          1,
+          'The release side publishes and the acquire side, reading that value, receives.',
+        ),
+        choose(
+          'Why does the reader load the flag before loading the data?',
+          [
+            'Only reads after the Acquire load are covered',
+            'Loading the data first makes the flag load fail',
+            'The order of the two loads never matters',
+            'Data loads are slower, so they should go last',
+          ],
+          0,
+          'The acquire load is the point after which the writer’s earlier writes become visible.',
+        ),
+      ],
+    },
+  ],
+  'rust-send': [
+    {
+      title: 'Send marks values that may move to another thread',
+      explanation: [
+        'Send is a marker trait: a type is Send if its values may be moved to another thread. Integers, String, and tuples of Send types are Send. std::rc::Rc is not, because its owner count is updated without atomic operations.',
+        "std::thread::spawn requires its closure to be Send + 'static, so everything a move closure captures must be Send and must not borrow local data.",
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let owned = String::from("payload");\n    let length = std::thread::spawn(move || owned.len()).join().unwrap();\n    println!("{}", length);\n}',
+        output: '7',
+        explanation:
+          'A String is Send and owned, so the closure capturing it may run on another thread.',
+      },
+      questions: [
+        choose(
+          'Which value can be captured by a move closure passed to std::thread::spawn?',
+          [
+            'An Rc<String>',
+            'A reference to a local String in main',
+            'A String',
+            'A tuple containing an Rc<u32>',
+          ],
+          2,
+          "Rc is not Send, a tuple holding one is not either, and a local borrow is not 'static.",
+        ),
+        choose(
+          'Why is Rc<T> not Send?',
+          [
+            'Rc values always live on the stack',
+            'Rc values cannot be cloned at all',
+            'Rc requires its T to be a Copy type',
+            'Its owner count is not updated atomically',
+          ],
+          3,
+          'Clones in two threads could update the plain count at the same time.',
+        ),
+        choose(
+          "What does the 'static bound on spawn’s closure rule out?",
+          [
+            'Capturing any String value at all',
+            'Returning a value from the thread',
+            'Capturing borrows of local variables',
+            'Using integers inside the thread',
+          ],
+          2,
+          'The thread may outlive the current function, so it may only hold data that cannot dangle.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let parts = (String::from("ab"), 3);\n    let result = std::thread::spawn(move || format!("{}{}", parts.0, parts.1))\n        .join()\n        .unwrap();\n    println!("{}", result);\n}',
+          ['ab 3', 'ab3', '3ab', 'ab'],
+          1,
+          'A tuple of a String and an integer is Send, so it moves into the thread whole.',
+        ),
+      ],
+    },
+    {
+      title: "Put Send + 'static on generic thread helpers",
+      explanation: [
+        "A generic function that moves a T into a spawned thread must promise T: Send + 'static, or the compiler rejects the spawn. A value the thread returns through join must be Send as well.",
+        'Callers then get a clear error when they pass a type such as Rc, instead of a data race at run time.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn in_thread<T: Send + \'static>(value: T) -> T {\n    std::thread::spawn(move || value).join().unwrap()\n}\n\nfn main() {\n    let a = in_thread(5);\n    let b = in_thread(String::from("echo"));\n    println!("{} {}", a + 1, b);\n}',
+        output: '6 echo',
+        explanation:
+          'Both i32 and String meet the bound, so each value travels to a thread and back.',
+      },
+      questions: [
+        choose(
+          'fn run<T>(value: T) { std::thread::spawn(move || value); } is rejected. What fixes it?',
+          [
+            'Add the bound T: Copy + Clone',
+            'Take &T instead of an owned T',
+            "Add the bound T: Send + 'static",
+            "Add the bound T: Clone + 'static",
+          ],
+          2,
+          "spawn needs everything it captures to be Send and 'static, so the generic T must promise both.",
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn background<F: FnOnce() -> R + Send + \'static, R: Send + \'static>(job: F) -> R {\n    std::thread::spawn(job).join().unwrap()\n}\n\nfn main() {\n    let base = 10;\n    let a = background(move || base * 2);\n    let b = background(|| String::from("ok"));\n    println!("{} {}", a, b);\n}',
+          ['20 ok', '10 ok', 'ok 20', '20'],
+          0,
+          'Each closure runs on its own thread, and its Send result returns through join.',
+        ),
+        choose(
+          'Calling in_thread(std::rc::Rc::new(1)) is rejected. Why?',
+          [
+            "Rc<i32> does not live for 'static",
+            'Rc<i32> does not implement Send',
+            'in_thread only accepts Copy types',
+            'A thread can never return a value',
+          ],
+          1,
+          "Rc<i32> owns its data, so it is 'static; the failing part is Send.",
+        ),
+        choose(
+          'Which type is Send?',
+          [
+            'std::rc::Rc<String>',
+            'std::rc::Weak<String>',
+            '(u32, std::rc::Rc<u8>)',
+            '(String, u32)',
+          ],
+          3,
+          'Rc and its Weak pointers are not Send, and a tuple is Send only if every element is.',
+        ),
+      ],
+    },
+  ],
+  'rust-sync': [
+    {
+      title: 'Sync means &T may be shared between threads',
+      explanation: [
+        'A type T is Sync when a shared reference &T may be used from several threads at once. Types without interior mutability, such as i32, String, and arrays of them, are Sync, so scoped threads can all borrow them together.',
+        'std::cell::Cell and RefCell are not Sync: they allow changes through & without any locking, which would race. Thread-safe types such as Mutex and the atomics are Sync.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let table = [2, 4, 6];\n    let total = std::thread::scope(|s| {\n        let a = s.spawn(|| table[0] + table[1]);\n        let b = s.spawn(|| table[2] * 10);\n        a.join().unwrap() + b.join().unwrap()\n    });\n    println!("{}", total);\n}',
+        output: '66',
+        explanation:
+          'Both threads hold &table at the same time, which is allowed because arrays of i32 are Sync.',
+      },
+      questions: [
+        choose(
+          'Two scoped threads both borrow a std::cell::Cell<u32>. Why is that rejected?',
+          [
+            'Cell values cannot be borrowed at all',
+            'Cell is not Sync; unlocked changes through & would race',
+            'Scoped threads may only borrow integers',
+            'Cell is not Send, so it cannot exist in main',
+          ],
+          1,
+          'Sharing &Cell across threads would let two threads set it at once without coordination.',
+        ),
+        choose(
+          'What does it mean for a type T to be Sync?',
+          [
+            'A T may be moved to one other thread',
+            'T may only be used by the thread that created it',
+            'A &T may be used from several threads at once',
+            'T is copied for each thread that uses it',
+          ],
+          2,
+          'Sync is about sharing references; Send is about moving values.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let text = String::from("shared text");\n    let facts = std::thread::scope(|s| {\n        let len = s.spawn(|| text.len());\n        let has = s.spawn(|| text.contains("text"));\n        (len.join().unwrap(), has.join().unwrap())\n    });\n    println!("{} {}", facts.0, facts.1);\n}',
+          ['11 false', '10 true', '2 true', '11 true'],
+          3,
+          'String is Sync, so both threads read it through shared references at the same time.',
+        ),
+        choose(
+          'Which type may be shared by reference among scoped threads that all change it?',
+          [
+            'std::sync::Mutex<u32>',
+            'std::cell::Cell<u32>',
+            'std::cell::RefCell<u32>',
+            'A plain u32 changed through &',
+          ],
+          0,
+          'Mutex is Sync because its lock coordinates the changes; the cell types are not.',
+        ),
+      ],
+    },
+    {
+      title: 'Bound generic thread code by Sync and Send',
+      explanation: [
+        'A generic function that lends &T to scoped threads needs T: Sync, because several threads hold that reference. If a thread also returns a T, that value moves back across threads, so T: Send is needed too.',
+        'An Arc<T> may be sent to another thread only when T is both Send and Sync, because every clone gives another thread a shared reference to the same T.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn split_len<T: Sync>(items: &[T]) -> (usize, usize) {\n    let mid = items.len() / 2;\n    std::thread::scope(|s| {\n        let left = s.spawn(|| items[..mid].len());\n        let right = s.spawn(|| items[mid..].len());\n        (left.join().unwrap(), right.join().unwrap())\n    })\n}\n\nfn main() {\n    let r = split_len(&["a", "b", "c", "d", "e"]);\n    println!("{} {}", r.0, r.1);\n}',
+        output: '2 3',
+        explanation:
+          'Each thread borrows part of items, which the T: Sync bound allows.',
+      },
+      questions: [
+        choose(
+          'Removing T: Sync from split_len makes it fail to compile. Why?',
+          [
+            'Sharing &[T] across threads needs T: Sync',
+            'len can only be called on Sync types',
+            'Slices cannot be split without Sync',
+            'scope requires every type parameter to be Copy',
+          ],
+          0,
+          'Without the bound, T might be something like Cell that is unsafe to share.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn peek<T: Sync + Send + Copy>(value: &T) -> T {\n    std::thread::scope(|s| s.spawn(|| *value).join().unwrap())\n}\n\nfn main() {\n    let n = 21;\n    let pair = (1, 2);\n    println!("{} {}", peek(&n) * 2, peek(&pair).1);\n}',
+          ['21 2', '42 2', '42 1', '42 12'],
+          1,
+          'Each thread copies the borrowed value and returns it through join.',
+        ),
+        choose(
+          'In peek<T: Sync + Send + Copy>(value: &T) -> T, why is Send needed as well as Sync?',
+          [
+            'Sync types can never be copied',
+            'The returned T moves across threads',
+            'Send is what allows the thread to borrow value',
+            'Copy types are always rejected without Send',
+          ],
+          1,
+          'Sync covers the shared borrow; Send covers the owned value coming back.',
+        ),
+        choose(
+          'Can a std::sync::Arc<std::cell::RefCell<u32>> be sent to another thread?',
+          [
+            'Yes: Arc makes anything thread-safe',
+            'No: Arc<T> is Send only if T is Sync, and RefCell is not',
+            'Yes, because RefCell checks borrows at run time',
+            'No: an Arc can never be sent between threads',
+          ],
+          1,
+          'Clones of the Arc would give two threads &RefCell at once, and RefCell’s checks are not thread-safe.',
+        ),
+      ],
+    },
+  ],
+  'rust-arc-mutex': [
+    {
+      title: 'Give each worker an Arc clone and lock only to update',
+      explanation: [
+        'The pattern is Arc<Mutex<T>>: each worker thread gets its own Arc clone before spawning, and locks the Mutex only for the moment it changes the value.',
+        'After joining every worker, main locks once more to read the final result. All worker clones are gone by then, so the Arc count is back to one.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let total = std::sync::Arc::new(std::sync::Mutex::new(0));\n    let mut handles = Vec::new();\n    for worker in 1..=4 {\n        let total = std::sync::Arc::clone(&total);\n        handles.push(std::thread::spawn(move || {\n            *total.lock().unwrap() += worker;\n        }));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", total.lock().unwrap());\n}',
+        output: '10',
+        explanation:
+          'Four workers add 1, 2, 3, and 4 in some order; the lock makes each addition safe, so the sum is always 10.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let names = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));\n    let mut handles = Vec::new();\n    for n in 0..5 {\n        let names = std::sync::Arc::clone(&names);\n        handles.push(std::thread::spawn(move || {\n            names.lock().unwrap().push(n);\n        }));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", names.lock().unwrap().len());\n}',
+          ['5', '4', '1', '0'],
+          0,
+          'Every worker pushes exactly once under the lock, so none of the five pushes is lost.',
+        ),
+        choose(
+          'Why does each worker receive std::sync::Arc::clone(&total) instead of total itself?',
+          [
+            'The first closure would take the only Arc',
+            'clone copies the counter so workers do not interfere',
+            'A Mutex needs a fresh Arc for every lock call',
+            'Arc::clone releases the lock for the new worker',
+          ],
+          0,
+          'Each thread must own a handle, and cloning the Arc makes another handle to the same Mutex.',
+        ),
+        choose(
+          'A worker computes a slow result and then adds it to a shared total. Which lock scope is best?',
+          [
+            'Lock first and hold the lock during the computation',
+            'Lock once in main on behalf of all workers',
+            'Compute first, then lock just for the addition',
+            'Skip the lock, since Arc already protects the total',
+          ],
+          2,
+          'Holding the lock only for the update lets other workers compute in parallel.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let count = std::sync::Arc::new(std::sync::Mutex::new(0));\n    let mut handles = Vec::new();\n    for _ in 0..3 {\n        let count = std::sync::Arc::clone(&count);\n        handles.push(std::thread::spawn(move || {\n            for _ in 0..100 {\n                *count.lock().unwrap() += 1;\n            }\n        }));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{} {}", count.lock().unwrap(), std::sync::Arc::strong_count(&count));\n}',
+          ['300 1', '300 4', '100 1', '3 1'],
+          0,
+          'All 300 increments are counted, and the workers’ Arc clones were dropped when they finished.',
+        ),
+      ],
+    },
+    {
+      title: 'Neither Arc nor Mutex is enough alone',
+      explanation: [
+        'Arc alone gives several threads ownership but only read access, so *arc += 1 is rejected. A Mutex alone allows changes but has a single owner, so it cannot be moved into several threads.',
+        'Combined as Arc<Mutex<T>>, they give shared ownership and exclusive changes. The final value is exact, but the order in which threads applied their changes is not fixed.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let words = ["alpha", "be", "gamma"];\n    let letters = std::sync::Arc::new(std::sync::Mutex::new(0));\n    let mut handles = Vec::new();\n    for word in words {\n        let letters = std::sync::Arc::clone(&letters);\n        handles.push(std::thread::spawn(move || {\n            let n = word.len();\n            *letters.lock().unwrap() += n;\n        }));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", letters.lock().unwrap());\n}',
+        output: '12',
+        explanation:
+          'Each worker computes its word length without the lock and adds it under the lock: 5 + 2 + 5.',
+      },
+      questions: [
+        choose(
+          'Why doesn’t a std::sync::Arc<u32> alone work for a counter that workers increment?',
+          [
+            'An Arc cannot be moved into a thread',
+            'Arc gives only shared read access',
+            'A u32 cannot be stored in an Arc',
+            'Each worker would have to clone the u32',
+          ],
+          1,
+          'Shared ownership does not include permission to mutate.',
+        ),
+        choose(
+          'A plain std::sync::Mutex<u32> created in main is captured by the first of four move closures. What goes wrong?',
+          [
+            'A Mutex cannot be used from a spawned thread',
+            'That closure takes ownership, so no other worker can use it',
+            'lock works only on the thread that created the Mutex',
+            'A Mutex can be locked only once in total',
+          ],
+          1,
+          'The Mutex has one owner; wrapping it in an Arc lets every worker own a handle.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let text = std::sync::Arc::new(std::sync::Mutex::new(String::new()));\n    let mut handles = Vec::new();\n    for piece in ["ab", "cde", "f"] {\n        let text = std::sync::Arc::clone(&text);\n        handles.push(std::thread::spawn(move || text.lock().unwrap().push_str(piece)));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    println!("{}", text.lock().unwrap().len());\n}',
+          ['3', '6', '2', '0'],
+          1,
+          'All three pieces are appended under the lock, giving 2 + 3 + 1 bytes.',
+        ),
+        choose(
+          'In that program, which statement about the final text is true?',
+          [
+            'It is always exactly "abcdef"',
+            'Length 6, with the pieces in any order',
+            'Pieces may be split up, as in "acbdef"',
+            'It may be shorter if two threads lock at once',
+          ],
+          1,
+          'Each push_str happens whole under the lock, but the threads may take the lock in any order.',
+        ),
+      ],
+    },
+  ],
+  'rust-deadlock-scope': [
+    {
+      title: 'A guard holds the lock until it is dropped',
+      explanation: [
+        'std’s Mutex is not reentrant: if a thread calls lock() again while its own guard is still alive, the second call never succeeds. A guard stored in a variable lives to the end of its block.',
+        'Keep each guard in a small block, or use it as a temporary inside a single statement, so it is dropped before the next lock. try_lock returns Err instead of waiting, which makes a held lock visible.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let value = std::sync::Mutex::new(4);\n    {\n        let mut guard = value.lock().unwrap();\n        *guard += 1;\n    }\n    *value.lock().unwrap() *= 10;\n    println!("{}", value.lock().unwrap());\n}',
+        output: '50',
+        explanation:
+          'The first guard ends with its block, and the second is a temporary that ends with its statement.',
+      },
+      questions: [
+        choose(
+          'What happens when this program runs?',
+          [
+            'again shares the lock with guard',
+            'The compiler rejects the second lock call',
+            'The second call releases guard automatically',
+            'The second lock never succeeds',
+          ],
+          3,
+          'The same thread is waiting for a lock that only it can release.',
+          'fn main() {\n    let value = std::sync::Mutex::new(1);\n    let guard = value.lock().unwrap();\n    let again = value.lock().unwrap();\n}',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let m = std::sync::Mutex::new(0);\n    let while_held;\n    {\n        let _guard = m.lock().unwrap();\n        while_held = m.try_lock().is_ok();\n    }\n    let after = m.try_lock().is_ok();\n    println!("{} {}", while_held, after);\n}',
+          ['true true', 'false true', 'false false', 'true false'],
+          1,
+          '_guard keeps the lock until the block ends; afterwards try_lock succeeds.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn add(m: &std::sync::Mutex<i32>, n: i32) {\n    *m.lock().unwrap() += n;\n}\n\nfn main() {\n    let m = std::sync::Mutex::new(1);\n    add(&m, 2);\n    let doubled = *m.lock().unwrap() * 2;\n    add(&m, doubled);\n    println!("{}", m.lock().unwrap());\n}',
+          ['6', '9', '12', '3'],
+          1,
+          'The temporary guard in the let statement is dropped before add locks again: 3, then 3 + 6.',
+        ),
+        choose(
+          'A function holds let mut g = m.lock().unwrap(); and then calls a helper that also locks m. How can it be fixed?',
+          [
+            'End g’s scope first, or change the value through g',
+            'Call the helper twice so the second call succeeds',
+            'Declare m with let mut',
+            'Clone the Mutex before calling the helper',
+          ],
+          0,
+          'Either release the guard before relocking or keep working through the guard already held.',
+        ),
+      ],
+    },
+    {
+      title: 'Never wait for one lock while holding another',
+      explanation: [
+        'If thread 1 holds lock A and waits for B while thread 2 holds B and waits for A, neither can ever continue: a deadlock.',
+        'Two habits prevent it: hold at most one lock at a time, as in a transfer that finishes with one account before locking the other, or always take several locks in one agreed order.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn transfer(from: &std::sync::Mutex<i32>, to: &std::sync::Mutex<i32>, amount: i32) {\n    *from.lock().unwrap() -= amount;\n    *to.lock().unwrap() += amount;\n}\n\nfn main() {\n    let a = std::sync::Arc::new(std::sync::Mutex::new(100));\n    let b = std::sync::Arc::new(std::sync::Mutex::new(50));\n    let first = {\n        let (a, b) = (std::sync::Arc::clone(&a), std::sync::Arc::clone(&b));\n        std::thread::spawn(move || transfer(&a, &b, 30))\n    };\n    let second = {\n        let (a, b) = (std::sync::Arc::clone(&a), std::sync::Arc::clone(&b));\n        std::thread::spawn(move || transfer(&b, &a, 10))\n    };\n    first.join().unwrap();\n    second.join().unwrap();\n    println!("{} {}", a.lock().unwrap(), b.lock().unwrap());\n}',
+        output: '80 70',
+        explanation:
+          'The threads transfer in opposite directions, but each statement in transfer holds only one lock, so they cannot block each other.',
+      },
+      questions: [
+        choose(
+          'Thread 1 holds lock A and waits for B; thread 2 holds B and waits for A. What is this?',
+          [
+            'A data race on the values in A and B',
+            'A panic that unwrap reports at once',
+            'A deadlock: neither thread can ever continue',
+            'Ordinary waiting that resolves itself',
+          ],
+          2,
+          'Each thread waits for a lock the other will never release.',
+        ),
+        choose(
+          'Two functions each need mutexes x and y at the same time. Which rule prevents a deadlock between them?',
+          [
+            'Both always lock x before y',
+            'Each locks them in whichever order is convenient',
+            'Each locks every mutex twice to be sure',
+            'Both use try_lock and ignore failures',
+          ],
+          0,
+          'With one global order, no thread can hold the second lock while waiting for the first.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn transfer(from: &std::sync::Mutex<i32>, to: &std::sync::Mutex<i32>, amount: i32) {\n    *from.lock().unwrap() -= amount;\n    *to.lock().unwrap() += amount;\n}\n\nfn main() {\n    let a = std::sync::Mutex::new(10);\n    let b = std::sync::Mutex::new(0);\n    let c = std::sync::Mutex::new(5);\n    transfer(&a, &b, 4);\n    transfer(&b, &c, 3);\n    transfer(&c, &a, 8);\n    println!("{} {} {}", a.lock().unwrap(), b.lock().unwrap(), c.lock().unwrap());\n}',
+          ['6 1 8', '14 4 0', '10 1 0', '14 1 0'],
+          3,
+          'a gives 4 and receives 8; b receives 4 and gives 3; c receives 3 and gives 8.',
+        ),
+        choose(
+          'Why can’t the one-lock-at-a-time transfer deadlock, even with threads moving money in opposite directions?',
+          [
+            'Mutexes detect transfers in opposite directions',
+            'The threads always run one after another',
+            'unwrap retries the lock until it succeeds',
+            'Each lock is released before the next is taken',
+          ],
+          3,
+          'A thread never waits while holding a lock, so no cycle of waiting can form.',
+        ),
+      ],
+    },
+  ],
+  'rust-future-pin': [
+    {
+      title: 'Box::pin makes any future pollable',
+      explanation: [
+        'An async block, async { ... }, is a future whose body runs only when it is polled. poll takes self as Pin<&mut Self>. Pin::new works only for futures that are fine to move (Unpin), and an async block’s future is not.',
+        'Box::pin(fut) moves the future to the heap and returns a Pin<Box<F>>. fut.as_mut() then gives the Pin<&mut F> that poll needs, as many times as required.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut fut = Box::pin(async { 6 * 7 });\n    let mut cx = Context::from_waker(Waker::noop());\n    match fut.as_mut().poll(&mut cx) {\n        Poll::Ready(value) => println!("ready {}", value),\n        Poll::Pending => println!("pending"),\n    }\n}',
+        output: 'ready 42',
+        explanation:
+          'The boxed, pinned async block can be polled through as_mut, and its body finishes on the first poll.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let base = 5;\n    let mut fut = Box::pin(async move { base * 3 });\n    let mut cx = Context::from_waker(Waker::noop());\n    if let Poll::Ready(v) = fut.as_mut().poll(&mut cx) {\n        println!("{}", v + 1);\n    }\n}',
+          ['15', '18', '5', '16'],
+          3,
+          'async move captures base; polling runs the body, which produces 15.',
+        ),
+        choose(
+          'Why does Pin::new(&mut fut).poll(&mut cx) fail to compile when fut is an async block?',
+          [
+            'Async blocks cannot be polled at all',
+            'Pin::new only accepts integer futures',
+            'The async block’s future is not Unpin',
+            'The Context must be boxed first',
+          ],
+          2,
+          'Pin::new is only for types that are safe to move; Box::pin works for any future.',
+        ),
+        choose(
+          'What does Box::pin(fut) return?',
+          [
+            'A Pin<Box<F>> owning the future on the heap',
+            'A Box<F> that can be moved out freely',
+            'The future’s output, after polling it once',
+            'A Pin<&mut F> borrowing a local variable',
+          ],
+          0,
+          'The future lives in the box, and the Pin promises it will not be moved out again.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut fut = Box::pin(async {\n        println!("inside");\n        9\n    });\n    println!("created");\n    let mut cx = Context::from_waker(Waker::noop());\n    if let Poll::Ready(v) = fut.as_mut().poll(&mut cx) {\n        println!("got {}", v);\n    }\n}',
+          [
+            'inside\ncreated\ngot 9',
+            'created\ngot 9',
+            'inside\ngot 9\ncreated',
+            'created\ninside\ngot 9',
+          ],
+          3,
+          'Creating the async block runs none of its body; poll runs it.',
+        ),
+      ],
+    },
+    {
+      title: 'A pinned future stays where it is',
+      explanation: [
+        'An async block may hold references to its own local variables across an await, so once polled it must stay at one address. Pin guarantees that: safe code cannot move a non-Unpin value back out of its Pin.',
+        'Moving the Pin<Box<F>> itself is fine, because only the pointer moves. std::pin::pin!(fut) pins a future in the current function’s stack frame instead of on the heap.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut fut = std::pin::pin!(async { "stack pinned" });\n    let mut cx = Context::from_waker(Waker::noop());\n    if let Poll::Ready(text) = fut.as_mut().poll(&mut cx) {\n        println!("{}", text);\n    }\n}',
+        output: 'stack pinned',
+        explanation:
+          'pin! gives a Pin<&mut F> to a future stored in main itself, which as_mut can poll without a heap allocation.',
+      },
+      questions: [
+        choose(
+          'Why may an async block’s future need to stay at one address once polled?',
+          [
+            'Heap memory can never be moved',
+            'Moving it would run its body a second time',
+            'It may hold references to its own local variables',
+            'The Waker stores the future’s address',
+          ],
+          2,
+          'A reference into the future itself would dangle if the future moved.',
+        ),
+        choose(
+          'How does Box::pin(fut) differ from std::pin::pin!(fut)?',
+          [
+            'pin! allows moving the future later; Box::pin does not',
+            'Box::pin polls the future immediately',
+            'Box::pin pins on the heap; pin! pins in the current stack frame',
+            'They are identical; both allocate on the heap',
+          ],
+          2,
+          'Both give a pinned future; they differ in where it is stored and how long it can live.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut fut = Box::pin(async { 2 + 2 });\n    let mut cx = Context::from_waker(Waker::noop());\n    let first = match fut.as_mut().poll(&mut cx) {\n        Poll::Ready(v) => v,\n        Poll::Pending => 0,\n    };\n    let moved_box = fut;\n    println!("{}", first);\n}',
+          ['0', '2', '4', '22'],
+          2,
+          'The future is ready on its first poll. Moving the Pin<Box> afterwards only moves the pointer.',
+        ),
+        choose(
+          'fut has type Pin<Box<F>>, where F is an async block. Which operation does safe Rust refuse?',
+          [
+            'Moving the Pin<Box<F>> into another variable',
+            'Taking the F out of the box by value',
+            'Calling fut.as_mut().poll(&mut cx)',
+            'Dropping fut',
+          ],
+          1,
+          'Moving the future itself out would break the pin’s promise; the other operations keep it in place.',
+        ),
+      ],
+    },
+  ],
+  'rust-future-pending': [
+    {
+      title: 'Implement Future by writing poll',
+      explanation: [
+        'impl Future for Countdown { type Output = ...; fn poll(...) -> Poll<...> } turns a struct into a future. The associated type Output is what Poll::Ready carries when the future finishes.',
+        'Each call to poll either finishes with Ready or reports Pending. Progress between polls is kept in the struct’s own fields, changed through self. For a struct with ordinary fields, Pin::new(&mut fut) is enough to poll it.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::{Context, Poll, Waker};\n\nstruct Countdown {\n    left: u32,\n}\n\nimpl Future for Countdown {\n    type Output = &\'static str;\n\n    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<\'_>) -> Poll<&\'static str> {\n        if self.left == 0 {\n            Poll::Ready("liftoff")\n        } else {\n            self.left -= 1;\n            cx.waker().wake_by_ref();\n            Poll::Pending\n        }\n    }\n}\n\nfn main() {\n    let mut fut = Countdown { left: 2 };\n    let mut cx = Context::from_waker(Waker::noop());\n    let mut polls = 1;\n    let mut result = Pin::new(&mut fut).poll(&mut cx);\n    while result.is_pending() {\n        polls += 1;\n        result = Pin::new(&mut fut).poll(&mut cx);\n    }\n    println!("{:?} after {} polls", result, polls);\n}',
+        output: 'Ready("liftoff") after 3 polls',
+        explanation:
+          'The first two polls count left down to 0 and return Pending; the third finds 0 and returns Ready.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::{Context, Poll, Waker};\n\nstruct Countdown {\n    left: u32,\n}\n\nimpl Future for Countdown {\n    type Output = &\'static str;\n\n    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<\'_>) -> Poll<&\'static str> {\n        if self.left == 0 {\n            Poll::Ready("liftoff")\n        } else {\n            self.left -= 1;\n            cx.waker().wake_by_ref();\n            Poll::Pending\n        }\n    }\n}\n\nfn polls_needed(left: u32) -> u32 {\n    let mut fut = Countdown { left };\n    let mut cx = Context::from_waker(Waker::noop());\n    let mut polls = 1;\n    while Pin::new(&mut fut).poll(&mut cx).is_pending() {\n        polls += 1;\n    }\n    polls\n}\n\nfn main() {\n    println!("{} {}", polls_needed(0), polls_needed(3));\n}',
+          ['0 3', '1 3', '0 4', '1 4'],
+          3,
+          'A countdown starting at n returns Pending n times and is Ready on poll n + 1.',
+        ),
+        choose(
+          "In impl Future for Countdown, what does type Output = &'static str; decide?",
+          [
+            'The type of the Context passed to poll',
+            'How many times poll may be called',
+            'The type that Poll::Ready carries',
+            'The type of Countdown’s fields',
+          ],
+          2,
+          'Output is the result type of the future, so poll returns Poll<Self::Output>.',
+        ),
+        choose(
+          'Where does a hand-written future keep its progress between polls?',
+          [
+            'In its own fields, updated through self in poll',
+            'In poll’s local variables, which persist between calls',
+            'In the Context, which remembers each future',
+            'Nowhere; every poll starts from scratch',
+          ],
+          0,
+          'Locals vanish when poll returns, so state that must survive goes in the struct.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::{Context, Poll, Waker};\n\nstruct Sum {\n    next: u32,\n    total: u32,\n}\n\nimpl Future for Sum {\n    type Output = u32;\n\n    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<\'_>) -> Poll<u32> {\n        if self.next > 3 {\n            Poll::Ready(self.total)\n        } else {\n            let next = self.next;\n            self.total += next;\n            self.next += 1;\n            cx.waker().wake_by_ref();\n            Poll::Pending\n        }\n    }\n}\n\nfn main() {\n    let mut fut = Sum { next: 1, total: 0 };\n    let mut cx = Context::from_waker(Waker::noop());\n    let mut pending = 0;\n    let mut result = Pin::new(&mut fut).poll(&mut cx);\n    while result.is_pending() {\n        pending += 1;\n        result = Pin::new(&mut fut).poll(&mut cx);\n    }\n    println!("{:?} {}", result, pending);\n}',
+          ['Ready(6) 4', 'Ready(10) 3', 'Ready(3) 3', 'Ready(6) 3'],
+          3,
+          'Three Pending polls add 1, 2, and 3; the fourth poll finds next above 3 and returns the total.',
+        ),
+      ],
+    },
+    {
+      title: 'Return Pending only with a wakeup arranged',
+      explanation: [
+        'An executor polls a task again only after the task’s waker is woken. So before returning Pending, poll must make sure someone will wake it: call cx.waker().wake_by_ref() if progress is possible right away, or store cx.waker().clone() where a timer or socket will call wake later.',
+        'A future that returns Pending with no wakeup arranged may never be polled again. The examples here use Waker::noop(), which ignores wakes, and simply poll again by hand.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::{Context, Poll, Waker};\n\nstruct Later {\n    value: i32,\n    waiting: bool,\n    wakes: u32,\n}\n\nimpl Future for Later {\n    type Output = i32;\n\n    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<\'_>) -> Poll<i32> {\n        if self.waiting {\n            self.waiting = false;\n            self.wakes += 1;\n            cx.waker().wake_by_ref();\n            Poll::Pending\n        } else {\n            Poll::Ready(self.value)\n        }\n    }\n}\n\nfn main() {\n    let mut fut = Later { value: 8, waiting: true, wakes: 0 };\n    let mut cx = Context::from_waker(Waker::noop());\n    let first = Pin::new(&mut fut).poll(&mut cx);\n    let second = Pin::new(&mut fut).poll(&mut cx);\n    println!("{:?} {:?} {}", first, second, fut.wakes);\n}',
+        output: 'Pending Ready(8) 1',
+        explanation:
+          'The first poll records its state change, wakes the task, and returns Pending; the second poll is Ready.',
+      },
+      questions: [
+        choose(
+          'A future returns Poll::Pending without waking or storing the waker. What can happen under a real executor?',
+          [
+            'The task is never polled again and never finishes',
+            'The executor polls it again immediately anyway',
+            'The future is dropped and its output is 0',
+            'The compiler rejects the poll method',
+          ],
+          0,
+          'Executors rely on wakeups to know when polling is worthwhile.',
+        ),
+        choose(
+          'A future waits for a network message that will arrive later. What should poll do before returning Pending?',
+          [
+            'Call wake_by_ref in a loop until the message arrives',
+            'Block the thread until the message arrives',
+            'Return Ready with a placeholder value instead',
+            'Store cx.waker().clone() where the message handler will wake it',
+          ],
+          3,
+          'The event source should wake the task exactly when progress becomes possible.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::{Context, Poll, Waker};\n\nstruct Later {\n    value: i32,\n    waiting: bool,\n    wakes: u32,\n}\n\nimpl Future for Later {\n    type Output = i32;\n\n    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<\'_>) -> Poll<i32> {\n        if self.waiting {\n            self.waiting = false;\n            self.wakes += 1;\n            cx.waker().wake_by_ref();\n            Poll::Pending\n        } else {\n            Poll::Ready(self.value)\n        }\n    }\n}\n\nfn main() {\n    let mut fut = Later { value: -3, waiting: true, wakes: 0 };\n    let mut cx = Context::from_waker(Waker::noop());\n    let a = Pin::new(&mut fut).poll(&mut cx).is_ready();\n    let b = Pin::new(&mut fut).poll(&mut cx).is_ready();\n    println!("{} {} {}", a, b, fut.wakes);\n}',
+          ['true true 0', 'false false 1', 'false true 1', 'false true 2'],
+          2,
+          'Only the first poll waits and wakes; the second finds waiting false and finishes.',
+        ),
+        choose(
+          'Why can calling cx.waker().wake_by_ref() and then returning Pending be correct?',
+          [
+            'It makes poll count as returning Ready',
+            'It cancels the task and drops it',
+            'It schedules another poll right away',
+            'It never is; waking and Pending contradict each other',
+          ],
+          2,
+          'Waking right away schedules another poll, which suits a future that can continue immediately.',
+        ),
+      ],
+    },
+  ],
+  'rust-await': [
+    {
+      title: 'await takes the output of another future',
+      explanation: [
+        'Inside an async block or async fn, fut.await polls fut and, once it is Ready, evaluates to its output. That lets async code use futures like ordinary values, one after another.',
+        '.await is allowed only inside async code. Calling an async fn, as in double(5), returns a future and runs none of its body until that future is polled.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut task = Box::pin(async {\n        let a = std::future::ready(3).await;\n        let b = std::future::ready(4).await;\n        a * b\n    });\n    let mut cx = Context::from_waker(Waker::noop());\n    if let Poll::Ready(v) = task.as_mut().poll(&mut cx) {\n        println!("{}", v);\n    }\n}',
+        output: '12',
+        explanation:
+          'Each await yields the ready future’s value, and the block returns their product.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nasync fn double(n: i32) -> i32 {\n    n * 2\n}\n\nfn main() {\n    let mut task = Box::pin(async { double(double(5).await).await + 1 });\n    let mut cx = Context::from_waker(Waker::noop());\n    if let Poll::Ready(v) = task.as_mut().poll(&mut cx) {\n        println!("{}", v);\n    }\n}',
+          ['21', '11', '20', '22'],
+          0,
+          'The inner await gives 10, the outer await doubles that to 20, and 1 is added.',
+        ),
+        choose(
+          'Where can .await be written?',
+          [
+            'Inside an async block or async fn',
+            'Anywhere, including a plain fn main',
+            'Only on futures made by std::future::ready',
+            'Only inside a match on Poll',
+          ],
+          0,
+          'await needs an enclosing future that can suspend, which only async code provides.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut task = Box::pin(async {\n        println!("start");\n        let x = std::future::ready(10).await;\n        println!("got {}", x);\n        x + 1\n    });\n    println!("before poll");\n    let mut cx = Context::from_waker(Waker::noop());\n    if let Poll::Ready(v) = task.as_mut().poll(&mut cx) {\n        println!("done {}", v);\n    }\n}',
+          [
+            'start\nbefore poll\ngot 10\ndone 11',
+            'before poll\nstart\ndone 11',
+            'start\ngot 10\nbefore poll\ndone 11',
+            'before poll\nstart\ngot 10\ndone 11',
+          ],
+          3,
+          'The body starts only at the poll, and the ready future lets it run to the end in one go.',
+        ),
+        choose(
+          'What does calling double(5) return, for async fn double(n: i32) -> i32, before anything polls it?',
+          [
+            'The value 10, computed immediately',
+            'A future whose body has not run yet',
+            'Poll::Ready(10)',
+            'A thread handle already running the body',
+          ],
+          1,
+          'An async fn call only builds a future; polling it runs the body.',
+        ),
+      ],
+    },
+    {
+      title: 'Awaiting a pending future suspends the whole task',
+      explanation: [
+        'If the awaited future returns Pending, the enclosing async block returns Pending from its own poll and remembers where it stopped. The next poll resumes at that await; the statements before it do not run again.',
+        'Unlike a loop that keeps polling until Ready, await never busy-waits: the task simply stops until it is polled again.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut task = Box::pin(async {\n        println!("step 1");\n        let mut first = true;\n        let value = std::future::poll_fn(move |_cx| {\n            if first {\n                first = false;\n                Poll::Pending\n            } else {\n                Poll::Ready(5)\n            }\n        })\n        .await;\n        println!("step 2");\n        value * 2\n    });\n    let mut cx = Context::from_waker(Waker::noop());\n    println!("{:?}", task.as_mut().poll(&mut cx));\n    println!("{:?}", task.as_mut().poll(&mut cx));\n}',
+        output: 'step 1\nPending\nstep 2\nReady(10)',
+        explanation:
+          'The first poll stops at the await. The second resumes there, so step 1 is not printed again.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut task = Box::pin(async {\n        println!("begin");\n        let mut left = 2;\n        let word = std::future::poll_fn(move |_cx| {\n            if left == 0 {\n                Poll::Ready("ok")\n            } else {\n                left -= 1;\n                Poll::Pending\n            }\n        })\n        .await;\n        println!("end");\n        word\n    });\n    let mut cx = Context::from_waker(Waker::noop());\n    for _ in 0..3 {\n        println!("{:?}", task.as_mut().poll(&mut cx));\n    }\n}',
+          [
+            'begin\nPending\nbegin\nPending\nbegin\nend\nReady("ok")',
+            'begin\nPending\nPending\nReady("ok")',
+            'begin\nend\nReady("ok")\nReady("ok")\nReady("ok")',
+            'begin\nPending\nPending\nend\nReady("ok")',
+          ],
+          3,
+          'The task is suspended twice at the await and resumes there each time, so begin prints once.',
+        ),
+        choose(
+          'An async block awaits a future that returns Pending. What does polling the block return?',
+          [
+            'Pending, and the next poll resumes at that await',
+            'Pending, and the next poll restarts the block from the top',
+            'Ready with a default value',
+            'Nothing until the inner future is ready, blocking the thread',
+          ],
+          0,
+          'The block’s state records where it stopped, so it continues from the await.',
+        ),
+        choose(
+          'How does .await differ from a loop that polls a future until it is Ready?',
+          [
+            'await polls the future on a new thread',
+            'await never polls the inner future',
+            'await suspends the task instead of spinning',
+            'They are the same; await is a busy loop',
+          ],
+          2,
+          'Suspending frees the executor to run other tasks until a wakeup arrives.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'use std::future::Future;\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut task = Box::pin(async {\n        let a = std::future::ready(2).await;\n        let b = std::future::ready(a + 3).await;\n        a * b\n    });\n    let mut cx = Context::from_waker(Waker::noop());\n    let mut polls = 1;\n    while task.as_mut().poll(&mut cx).is_pending() {\n        polls += 1;\n    }\n    println!("{}", polls);\n}',
+          ['2', '3', '0', '1'],
+          3,
+          'Ready futures never return Pending, so both awaits complete within the first poll.',
+        ),
+      ],
+    },
+  ],
 };
