@@ -18,7 +18,7 @@ import {
   encompassedBy as encompassedIn,
 } from './catalog-outline';
 import { mathSpans, mathTextErrors, mathTextFields } from './math-text';
-import { typedQuestionErrors } from './typed-answer';
+import { synonymCollisionErrors, typedQuestionErrors } from './typed-answer';
 import {
   GENERATOR_SAMPLES,
   MIN_DISTINCT_VARIANTS,
@@ -86,8 +86,9 @@ export interface ChoiceQuestion extends QuestionBase {
 
 /**
  * A typed number. The response is graded by `src/lib/typed-answer.ts`: it may
- * be an integer, a decimal, a simple fraction like `3/4`, or scientific
- * notation like `1e-3`, and is correct within the absolute `tolerance`.
+ * be an integer, a decimal, a simple fraction like `3/4`, scientific notation
+ * like `1e-3`, or grouped in thousands (`1,000`), optionally followed by the
+ * declared unit, and is correct within the absolute `tolerance`.
  */
 export interface NumericQuestion extends QuestionBase {
   type: 'numeric';
@@ -96,7 +97,10 @@ export interface NumericQuestion extends QuestionBase {
   answer: number;
   /** Absolute: correct when |response − answer| ≤ tolerance. Omitted is exact. */
   tolerance?: number;
-  /** Unit or format hint shown next to the input, e.g. `ms` or `to 2 decimals`. */
+  /**
+   * Unit or format hint shown next to the input, e.g. `ms` or `to 2 decimals`.
+   * A unit (one word without digits) may also end the response: `250 ms`.
+   */
   unit?: string;
   generate?: (seed: number) => GeneratedFields<NumericQuestion>;
 }
@@ -104,14 +108,22 @@ export interface NumericQuestion extends QuestionBase {
 /**
  * A short typed answer: a predicted program output, a name, or a keyword.
  * Responses are compared line by line after trimming each line and
- * collapsing runs of spaces; case matters unless `ignoreCase` is set.
+ * collapsing runs of spaces. An output question (`checksOutput`) or an
+ * `exact` one stops there, case included unless `ignoreCase` is set. Any
+ * other accepts equivalent forms: any case unless `caseSensitive`, wrapping
+ * quotes or backticks, and trailing punctuation (`src/lib/typed-answer.ts`).
  */
 export interface TextQuestion extends QuestionBase {
   type: 'text';
   code?: string;
-  /** Accepted answers; the first is the one shown after answering. */
+  /** Accepted answers and synonyms; the first is the one shown after answering. */
   answers: string[];
+  /** Case does not matter, for an exact question or a capitalized term. */
   ignoreCase?: boolean;
+  /** Case is part of the answer, as in an identifier such as `True`. */
+  caseSensitive?: boolean;
+  /** Graded like an output: quotes and punctuation count, as in `'a'`. */
+  exact?: boolean;
   /** The single accepted answer is exactly what `code` prints; catalog tests run it. */
   checksOutput?: boolean;
   generate?: (seed: number) => GeneratedFields<TextQuestion>;
@@ -487,6 +499,13 @@ export function validateCurriculum(
         )
           errors.push(`${question.id}: needs four or more distinct choices.`);
     }
+    // A typed synonym must not accept a distractor of the same skill.
+    errors.push(
+      ...synonymCollisionErrors([
+        ...item.questions,
+        ...points.flatMap((point) => point.questions),
+      ]),
+    );
     for (const question of [
       ...item.questions,
       ...points.flatMap((point) => point.questions),

@@ -71,6 +71,7 @@ import { createAnkiClient, type AnkiClient } from '../lib/anki';
 import { loadCardText } from '../lib/cards';
 import { type LearnerState } from '../lib/state';
 import { legacyMemory, recallProbability } from '../lib/retention';
+import { averageAnswerTime, formatAnswerTime } from '../lib/answer-time';
 import { useLearner } from './useLearner';
 
 function masteryStatus(state: LearnerState, skill: Skill) {
@@ -879,6 +880,21 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
               aria-label="Selected skill mastery"
             />
           </div>
+          {(() => {
+            // Recorded on every answer since state version 9 (CEN-161).
+            const average = averageAnswerTime(
+              state.progress.attempts,
+              selected,
+            );
+            return (
+              average && (
+                <p className="detail-note">
+                  Average answer time: {formatAnswerTime(average.ms)} over{' '}
+                  {average.count} {average.count === 1 ? 'answer' : 'answers'}.
+                </p>
+              )
+            );
+          })()}
           {getSkillState(state.progress, selected.id).mastery === 1 &&
             (() => {
               const p = getSkillState(state.progress, selected.id);

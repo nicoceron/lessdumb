@@ -15,6 +15,7 @@ import {
   getSkillState,
   isMastered,
   isUnlocked,
+  timed,
   type Progress,
   type SkillProgress,
 } from './learning';
@@ -68,7 +69,11 @@ export interface DiagnosticAnswer extends DiagnosticQuestion {
   answer: number | string;
   correct: boolean;
   at: number;
-  /** Time from showing the question to submitting it, measured by the page. */
+  /**
+   * Time from showing the question to submitting it, measured by the page:
+   * paused while the tab is hidden and capped at MAX_ANSWER_MS since
+   * version 9 (src/lib/answer-time.ts).
+   */
   elapsedMs?: number;
 }
 
@@ -384,11 +389,8 @@ export function answerDiagnostic(
         answer,
         correct,
         at,
-        ...(elapsedMs !== undefined &&
-        Number.isFinite(elapsedMs) &&
-        elapsedMs >= 0
-          ? { elapsedMs: Math.round(elapsedMs) }
-          : {}),
+        // Capped and paused while hidden, as on every attempt (CEN-161).
+        ...timed(elapsedMs),
       },
     ],
   };

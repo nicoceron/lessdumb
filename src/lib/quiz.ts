@@ -17,6 +17,7 @@ import {
   isUnlocked,
   MAX_RECENT_ATTEMPTS,
   seenCounts,
+  timed,
   type Attempt,
   type Progress,
   type SkillProgress,
@@ -483,6 +484,8 @@ export function answerQuiz(
   now: Now = Date.now(),
   catalog: GraphCatalog = defaultCatalog,
   writerId?: string,
+  /** Answer time measured by the page; kept on the attempt. */
+  elapsedMs?: number,
 ): Progress {
   const quiz = quizzesOf(progress).find((item) => item.id === quizId);
   if (!quiz || quiz.completedAt !== undefined) return progress;
@@ -527,6 +530,7 @@ export function answerQuiz(
     xp: 0,
     quizId,
     ...(question.variant !== undefined ? { variant: question.variant } : {}),
+    ...timed(elapsedMs),
   };
   const day = activityDay(progress, at);
   const updated: Quiz = {

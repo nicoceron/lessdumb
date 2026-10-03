@@ -31,7 +31,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 - **Courses:** choose your active course from eight courses and 721 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
 - **Lessons:** each lesson is one page that grows as you work, as in Math Academy: the introduction, then for each knowledge point its explanation, a worked example, and its questions, then the code exercise. Answered questions stay on the page with their explanations, so you can scroll back and reread while you solve. Reviews stack their questions on one page the same way.
 - **Account menu:** the avatar menu opens the knowledge graph, flashcards, code lab, and settings, and signs you in or out.
-- **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
+- **Knowledge graph:** inspect prerequisites, see mastery, availability, and your average answer time per skill, search skills, and explore their connections.
 - **Flashcards:** receive recall cards after mastery and correction cards after mistakes, with math typeset; connect Anki or export a tab-separated deck.
 - **Code lab:** experiment with real Python, Rust, or C++ in a separate playground without changing mastery.
 - **Accounts and settings:** create an email/password account, save progress across browsers using the same server, delete the account and its progress, configure Anki, and export a JSON backup.

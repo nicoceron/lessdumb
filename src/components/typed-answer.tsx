@@ -3,10 +3,12 @@ import { Check, X } from 'lucide-react';
 import type { TypedQuestion } from '../lib/curriculum';
 import {
   acceptedAnswer,
+  isExactText,
   normalizeText,
   parseNumber,
   TYPED_RESPONSE_MAX_LENGTH,
   typedLines,
+  unitSuffix,
 } from '../lib/typed-answer';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,9 +27,19 @@ function hintFor(question: TypedQuestion, multiline: boolean): string {
     return multiline
       ? `Type exactly what it prints, one printed line per line. ${submit}`
       : `Type exactly what it prints. ${submit}`;
-  return question.ignoreCase
-    ? `Capitalization does not matter. ${submit}`
-    : submit;
+  const caseFree = isExactText(question)
+    ? question.ignoreCase
+    : !question.caseSensitive;
+  return caseFree ? `Capitalization does not matter. ${submit}` : submit;
+}
+
+/** A typed number with its unit, unless the learner already typed it. */
+function withUnit(response: string, unit?: string): string {
+  if (!unit) return response;
+  const suffix = unitSuffix(unit);
+  return suffix && response.trim().endsWith(suffix)
+    ? response
+    : `${response} ${unit}`;
 }
 
 export function TypedAnswerInput({
@@ -120,10 +132,14 @@ export function TypedAnswerInput({
 /** Whether a correct response reads differently from the accepted answer. */
 function differs(question: TypedQuestion, response: string): boolean {
   if (question.type === 'numeric')
-    return parseNumber(response) !== question.answer || !!question.tolerance;
+    return (
+      parseNumber(response, question.unit) !== question.answer ||
+      !!question.tolerance
+    );
+  // Show the canonical spelling when the learner typed an equivalent form.
+  const fold = isExactText(question) && !!question.ignoreCase;
   return (
-    normalizeText(response, question.ignoreCase) !==
-    normalizeText(question.answers[0], question.ignoreCase)
+    normalizeText(response, fold) !== normalizeText(question.answers[0], fold)
   );
 }
 
@@ -151,10 +167,7 @@ export function TypedAnswerResult({
         className={`typed-response ${correct ? 'is-correct' : 'is-incorrect'}`}
       >
         <span className="answer-tag">Your answer</span>
-        <pre>
-          {response}
-          {unit ? ` ${unit}` : ''}
-        </pre>
+        <pre>{withUnit(response, unit)}</pre>
         {correct ? (
           <Check size={18} aria-hidden="true" />
         ) : (

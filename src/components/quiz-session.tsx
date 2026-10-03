@@ -33,6 +33,7 @@ import { acceptedAnswer, gradeTyped } from '../lib/typed-answer';
 import type { AnswerQuestion } from '../lib/curriculum';
 import { Btn, ContentLoading } from './shared';
 import { useSkillContent } from './use-content';
+import { useAnswerTime } from './use-answer-time';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -89,6 +90,14 @@ export default function QuizSession({
       quiz?.questions ??
       (status?.kind === 'available' ? planQuiz(state.progress, courseId) : [])
     ).map((slot) => slot.skillId),
+  );
+  // Each question's answer time runs from when it is shown.
+  const liveIndex =
+    quiz && !finished && content.ready
+      ? quiz.questions.findIndex((slot) => slot.answer === undefined)
+      : -1;
+  const answerTime = useAnswerTime(
+    liveIndex >= 0 ? `${quiz!.id}-${liveIndex}` : undefined,
   );
   useEffect(() => {
     if (!quiz || finished) return;
@@ -190,12 +199,22 @@ export default function QuizSession({
       }
       answer = response;
     }
+    const elapsedMs = answerTime();
     setSelected(null);
     setResponse('');
     setInvalid(null);
     update((s) => ({
       ...s,
-      progress: answerQuiz(s.progress, quiz!.id, index, answer, Date.now()),
+      progress: answerQuiz(
+        s.progress,
+        quiz!.id,
+        index,
+        answer,
+        Date.now(),
+        undefined,
+        undefined,
+        elapsedMs,
+      ),
     }));
   }
   return (

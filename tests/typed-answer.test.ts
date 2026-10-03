@@ -18,11 +18,14 @@ import {
   gradeNumeric,
   gradeText,
   gradeTyped,
+  lenientText,
   NOT_A_NUMBER,
   normalizeText,
   parseNumber,
+  synonymCollisionErrors,
   TYPED_RESPONSE_MAX_LENGTH,
   typedQuestionErrors,
+  unitSuffix,
 } from '../src/lib/typed-answer';
 import {
   applyAttempt,
@@ -72,17 +75,30 @@ const numeric = (
   explanation: 'Count them.',
   ...extra,
 });
+/** A name, keyword, or term: graded in equivalent forms. */
 const text = (
   answers: string[],
   extra: Partial<TextQuestion> = {},
 ): TextQuestion => ({
   id: 'fixture-q',
   type: 'text',
-  prompt: 'What does it print?',
+  prompt: 'Which function returns the length?',
   answers,
-  explanation: 'It prints that.',
+  explanation: 'That one.',
   ...extra,
 });
+/** What a program prints: graded exactly. */
+const output = (
+  answers: string[],
+  extra: Partial<TextQuestion> = {},
+): TextQuestion =>
+  text(answers, {
+    prompt: 'What does it print?',
+    code: `print(${JSON.stringify(answers[0])})`,
+    explanation: 'It prints that.',
+    checksOutput: true,
+    ...extra,
+  });
 
 describe('reading a typed number', () => {
   it('accepts integers, decimals, negatives, simple fractions, and scientific notation', () => {
@@ -103,7 +119,6 @@ describe('reading a typed number', () => {
       '',
       '   ',
       'abc',
-      '1,000',
       '3/0',
       '1/2/3',
       '1.5/2',
@@ -156,7 +171,7 @@ describe('grading numeric answers', () => {
       status: 'invalid',
       message: NOT_A_NUMBER,
     });
-    expect(gradeNumeric(numeric(1000), '1,000')).toMatchObject({
+    expect(gradeNumeric(numeric(1000), '1.000,5')).toMatchObject({
       status: 'invalid',
     });
     expect(gradeNumeric(numeric(3), ' ')).toEqual({
@@ -166,9 +181,9 @@ describe('grading numeric answers', () => {
   });
 });
 
-describe('grading text answers', () => {
+describe('grading output answers', () => {
   it('ignores surrounding and repeated spaces but not the characters', () => {
-    const question = text(['[1, 2]']);
+    const question = output(['[1, 2]']);
     expect(gradeText(question, '  [1, 2] ')).toEqual({ status: 'correct' });
     expect(gradeText(question, '[1,   2]')).toEqual({ status: 'correct' });
     expect(gradeText(question, '[1,2]')).toEqual({ status: 'incorrect' });
@@ -176,15 +191,20 @@ describe('grading text answers', () => {
     expect(gradeText(question, '(1, 2)')).toEqual({ status: 'incorrect' });
   });
 
-  it('is case-sensitive unless the question says otherwise', () => {
-    expect(gradeText(text(['True']), 'true')).toEqual({ status: 'incorrect' });
-    expect(gradeText(text(['len'], { ignoreCase: true }), 'LEN')).toEqual({
-      status: 'correct',
+  it('is case-sensitive, and an exact question too unless it ignores case', () => {
+    expect(gradeText(output(['True']), 'true')).toEqual({
+      status: 'incorrect',
     });
+    expect(gradeText(text(['Len'], { exact: true }), 'len')).toEqual({
+      status: 'incorrect',
+    });
+    expect(
+      gradeText(text(['len'], { exact: true, ignoreCase: true }), 'LEN'),
+    ).toEqual({ status: 'correct' });
   });
 
   it('compares multi-line output line by line, ignoring trailing spaces and line endings', () => {
-    const question = text(['first\nsecond']);
+    const question = output(['first\nsecond']);
     expect(gradeText(question, 'first  \r\nsecond\n')).toEqual({
       status: 'correct',
     });
@@ -199,26 +219,24 @@ describe('grading text answers', () => {
     });
   });
 
-  it('accepts any listed answer and straightens curly quotes from phone keyboards', () => {
-    const question = text(['append', 'list.append']);
-    expect(gradeText(question, 'list.append')).toEqual({ status: 'correct' });
-    expect(gradeText(text(["['a']"]), '[‘a’]')).toEqual({
+  it('straightens curly quotes from phone keyboards', () => {
+    expect(gradeText(output(["['a']"]), '[‘a’]')).toEqual({
       status: 'correct',
     });
     expect(normalizeText(' a \t b \n\n c ')).toBe('a b\n\nc');
   });
 
   it('treats a blank or overlong response as not gradable', () => {
-    expect(gradeText(text(['x']), ' \n ')).toMatchObject({
+    expect(gradeText(output(['x']), ' \n ')).toMatchObject({
       status: 'invalid',
     });
     expect(
-      gradeTyped(text(['x']), 'x'.repeat(TYPED_RESPONSE_MAX_LENGTH + 1)),
+      gradeTyped(output(['x']), 'x'.repeat(TYPED_RESPONSE_MAX_LENGTH + 1)),
     ).toMatchObject({ status: 'invalid' });
   });
 
   it('shows the accepted answer with its tolerance', () => {
-    expect(acceptedAnswer(text(['3 4', '3  4']))).toBe('3 4');
+    expect(acceptedAnswer(text(['len', 'length']))).toBe('len');
     expect(acceptedAnswer(numeric(0.731, { tolerance: 0.0005 }))).toBe(
       '0.731 (± 0.0005)',
     );
@@ -250,10 +268,11 @@ describe('validating typed questions', () => {
     expect(
       typedQuestionErrors(numeric(5 / 6, { tolerance: 0.0005, unit: '%' })),
     ).toEqual([]);
-    expect(typedQuestionErrors(text(['3\n4'], { checksOutput: true }))).toEqual(
+    expect(typedQuestionErrors(output(['3\n4']))).toEqual([]);
+    expect(typedQuestionErrors(text(['len', 'length']))).toEqual([]);
+    expect(typedQuestionErrors(text(['len', 'LEN'], { exact: true }))).toEqual(
       [],
     );
-    expect(typedQuestionErrors(text(['len', 'LEN']))).toEqual([]);
   });
 
   it('rejects an answer or tolerance that cannot be graded as intended', () => {
@@ -278,17 +297,17 @@ describe('validating typed questions', () => {
     expect(typedQuestionErrors(text(['a\nb\nc\nd'])).join()).toContain(
       'at most 3 lines',
     );
+    // Case folding makes these one answer.
+    expect(typedQuestionErrors(text(['len', 'LEN'])).join()).toContain(
+      'distinct',
+    );
+    expect(typedQuestionErrors(output(['x  y'])).join()).toContain('spacing');
     expect(
-      typedQuestionErrors(text(['x  y'], { checksOutput: true })).join(),
-    ).toContain('spacing');
-    expect(
-      typedQuestionErrors(
-        text(['True'], { checksOutput: true, ignoreCase: true }),
-      ).join(),
+      typedQuestionErrors(output(['True'], { ignoreCase: true })).join(),
     ).toContain('exactly its output');
-    expect(
-      typedQuestionErrors(text(['1', '1.0'], { checksOutput: true })).join(),
-    ).toContain('exactly its output');
+    expect(typedQuestionErrors(output(['1', '1.0'])).join()).toContain(
+      'exactly its output',
+    );
   });
 });
 
@@ -323,9 +342,9 @@ const typedSkill: Skill = {
   knowledgePoints: [
     point('fixture-typed', 0, [numeric(4), numeric(6), numeric(0.5)]),
     point('fixture-typed', 1, [
-      text(['3\n4'], { checksOutput: true, code: 'print(3)\nprint(4)' }),
+      output(['3\n4'], { code: 'print(3)\nprint(4)' }),
       text(['len'], { ignoreCase: true }),
-      text(['None']),
+      text(['None'], { caseSensitive: true }),
     ]),
   ],
   questions: [],
@@ -495,6 +514,348 @@ describe('typed questions in the engine', () => {
     );
     expect(() => parseStateUpdate({ state: tampered, revision: 0 })).toThrow(
       'response',
+    );
+  });
+});
+
+describe('equivalent numeric answers (CEN-161)', () => {
+  it('accepts a leading plus sign on every form', () => {
+    expect(parseNumber('+42')).toBe(42);
+    expect(parseNumber('+0.5')).toBe(0.5);
+    expect(parseNumber('+3/4')).toBe(0.75);
+    expect(parseNumber('+1e3')).toBe(1000);
+    expect(parseNumber('+1,000')).toBe(1000);
+    expect(gradeNumeric(numeric(7), '+7')).toEqual({ status: 'correct' });
+    for (const value of ['++4', '+-4', '+ 4', '+'])
+      expect(parseNumber(value), value).toBeNull();
+  });
+
+  it('accepts thousands grouped by commas or spaces when unambiguous', () => {
+    expect(parseNumber('1,000')).toBe(1000);
+    expect(parseNumber('12,345,678')).toBe(12_345_678);
+    expect(parseNumber('-1,234.5')).toBe(-1234.5);
+    expect(parseNumber('1 000')).toBe(1000);
+    expect(parseNumber('1 000 000')).toBe(1_000_000);
+    // No-break, thin, and narrow no-break spaces from keyboards and pastes.
+    expect(parseNumber('1 000')).toBe(1000);
+    expect(parseNumber('1 000')).toBe(1000);
+    expect(parseNumber('1 000.25')).toBe(1000.25);
+    expect(gradeNumeric(numeric(1000), '1,000')).toEqual({
+      status: 'correct',
+    });
+    expect(gradeNumeric(numeric(1000), '1 000')).toEqual({
+      status: 'correct',
+    });
+    expect(gradeNumeric(numeric(1000), '1,001')).toEqual({
+      status: 'incorrect',
+    });
+  });
+
+  it('rejects separators that could be a decimal comma or a typo', () => {
+    for (const value of [
+      '1,5',
+      '0,25',
+      '12,34',
+      '1,00',
+      '1,0000',
+      '1000,000',
+      '10,00,000',
+      ',000',
+      '1,000,',
+      '1,000 000',
+      '1 000,000',
+      '1 00',
+      '1  000',
+      '1.000,5',
+      '1,000/4',
+      '1,000e3',
+    ])
+      expect(parseNumber(value), value).toBeNull();
+    // Not a number, so not a miss: the learner is asked again.
+    expect(gradeNumeric(numeric(1.5), '1,5')).toEqual({
+      status: 'invalid',
+      message: NOT_A_NUMBER,
+    });
+  });
+
+  it('accepts the declared unit as a suffix, with or without a space', () => {
+    const ms = numeric(250, { unit: 'ms' });
+    expect(gradeNumeric(ms, '250')).toEqual({ status: 'correct' });
+    expect(gradeNumeric(ms, '250 ms')).toEqual({ status: 'correct' });
+    expect(gradeNumeric(ms, '250ms')).toEqual({ status: 'correct' });
+    expect(gradeNumeric(ms, '1/4 ms')).toMatchObject({ status: 'incorrect' });
+    expect(gradeNumeric(numeric(50, { unit: '%' }), '50%')).toEqual({
+      status: 'correct',
+    });
+    expect(gradeNumeric(numeric(1200, { unit: 'km' }), '1,200 km')).toEqual({
+      status: 'correct',
+    });
+    expect(parseNumber('250 ms', 'ms')).toBe(250);
+  });
+
+  it('rejects another unit, a unit in another case, or a unit not declared', () => {
+    const ms = numeric(250, { unit: 'ms' });
+    for (const value of ['250 s', '250 MS', 'ms 250', '250 ms ms', 'ms'])
+      expect(gradeNumeric(ms, value), value).toMatchObject({
+        status: 'invalid',
+      });
+    expect(gradeNumeric(numeric(250), '250 ms')).toMatchObject({
+      status: 'invalid',
+    });
+    expect(parseNumber('50%')).toBeNull();
+  });
+
+  it('treats a format hint as a hint, never as a suffix', () => {
+    expect(unitSuffix('ms')).toBe('ms');
+    expect(unitSuffix('km/h')).toBe('km/h');
+    expect(unitSuffix('%')).toBe('%');
+    expect(unitSuffix('to 3 decimals')).toBeUndefined();
+    expect(unitSuffix('fraction or 3 decimals')).toBeUndefined();
+    expect(unitSuffix('m2')).toBeUndefined();
+    expect(unitSuffix(undefined)).toBeUndefined();
+    const rounded = numeric(0.731, {
+      tolerance: 0.0005,
+      unit: 'to 3 decimals',
+    });
+    expect(gradeNumeric(rounded, '0.731')).toEqual({ status: 'correct' });
+    expect(gradeNumeric(rounded, '0.731 to 3 decimals')).toMatchObject({
+      status: 'invalid',
+    });
+  });
+});
+
+describe('equivalent text answers (CEN-161)', () => {
+  it('ignores case unless the question is case-sensitive', () => {
+    const len = text(['len']);
+    for (const value of ['len', 'LEN', 'Len'])
+      expect(gradeText(len, value), value).toEqual({ status: 'correct' });
+    expect(gradeText(len, 'lent')).toEqual({ status: 'incorrect' });
+    const none = text(['None'], { caseSensitive: true });
+    expect(gradeText(none, 'None')).toEqual({ status: 'correct' });
+    expect(gradeText(none, '`None`')).toEqual({ status: 'correct' });
+    for (const value of ['none', 'NONE', 'nOne'])
+      expect(gradeText(none, value), value).toEqual({ status: 'incorrect' });
+  });
+
+  it('removes wrapping quotes and backticks, in matched pairs only', () => {
+    const len = text(['len']);
+    for (const value of [
+      '"len"',
+      "'len'",
+      '`len`',
+      '“len”',
+      '‘len’',
+      '`"len"`',
+      '" len "',
+    ])
+      expect(gradeText(len, value), value).toEqual({ status: 'correct' });
+    for (const value of ['"len', "len'", '"len\'', '`len"', 'l"e"n'])
+      expect(gradeText(len, value), value).toEqual({ status: 'incorrect' });
+  });
+
+  it('removes trailing punctuation, but not leading or inner punctuation', () => {
+    const len = text(['len']);
+    for (const value of [
+      'len.',
+      'len!',
+      'len?',
+      'len;',
+      'len:',
+      'len,',
+      'len...',
+      '"len".',
+      '`len`;',
+    ])
+      expect(gradeText(len, value), value).toEqual({ status: 'correct' });
+    for (const value of ['.len', 'l.en', 'len()', '-len', 'len-'])
+      expect(gradeText(len, value), value).toEqual({ status: 'incorrect' });
+    expect(lenientText(' "Len." ')).toBe('len');
+    expect(lenientText(' "Len." ', true)).toBe('Len');
+  });
+
+  it('accepts every authored synonym and nothing else', () => {
+    const append = text(['append', 'list.append']);
+    expect(gradeText(append, 'list.append')).toEqual({ status: 'correct' });
+    expect(gradeText(append, 'List.Append')).toEqual({ status: 'correct' });
+    expect(gradeText(append, '`list.append`')).toEqual({ status: 'correct' });
+    expect(gradeText(append, 'extend')).toEqual({ status: 'incorrect' });
+    expect(gradeText(append, 'list')).toEqual({ status: 'incorrect' });
+  });
+
+  it('treats a response that is only quotes or punctuation as blank', () => {
+    for (const value of ['""', '``', '.', '?!'])
+      expect(gradeText(text(['len']), value), value).toEqual({
+        status: 'invalid',
+        message: EMPTY_RESPONSE,
+      });
+  });
+
+  it('keeps an exact question exact: quotes, punctuation, and case count', () => {
+    const char = text(["'a'"], { exact: true });
+    expect(gradeText(char, " 'a' ")).toEqual({ status: 'correct' });
+    for (const value of ['a', '"a"', "'A'", "'a'."])
+      expect(gradeText(char, value), value).toEqual({ status: 'incorrect' });
+  });
+
+  it('keeps output questions exact after whitespace normalization', () => {
+    const ready = output(['Ready']);
+    expect(gradeText(ready, '  Ready ')).toEqual({ status: 'correct' });
+    for (const value of [
+      'ready',
+      'READY',
+      '"Ready"',
+      '`Ready`',
+      'Ready.',
+      'Ready!',
+    ])
+      expect(gradeText(ready, value), value).toEqual({ status: 'incorrect' });
+    const quoted = output(["'hi'"]);
+    expect(gradeText(quoted, "'hi'")).toEqual({ status: 'correct' });
+    expect(gradeText(quoted, 'hi')).toEqual({ status: 'incorrect' });
+  });
+
+  it('grades quiz and placement answers with the same rules', () => {
+    expect(gradeAnswer(text(['len']), '"LEN".')).toBe(true);
+    expect(gradeAnswer(output(['Ready']), 'ready')).toBe(false);
+    expect(gradeAnswer(numeric(1000, { unit: 'ms' }), '+1,000 ms')).toBe(true);
+  });
+});
+
+describe('validating equivalent typed answers (CEN-161)', () => {
+  it('flags an output question marked case-sensitive or exact', () => {
+    expect(
+      typedQuestionErrors(output(['x'], { caseSensitive: true })).join(),
+    ).toContain('always graded exactly');
+    expect(
+      typedQuestionErrors(output(['x'], { exact: true })).join(),
+    ).toContain('always graded exactly');
+    expect(
+      typedQuestionErrors(
+        text(['x'], { exact: true, caseSensitive: true }),
+      ).join(),
+    ).toContain('drop caseSensitive');
+  });
+
+  it('flags a question that asks what code prints but is not an output question', () => {
+    expect(
+      typedQuestionErrors(
+        text(['3'], { prompt: 'What does this print?', code: 'print(3)' }),
+      ).join(),
+    ).toContain('make it an output question');
+    expect(
+      typedQuestionErrors(
+        text(['len'], { prompt: 'Which function is called?', code: 'len(xs)' }),
+      ),
+    ).toEqual([]);
+    // Without code, "print" is a word in a term question.
+    expect(
+      typedQuestionErrors(
+        text(['print'], { prompt: 'Which function prints a value?' }),
+      ),
+    ).toEqual([]);
+  });
+
+  it('flags answers that lenient grading would change: mark them exact', () => {
+    for (const answer of ["'a'", '`x`', 'x += 1;', '?', 'done.'])
+      expect(typedQuestionErrors(text([answer])).join(), answer).toContain(
+        'mark the question exact',
+      );
+    expect(typedQuestionErrors(text(["'a'"], { exact: true }))).toEqual([]);
+    expect(typedQuestionErrors(text(['x += 1;'], { exact: true }))).toEqual([]);
+  });
+
+  it('asks a capitalized answer to say whether case matters', () => {
+    expect(typedQuestionErrors(text(['True'])).join()).toContain(
+      'set caseSensitive',
+    );
+    expect(
+      typedQuestionErrors(text(['True'], { caseSensitive: true })),
+    ).toEqual([]);
+    expect(typedQuestionErrors(text(['NumPy'], { ignoreCase: true }))).toEqual(
+      [],
+    );
+    expect(
+      typedQuestionErrors(
+        text(['True'], { caseSensitive: true, ignoreCase: true }),
+      ).join(),
+    ).toContain('contradict');
+  });
+
+  it('rejects a synonym that a related choice question counts wrong', () => {
+    const choice = (choices: string[], id = 'fixture-c'): Question => ({
+      id,
+      type: 'choice',
+      prompt: 'Which method adds one item to the end of a list?',
+      choices,
+      answer: 0,
+      explanation: '',
+    });
+    const methods = choice(['`append`', '`extend`', '`insert`', '`add`']);
+    expect(synonymCollisionErrors([text(['append']), methods])).toEqual([]);
+    expect(
+      synonymCollisionErrors([text(['append', 'extend']), methods]).join(),
+    ).toContain('accepts "`extend`", which fixture-c counts wrong');
+    // Case folding collides too: True is a distractor where true is right.
+    const literals = choice(['true', 'True', 'TRUE', '1']);
+    expect(synonymCollisionErrors([text(['true']), literals])).toHaveLength(2);
+    expect(
+      synonymCollisionErrors([
+        text(['true'], { caseSensitive: true }),
+        literals,
+      ]),
+    ).toEqual([]);
+    // A choice question about something else is not related.
+    expect(
+      synonymCollisionErrors([
+        text(['len']),
+        choice(['`append`', '`len`', '`insert`', '`add`']),
+      ]),
+    ).toEqual([]);
+    // Exact questions accept only their listed answers.
+    expect(
+      synonymCollisionErrors([text(['true'], { exact: true }), literals]),
+    ).toEqual([]);
+  });
+
+  it('reports synonym collisions when validating a catalog', () => {
+    const [first, second] = typedSkill.knowledgePoints!;
+    const colliding: Skill = {
+      ...typedSkill,
+      knowledgePoints: [
+        first,
+        {
+          ...second,
+          questions: [
+            ...second.questions,
+            {
+              id: `${second.id}-q4`,
+              type: 'choice',
+              prompt: 'Which value is missing?',
+              choices: ['None', 'none', 'Null', 'nil'],
+              answer: 0,
+              explanation: 'None is Python’s missing value.',
+            },
+          ],
+        },
+      ],
+    };
+    expect(validateCurriculum([colliding], catalog)).toEqual([]);
+    const lenient: Skill = {
+      ...colliding,
+      knowledgePoints: [
+        first,
+        {
+          ...colliding.knowledgePoints![1],
+          questions: colliding.knowledgePoints![1].questions.map((q) =>
+            q.type === 'text' && q.answers[0] === 'None'
+              ? { ...q, caseSensitive: undefined, ignoreCase: true }
+              : q,
+          ),
+        },
+      ],
+    };
+    expect(validateCurriculum([lenient], catalog).join()).toContain(
+      'which fixture-typed-kp2-q4 counts wrong',
     );
   });
 });

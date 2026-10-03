@@ -181,7 +181,7 @@ describe('cards stored by reference (CEN-153)', () => {
     expect(missing).toEqual([]);
   });
 
-  it('migrates a version 7 state to version 8 and keeps its cards as saved', () => {
+  it('migrates a version 7 state to the current version and keeps its cards as saved', () => {
     const { skill, question } = mathWithCode;
     units.loaded.add(skill.id).add(root.id);
     const textCards = [
@@ -194,8 +194,8 @@ describe('cards stored by reference (CEN-153)', () => {
     v7.progress.version = 7;
     const loaded = parseStateUpdate({ state: v7, revision: 0 }).state;
     expect(loaded.version).toBe(STATE_VERSION);
-    expect(STATE_VERSION).toBe(8);
-    expect(loaded.progress.version).toBe(8);
+    expect(STATE_VERSION).toBe(9);
+    expect(loaded.progress.version).toBe(STATE_VERSION);
     expect(loaded.cards).toEqual(textCards);
     expect(migrateState(loaded)).toBe(loaded);
   });

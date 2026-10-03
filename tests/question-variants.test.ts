@@ -595,7 +595,7 @@ describe('storing and rebuilding the variant asked', () => {
     }).state;
     expect(saved.progress.attempts.at(-1)!.variant).toBe(2);
     expect(saved.version).toBe(STATE_VERSION);
-    expect(STATE_VERSION).toBe(8);
+    expect(STATE_VERSION).toBe(9);
     for (const invalid of [-1, 1.5, MAX_VARIANT + 1, '2']) {
       const bad = JSON.parse(JSON.stringify(state));
       bad.progress.attempts.at(-1).variant = invalid;

@@ -6,6 +6,7 @@ import { activityTotals, type ActivityState } from '../activity';
 import { TYPED_RESPONSE_MAX_LENGTH } from '../typed-answer';
 import { MAX_VARIANT } from '../variants';
 import { mistakeQuestionId } from '../cards';
+import { MAX_ANSWER_MS } from '../answer-time';
 
 /** Every schema version a saved state may have; older ones migrate on read. */
 const VERSIONS = Array.from({ length: STATE_VERSION }, (_, index) => index + 1);
@@ -481,6 +482,7 @@ function validateDiagnosticQuestion(
     answer(question.answer, `${path}.answer`);
     boolean(question.correct, `${path}.correct`);
     timestamp(question.at, `${path}.at`);
+    // Uncapped before version 9; placement answers since are capped.
     if (question.elapsedMs !== undefined)
       number(question.elapsedMs, `${path}.elapsedMs`, 0, 24 * 3_600_000);
   }
@@ -591,6 +593,7 @@ function validateAttempt(value: unknown, path: string): string {
     'credited',
     'response',
     'variant',
+    'elapsedMs',
   ]);
   const id = string(attempt.id, `${path}.id`);
   string(attempt.skillId, `${path}.skillId`);
@@ -604,6 +607,9 @@ function validateAttempt(value: unknown, path: string): string {
     string(attempt.response, `${path}.response`, TYPED_RESPONSE_MAX_LENGTH);
   if (attempt.variant !== undefined)
     number(attempt.variant, `${path}.variant`, 0, MAX_VARIANT);
+  // Version 9: the answer time, capped by the page (src/lib/answer-time.ts).
+  if (attempt.elapsedMs !== undefined)
+    number(attempt.elapsedMs, `${path}.elapsedMs`, 0, MAX_ANSWER_MS);
   if (attempt.credited !== undefined)
     strings(attempt.credited, `${path}.credited`, 100);
   isoTimestamp(attempt.at, `${path}.at`);
