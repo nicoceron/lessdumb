@@ -5524,4 +5524,2181 @@ int main() {
       ],
     },
   ],
+  'cpp-integral-concept': [
+    {
+      title: 'std::integral accepts only integer types',
+      explanation: [
+        'A concept is a named compile-time test on a type. std::integral<T> (from <concepts>) is true for the built-in integer types, such as int, long long, unsigned, char and bool, and false for floating-point types such as double.',
+        'Writing template<std::integral T> constrains a template: it accepts only argument types that satisfy the concept. The concept itself is a compile-time bool, so it can also be printed.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <concepts>
+#include <iostream>
+template<std::integral T> T remainder(T value) { return value % 2; }
+int main() {
+  std::cout << remainder(7) << " " << remainder(10LL) << "\\n";
+  std::cout << std::integral<int> << " " << std::integral<double> << "\\n";
+}`,
+        output: '1 0\n1 0',
+        explanation:
+          'int and long long satisfy std::integral, so both calls compile; % gives the remainder after integer division. The concept is true for int and false for double.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <concepts>
+#include <iostream>
+int main() {
+  std::cout << std::integral<long long> << " " << std::integral<double> << "\\n";
+}`,
+          ['1 0', '1 1', '0 0', '0 1'],
+          0,
+          'long long is an integer type; double is a floating-point type.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <concepts>
+#include <iostream>
+int main() {
+  std::cout << std::integral<bool> << " " << std::integral<char> << "\\n";
+}`,
+          ['0 0', '0 1', '1 0', '1 1'],
+          3,
+          'bool and char are both integral types in C++, so both tests are true.',
+        ),
+        choose(
+          'Which call is rejected by `template<std::integral T> T half(T value)`?',
+          ['half(9)', 'half(9LL)', 'half(9u)', 'half(9.0)'],
+          3,
+          '9.0 is a double, which does not satisfy std::integral; the other arguments are integer types.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <concepts>
+#include <iostream>
+template<std::integral T> T half(T value) { return value / 2; }
+int main() {
+  std::cout << half(9) << " " << half(-9) << "\\n";
+}`,
+          ['4.5 -4.5', '4 -4', '4 -5', '5 -5'],
+          1,
+          'T is int in both calls, so the division truncates toward zero.',
+        ),
+      ],
+    },
+    {
+      title: 'A constraint states what the body needs',
+      explanation: [
+        'A constraint is checked at the call, before the body is instantiated. A call with an unsuitable type is rejected with a message naming the failed concept, instead of an error deep inside the template.',
+        'Match the constraint to what the body really needs. % works only on integers, so a remainder function should require std::integral.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <concepts>
+#include <iostream>
+template<std::integral T> T tens(T value) { return value / 10; }
+int main() {
+  std::cout << tens(507) << " " << tens(4000000000LL) << " " << tens(99u) << "\\n";
+}`,
+        output: '50 400000000 9',
+        explanation:
+          'int, long long and unsigned all satisfy std::integral, and each call divides in its own type.',
+      },
+      questions: [
+        choose(
+          'remainder requires std::integral. What does the compiler report for remainder(7.5)?',
+          [
+            'Nothing; it returns 1.5',
+            'The call does not satisfy the std::integral constraint',
+            'Nothing; it truncates 7.5 to 7 and returns 1',
+            'A run-time error when the call executes',
+          ],
+          1,
+          'Constraints are compile-time checks on the argument type; no conversion to an integer type is attempted.',
+        ),
+        choose(
+          'A function computes value % divisor. Which template head states its real requirement?',
+          [
+            'template<class T>',
+            'template<std::floating_point T>',
+            'template<std::integral T>',
+            'template<class T> requires true',
+          ],
+          2,
+          '% needs integer operands, which std::integral guarantees. The unconstrained forms accept double and then fail inside the body.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <concepts>
+#include <iostream>
+template<std::integral T> T tens(T value) { return value / 10; }
+int main() {
+  std::cout << tens(507) << " " << tens(-38) << "\\n";
+}`,
+          ['50 -3', '50.7 -3.8', '51 -4', '50 -4'],
+          0,
+          'Integer division truncates toward zero for both signs.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <concepts>
+#include <iostream>
+template<std::integral T> int next(T value) { return static_cast<int>(value) + 1; }
+int main() {
+  std::cout << next(true) << " " << next(41) << "\\n";
+}`,
+          ['1 42', '0 42', '2 42', 'true 42'],
+          2,
+          'bool satisfies std::integral, and true converts to the int 1, so next(true) is 2.',
+        ),
+      ],
+    },
+  ],
+  'cpp-requires-expression': [
+    {
+      title: 'A requires expression tests whether code compiles',
+      explanation: [
+        'A requires expression lists expressions that must be valid for a type: requires(const T& value) { value.size(); }. The expressions are only checked, never run. Naming it as a concept gives the test a name: template<class T> concept HasSize = requires(const T& value) { value.size(); };',
+        'HasSize<std::vector<int>> is true because a vector has size(); HasSize<int> is false. Every listed requirement must be valid for the concept to hold.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <vector>
+template<class T> concept HasSize = requires(const T& value) { value.size(); };
+int main() {
+  std::cout << HasSize<std::vector<int>> << " " << HasSize<int> << "\\n";
+}`,
+        output: '1 0',
+        explanation:
+          'vector<int> has a size() member and int does not. No size() is actually called.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <vector>
+template<class T> concept HasFront = requires(const T& value) { value.front(); };
+int main() {
+  std::cout << HasFront<std::vector<int>> << " " << HasFront<double> << "\\n";
+}`,
+          ['1 1', '0 0', '0 1', '1 0'],
+          3,
+          'A vector has front(); a double has no members at all.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <vector>
+template<class T> concept Addable = requires(T a, T b) { a + b; };
+int main() {
+  std::cout << Addable<int> << " " << Addable<std::vector<int>> << "\\n";
+}`,
+          ['1 0', '1 1', '0 1', '0 0'],
+          0,
+          'Two ints can be added; std::vector defines no + operator.',
+        ),
+        choose(
+          'What does `requires(const T& v) { v.size(); }` do with v.size()?',
+          [
+            'Calls it once to check that it returns a positive value',
+            'Calls it for every element',
+            'Checks only that the expression would compile for T',
+            'Stores its result for later use',
+          ],
+          2,
+          'A requires expression is unevaluated; it asks only whether the code is well formed.',
+        ),
+        choose(
+          'A concept requires `{ v.size(); v[0]; }`. A type has size() but no operator[]. Does it satisfy the concept?',
+          [
+            'Yes; one valid requirement is enough',
+            'No; every listed requirement must be valid',
+            'Yes, but only if size() returns 0',
+            'It depends on the values stored',
+          ],
+          1,
+          'The requirements are combined with "and"; one invalid expression makes the concept false.',
+        ),
+      ],
+    },
+    {
+      title: 'Constrain a template with your own concept',
+      explanation: [
+        'A named concept constrains a template exactly like std::integral: template<HasSize T> int count(const T& items). The body may then use items.size(), and a type without size() is rejected at the call.',
+        'State the operations the body really uses. A constraint on some unrelated property admits types the body cannot handle and rejects types it could.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <vector>
+template<class T> concept HasSize = requires(const T& value) { value.size(); };
+template<HasSize T> int count(const T& items) { return static_cast<int>(items.size()); }
+int main() {
+  std::vector<int> a{4, 8, 15};
+  std::vector<double> b;
+  std::cout << count(a) << " " << count(b) << "\\n";
+}`,
+        output: '3 0',
+        explanation:
+          'Both vector types satisfy HasSize, so count accepts them and returns their sizes.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <vector>
+template<class T> concept HasSize = requires(const T& value) { value.size(); };
+template<HasSize T> int count(const T& items) { return static_cast<int>(items.size()); }
+int main() {
+  std::vector<int> a{1, 2};
+  std::vector<double> b{0.5, 1.5, 2.5};
+  std::cout << count(a) << " " << count(b) << "\\n";
+}`,
+          ['2 3', '3 2', '2 4.5', '1 2'],
+          0,
+          'count returns the number of elements of each vector, whatever their element type.',
+        ),
+        choose(
+          '`template<HasSize T> int count(const T& c)`, where HasSize requires value.size(). What happens with count(42)?',
+          [
+            'It returns 0',
+            'It returns 1',
+            'It returns 42',
+            'The call is rejected because int does not satisfy HasSize',
+          ],
+          3,
+          'int has no size() member, so the constraint fails and the template is not used.',
+        ),
+        choose(
+          'A template body calls items.size() and items[0]. Which constraint matches it?',
+          [
+            'template<std::integral T>',
+            'A concept requiring items + items',
+            'A concept requiring items.size() and items[0]',
+            'No constraint can express this',
+          ],
+          2,
+          'The concept should list exactly the expressions the body uses.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <vector>
+template<class T> concept Indexable = requires(const T& c) {
+  c.size();
+  c[0];
+};
+template<Indexable T> int first_or(const T& c, int fallback) {
+  return c.size() > 0 ? static_cast<int>(c[0]) : fallback;
+}
+int main() {
+  std::vector<int> full{7, 2};
+  std::vector<int> empty;
+  std::cout << first_or(full, -1) << " " << first_or(empty, -1) << "\\n";
+}`,
+          ['7 0', '7 -1', '2 -1', '-1 -1'],
+          1,
+          'Both vectors satisfy Indexable. The empty one takes the fallback instead of reading c[0].',
+        ),
+      ],
+    },
+  ],
+  'cpp-if-constexpr': [
+    {
+      title: 'if constexpr picks a branch for each type',
+      explanation: [
+        'Type traits from <type_traits>, such as std::is_integral_v<T> and std::is_signed_v<T>, are compile-time bools that describe a type. Note that std::is_signed_v is true for floating-point types too.',
+        'if constexpr (condition) evaluates its constant condition when the template is instantiated and keeps only the selected branch for that type.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <type_traits>
+template<class T> int kind(T) {
+  if constexpr (std::is_integral_v<T>) return 1;
+  else return 2;
+}
+int main() {
+  std::cout << kind(5) << " " << kind(5.0) << "\\n";
+}`,
+        output: '1 2',
+        explanation:
+          'kind<int> keeps only the first branch and kind<double> only the second; nothing is tested at run time.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+template<class T> int sign_kind(T) {
+  if constexpr (std::is_signed_v<T>) return -1;
+  else return 1;
+}
+int main() {
+  std::cout << sign_kind(3) << " " << sign_kind(3u) << "\\n";
+}`,
+          ['1 1', '-1 -1', '-1 1', '1 -1'],
+          2,
+          'int is signed and unsigned is not, whatever the values passed.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  std::cout << std::is_signed_v<double> << " " << std::is_integral_v<double> << "\\n";
+}`,
+          ['0 0', '1 0', '0 1', '1 1'],
+          1,
+          'Floating-point types can hold negative values, so they count as signed, but they are not integral.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+template<class T> T step(T value) {
+  if constexpr (std::is_integral_v<T>) return value + 1;
+  else return value + 0.5;
+}
+int main() {
+  std::cout << step(2) << " " << step(2.0) << "\\n";
+}`,
+          ['3 2.5', '3 3', '2.5 2.5', '3 3.0'],
+          0,
+          'The int instantiation adds 1 and the double instantiation adds 0.5.',
+        ),
+        choose(
+          'When is the condition of an if constexpr evaluated?',
+          [
+            'Each time the function runs',
+            'Only when the condition is true',
+            'At link time',
+            'At compile time, when the template is instantiated for a type',
+          ],
+          3,
+          'The condition must be a constant expression, and the choice is fixed per instantiation.',
+        ),
+      ],
+    },
+    {
+      title: 'The discarded branch is not instantiated',
+      explanation: [
+        'Inside a template, the branch an if constexpr does not select is discarded for that instantiation: its code is not checked against T. A branch may therefore use an operation that only some types support, such as % (the remainder after integer division), which double does not have.',
+        'An ordinary if compiles both branches for every T, so the same code with a plain if fails for double even though that branch would never run.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <type_traits>
+template<class T> T trim(T value) {
+  if constexpr (std::is_integral_v<T>) return value - value % 10;
+  else return value;
+}
+int main() {
+  std::cout << trim(347) << " " << trim(3.47) << "\\n";
+}`,
+        output: '340 3.47',
+        explanation:
+          'For int, the first branch removes the last digit. For double, that branch is discarded, so value % 10 is never compiled for double.',
+      },
+      questions: [
+        choose(
+          '`template<class T> T f(T v) { if (std::is_integral_v<T>) return v % 2; else return v; }` Why does f(2.5) fail to compile?',
+          [
+            'An ordinary if keeps both branches, and v % 2 is invalid for double',
+            'is_integral_v cannot be used in an if',
+            'f must return int',
+            'The else branch needs a cast',
+          ],
+          0,
+          'The condition is false for double, but a plain if still compiles the unused branch.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+template<class T> T trim(T value) {
+  if constexpr (std::is_integral_v<T>) return value - value % 10;
+  else return value;
+}
+int main() {
+  std::cout << trim(1995) << " " << trim(19.95) << "\\n";
+}`,
+          ['1990 19.9', '1995 19.95', '1990 10', '1990 19.95'],
+          3,
+          'Only the int instantiation drops the last digit; the double passes through unchanged.',
+        ),
+        choose(
+          'Which change makes that function with the plain if compile for both int and double?',
+          [
+            'Make v a reference parameter',
+            'Replace if with if constexpr',
+            'Cast the result to double',
+            'Add return 0; at the end',
+          ],
+          1,
+          'if constexpr discards the % branch for double, so it is never checked for that type.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+template<class T> long long magnitude(T value) {
+  long long widened = value;
+  if constexpr (std::is_signed_v<T>) return widened < 0 ? -widened : widened;
+  else return widened;
+}
+int main() {
+  std::cout << magnitude(-7) << " " << magnitude(4000000000u) << "\\n";
+}`,
+          ['-7 4000000000', '7 4000000000', '7 -294967296', '7 0'],
+          1,
+          'The signed instantiation negates -7. The unsigned one keeps only the else branch and returns the value as is.',
+        ),
+      ],
+    },
+    {
+      title: 'Widen first, then branch on signedness',
+      explanation: [
+        'Negating the most negative int overflows, because its positive value does not fit in int. Converting to long long first makes the negation safe.',
+        'Combined with if constexpr on std::is_signed_v, the negation code exists only for signed types, and unsigned values are returned unchanged.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <limits>
+#include <type_traits>
+template<class T> long long magnitude(T value) {
+  long long widened = value;
+  if constexpr (std::is_signed_v<T>) return widened < 0 ? -widened : widened;
+  else return widened;
+}
+int main() {
+  std::cout << magnitude(std::numeric_limits<int>::min()) << " " << magnitude(7u) << "\\n";
+}`,
+        output: '2147483648 7',
+        explanation:
+          'The minimum int is -2147483648. Its magnitude does not fit in int but fits in long long, so widening first avoids overflow.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+template<class T> long long magnitude(T value) {
+  long long widened = value;
+  if constexpr (std::is_signed_v<T>) return widened < 0 ? -widened : widened;
+  else return widened;
+}
+int main() {
+  std::cout << magnitude(-12) << " " << magnitude(12) << "\\n";
+}`,
+          ['-12 12', '12 -12', '12 12', '0 12'],
+          2,
+          'Both calls use the signed branch; only the negative value is negated.',
+        ),
+        choose(
+          'Why does magnitude convert to long long before negating?',
+          [
+            'Negating the minimum int would overflow, because its positive value does not fit in int',
+            'long long arithmetic is faster than int arithmetic',
+            'if constexpr works only with long long',
+            'Unsigned values cannot be returned from templates',
+          ],
+          0,
+          'int ranges from -2147483648 to 2147483647, so -(-2147483648) needs a wider type.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+template<class T> T flip(T value) {
+  if constexpr (std::is_signed_v<T>) return -value;
+  else return value;
+}
+int main() {
+  std::cout << flip(-3) << " " << flip(3u) << " " << flip(1.5) << "\\n";
+}`,
+          ['3 3 -1.5', '3 3 1.5', '-3 3 -1.5', '3 -3 -1.5'],
+          0,
+          'int and double are signed, so they are negated; unsigned is returned unchanged.',
+        ),
+      ],
+    },
+  ],
+  'cpp-concepts': [
+    {
+      title: 'The more constrained template wins',
+      explanation: [
+        'When two templates both match a call, overload resolution prefers the more constrained one. With template<class T> int classify(T) and template<std::integral T> int classify(T), classify(4) picks the std::integral version, while classify(2.5) can use only the unconstrained one.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <concepts>
+#include <iostream>
+template<class T> int classify(T) { return 1; }
+template<std::integral T> int classify(T) { return 2; }
+int main() {
+  std::cout << classify(4) << " " << classify(2.5) << "\\n";
+}`,
+        output: '2 1',
+        explanation:
+          'int satisfies std::integral, so the constrained overload is preferred. double satisfies only the unconstrained one.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <concepts>
+#include <iostream>
+template<class T> int describe(T) { return 0; }
+template<std::integral T> int describe(T) { return 1; }
+int main() {
+  std::cout << describe(7LL) << " " << describe(7.0f) << " " << describe(true) << "\\n";
+}`,
+          ['1 0 0', '0 0 1', '1 1 1', '1 0 1'],
+          3,
+          'long long and bool are integral, so they get the constrained overload; float does not.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <concepts>
+#include <iostream>
+template<class T> int classify(T) { return 1; }
+template<std::integral T> int classify(T) { return 2; }
+int main() {
+  std::cout << classify(1) + classify(1.5) + classify(2) << "\\n";
+}`,
+          ['4', '5', '6', '3'],
+          1,
+          'The two int calls return 2 each and the double call returns 1.',
+        ),
+        choose(
+          'Both `template<class T> int f(T)` and `template<std::integral T> int f(T)` are declared. Which runs for f(3)?',
+          [
+            'The unconstrained one, because it was declared first',
+            'Neither; the call is ambiguous',
+            'The std::integral one, because it is more constrained',
+            'Both, one after the other',
+          ],
+          2,
+          'Declaration order does not matter; a satisfied, more constrained template is preferred.',
+        ),
+        choose(
+          'Two templates differ only in return type: `template<std::integral T> int g(T)` and `template<std::integral T> long g(T)`. What happens when g(1) is called?',
+          [
+            'The call is ambiguous: return types alone do not distinguish overloads',
+            'The long version is chosen for large values',
+            'The int version is chosen because 1 is an int',
+            'The compiler picks one at random',
+          ],
+          0,
+          'Overload resolution looks at parameters and constraints, not at the return type.',
+        ),
+      ],
+    },
+    {
+      title: 'Non-overlapping constraints split the types',
+      explanation: [
+        'Overloads with constraints that never overlap, such as std::integral and std::floating_point, divide the types between them: each call matches exactly one. A type that satisfies neither matches nothing, and the call does not compile unless an unconstrained overload exists.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <concepts>
+#include <iostream>
+template<std::integral T> int bucket(T) { return 1; }
+template<std::floating_point T> int bucket(T) { return 2; }
+int main() {
+  std::cout << bucket(3) << " " << bucket(3.0) << " " << bucket('x') << "\\n";
+}`,
+        output: '1 2 1',
+        explanation: '3 and the char x are integral; 3.0 is floating-point.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <concepts>
+#include <iostream>
+template<std::integral T> int bucket(T) { return 1; }
+template<std::floating_point T> int bucket(T) { return 2; }
+int main() {
+  std::cout << bucket(0.5f) << " " << bucket(10u) << " " << bucket(false) << "\\n";
+}`,
+          ['2 1 2', '2 1 1', '1 1 1', '2 2 1'],
+          1,
+          'float is floating-point; unsigned and bool are integral.',
+        ),
+        choose(
+          'Only the std::integral and std::floating_point overloads of bucket exist. What happens for a call with a struct argument?',
+          [
+            'No overload matches, so the call does not compile',
+            'It picks the integral overload',
+            'It picks the floating-point overload',
+            'It returns 0',
+          ],
+          0,
+          'A struct satisfies neither concept, and there is no unconstrained fallback.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <concepts>
+#include <iostream>
+template<std::integral T> int bucket(T) { return 1; }
+template<std::floating_point T> int bucket(T) { return 2; }
+int main() {
+  std::cout << bucket(1) + bucket(2.0) + bucket(3) * 10 << "\\n";
+}`,
+          ['13', '31', '40', '14'],
+          0,
+          'bucket(1) is 1, bucket(2.0) is 2, and bucket(3) * 10 is 10.',
+        ),
+        choose(
+          "With these two overloads, what does bucket('a') return?",
+          [
+            '2, because characters are stored as numbers',
+            'Nothing; the call does not compile',
+            '0',
+            '1, because char is an integral type',
+          ],
+          3,
+          'char is one of the integer types and satisfies std::integral.',
+        ),
+      ],
+    },
+    {
+      title: 'A concept built on another is more specific',
+      explanation: [
+        'std::signed_integral<T> is defined as std::integral<T> plus being signed, so it subsumes std::integral. With overloads constrained by std::integral and std::signed_integral, a signed type such as int picks the signed_integral overload, and unsigned or bool falls back to the plain integral one.',
+        'This preference comes from how the concepts are defined, not from the order the overloads are written.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <concepts>
+#include <iostream>
+template<std::integral T> int rank(T) { return 1; }
+template<std::signed_integral T> int rank(T) { return 2; }
+int main() {
+  std::cout << rank(-3) << " " << rank(3u) << "\\n";
+}`,
+        output: '2 1',
+        explanation:
+          'int satisfies both, and signed_integral is more specific. unsigned satisfies only std::integral.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <concepts>
+#include <iostream>
+template<std::integral T> int rank(T) { return 1; }
+template<std::signed_integral T> int rank(T) { return 2; }
+int main() {
+  std::cout << rank(5) << " " << rank(5u) << " " << rank(5LL) << "\\n";
+}`,
+          ['2 2 2', '1 1 1', '2 1 2', '2 1 1'],
+          2,
+          'int and long long are signed integer types; unsigned is not signed.',
+        ),
+        choose(
+          'Why is rank(-3) not ambiguous, even though int satisfies both constraints?',
+          [
+            'The signed overload is written second',
+            'std::signed_integral is defined in terms of std::integral, so it is more constrained',
+            'A negative argument always prefers signed types',
+            'The compiler picks the first matching template',
+          ],
+          1,
+          'Subsumption makes signed_integral strictly more specific, so it wins whenever both match.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <concepts>
+#include <iostream>
+template<std::integral T> int rank(T) { return 1; }
+template<std::signed_integral T> int rank(T) { return 2; }
+int main() {
+  std::cout << rank(true) << " " << rank(-1LL) << "\\n";
+}`,
+          ['2 2', '1 1', '2 1', '1 2'],
+          3,
+          'bool is integral but not signed, so it gets rank 1; long long is signed.',
+        ),
+      ],
+    },
+  ],
+  'cpp-static-assert': [
+    {
+      title: 'static_assert checks a condition while compiling',
+      explanation: [
+        'static_assert(condition, "message") evaluates its condition during compilation. If the condition is true, nothing happens, and nothing is printed at run time. If it is false, compilation stops with the message. The message may be omitted.',
+        'The fixed-width types from <cstdint>, such as std::uint32_t, have exactly the number of bits in their names, which is a typical thing to check.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <cstdint>
+#include <iostream>
+static_assert(sizeof(std::uint32_t) == 4, "uint32_t must be 4 bytes");
+int main() {
+  static_assert(2 + 2 == 4);
+  std::cout << "running\\n";
+}`,
+        output: 'running',
+        explanation:
+          'Both conditions are true, so the program compiles; the assertions produce no output of their own.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <cstdint>
+#include <iostream>
+static_assert(sizeof(std::uint16_t) == 2);
+int main() {
+  std::cout << sizeof(std::uint16_t) << "\\n";
+}`,
+          ['16', '2', '4', '1'],
+          1,
+          'sizeof counts bytes, and a 16-bit type occupies 2 bytes; the static_assert passes silently.',
+        ),
+        choose(
+          'What happens when a static_assert condition is false?',
+          [
+            'The program prints the message and keeps running',
+            'The program aborts when it reaches that line',
+            'Compilation fails with the message',
+            'The assertion is skipped in release builds',
+          ],
+          2,
+          'The check happens in the compiler, so a false condition means there is no program to run.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <cstdint>
+#include <iostream>
+static_assert(sizeof(std::uint8_t) == 1);
+static_assert(sizeof(std::uint64_t) == 8);
+int main() {
+  std::cout << sizeof(std::uint8_t) + sizeof(std::uint64_t) << "\\n";
+}`,
+          ['72', '16', '2', '9'],
+          3,
+          'The sizes are 1 and 8 bytes; 72 would be the total in bits.',
+        ),
+        choose(
+          'A static_assert passes. What does it add to the program’s output?',
+          [
+            'Nothing; it has no run-time effect',
+            'Its message',
+            'The digit 1',
+            'A line saying the check passed',
+          ],
+          0,
+          'static_assert exists only during compilation.',
+        ),
+      ],
+    },
+    {
+      title: 'The condition must be a constant expression',
+      explanation: [
+        'The compiler must know the condition’s value, so it must be a constant expression: literals, sizeof, and variables declared constexpr with constant initializers. A function parameter or anything computed while the program runs cannot be used, because its value does not exist yet during compilation.',
+        'Check run-time values with ordinary code, such as an if.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+constexpr int slots = 8;
+constexpr int slot_bytes = 16;
+static_assert(slots * slot_bytes <= 256, "buffer too large");
+int main() {
+  std::cout << slots * slot_bytes << "\\n";
+}`,
+        output: '128',
+        explanation:
+          'slots and slot_bytes are constexpr, so their product is known while compiling and can be checked.',
+      },
+      questions: [
+        choose(
+          'Which static_assert compiles inside `int pick(int index)`?',
+          [
+            'static_assert(index < 4);',
+            'static_assert(index == index);',
+            'static_assert(sizeof(int) >= 2);',
+            'static_assert(pick(0) == 0);',
+          ],
+          2,
+          'Only sizeof(int) is known during compilation. index is a run-time parameter, and pick is not constexpr.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+constexpr int width = 6;
+constexpr int height = 4;
+static_assert(width * height == 24);
+int main() {
+  std::cout << width * height / 5 << "\\n";
+}`,
+          ['4.8', '24', '4', '5'],
+          2,
+          'The assertion passes, and 24 / 5 is integer division, giving 4.',
+        ),
+        choose(
+          'A program reads a buffer size from a config file at startup. How should it check that the size is at most 4096?',
+          [
+            'static_assert(size <= 4096);',
+            'Declare size constexpr after reading it',
+            'static_assert(sizeof(size) <= 4096);',
+            'An ordinary run-time check such as if (size > 4096)',
+          ],
+          3,
+          'The size exists only at run time, so only run-time code can check it.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <cstdint>
+#include <iostream>
+static_assert(sizeof(std::int64_t) == 8);
+int main() {
+  std::cout << static_cast<int>(sizeof(std::int64_t)) * 8 << "\\n";
+}`,
+          ['64', '8', '512', '16'],
+          0,
+          'An int64_t is 8 bytes, which is 64 bits.',
+        ),
+      ],
+    },
+    {
+      title: 'Guard size assumptions the standard does not promise',
+      explanation: [
+        'C++ fixes only some sizes: sizeof(char) is 1, and fixed-width types such as std::int32_t and std::uint64_t have exactly 32 and 64 bits. Other sizes, such as sizeof(int) or sizeof(long), vary between platforms.',
+        'When code depends on such a size, a static_assert turns a silent assumption into a compile-time check that fails on a platform where it is false.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <cstdint>
+#include <iostream>
+static_assert(sizeof(std::int32_t) * 2 == sizeof(std::int64_t));
+int main() {
+  std::cout << sizeof(char) << " " << sizeof(std::int32_t) << "\\n";
+}`,
+        output: '1 4',
+        explanation:
+          'Both sizes are guaranteed, so the assertion holds on every platform that provides these types.',
+      },
+      questions: [
+        choose(
+          'Which size is not fixed by the C++ standard?',
+          [
+            'sizeof(char)',
+            'sizeof(std::uint16_t)',
+            'sizeof(std::int8_t)',
+            'sizeof(long)',
+          ],
+          3,
+          'long is 4 bytes on some platforms and 8 on others; the other sizes are fixed.',
+        ),
+        choose(
+          'A wire-format header struct must be exactly 16 bytes. Which line documents and enforces that?',
+          [
+            'static_assert(sizeof(Header) == 16);',
+            'if (sizeof(Header) != 16) return;',
+            '// Header is 16 bytes',
+            'A run-time check at the end of main',
+          ],
+          0,
+          'Only static_assert stops the build on a platform where the layout differs.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <cstdint>
+#include <iostream>
+int main() {
+  std::cout << sizeof(std::uint8_t) * 8 << " " << sizeof(std::uint32_t) * 8 << "\\n";
+}`,
+          ['1 4', '8 32', '8 8', '64 256'],
+          1,
+          'Multiplying the byte sizes by 8 gives the bit widths in the type names.',
+        ),
+      ],
+    },
+  ],
+  'cpp-constexpr-function': [
+    {
+      title: 'A constexpr function can run while compiling',
+      explanation: [
+        'Marking a function constexpr allows a call with constant arguments to be evaluated during compilation. The result can then be used where a constant is required, such as in a static_assert or to initialize a constexpr variable.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+constexpr int square(int value) { return value * value; }
+static_assert(square(4) == 16);
+int main() {
+  constexpr int area = square(6);
+  std::cout << area << "\\n";
+}`,
+        output: '36',
+        explanation:
+          'square(4) is evaluated by the compiler for the assertion, and square(6) initializes the constant area.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+constexpr int cube(int value) { return value * value * value; }
+int main() {
+  constexpr int c = cube(3);
+  static_assert(c == 27);
+  std::cout << c + 1 << "\\n";
+}`,
+          ['27', '10', '28', '9'],
+          2,
+          'cube(3) is 27, computed during compilation, and the program prints 28.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+constexpr int add_tax(int cents) { return cents + cents / 10; }
+static_assert(add_tax(100) == 110);
+int main() {
+  std::cout << add_tax(55) << "\\n";
+}`,
+          ['60', '60.5', '61', '55'],
+          0,
+          '55 / 10 is integer division, giving 5, so the result is 60.',
+        ),
+        choose(
+          'Which use requires the call to be evaluated during compilation?',
+          [
+            'std::cout << square(n);',
+            'int x = square(n);',
+            'static_assert(square(3) == 9);',
+            'return square(n);',
+          ],
+          2,
+          'A static_assert condition must be a constant expression; the other uses accept run-time values.',
+        ),
+      ],
+    },
+    {
+      title: 'The same function also runs at run time',
+      explanation: [
+        'constexpr permits compile-time evaluation; it does not force it. Called with a run-time value, such as a parameter, a constexpr function simply runs like any other function.',
+        'What cannot work is storing such a call in a constexpr variable: constexpr int s = square(n); requires n to be a constant.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+constexpr int square(int value) { return value * value; }
+int total_area(int side) { return square(side) + square(2); }
+int main() {
+  std::cout << total_area(5) << "\\n";
+}`,
+        output: '29',
+        explanation:
+          'square(side) runs at run time with the parameter 5; square(2) may be folded by the compiler. Both give ordinary results: 25 + 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+constexpr int square(int value) { return value * value; }
+int main() {
+  int n = 7;
+  int s = square(n);
+  std::cout << s << "\\n";
+}`,
+          ['14', '7', '49', '0'],
+          2,
+          'n is an ordinary variable, so the call runs at run time and returns 49.',
+        ),
+        choose(
+          '`int n = read_input(); constexpr int s = square(n);` Why does this not compile?',
+          [
+            'square cannot be called with a variable',
+            'n is not a constant expression, so square(n) cannot initialize a constexpr variable',
+            'constexpr variables must be global',
+            'square returns the wrong type',
+          ],
+          1,
+          'A constexpr variable needs a value known during compilation, and n is read at run time.',
+        ),
+        choose(
+          'Does marking a function constexpr guarantee that every call is computed during compilation?',
+          [
+            'Yes, the compiler computes every call',
+            'Yes, unless the function has parameters',
+            'No; constexpr functions run only at run time',
+            'No; only calls in constant contexts are guaranteed to be computed while compiling',
+          ],
+          3,
+          'Calls with run-time arguments run normally; constant contexts such as static_assert force compile-time evaluation.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+constexpr int half(int value) { return value / 2; }
+int main() {
+  int x = 9;
+  constexpr int fixed = half(9);
+  std::cout << fixed + half(x) << "\\n";
+}`,
+          ['8', '9', '4', '10'],
+          0,
+          'half(9) is 4 both as a compile-time constant and as a run-time call, so the sum is 8.',
+        ),
+      ],
+    },
+  ],
+  'cpp-consteval-function': [
+    {
+      title: 'consteval requires a compile-time result',
+      explanation: [
+        'A consteval function is an immediate function: every call must produce a constant during compilation. Call it with literals or constexpr values, and use the result to initialize a constexpr variable or in a static_assert.',
+        '1 << n shifts the bits of 1 left by n places, which equals 2 to the power n, so capacity(3) is 8.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+consteval int capacity(int exponent) { return 1 << exponent; }
+static_assert(capacity(4) == 16);
+int main() {
+  constexpr int count = capacity(3);
+  std::cout << count << "\\n";
+}`,
+        output: '8',
+        explanation:
+          'Both calls have constant arguments, so the compiler evaluates them: 2 to the power 4 and 2 to the power 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+consteval int kib(int n) { return n * 1024; }
+int main() {
+  constexpr int size = kib(4);
+  std::cout << size << "\\n";
+}`,
+          ['4', '1028', '4096', '1024'],
+          2,
+          'kib(4) is computed during compilation as 4 * 1024.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+consteval int capacity(int exponent) { return 1 << exponent; }
+int main() {
+  constexpr int total = capacity(5) + capacity(0);
+  std::cout << total << "\\n";
+}`,
+          ['32', '33', '5', '6'],
+          1,
+          '1 << 5 is 32 and 1 << 0 is 1.',
+        ),
+        choose(
+          'Which call to `consteval int twice(int v)` is valid?',
+          [
+            'twice(n), where n is a function parameter',
+            'twice(read()), where read returns user input',
+            'twice(x), where x is an ordinary int variable',
+            'twice(21)',
+          ],
+          3,
+          'Only the literal argument is a constant expression.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+consteval int capacity(int exponent) { return 1 << exponent; }
+int main() {
+  constexpr int base = 3;
+  constexpr int cap = capacity(base);
+  std::cout << cap << " " << base << "\\n";
+}`,
+          ['8 3', '6 3', '9 3', '3 8'],
+          0,
+          'base is constexpr, so capacity(base) is a valid immediate call giving 8.',
+        ),
+      ],
+    },
+    {
+      title: 'consteval rejects run-time arguments',
+      explanation: [
+        'The difference from constexpr shows with run-time values. A constexpr function called with a parameter just runs at run time; a consteval function called with a parameter is a compile error, because no constant can be produced.',
+        'Use consteval when a value must be fixed at build time, such as a table size, and constexpr when the same function should also serve run-time inputs.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+constexpr int scale(int value) { return value * 10; }
+consteval int fixed_scale(int value) { return value * 10; }
+int runtime(int value) { return scale(value); }
+int main() {
+  constexpr int built = fixed_scale(4);
+  std::cout << built << " " << runtime(5) << "\\n";
+}`,
+        output: '40 50',
+        explanation:
+          'runtime may call the constexpr scale with its parameter. Calling fixed_scale(value) there would not compile.',
+      },
+      questions: [
+        choose(
+          'Given `consteval int sq(int v)`, a function `int f(int n)` calls sq(n). What happens?',
+          [
+            'It compiles and runs at run time',
+            'It returns 0',
+            'It is a compile error, because n is not a constant',
+            'It is evaluated when f is first called',
+          ],
+          2,
+          'An immediate function call must be a constant expression, and n is a run-time parameter.',
+        ),
+        choose(
+          'A function must also accept values read at run time. Which keyword fits?',
+          [
+            'constexpr',
+            'consteval',
+            'static_assert',
+            'Either one; they behave the same',
+          ],
+          0,
+          'constexpr allows both compile-time and run-time calls; consteval allows only compile-time ones.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+constexpr int scale(int value) { return value * 10; }
+consteval int fixed_scale(int value) { return value * 10; }
+int main() {
+  constexpr int a = fixed_scale(2);
+  int b = scale(3);
+  std::cout << a + b << "\\n";
+}`,
+          ['23', '5', '60', '50'],
+          3,
+          'a is 20 and b is 30.',
+        ),
+        choose(
+          'Why would a library mark a buffer-size function consteval?',
+          [
+            'To make it faster when called at run time',
+            'To guarantee the size is computed during compilation, never from run-time data',
+            'To allow it to read configuration files',
+            'To let it throw exceptions',
+          ],
+          1,
+          'consteval turns any attempt to compute the size from run-time data into a compile error.',
+        ),
+      ],
+    },
+  ],
+  'cpp-constexpr': [
+    {
+      title: 'Build a lookup table during compilation',
+      explanation: [
+        'std::array<int, N> (from <array>) is a fixed-size array whose length N is part of its type. A constexpr function may declare a local std::array, fill it in a loop, and return it.',
+        'constexpr auto values = table(); then builds the whole table during compilation, and the program only reads it.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <array>
+#include <iostream>
+constexpr std::array<int, 4> table() {
+  std::array<int, 4> result{};
+  for (int i = 0; i < 4; ++i) result[i] = i * i;
+  return result;
+}
+int main() {
+  constexpr auto values = table();
+  std::cout << values[2] << " " << values[3] << "\\n";
+}`,
+        output: '4 9',
+        explanation: 'The table holds 0, 1, 4 and 9, computed by the compiler.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <array>
+#include <iostream>
+constexpr std::array<int, 5> table() {
+  std::array<int, 5> result{};
+  for (int i = 0; i < 5; ++i) result[i] = i * 10;
+  return result;
+}
+int main() {
+  constexpr auto values = table();
+  std::cout << values[4] << "\\n";
+}`,
+          ['50', '4', '40', '10'],
+          2,
+          'Index 4 holds 4 * 10; indexes start at 0, so 50 is never stored.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <array>
+#include <iostream>
+constexpr std::array<int, 5> running() {
+  std::array<int, 5> result{};
+  for (int i = 1; i < 5; ++i) result[i] = result[i - 1] + i;
+  return result;
+}
+int main() {
+  constexpr auto values = running();
+  std::cout << values[4] << "\\n";
+}`,
+          ['10', '4', '15', '6'],
+          0,
+          'The entries are 0, 1, 3, 6 and 10: each adds its index to the previous entry.',
+        ),
+        choose(
+          'What does `constexpr auto values = table();` achieve?',
+          [
+            'table() runs every time values is read',
+            'The table is computed during compilation and stored as a constant',
+            'values refers to an array that lives inside table',
+            'The table is computed lazily, on first use',
+          ],
+          1,
+          'A constexpr variable must be initialized by a constant expression, so table() runs in the compiler.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <array>
+#include <iostream>
+constexpr std::array<int, 4> table() {
+  std::array<int, 4> result{};
+  for (int i = 0; i < 4; ++i) result[i] = i * i;
+  return result;
+}
+int main() {
+  constexpr auto values = table();
+  static_assert(values[1] == 1);
+  std::cout << values.size() << "\\n";
+}`,
+          ['3', '16', '5', '4'],
+          3,
+          'size() is the N in std::array<int, 4>, whatever the entries contain.',
+        ),
+      ],
+    },
+    {
+      title: 'Check a run-time index against size()',
+      explanation: [
+        'The table is fixed, but the index often arrives at run time. operator[] does not check bounds, so compare the index with values.size() first; valid indexes run from 0 to size() - 1.',
+        'With a std::size_t index, a negative number cannot slip through: -1 converted to std::size_t wraps to a huge value, which fails the check.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <array>
+#include <cstddef>
+#include <iostream>
+constexpr std::array<int, 4> table() {
+  std::array<int, 4> result{};
+  for (int i = 0; i < 4; ++i) result[i] = i * i;
+  return result;
+}
+int lookup(std::size_t index) {
+  constexpr auto values = table();
+  return index < values.size() ? values[index] : -1;
+}
+int main() {
+  std::cout << lookup(3) << " " << lookup(4) << "\\n";
+}`,
+        output: '9 -1',
+        explanation:
+          'Index 3 is the last valid one. Index 4 equals size(), so the guard returns -1 instead of reading past the end.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <array>
+#include <cstddef>
+#include <iostream>
+constexpr std::array<int, 4> table() {
+  std::array<int, 4> result{};
+  for (int i = 0; i < 4; ++i) result[i] = i * i;
+  return result;
+}
+int lookup(std::size_t index) {
+  constexpr auto values = table();
+  return index < values.size() ? values[index] : -1;
+}
+int main() {
+  std::cout << lookup(0) << " " << lookup(5) << "\\n";
+}`,
+          ['0 -1', '1 -1', '0 25', '-1 -1'],
+          0,
+          'Index 0 holds 0 * 0. Index 5 is out of range, so the fallback is returned.',
+        ),
+        predictOutput(
+          'A negative index is converted to std::size_t. What does this program print?',
+          `#include <array>
+#include <cstddef>
+#include <iostream>
+constexpr std::array<int, 4> table() {
+  std::array<int, 4> result{};
+  for (int i = 0; i < 4; ++i) result[i] = i * i;
+  return result;
+}
+int lookup(std::size_t index) {
+  constexpr auto values = table();
+  return index < values.size() ? values[index] : -1;
+}
+int main() {
+  std::cout << lookup(static_cast<std::size_t>(-1)) << "\\n";
+}`,
+          ['9', '0', '1', '-1'],
+          3,
+          '-1 wraps to the largest std::size_t value, which is not less than 4, so the guard rejects it.',
+        ),
+        choose(
+          'A table has 4 entries. Which guard is correct before reading values[i]?',
+          [
+            'i <= values.size()',
+            'i < values.size() - 1',
+            'i < values.size()',
+            'values[i] != 0',
+          ],
+          2,
+          'Valid indexes are 0 to 3. <= admits 4, and size() - 1 wrongly excludes 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <array>
+#include <cstddef>
+#include <iostream>
+constexpr std::array<int, 4> table() {
+  std::array<int, 4> result{};
+  for (int i = 0; i < 4; ++i) result[i] = i * i;
+  return result;
+}
+int main() {
+  constexpr auto values = table();
+  int sum = 0;
+  for (std::size_t i = 0; i < values.size(); ++i) sum += values[i];
+  std::cout << sum << "\\n";
+}`,
+          ['30', '14', '9', '6'],
+          1,
+          '0 + 1 + 4 + 9 is 14; the half-open loop stops before index 4.',
+        ),
+      ],
+    },
+    {
+      title: 'Verify the table while compiling',
+      explanation: [
+        'Because the table is a constant, static_assert can check its entries, so a wrong formula fails the build instead of producing wrong answers later. Indexes that arrive at run time still need the run-time bounds check.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <array>
+#include <cstddef>
+#include <iostream>
+constexpr std::array<int, 5> powers() {
+  std::array<int, 5> result{};
+  int value = 1;
+  for (int i = 0; i < 5; ++i) {
+    result[i] = value;
+    value *= 2;
+  }
+  return result;
+}
+constexpr auto table = powers();
+static_assert(table[4] == 16);
+int lookup(std::size_t index) { return index < table.size() ? table[index] : -1; }
+int main() {
+  std::cout << lookup(3) << " " << lookup(5) << "\\n";
+}`,
+        output: '8 -1',
+        explanation:
+          'The table holds 1, 2, 4, 8 and 16, and the build checks the last entry. Index 5 is out of range at run time.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <array>
+#include <cstddef>
+#include <iostream>
+constexpr std::array<int, 5> powers() {
+  std::array<int, 5> result{};
+  int value = 1;
+  for (int i = 0; i < 5; ++i) {
+    result[i] = value;
+    value *= 2;
+  }
+  return result;
+}
+constexpr auto table = powers();
+static_assert(table[0] == 1);
+int lookup(std::size_t index) { return index < table.size() ? table[index] : -1; }
+int main() {
+  std::cout << lookup(0) + lookup(4) << "\\n";
+}`,
+          ['16', '17', '32', '33'],
+          1,
+          'table[0] is 1 and table[4] is 16.',
+        ),
+        choose(
+          'What does `static_assert(table[4] == 16);` protect against?',
+          [
+            'An out-of-range index arriving at run time',
+            'The table being modified at run time',
+            'Overflow inside lookup',
+            'A mistake in the table formula, caught during compilation',
+          ],
+          3,
+          'It checks the computed contents once, in the compiler; run-time indexes need their own check.',
+        ),
+        choose(
+          'Why is `static_assert(table[i] > 0);` invalid inside `int lookup(std::size_t i)`?',
+          [
+            'table cannot be indexed inside a static_assert',
+            'i is a run-time parameter, so table[i] is not a constant expression',
+            'static_assert accepts only ==',
+            'table is not constexpr',
+          ],
+          1,
+          'The index is unknown during compilation, so the condition cannot be evaluated there.',
+        ),
+      ],
+    },
+  ],
+  'cpp-function-object': [
+    {
+      title: 'operator() makes an object callable',
+      explanation: [
+        'A struct that defines operator() can be called like a function. Its members carry configuration: with struct Offset { int amount; int operator()(int value) const { return value + amount; } };, Offset add3{3}; makes add3(5) return 8.',
+        'The const after the parameter list promises that calling the object does not change its members.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+struct Offset {
+  int amount;
+  int operator()(int value) const { return value + amount; }
+};
+int main() {
+  Offset add3{3};
+  Offset minus2{-2};
+  std::cout << add3(5) << " " << minus2(3) << "\\n";
+}`,
+        output: '8 1',
+        explanation:
+          'Both objects run the same operator(), each with its own amount.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Multiply {
+  int factor;
+  int operator()(int value) const { return value * factor; }
+};
+int main() {
+  Multiply triple{3};
+  std::cout << triple(4) + triple(1) << "\\n";
+}`,
+          ['12', '7', '15', '13'],
+          2,
+          'triple(4) is 12 and triple(1) is 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Line {
+  int slope;
+  int intercept;
+  int operator()(int x) const { return slope * x + intercept; }
+};
+int main() {
+  Line f{2, 1};
+  std::cout << f(3) << " " << f(0) << "\\n";
+}`,
+          ['7 1', '9 1', '7 0', '5 2'],
+          0,
+          'f(x) computes 2 * x + 1 from the members set at initialization.',
+        ),
+        choose(
+          'What makes `callback(4)` valid when callback is an object of a struct?',
+          [
+            'The struct has an int member',
+            'The struct is initialized with braces',
+            'The struct defines operator()',
+            'The struct name ends in Callback',
+          ],
+          2,
+          'Call syntax on an object invokes its operator().',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Offset {
+  int amount;
+  int operator()(int value) const { return value + amount; }
+};
+int apply_twice(Offset step, int value) { return step(step(value)); }
+int main() {
+  std::cout << apply_twice(Offset{4}, 1) << "\\n";
+}`,
+          ['5', '8', '6', '9'],
+          3,
+          'The object is passed like any value and called twice: 1 + 4 + 4.',
+        ),
+      ],
+    },
+    {
+      title: 'Calls can update the object’s own state',
+      explanation: [
+        'Without const, operator() may change members, so the object remembers earlier calls. Each object has its own state: two counters advance independently, and a copy starts from the state at the moment it was made.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+struct Counter {
+  int count;
+  int operator()() {
+    count += 1;
+    return count;
+  }
+};
+int main() {
+  Counter a{0};
+  Counter b{10};
+  a();
+  a();
+  std::cout << a() << " " << b() << "\\n";
+}`,
+        output: '3 11',
+        explanation: 'a has been called three times; b once, starting from 10.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Counter {
+  int count;
+  int operator()() {
+    count += 1;
+    return count;
+  }
+};
+int main() {
+  Counter c{5};
+  c();
+  c();
+  std::cout << c.count << "\\n";
+}`,
+          ['5', '6', '2', '7'],
+          3,
+          'Each call adds 1 to the member, starting from 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Counter {
+  int count;
+  int operator()() {
+    count += 1;
+    return count;
+  }
+};
+int main() {
+  Counter a{0};
+  a();
+  Counter b = a;
+  b();
+  b();
+  std::cout << a.count << " " << b.count << "\\n";
+}`,
+          ['1 3', '3 3', '1 2', '3 1'],
+          0,
+          'b copied a’s count of 1 and then counted on alone; a is unaffected.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Total {
+  int sum;
+  int operator()(int value) {
+    sum += value;
+    return sum;
+  }
+};
+int main() {
+  Total t{0};
+  t(4);
+  t(6);
+  std::cout << t(-3) << "\\n";
+}`,
+          ['-3', '7', '10', '13'],
+          1,
+          'The running sum is 4, then 10, then 7.',
+        ),
+        choose(
+          'A function object counts how often it is called. Why must its operator() not be marked const?',
+          [
+            'A const operator() may not modify members, and counting changes a member',
+            'const member functions cannot return int',
+            'const objects cannot be called',
+            'It must be const, or the count resets',
+          ],
+          0,
+          'const promises the call leaves the object unchanged, which a counter cannot keep.',
+        ),
+      ],
+    },
+  ],
+  'cpp-std-function': [
+    {
+      title: 'std::function holds any callable with the right signature',
+      explanation: [
+        'std::function<int(int)> (from <functional>) can store any callable that accepts an int and returns an int: a lambda, a function object, or a plain function. Calling the std::function calls whatever it currently holds.',
+        'The signature is written as the return type followed by the parameter types in parentheses. Because the concrete callable type is hidden, code that receives a std::function does not need to know what kind of callable it is.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <functional>
+#include <iostream>
+int negate(int x) { return -x; }
+struct Offset {
+  int amount;
+  int operator()(int x) const { return x + amount; }
+};
+int main() {
+  std::function<int(int)> f = [](int x) { return x * 3; };
+  std::cout << f(4) << " ";
+  f = negate;
+  std::cout << f(4) << " ";
+  f = Offset{10};
+  std::cout << f(4) << "\\n";
+}`,
+        output: '12 -4 14',
+        explanation:
+          'The same variable holds a lambda, then a function, then a function object, and each call uses the current one.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+int main() {
+  std::function<int(int, int)> combine = [](int a, int b) { return a * 10 + b; };
+  std::cout << combine(4, 2) << "\\n";
+}`,
+          ['42', '24', '6', '8'],
+          0,
+          'The stored lambda computes 4 * 10 + 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+struct Offset {
+  int amount;
+  int operator()(int x) const { return x + amount; }
+};
+int main() {
+  std::function<int(int)> f = [](int x) { return x + 1; };
+  int first = f(f(1));
+  f = Offset{5};
+  std::cout << first << " " << f(1) << "\\n";
+}`,
+          ['3 3', '2 6', '3 6', '3 2'],
+          2,
+          'f(f(1)) uses the lambda twice to reach 3. After the reassignment, f(1) uses Offset and gives 6.',
+        ),
+        choose(
+          'Which callable can be stored in std::function<int(int)>?',
+          [
+            '[](int a, int b) { return a + b; }',
+            '[]() { return 7; }',
+            'An int variable holding 7',
+            '[](int x) { return x * 2; }',
+          ],
+          3,
+          'Only the last one takes one int and returns an int; the others have the wrong parameters or are not callable.',
+        ),
+        choose(
+          'What does it mean for a function receiving a std::function<int(int)> parameter?',
+          [
+            'It can call the argument without knowing whether it is a lambda, function or function object',
+            'It can receive only lambdas',
+            'It must know the argument’s concrete type to call it',
+            'Its argument’s return value is discarded',
+          ],
+          0,
+          'std::function erases the concrete callable type behind the common signature.',
+        ),
+      ],
+    },
+    {
+      title: 'Captured state travels with the stored callable',
+      explanation: [
+        'Storing a lambda or function object in a std::function stores a copy of it, including any captured values or members. A by-value capture is the snapshot taken when the lambda was created, even if the original variable changes before the call.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <functional>
+#include <iostream>
+int main() {
+  int bonus = 5;
+  std::function<int(int)> score = [bonus](int base) { return base + bonus; };
+  bonus = 50;
+  std::cout << score(10) << "\\n";
+}`,
+        output: '15',
+        explanation:
+          'The stored lambda copied bonus as 5; the later change does not reach it.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+int main() {
+  int rate = 2;
+  std::function<int(int)> f = [rate](int x) { return x * rate; };
+  rate = 3;
+  f = [rate](int x) { return x * rate; };
+  std::cout << f(5) << "\\n";
+}`,
+          ['10', '25', '15', '5'],
+          2,
+          'The second lambda was created after rate became 3, and it replaced the first.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+struct Offset {
+  int amount;
+  int operator()(int x) const { return x + amount; }
+};
+int main() {
+  Offset off{1};
+  std::function<int(int)> f = off;
+  off.amount = 100;
+  std::cout << f(1) << "\\n";
+}`,
+          ['101', '1', '100', '2'],
+          3,
+          'f holds its own copy of off, made when it was assigned, with amount 1.',
+        ),
+        choose(
+          'A std::function is assigned a lambda that captures limit by value. Later limit changes. What does the stored callable use?',
+          [
+            'The new value of limit',
+            'The value limit had when the lambda was created',
+            'Zero',
+            'Whatever value the previous call used',
+          ],
+          1,
+          'The lambda’s capture is a copy, and the std::function stores a copy of the lambda.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+int main() {
+  int n = 4;
+  auto base = [n](int x) { return x + n; };
+  std::function<int(int)> a = base;
+  std::function<int(int)> b = base;
+  n = 9;
+  std::cout << a(1) + b(1) << "\\n";
+}`,
+          ['10', '20', '15', '5'],
+          0,
+          'Both copies hold the snapshot n = 4, so each call returns 5.',
+        ),
+      ],
+    },
+  ],
+  'cpp-empty-callback': [
+    {
+      title: 'A std::function can be empty',
+      explanation: [
+        'A default-constructed std::function holds no callable. In a condition it converts to bool: false while empty, true once something is assigned. Assigning nullptr empties it again.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <functional>
+#include <iostream>
+int main() {
+  std::function<int(int)> hook;
+  if (hook) std::cout << "set\\n";
+  else std::cout << "empty\\n";
+  hook = [](int x) { return x + 2; };
+  if (hook) std::cout << hook(5) << "\\n";
+}`,
+        output: 'empty\n7',
+        explanation:
+          'hook starts empty, so the first test is false. After the assignment it holds a lambda and can be called.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+int main() {
+  std::function<void()> f;
+  std::cout << static_cast<bool>(f) << " ";
+  f = [] {};
+  std::cout << static_cast<bool>(f) << "\\n";
+}`,
+          ['1 1', '0 0', '1 0', '0 1'],
+          3,
+          'Default construction gives an empty function; any assigned callable, even one that does nothing, makes it non-empty.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+int main() {
+  std::function<int()> f = [] { return 4; };
+  std::cout << static_cast<bool>(f) << " ";
+  f = nullptr;
+  std::cout << static_cast<bool>(f) << "\\n";
+}`,
+          ['1 0', '1 1', '4 0', '0 0'],
+          0,
+          'Assigning nullptr removes the stored callable.',
+        ),
+        choose(
+          'What does `if (callback)` test when callback is a std::function?',
+          [
+            'Whether the callable returns true',
+            'Whether the callable has been called before',
+            'Whether the std::function currently holds a callable',
+            'Whether the callable takes no arguments',
+          ],
+          2,
+          'The bool conversion reports presence, not anything about the callable’s result.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+int outcome(bool configured, int value) {
+  std::function<int(int)> callback;
+  if (configured) callback = [](int x) { return x + 2; };
+  return callback ? callback(value) : -1;
+}
+int main() {
+  std::cout << outcome(true, 5) << " " << outcome(false, 5) << "\\n";
+}`,
+          ['7 7', '7 -1', '-1 7', '7 5'],
+          1,
+          'Only the configured call stores a lambda; the other keeps the empty function and returns the fallback.',
+        ),
+      ],
+    },
+    {
+      title: 'Guard every call to an optional callback',
+      explanation: [
+        'Calling an empty std::function does not quietly do nothing: it throws std::bad_function_call. An optional callback therefore needs an explicit rule for absence, such as skipping the call or using a default result, checked before every invocation.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <functional>
+#include <iostream>
+int notify(std::function<int(int)> hook, int value) {
+  if (hook) return hook(value);
+  return value;
+}
+int main() {
+  std::function<int(int)> none;
+  std::function<int(int)> doubler = [](int x) { return x * 2; };
+  std::cout << notify(none, 6) << " " << notify(doubler, 6) << "\\n";
+}`,
+        output: '6 12',
+        explanation:
+          'Without a hook, notify returns the value unchanged; with one, it returns the hook’s result.',
+      },
+      questions: [
+        choose(
+          'What happens when an empty std::function<int(int)> is called?',
+          [
+            'It returns 0',
+            'It returns its argument unchanged',
+            'The program fails to compile',
+            'It throws std::bad_function_call',
+          ],
+          3,
+          'Emptiness is a run-time state, and invoking it is reported with an exception.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+int main() {
+  std::function<int(int)> first = [](int x) { return x + 1; };
+  std::function<int(int)> second;
+  std::function<int(int)> third = [](int x) { return x * 10; };
+  int value = 2;
+  if (first) value = first(value);
+  if (second) value = second(value);
+  if (third) value = third(value);
+  std::cout << value << "\\n";
+}`,
+          ['3', '30', '12', '0'],
+          1,
+          'The empty second stage is skipped, so 2 becomes 3 and then 30.',
+        ),
+        choose(
+          'A logger accepts an optional formatting callback. Which design handles a missing callback?',
+          [
+            'Check if (format) before calling, and use default formatting otherwise',
+            'Call it unconditionally; an empty function does nothing',
+            'Assign nullptr to it before calling',
+            'Call it twice to make sure it is set',
+          ],
+          0,
+          'An explicit check with a default keeps the logger working whether or not a callback was supplied.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+int call_or(std::function<int(int)> hook, int value) {
+  return hook ? hook(value) : -1;
+}
+int main() {
+  std::function<int(int)> hook = [](int x) { return x + 2; };
+  int before = call_or(hook, 5);
+  hook = nullptr;
+  std::cout << before << " " << call_or(hook, 5) << "\\n";
+}`,
+          ['7 7', '-1 -1', '7 -1', '7 5'],
+          2,
+          'The first call uses the lambda; after hook is emptied, the guard returns the fallback.',
+        ),
+      ],
+    },
+  ],
+  'cpp-callbacks': [
+    {
+      title: 'A mutable lambda keeps state between calls',
+      explanation: [
+        'A lambda’s captured copies are read-only unless the lambda is declared mutable. With [value = start]() mutable { return ++value; }, each call changes the closure’s own copy, so the closure remembers earlier calls. The original variable is untouched.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int start = 2;
+  auto next = [value = start]() mutable { return ++value; };
+  next();
+  std::cout << next() << " " << start << "\\n";
+}`,
+        output: '4 2',
+        explanation:
+          'The closure’s copy goes from 2 to 3 to 4. start itself stays 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto tick = [n = 0]() mutable {
+    n += 5;
+    return n;
+  };
+  tick();
+  tick();
+  std::cout << tick() << "\\n";
+}`,
+          ['5', '0', '10', '15'],
+          3,
+          'The closure keeps n between calls: 5, 10, 15.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto a = [n = 0]() mutable { return ++n; };
+  auto b = [n = 0]() mutable { return ++n; };
+  a();
+  a();
+  std::cout << a() << " " << b() << "\\n";
+}`,
+          ['3 1', '3 4', '1 1', '3 3'],
+          0,
+          'a and b are separate closures, each with its own n.',
+        ),
+        choose(
+          'Why does `[count = 0]() { return ++count; }` fail to compile?',
+          [
+            'count must be captured by reference',
+            'By default a lambda’s call operator is const, so its captured copies are read-only',
+            'Init captures cannot be modified, even with mutable',
+            'A lambda without parameters cannot return a value',
+          ],
+          1,
+          'mutable lifts that restriction for the closure’s own copies.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int total = 10;
+  auto add = [total](int x) mutable {
+    total += x;
+    return total;
+  };
+  add(5);
+  std::cout << add(5) << " " << total << "\\n";
+}`,
+          ['20 20', '15 10', '20 10', '15 15'],
+          2,
+          'The closure’s copy reaches 20 over two calls; the outer total is never modified.',
+        ),
+      ],
+    },
+    {
+      title: 'Copies of a callback have independent state',
+      explanation: [
+        'Copying a closure, or a std::function that holds one, copies its captured values. After the copy, each object updates its own state, so calling one does not advance the other. The copy starts from whatever state the original had at the moment of copying.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <functional>
+#include <iostream>
+int main() {
+  std::function<int()> first = [value = 2]() mutable { return ++value; };
+  auto second = first;
+  int a = first();
+  int b = second();
+  std::cout << a << " " << b << "\\n";
+}`,
+        output: '3 3',
+        explanation:
+          'second copied value as 2 before either call, so each copy increments its own 2 to 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+int main() {
+  std::function<int()> first = [value = 0]() mutable { return ++value; };
+  first();
+  first();
+  auto second = first;
+  first();
+  std::cout << first() << " " << second() << "\\n";
+}`,
+          ['4 3', '4 5', '4 1', '2 3'],
+          0,
+          'second copied the state 2. first then reaches 4, and second’s first call takes its own copy to 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <functional>
+#include <iostream>
+int main() {
+  std::function<int()> first = [value = 0]() mutable { return ++value; };
+  auto second = first;
+  first();
+  second();
+  std::cout << second() << " " << first() << "\\n";
+}`,
+          ['2 3', '3 4', '2 2', '1 2'],
+          2,
+          'Each copy has been called twice by the time its value is printed.',
+        ),
+        choose(
+          'Two std::function copies are made from one counting lambda. Calls through one copy should be visible through the other. Does copying achieve that?',
+          [
+            'Yes; copies share their captured values',
+            'Yes, but only for std::function, not for lambdas',
+            'No; copying a mutable lambda does not compile',
+            'No; each copy holds its own captured values',
+          ],
+          3,
+          'Copies are independent. Sharing must be arranged deliberately, for example through a pointer to one counter.',
+        ),
+      ],
+    },
+    {
+      title: 'Share state deliberately through a pointer',
+      explanation: [
+        'When several callbacks must update one value, capture something that refers to it. An init capture of a pointer, [p = &total], copies only the address, so every copy of the callback updates the same total. That total must outlive every callback that uses it.',
+        'A closure that owns a std::unique_ptr cannot be stored in std::function at all: std::function requires a copyable callable, and such a closure cannot be copied.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <functional>
+#include <iostream>
+int main() {
+  int total = 0;
+  std::function<void(int)> add = [p = &total](int x) { *p += x; };
+  auto copy = add;
+  add(3);
+  copy(4);
+  std::cout << total << "\\n";
+}`,
+        output: '7',
+        explanation:
+          'Both callbacks hold the same address, so both updates land in total.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int shared = 0;
+  auto a = [p = &shared] { ++*p; };
+  auto b = a;
+  a();
+  b();
+  b();
+  std::cout << shared << "\\n";
+}`,
+          ['1', '2', '3', '0'],
+          2,
+          'a and b copy the pointer, not the counter, so all three calls increment shared.',
+        ),
+        predictOutput(
+          'One callback keeps a private count and also updates a shared one. What does this program print?',
+          `#include <functional>
+#include <iostream>
+int main() {
+  int shared = 0;
+  std::function<int()> f = [p = &shared, own = 0]() mutable {
+    ++*p;
+    return ++own;
+  };
+  auto g = f;
+  f();
+  f();
+  std::cout << g() << " " << shared << "\\n";
+}`,
+          ['3 3', '1 3', '3 1', '1 1'],
+          1,
+          'own is copied, so g’s count starts at 0 and returns 1. The pointer is shared, so all three calls increment shared.',
+        ),
+        choose(
+          'Why can `[held = std::move(owner)] { return *held; }` not be assigned to a std::function<int()>?',
+          [
+            'std::function cannot store lambdas with captures',
+            'The lambda returns int&, not int',
+            'held must be a raw pointer',
+            'std::function needs a copyable callable, and a closure that owns a unique_ptr cannot be copied',
+          ],
+          3,
+          'Copying the std::function would require copying the unique_ptr, which is not allowed.',
+        ),
+        choose(
+          'A callback captures [p = &count], where count is a local, and is stored in an object that outlives that function. What is the problem?',
+          [
+            'The pointer dangles once count is destroyed',
+            'Each copy of the callback counts separately',
+            'Pointers cannot be captured',
+            'There is no problem',
+          ],
+          0,
+          'Sharing through a pointer requires the pointed-to object to live at least as long as every callback.',
+        ),
+      ],
+    },
+  ],
 };
