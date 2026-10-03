@@ -2153,6 +2153,7 @@ const definitions: Definition[] = [
   },
 ];
 
+// Listed in teaching order, so every prerequisite precedes its dependents.
 const mathSkills: Skill[] = withTeachingOrder(
   definitions.map((d): Omit<Skill, 'order'> => ({
     id: d.id,
@@ -2192,7 +2193,7 @@ const mathSkills: Skill[] = withTeachingOrder(
       back,
     })),
   })),
-);
+).sort((a, b) => a.order - b.order);
 export const quantitativeCatalog: CurriculumCatalog = {
   courses: [
     {

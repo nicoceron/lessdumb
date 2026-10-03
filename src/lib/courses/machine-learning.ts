@@ -2166,7 +2166,12 @@ const curriculum = [
     'ml-production',
     'Keep deployed predictions reliable',
     'Version the full prediction pipeline and monitor real outcomes.',
-    ['ml-preprocessing', 'da-pipeline', 'math-sampling'],
+    [
+      'ml-preprocessing',
+      'da-pipeline',
+      'ml-classification-metrics',
+      'math-sampling',
+    ],
     [
       'Serving a model requires the same feature definitions and fitted preprocessing used during training. Store the model together with its schema, transformation state, package versions, and training-data lineage. Validate required fields and input types at the boundary. A reproducible prediction is more than a saved weight file.',
       'Monitor input quality, latency, failures, prediction distributions, and eventual outcomes when labels arrive. Covariate shift changes input distributions; concept drift changes the relationship between inputs and targets. An input-distribution change is a warning to investigate, not automatic proof that accuracy fell. Re-evaluate with new representative labels, compare subgroup performance, and keep a rollback path for a bad release.',
