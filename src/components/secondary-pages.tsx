@@ -38,6 +38,7 @@ import { codeLanguage, codeLanguageLabels } from '../lib/code-language';
 import { type LearnerState } from '../lib/state';
 import { InlineText } from './inline-text';
 import { useSkillContent } from './use-content';
+import { usePythonSpare } from './use-python-spare';
 import { Pill, PageTitle, download } from './shared';
 import { Button } from './ui/button';
 import {
@@ -676,6 +677,7 @@ export function CodeLab({
     rust: 'fn main() {\n    let name = "world";\n    println!("Hello, {name}!");\n}',
     cpp: '#include <iostream>\n#include <string>\n\nint main() {\n    std::string name = "world";\n    std::cout << "Hello, " << name << "!\\n";\n}',
   });
+  usePythonSpare(language === 'python' ? '' : null);
   const code = programs[language];
   const setCode = (value: string) =>
     setPrograms((saved) => ({ ...saved, [language]: value }));

@@ -9,6 +9,7 @@ import {
   withLargeCase,
 } from '../src/lib/courses/competitive/shared';
 import { shortcuts } from './helpers/competitive-shortcuts';
+import { pyodideDirectory as pyodide } from './helpers/pyodide';
 
 // Every hardened Competitive Programming exercise must accept its reference
 // solution and reject the brute-force or shortcut solutions that passed the
@@ -33,7 +34,6 @@ interface Device {
 const thisMachine: Device = { timeScale: 1, slowdown: 1 };
 const slowPhone: Device = { timeScale: 6, slowdown: 6 };
 
-const pyodide = `${resolve('public/pyodide')}/`;
 const bootstrap = `
   import { parentPort } from 'node:worker_threads';
   import { loadPyodide } from ${JSON.stringify(pathToFileURL(`${pyodide}pyodide.mjs`).href)};

@@ -34,7 +34,95 @@ function rememberCalibration(value: number) {
   }
 }
 
-/** Each run uses an isolated, terminable worker. Learner code never runs on the server. */
+/**
+ * The warm spare. Starting Python takes most of a check (about 0.85 s on a
+ * fast laptop, several seconds on a phone, plus any packages), so a page with
+ * a Python exercise keeps one worker loading Python before the learner
+ * clicks. The spare has never run learner code: a run takes it, and the run's
+ * worker is terminated when the run ends, as before. One spare per tab.
+ */
+type Spare = { worker: Worker; preloaded: Set<string> };
+let spare: Spare | undefined;
+/** Pages that asked for a spare, each with its exercise's authored source. */
+const holders = new Map<symbol, string>();
+let releaseTimer: ReturnType<typeof setTimeout> | undefined;
+/**
+ * How long a spare outlives the last page that asked for it, so moving from
+ * one Python page to another does not restart Python.
+ */
+export const SPARE_RELEASE_MS = 5000;
+
+function startWorker(): Worker {
+  return new Worker('/python-worker.mjs', { type: 'module' });
+}
+
+/** Preload, in the spare, the packages an exercise's source imports. */
+function preload(source: string) {
+  if (!spare || !source || spare.preloaded.has(source)) return;
+  spare.preloaded.add(source);
+  try {
+    spare.worker.postMessage({ preload: source });
+  } catch {
+    // The run loads its packages itself.
+  }
+}
+
+function discardSpare() {
+  spare?.worker.terminate();
+  spare = undefined;
+}
+
+function startSpare() {
+  if (spare || holders.size === 0) return;
+  let worker: Worker;
+  try {
+    worker = startWorker();
+  } catch {
+    // A run then starts its own worker and reports the failure.
+    return;
+  }
+  const failed = () => {
+    if (spare?.worker === worker) spare = undefined;
+    worker.terminate();
+  };
+  worker.onerror = failed;
+  worker.onmessageerror = failed;
+  spare = { worker, preloaded: new Set() };
+  for (const source of holders.values()) preload(source);
+}
+
+/** The spare, or a new worker when there is none. The run sets its handlers. */
+function takeWorker(): Worker {
+  const taken = spare?.worker;
+  spare = undefined;
+  return taken ?? startWorker();
+}
+
+/**
+ * Keeps a warm spare while a page shows a Python exercise. `source` is the
+ * exercise's authored starter code and checks; the spare preloads the
+ * packages it imports. Returns the release for when the page leaves.
+ */
+export function warmPython(source = ''): () => void {
+  const holder = Symbol('Python page');
+  holders.set(holder, source);
+  clearTimeout(releaseTimer);
+  releaseTimer = undefined;
+  startSpare();
+  preload(source);
+  return () => {
+    if (!holders.delete(holder) || holders.size) return;
+    releaseTimer = setTimeout(() => {
+      releaseTimer = undefined;
+      if (!holders.size) discardSpare();
+    }, SPARE_RELEASE_MS);
+  };
+}
+
+/**
+ * Each run uses an isolated, terminable worker that has never run other code.
+ * Learner code never runs on the server.
+ */
 export function runPython(
   code: string,
   tests = '',
@@ -51,6 +139,9 @@ export function runPython(
       worker?.terminate();
       signal?.removeEventListener('abort', cancelled);
       resolve(result);
+      // Prepare the next run's worker once the page has reacted: a page that
+      // is closing has released its spare by then.
+      queueMicrotask(startSpare);
     };
     const unavailable = () =>
       finish({
@@ -72,7 +163,7 @@ export function runPython(
     }
     signal?.addEventListener('abort', cancelled, { once: true });
     try {
-      worker = new Worker('/python-worker.mjs', { type: 'module' });
+      worker = takeWorker();
       const id = crypto.randomUUID();
       timeout = setTimeout(
         () =>

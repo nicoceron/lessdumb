@@ -9,3 +9,10 @@
 
 /catalog/*.md
   Content-Type: text/markdown; charset=utf-8
+
+# The Python runtime lives in a directory named for its Pyodide version and
+# package set (scripts/copy-python.mjs), so its files never change in place.
+# /pyodide/current.mjs, which names that directory, is not matched and keeps
+# the default revalidation.
+/pyodide/:version/*
+  Cache-Control: public, max-age=31536000, immutable

@@ -21,6 +21,7 @@ import {
 import type { PythonResult } from '../src/lib/python';
 import { gradeText } from '../src/lib/typed-answer';
 import { GENERATOR_SAMPLES, questionVariant } from '../src/lib/variants';
+import { pyodideDirectory } from './helpers/pyodide';
 
 // Every worked example and every "what does this print?" question is run, and
 // its published output must be exactly what the program prints. A typed output
@@ -221,9 +222,7 @@ describe('Python knowledge points run as published', () => {
   ) => Promise<PythonResult>;
   beforeAll(async () => {
     if (!python.length && !pythonExercises.length) return;
-    runtime = await loadPyodide({
-      indexURL: `${resolve('public/pyodide')}/`,
-    });
+    runtime = await loadPyodide({ indexURL: pyodideDirectory });
     await runtime.loadPackage(['numpy', 'pandas', 'scikit-learn']);
     executePython = (
       await import(pathToFileURL(resolve('public/python-runtime.mjs')).href)
