@@ -608,6 +608,357 @@ const bfsDistances = (graph: string, source = 0, onPop = '', onScan = '') =>
     '            queue.append(neighbor)',
   );
 
+const incomingCounts = lines(
+  'def incoming_counts(graph):',
+  '    counts = [0] * len(graph)',
+  '    for neighbors in graph:',
+  '        for vertex in neighbors:',
+  '            counts[vertex] += 1',
+  '    return counts',
+  '',
+);
+
+const readyVertices = lines(
+  'def ready_vertices(indegrees):',
+  '    return [vertex for vertex in range(len(indegrees)) if indegrees[vertex] == 0]',
+  '',
+);
+
+const releaseEdges = lines(
+  'def release_edges(indegrees, outgoing):',
+  '    counts = indegrees.copy()',
+  '    ready = []',
+  '    for vertex in outgoing:',
+  '        counts[vertex] -= 1',
+  '        if counts[vertex] == 0:',
+  '            ready.append(vertex)',
+  '    return counts, ready',
+  '',
+);
+
+/** Kahn’s algorithm; `seed` builds the initial queue, `finish` prints. */
+const kahn = (
+  n: number,
+  edges: string,
+  finish = 'print(order)',
+  seed = 'deque([vertex for vertex in range(n) if indegree[vertex] == 0])',
+) =>
+  lines(
+    'from collections import deque',
+    `n = ${n}`,
+    `edges = ${edges}`,
+    'graph = [[] for _ in range(n)]',
+    'indegree = [0] * n',
+    'for source, target in edges:',
+    '    graph[source].append(target)',
+    '    indegree[target] += 1',
+    `queue = ${seed}`,
+    'order = []',
+    'while queue:',
+    '    vertex = queue.popleft()',
+    '    order.append(vertex)',
+    '    for neighbor in graph[vertex]:',
+    '        indegree[neighbor] -= 1',
+    '        if indegree[neighbor] == 0:',
+    '            queue.append(neighbor)',
+    finish,
+  );
+
+const completeOrNone = lines(
+  'print(order)',
+  'if len(order) == n:',
+  '    print(order)',
+  'else:',
+  '    print(None)',
+);
+
+const relaxDistance = lines(
+  'def relax(current, source_distance, weight):',
+  '    candidate = source_distance + weight',
+  '    if current is None or candidate < current:',
+  '        return candidate',
+  '    return current',
+  '',
+);
+
+const isCurrent = lines(
+  'def is_current(entry, distances):',
+  '    queued_distance, vertex = entry',
+  '    return queued_distance == distances[vertex]',
+  '',
+);
+
+const nextEntry = lines(
+  'import heapq',
+  '',
+  'def next_entry(entries, distances):',
+  '    heap = entries.copy()',
+  '    heapq.heapify(heap)',
+  '    while heap:',
+  '        distance, vertex = heapq.heappop(heap)',
+  '        if distance == distances[vertex]:',
+  '            return distance, vertex',
+  '    return None',
+  '',
+);
+
+/** Lazy-heap Dijkstra from vertex 0; `onPop` runs before the stale check. */
+const dijkstra = (graph: string, onPop = '') =>
+  lines(
+    'import heapq',
+    `graph = ${graph}`,
+    'distance = [None] * len(graph)',
+    'distance[0] = 0',
+    'heap = [(0, 0)]',
+    'while heap:',
+    '    cost, vertex = heapq.heappop(heap)',
+    ...(onPop ? [`    ${onPop}`] : []),
+    '    if cost == distance[vertex]:',
+    '        for neighbor, weight in graph[vertex]:',
+    '            candidate = cost + weight',
+    '            if distance[neighbor] is None or candidate < distance[neighbor]:',
+    '                distance[neighbor] = candidate',
+    '                heapq.heappush(heap, (candidate, neighbor))',
+  );
+
+const shortestCosts = lines(
+  'import heapq',
+  '',
+  'def shortest_costs(n, edges, source):',
+  '    graph = [[] for _ in range(n)]',
+  '    for u, v, weight in edges:',
+  '        if weight < 0:',
+  '            raise ValueError("negative weight")',
+  '        graph[u].append((v, weight))',
+  '    distance = [None] * n',
+  '    distance[source] = 0',
+  '    heap = [(0, source)]',
+  '    while heap:',
+  '        cost, vertex = heapq.heappop(heap)',
+  '        if cost == distance[vertex]:',
+  '            for neighbor, weight in graph[vertex]:',
+  '                candidate = cost + weight',
+  '                if distance[neighbor] is None or candidate < distance[neighbor]:',
+  '                    distance[neighbor] = candidate',
+  '                    heapq.heappush(heap, (candidate, neighbor))',
+  '    return distance',
+  '',
+);
+
+const findRoot = lines(
+  'def find_root(parent, vertex):',
+  '    while parent[vertex] != vertex:',
+  '        vertex = parent[vertex]',
+  '    return vertex',
+  '',
+);
+
+const countHops = lines(
+  'def hops(parent, vertex):',
+  '    count = 0',
+  '    while parent[vertex] != vertex:',
+  '        vertex = parent[vertex]',
+  '        count += 1',
+  '    return count',
+  '',
+);
+
+const compressPath = lines(
+  'def compress(parent, vertex):',
+  '    result = parent.copy()',
+  '    root = vertex',
+  '    while result[root] != root:',
+  '        root = result[root]',
+  '    while result[vertex] != vertex:',
+  '        next_vertex = result[vertex]',
+  '        result[vertex] = root',
+  '        vertex = next_vertex',
+  '    return result',
+  '',
+);
+
+const joinRoots = lines(
+  'def join_roots(parent, sizes, first, second):',
+  '    new_parent = parent.copy()',
+  '    new_sizes = sizes.copy()',
+  '    if first == second:',
+  '        return new_parent, new_sizes',
+  '    if new_sizes[first] < new_sizes[second]:',
+  '        first, second = second, first',
+  '    new_parent[second] = first',
+  '    new_sizes[first] += new_sizes[second]',
+  '    return new_parent, new_sizes',
+  '',
+);
+
+/** DSU with path halving and union by size; records the count per edge. */
+const dsuRun = (n: number, edges: string) =>
+  lines(
+    `n = ${n}`,
+    'parent = list(range(n))',
+    'size = [1] * n',
+    'components = n',
+    '',
+    'def find(vertex):',
+    '    while parent[vertex] != vertex:',
+    '        parent[vertex] = parent[parent[vertex]]',
+    '        vertex = parent[vertex]',
+    '    return vertex',
+    '',
+    'counts = []',
+    `for first, second in ${edges}:`,
+    '    a, b = find(first), find(second)',
+    '    if a != b:',
+    '        if size[a] < size[b]:',
+    '            a, b = b, a',
+    '        parent[b] = a',
+    '        size[a] += size[b]',
+    '        components -= 1',
+    '    counts.append(components)',
+  );
+
+/** Union by size without compression, to show the depth bound alone. */
+const sizeOnlyUnions = (n: number, pairs: string) =>
+  lines(
+    countHops,
+    `parent = list(range(${n}))`,
+    `size = [1] * ${n}`,
+    `for first, second in ${pairs}:`,
+    '    a, b = first, second',
+    '    while parent[a] != a:',
+    '        a = parent[a]',
+    '    while parent[b] != b:',
+    '        b = parent[b]',
+    '    if a != b:',
+    '        if size[a] < size[b]:',
+    '            a, b = b, a',
+    '        parent[b] = a',
+    '        size[a] += size[b]',
+    `print(max([hops(parent, v) for v in range(${n})]))`,
+  );
+
+const acceptEdge = lines(
+  'def accept(labels, u, v):',
+  '    first, second = labels[u], labels[v]',
+  '    if first == second:',
+  '        return False, labels.copy()',
+  '    merged = []',
+  '    for label in labels:',
+  '        if label == second:',
+  '            merged.append(first)',
+  '        else:',
+  '            merged.append(label)',
+  '    return True, merged',
+  '',
+);
+
+const acceptedCount = (n: number, edges: string) =>
+  lines(
+    acceptEdge,
+    `labels = list(range(${n}))`,
+    'accepted = 0',
+    `for u, v in ${edges}:`,
+    '    ok, labels = accept(labels, u, v)',
+    '    if ok:',
+    '        accepted += 1',
+    `print(accepted, accepted == ${n} - 1)`,
+  );
+
+const completedCost = lines(
+  'def completed_cost(n, selected_weights):',
+  '    if len(selected_weights) != max(0, n - 1):',
+  '        return None',
+  '    return sum(selected_weights)',
+  '',
+);
+
+const weightKey = 'key=lambda edge: edge[2]';
+
+/** Kruskal with DSU; prints accepted weights and the total. */
+const kruskal = (n: number, edges: string) =>
+  lines(
+    `n = ${n}`,
+    `edges = ${edges}`,
+    'parent = list(range(n))',
+    'size = [1] * n',
+    '',
+    'def find(vertex):',
+    '    while parent[vertex] != vertex:',
+    '        parent[vertex] = parent[parent[vertex]]',
+    '        vertex = parent[vertex]',
+    '    return vertex',
+    '',
+    'total = 0',
+    'chosen = []',
+    `for u, v, weight in sorted(edges, ${weightKey}):`,
+    '    a, b = find(u), find(v)',
+    '    if a != b:',
+    '        if size[a] < size[b]:',
+    '            a, b = b, a',
+    '        parent[b] = a',
+    '        size[a] += size[b]',
+    '        total += weight',
+    '        chosen.append(weight)',
+    'print(chosen, total)',
+  );
+
+const minimumLinkCost = lines(
+  'def minimum_link_cost(n, edges):',
+  '    if n <= 1:',
+  '        return 0',
+  '    parent = list(range(n))',
+  '    size = [1] * n',
+  '',
+  '    def find(vertex):',
+  '        while parent[vertex] != vertex:',
+  '            parent[vertex] = parent[parent[vertex]]',
+  '            vertex = parent[vertex]',
+  '        return vertex',
+  '',
+  '    total = 0',
+  '    chosen = 0',
+  `    for u, v, weight in sorted(edges, ${weightKey}):`,
+  '        a, b = find(u), find(v)',
+  '        if a != b:',
+  '            if size[a] < size[b]:',
+  '                a, b = b, a',
+  '            parent[b] = a',
+  '            size[a] += size[b]',
+  '            total += weight',
+  '            chosen += 1',
+  '    if chosen != n - 1:',
+  '        return None',
+  '    return total',
+  '',
+);
+
+/** Reports after how many sorted edges Kruskal’s tree was complete. */
+const kruskalCompletion = (n: number, edges: string) =>
+  lines(
+    `n = ${n}`,
+    `edges = ${edges}`,
+    'parent = list(range(n))',
+    '',
+    'def find(vertex):',
+    '    while parent[vertex] != vertex:',
+    '        parent[vertex] = parent[parent[vertex]]',
+    '        vertex = parent[vertex]',
+    '    return vertex',
+    '',
+    `order = sorted(edges, ${weightKey})`,
+    'chosen = 0',
+    'complete_after = 0',
+    'for index in range(len(order)):',
+    '    u, v, weight = order[index]',
+    '    a, b = find(u), find(v)',
+    '    if a != b:',
+    '        parent[b] = a',
+    '        chosen += 1',
+    '        if chosen == n - 1:',
+    '            complete_after = index + 1',
+    'print(complete_after, len(order))',
+  );
+
 export const knowledgePoints: KnowledgePointModule = {
   // ---------------------------------------------------------------- stacks
   'cp-stack-push': [
@@ -7124,6 +7475,2198 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           3,
           'Each removal from the front moves the rest of the list, adding work proportional to the queue length.',
+        ),
+      ],
+    },
+  ],
+  // ---------------------------------------------------- topological order
+  'cp-incoming-counts': [
+    {
+      title: 'Count incoming edges per vertex',
+      explanation: [
+        'In a dependency graph, an edge u → v means u must come before v. The indegree of v is the number of edges entering it: the prerequisites v still waits for.',
+        'Count by scanning every adjacency entry and adding 1 at its destination. Indegree counts edges into a vertex; the length of graph[v] counts edges out of it.',
+      ],
+      example: {
+        code: lines(
+          incomingCounts,
+          'print(incoming_counts([[1, 2], [2], [], [0]]))',
+        ),
+        output: '[1, 1, 2, 0]',
+        explanation:
+          'Vertex 2 is the destination of two edges, from 0 and from 1. Vertex 3 has an edge out but none in.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(incomingCounts, 'print(incoming_counts([[1], [2], [0]]))'),
+          ['[1, 1, 1]', '[0, 1, 1]', '[1, 1, 0]', '[3, 0, 0]'],
+          0,
+          'In the cycle 0 → 1 → 2 → 0, every vertex is the destination of exactly one edge.',
+        ),
+        choose(
+          'graph[4] lists three neighbors. What does that tell you about vertex 4?',
+          [
+            'Its indegree is 3',
+            'It has 3 outgoing edges',
+            'It has 3 prerequisites',
+            'It is ready immediately',
+          ],
+          1,
+          'graph[4] lists edges leaving 4; its indegree depends on the other vertices’ lists.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            incomingCounts,
+            'graph = [[3], [3], [3], []]',
+            'print(incoming_counts(graph), [len(x) for x in graph])',
+          ),
+          [
+            '[1, 1, 1, 0] [0, 0, 0, 3]',
+            '[0, 0, 0, 1] [1, 1, 1, 0]',
+            '[0, 0, 0, 3] [1, 1, 1, 0]',
+            '[0, 0, 0, 3] [1, 1, 1, 3]',
+          ],
+          2,
+          'Three edges enter 3, while each of 0, 1 and 2 has one edge out.',
+        ),
+        choose(
+          'Edge u → v means u must come before v. Which number says how many prerequisites v has?',
+          [
+            'len(graph[v])',
+            'The number of vertices',
+            'len(graph[u])',
+            'The indegree of v',
+          ],
+          3,
+          'Each prerequisite of v is an edge into v.',
+        ),
+      ],
+    },
+    {
+      title: 'Count parallel edges and self-loops too',
+      explanation: [
+        'Every adjacency entry is one dependency, so two parallel edges into v add 2, and both must be removed later. A self-loop v → v adds 1 to v’s own count, which v itself can never release.',
+        'An isolated vertex keeps count 0, and the counts always sum to the number of edges.',
+      ],
+      example: {
+        code: lines(
+          incomingCounts,
+          'counts = incoming_counts([[1, 1], [1], [], []])',
+          'print(counts, sum(counts))',
+        ),
+        output: '[0, 3, 0, 0] 3',
+        explanation:
+          'The two parallel edges from 0 and the self-loop at 1 all enter vertex 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(incomingCounts, 'print(incoming_counts([[2, 2], [2], []]))'),
+          ['[0, 0, 2]', '[0, 0, 3]', '[0, 0, 1]', '[2, 1, 0]'],
+          1,
+          'Both parallel edges from 0 count, plus the edge from 1.',
+        ),
+        choose(
+          'A graph has 7 directed edges, some parallel and one a self-loop. What do all the indegrees sum to?',
+          ['7', '6', '14', 'The number of vertices'],
+          0,
+          'Every edge, parallel or self-loop, adds exactly 1 at its destination.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(incomingCounts, 'print(incoming_counts([[], [1], [0]]))'),
+          ['[0, 1, 1]', '[1, 0, 0]', '[1, 1, 0]', '[0, 0, 0]'],
+          2,
+          'The self-loop gives vertex 1 a count of 1, and the edge 2 → 0 gives vertex 0 a count of 1.',
+        ),
+        choose(
+          'Vertex 5 has a self-loop 5 → 5 and no other incoming edges. What is its indegree?',
+          ['0, since a vertex cannot wait for itself', '2', 'Undefined', '1'],
+          3,
+          'The self-loop is one edge entering 5.',
+        ),
+      ],
+    },
+  ],
+  'cp-zero-indegree': [
+    {
+      title: 'Start with every zero-indegree vertex',
+      explanation: [
+        'A vertex whose remaining indegree is 0 waits for nothing, so it can be scheduled now. The initial ready list holds every such vertex, here in increasing index order.',
+        'Isolated vertices and the starting vertices of separate components all have indegree 0, so all of them belong in the initial ready list.',
+      ],
+      example: {
+        code: lines(readyVertices, 'print(ready_vertices([1, 0, 0, 3, 0, 1]))'),
+        output: '[1, 2, 4]',
+        explanation:
+          'Only vertices 1, 2 and 4 have no remaining prerequisites.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(readyVertices, 'print(ready_vertices([3, 1, 0, 0]))'),
+          ['[0, 1]', '[2, 3]', '[2]', '[3, 2]'],
+          1,
+          'Vertices 2 and 3 have count 0, and the comprehension lists them in index order.',
+        ),
+        choose(
+          'A graph has two separate components and an isolated vertex. Which vertices start in the ready list?',
+          [
+            'Only vertex 0',
+            'One vertex from the largest component',
+            'Every vertex with indegree 0, in any component',
+            'Only the isolated vertex',
+          ],
+          2,
+          'Nothing will ever release a zero-indegree vertex later, so all of them must start ready.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(readyVertices, 'print(ready_vertices([0, 0, 0]))'),
+          ['[0, 1, 2]', '[0]', '[]', '[0, 0, 0]'],
+          0,
+          'With no edges, every vertex is ready; the list holds vertex numbers, not counts.',
+        ),
+        predictOutput(
+          'Which vertices are ready at the start?',
+          lines(
+            incomingCounts,
+            readyVertices,
+            'print(ready_vertices(incoming_counts([[1], [], [1], []])))',
+          ),
+          ['[0, 2]', '[1]', '[3]', '[0, 2, 3]'],
+          3,
+          'Only vertex 1 has prerequisites; the isolated vertex 3 is ready along with 0 and 2.',
+        ),
+      ],
+    },
+    {
+      title: 'No ready vertex means a cycle remains',
+      explanation: [
+        'Every vertex on a directed cycle has an incoming edge from the vertex before it, so none of them reaches indegree 0 while the cycle is intact. If unprocessed vertices remain and none has indegree 0, they cannot all be scheduled.',
+        'A self-loop is the smallest such cycle: the vertex waits for itself forever.',
+      ],
+      example: {
+        code: lines(
+          readyVertices,
+          'print(ready_vertices([1, 1, 1]))  # 0 -> 1 -> 2 -> 0',
+          'print(ready_vertices([0, 1]))  # 1 -> 1',
+        ),
+        output: '[]\n[0]',
+        explanation:
+          'In the 3-cycle every vertex waits for its predecessor, so nothing is ready. With a self-loop at 1, vertex 0 is ready but 1 waits for itself.',
+      },
+      questions: [
+        choose(
+          'Kahn’s algorithm has unprocessed vertices left, but none has indegree 0. What does that show?',
+          [
+            'All vertices are processed',
+            'The remaining graph contains a directed cycle',
+            'Some edge has a negative weight',
+            'The graph is undirected',
+          ],
+          1,
+          'Without a cycle, some remaining vertex would have no remaining prerequisite.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(
+            incomingCounts,
+            readyVertices,
+            'print(ready_vertices(incoming_counts([[1], [0], [0]])))',
+          ),
+          ['[]', '[0, 1]', '[2]', '[0]'],
+          2,
+          '0 and 1 wait for each other in a cycle; only 2, which nothing points to, is ready.',
+        ),
+        choose(
+          'Which graph has no vertex with indegree 0?',
+          ['0 → 1, 1 → 0', '0 → 1, 1 → 2', '0 → 1, 2 → 1', '0 → 2, 1 → 2'],
+          0,
+          'In the two-vertex cycle, each vertex has an edge from the other.',
+        ),
+        choose(
+          'Vertex 3 has a self-loop 3 → 3. Can it ever enter the ready list?',
+          [
+            'Yes, once its other prerequisites finish',
+            'Yes, it is ready at the start',
+            'Only if it has no outgoing edges',
+            'No, it always waits for itself',
+          ],
+          3,
+          'Its own edge can be released only by processing 3, which first needs count 0.',
+        ),
+      ],
+    },
+  ],
+  'cp-release-dependency': [
+    {
+      title: 'Decrement each outgoing incidence',
+      explanation: [
+        'When a ready vertex is processed, each of its outgoing edges is satisfied: subtract 1 from the destination’s remaining count, once per edge entry, including each parallel edge.',
+        'A destination becomes ready exactly when its count reaches 0.',
+      ],
+      example: {
+        code: lines(releaseEdges, 'print(release_edges([0, 2, 1, 1], [1, 2]))'),
+        output: '([0, 1, 0, 1], [2])',
+        explanation:
+          'Vertex 1 still waits for one more prerequisite, while vertex 2’s only prerequisite is now done.',
+      },
+      questions: [
+        choose(
+          'Vertex 6 has remaining count 2. The processed vertex has one edge to 6. What is 6’s count afterwards, and is it ready?',
+          ['0, ready', '1, not ready', '2, not ready', '1, ready'],
+          1,
+          'One prerequisite is removed, and one still remains.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(releaseEdges, 'print(release_edges([0, 1, 1], [1, 2]))'),
+          [
+            '([0, 0, 0], [1, 2])',
+            '([0, 1, 1], [])',
+            '([0, 0, 0], [])',
+            '([0, 0, 0], [2, 1])',
+          ],
+          0,
+          'Both destinations drop from 1 to 0 and become ready in edge order.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(releaseEdges, 'print(release_edges([0, 3, 0], [1, 1]))'),
+          [
+            '([0, 2, 0], [])',
+            '([0, 0, 0], [1])',
+            '([0, 1, 0], [])',
+            '([0, 1, 0], [1])',
+          ],
+          2,
+          'The two parallel edges each subtract 1, leaving 1 still blocked at count 1.',
+        ),
+        choose(
+          'Why must a parallel edge to v be decremented twice?',
+          [
+            'Because v must be queued twice',
+            'Because parallel edges have double weight',
+            'Because v becomes negative otherwise',
+            'Because v’s count included both edges',
+          ],
+          3,
+          'Each edge added 1 to v’s count, so each must subtract 1 for the count to reach 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Release a vertex only at the transition to zero',
+      explanation: [
+        'Append a destination to the ready list at the moment its count becomes 0, not whenever it is decremented. Checking right after each decrement means it is appended once, by its final remaining prerequisite.',
+        'With parallel edges, the first decrement can leave the vertex blocked; only the last one releases it.',
+      ],
+      example: {
+        code: lines(releaseEdges, 'print(release_edges([0, 2, 1], [1, 2, 1]))'),
+        output: '([0, 0, 0], [2, 1])',
+        explanation:
+          'The first edge to 1 leaves it at 1. The edge to 2 releases 2, and the second edge to 1 releases 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(releaseEdges, 'print(release_edges([0, 2, 2], [2, 1, 2]))'),
+          [
+            '([0, 1, 0], [2])',
+            '([0, 1, 0], [2, 1])',
+            '([0, 0, 0], [2, 1])',
+            '([0, 1, 1], [])',
+          ],
+          0,
+          '2 receives two decrements and reaches 0; 1 receives one and stays blocked at 1.',
+        ),
+        predictOutput(
+          'This version appends on every decrement. What does it print?',
+          lines(
+            'def careless(indegrees, outgoing):',
+            '    counts = indegrees.copy()',
+            '    ready = []',
+            '    for vertex in outgoing:',
+            '        counts[vertex] -= 1',
+            '        ready.append(vertex)',
+            '    return counts, ready',
+            '',
+            'print(careless([0, 2], [1, 1]))',
+          ),
+          [
+            '([0, 0], [1])',
+            '([0, 1], [1])',
+            '([0, 0], [1, 1])',
+            '([0, 0], [])',
+          ],
+          2,
+          'Vertex 1 is appended after both decrements, so it would be scheduled twice, the first time too early.',
+        ),
+        choose(
+          'When should a neighbor be appended to the ready queue?',
+          [
+            'Whenever its count is decremented',
+            'When its count changes from 1 to 0',
+            'At the start, with every vertex',
+            'Whenever its count is positive',
+          ],
+          1,
+          'That transition happens once, when its last prerequisite is removed.',
+        ),
+        choose(
+          'Vertex 4 has two prerequisites, 1 and 2. Processing 1 brings its count to 1. Which processing step releases it?',
+          [
+            'Vertex 1’s, since it came first',
+            'None until all vertices are done',
+            'Vertex 4’s own',
+            'Vertex 2’s, its final remaining prerequisite',
+          ],
+          3,
+          'Only the decrement from 2 brings the count from 1 to 0.',
+        ),
+      ],
+    },
+  ],
+  'cp-topological': [
+    {
+      title: 'Schedule with Kahn’s algorithm',
+      explanation: [
+        'Kahn’s algorithm counts indegrees, queues every vertex whose count is 0, and then repeatedly removes a vertex from the front, appends it to the order, and releases its outgoing edges. A neighbor whose count reaches 0 joins the back of the queue.',
+        'Every edge u → v is respected: v cannot be queued until u, and every other prerequisite of v, has been removed.',
+      ],
+      example: {
+        code: kahn(5, '[(3, 1), (0, 1), (1, 2), (3, 4)]'),
+        output: '[0, 3, 1, 4, 2]',
+        explanation:
+          '0 and 3 start ready. Vertex 1 waits for both, so it is released by 3; then 4 and 2 follow.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          kahn(4, '[(2, 0), (2, 1), (1, 0), (3, 2)]'),
+          ['[3, 2, 1, 0]', '[0, 1, 2, 3]', '[3, 2, 0, 1]', '[2, 3, 1, 0]'],
+          0,
+          'Only 3 starts ready. 2 follows, then 1, and 0 must wait for both 2 and 1.',
+        ),
+        choose(
+          'Edge u → v means u is a prerequisite of v. What must every topological order satisfy?',
+          [
+            'v appears before u',
+            'u and v are adjacent',
+            'u appears before v',
+            'Vertices are sorted by number',
+          ],
+          2,
+          'A prerequisite must be scheduled before what depends on it.',
+        ),
+        predictOutput(
+          'What is printed?',
+          kahn(3, '[]'),
+          ['[]', '[0, 1, 2]', '[2, 1, 0]', 'None'],
+          1,
+          'With no edges every vertex starts ready, and the queue releases them in index order.',
+        ),
+        choose(
+          'Which list is a valid topological order for the edges 0 → 2, 1 → 2 and 2 → 3?',
+          ['[0, 2, 1, 3]', '[2, 0, 1, 3]', '[0, 1, 3, 2]', '[1, 0, 2, 3]'],
+          3,
+          'Both 0 and 1 precede 2, and 2 precedes 3; the others break one of those edges.',
+        ),
+      ],
+    },
+    {
+      title: 'Seed the queue from every component',
+      explanation: [
+        'The initial queue must contain every vertex with indegree 0, not only vertex 0. Isolated vertices and the sources of separate components would otherwise never be processed.',
+        'When several vertices are ready at once, any of them may go next, so a graph can have several valid orders; Kahn’s algorithm with a FIFO queue produces one of them.',
+      ],
+      example: {
+        code: kahn(4, '[(0, 1), (2, 3)]'),
+        output: '[0, 2, 1, 3]',
+        explanation:
+          'Both chain starts, 0 and 2, are queued at once, so the two chains interleave.',
+      },
+      questions: [
+        predictOutput(
+          'This version seeds the queue with vertex 0 only. What does it print?',
+          kahn(4, '[(0, 1), (2, 3)]', 'print(order)', 'deque([0])'),
+          ['[0, 1, 2, 3]', '[0, 2, 1, 3]', '[0, 1]', '[0]'],
+          2,
+          'Vertex 2 is never queued, so the second chain is never processed.',
+        ),
+        predictOutput(
+          'What is printed?',
+          kahn(5, '[(4, 0), (1, 3)]'),
+          [
+            '[1, 2, 4, 3, 0]',
+            '[4, 1, 0, 3, 2]',
+            '[1, 2, 4, 0, 3]',
+            '[0, 1, 2, 3, 4]',
+          ],
+          0,
+          '1, 2 and 4 start ready. 1 releases 3, then 4 releases 0, so 3 leaves before 0.',
+        ),
+        choose(
+          'The only edges are 0 → 1 and 2 → 3. Why must the initial queue include vertex 2?',
+          [
+            '2 has the largest label',
+            '2 has indegree 0, and no edge will ever release it',
+            'Vertex 0 is not ready',
+            'The queue must hold every vertex',
+          ],
+          1,
+          'A vertex enters the queue later only when an edge into it is released; 2 has no such edge.',
+        ),
+        choose(
+          'With only the edges 0 → 2 and 1 → 2, how many valid topological orders exist?',
+          ['1', '3', '0', '2'],
+          3,
+          '[0, 1, 2] and [1, 0, 2]; 2 must come last, but 0 and 1 may go in either order.',
+        ),
+      ],
+    },
+    {
+      title: 'Return None when a cycle blocks the schedule',
+      explanation: [
+        'If the graph has a directed cycle, its vertices never reach indegree 0, so the loop ends having processed fewer than n vertices. A complete-schedule function should then return None rather than the partial order.',
+        'Building the graph and counts, seeding the queue, and processing each vertex and edge once costs O(n + m) time and O(n + m) space.',
+      ],
+      example: {
+        code: kahn(4, '[(0, 1), (1, 2), (2, 1), (2, 3)]', completeOrNone),
+        output: '[0]\nNone',
+        explanation:
+          'After 0, vertex 1 still waits for 2 and 2 waits for 1, so only one of four vertices is processed.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          kahn(3, '[(0, 1), (1, 2), (2, 0)]', completeOrNone),
+          ['[]\nNone', '[0, 1, 2]\n[0, 1, 2]', '[0]\nNone', '[]\n[]'],
+          0,
+          'Every vertex lies on the cycle, so none is ever ready.',
+        ),
+        predictOutput(
+          'What is printed?',
+          kahn(4, '[(0, 1), (2, 2), (1, 3)]', completeOrNone),
+          [
+            '[0, 1, 2, 3]\n[0, 1, 2, 3]',
+            '[0, 1, 3]\n[0, 1, 3]',
+            '[0, 1, 3]\nNone',
+            '[0, 2, 1, 3]\nNone',
+          ],
+          2,
+          'The self-loop keeps 2 blocked forever, so three of four vertices are processed and the result is None.',
+        ),
+        choose(
+          'Kahn’s algorithm processes three of five vertices. What should a function that promises a complete schedule return?',
+          [
+            'The three-vertex prefix',
+            'The remaining two vertices',
+            'The three vertices plus the rest in any order',
+            'None',
+          ],
+          3,
+          'A cycle prevents any complete order, so a partial list would be a wrong schedule.',
+        ),
+        choose(
+          'What is the running time of Kahn’s algorithm on n vertices and m edges?',
+          ['O(n · m)', 'O(n + m)', 'O(n²)', 'O(m log n)'],
+          1,
+          'Each vertex is queued at most once, and each edge is counted once and released once.',
+        ),
+      ],
+    },
+  ],
+  // ------------------------------------------------------------- Dijkstra
+  'cp-distance-relaxation': [
+    {
+      title: 'Propose d + w across a weighted edge',
+      explanation: [
+        'In a weighted graph, reaching u at distance d and then crossing an edge of weight w gives a route to v of length d + w. Relaxing the edge compares that candidate with v’s best known distance.',
+        'Keep the candidate only if it is strictly smaller; otherwise the old route is at least as good.',
+      ],
+      example: {
+        code: lines(
+          relaxDistance,
+          'print(relax(12, 3, 4))',
+          'print(relax(5, 3, 4))',
+        ),
+        output: '7\n5',
+        explanation:
+          'The candidate 3 + 4 = 7 beats 12, but it does not beat 5.',
+      },
+      questions: [
+        choose(
+          'u has distance 9, and the edge u → v has weight 3. What candidate distance does v get?',
+          ['3', '27', '12', '6'],
+          2,
+          'Distances add along a route: 9 + 3 = 12.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(relaxDistance, 'print(relax(10, 4, 6), relax(10, 4, 5))'),
+          ['10 9', '10 10', '9 9', '6 5'],
+          0,
+          '4 + 6 = 10 ties the current distance and is not kept; 4 + 5 = 9 improves it.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            relaxDistance,
+            'best = 20',
+            'for source_distance, weight in [(5, 9), (2, 15), (11, 1)]:',
+            '    best = relax(best, source_distance, weight)',
+            'print(best)',
+          ),
+          ['14', '17', '20', '12'],
+          3,
+          'The candidates are 14, 17 and 12; each relaxation keeps the smallest seen so far.',
+        ),
+        choose(
+          'v’s best distance is 8, and a new route also gives exactly 8. What should relaxation do?',
+          [
+            'Replace it, since the route is newer',
+            'Keep 8; the candidate is not smaller',
+            'Set it to 16',
+            'Mark v as unreachable',
+          ],
+          1,
+          'Only a strictly smaller candidate improves the distance.',
+        ),
+      ],
+    },
+    {
+      title: 'Treat None as no route yet, with nonnegative weights',
+      explanation: [
+        'Before any route is found, v’s distance is None. Any candidate improves None, so the test is current is None or candidate < current, with the None check first.',
+        'Dijkstra’s ordering argument needs every weight to be nonnegative: then extending a route never makes it shorter. Zero weights are fine; negative weights break that guarantee.',
+      ],
+      example: {
+        code: lines(
+          relaxDistance,
+          'print(relax(None, 0, 5))',
+          'print(relax(None, 7, 0))',
+          'print(relax(3, 3, 0))',
+        ),
+        output: '5\n7\n3',
+        explanation:
+          'None is replaced by any candidate. A zero-weight edge gives a route as long as its start, which does not beat an equal distance.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(relaxDistance, 'print(relax(None, 2, 2), relax(4, 2, 2))'),
+          ['None 4', '4 4', '4 2', '2 4'],
+          1,
+          'The first candidate 4 replaces None; the second only ties 4, so 4 is kept.',
+        ),
+        choose(
+          'Why must the test read current is None or candidate < current, in that order?',
+          [
+            'Comparing a number with None raises TypeError',
+            'None means distance 0',
+            'or always evaluates both sides',
+            'It makes the candidate smaller',
+          ],
+          0,
+          'or skips the comparison once current is None, so a number is never compared with None.',
+        ),
+        choose(
+          'Which edge weights does Dijkstra’s algorithm allow?',
+          [
+            'Only weights equal to 1',
+            'Only strictly positive weights',
+            'Nonnegative weights, including 0',
+            'Any integer weights',
+          ],
+          2,
+          'Zero weights never shorten a route, so the ordering argument still holds.',
+        ),
+        predictOutput(
+          'A negative weight breaks Dijkstra’s guarantee. What does this program print?',
+          lines(relaxDistance, 'print(relax(None, 5, -3), relax(4, 5, -3))'),
+          ['8 4', '2 4', 'None 4', '2 2'],
+          3,
+          'A route through a vertex at distance 5 ends at 2: with a negative weight, extending a route can shorten it.',
+        ),
+      ],
+    },
+  ],
+  'cp-stale-distance': [
+    {
+      title: 'An improved route leaves an old heap entry behind',
+      explanation: [
+        'heapq cannot change an entry already in the heap. When v’s distance improves, the simple approach pushes a new entry (new_distance, v) and leaves the old (old_distance, v) where it is.',
+        'So the heap can hold several entries for one vertex, and only the one matching distance[v] is current.',
+      ],
+      example: {
+        code: lines(
+          'import heapq',
+          'distance = [0, None]',
+          'heap = []',
+          'distance[1] = 9',
+          'heapq.heappush(heap, (9, 1))',
+          'distance[1] = 4',
+          'heapq.heappush(heap, (4, 1))',
+          'print(len(heap), distance[1])',
+          'print(heapq.heappop(heap), heapq.heappop(heap))',
+        ),
+        output: '2 4\n(4, 1) (9, 1)',
+        explanation:
+          'Both proposals for vertex 1 stay in the heap. The current one, (4, 1), comes out first; (9, 1) is stale.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'import heapq',
+            'distance = [0, None, None]',
+            'heap = []',
+            'for proposal in [10, 7, 5]:',
+            '    distance[2] = proposal',
+            '    heapq.heappush(heap, (proposal, 2))',
+            'print(len(heap), heap[0])',
+          ),
+          ['1 (5, 2)', '3 (5, 2)', '3 (10, 2)', '1 (10, 2)'],
+          1,
+          'Every improvement adds an entry, so three entries for vertex 2 remain, with the smallest at the root.',
+        ),
+        choose(
+          'Why can a heap hold two entries for the same vertex?',
+          [
+            'A better route was pushed while the older entry stayed queued',
+            'The vertex has two incoming edges',
+            'heapq duplicates every push',
+            'The vertex is its own neighbor',
+          ],
+          0,
+          'Nothing removes the old entry when the improved one is pushed.',
+        ),
+        choose(
+          'The heap holds (9, 1) and (4, 1), and distance[1] is 4. Which entry is current?',
+          ['(9, 1)', 'Both', '(4, 1)', 'Neither'],
+          2,
+          'Only the entry whose distance matches the stored best is current.',
+        ),
+        predictOutput(
+          'Which entries are current?',
+          lines(
+            'entries = [(4, 1), (9, 1)]',
+            'distance = [0, 4]',
+            'print([entry[0] == distance[entry[1]] for entry in entries])',
+          ),
+          ['[True, True]', '[False, True]', '[False, False]', '[True, False]'],
+          3,
+          '(4, 1) matches distance[1]; (9, 1) records an older, longer route.',
+        ),
+      ],
+    },
+    {
+      title: 'Skip an entry whose distance no longer matches',
+      explanation: [
+        'When an entry (d, v) is popped, compare d with distance[v]. If they differ, a better route was found after this entry was pushed: the entry is stale and must not expand v’s edges again.',
+        'If they match, the entry is current and v is processed. With nonnegative weights, the current entry for a vertex is popped before any stale entry for it.',
+      ],
+      example: {
+        code: lines(
+          isCurrent,
+          'print(is_current((12, 2), [0, 5, 7]))',
+          'print(is_current((7, 2), [0, 5, 7]))',
+        ),
+        output: 'False\nTrue',
+        explanation:
+          'Vertex 2’s best is now 7, so the entry claiming 12 is stale.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            isCurrent,
+            'print(is_current((3, 0), [3, 8]), is_current((6, 1), [3, 8]))',
+          ),
+          ['True True', 'False False', 'True False', 'False True'],
+          2,
+          '(3, 0) matches distance[0]; (6, 1) does not match distance[1] = 8.',
+        ),
+        choose(
+          'The popped entry is (15, 3), but distance[3] is 11. What should happen?',
+          [
+            'Expand vertex 3 with distance 15',
+            'Skip the entry without expanding 3',
+            'Reset distance[3] to 15',
+            'Push (15, 3) back',
+          ],
+          1,
+          'A shorter route to 3 was already found, so this entry is out of date.',
+        ),
+        predictOutput(
+          'Which vertices are processed?',
+          lines(
+            'import heapq',
+            'distance = [0, 3, 5]',
+            'heap = [(0, 0), (8, 1), (3, 1), (5, 2), (6, 2)]',
+            'heapq.heapify(heap)',
+            'processed = []',
+            'while heap:',
+            '    d, v = heapq.heappop(heap)',
+            '    if d == distance[v]:',
+            '        processed.append(v)',
+            'print(processed)',
+          ),
+          ['[0, 1, 1, 2, 2]', '[0, 2, 1]', '[0, 1, 2, 2, 1]', '[0, 1, 2]'],
+          3,
+          'Each vertex’s matching entry is popped once; (6, 2) and (8, 1) are stale and skipped.',
+        ),
+        choose(
+          'What goes wrong if stale entries are expanded anyway?',
+          [
+            'Edges are relaxed again from an outdated distance, wasting work',
+            'Distances become too small',
+            'The heap loses its minimum',
+            'Vertices become unreachable',
+          ],
+          0,
+          'A stale distance is larger than the current one, so its candidates cannot improve anything.',
+        ),
+      ],
+    },
+  ],
+  'cp-minimum-distance-work': [
+    {
+      title: 'Pop the smallest distance proposal first',
+      explanation: [
+        'Dijkstra keeps (distance, vertex) proposals in a min-heap and always takes the smallest distance next, not the oldest proposal as BFS would or the newest as DFS would.',
+        'Tuples compare by distance first; equal distances are ordered by vertex, the second field.',
+      ],
+      example: {
+        code: lines(
+          'import heapq',
+          'heap = []',
+          'for entry in [(7, 3), (2, 5), (2, 1), (9, 0)]:',
+          '    heapq.heappush(heap, entry)',
+          'print(heapq.heappop(heap))',
+          'print(heapq.heappop(heap))',
+        ),
+        output: '(2, 1)\n(2, 5)',
+        explanation:
+          'Distance 2 is smallest; between the two distance-2 entries, vertex 1 comes before vertex 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'import heapq',
+            'heap = []',
+            'for entry in [(4, 2), (1, 7), (6, 0)]:',
+            '    heapq.heappush(heap, entry)',
+            'print(heapq.heappop(heap))',
+          ),
+          ['(4, 2)', '(6, 0)', '(1, 7)', '(1, 0)'],
+          2,
+          'The heap returns the smallest distance, 1, whatever the vertex number.',
+        ),
+        choose(
+          'Proposals were pushed in the order (5, 1), (3, 2), (8, 0). Which does Dijkstra take next?',
+          [
+            '(3, 2), the smallest distance',
+            '(5, 1), the oldest',
+            '(8, 0), the newest',
+            '(8, 0), the smallest vertex',
+          ],
+          0,
+          'Dijkstra always expands the closest proposal.',
+        ),
+        predictOutput(
+          'In what order are the vertices taken?',
+          lines(
+            'import heapq',
+            'heap = [(3, 4), (3, 2), (1, 9)]',
+            'heapq.heapify(heap)',
+            'print([heapq.heappop(heap)[1] for _ in range(3)])',
+          ),
+          ['[9, 4, 2]', '[9, 2, 4]', '[2, 4, 9]', '[4, 2, 9]'],
+          1,
+          'Distance 1 goes first; the two distance-3 entries are ordered by vertex, 2 before 4.',
+        ),
+        choose(
+          'How do (6, 3) and (6, 1) compare in the heap?',
+          [
+            '(6, 3) first, since it was pushed first',
+            'They cannot be compared',
+            'They are merged into one entry',
+            '(6, 1) first, by the second field',
+          ],
+          3,
+          'The distances tie, so the tuples compare their vertex fields.',
+        ),
+      ],
+    },
+    {
+      title: 'Discard stale proposals until a current one appears',
+      explanation: [
+        'The smallest entry in the heap may be stale. Pop it, compare with distance[vertex], and if it does not match, discard it and pop again. The first matching entry is the smallest valid proposal.',
+        'If every entry is stale, the heap empties and no usable work remains.',
+      ],
+      example: {
+        code: lines(
+          nextEntry,
+          'print(next_entry([(2, 0), (5, 1), (4, 0)], [4, 5]))',
+          'print(next_entry([(8, 1)], [0, 3]))',
+        ),
+        output: '(4, 0)\nNone',
+        explanation:
+          '(2, 0) is popped first but stale, so (4, 0) is the answer. A heap holding only stale work gives None.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            nextEntry,
+            'print(next_entry([(1, 1), (2, 0), (3, 1)], [2, 3]))',
+          ),
+          ['(1, 1)', '(2, 0)', '(3, 1)', 'None'],
+          1,
+          '(1, 1) is stale because distance[1] is 3; the next entry (2, 0) matches.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(nextEntry, 'print(next_entry([(5, 0), (6, 0)], [4, 9]))'),
+          ['(5, 0)', '(6, 0)', '(4, 0)', 'None'],
+          3,
+          'Neither entry matches distance[0] = 4, so no usable proposal remains.',
+        ),
+        choose(
+          'The smallest heap entry is stale. What happens next?',
+          [
+            'It is expanded anyway',
+            'Every distance is reset',
+            'It is discarded and the next entry popped',
+            'The search stops',
+          ],
+          2,
+          'Stale entries are thrown away until a current one appears or the heap empties.',
+        ),
+        predictOutput(
+          'How many entries are discarded before a current one appears?',
+          lines(
+            'import heapq',
+            'heap = [(1, 0), (2, 1), (3, 0), (4, 1)]',
+            'distances = [3, 4]',
+            'discarded = 0',
+            'entry = heapq.heappop(heap)',
+            'while entry[0] != distances[entry[1]]:',
+            '    discarded += 1',
+            '    entry = heapq.heappop(heap)',
+            'print(discarded, entry)',
+          ),
+          ['2 (3, 0)', '0 (1, 0)', '3 (4, 1)', '1 (2, 1)'],
+          0,
+          '(1, 0) and (2, 1) are stale; (3, 0) matches distances[0].',
+        ),
+      ],
+    },
+  ],
+  'cp-dijkstra': [
+    {
+      title: 'Relax edges from the closest unfinished vertex',
+      explanation: [
+        'Dijkstra’s algorithm starts with distance[source] = 0, every other distance None, and (0, source) in a heap. It pops the smallest entry, skips it if stale, and otherwise relaxes each outgoing edge, pushing (candidate, neighbor) whenever the candidate improves distance[neighbor].',
+        'Here graph[u] lists (neighbor, weight) pairs. Unreachable vertices keep None.',
+      ],
+      example: {
+        code: lines(
+          dijkstra('[[(1, 4), (2, 1)], [(3, 1)], [(1, 2), (3, 5)], [], []]'),
+          'print(distance)',
+        ),
+        output: '[0, 3, 1, 4, None]',
+        explanation:
+          'The route 0 → 2 → 1 costs 3 and beats the direct edge of weight 4; vertex 3 is then reached through 1 at cost 4. Vertex 4 is unreachable.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            dijkstra('[[(1, 2), (2, 7)], [(2, 3)], [], []]'),
+            'print(distance)',
+          ),
+          [
+            '[0, 2, 7, None]',
+            '[0, 2, 5, None]',
+            '[0, 2, 5, 0]',
+            '[0, 2, 3, None]',
+          ],
+          1,
+          '0 → 1 → 2 costs 2 + 3 = 5, which beats the direct edge of weight 7.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(dijkstra('[[(1, 0)], [(2, 0)], [(0, 0)]]'), 'print(distance)'),
+          ['[0, 0, 0]', '[0, None, None]', '[0, 1, 2]', 'None'],
+          0,
+          'Zero-weight edges are allowed, and crossing them adds nothing to the distance.',
+        ),
+        choose(
+          'Which graph property does this Dijkstra contract require?',
+          [
+            'Every weight is exactly 1',
+            'The graph has no cycles',
+            'Every weight is nonnegative',
+            'Every vertex is reachable',
+          ],
+          2,
+          'Cycles and unreachable vertices are fine; negative weights are not.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(dijkstra('[[(1, 5), (1, 2)], []]'), 'print(distance)'),
+          ['[0, 5]', '[0, 7]', '[0, 2, 5]', '[0, 2]'],
+          3,
+          'Both parallel edges are relaxed, and the cheaper one gives distance 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Trace which entries are processed and which are stale',
+      explanation: [
+        'Printing each popped entry with whether it is current shows the algorithm’s order: current entries come out in nondecreasing distance, and each vertex is processed exactly once, at its final distance.',
+        'Stale entries still come out of the heap, after the improved entry for the same vertex, and are skipped.',
+      ],
+      example: {
+        code: dijkstra(
+          '[[(1, 4), (2, 1)], [(3, 1)], [(1, 2), (3, 5)], [], []]',
+          'print(cost, vertex, cost == distance[vertex])',
+        ),
+        output: '0 0 True\n1 2 True\n3 1 True\n4 1 False\n4 3 True\n6 3 False',
+        explanation:
+          'Vertex 1’s first proposal 4 and vertex 3’s first proposal 6 were both improved, so those entries come out stale.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          dijkstra(
+            '[[(1, 5), (2, 1)], [], [(1, 1)]]',
+            'print(cost, vertex, cost == distance[vertex])',
+          ),
+          [
+            '0 0 True\n1 2 True\n2 1 True\n5 1 False',
+            '0 0 True\n5 1 True\n1 2 True\n2 1 False',
+            '0 0 True\n1 2 True\n2 1 True',
+            '0 0 True\n1 2 True\n5 1 False\n2 1 True',
+          ],
+          0,
+          'The route through 2 improves vertex 1 to 2, so (2, 1) is current and the older (5, 1) comes out stale at the end.',
+        ),
+        choose(
+          'In what order do the current entries leave the heap?',
+          [
+            'In the order they were pushed',
+            'In nondecreasing order of distance',
+            'In increasing vertex number',
+            'In the order of the input edges',
+          ],
+          1,
+          'The heap always yields the smallest distance, and later relaxations never go below it.',
+        ),
+        choose(
+          'How many times is each reachable vertex’s edge list scanned?',
+          [
+            'Once per heap entry for it',
+            'Once per incoming edge',
+            'Once, when its current entry is popped',
+            'Twice',
+          ],
+          2,
+          'Stale entries are skipped, and each vertex has exactly one current entry popped.',
+        ),
+        predictOutput(
+          'Which popped entries are current?',
+          lines(
+            'checks = []',
+            dijkstra(
+              '[[(1, 9), (2, 1)], [], [(1, 1)]]',
+              'checks.append(cost == distance[vertex])',
+            ),
+            'print(checks)',
+          ),
+          [
+            '[True, True, True, True]',
+            '[True, False, True, True]',
+            '[True, True, False]',
+            '[True, True, True, False]',
+          ],
+          3,
+          'Vertices 0, 2 and 1 are processed in turn; the original (9, 1) proposal comes out last and is stale.',
+        ),
+      ],
+    },
+    {
+      title: 'Reject negative weights and bound the cost',
+      explanation: [
+        'With nonnegative weights, a popped current distance is final: any other route must pass through a vertex whose distance is at least as large, and adding nonnegative weights cannot make it smaller. A negative edge breaks that argument, so this contract rejects negative weights with ValueError, even in an unreachable part of the graph.',
+        'The lazy heap gets at most one entry per improvement, so it holds O(V + E) entries. Each push and pop costs O(log(V + E)), for O((V + E) log(V + E)) time and O(V + E) space in total.',
+      ],
+      example: {
+        code: lines(
+          shortestCosts,
+          'print(shortest_costs(3, [(0, 1, 4), (1, 2, 0)], 0))',
+          'try:',
+          '    shortest_costs(2, [(1, 0, -1)], 0)',
+          'except ValueError as error:',
+          '    print("rejected:", error)',
+        ),
+        output: '[0, 4, 4]\nrejected: negative weight',
+        explanation:
+          'The zero-weight edge keeps vertex 2 at 4. The second graph is rejected even though its negative edge starts at a vertex the source never reaches.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            shortestCosts,
+            'print(shortest_costs(3, [(0, 1, 3), (1, 0, 0), (0, 1, 1), (1, 2, 2)], 0))',
+          ),
+          ['[0, 3, 5]', '[0, 1, 3]', '[0, 1, 2]', '[0, 0, 2]'],
+          1,
+          'The cheaper parallel edge gives 1 its distance 1, and 2 follows at 1 + 2 = 3; the zero-weight edge back to 0 changes nothing.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            shortestCosts,
+            'try:',
+            '    print(shortest_costs(3, [(0, 1, 2), (2, 2, -1)], 0))',
+            'except ValueError as error:',
+            '    print("rejected:", error)',
+          ),
+          [
+            '[0, 2, None]',
+            '[0, 2, -1]',
+            'rejected: negative weight',
+            '[0, 2, 0]',
+          ],
+          2,
+          'Weights are checked while the graph is built, before any search, so the unreachable negative self-loop is still rejected.',
+        ),
+        choose(
+          'Why can a popped current distance be treated as final when all weights are nonnegative?',
+          [
+            'Other routes pass a vertex at least as far, and weights cannot reduce it',
+            'The heap stores each vertex only once',
+            'Vertices are popped in index order',
+            'Each edge is relaxed exactly once',
+          ],
+          0,
+          'Any alternative route leaves the processed region through a vertex no closer, and nonnegative weights only add to that.',
+        ),
+        choose(
+          'With parallel edges allowed, which time bound fits the lazy-heap Dijkstra?',
+          ['O(V + E)', 'O(V · E)', 'O(V²)', 'O((V + E) log(V + E))'],
+          3,
+          'Up to V + E heap entries are pushed and popped, each at logarithmic cost.',
+        ),
+      ],
+    },
+  ],
+  // ------------------------------------------------------- disjoint sets
+  'cp-parent-root': [
+    {
+      title: 'Follow parent links until a vertex points to itself',
+      explanation: [
+        'A disjoint-set forest stores parent[v] for every vertex. A root is its own parent, parent[r] == r, and represents its whole set. Following parent links from any member eventually reaches that root.',
+        'Two vertices are in the same set exactly when they reach the same root.',
+      ],
+      example: {
+        code: lines(
+          findRoot,
+          'parent = [0, 0, 1, 3, 3]',
+          'print(find_root(parent, 2), find_root(parent, 4), find_root(parent, 3))',
+        ),
+        output: '0 3 3',
+        explanation:
+          '2 climbs to 1 and then to the root 0. 4 climbs to 3, which is its own parent.',
+      },
+      questions: [
+        choose(
+          'What identifies a root in a parent array?',
+          [
+            'Its index is 0',
+            'parent[r] == r',
+            'It has the most children',
+            'parent[r] is None',
+          ],
+          1,
+          'A root is the one vertex in its set that points to itself.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(
+            findRoot,
+            'parent = [1, 1, 1, 2]',
+            'print(find_root(parent, 3), find_root(parent, 0))',
+          ),
+          ['2 1', '1 0', '1 1', '3 0'],
+          2,
+          '3 climbs to 2 and then to 1; 0 climbs straight to 1. Vertex 1 points to itself.',
+        ),
+        predictOutput(
+          'Are these pairs in the same set?',
+          lines(
+            findRoot,
+            'parent = [0, 0, 2, 2, 0]',
+            'print(find_root(parent, 4) == find_root(parent, 1), find_root(parent, 3) == find_root(parent, 1))',
+          ),
+          ['True False', 'True True', 'False False', 'False True'],
+          0,
+          '4 and 1 both reach root 0, while 3 reaches root 2.',
+        ),
+        choose(
+          'parent = [0, 1, 2, 3]. How many sets are there?',
+          ['1', '2', '3', '4'],
+          3,
+          'Every vertex is its own parent, so each is a root of a one-vertex set.',
+        ),
+      ],
+    },
+    {
+      title: 'Find roots with a loop on tall chains',
+      explanation: [
+        'The loop takes one step per link, so a find costs the length of the path to the root. In an unbalanced forest that path can include every vertex.',
+        'A loop handles such tall chains safely; a recursive find would add one Python call per link and can exceed the recursion limit.',
+      ],
+      example: {
+        code: lines(
+          countHops,
+          'chain = [0, 0, 1, 2, 3, 4]',
+          'print(hops(chain, 5), hops(chain, 0))',
+        ),
+        output: '5 0',
+        explanation:
+          '5 climbs through 4, 3, 2 and 1 to reach 0: five links. The root needs none.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(countHops, 'print(hops([0, 0, 1, 2], 3))'),
+          ['1', '2', '3', '4'],
+          2,
+          '3 → 2 → 1 → 0 follows three links.',
+        ),
+        choose(
+          'A forest is a single chain of 100,000 vertices. Why is a recursive find risky in Python?',
+          [
+            'It returns the wrong root',
+            'One call per link exceeds the recursion limit',
+            'Recursion cannot read lists',
+            'It changes the parent array',
+          ],
+          1,
+          'Python allows only about 1,000 nested calls by default.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(countHops, 'print(hops(list(range(6)), 4))'),
+          ['4', '1', '6', '0'],
+          3,
+          'Every vertex in list(range(6)) is its own parent, so 4 is already a root.',
+        ),
+        choose(
+          'Without balancing or compression, what does one find cost?',
+          [
+            'The length of the path to the root, up to n',
+            'O(1) always',
+            'O(log n) always',
+            'O(n²)',
+          ],
+          0,
+          'It follows one link per step, and an unbalanced chain can make that path long.',
+        ),
+      ],
+    },
+  ],
+  'cp-compress-path': [
+    {
+      title: 'Point every vertex on the path at the root',
+      explanation: [
+        'Path compression first finds the root of vertex, then walks the same path again, setting each visited vertex’s parent to the root. Later finds from those vertices take one step.',
+        'Only the vertices on that path change. Other branches and other sets keep their parent entries, and no vertex changes sets.',
+      ],
+      example: {
+        code: lines(compressPath, 'print(compress([1, 2, 2, 1, 3], 4))'),
+        output: '[1, 2, 2, 2, 2]',
+        explanation:
+          '4, 3 and 1 lie on the path to root 2 and now point straight at it. Vertex 0 hangs off 1 but was not on the path, so it still points to 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(compressPath, 'print(compress([0, 0, 1, 2], 3))'),
+          ['[0, 0, 1, 2]', '[0, 0, 0, 0]', '[3, 0, 1, 2]', '[0, 0, 0, 2]'],
+          1,
+          '3, 2 and 1 are all on the path to root 0, so each now points to 0.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(compressPath, 'print(compress([0, 0, 1, 2, 2], 3))'),
+          [
+            '[0, 0, 0, 0, 0]',
+            '[0, 0, 1, 0, 2]',
+            '[0, 0, 0, 2, 2]',
+            '[0, 0, 0, 0, 2]',
+          ],
+          3,
+          'Only 3, 2 and 1 are on the searched path. Vertex 4 hangs off 2 and keeps its parent.',
+        ),
+        choose(
+          'Does path compression change which set a vertex belongs to?',
+          [
+            'No, every rewritten vertex keeps the same root',
+            'Yes, it moves the vertex to the root’s set',
+            'Only for vertices off the path',
+            'Only when the root is 0',
+          ],
+          0,
+          'Each rewritten vertex points to the root it already reached, so membership is unchanged.',
+        ),
+        choose(
+          'Why does the second loop save next_vertex = result[vertex] before rewriting result[vertex]?',
+          [
+            'To count the set size',
+            'To find a second root',
+            'To continue along the original path',
+            'To sort the path',
+          ],
+          2,
+          'After the rewrite, result[vertex] is the root, so the old next step would be lost.',
+        ),
+      ],
+    },
+    {
+      title: 'Compressed paths make later finds shorter',
+      explanation: [
+        'After compression, every vertex on the searched path is one link from its root, so repeating the find costs a single step. Over many operations this keeps the forest shallow.',
+        'The iterative variant used in full DSU code redirects each vertex to its grandparent while climbing, parent[v] = parent[parent[v]], which roughly halves the path in a single pass.',
+      ],
+      example: {
+        code: lines(
+          countHops,
+          compressPath,
+          'parent = [0, 0, 1, 2, 3]',
+          'print(hops(parent, 4))',
+          'parent = compress(parent, 4)',
+          'print(hops(parent, 4), hops(parent, 2))',
+        ),
+        output: '4\n1 1',
+        explanation:
+          'Before compression vertex 4 is four links from the root; afterwards it and every vertex on its path are one link away.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            countHops,
+            compressPath,
+            'parent = compress([0, 0, 1, 2], 3)',
+            'print(hops(parent, 3), parent)',
+          ),
+          [
+            '3 [0, 0, 0, 0]',
+            '1 [0, 0, 0, 0]',
+            '1 [0, 0, 1, 2]',
+            '0 [0, 0, 0, 0]',
+          ],
+          1,
+          'Every vertex on the path now points at the root 0, so 3 needs one link.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            'def find_halving(parent, vertex):',
+            '    while parent[vertex] != vertex:',
+            '        parent[vertex] = parent[parent[vertex]]',
+            '        vertex = parent[vertex]',
+            '    return vertex',
+            '',
+            'parent = [0, 0, 1, 2, 3]',
+            'print(find_halving(parent, 4), parent)',
+          ),
+          [
+            '0 [0, 0, 0, 0, 0]',
+            '0 [0, 0, 1, 2, 3]',
+            '0 [0, 0, 0, 2, 2]',
+            '2 [0, 0, 0, 2, 2]',
+          ],
+          2,
+          '4 jumps to its grandparent 2, then 2 jumps to its grandparent 0; vertex 3 is skipped and keeps its parent.',
+        ),
+        choose(
+          'After compress(parent, v), how many links does a find from v follow?',
+          ['None', 'The same as before', 'Twice as many', 'At most one'],
+          3,
+          'v now points directly at its root, or is the root itself.',
+        ),
+        choose(
+          'What does parent[v] = parent[parent[v]] do during a find?',
+          [
+            'Points v at its grandparent, shortening the path',
+            'Makes v a root',
+            'Moves v to another set',
+            'Swaps v with its parent',
+          ],
+          0,
+          'The grandparent is in the same set and closer to the root.',
+        ),
+      ],
+    },
+  ],
+  'cp-union-size': [
+    {
+      title: 'Attach the smaller root under the larger',
+      explanation: [
+        'To merge two sets whose roots are known, make one root the parent of the other. Union by size attaches the root of the smaller set under the root of the larger set and adds the sizes at the surviving root.',
+        'Only root sizes are read later, so the attached root’s old size entry can stay as it is. Under this course’s contract, equal sizes keep the first root.',
+      ],
+      example: {
+        code: lines(joinRoots, 'print(join_roots([0, 0, 2], [2, 1, 1], 2, 0))'),
+        output: '([0, 0, 0], [3, 1, 1])',
+        explanation:
+          'Root 2’s set has size 1 and root 0’s has size 2, so 2 is attached under 0, whose size becomes 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            joinRoots,
+            'print(join_roots([0, 1, 1, 1], [1, 3, 1, 1], 0, 1))',
+          ),
+          [
+            '([0, 0, 1, 1], [4, 3, 1, 1])',
+            '([1, 1, 1, 1], [1, 4, 1, 1])',
+            '([1, 1, 1, 1], [4, 4, 1, 1])',
+            '([0, 1, 1, 1], [1, 4, 1, 1])',
+          ],
+          1,
+          'Root 0’s set is smaller (1 against 3), so 0 goes under 1, and size[1] becomes 4.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(joinRoots, 'print(join_roots([0, 1], [1, 1], 1, 0))'),
+          [
+            '([0, 0], [2, 1])',
+            '([1, 1], [2, 2])',
+            '([1, 1], [1, 2])',
+            '([0, 1], [1, 1])',
+          ],
+          2,
+          'The sizes tie, so the first root, 1, survives and 0 is attached under it.',
+        ),
+        choose(
+          'A set of size 10 with root 4 is merged with a set of size 3 with root 7. What changes?',
+          [
+            'parent[4] becomes 7',
+            'Both roots point to 0',
+            'size[7] becomes 13',
+            'parent[7] becomes 4, and size[4] becomes 13',
+          ],
+          3,
+          'The smaller set’s root, 7, goes under the larger set’s root, 4, which records the combined size.',
+        ),
+        choose(
+          'Where is the merged size stored?',
+          [
+            'At the surviving root',
+            'At every member',
+            'At the attached root',
+            'Nowhere; it is recomputed',
+          ],
+          0,
+          'Sizes are read only at roots, so the survivor’s entry is the one that matters.',
+        ),
+      ],
+    },
+    {
+      title: 'Skip self-merges and keep trees shallow',
+      explanation: [
+        'If both roots are the same, the vertices are already in one set: nothing changes, and the size must not double.',
+        'Attaching the smaller set under the larger means a vertex gets one link deeper only when its set at least doubles in size, so no path to a root is longer than about log₂ n links, even without compression.',
+      ],
+      example: {
+        code: lines(
+          joinRoots,
+          'print(join_roots([0, 0, 2], [2, 1, 1], 0, 0))',
+          'print(join_roots([0, 0, 2], [2, 1, 1], 0, 2))',
+        ),
+        output: '([0, 0, 2], [2, 1, 1])\n([0, 0, 0], [3, 1, 1])',
+        explanation:
+          'Joining root 0 with itself changes nothing. Joining it with root 2 attaches the smaller set and adds the sizes.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(joinRoots, 'print(join_roots([1, 1], [1, 2], 1, 1))'),
+          [
+            '([1, 1], [1, 4])',
+            '([1, 1], [1, 2])',
+            '([1, 1], [2, 2])',
+            '([0, 1], [1, 2])',
+          ],
+          1,
+          'Both arguments are the same root, so both arrays are returned unchanged.',
+        ),
+        choose(
+          'What goes wrong if the same-root check is skipped and a root is joined with itself?',
+          [
+            'Its parent stays itself, but its size doubles',
+            'The root gets a new parent',
+            'An IndexError is raised',
+            'Nothing at all',
+          ],
+          0,
+          'parent[r] = r changes nothing, but size[r] += size[r] counts the set twice.',
+        ),
+        predictOutput(
+          'Each union here attaches the larger set’s root under a single new vertex. How deep does vertex 0 end up?',
+          lines(
+            countHops,
+            'parent = list(range(4))',
+            'for root in [0, 1, 2]:',
+            '    parent[root] = root + 1',
+            'print(hops(parent, 0))',
+          ),
+          ['1', '2', '4', '3'],
+          3,
+          'Ignoring sizes builds the chain 0 → 1 → 2 → 3, so 0 is three links deep; union by size would keep it at 1.',
+        ),
+        choose(
+          'With union by size on n vertices, how long can the path from a vertex to its root get?',
+          [
+            'Up to n − 1 links',
+            'Exactly 1 link',
+            'About log₂ n links',
+            'About n / 2 links',
+          ],
+          2,
+          'Each extra link means the vertex’s set at least doubled, which can happen only about log₂ n times.',
+        ),
+      ],
+    },
+  ],
+  'cp-dsu': [
+    {
+      title: 'Merge components as undirected edges arrive',
+      explanation: [
+        'Disjoint set union starts with every vertex as its own set: parent = list(range(n)), every size 1, and n components. For each undirected edge (u, v), find both roots; if they differ, union them by size and decrease the component count by one.',
+        'An edge whose endpoints already share a root, including a repeated edge or a self-loop, changes nothing.',
+      ],
+      example: {
+        code: lines(
+          dsuRun(6, '[(1, 2), (3, 4), (2, 1), (5, 5), (4, 1)]'),
+          'print(counts)',
+        ),
+        output: '[5, 4, 4, 4, 3]',
+        explanation:
+          'The repeated edge (2, 1) and the self-loop (5, 5) connect vertices already together. (4, 1) joins two sets.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(dsuRun(4, '[(0, 1), (1, 0), (2, 3), (0, 2)]'), 'print(counts)'),
+          ['[3, 2, 1, 0]', '[3, 3, 2, 1]', '[3, 3, 2, 2]', '[4, 3, 2, 1]'],
+          1,
+          'The repeated edge (1, 0) changes nothing; the other three edges each merge two sets.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(dsuRun(3, '[(2, 2), (0, 0)]'), 'print(counts)'),
+          ['[2, 1]', '[3, 2]', '[2, 2]', '[3, 3]'],
+          3,
+          'A self-loop’s endpoints share a root, so neither edge merges anything.',
+        ),
+        choose(
+          'Vertices 3 and 8 already share a root when the edge (3, 8) arrives. What changes?',
+          [
+            'Nothing; they are already connected',
+            'The count drops by one',
+            'Both get new roots',
+            'The count rises by one',
+          ],
+          0,
+          'The edge adds no new connection between different components.',
+        ),
+        choose(
+          'Before any edge arrives, how many components do n vertices form?',
+          ['0', '1', 'n', 'n − 1'],
+          2,
+          'Every vertex starts as its own set.',
+        ),
+      ],
+    },
+    {
+      title: 'Answer connectivity questions with find',
+      explanation: [
+        'After the edges are processed, u and v are connected exactly when find(u) == find(v). A set’s size is read at its root, size[find(v)].',
+        'DSU answers undirected connectivity only. It does not store paths, distances or edge directions.',
+      ],
+      example: {
+        code: lines(
+          dsuRun(5, '[(0, 1), (3, 4), (1, 3)]'),
+          'print(find(0) == find(4), find(2) == find(0), size[find(4)])',
+        ),
+        output: 'True False 4',
+        explanation:
+          '0 and 4 are joined through 1 and 3; vertex 2 never received an edge. The set holding 4 has four members.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            dsuRun(6, '[(0, 5), (1, 2), (2, 5)]'),
+            'print(find(1) == find(0), find(3) == find(4), size[find(5)])',
+          ),
+          ['True False 4', 'True True 4', 'False False 3', 'True False 3'],
+          0,
+          '0, 5, 1 and 2 end up in one set of size 4; 3 and 4 never received an edge.',
+        ),
+        choose(
+          'A road network is processed with DSU. Which question can it answer directly?',
+          [
+            'How many roads lie on the shortest route',
+            'Whether two towns are connected at all',
+            'Which town must be visited first',
+            'The cheapest route between two towns',
+          ],
+          1,
+          'DSU tracks which vertices share a component, nothing about routes.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(dsuRun(3, '[(0, 1)]'), 'print(size[1], size[find(1)])'),
+          ['2 2', '2 1', '1 2', '1 1'],
+          2,
+          'Vertex 1 was attached under root 0; its own size entry is stale, and the true size is read at the root.',
+        ),
+        choose(
+          'Directed edges 0 → 1 and 1 → 2 are fed to DSU as pairs. What does DSU conclude about 2 and 0?',
+          [
+            '2 can reach 0',
+            '0 cannot reach 2',
+            'Nothing, since the edges are directed',
+            'They are connected, ignoring direction',
+          ],
+          3,
+          'DSU treats every pair as an undirected connection.',
+        ),
+      ],
+    },
+    {
+      title: 'Rely on amortized near-constant operations',
+      explanation: [
+        'With union by size and path compression together, a sequence of operations takes amortized O(α(n)) time each, where the inverse Ackermann function α(n) is at most 4 for any realistic n. That is an average over the sequence, not a promise that every single find takes one step.',
+        'Initialization costs O(n), and the parent and size arrays use O(n) space. Union by size alone already keeps every path within about log₂ n links.',
+      ],
+      example: {
+        code: sizeOnlyUnions(
+          8,
+          '[(0, 1), (2, 3), (4, 5), (6, 7), (0, 2), (4, 6), (0, 4)]',
+        ),
+        output: '3',
+        explanation:
+          'Every merge joins two equal-sized sets, the worst case for depth, yet no vertex is more than 3 = log₂ 8 links from its root.',
+      },
+      questions: [
+        choose(
+          'What does amortized O(α(n)) per operation promise for DSU?',
+          [
+            'Every single find takes one step',
+            'The average over a sequence is almost constant',
+            'Each union takes exactly O(log n)',
+            'Finds never change the parent array',
+          ],
+          1,
+          'Amortized bounds average the cost over many operations; one find can still climb several links.',
+        ),
+        choose(
+          'What does initializing DSU for n vertices cost?',
+          ['O(1)', 'O(n log n)', 'O(n)', 'O(n²)'],
+          2,
+          'It fills a parent and a size entry for each vertex.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          sizeOnlyUnions(4, '[(0, 1), (2, 3), (0, 2)]'),
+          ['3', '1', '4', '2'],
+          3,
+          'Vertex 3 sits under 2, which sits under 0: two links, which is log₂ 4.',
+        ),
+        choose(
+          'Which combination gives DSU its near-constant amortized time?',
+          [
+            'Union by size with path compression',
+            'Sorting the edges first',
+            'Recursive find without compression',
+            'Storing every set as a list',
+          ],
+          0,
+          'Size-based unions keep trees shallow, and compression flattens the paths that finds use.',
+        ),
+      ],
+    },
+  ],
+  // --------------------------------------------------- spanning trees
+  'cp-edge-weight-order': [
+    {
+      title: 'Sort (u, v, weight) edges by their third field',
+      explanation: [
+        'Kruskal’s algorithm considers edges from cheapest to most expensive. With edges stored as (u, v, weight), plain sorted(edges) orders by u first, so the key must pick out the weight: key=lambda edge: edge[2].',
+        'Negative weights sort before positive ones like any other numbers, and every edge occurrence, including duplicates, stays in the list.',
+      ],
+      example: {
+        code: lines(
+          'edges = [(0, 1, 7), (1, 2, 2), (0, 2, 4)]',
+          'print(sorted(edges))',
+          'print(sorted(edges, key=lambda edge: edge[2]))',
+        ),
+        output:
+          '[(0, 1, 7), (0, 2, 4), (1, 2, 2)]\n[(1, 2, 2), (0, 2, 4), (0, 1, 7)]',
+        explanation:
+          'Without a key the tuples compare by their first endpoint; the key orders them by weight.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'edges = [(2, 3, 5), (0, 1, 9), (1, 4, -2)]',
+            'print(sorted(edges, key=lambda edge: edge[2]))',
+          ),
+          [
+            '[(0, 1, 9), (1, 4, -2), (2, 3, 5)]',
+            '[(1, 4, -2), (2, 3, 5), (0, 1, 9)]',
+            '[(2, 3, 5), (0, 1, 9), (1, 4, -2)]',
+            '[(0, 1, 9), (2, 3, 5), (1, 4, -2)]',
+          ],
+          1,
+          'Weights −2, 5 and 9 in ascending order; the negative weight comes first.',
+        ),
+        choose(
+          'Edges are stored as (u, v, weight). Why is sorted(edges) without a key wrong for Kruskal?',
+          [
+            'It orders edges by their first endpoint',
+            'It removes duplicate edges',
+            'It cannot compare tuples',
+            'It sorts in descending order',
+          ],
+          0,
+          'Tuples compare field by field, starting with u.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            'edges = [(0, 1, 3), (0, 1, 3), (1, 2, 1)]',
+            'print(len(sorted(edges, key=lambda edge: edge[2])))',
+          ),
+          ['2', '1', '6', '3'],
+          3,
+          'Sorting keeps every occurrence, including the duplicate edge.',
+        ),
+        choose(
+          'Where does an edge of weight −4 go in Kruskal’s order?',
+          [
+            'Last, after every positive weight',
+            'It is discarded',
+            'Before every larger weight, as a normal number',
+            'Wherever it appeared in the input',
+          ],
+          2,
+          'Negative weights are ordinary numbers and are the cheapest candidates.',
+        ),
+      ],
+    },
+    {
+      title: 'Break ties for a reproducible order',
+      explanation: [
+        'Several edges may share a weight. Any order among them still yields a minimum total, but a fixed tie rule makes traces reproducible: sort by (weight, u, v).',
+        'Python’s sort is stable, so with the weight alone as the key, equal-weight edges keep their input order instead.',
+      ],
+      example: {
+        code: lines(
+          'edges = [(2, 3, 4), (0, 1, 4), (1, 2, 1)]',
+          'print(sorted(edges, key=lambda edge: (edge[2], edge[0], edge[1])))',
+          'print(sorted(edges, key=lambda edge: edge[2]))',
+        ),
+        output:
+          '[(1, 2, 1), (0, 1, 4), (2, 3, 4)]\n[(1, 2, 1), (2, 3, 4), (0, 1, 4)]',
+        explanation:
+          'With the full key, (0, 1, 4) precedes (2, 3, 4). With the weight alone, the two weight-4 edges stay in input order.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'edges = [(3, 1, 2), (0, 4, 2), (0, 2, 2)]',
+            'print(sorted(edges, key=lambda edge: (edge[2], edge[0], edge[1])))',
+          ),
+          [
+            '[(3, 1, 2), (0, 4, 2), (0, 2, 2)]',
+            '[(0, 4, 2), (0, 2, 2), (3, 1, 2)]',
+            '[(0, 2, 2), (0, 4, 2), (3, 1, 2)]',
+            '[(0, 2, 2), (3, 1, 2), (0, 4, 2)]',
+          ],
+          2,
+          'All weights tie, so u decides, and v settles the two edges with u = 0.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            'edges = [(3, 1, 2), (0, 4, 2), (0, 2, 2)]',
+            'print(sorted(edges, key=lambda edge: edge[2]))',
+          ),
+          [
+            '[(3, 1, 2), (0, 4, 2), (0, 2, 2)]',
+            '[(0, 2, 2), (0, 4, 2), (3, 1, 2)]',
+            '[(0, 4, 2), (0, 2, 2), (3, 1, 2)]',
+            '[(0, 2, 2), (3, 1, 2), (0, 4, 2)]',
+          ],
+          0,
+          'Every key is 2, and a stable sort leaves equal keys in their input order.',
+        ),
+        choose(
+          'Which key sorts (u, v, weight) edges by weight, then u, then v?',
+          [
+            'lambda edge: (edge[0], edge[1], edge[2])',
+            'lambda edge: (edge[2], edge[1], edge[0])',
+            'lambda edge: edge[2]',
+            'lambda edge: (edge[2], edge[0], edge[1])',
+          ],
+          3,
+          'The key lists the fields in priority order: weight first, then u, then v.',
+        ),
+        choose(
+          'Two edges tie on weight. Does their order change the total weight Kruskal’s algorithm finds?',
+          [
+            'Yes; the lower-numbered edge is always cheaper',
+            'No; it may change which edges are chosen, not the total',
+            'Yes; ties make the result invalid',
+            'No; tied edges are never chosen',
+          ],
+          1,
+          'Swapping equal-weight edges cannot change the sum, though a different tree may result.',
+        ),
+      ],
+    },
+  ],
+  'cp-forest-cycle-check': [
+    {
+      title: 'Accept an edge only between different components',
+      explanation: [
+        'The selected edges form a forest. An edge whose endpoints are already in the same component would close a cycle, so it is rejected. An edge between two different components joins them without a cycle.',
+        'Here equal labels mark the same component. A self-loop always has both endpoints in one component, so it is always rejected.',
+      ],
+      example: {
+        code: lines(
+          acceptEdge,
+          'print(accept([0, 0, 2, 2], 1, 2))',
+          'print(accept([0, 0, 2, 2], 3, 2))',
+        ),
+        output: '(True, [0, 0, 0, 0])\n(False, [0, 0, 2, 2])',
+        explanation:
+          '1 and 2 are in different components, so the edge is accepted and the components merge. 3 and 2 already share label 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(acceptEdge, 'print(accept([0, 1, 1, 3], 1, 2))'),
+          [
+            '(True, [0, 1, 1, 3])',
+            '(False, [0, 1, 1, 3])',
+            '(True, [0, 0, 0, 3])',
+            '(False, [1, 1, 1, 3])',
+          ],
+          1,
+          '1 and 2 both carry label 1, so the edge would close a cycle and the labels are unchanged.',
+        ),
+        choose(
+          'Why is a self-loop never accepted into the forest?',
+          [
+            'Its weight is always negative',
+            'Its endpoints are in different components',
+            'Its single endpoint is already in its own component',
+            'It would disconnect the graph',
+          ],
+          2,
+          'Both ends are the same vertex, so they trivially share a component.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(acceptEdge, 'print(accept([5, 5, 7, 7, 9], 4, 0))'),
+          [
+            '(True, [9, 9, 7, 7, 9])',
+            '(True, [5, 5, 7, 7, 5])',
+            '(False, [5, 5, 7, 7, 9])',
+            '(True, [9, 5, 7, 7, 9])',
+          ],
+          0,
+          'Labels 9 and 5 differ, so the edge is accepted and every 5 is relabelled 9, the label of u = 4.',
+        ),
+        choose(
+          'The components so far are {0, 1, 2} and {3}. Which candidate edge would close a cycle?',
+          ['(2, 3)', '(1, 3)', '(0, 3)', '(0, 2)'],
+          3,
+          '0 and 2 are already connected; every other edge joins the two components.',
+        ),
+      ],
+    },
+    {
+      title: 'Merge the two components after accepting',
+      explanation: [
+        'Accepting an edge joins its two components into one. In this small model, every vertex carrying v’s label is relabelled with u’s label, so later checks see a single component.',
+        'Forgetting to merge would let a later edge between the same two components be accepted again, creating a cycle.',
+      ],
+      example: {
+        code: lines(
+          acceptEdge,
+          'labels = [0, 1, 2, 3]',
+          'for u, v in [(0, 1), (2, 3), (1, 0), (1, 3)]:',
+          '    accepted, labels = accept(labels, u, v)',
+          '    print(accepted, labels)',
+        ),
+        output:
+          'True [0, 0, 2, 3]\nTrue [0, 0, 2, 2]\nFalse [0, 0, 2, 2]\nTrue [0, 0, 0, 0]',
+        explanation:
+          '(1, 0) is rejected because the first edge already merged 0 and 1. (1, 3) joins the two remaining components.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            acceptEdge,
+            'labels = [0, 1, 2]',
+            'results = []',
+            'for u, v in [(0, 1), (1, 2), (2, 0)]:',
+            '    accepted, labels = accept(labels, u, v)',
+            '    results.append(accepted)',
+            'print(results)',
+          ),
+          [
+            '[True, True, True]',
+            '[True, True, False]',
+            '[True, False, True]',
+            '[False, True, True]',
+          ],
+          1,
+          'The first two edges join all three vertices, so (2, 0) would close a triangle.',
+        ),
+        predictOutput(
+          'This check never merges labels. What does it print?',
+          lines(
+            'def accept_no_merge(labels, u, v):',
+            '    return labels[u] != labels[v]',
+            '',
+            'labels = [0, 1, 2]',
+            'print([accept_no_merge(labels, u, v) for u, v in [(0, 1), (1, 2), (0, 2)]])',
+          ),
+          [
+            '[True, True, False]',
+            '[True, False, False]',
+            '[False, False, False]',
+            '[True, True, True]',
+          ],
+          3,
+          'The labels never change, so the third edge is wrongly accepted and the selection contains a cycle.',
+        ),
+        choose(
+          'Labels are [4, 4, 6, 6], and edge (0, 3) is accepted. Which labels result?',
+          ['[4, 4, 4, 4]', '[6, 6, 6, 6]', '[4, 4, 6, 4]', '[4, 6, 6, 6]'],
+          0,
+          'Every vertex with v’s label 6 takes u’s label 4, not just vertex 3.',
+        ),
+        choose(
+          'n vertices start as n components. At most how many edges can be accepted?',
+          ['n', 'n / 2', 'n − 1', 'Any number'],
+          2,
+          'Each accepted edge removes one component, and at least one component always remains.',
+        ),
+      ],
+    },
+  ],
+  'cp-spanning-completion': [
+    {
+      title: 'A spanning forest needs exactly n − 1 edges',
+      explanation: [
+        'Each accepted forest edge joins two components, lowering the count by one. Starting from n separate vertices, n − 1 accepted edges leave a single component: a spanning tree.',
+        'If fewer than n − 1 edges were accepted after every candidate was considered, some components never joined and the graph has no spanning tree. An empty or one-vertex graph needs no edges and costs 0 under this course’s convention.',
+      ],
+      example: {
+        code: lines(
+          completedCost,
+          'print(completed_cost(4, [2, 5, 1]))',
+          'print(completed_cost(4, [2, 5]))',
+          'print(completed_cost(1, []))',
+        ),
+        output: '8\nNone\n0',
+        explanation:
+          'Three edges span four vertices. Two edges leave two components. One vertex is already spanned.',
+      },
+      questions: [
+        choose(
+          'A forest on 9 vertices must become a spanning tree. How many edges must be accepted?',
+          ['9', '8', '10', '18'],
+          1,
+          'Nine separate vertices need eight merges to become one component.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(
+            completedCost,
+            'print(completed_cost(3, [4, -1]), completed_cost(3, [4]))',
+          ),
+          ['3 None', '3 4', 'None None', '5 None'],
+          0,
+          'Two edges span three vertices, and negative costs are allowed; one edge does not.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            completedCost,
+            'print(completed_cost(0, []), completed_cost(2, []))',
+          ),
+          ['None None', '0 0', 'None 0', '0 None'],
+          3,
+          'An empty graph needs no edges; two vertices need one.',
+        ),
+        choose(
+          'After all candidates, an acyclic selection on 7 vertices has 5 edges. What does that mean?',
+          [
+            'It is a spanning tree',
+            'One more edge must be a self-loop',
+            'Two components remain, so no spanning tree exists',
+            'The total weight must be zero',
+          ],
+          2,
+          'Five merges from seven components leave two.',
+        ),
+      ],
+    },
+    {
+      title: 'Count edges only after filtering cycles',
+      explanation: [
+        'The n − 1 test is valid only for an acyclic selection. Arbitrary edges can number n − 1 while containing a cycle and leaving another vertex isolated.',
+        'So the completion check comes after the forest check: count only the accepted edges.',
+      ],
+      example: {
+        code: acceptedCount(4, '[(0, 1), (1, 2), (2, 0)]'),
+        output: '2 False',
+        explanation:
+          'Three candidates is n − 1 for n = 4, but the third closes a cycle. Only two are accepted, and vertex 3 is still alone.',
+      },
+      questions: [
+        choose(
+          'Edges (0, 1), (1, 2) and (2, 0) are chosen on 4 vertices. Why is this not a spanning tree, though it has n − 1 edges?',
+          [
+            'The edges form a cycle and vertex 3 is isolated',
+            'The weights are not sorted',
+            'A spanning tree needs n edges',
+            'Vertex 0 appears twice',
+          ],
+          0,
+          'A cycle wastes an edge, so the remaining edges cannot reach every vertex.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          acceptedCount(5, '[(0, 1), (2, 3), (1, 0), (3, 4), (4, 2)]'),
+          ['5 True', '4 True', '3 False', '2 False'],
+          2,
+          '(1, 0) and (4, 2) close cycles, so only three edges join the five vertices, leaving two components.',
+        ),
+        choose(
+          'Which statement holds for an acyclic selection on n vertices?',
+          [
+            'It is spanning exactly when it has n edges',
+            'It is spanning whenever every vertex has an edge',
+            'It is never spanning',
+            'It is spanning exactly when it has n − 1 edges',
+          ],
+          3,
+          'Without cycles, every edge merges two components, so n − 1 edges leave exactly one.',
+        ),
+        predictOutput(
+          'What is printed?',
+          acceptedCount(3, '[(0, 1), (0, 1), (1, 2)]'),
+          ['3 False', '2 True', '3 True', '2 False'],
+          1,
+          'The repeated (0, 1) is rejected; the other two edges span all three vertices.',
+        ),
+      ],
+    },
+  ],
+  'cp-mst': [
+    {
+      title: 'Build a minimum spanning tree with Kruskal’s algorithm',
+      explanation: [
+        'Kruskal’s algorithm sorts the edges by weight, then scans them cheapest first, accepting an edge exactly when its endpoints have different DSU roots. Each accepted edge merges two components and adds its weight to the total.',
+        'The cut property makes this safe: the cheapest edge crossing between two components can always be part of some minimum spanning tree.',
+      ],
+      example: {
+        code: kruskal(
+          4,
+          '[(0, 1, 4), (1, 2, 2), (0, 2, 5), (2, 3, 1), (1, 3, 3)]',
+        ),
+        output: '[1, 2, 4] 7',
+        explanation:
+          'Weights 1 and 2 join 1, 2 and 3; the weight-3 edge would close a cycle; weight 4 brings in vertex 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          kruskal(3, '[(0, 1, 5), (1, 2, 3), (0, 2, 4)]'),
+          ['[3, 4, 5] 12', '[3, 4] 7', '[3, 5] 8', '[4, 5] 9'],
+          1,
+          'Edges 3 and 4 connect all three vertices; the weight-5 edge would close a cycle.',
+        ),
+        choose(
+          'Why does Kruskal reject an edge whose endpoints already share a DSU root?',
+          [
+            'It would close a cycle in the chosen forest',
+            'Its weight must be negative',
+            'It must be the most expensive edge',
+            'It would disconnect a vertex',
+          ],
+          0,
+          'The endpoints are already connected by chosen edges.',
+        ),
+        predictOutput(
+          'What is printed?',
+          kruskal(3, '[(0, 1, 2), (0, 1, -1), (1, 2, 0), (2, 0, 5)]'),
+          ['[-1, 0, 2] 1', '[0, 2] 2', '[-1, 0] -1', '[-1, 2] 1'],
+          2,
+          'The cheaper parallel edge −1 and the edge 0 span all three vertices; the other two edges would close cycles.',
+        ),
+        choose(
+          'How does a minimum spanning tree differ from shortest paths from vertex 0?',
+          [
+            'It is always identical to the shortest-path tree',
+            'It minimizes the number of edges on every route',
+            'It only works on directed graphs',
+            'It minimizes total weight joining all vertices, not routes from 0',
+          ],
+          3,
+          'An MST optimizes the whole network’s cost; a route from 0 inside it may be longer than the shortest one.',
+        ),
+      ],
+    },
+    {
+      title: 'Report None when the graph is disconnected',
+      explanation: [
+        'If the scan ends with fewer than n − 1 accepted edges, some components could not be joined: no spanning tree exists, so return None rather than the partial total. For n = 0 or n = 1, the empty tree costs 0.',
+        'Self-loops never join two components, and of several parallel edges at most one is accepted: the cheapest, because it is scanned first.',
+      ],
+      example: {
+        code: lines(
+          minimumLinkCost,
+          'print(minimum_link_cost(4, [(0, 1, 3), (2, 3, 1)]))',
+          'print(minimum_link_cost(1, []))',
+          'print(minimum_link_cost(2, [(0, 1, 6), (0, 1, 2), (1, 1, -5)]))',
+        ),
+        output: 'None\n0\n2',
+        explanation:
+          'The first graph keeps two components. A single vertex costs 0. The negative self-loop is rejected, and the cheaper parallel edge 2 is chosen.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            minimumLinkCost,
+            'print(minimum_link_cost(3, [(0, 1, 1), (1, 1, -9), (0, 1, 4)]), minimum_link_cost(0, []))',
+          ),
+          ['-8 0', '1 0', 'None 0', 'None None'],
+          2,
+          'Vertex 2 has no edge, so three vertices cannot be spanned; an empty graph costs 0.',
+        ),
+        choose(
+          'A graph on 5 vertices yields only 3 accepted edges. What should the function return?',
+          [
+            'The total of those 3 edges',
+            'None, because the graph is disconnected',
+            '0',
+            'The weight of the cheapest edge',
+          ],
+          1,
+          'A spanning tree on 5 vertices needs 4 edges, so none exists.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            minimumLinkCost,
+            'print(minimum_link_cost(2, [(1, 0, 7), (0, 1, 7), (0, 1, 9)]))',
+          ),
+          ['7', '14', '23', '9'],
+          0,
+          'One edge of weight 7 joins the two vertices; every other parallel edge is rejected.',
+        ),
+        choose(
+          'Why can a self-loop never be accepted?',
+          [
+            'Its weight is counted twice',
+            'Self-loops are removed when sorting',
+            'It would leave a vertex isolated',
+            'Both endpoints always share a root',
+          ],
+          3,
+          'Its two endpoints are the same vertex, so they are already in one component.',
+        ),
+      ],
+    },
+    {
+      title: 'Account for sorting and DSU costs',
+      explanation: [
+        'Sorting m edges costs O(m log m) and dominates; the scan then makes about 2m finds and at most n − 1 unions, each amortized O(α(n)). Including initialization, Kruskal takes O(n + m log(m + 1) + m · α(n)) time and O(n + m) space.',
+        'Once n − 1 edges are accepted the tree is complete: every later edge has both endpoints in the single remaining component.',
+      ],
+      example: {
+        code: kruskalCompletion(
+          4,
+          '[(0, 1, 2), (1, 3, 9), (2, 3, 1), (0, 2, 4), (1, 2, 3)]',
+        ),
+        output: '3 5',
+        explanation:
+          'The three cheapest edges, weights 1, 2 and 3, already connect all four vertices; the last two would only close cycles.',
+      },
+      questions: [
+        choose(
+          'Which step dominates Kruskal’s running time on a large graph?',
+          [
+            'Initializing the parent array',
+            'Sorting the m edges',
+            'The unions',
+            'Printing the total',
+          ],
+          1,
+          'O(m log m) for sorting outgrows the nearly constant amortized DSU work per edge.',
+        ),
+        choose(
+          'Kruskal has accepted n − 1 edges, and more candidates remain. Why can it stop?',
+          [
+            'Every remaining edge joins two vertices already connected',
+            'Heavier edges would lower the total',
+            'Sorting failed for the rest',
+            'DSU cannot handle more unions',
+          ],
+          0,
+          'All vertices are in one component, so every later edge would close a cycle.',
+        ),
+        predictOutput(
+          'After how many sorted edges is the tree complete?',
+          kruskalCompletion(3, '[(0, 1, 5), (1, 2, 1), (0, 2, 2), (0, 1, 7)]'),
+          ['4 4', '3 4', '2 4', '2 2'],
+          2,
+          'The two cheapest edges already join all three vertices.',
+        ),
+        choose(
+          'What extra space does Kruskal with DSU use for n vertices and m edges?',
+          ['O(1)', 'O(n²)', 'O(m log m)', 'O(n + m)'],
+          3,
+          'The sorted edge list takes O(m), and the parent and size arrays take O(n).',
         ),
       ],
     },
