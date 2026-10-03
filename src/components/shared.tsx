@@ -54,3 +54,23 @@ export function PageTitle({
     </div>
   );
 }
+
+/** Shown while a course's lesson content downloads, or after it failed to. */
+export function ContentLoading({
+  error,
+  retry,
+}: {
+  error: string | null;
+  retry: () => void;
+}) {
+  return error ? (
+    <div className="empty-state" role="alert">
+      <p>{error}</p>
+      <Button onClick={retry}>Retry</Button>
+    </div>
+  ) : (
+    <div className="loading-space" role="status">
+      Loading the lesson…
+    </div>
+  );
+}

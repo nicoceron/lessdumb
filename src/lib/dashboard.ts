@@ -1,11 +1,6 @@
-import {
-  assessmentPolicy,
-  defaultCatalog,
-  type Course,
-  type CurriculumCatalog,
-  type Skill,
-  type Unit,
-} from './curriculum';
+import type { Course, GraphCatalog, SkillOutline, Unit } from './curriculum';
+import { defaultCatalog } from './catalog-index';
+import { assessmentPolicy } from './catalog-outline';
 import {
   coursePath,
   dateKey,
@@ -32,12 +27,12 @@ import { lessonXp, REVIEW_XP } from './xp';
 type Now = Date | number;
 const time = (now: Now) => (now instanceof Date ? now.getTime() : now);
 
-function indexOf(catalog: CurriculumCatalog) {
+function indexOf(catalog: GraphCatalog) {
   return new Map(catalog.skills.map((item) => [item.id, item]));
 }
 
 /** One traversal per pass; cycles and missing nodes fail closed, as in the engine. */
-function unlockChecker(progress: Progress, catalog: CurriculumCatalog) {
+function unlockChecker(progress: Progress, catalog: GraphCatalog) {
   const byId = indexOf(catalog);
   const mastered = new Map<string, boolean>();
   const ready = new Map<string, boolean>();
@@ -72,10 +67,10 @@ export const skillStatusLabels: Record<SkillStatus, string> = {
 /** Status circles share the graph's rule: a lapsed ancestor locks its descendants. */
 export function skillStatuses(
   progress: Progress,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ) {
   const check = unlockChecker(progress, catalog);
-  return (skill: Skill): SkillStatus => {
+  return (skill: SkillOutline): SkillStatus => {
     if (!check.unlocked(skill.id)) return 'locked';
     const state = getSkillState(progress, skill.id);
     if (state.mastery >= 1) return 'mastered';
@@ -84,7 +79,7 @@ export function skillStatuses(
 }
 
 export interface DashboardTask {
-  skill: Skill;
+  skill: SkillOutline;
   mode: 'learn' | 'review';
   /** Base XP for the task, from the XP scale. */
   xp: number;
@@ -104,7 +99,7 @@ export function taskQueue(
   courseId: string,
   now: Now = Date.now(),
   limit = 5,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): DashboardTask[] {
   const at = time(now);
   const byId = indexOf(catalog);
@@ -112,19 +107,19 @@ export function taskQueue(
   const check = unlockChecker(progress, catalog);
   const lastSkill = progress.attempts.at(-1)?.skillId;
   const state = (id: string) => getSkillState(progress, id);
-  const courseFirst = (a: Skill, b: Skill) =>
+  const courseFirst = (a: SkillOutline, b: SkillOutline) =>
     a.courseId === courseId && b.courseId !== courseId
       ? -1
       : b.courseId === courseId && a.courseId !== courseId
         ? 1
         : 0;
   const coverageCache = new Map<string, number>();
-  const coverage = (item: Skill) => {
+  const coverage = (item: SkillOutline) => {
     if (!coverageCache.has(item.id))
       coverageCache.set(item.id, reviewCoverage(progress, item, at, catalog));
     return coverageCache.get(item.id)!;
   };
-  const recent = (a: Skill, b: Skill) =>
+  const recent = (a: SkillOutline, b: SkillOutline) =>
     (state(b.id).lastPracticedAt ?? 0) - (state(a.id).lastPracticedAt ?? 0);
 
   const due = registry
@@ -170,7 +165,7 @@ export function taskQueue(
 
   const head = nextTask(progress, at, courseId, catalog);
   const lessons = [...new Set([...remediation, ...active, ...fresh])];
-  const ordered: { skill: Skill; mode: 'learn' | 'review' }[] =
+  const ordered: { skill: SkillOutline; mode: 'learn' | 'review' }[] =
     head && byId.has(head.skillId)
       ? [{ skill: byId.get(head.skillId)!, mode: head.mode }]
       : [];
@@ -218,7 +213,7 @@ export function taskQueue(
 }
 
 /** Share of a lesson's steps passed so far, including an unfinished attempt. */
-function lessonCompletion(progress: Progress, skill: Skill): number {
+function lessonCompletion(progress: Progress, skill: SkillOutline): number {
   const steps = lessonState(progress, skill).steps;
   return (
     steps.filter((step) => step.status === 'done' || step.status === 'passed')
@@ -267,7 +262,7 @@ export function todayXp(progress: Progress, now: Now = Date.now()): number {
 export function remainingLessonXp(
   progress: Progress,
   courseId: string,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): number {
   return coursePath(courseId, catalog)
     .filter((item) => !isMastered(progress, item.id, catalog))
@@ -288,7 +283,7 @@ export function estimateCompletion(
   dailyGoal: number,
   courseId: string,
   now: Now = Date.now(),
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): CompletionEstimate {
   const remaining = remainingLessonXp(progress, courseId, catalog);
   if (remaining <= 0) return { status: 'complete' };
@@ -340,7 +335,7 @@ export interface HistoryEntry {
   id: string;
   kind: 'lesson' | 'review' | 'quiz';
   /** The lesson or review's skill; quizzes span several skills. */
-  skill?: Skill;
+  skill?: SkillOutline;
   /** Quiz entries: "Quiz N" and the quiz's ID. */
   title?: string;
   quizId?: string;
@@ -368,7 +363,7 @@ const creditedBy = (attempts: Attempt[]) => {
  */
 export function taskHistory(
   progress: Progress,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): HistoryEntry[] {
   const byId = indexOf(catalog);
   const attemptsBySkill = new Map<string, Attempt[]>();
@@ -464,7 +459,7 @@ export interface QuizTask {
 export function quizTask(
   progress: Progress,
   courseId: string,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): QuizTask | null {
   const status = quizStatus(progress, courseId, catalog);
   if (status.kind === 'active')
@@ -504,7 +499,7 @@ export function groupByDay(
  */
 export function courseSequence(
   courseId: string,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): Course[] {
   const target = catalog.courses.find((course) => course.id === courseId);
   if (!target) return [];
@@ -539,7 +534,7 @@ export function courseSequence(
 }
 
 export interface OutlineSkill {
-  skill: Skill;
+  skill: SkillOutline;
   number: string;
   status: SkillStatus;
 }
@@ -564,7 +559,7 @@ export interface OutlineUnit {
 export function courseOutline(
   progress: Progress,
   courseId: string,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): OutlineUnit[] {
   const status = skillStatuses(progress, catalog);
   const byId = indexOf(catalog);
@@ -621,7 +616,7 @@ export function courseOutline(
 export function courseMastery(
   progress: Progress,
   course: Course,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ) {
   const mastered = course.skillIds.filter((id) =>
     isMastered(progress, id, catalog),

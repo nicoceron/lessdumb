@@ -56,14 +56,9 @@ import {
   RotateCcw,
   X,
 } from 'lucide-react';
-import {
-  courses,
-  skills,
-  skillById,
-  units,
-  type Skill,
-  encompassedBy,
-} from '../lib/curriculum';
+import type { SkillOutline as Skill } from '../lib/curriculum';
+import { courses, skills, skillById, units } from '../lib/catalog-index';
+import { encompassedBy } from '../lib/catalog-outline';
 import { getSkillState, isUnlocked, coursePath } from '../lib/learning';
 import {
   ACCOUNT_DELETED_NOTICE,
@@ -903,12 +898,12 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                 </div>
               );
             })()}
-          {encompassedBy(selected.id).length > 0 && (
+          {encompassedBy(selected.id, skills).length > 0 && (
             <>
               <h3>Also reviewed by</h3>
               <p className="mb-3 text-sm text-muted-foreground">
                 Succeeding at these skills gives this one partial review credit:{' '}
-                {encompassedBy(selected.id)
+                {encompassedBy(selected.id, skills)
                   .map((item) => item.title)
                   .join(', ')}
                 .

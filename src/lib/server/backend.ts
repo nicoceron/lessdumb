@@ -6,7 +6,6 @@ import { authOptions as createAuthOptions } from './auth-options';
 import { sqliteStateStore } from './sqlite-state-store';
 import type { Backend, BackendAuth } from './backend-contract';
 import type { Mailer } from './mail';
-import { nodeMailer } from './node-mail';
 export type { Backend } from './backend-contract';
 export { SESSION_READ_RATE_LIMIT } from './auth-options';
 import { getMigrations } from 'better-auth/db/migration';
@@ -18,7 +17,7 @@ export interface BackendOptions {
   baseURL: string;
   trustedOrigins?: string[];
   rateLimit?: boolean;
-  /** Omitted: email is off, as in the default configuration. */
+  /** Omitted: email is off. The Node server never sends real email. */
   mail?: Mailer;
 }
 
@@ -104,14 +103,9 @@ function localSecret(dataDirectory: string): string {
   }
 }
 
-const nodeBaseURL = () =>
-  process.env.BETTER_AUTH_URL ?? 'http://localhost:4321';
-let mail: Mailer | undefined;
-const nodeMail = () => (mail ??= nodeMailer(nodeBaseURL()));
-
-/** The Node server has no real email; only the loopback test outbox enables it. */
+/** The Node server has no mail transport, so email features stay off. */
 export function emailEnabled(): boolean {
-  return nodeMail().enabled;
+  return false;
 }
 
 let backend: Backend | undefined;
@@ -132,7 +126,7 @@ export async function getBackend(): Promise<Backend> {
         'BETTER_AUTH_SECRET must contain at least 32 characters.',
       );
     }
-    const baseURL = nodeBaseURL();
+    const baseURL = configuredURL ?? 'http://localhost:4321';
     backend = createBackend({
       databasePath: resolve(dataDirectory, 'lessdumb.sqlite'),
       secret: configuredSecret ?? localSecret(dataDirectory),
@@ -140,7 +134,6 @@ export async function getBackend(): Promise<Backend> {
       trustedOrigins: configuredURL
         ? [new URL(baseURL).origin]
         : ['http://localhost:4321', 'http://127.0.0.1:4321'],
-      mail: nodeMail(),
     });
   }
   await backend.ready();

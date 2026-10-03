@@ -1,4 +1,4 @@
-import type { Skill } from './curriculum';
+import type { SkillOutline } from './curriculum';
 
 // XP measures focused work: about one XP per minute, as in Math Academy.
 // A lesson is worth roughly three minutes per knowledge point plus setup; a
@@ -6,7 +6,7 @@ import type { Skill } from './curriculum';
 
 /** Base XP shown on a lesson task before it is attempted. */
 export function lessonXp(
-  skill: Pick<Skill, 'estimatedMinutes' | 'knowledgePoints'>,
+  skill: Pick<SkillOutline, 'estimatedMinutes' | 'knowledgePoints'>,
 ): number {
   const points = skill.knowledgePoints?.length;
   return points

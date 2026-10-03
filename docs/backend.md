@@ -4,7 +4,7 @@ lessdumb runs locally on Astro Node with Better Auth's SQLite adapter and public
 
 ## Email: password reset and verification
 
-Password reset and email verification use Better Auth's documented callbacks (`emailAndPassword.sendResetPassword`, `emailVerification.sendVerificationEmail` with `sendOnSignUp` and `autoSignInAfterVerification`). **Email is off by default.** It turns on only when the server has a mail transport and a sender: on Workers, the Cloudflare Email Service `EMAIL` binding plus the `EMAIL_FROM` variable ([turning email on](cloudflare.md#turn-on-email)). The Node server never sends real email.
+Password reset and email verification use Better Auth's documented callbacks (`emailAndPassword.sendResetPassword`, `emailVerification.sendVerificationEmail` with `sendOnSignUp` and `autoSignInAfterVerification`). **Email is off by default.** It turns on only when the server has a mail transport and a sender: on Workers, the Cloudflare Email Service `EMAIL` binding plus the `EMAIL_FROM` variable ([turning email on](cloudflare.md#turn-on-email)). The Node server has no mail transport, so it always runs with email off.
 
 The server renders an "email enabled" flag into the app (`data-email` on the app shell) and the UI follows it:
 
@@ -14,16 +14,6 @@ The server renders an "email enabled" flag into the app (`data-email` on the app
 `src/lib/server/mail.ts` has one `sendMail({ to, subject, text, html })`. It never throws: a missing transport or sender, a failed delivery, or a spent budget is logged and returned as a result, so sign-up and reset requests never fail because of email. Logs name only the recipient's domain. Real deliveries skip reserved names from RFC 2606 and RFC 6761 (`example.com`, `example.net`, `example.org`, and any `.test`, `.example`, `.invalid`, or `.localhost` domain), so test and smoke accounts never bounce.
 
 Two limits protect the Email Service quota (3,000 a month on Workers Paid): Better Auth allows 3 reset and 3 verification requests per client address per minute, and the D1 `email_budget` table (migration `0003`) caps real deliveries at 90 a day overall and 5 a day per recipient. The budget fails closed: if it cannot be checked, the message is held. Recipients are stored as SHA-256 hashes and rows expire after two days.
-
-### Test outbox (Node only)
-
-For browser tests, the Node server writes each message as a JSON file to the directory named by `LESSDUMB_TEST_OUTBOX`, and Playwright reads the links from there. It records every recipient, including reserved domains, because nothing leaves the machine. The outbox cannot be turned on in production: the Cloudflare build never includes it, and the Node server ignores the variable (with a warning) unless `BETTER_AUTH_URL` is a loopback origin (`localhost`, `*.localhost`, `127.0.0.1`, `[::1]`). Without the variable the Node server runs with email off, like the default production configuration.
-
-```sh
-npm run build
-LESSDUMB_TEST_OUTBOX=/tmp/lessdumb-outbox BETTER_AUTH_URL=http://127.0.0.1:4343 PORT=4343 node scripts/serve.mjs
-LESSDUMB_TEST_OUTBOX=/tmp/lessdumb-outbox LESSDUMB_E2E_URL=http://127.0.0.1:4343 npx playwright test
-```
 
 ## Account deletion
 
@@ -83,7 +73,7 @@ The schema permits up to 5,000 retained attempts for older clients and a 4 MiB s
 
 `npm test` includes real account/session persistence, per-account isolation, stale-cookie rejection, revision conflicts, schema validation, and progress reconciliation tests. `LESSDUMB_E2E_URL=http://127.0.0.1:4321 npm run test:e2e` runs browser tests against a running local server; these exercise failed cloud loads, retry behavior, and account switches in another tab. Browser tests create unique test accounts in that server's ignored database.
 
-`tests/mail.test.ts` covers disabled mail, reserved-domain skips, sender parsing, delivery failures, the budget, message content, and the outbox's loopback guard. `tests/account-email.test.ts` drives the real Better Auth handler with email off (every email route refuses) and on (verification on sign-up, resend, invalid links, reset through the emailed link with session revocation and one-time tokens, unknown emails, failed delivery) and checks that deletion requires the password and removes the user, sessions, and progress. `tests/account-email.spec.ts` repeats the reset, verification, email-off, and deletion flows in the browser; the email-on cases run only against a server with the test outbox. `tests/cloudflare-backend.test.ts` checks D1 progress deletion and the budget, including concurrent sends.
+`tests/mail.test.ts` covers disabled mail, reserved-domain skips, sender parsing, delivery failures, the budget, and message content. `tests/account-email.test.ts` drives the real Better Auth handler with email off (every email route refuses) and on, through an injected capturing transport (verification on sign-up, resend, invalid links, reset through the emailed link with session revocation and one-time tokens, unknown emails, failed delivery) and checks that deletion requires the password and removes the user, sessions, and progress. `tests/cloudflare-backend.test.ts` checks D1 progress deletion and the budget, including concurrent sends.
 
 The rate-limit regression uses the real Better Auth handler and SQLite: 600 session reads succeed and the next returns 429 with a retry header, while the eleventh credential attempt is still rejected. Adapter tests cover initial rate-limit, outage, and network errors, retained authenticated data, retry, and confirmed unauthenticated responses.
 

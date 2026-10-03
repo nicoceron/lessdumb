@@ -1,5 +1,5 @@
 import type { Skill } from '../../curriculum';
-import { skill, choice, exercise, withLargeCase } from './shared';
+import { skill, exercise, withLargeCase } from './shared';
 
 // Each stage isolates one invariant before the original synthesis exercise.
 export const competitiveMicroFoundations: Skill[] = [
@@ -17,32 +17,6 @@ export const competitiveMicroFoundations: Skill[] = [
     '3',
     'Only visits are counted; the values do not affect the count.',
     [
-      choice(
-        'Scanning [20, 20, 20, 20] once performs how many visits?',
-        ['20', '4', '80', '16'],
-        1,
-        'There are four items, so four visits.',
-        'Count positions, not their values.',
-      ),
-      choice(
-        'What is the counter after processing an empty list?',
-        ['1', 'Undefined', '0', 'The largest value'],
-        2,
-        'No visit changes the initial zero.',
-        'Start from the initial state.',
-      ),
-      choice(
-        'If the input length doubles and each visit costs the same, what happens to scan work?',
-        [
-          'It approximately doubles',
-          'It squares',
-          'It halves',
-          'It stays constant',
-        ],
-        0,
-        'The action count is proportional to the number of items.',
-        'One action per item.',
-      ),
       exercise(
         'Implement scan_checks(values). Return the number of items visited by one full scan of the input list.',
         'def scan_checks(values):\n    pass',
@@ -77,27 +51,6 @@ export const competitiveMicroFoundations: Skill[] = [
     '6',
     'Two rows each contain three counted visits.',
     [
-      choice(
-        'An outer loop of size 3 contains a complete inner loop of size 5. How many pairs?',
-        ['8', '15', '25', '9'],
-        1,
-        'Three complete groups of five give fifteen pairs.',
-        'Multiply independent sizes.',
-      ),
-      choice(
-        'A complete 7-by-0 nested loop executes its inner action how many times?',
-        ['7', '49', '0', '1'],
-        2,
-        'The empty inner loop contributes no actions.',
-        'A zero factor makes the product zero.',
-      ),
-      choice(
-        'Which expression counts a scan of a items followed by a separate scan of b items?',
-        ['a * b', 'a ** b', 'max(a, b)', 'a + b'],
-        3,
-        'The two scan counts add because neither is inside the other.',
-        'Distinguish sequence from nesting.',
-      ),
       exercise(
         'Implement pair_checks(rows, columns) for nonnegative integers. Return how many actions a full rows-by-columns nested loop performs, using a formula. A hidden case with a billion rows and columns must finish within 3 seconds.',
         'def pair_checks(rows, columns):\n    pass',
@@ -137,32 +90,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '4',
     'The fourth doubling reaches 16, the first visited probe at least 10.',
     [
-      choice(
-        'How many doublings from 1 are needed to reach at least 8?',
-        ['2', '3', '4', '8'],
-        1,
-        'The updates reach 2, 4, and 8.',
-        'Count updates, not the initial probe.',
-      ),
-      choice(
-        'Why is the number of doubling steps logarithmic?',
-        [
-          'The target shrinks by one',
-          'The probe grows by a fixed factor',
-          'Every input item is visited',
-          'The probe is always the target',
-        ],
-        1,
-        'Each step multiplies progress by two.',
-        'Repeated multiplication reaches large targets quickly.',
-      ),
-      choice(
-        'What count is correct for target 1?',
-        ['1', '2', '-1', '0'],
-        3,
-        'The initial probe already satisfies the target.',
-        'Check the loop condition before the first update.',
-      ),
       exercise(
         'Implement doubling_steps(target) for an integer target >= 0. Starting at probe 1, count how many doublings are needed until probe >= target.',
         'def doubling_steps(target):\n    pass',
@@ -194,27 +121,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     "['3', '-4', '9']",
     'Three whitespace-delimited fields remain strings.',
     [
-      choice(
-        'Which result comes from "7  -2".split()?',
-        ['[7, -2]', '["7", "-2"]', '["7  -2"]', '[]'],
-        1,
-        'Both tokens are strings.',
-        'Splitting changes boundaries, not types.',
-      ),
-      choice(
-        'What does whitespace-only text produce with split()?',
-        ['[""]', '[" "]', '[]', 'An exception'],
-        2,
-        'No non-whitespace token exists.',
-        'Runs of whitespace are separators.',
-      ),
-      choice(
-        'With no argument, does split treat a tab as a separator?',
-        ['Yes', 'Only after an integer', 'No', 'Only if strip is called first'],
-        0,
-        'Default splitting uses whitespace, including tabs.',
-        'The default separator is broader than a literal space.',
-      ),
       exercise(
         'Implement tokenize(text). Return the whitespace-delimited string tokens, allowing spaces, tabs, and newlines.',
         'def tokenize(text):\n    pass',
@@ -249,32 +155,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '7',
     'The converted integers add to seven.',
     [
-      choice(
-        'What is int("-8") + int("3")?',
-        ['-83', '-5', '5', 'A TypeError'],
-        1,
-        'After conversion ordinary integer addition gives -5.',
-        'Convert before adding.',
-      ),
-      choice(
-        'Why can "4" + "6" produce "46"?',
-        [
-          'Both operands are strings',
-          'Python always sorts digits',
-          'The inputs are integers',
-          'Whitespace is missing',
-        ],
-        0,
-        'String + concatenates text.',
-        'Inspect the operand types.',
-      ),
-      choice(
-        'Which value is returned by int("0")?',
-        ['False as a string', 'The string "0"', 'Integer 0', 'An empty list'],
-        2,
-        'int converts numeric text to an integer.',
-        'Zero is valid integer text.',
-      ),
       exercise(
         'Implement integer_tokens(tokens). Convert a list of valid integer strings into a list of integers in the same order.',
         'def integer_tokens(tokens):\n    pass',
@@ -309,32 +189,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '[8, 5]',
     'The slice selects the two payload fields and leaves metadata alone.',
     [
-      choice(
-        'For "3 6 2 9", which field is the count?',
-        ['6', '2', '9', '3'],
-        3,
-        'The first token declares three payload values.',
-        'The format assigns the role.',
-      ),
-      choice(
-        'Which slice selects n tokens following a leading count?',
-        ['tokens[:n]', 'tokens[1:1 + n]', 'tokens[n:]', 'tokens[1:n]'],
-        1,
-        'The upper endpoint is exclusive, so 1 + n is required.',
-        'Select n positions starting at index 1.',
-      ),
-      choice(
-        'What should a declared count of zero contribute?',
-        [
-          'The size token itself',
-          'One zero-valued reading',
-          'An empty payload',
-          'Every trailing field',
-        ],
-        2,
-        'Zero readings means no payload values.',
-        'The count describes length, not a value.',
-      ),
       exercise(
         'Implement counted_values(text). Blank text returns []. Otherwise, the first integer token is n >= 0; return the next n integer fields and ignore any trailing fields. Assume n payload fields exist.',
         'def counted_values(text):\n    pass',
@@ -369,37 +223,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '4',
     'The one downward transition subtracts one.',
     [
-      choice(
-        'Starting at 3, what is the unbounded level after "up"?',
-        ['3', '4', '5', '0'],
-        2,
-        'The up transition adds two.',
-        'Apply exactly one event.',
-      ),
-      choice(
-        'What does reset do to a current level of 11?',
-        [
-          'Sets it to zero',
-          'Decreases it to 10',
-          'Preserves it',
-          'Makes it negative',
-        ],
-        0,
-        'Reset replaces the current state with zero.',
-        'Reset is assignment, not subtraction.',
-      ),
-      choice(
-        'Can this unbounded down transition take level 0 below zero?',
-        [
-          'No, never',
-          'Yes, to -1',
-          'Only after reset',
-          'Only if commands are integers',
-        ],
-        1,
-        'No floor has been specified yet.',
-        'Follow this stage’s declared rules.',
-      ),
       exercise(
         'Implement advance_level(level, command). "up" adds 2, "down" subtracts 1, and "reset" returns 0. Commands are always valid; apply no ceiling or floor.',
         'def advance_level(level, command):\n    pass',
@@ -434,27 +257,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '5',
     'Nine exceeds the cap, so the accepted state is five.',
     [
-      choice(
-        'Clamp -4 to [0, 6]. What is the result?',
-        ['-4', '4', '6', '0'],
-        3,
-        'The floor replaces negative values with zero.',
-        'Check the lower bound.',
-      ),
-      choice(
-        'Clamp 3 to [0, 6]. What is the result?',
-        ['0', '3', '6', '9'],
-        1,
-        'Three already lies inside the interval.',
-        'Clamping preserves valid values.',
-      ),
-      choice(
-        'If the ceiling is zero, what is every clamped value?',
-        ['The original value', 'One', 'Zero', 'Negative one'],
-        2,
-        'The allowed interval contains only zero.',
-        'Both boundaries coincide.',
-      ),
       exercise(
         'Implement clamp_level(value, ceiling) for ceiling >= 0. Return value limited to the inclusive interval [0, ceiling].',
         'def clamp_level(value, ceiling):\n    pass',
@@ -489,32 +291,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '5',
     'The zero observation does not erase the earlier five.',
     [
-      choice(
-        'What is the peak after observing [2, 7, 0, 4]?',
-        ['4', '0', '7', '13'],
-        2,
-        'Seven is the largest observed level.',
-        'Keep historical and current state separate.',
-      ),
-      choice(
-        'Which update preserves all prior peak evidence?',
-        [
-          'peak = current',
-          'peak = max(peak, current)',
-          'peak = 0',
-          'peak += current',
-        ],
-        1,
-        'The maximum keeps an older peak unless the current level exceeds it.',
-        'The summary must never decrease.',
-      ),
-      choice(
-        'What is the initialized peak for no nonnegative observations?',
-        ['None', '-1', '1', '0'],
-        3,
-        'The contract uses zero as the initial baseline.',
-        'No event changes the baseline.',
-      ),
       exercise(
         'Implement observed_peak(levels). All levels are nonnegative integers. Return the maximum observed level with initial baseline 0, including [] -> 0.',
         'def observed_peak(levels):\n    pass',
@@ -549,32 +325,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '[(0, 1), (0, 2), (1, 2)]',
     'The three unordered distinct-index pairs each occur once.',
     [
-      choice(
-        'Which pair must be excluded when requiring i < j?',
-        ['(0, 1)', '(1, 3)', '(2, 2)', '(2, 4)'],
-        2,
-        'A self-pair does not satisfy strict order.',
-        'Different positions are required.',
-      ),
-      choice(
-        'How many unordered distinct-index pairs exist for length 4?',
-        ['4', '6', '8', '16'],
-        1,
-        '4 × 3 / 2 gives six pairs.',
-        'Each unordered pair has two ordered orientations.',
-      ),
-      choice(
-        'Why start j at i + 1?',
-        [
-          'To include self-pairs',
-          'To revisit earlier positions',
-          'To avoid self-pairs and reversed duplicates',
-          'To sort values',
-        ],
-        2,
-        'Every pair is represented only in increasing index order.',
-        'Use a canonical orientation.',
-      ),
       exercise(
         'Implement index_pairs(n) for n >= 0. Return all tuples (i, j) with 0 <= i < j < n, in outer-i then inner-j loop order.',
         'def index_pairs(n):\n    pass',
@@ -609,32 +359,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '3',
     'The values thirteen and ten differ by three.',
     [
-      choice(
-        'What is the absolute gap between -5 and 2?',
-        ['-7', '7', '3', '-3'],
-        1,
-        'Absolute subtraction gives abs(-7) = 7.',
-        'Distance is nonnegative.',
-      ),
-      choice(
-        'What gap do equal values at different positions receive?',
-        ['Zero', 'One', 'Their index difference', 'No score'],
-        0,
-        'The objective compares values, not their indices.',
-        'Repeated values are valid candidates.',
-      ),
-      choice(
-        'Why keep scoring separate from generating candidates?',
-        [
-          'To omit boundary cases',
-          'To change the objective without changing valid candidates',
-          'To avoid checking any candidates',
-          'To make every score equal',
-        ],
-        1,
-        'The valid choices and the comparison objective are different responsibilities.',
-        'Generation says what to check; scoring says how to compare it.',
-      ),
       exercise(
         'Implement pair_gap(values, i, j). Positions i and j are valid distinct indices in the integer list. Return the absolute difference between their values.',
         'def pair_gap(values, i, j):\n    pass',
@@ -669,37 +393,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '4',
     'The first score establishes a minimum and four improves it.',
     [
-      choice(
-        'Why can initializing a nonnegative minimum to 0 be wrong?',
-        [
-          'Zero is never an integer',
-          'No positive candidate could improve it',
-          'It uses too much storage',
-          'It reverses the input',
-        ],
-        1,
-        'A fabricated zero remains smaller than every positive candidate.',
-        'The initial state must not invent a score.',
-      ),
-      choice(
-        'After visited scores [8, 3, 6], what is best?',
-        ['6', '8', '3', '17'],
-        2,
-        'The smallest visited score is three.',
-        'Maintain the minimum of the visited prefix.',
-      ),
-      choice(
-        'What does None represent before the first candidate?',
-        [
-          'A score of zero',
-          'The largest score',
-          'A failed parser',
-          'No candidate has been visited',
-        ],
-        3,
-        'There is no objective value yet.',
-        'An empty state differs from a numeric score.',
-      ),
       exercise(
         'Implement minimum_score(scores). Return the minimum integer score, or None if the input list is empty.',
         'def minimum_score(scores):\n    pass',
@@ -734,32 +427,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '[2, 7, 7]\n[7, 2, 7]',
     'The ordered copy changes sequence order while the input remains intact.',
     [
-      choice(
-        'Which call returns a new ordered list?',
-        [
-          'values.sort()',
-          'sorted(values)',
-          'values.append(0)',
-          'values.reverse()',
-        ],
-        1,
-        'sorted constructs and returns a new list.',
-        'Separate returning a copy from mutation.',
-      ),
-      choice(
-        'What does list.sort() return?',
-        ['The original list', 'A new list', 'None', 'The largest element'],
-        2,
-        'It sorts in place and returns None.',
-        'Mutation methods generally do not return the changed list.',
-      ),
-      choice(
-        'After sorting [4, 4, 1], how many elements remain?',
-        ['2', '1', '4', '3'],
-        3,
-        'Sorting preserves every input occurrence.',
-        'Ordering does not deduplicate.',
-      ),
       exercise(
         'Implement ordered_copy(values). Return a new ascending integer list without changing the input, including duplicate values.',
         'def ordered_copy(values):\n    pass',
@@ -794,37 +461,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '[(1, 9), (3, 7), (3, 2)]',
     'Deadline is primary; negated effort places seven before two at deadline three.',
     [
-      choice(
-        'Which tuple comes first under ordinary ascending tuple comparison?',
-        ['(2, 9)', '(1, 20)', '(3, 0)', '(2, -5)'],
-        1,
-        'The smallest first field wins before later fields are examined.',
-        'Compare the primary field first.',
-      ),
-      choice(
-        'Which key reverses effort while leaving deadline ascending?',
-        [
-          '(-deadline, effort)',
-          '(effort, deadline)',
-          '(deadline, -effort)',
-          '(-deadline, -effort)',
-        ],
-        2,
-        'Negating only effort reverses only the secondary numeric order.',
-        'Negation reverses integer order.',
-      ),
-      choice(
-        'When does tuple comparison examine the second field?',
-        [
-          'Always before the first',
-          'Only if first fields tie',
-          'Only for negative numbers',
-          'Never',
-        ],
-        1,
-        'The first unequal field determines tuple order.',
-        'Later keys resolve ties in earlier keys.',
-      ),
       exercise(
         'Implement deadline_effort_key(record). A record is (deadline, effort). Return the tuple key for deadline ascending and effort descending.',
         'def deadline_effort_key(record):\n    pass',
@@ -859,32 +495,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     "[(1, 'b'), (2, 'z'), (2, 'a')]",
     'The two priority-two records stay in their original z-then-a order.',
     [
-      choice(
-        'Equal-key records arrive as z then a. What order does a stable sort preserve?',
-        ['a then z', 'z then a', 'Only a survives', 'A random order'],
-        1,
-        'Stability retains their original relative order.',
-        'No extra key was specified.',
-      ),
-      choice(
-        'Which key preserves arrival order for records tied on priority?',
-        ['(priority, label)', '-label', 'priority alone', 'The whole record'],
-        2,
-        'A priority-only key leaves tied records equal under the key.',
-        'Do not add a new tie-breaker.',
-      ),
-      choice(
-        'Does stability preserve the entire input order even for different keys?',
-        [
-          'Yes, always',
-          'Only for strings',
-          'Only for negative keys',
-          'No, only equal-key relative order',
-        ],
-        3,
-        'Different keys are reordered by their key values.',
-        'Stability applies to ties.',
-      ),
       exercise(
         'Implement stable_priorities(records). Each record is (integer_priority, label). Return a new list ordered only by priority ascending, preserving arrival order among tied priorities and leaving the input unchanged.',
         'def stable_priorities(records):\n    pass',
@@ -919,32 +529,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '2\nTrue',
     'Three observations contain two distinct labels and elm is present.',
     [
-      choice(
-        'What information does a set directly store?',
-        [
-          'Exact occurrence counts',
-          'The distinct values present',
-          'Input index of every occurrence',
-          'Every duplicate separately',
-        ],
-        1,
-        'A set keeps unique members.',
-        'Presence differs from multiplicity.',
-      ),
-      choice(
-        'Adding the same integer twice to a set changes its size by what overall amount?',
-        ['2', '0', '1', 'It always fails'],
-        2,
-        'The first addition inserts one member; the duplicate adds none.',
-        'Duplicates share membership.',
-      ),
-      choice(
-        'Which value can be an ordinary set member?',
-        ['[1, 2]', '{"a": 1}', 'set([1])', 'The integer 12'],
-        3,
-        'Integers are hashable; the mutable collection options are not.',
-        'Hash-based containers need hashable keys.',
-      ),
       exercise(
         'Implement distinct_count(values). The list contains integers or strings. Return its number of distinct values using set membership.',
         'def distinct_count(values):\n    pass',
@@ -979,32 +563,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '{5: 3, 2: 1}',
     'Each observation adds one to its own value count.',
     [
-      choice(
-        'What default is appropriate before a value appears?',
-        ['1', '-1', '0', 'None'],
-        2,
-        'The value has occurred zero times.',
-        'The first update should create count one.',
-      ),
-      choice(
-        'After scanning [a, b, a], what should counts[a] be?',
-        ['3', '2', '1', '0'],
-        1,
-        'The value a appears twice.',
-        'Increment only the observed key.',
-      ),
-      choice(
-        'Why is a dictionary needed instead of just a set?',
-        [
-          'To preserve multiplicity',
-          'To avoid all hashing',
-          'To sort the input',
-          'To force equal counts',
-        ],
-        0,
-        'Dictionary values can store the separate occurrence counts.',
-        'Membership alone loses frequency.',
-      ),
       exercise(
         'Implement frequencies(values). Return a dictionary mapping each hashable integer or string value to its number of occurrences. Store only values that appear.',
         'def frequencies(values):\n    pass',
@@ -1039,32 +597,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     "{'oak': 3, 'pine': 2}",
     'Only keys with counts at least two enter the result.',
     [
-      choice(
-        'From counts {a: 2, b: 1}, which entry meets threshold 2?',
-        ['Both', 'Only b', 'Only a', 'Neither'],
-        2,
-        'Only a has count at least two.',
-        'Compare the count rather than the label.',
-      ),
-      choice(
-        'What does dictionary.items() provide?',
-        ['Only keys', 'Only values', '(key, value) entries', 'Input positions'],
-        2,
-        'items iterates the stored key-value pairs.',
-        'The threshold needs both the label and its count.',
-      ),
-      choice(
-        'Why create a new dictionary while filtering?',
-        [
-          'To preserve the source and avoid changing its keys during iteration',
-          'To give every value count one',
-          'To sort every key',
-          'To merge all labels',
-        ],
-        0,
-        'Separate output construction leaves iteration and source data intact.',
-        'Mutation of collection size during iteration is unsafe.',
-      ),
       exercise(
         'Implement counts_at_least(counts, threshold). counts contains positive integer occurrence counts and threshold >= 1. Return a new dictionary containing entries with count >= threshold without changing counts.',
         'def counts_at_least(counts, threshold):\n    pass',
@@ -1099,37 +631,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     'tail',
     'The record explicitly points from head to tail.',
     [
-      choice(
-        'In record (8, "z"), which field is the next reference?',
-        ['8', '"z"', 'The record’s dictionary position', 'The smallest key'],
-        1,
-        'The second tuple field stores next_id.',
-        'Use the declared node format.',
-      ),
-      choice(
-        'Does dictionary insertion order define linked-list order?',
-        [
-          'Yes',
-          'Only for string IDs',
-          'No, next references define it',
-          'Only for numeric values',
-        ],
-        2,
-        'References encode traversal order independently of storage.',
-        'Follow links rather than key order.',
-      ),
-      choice(
-        'What does a next reference of None mean?',
-        [
-          'The current node has value zero',
-          'The dictionary is sorted',
-          'Every node must be visited',
-          'The chain ends here',
-        ],
-        3,
-        'None is the declared end sentinel.',
-        'The sentinel is not a real next node.',
-      ),
       exercise(
         'Implement next_reference(nodes, node_id). nodes maps IDs to (value, next_id); node_id exists. Return only that node’s next_id without changing nodes.',
         'def next_reference(nodes, node_id):\n    pass',
@@ -1164,37 +665,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     'False\nTrue\nFalse',
     'Only None matches the terminal sentinel.',
     [
-      choice(
-        'Is node ID 0 necessarily a terminal reference?',
-        [
-          'Yes, because zero is false',
-          'No, only None is terminal',
-          'Only in dictionaries',
-          'Only when its value is positive',
-        ],
-        1,
-        'Zero may be a valid ID under this contract.',
-        'Test the exact sentinel.',
-      ),
-      choice(
-        'Which test identifies the declared end?',
-        ['not node_id', 'node_id == 0', 'node_id is None', 'len(node_id) == 0'],
-        2,
-        'Identity with None matches the specified sentinel.',
-        'False values and the sentinel are different.',
-      ),
-      choice(
-        'Why can while current stop too early?',
-        [
-          'It sorts dictionary keys',
-          'It treats valid false-valued IDs as a stop',
-          'It follows two links at once',
-          'It rejects all strings',
-        ],
-        1,
-        'A zero or empty-string ID fails truthiness even though it is not None.',
-        'Use the declared end condition.',
-      ),
       exercise(
         'Implement is_chain_end(node_id). Return True exactly when node_id is None. Zero, empty string, and False are valid nonterminal values for this test.',
         'def is_chain_end(node_id):\n    pass',
@@ -1226,37 +696,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '2',
     'The cursor visits ID zero and last, ignoring the unrelated node.',
     [
-      choice(
-        'A dictionary has five nodes but only two reachable from head. What is chain length?',
-        ['5', '7', '2', '0'],
-        2,
-        'Only reachable records belong to that chain.',
-        'Advance through references, not every dictionary entry.',
-      ),
-      choice(
-        'When should the cursor advance?',
-        [
-          'After counting the current node',
-          'Before any node is counted',
-          'Only at the end of the entire loop',
-          'Never',
-        ],
-        0,
-        'Count the node being visited, then move to its successor.',
-        'Keep visited count and next cursor consistent.',
-      ),
-      choice(
-        'What precondition makes this simple traversal terminate?',
-        [
-          'All values are positive',
-          'IDs are alphabetic',
-          'The dictionary is sorted',
-          'The reachable chain is acyclic and ends at None',
-        ],
-        3,
-        'A cycle would keep producing another node indefinitely.',
-        'A terminal cursor must eventually be reached.',
-      ),
       exercise(
         'Implement chain_length(nodes, head). Return the number of reachable nodes from head, following (value, next_id) records until None. The reachable chain is finite, acyclic, and complete. None head returns 0.',
         'def chain_length(nodes, head):\n    pass',
@@ -1291,37 +730,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     'True\nTrue\nFalse\nFalse',
     'Only the two ASCII letters pass the declared membership test.',
     [
-      choice(
-        'Which character belongs to the ASCII letter alphabet?',
-        ['é', '7', '?', 'Q'],
-        3,
-        'Q lies in uppercase ASCII A–Z.',
-        'The accepted ranges are explicit.',
-      ),
-      choice(
-        'Why might isalpha() be wrong for an ASCII-only task?',
-        [
-          'It accepts letters beyond ASCII',
-          'It returns no value',
-          'It modifies the character',
-          'It rejects all uppercase letters',
-        ],
-        0,
-        'Unicode alphabetic characters can lie outside the required alphabet.',
-        'Match the task’s accepted values.',
-      ),
-      choice(
-        'Which test accepts both ASCII cases?',
-        [
-          'char >= "a"',
-          '"A" <= char <= "Z" or "a" <= char <= "z"',
-          'char != " "',
-          'char.isdigit()',
-        ],
-        1,
-        'The two bounded ranges describe exactly the accepted cases.',
-        'Each range needs both lower and upper bounds.',
-      ),
       exercise(
         'Implement ascii_letter(char). char is exactly one character. Return True for ASCII A–Z or a–z and False for every other character.',
         'def ascii_letter(char):\n    pass',
@@ -1356,37 +764,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     'b\nB',
     'The normalized result is new text; the original stays uppercase.',
     [
-      choice(
-        'What is the normalized ASCII result for "G"?',
-        ['G', 'g', '7', 'An empty string'],
-        1,
-        'Uppercase G maps to lowercase g.',
-        'Merge only the specified case distinction.',
-      ),
-      choice(
-        'Should this ASCII-only transformation change "İ"?',
-        [
-          'Yes, into any lowercase expansion',
-          'Only if it occurs twice',
-          'No, it is outside A–Z',
-          'Yes, into ASCII i',
-        ],
-        2,
-        'The transformation applies only to ASCII uppercase characters.',
-        'Respect the declared alphabet.',
-      ),
-      choice(
-        'Calling text.lower() without storing its result does what to text?',
-        [
-          'Mutates it in place',
-          'Deletes it',
-          'Makes it None',
-          'Leaves the original string unchanged',
-        ],
-        3,
-        'String methods return new strings.',
-        'Strings are immutable.',
-      ),
       exercise(
         'Implement normalize_ascii(char) for one character. Lowercase ASCII A–Z; return every other character unchanged, including non-ASCII letters and punctuation.',
         'def normalize_ascii(char):\n    pass',
@@ -1421,32 +798,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     "['a', 'b', 'a']",
     'Punctuation, the digit, and the non-ASCII letter are ignored; accepted repetitions remain.',
     [
-      choice(
-        'What normalized characters come from "B!b"?',
-        ['["B", "b"]', '["b"]', '["b", "b"]', '["B", "!", "b"]'],
-        2,
-        'Both accepted letters normalize to b and both occurrences remain.',
-        'Filtering does not deduplicate.',
-      ),
-      choice(
-        'Why preserve input order in the accepted list?',
-        [
-          'To retain the processed sequence while changing representation',
-          'To automatically sort the text',
-          'To erase repeated letters',
-          'To force all characters uppercase',
-        ],
-        0,
-        'Filtering changes membership but not the order of retained characters.',
-        'The output follows the scan.',
-      ),
-      choice(
-        'For "123é", how many accepted ASCII letters remain?',
-        ['4', '1', '3', '0'],
-        3,
-        'None of these characters belongs to the accepted ASCII alphabet.',
-        'Use the explicit character ranges.',
-      ),
       exercise(
         'Implement accepted_characters(text). Return a list of lowercase ASCII letters from text, preserving order and repetitions. Normalize A–Z and ignore all other non-letter characters, including non-ASCII letters.',
         'def accepted_characters(text):\n    pass',
@@ -1481,32 +832,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '4\n[0, 1, 2, 3]',
     'Three elements have four boundaries, including the empty prefix.',
     [
-      choice(
-        'How many prefix boundaries does a list of length 5 need?',
-        ['5', '6', '4', '10'],
-        1,
-        'The boundary before the first element adds one.',
-        'Count the empty prefix too.',
-      ),
-      choice(
-        'What is the total at prefix boundary 0?',
-        ['The first value', 'The final total', 'Zero', 'Undefined'],
-        2,
-        'No values precede boundary zero.',
-        'An empty sum is zero.',
-      ),
-      choice(
-        'What does prefix boundary i describe?',
-        [
-          'Only the value at i',
-          'Every value after i',
-          'A range of size zero',
-          'The first i values',
-        ],
-        3,
-        'Boundary i lies just after the first i elements.',
-        'Boundaries count processed elements.',
-      ),
       exercise(
         'Implement prefix_boundary_count(values). Return the number of boundaries required for a prefix-sum table of the input list, including boundary zero.',
         'def prefix_boundary_count(values):\n    pass',
@@ -1538,32 +863,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '[0, 4, -2, 7]',
     'Each new entry adds one value to the previous total.',
     [
-      choice(
-        'Extend prefix [0, 4] with value -6. What new entry is appended?',
-        ['6', '-2', '-6', '10'],
-        1,
-        'The previous total four plus negative six equals negative two.',
-        'Add to the last boundary total.',
-      ),
-      choice(
-        'Must prefix totals increase?',
-        [
-          'Yes, for all integer lists',
-          'Only with at least two values',
-          'No, negative inputs may decrease them',
-          'They are never numeric',
-        ],
-        2,
-        'A negative value can lower the cumulative total.',
-        'Do not confuse a sum table with a sorted list.',
-      ),
-      choice(
-        'What table is correct for empty values?',
-        ['[]', '[None]', '[1]', '[0]'],
-        3,
-        'The empty prefix boundary remains.',
-        'No values are appended.',
-      ),
       exercise(
         'Implement build_prefix(values). Return [0] followed by cumulative totals of the integer input list in order. Do not change values.',
         'def build_prefix(values):\n    pass',
@@ -1598,37 +897,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '3\n0',
     'The first query sums -6 and 9; equal boundaries cancel to zero.',
     [
-      choice(
-        'Which formula answers [left, right)?',
-        [
-          'prefix[left] - prefix[right]',
-          'prefix[right] - prefix[left]',
-          'prefix[right] + prefix[left]',
-          'prefix[right - left]',
-        ],
-        1,
-        'Subtracting the earlier total cancels the preceding values.',
-        'The right prefix includes the desired range and the left prefix.',
-      ),
-      choice(
-        'What does a query with left == right return?',
-        ['The next value', 'The whole sum', 'Zero', 'An error for every table'],
-        2,
-        'Both prefix boundaries are identical.',
-        'The half-open range is empty.',
-      ),
-      choice(
-        'For n elements, can right equal n?',
-        [
-          'No, n is always invalid',
-          'Only for empty input',
-          'Only when all values are positive',
-          'Yes, it is the boundary after the last element',
-        ],
-        3,
-        'Prefix tables contain n + 1 boundaries.',
-        'A boundary is different from an element index.',
-      ),
       exercise(
         'Implement prefix_query(prefix, left, right). prefix is a valid zero-seeded prefix table for n integers; 0 <= left <= right <= n. Return the sum on the half-open range [left, right).',
         'def prefix_query(prefix, left, right):\n    pass',
@@ -1663,32 +931,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '[(1, 3), (4, -3)]',
     'The effect begins at one and stops before four.',
     [
-      choice(
-        'Adding 5 to [2, 7) requires which cancellation?',
-        ['+5 at 7', '-5 at 6', '-5 at 7', '+5 at 2 only'],
-        2,
-        'The excluded boundary seven cancels the added effect.',
-        'Cancel at right, not right - 1.',
-      ),
-      choice(
-        'What is the net effect of events for [3, 3)?',
-        [
-          'One added element',
-          'Zero effect',
-          'All later values increase',
-          'A mandatory error',
-        ],
-        1,
-        'The equal-position changes cancel.',
-        'An empty half-open interval contains no elements.',
-      ),
-      choice(
-        'If delta is -4, what is the right-boundary event?',
-        ['-4', '0', '-8', '+4'],
-        3,
-        'Cancellation negates the applied delta.',
-        'Subtracting a negative delta adds four.',
-      ),
       exercise(
         'Implement range_change_events(left, right, delta). For integers with left <= right, return [(left, delta), (right, -delta)] representing addition on [left, right). Retain both events even for an empty range.',
         'def range_change_events(left, right, delta):\n    pass',
@@ -1723,32 +965,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '[2, 5, 0, -2, -5]',
     'The combined boundary events describe both updates.',
     [
-      choice(
-        'Why use n + 1 entries for n positions?',
-        [
-          'To sort every update',
-          'To store cancellation at right == n',
-          'To duplicate all values',
-          'To exclude position zero',
-        ],
-        1,
-        'An update ending after the final element still needs its cancellation boundary.',
-        'Boundaries outnumber positions by one.',
-      ),
-      choice(
-        'Two start events add 3 and 4 at the same boundary. What is the combined event?',
-        ['1', '12', '7', 'Only the later 4'],
-        2,
-        'Boundary effects combine by addition.',
-        'Do not overwrite existing events.',
-      ),
-      choice(
-        'How many boundary writes does one valid range update need?',
-        ['Two', 'Its entire range length', 'n squared', 'Zero for every delta'],
-        0,
-        'Only start and end entries change.',
-        'Record changes rather than applying every position immediately.',
-      ),
       exercise(
         'Implement difference_table(n, updates). Start with n zero values; each update is (left, right, delta), with 0 <= left <= right <= n, for half-open addition. Return the n + 1 accumulated difference entries, including the cancellation sentinel.',
         'def difference_table(n, updates):\n    pass',
@@ -1783,37 +999,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '[2, 7, 7, 5]',
     'The first update contributes two on positions zero through two; the second contributes five on one through three.',
     [
-      choice(
-        'What operation reconstructs difference values?',
-        [
-          'Sort the entries',
-          'Multiply adjacent entries',
-          'A cumulative sum',
-          'Take absolute values',
-        ],
-        2,
-        'Each boundary change modifies the active running effect.',
-        'Carry prior events forward.',
-      ),
-      choice(
-        'Should the final sentinel produce an output element?',
-        [
-          'Yes, always',
-          'Only for negative updates',
-          'Only if it is zero',
-          'No, it lies after the last real position',
-        ],
-        3,
-        'The sentinel is a boundary, not an extra input position.',
-        'Return n values from n + 1 entries.',
-      ),
-      choice(
-        'Recover the first three values from [3, -1, 2, -4].',
-        ['[3, 2, 4]', '[3, -1, 2]', '[0, 3, 2]', '[3, 4, 2]'],
-        0,
-        'The running sums are three, two, and four.',
-        'Accumulate entries before appending each value.',
-      ),
       exercise(
         'Implement recover_difference(diff). diff has length n + 1 and represents n values with a final cancellation sentinel. Return the n cumulative values and exclude the sentinel from output.',
         'def recover_difference(diff):\n    pass',
@@ -1848,37 +1033,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '6\nTrue',
     'The outer pair uses two distinct positions with sum six.',
     [
-      choice(
-        'Why must a pair loop require left < right?',
-        [
-          'To reject negative values',
-          'To exclude self-pairs',
-          'To remove duplicates by value',
-          'To reverse sorting',
-        ],
-        1,
-        'Distinct positions require unequal indices in canonical order.',
-        'An index cannot partner with itself.',
-      ),
-      choice(
-        'For length 5, what is the initial right index?',
-        ['5', '6', '4', '0'],
-        2,
-        'Element indices run from zero through n - 1.',
-        'A boundary and an element index differ.',
-      ),
-      choice(
-        'Can two equal values at distinct positions form a candidate pair?',
-        [
-          'Yes',
-          'Never',
-          'Only after deduplication',
-          'Only if the list is unsorted',
-        ],
-        0,
-        'Candidate validity concerns positions, not value uniqueness.',
-        'Repeated values can represent different items.',
-      ),
       exercise(
         'Implement outer_pair_sum(sorted_values). Return the sum of the first and last values if the list has at least two positions; return None otherwise. Do not remove duplicates.',
         'def outer_pair_sum(sorted_values):\n    pass',
@@ -1913,42 +1067,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '1',
     'The value ten cannot pair with even the smallest one under limit eight.',
     [
-      choice(
-        'Smallest + largest is above the limit. Which endpoint has no valid remaining partner?',
-        [
-          'The smallest',
-          'The largest',
-          'Both must always be discarded',
-          'Neither can be discarded',
-        ],
-        1,
-        'Every other partner of largest is at least as big as smallest.',
-        'Hold the largest fixed while varying its partner.',
-      ),
-      choice(
-        'What precondition supports this discard proof?',
-        [
-          'Distinct values',
-          'Positive values',
-          'Ascending order',
-          'An even length',
-        ],
-        2,
-        'The endpoints must bound all remaining values.',
-        'The proof uses order.',
-      ),
-      choice(
-        'Does the proof remain valid for an ascending list containing negative numbers?',
-        [
-          'Yes',
-          'No, negatives disable comparison',
-          'Only if every value is negative',
-          'Only with one element',
-        ],
-        0,
-        'Order, rather than positivity, supplies the partner inequality.',
-        'Compare partner magnitudes using sorted order.',
-      ),
       exercise(
         'Implement discard_heavy_right(sorted_values, left, right, limit), with valid left < right. Return right - 1 if the outer pair sum is greater than limit; otherwise return right unchanged.',
         'def discard_heavy_right(sorted_values, left, right, limit):\n    pass',
@@ -1983,37 +1101,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '3',
     'All three larger-index partners fit with the left value one.',
     [
-      choice(
-        'For left = 1 and right = 5, how many partner positions lie in (left, right]?',
-        ['5', '4', '6', '3'],
-        1,
-        'The positions 2, 3, 4, and 5 are four partners.',
-        'Subtract the excluded left index.',
-      ),
-      choice(
-        'Why do all smaller partners fit when the largest fits?',
-        [
-          'They have the same value',
-          'They have no indices',
-          'Sorted order makes their sums no larger',
-          'The input length is even',
-        ],
-        2,
-        'Their values do not exceed the largest partner.',
-        'Hold left fixed and compare other partners.',
-      ),
-      choice(
-        'After counting all partners for left, which move avoids recounting that block?',
-        [
-          'Advance left',
-          'Reset both pointers',
-          'Keep left and decrease no pointer',
-          'Sort again',
-        ],
-        0,
-        'Advancing left ensures that endpoint is counted only once.',
-        'Every counted block has a unique left endpoint.',
-      ),
       exercise(
         'Implement fitting_partner_block(sorted_values, left, right, limit), with valid left < right in ascending integers. Return right - left if the outer sum is <= limit; otherwise return 0 because this atom cannot certify the complete block.',
         'def fitting_partner_block(sorted_values, left, right, limit):\n    pass',
@@ -2048,37 +1135,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     "{'b': 1, 'a': 1}",
     'Only positions one and two belong to this half-open window.',
     [
-      choice(
-        'Which positions belong to [1, 3)?',
-        ['1 and 3', '0, 1, and 2', '1 and 2', 'Only 3'],
-        2,
-        'The left is included and the right excluded.',
-        'Use half-open endpoints consistently.',
-      ),
-      choice(
-        'What does len(counts) mean when no zero entries are stored?',
-        [
-          'Window length',
-          'Distinct labels currently present',
-          'Every label ever seen',
-          'Sum of all counts',
-        ],
-        1,
-        'Each present key represents one distinct label.',
-        'Multiplicity is stored in values, not key count.',
-      ),
-      choice(
-        'What map describes an empty window?',
-        [
-          'All historical counts',
-          'One zero entry',
-          'None',
-          'An empty dictionary',
-        ],
-        3,
-        'No labels are currently present.',
-        'Window state must match its exact contents.',
-      ),
       exercise(
         'Implement window_counts(labels, left, right). With 0 <= left <= right <= len(labels), return occurrence counts for exactly labels[left:right]. Labels are hashable integers or strings.',
         'def window_counts(labels, left, right):\n    pass',
@@ -2113,37 +1169,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     "{'b': 2}",
     'Removing the last a occurrence leaves only the b key.',
     [
-      choice(
-        'A label has count 3 before one removal. What count remains?',
-        ['0', '2', '3', 'The key must always disappear'],
-        1,
-        'One occurrence leaves, so two remain.',
-        'Decrement once per removed position.',
-      ),
-      choice(
-        'Why delete a key at count zero?',
-        [
-          'To change input labels',
-          'To sort the dictionary',
-          'To keep map size equal to the distinct labels present',
-          'To erase every other key',
-        ],
-        2,
-        'A zero-count key no longer belongs to the current window.',
-        'Presence and map size must agree.',
-      ),
-      choice(
-        'Which Python statement removes a known dictionary key?',
-        [
-          'counts.remove(label)',
-          'counts.append(label)',
-          'counts = label',
-          'del counts[label]',
-        ],
-        3,
-        'del removes that entry from the dictionary.',
-        'The key is not a list item.',
-      ),
       exercise(
         'Implement remove_occurrence(counts, label). counts stores positive occurrence counts and label is present. Return a new map with one occurrence removed, deleting label if its count becomes zero. Preserve counts.',
         'def remove_occurrence(counts, label):\n    pass',
@@ -2178,37 +1203,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
     '2',
     'Removing the first a is insufficient; removing b leaves the suffix a,c with two distinct labels.',
     [
-      choice(
-        'Why can removing the leftmost item repair an at-most-k-distinct window?',
-        [
-          'It cannot increase distinct count',
-          'It always removes all labels',
-          'It sorts the remaining input',
-          'It increases every frequency',
-        ],
-        0,
-        'Removal decreases a count and can remove a distinct key.',
-        'The validity measure is monotone under removals.',
-      ),
-      choice(
-        'For [a, b, a, c] with k = 2, what first valid suffix boundary is found?',
-        ['0', '1', '2', '4'],
-        2,
-        'After removing a then b, the remaining suffix [a,c] has two types.',
-        'One removal may leave another copy of the same label.',
-      ),
-      choice(
-        'Why stop at the first valid left boundary?',
-        [
-          'To keep the shortest suffix',
-          'To retain the longest valid suffix for this right endpoint',
-          'To guarantee all labels are unique',
-          'To ignore the final value',
-        ],
-        1,
-        'Any further removal would shorten a window that already meets the constraint.',
-        'Keep as much valid input as possible.',
-      ),
       exercise(
         'Implement repair_left(labels, max_types), with hashable integer or string labels and max_types >= 0. Treat the whole list as one expanded window. Return the smallest left index whose suffix labels[left:] has at most max_types distinct labels. A hidden case with 200,000 labels must finish within 3 seconds.',
         'def repair_left(labels, max_types):\n    pass',
@@ -2249,32 +1243,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     '4\nTrue',
     'The integer midpoint lies inside indices two through six.',
     [
-      choice(
-        'What midpoint belongs to [3, 8)?',
-        ['5.5', '8', '5', '2'],
-        2,
-        'Floor division of eleven by two gives five.',
-        'An index must be an integer inside the interval.',
-      ),
-      choice(
-        'What is the midpoint of [4, 5)?',
-        ['4', '5', '0', 'There is no valid midpoint'],
-        0,
-        'The interval contains only index four.',
-        'A one-item interval is not empty.',
-      ),
-      choice(
-        'When should a search avoid examining a midpoint?',
-        [
-          'When low < high',
-          'When low == high',
-          'When the midpoint is zero',
-          'When duplicates exist',
-        ],
-        1,
-        'Equal boundaries describe an empty undecided interval.',
-        'Test interval nonemptiness first.',
-      ),
       exercise(
         'Implement search_midpoint(low, high) for integer indices with 0 <= low < high. Return the integer midpoint inside the half-open interval [low, high).',
         'def search_midpoint(low, high):\n    pass',
@@ -2309,32 +1277,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     '(0, 2)',
     'The qualifying index two remains a possible boundary while earlier positions are searched.',
     [
-      choice(
-        'A midpoint is too small. Which update excludes it and all earlier positions?',
-        ['low = mid', 'high = mid', 'low = mid + 1', 'high = mid + 1'],
-        2,
-        'The first possible qualifying index must come after mid.',
-        'Exclude the proven too-small midpoint.',
-      ),
-      choice(
-        'A midpoint qualifies. Which update preserves it as a possible boundary?',
-        ['high = mid', 'high = mid - 1', 'low = mid + 1', 'low = high'],
-        0,
-        'high = mid retains the midpoint boundary while searching earlier.',
-        'A qualifying midpoint may be the first answer.',
-      ),
-      choice(
-        'What is the essential progress guarantee of either update?',
-        [
-          'All values change',
-          'The undecided interval shrinks',
-          'The list becomes distinct',
-          'The target disappears',
-        ],
-        1,
-        'Each step removes at least one undecided element.',
-        'Finite search needs strict progress.',
-      ),
       exercise(
         'Implement lower_bound_step(values, target, low, high). values is ascending and 0 <= low < high <= len(values). Examine the midpoint and return updated (low, high): skip a too-small midpoint, otherwise preserve it as the high boundary.',
         'def lower_bound_step(values, target, low, high):\n    pass',
@@ -2369,37 +1311,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     'no qualifying value',
     'The boundary after the last element represents absence.',
     [
-      choice(
-        'A lower-bound result equals len(values). What does it mean?',
-        [
-          'The last value matches',
-          'No element qualifies',
-          'Index the element at n',
-          'The input must contain duplicates',
-        ],
-        1,
-        'The boundary lies beyond every actual element.',
-        'A boundary can represent absence.',
-      ),
-      choice(
-        'What is the only lower-bound boundary for an empty list?',
-        ['-1', '1', '0', 'None always'],
-        2,
-        'The empty list has n = 0 and its only boundary is zero.',
-        'The search returns a boundary, not an arbitrary sentinel.',
-      ),
-      choice(
-        'What must happen before reading values[index] from a lower-bound result?',
-        [
-          'Always subtract one',
-          'Sort descending',
-          'Delete duplicates',
-          'Check index < len(values)',
-        ],
-        3,
-        'Only indices below n refer to elements.',
-        'Distinguish the n boundary from a valid element index.',
-      ),
       exercise(
         'Implement boundary_value(values, index), with 0 <= index <= len(values). Return values[index] when index refers to an element, otherwise return None for the boundary after the list.',
         'def boundary_value(values, index):\n    pass',
@@ -2434,42 +1345,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     '2',
     'The capacity allows consecutive groups [3,5] and [2,4].',
     [
-      choice(
-        'If one load exceeds capacity, can another group fix it without splitting that load?',
-        [
-          'Yes, always',
-          'No',
-          'Only with two groups',
-          'Only if later loads are positive',
-        ],
-        1,
-        'Every group containing that load is already oversized.',
-        'Individual loads are indivisible.',
-      ),
-      choice(
-        'When should the test open a new group?',
-        [
-          'After every load',
-          'When the next addition exceeds capacity',
-          'Whenever two values differ',
-          'Only after sorting',
-        ],
-        1,
-        'The current group remains as long as the next item fits.',
-        'Preserve the given order.',
-      ),
-      choice(
-        'Why is nonnegativity needed for this greedy overflow rule?',
-        [
-          'It makes labels hashable',
-          'It sorts automatically',
-          'Later negative loads could cancel an apparent overflow',
-          'It avoids every zero',
-        ],
-        2,
-        'Negative cancellation could make an earlier cut unnecessary.',
-        'The rule relies on loads never decreasing a group total.',
-      ),
       exercise(
         'Implement groups_for_capacity(weights, capacity). weights are ordered nonnegative integers and capacity >= 0. Return the minimum consecutive groups needed at this capacity, or None if a single load is too large. Empty weights returns 0.',
         'def groups_for_capacity(weights, capacity):\n    pass',
@@ -2504,42 +1379,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     'True\nTrue',
     'Two needed groups meet the budget, and a larger allowance cannot break the same grouping.',
     [
-      choice(
-        'Required groups = 3 and allowed groups = 2. Is the capacity feasible?',
-        [
-          'True',
-          'False',
-          'Only for sorted loads',
-          'Always if capacity is positive',
-        ],
-        1,
-        'The group budget is exceeded.',
-        'Feasibility must satisfy every contract condition.',
-      ),
-      choice(
-        'Once a capacity is feasible, what happens at a larger capacity?',
-        [
-          'It becomes infeasible',
-          'It stays feasible',
-          'The input order changes',
-          'Every group must split',
-        ],
-        1,
-        'The same grouping still fits under the larger limit.',
-        'Keep the arrangement fixed while relaxing its allowance.',
-      ),
-      choice(
-        'Which pattern is compatible with monotone capacity feasibility?',
-        [
-          'True, False, True',
-          'False, True, False',
-          'False, False, True, True',
-          'True, False, False',
-        ],
-        2,
-        'Increasing capacity can cross from infeasible to feasible but cannot cross back.',
-        'The predicate has one false-to-true boundary.',
-      ),
       exercise(
         'Implement capacity_fits(weights, max_groups, capacity). weights are ordered nonnegative integers, max_groups >= 1, and capacity >= 0. Return whether all loads fit in at most max_groups consecutive nonempty groups, without splitting loads. Empty input is feasible.',
         'def capacity_fits(weights, max_groups, capacity):\n    pass',
@@ -2574,37 +1413,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     '(5, 14)',
     'Five is the unavoidable single-item lower bound and fourteen permits one whole-input group.',
     [
-      choice(
-        'What lower bound is unavoidable for indivisible loads?',
-        [
-          'The smallest load',
-          'The average rounded down',
-          'The largest load',
-          'Zero for every input',
-        ],
-        2,
-        'The largest load must fit in some group.',
-        'One item alone can force the limit.',
-      ),
-      choice(
-        'Why is total sum a feasible upper bound?',
-        [
-          'One group can contain all nonnegative loads',
-          'It creates a sorted input',
-          'It assumes infinitely many groups',
-          'Every load is equal',
-        ],
-        0,
-        'The one-group arrangement fits at the total.',
-        'Give a concrete feasible arrangement.',
-      ),
-      choice(
-        'What bounds should empty loads use?',
-        ['(1, 1)', '(None, None)', '(-1, 0)', '(0, 0)'],
-        3,
-        'There is no required positive capacity.',
-        'The empty task has answer zero.',
-      ),
       exercise(
         'Implement capacity_bounds(weights). weights contains nonnegative integers. Return (largest_item, total_sum) for nonempty input, or (0, 0) for empty input.',
         'def capacity_bounds(weights):\n    pass',
@@ -2639,37 +1447,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     '[-20, 3, 50]',
     'One representative of each coordinate appears in ascending order.',
     [
-      choice(
-        'What distinct ordered coordinates come from [8, -1, 8, 4]?',
-        ['[8, -1, 4]', '[-1, 4, 8]', '[-1, 4, 8, 8]', '[0, 1, 2]'],
-        1,
-        'Remove duplicate eight, then sort the remaining values.',
-        'This stage still returns original coordinates.',
-      ),
-      choice(
-        'Why remove duplicates before assigning ranks?',
-        [
-          'To lose every repeated occurrence from the final result',
-          'To force identical coordinates to share one rank',
-          'To preserve numeric distances in ranks',
-          'To reverse order',
-        ],
-        1,
-        'Equal values need one representative in the ordered coordinate list.',
-        'Rank identity corresponds to value identity.',
-      ),
-      choice(
-        'Does building the unique list already translate original positions?',
-        [
-          'Yes, always',
-          'Only for negative values',
-          'No, translation is a later stage',
-          'Only if the list is sorted',
-        ],
-        2,
-        'This list establishes the coordinate order; it does not yet map the original sequence.',
-        'Distinguish the lookup vocabulary from the final output.',
-      ),
       exercise(
         'Implement ordered_coordinates(values). Return the distinct integer coordinates in ascending order, leaving the original input unchanged.',
         'def ordered_coordinates(values):\n    pass',
@@ -2704,37 +1481,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     '{-20: 0, 3: 1, 50: 2}',
     'Each original coordinate maps to its position in the ordered vocabulary.',
     [
-      choice(
-        'What rank does the smallest distinct coordinate receive?',
-        ['1', '-1', '0', 'Its original value'],
-        2,
-        'Ranks begin at zero.',
-        'Use the ordered list index.',
-      ),
-      choice(
-        'Do ranks 0 and 1 imply original coordinates differ by one?',
-        [
-          'Yes',
-          'No, ranks preserve order rather than distance',
-          'Only for negative coordinates',
-          'Only if there are two values',
-        ],
-        1,
-        'Adjacent ranks can represent arbitrarily large coordinate gaps.',
-        'Retain originals when lengths matter.',
-      ),
-      choice(
-        'Why store a coordinate-to-rank dictionary?',
-        [
-          'To avoid repeated searches in the unique list',
-          'To change original values in place',
-          'To make every rank equal',
-          'To sort the original sequence again',
-        ],
-        0,
-        'A precomputed association supports repeated expected constant-time lookups.',
-        'Store the answer to the repeated lookup.',
-      ),
       exercise(
         'Implement coordinate_ranks(unique). unique is an ascending list of distinct integers. Return a dictionary mapping each coordinate to its zero-based position.',
         'def coordinate_ranks(unique):\n    pass',
@@ -2769,37 +1515,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     '[2, 0, 2, 1]',
     'The original occurrence order remains while each value becomes its rank.',
     [
-      choice(
-        'Translate [9, 1, 9] with map {1: 0, 9: 1}.',
-        ['[0, 1]', '[1, 0, 1]', '[0, 1, 1]', '[9, 1, 9]'],
-        1,
-        'Each original occurrence is replaced in its original position.',
-        'Look up values while scanning the source order.',
-      ),
-      choice(
-        'What happens to repeated values during translation?',
-        [
-          'Only one remains',
-          'They get different ranks',
-          'They remain repeated with the same rank',
-          'They are sorted to the front',
-        ],
-        2,
-        'Multiplicity and positions are retained; equal values share the map entry.',
-        'Compression changes representation, not membership.',
-      ),
-      choice(
-        'Which output length is required?',
-        [
-          'The number of distinct values',
-          'Always one',
-          'The largest rank',
-          'The original input length',
-        ],
-        3,
-        'There is one output rank per original occurrence.',
-        'Preserve every position.',
-      ),
       exercise(
         'Implement translate_ranks(values, ranks). Every integer value in values has an entry in ranks. Return the mapped ranks in original occurrence order, preserving duplicates and the input.',
         'def translate_ranks(values, ranks):\n    pass',
@@ -2834,42 +1549,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     '[(1, 1), (4, -1), (3, 1), (8, -1)]',
     'Only the two nonempty intervals generate activation/departure pairs.',
     [
-      choice(
-        'What changes at the start of a nonempty half-open interval?',
-        [
-          'Active count decreases by one',
-          'Active count increases by one',
-          'Every coordinate disappears',
-          'The interval is already inactive',
-        ],
-        1,
-        'The interval becomes active at its included start.',
-        'Use an activation event.',
-      ),
-      choice(
-        'How many events should [5, 5) contribute to occupancy?',
-        [
-          'Two active intervals',
-          'One activation',
-          'None',
-          'An infinite sequence',
-        ],
-        2,
-        'The empty interval occupies no position.',
-        'Equal half-open boundaries contain no values.',
-      ),
-      choice(
-        'Why are sparse events useful for coordinates near 10 to the power 12?',
-        [
-          'They require a trillion array entries',
-          'They erase coordinate order',
-          'They avoid sorting',
-          'They store only actual boundary changes',
-        ],
-        3,
-        'Storage depends on interval count rather than the coordinate span.',
-        'Represent changes rather than every possible location.',
-      ),
       exercise(
         'Implement interval_events(intervals). Each pair has start <= end and describes [start, end). Return unsorted event tuples in input order: (start, 1), (end, -1) for each nonempty interval. Ignore empty intervals.',
         'def interval_events(intervals):\n    pass',
@@ -2904,37 +1583,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     '[(1, 1), (3, -1), (3, 1), (5, -1)]',
     'At coordinate three, departure precedes arrival.',
     [
-      choice(
-        'At one coordinate, which change comes first for half-open occupancy?',
-        ['+1', '-1', 'A random change', 'Both are ignored'],
-        1,
-        'Departures exclude the endpoint and are processed before arrivals.',
-        'Match the endpoint convention.',
-      ),
-      choice(
-        'Do [1, 3) and [3, 5) overlap?',
-        [
-          'Yes, at three',
-          'Only if coordinates are positive',
-          'No',
-          'They overlap everywhere',
-        ],
-        2,
-        'The first interval excludes three and the second starts there.',
-        'One endpoint is excluded.',
-      ),
-      choice(
-        'Why does ordinary tuple sorting implement the desired tie rule?',
-        [
-          'It compares the change first at every coordinate',
-          'It removes negative values',
-          'It reverses coordinates',
-          'At equal coordinates, -1 is smaller than +1',
-        ],
-        3,
-        'The first field orders coordinates, and the second resolves ties.',
-        'Use the declared event encoding.',
-      ),
       exercise(
         'Implement ordered_half_open_events(events). Each event is (coordinate, change), with change either -1 for departure or +1 for arrival. Return a new sorted list by coordinate ascending, with departures before arrivals at ties, preserving events.',
         'def ordered_half_open_events(events):\n    pass',
@@ -2969,42 +1617,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
     '2\n0',
     'The maximum occupancy is two, and all intervals have departed by the final event.',
     [
-      choice(
-        'Why update the peak after applying an event?',
-        [
-          'To erase old maxima',
-          'To include the newly reached active count',
-          'To sort later events',
-          'To make every departure increase peak',
-        ],
-        1,
-        'An arrival may produce a new maximum.',
-        'Observe the post-transition state.',
-      ),
-      choice(
-        'What does the running active count represent?',
-        [
-          'All intervals ever supplied',
-          'Only future starts',
-          'Intervals currently covering the swept position',
-          'The coordinate itself',
-        ],
-        2,
-        'Start and end changes maintain current occupancy.',
-        'Historical peak and present count differ.',
-      ),
-      choice(
-        'For a balanced full event stream, what is final active count?',
-        [
-          'The peak',
-          'The largest coordinate',
-          'The number of all arrivals',
-          'Zero',
-        ],
-        3,
-        'Each nonempty interval contributes one activation and one departure.',
-        'All supplied intervals eventually end.',
-      ),
       exercise(
         'Implement peak_active(ordered_events). The events come from nonempty half-open intervals, are sorted by coordinate with departures before arrivals at ties, and use changes -1 or +1. Return the maximum active count, or 0 for no events.',
         'def peak_active(ordered_events):\n    pass',

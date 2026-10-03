@@ -14,7 +14,9 @@ import {
   type Progress,
   type SkillProgress,
 } from './learning';
-import { defaultCatalog, type CurriculumCatalog } from './curriculum';
+import type { GraphCatalog, SkillOutline } from './curriculum';
+import { defaultCatalog, skillById } from './catalog-index';
+import { contentOf } from './content';
 import { mergeQuizzes, type Quiz } from './quiz';
 import { mergeDiagnostics } from './placement';
 import {
@@ -22,6 +24,7 @@ import {
   findQuestion,
   hasKnowledgePoints,
   hasLessonEvidence,
+  legacyQuestionIds,
   lessonEvidenceIds,
   masteryFraction,
   reviewCycleComplete,
@@ -69,7 +72,11 @@ export function createState(): LearnerState {
   };
 }
 
-/** Record an answer against the current state without replacing concurrent work. */
+/**
+ * Record an answer against the current state without replacing concurrent
+ * work. The skill's content must be loaded: mistake and mastery cards carry
+ * its text.
+ */
 export function recordLearningAnswer(
   state: LearnerState,
   input: AttemptInput,
@@ -77,9 +84,9 @@ export function recordLearningAnswer(
   const progress = applyAttempt(state.progress, input);
   // A stable attempt identity can be replayed by a state updater or save retry.
   if (progress === state.progress) return state;
-  const skill = defaultCatalog.skills.find(
-    (candidate) => candidate.id === input.skillId,
-  )!;
+  const skill = contentOf(skillById[input.skillId]);
+  if (!skill)
+    throw new Error(`Load ${input.skillId} before recording its answers.`);
   const question = findQuestion(skill, input.questionId)!;
   const cards = [...state.cards];
   const cardIds = new Set(cards.map((card) => card.id));
@@ -148,7 +155,7 @@ export type LegacyLearnerState = Omit<LearnerState, 'version' | 'progress'> & {
  */
 export function migrateState(
   state: LearnerState | LegacyLearnerState,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): LearnerState {
   const progress = normalizeProgress(
     state.progress.version === 5
@@ -164,21 +171,19 @@ export function migrateState(
 /** Converts legacy evidence for skills now taught through knowledge points. */
 export function normalizeProgress(
   progress: Progress,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): Progress {
   let skills: Record<string, SkillProgress> | undefined;
   for (const skill of catalog.skills) {
     const state = progress.skills[skill.id];
     if (!state || !hasKnowledgePoints(skill)) continue;
     let next = state;
-    // Mastered under the four-question lesson: every authored question is
-    // evidence. Credit its points once; a later observation of a point
+    // Mastered under the four-question lesson: every one of its questions
+    // is evidence. Credit its points once; a later observation of a point
     // (pass or fail) has an evidence checkpoint and is left alone.
-    const legacyMastered =
-      skill.questions.length > 0 &&
-      skill.questions.every((question) =>
-        state.questionIds.includes(question.id),
-      );
+    const legacyMastered = legacyQuestionIds(skill).every((id) =>
+      state.questionIds.includes(id),
+    );
     const missing = legacyMastered
       ? lessonEvidenceIds(skill).filter(
           (id) =>
@@ -407,7 +412,7 @@ function compareMemory(left: MemoryState, right: MemoryState): number {
 export function mergeStates(
   localState: LearnerState | LegacyLearnerState,
   remoteState: LearnerState | LegacyLearnerState,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): LearnerState {
   const local = migrateState(localState, catalog);
   const remote = migrateState(remoteState, catalog);
@@ -717,26 +722,6 @@ export function mergeStates(
       cards.set(card.id, existing?.status === 'synced' ? existing : card);
     }
   }
-  // Reconciliation itself can complete mastery when devices supplied different answers.
-  for (const [id, progress] of Object.entries(skills)) {
-    const definition = skillById[id];
-    // Placement earns no cards, even once its first review confirms it.
-    if (
-      definition &&
-      hasLessonEvidence(definition, progress.questionIds) &&
-      (!progress.placement || progress.placement.demotedAt !== undefined)
-    ) {
-      for (const card of definition.flashcards) {
-        if (!cards.has(card.id))
-          cards.set(card.id, {
-            ...card,
-            skillName: definition.title,
-            kind: 'mastery',
-            status: 'pending',
-          });
-      }
-    }
-  }
   const lastActivityDate =
     [local.progress.lastActivityDate, remote.progress.lastActivityDate]
       .filter((day): day is string => day !== null)
@@ -747,20 +732,69 @@ export function mergeStates(
     remote.progress.lastActivityDate !== lastActivityDate
       ? local
       : remote;
-  return {
-    ...recent,
-    progress: {
-      ...recent.progress,
-      skills,
-      ...xp,
-      ...(quizzes.length ? { quizzes } : {}),
-      ...(diagnostics.length ? { diagnostics } : {}),
-      attempts: xp.attempts.slice(-MAX_RECENT_ATTEMPTS),
-      lastActivityDate,
-      streak: activitySource.progress.streak,
+  // Reconciliation itself can complete mastery when devices supplied
+  // different answers. Cards need the skill's text: skills whose content is
+  // not loaded are queued once it is (see missingMasteryCards).
+  return queueMasteryCards(
+    {
+      ...recent,
+      progress: {
+        ...recent.progress,
+        skills,
+        ...xp,
+        ...(quizzes.length ? { quizzes } : {}),
+        ...(diagnostics.length ? { diagnostics } : {}),
+        attempts: xp.attempts.slice(-MAX_RECENT_ATTEMPTS),
+        lastActivityDate,
+        streak: activitySource.progress.streak,
+      },
+      cards: [...cards.values()],
+      createdAt: Math.min(local.createdAt, remote.createdAt),
+      updatedAt: Math.max(local.updatedAt, remote.updatedAt),
     },
-    cards: [...cards.values()],
-    createdAt: Math.min(local.createdAt, remote.createdAt),
-    updatedAt: Math.max(local.updatedAt, remote.updatedAt),
-  };
+    catalog,
+  );
+}
+
+/** Mastered skills whose mastery cards are not all queued yet. */
+export function missingMasteryCards(
+  state: LearnerState,
+  catalog: GraphCatalog = defaultCatalog,
+): SkillOutline[] {
+  const queued = new Set(state.cards.map((card) => card.id));
+  return catalog.skills.filter((skill) => {
+    const progress = state.progress.skills[skill.id];
+    return (
+      !!progress &&
+      // Placement earns no cards, even once its first review confirms it.
+      (!progress.placement || progress.placement.demotedAt !== undefined) &&
+      skill.flashcards.some((card) => !queued.has(card.id)) &&
+      hasLessonEvidence(skill, progress.questionIds)
+    );
+  });
+}
+
+/**
+ * Queue the mastery cards of every mastered skill whose content is loaded.
+ * Returns the same state when nothing is added.
+ */
+export function queueMasteryCards(
+  state: LearnerState,
+  catalog: GraphCatalog = defaultCatalog,
+): LearnerState {
+  const added: QueuedCard[] = [];
+  for (const outline of missingMasteryCards(state, catalog)) {
+    const skill = contentOf(outline);
+    if (!skill) continue;
+    const queued = new Set(state.cards.map((card) => card.id));
+    for (const card of skill.flashcards)
+      if (!queued.has(card.id))
+        added.push({
+          ...card,
+          skillName: skill.title,
+          kind: 'mastery',
+          status: 'pending',
+        });
+  }
+  return added.length ? { ...state, cards: [...state.cards, ...added] } : state;
 }

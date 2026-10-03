@@ -63,19 +63,9 @@ describe('competitive programming in the shared knowledge graph', () => {
     for (const skill of path.filter((item) => item.courseId === courseId)) {
       // Every contest assessment defines a function that returns a result.
       expect(ancestors(skill.id).has('return-values')).toBe(true);
-      expect(skill.questions.map((q) => q.type)).toEqual([
-        'choice',
-        'choice',
-        'choice',
-        'code',
-      ]);
-      // Three options let a learner eliminate two and still guess half the time.
-      for (const question of skill.questions)
-        if (question.type === 'choice')
-          expect(
-            new Set(question.choices.map((choice) => choice.trim())).size,
-            question.id,
-          ).toBeGreaterThanOrEqual(4);
+      // Choice practice comes from knowledge points; the exercise is code.
+      expect(skill.questions.map((q) => q.type)).toEqual(['code']);
+      expect(skill.knowledgePoints?.length).toBeGreaterThan(0);
       expect(skill.assessment).toEqual({
         requiredTypes: ['code', 'choice'],
         reviewAnswers: 2,

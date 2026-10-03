@@ -8,7 +8,7 @@ import {
   Timer,
   X,
 } from 'lucide-react';
-import { courses } from '../lib/curriculum';
+import { courses, skillById } from '../lib/catalog-index';
 import { choiceLetter, choiceOrder } from '../lib/choice-order';
 import { codeLanguage } from '../lib/code-language';
 import {
@@ -22,7 +22,8 @@ import {
   type Quiz,
 } from '../lib/quiz';
 import { type LearnerState } from '../lib/state';
-import { Btn } from './shared';
+import { Btn, ContentLoading } from './shared';
+import { useCourseContent } from './use-content';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -68,6 +69,10 @@ export default function QuizSession({
     if (!quizId && running) setQuizId(running.id);
   }, [quizId, running?.id]);
   const finished = quiz?.completedAt !== undefined;
+  // Questions and explanations are lesson content, loaded per course.
+  const content = useCourseContent(
+    (quiz?.questions ?? []).map((slot) => skillById[slot.skillId]?.courseId),
+  );
   useEffect(() => {
     if (!quiz || finished) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -135,6 +140,8 @@ export default function QuizSession({
     );
   }
 
+  if (!content.ready)
+    return <ContentLoading error={content.error} retry={content.retry} />;
   if (finished) return <QuizResults quiz={quiz} />;
 
   const index = quiz.questions.findIndex((slot) => slot.answer === undefined);

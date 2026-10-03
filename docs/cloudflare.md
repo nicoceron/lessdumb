@@ -8,16 +8,6 @@ The Cloudflare build uses Astro's official Workers adapter, Workers Static Asset
 
 **Every push to `main` deploys automatically.** After the `verify` and `cloudflare` CI jobs pass, the `deploy` job in `.github/workflows/ci.yml` applies pending production D1 migrations and runs `npm run deploy:cloudflare`. It authenticates with the `CLOUDFLARE_API_TOKEN` repository secret: a Cloudflare API token with Workers Scripts Edit and D1 Edit on this account. A newer push to `main` never cancels a deploy in progress.
 
-### Production smoke test
-
-Right after the deploy, the same job runs `tests/smoke/production.smoke.ts` (`playwright.smoke.config.ts`) against the live Worker and its remote D1 database. It signs up a throwaway `smoke+<run id>-<time>@example.com` account with a password generated inside the test, checks that the dashboard loads, changes the daily goal and confirms through `/api/state` that it reached D1 and survives a reload with browser storage cleared, opens `/learn` and checks that a lesson shows a question, then deletes the account from the account dialog and confirms it can no longer sign in. If a step fails, it still tries to delete the account. The reserved `example.com` domain means no email is ever sent for it. A failing smoke test fails the run; the new version is already live by then, so fix forward or revert. Failure screenshots are uploaded as a workflow artifact; traces are off so the generated password is never recorded.
-
-The default `npx playwright test` run does not include it (`playwright.config.ts` matches only `tests/**/*.spec.ts`). To run it by hand against any deployment:
-
-```sh
-LESSDUMB_E2E_URL=https://lessdumb.nicocerond.workers.dev npx playwright test --config playwright.smoke.config.ts
-```
-
 To deploy by hand, or to set up another account, use Node 24 or newer and the repository's locked dependencies. Authenticate Wrangler to the intended account, then check `account_id`, the D1 database ID, and the public `BETTER_AUTH_URL` in `wrangler.jsonc` before deploying to another account.
 
 ```sh
@@ -55,7 +45,7 @@ The owner turns it on:
 
    The sender must be on the onboarded domain. Mail stays off if either the binding or a valid `EMAIL_FROM` is missing.
 
-4. **Merge to `main`.** CI applies migrations, deploys, and runs the smoke test. Then confirm by hand once: request a password reset for a real account and check that the email arrives.
+4. **Merge to `main`.** CI applies migrations and deploys. Then confirm by hand once: request a password reset for a real account and check that the email arrives.
 
 The binding is left out of `wrangler.jsonc` until then. A config with it passes `wrangler deploy --dry-run`, and the local preview simulates it (messages are written under `.wrangler/tmp/email/`, nothing is sent), but whether a real deploy accepts a `send_email` binding before any domain is onboarded could not be verified without changing the account, so it waits for step 3. If the first deploy with the binding fails on a permission error, give the `CLOUDFLARE_API_TOKEN` token the Email Sending permission as well; this was not testable from here.
 
@@ -76,7 +66,7 @@ npx wrangler d1 migrations apply lessdumb --local
 LESSDUMB_E2E_URL=http://127.0.0.1:4333 npm run test:e2e -- --config playwright.cloudflare.config.ts
 ```
 
-Playwright starts the foreground preview with its native `webServer` lifecycle, waits for HTTP readiness, and stops it after the browser suite. The documented `--ignore-lock` preview flag keeps the test server in the foreground when Astro detects an agent; Playwright exclusively owns the configured port. CI has a 15-minute job limit and cancels superseded runs. Preview uses local workerd and D1; it does not use the production database. Create `.dev.vars` **before building**: the Cloudflare Vite plugin stages these local values into the generated preview configuration. They are not a deployment secret source. The default `npm run build` and `npm start` remain the Node/SQLite version. Both builds use `dist`, so rebuild for the intended target before running or deploying it.
+Playwright starts the foreground preview with its native `webServer` lifecycle, waits for HTTP readiness, and stops it after the browser suite. The documented `--ignore-lock` preview flag keeps the test server in the foreground when Astro detects an agent; Playwright exclusively owns the configured port. CI does not run this browser suite for now; it builds the Worker and applies local D1 migrations, with a 15-minute job limit, and cancels superseded runs. Preview uses local workerd and D1; it does not use the production database. Create `.dev.vars` **before building**: the Cloudflare Vite plugin stages these local values into the generated preview configuration. They are not a deployment secret source. The default `npm run build` and `npm start` remain the Node/SQLite version. Both builds use `dist`, so rebuild for the intended target before running or deploying it.
 
 ## Runtime and storage
 

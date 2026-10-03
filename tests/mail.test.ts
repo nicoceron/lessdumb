@@ -1,6 +1,3 @@
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createMailer,
@@ -9,17 +6,11 @@ import {
   passwordResetEmail,
   verificationEmail,
   type MailTransport,
-  type OutgoingMail,
 } from '../src/lib/server/mail';
 import {
   workerMailer,
   type SendEmailBinding,
 } from '../src/lib/server/cloudflare-mail';
-import {
-  isLoopbackOrigin,
-  nodeMailer,
-  TEST_OUTBOX_ENV,
-} from '../src/lib/server/node-mail';
 
 const quiet = () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() });
 const message = {
@@ -28,9 +19,7 @@ const message = {
   text: 'Text',
   html: '<p>HTML</p>',
 };
-const cleanup: (() => void)[] = [];
 afterEach(() => {
-  for (const dispose of cleanup.splice(0)) dispose();
   vi.restoreAllMocks();
 });
 
@@ -228,69 +217,5 @@ describe('message content', () => {
     expect(email.text).toContain('https://lessdumb.dev/verify?token=t');
     expect(email.text).toContain('expires in 24 hours');
     expect(email.html).toContain('href="https://lessdumb.dev/verify?token=t"');
-  });
-});
-
-describe('Node test outbox', () => {
-  function directory() {
-    const path = mkdtempSync(join(tmpdir(), 'lessdumb-outbox-'));
-    cleanup.push(() => rmSync(path, { recursive: true, force: true }));
-    return path;
-  }
-
-  it('is off unless the explicit flag is set', () => {
-    expect(nodeMailer('http://127.0.0.1:4321', {}).enabled).toBe(false);
-  });
-
-  it('cannot be enabled for a public origin', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    const outbox = directory();
-    const mailer = nodeMailer('https://lessdumb.nicocerond.workers.dev', {
-      [TEST_OUTBOX_ENV]: outbox,
-    });
-    expect(mailer.enabled).toBe(false);
-    expect(warn).toHaveBeenCalled();
-    await mailer.sendMail(message);
-    expect(readdirSync(outbox)).toEqual([]);
-  });
-
-  it('records every message, including reserved domains, as a JSON file', async () => {
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    const outbox = directory();
-    const mailer = nodeMailer('http://127.0.0.1:4343', {
-      [TEST_OUTBOX_ENV]: outbox,
-    });
-    expect(mailer.enabled).toBe(true);
-    await expect(
-      mailer.sendMail({ ...message, to: 'reset@example.test' }),
-    ).resolves.toBe('sent');
-    const files = readdirSync(outbox);
-    expect(files).toHaveLength(1);
-    const saved = JSON.parse(
-      readFileSync(join(outbox, files[0]), 'utf8'),
-    ) as OutgoingMail;
-    expect(saved).toMatchObject({
-      to: 'reset@example.test',
-      subject: 'Subject',
-      from: { email: 'noreply@lessdumb.test', name: 'lessdumb' },
-    });
-  });
-
-  it('recognises loopback origins only', () => {
-    for (const origin of [
-      'http://localhost:4321',
-      'http://127.0.0.1:4343',
-      'http://[::1]:4321',
-      'http://app.localhost:3000',
-    ])
-      expect(isLoopbackOrigin(origin)).toBe(true);
-    for (const origin of [
-      'https://lessdumb.nicocerond.workers.dev',
-      'http://127.0.0.2:4321',
-      'http://localhost.evil.dev',
-      'not a url',
-    ])
-      expect(isLoopbackOrigin(origin)).toBe(false);
   });
 });
