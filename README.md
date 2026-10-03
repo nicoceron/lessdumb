@@ -27,9 +27,10 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 
 ## What you can do
 
-- **Today:** follow the next adaptive task, set a daily XP goal, and see your practice history and streak.
-- **My learning:** choose from 609 connected skills across eight courses through short explanations, examples, prediction questions, and executable exercises.
+- **Learn:** see your active course with its progress and estimated completion date (remaining lesson XP ÷ your daily XP goal), total, today's, and this week's XP, up to five next tasks in scheduler order (due reviews and ready lessons, including prerequisites from other courses), and a dated history of completed lessons and reviews with earned/possible XP.
+- **Courses:** choose your active course from eight courses and 609 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
 - **Lessons:** move through introduction slides and worked examples, follow labelled subgoals, then practice with a visible evidence checklist. Revisit the teaching material while keeping your pending choice or code; assisted answers remain separate from independent mastery.
+- **Account menu:** the avatar menu opens the knowledge graph, flashcards, code lab, and settings, and signs you in or out.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
 - **Flashcards:** receive recall cards after mastery and correction cards after mistakes; connect Anki or export a tab-separated deck.
 - **Code lab:** experiment with real Python, Rust, or C++ in a separate playground without changing mastery.
@@ -51,7 +52,7 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 | C++                      |     180 |       720 |                  180 |        360 |
 | **Total**                | **609** | **2,436** |              **574** |  **1,218** |
 
-Selecting a course saves a learning goal. The scheduler includes its prerequisite ancestors across courses, so missing foundations become real tasks rather than a dead end. The graph offers course paths with supporting prerequisites and an all-course view. Each node retains a domain and course identity, and its detail panel navigates both prerequisite and dependent edges.
+Choosing a course on the Courses page makes it your active course. The scheduler includes its prerequisite ancestors across courses, so missing foundations become real tasks rather than a dead end. The graph offers course paths with supporting prerequisites and an all-course view. Each node retains a domain and course identity, and its detail panel navigates both prerequisite and dependent edges.
 
 The three supplied books inform concept coverage; lessons, examples, questions, datasets, and cards are original. Source notes record exact scope: [data analysis](docs/sources/data-analysis.md), [machine learning](docs/sources/machine-learning.md), and [data systems](docs/sources/data-systems.md). The supplied data-systems early release contains chapters 1–8. The seven neural architecture skills assess concepts using choices and small Python analogues; the browser runtime does not execute TensorFlow/Keras training. This is a focused course catalog, not a reproduction of the books or their full exercise sets.
 
@@ -59,7 +60,7 @@ Competitive Programming draws its topic paths from the supplied USACO and NeetCo
 
 Rust has 32 four-skill topics, covering first programs, ownership and borrowing, UTF-8, data modeling, collections, traits, lifetimes, iterators, Cargo/build concepts, testing, smart pointers, concurrency, async mechanics, unsafe invariants, FFI, algorithms, and a framed-message codec. C++ has 45 four-skill topics, covering values and control flow, pointers and references, RAII and moves, STL, generic code, errors, build/link contracts, concurrency, memory layout, measurement, ring buffers, order books, protocols, and risk checks. Both courses start from zero and have their own explicit prerequisites; Python mastery is not required. Every step has three conceptual checks, one executable assessment, a runnable lesson, and two cards. [Rust scope](docs/sources/rust.md) and [C++ sources and GetCracked mapping](docs/sources/cpp.md) record the course boundaries. GetCracked supplied topic inspiration; its repeated local inventory is not a bank of 700 distinct exercises.
 
-The dashboard layout follows the compact course/progress/task pattern visible in [Math Academy’s official public dashboard screenshot](https://www.mathacademy.com/img/screenshots/student-dashboard.png), with independent branding and implementation.
+The Learn and Courses pages follow the compact course/XP/task/history and course-sequence/unit patterns of [Math Academy’s official public dashboard screenshot](https://www.mathacademy.com/img/screenshots/student-dashboard.png) and its course page, with independent branding and implementation.
 
 ## Python foundations
 
@@ -186,7 +187,10 @@ The 0.7.0 instructional-player update passed **723 Vitest tests and 36 Playwrigh
 ## Project structure
 
 ```text
-src/components/App.tsx          Workspace, course goals, knowledge graph
+src/components/App.tsx          Workspace shell, routing, knowledge graph
+src/components/workspace-header.tsx  Learn/Courses tabs and the account menu
+src/components/learn-dashboard.tsx   Learn: course, XP, tasks, and history
+src/components/courses-page.tsx      Courses: course sequence and numbered units
 src/components/learning-session.tsx  Lessons, assessment, language-aware grading
 src/components/lesson-player.tsx     Introduction slides and worked-example player
 src/components/secondary-pages.tsx   Flashcards, settings, account Dialog, Code lab
@@ -196,6 +200,8 @@ src/components/useLearner.ts    Device persistence and account synchronization
 src/lib/curriculum.ts           Original course, unit, skill, question, card registry
 src/lib/lesson-content.ts       Worked-example subgoals and existing-example fallback
 src/lib/learning.ts             Mastery evidence, task selection, review, XP, streaks
+src/lib/dashboard.ts            Task queue, XP summaries, completion estimate, history
+src/lib/xp.ts                   XP scale for lessons and reviews
 src/lib/retention.ts            Per-learner FSRS memory and recall estimates
 src/lib/activity.ts             Durable offline answer counters
 src/lib/python.ts              Terminable Python worker client
