@@ -62,13 +62,16 @@ const units: Unit[] = Object.entries(unitDescriptions).map(
   }),
 );
 
-/** Four related skills form each visible topic; graph edges remain the unlock authority. */
+const topicMembers = (slug: string) =>
+  rustDefinitions.filter((definition) => definition.topic === slug);
+
+/** Related skills form each visible topic, named by its final step; graph edges remain the unlock authority. */
 export const rustTopicStages = Object.fromEntries(
   rustTopics.map((topic) => {
-    const ids = rustDefinitions
-      .filter((definition) => definition.topic === topic.slug)
-      .map((definition) => `rust-${definition.slug}`);
-    return [ids[3], ids];
+    const ids = topicMembers(topic.slug).map(
+      (definition) => `rust-${definition.slug}`,
+    );
+    return [ids[ids.length - 1], ids];
   }),
 ) as Record<string, string[]>;
 
@@ -99,12 +102,22 @@ function choice(
 const authored: Skill[] = rustDefinitions.map((definition, index) => {
   const id = `rust-${definition.slug}`;
   const topic = rustTopics.find((item) => item.slug === definition.topic)!;
-  const topicDefinitions = rustDefinitions.filter(
-    (item) => item.topic === topic.slug,
-  );
-  const topicId = `rust-${topicDefinitions[3].slug}`;
+  const topicDefinitions = topicMembers(topic.slug);
+  const topicId = `rust-${topicDefinitions[topicDefinitions.length - 1].slug}`;
   const solution = definition.solution;
   const exampleCode = definition.exampleCode;
+  // Early examples print with {} until the Debug placeholder has been taught.
+  const debugPrinted = exampleCode.includes('{:?}');
+  const exampleNote =
+    definition.printNote ??
+    (debugPrinted
+      ? "The complete program prints the returned value using Rust's Debug format, so strings retain quotes and compound values show their structure."
+      : 'The complete program prints the returned value with the {} placeholder.');
+  const outputNote =
+    definition.printNote ??
+    (debugPrinted
+      ? 'Its returned value is printed with Debug formatting.'
+      : 'Its returned value is printed with {}.');
   const tests = definition.testCode;
   const exercise: CodeQuestion = {
     id: `${id}-q4`,
@@ -130,8 +143,8 @@ const authored: Skill[] = rustDefinitions.map((definition, index) => {
     estimatedMinutes: 5,
     topicId,
     topicTitle: topic.title,
-    stage: definition.stage,
-    stageCount: 4,
+    stage: topicDefinitions.indexOf(definition) + 1,
+    stageCount: topicDefinitions.length,
     assessment: { requiredTypes: ['choice', 'code'], reviewAnswers: 2 },
     lesson: {
       paragraphs: [
@@ -142,7 +155,7 @@ const authored: Skill[] = rustDefinitions.map((definition, index) => {
         language: 'rust',
         code: exampleCode,
         output: definition.output,
-        explanation: `${definition.rule} The complete program prints the returned value using Rust's Debug format, so strings retain quotes and compound values show their structure.`,
+        explanation: `${definition.rule} ${exampleNote}`,
       },
     },
     questions: [
@@ -160,7 +173,7 @@ const authored: Skill[] = rustDefinitions.map((definition, index) => {
         'What does this complete Rust program print?',
         definition.output,
         definition.outputDistractors,
-        `${definition.rule} Its returned value is printed with Debug formatting.`,
+        `${definition.rule} ${outputNote}`,
         'Follow the helper call and then the println! formatting.',
         (index + 1) % 3,
         exampleCode,
@@ -199,8 +212,7 @@ export const rustCatalog: CurriculumCatalog = {
     {
       id: courseId,
       title: 'Rust: from zero to systems',
-      description:
-        '128 focused skills across ownership, lifetimes, traits, testing, concurrency, async mechanics, unsafe invariants, and a bounded binary codec.',
+      description: `${rustDefinitions.length} focused skills across ownership, lifetimes, traits, testing, concurrency, async mechanics, unsafe invariants, and a bounded binary codec.`,
       domain: 'programming',
       language: 'rust',
       skillIds: skills.map((skill) => skill.id),
