@@ -12,6 +12,7 @@ import { knowledgePoints as machineLearning } from './machine-learning.kp';
 import { knowledgePoints as pythonFoundations } from './python-foundations.kp';
 import { knowledgePoints as quantitativeFoundations } from './quantitative-foundations.kp';
 import { knowledgePoints as rust1 } from './rust-1.kp';
+import { knowledgePoints as rust2 } from './rust-2.kp';
 
 export * from './authoring';
 
@@ -30,6 +31,7 @@ const modules: Record<string, KnowledgePointModule> = {
   'python-foundations.kp.ts': pythonFoundations,
   'quantitative-foundations.kp.ts': quantitativeFoundations,
   'rust-1.kp.ts': rust1,
+  'rust-2.kp.ts': rust2,
 };
 
 /** Registered file names, checked against the folder by the catalog tests. */
