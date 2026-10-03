@@ -17,7 +17,7 @@ export const competitiveAdvanced: Skill[] = [
       'cp-memo-state-key',
       'cp-memo-base-cases',
       'cp-memo-cache-scope',
-      'imports',
+      'decorators',
     ],
     [
       'Dynamic programming applies when different decision paths lead to the same subproblem. Define a state using all information that determines its answer. For a route with advances of one or three units, ways(remaining) counts ordered advance sequences that cover exactly remaining units. The empty route contributes one way at zero; a negative remainder contributes none.',
