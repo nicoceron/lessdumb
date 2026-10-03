@@ -7219,4 +7219,1451 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'cpp-unique-allocation': [
+    {
+      title: 'Create a unique owner with std::make_unique',
+      explanation: [
+        'std::make_unique<int>(12) from <memory> creates an int on the heap and returns a std::unique_ptr<int> that owns it. The unique_ptr is used like a pointer: *owner reads or writes the int.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\nint main() {\n  std::unique_ptr<int> owner = std::make_unique<int>(12);\n  std::cout << *owner << "\\n";\n}',
+        output: '12',
+        explanation:
+          'owner owns a new int initialized to 12, and *owner reads it.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto p = std::make_unique<int>(5);\n  *p += 3;\n  std::cout << *p << "\\n";\n}',
+          ['5', '3', '53', '8'],
+          3,
+          'Writing through *p changes the owned int from 5 to 8.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_unique<int>(2);\n  auto b = std::make_unique<int>(2);\n  *a = 10;\n  std::cout << *a + *b << "\\n";\n}',
+          ['20', '4', '12', '10'],
+          2,
+          'Each call creates its own int, so changing *a leaves *b at 2.',
+        ),
+        choose(
+          'What does std::make_unique<int>(7) return?',
+          [
+            'An int holding 7',
+            'A std::unique_ptr<int> owning a new int holding 7',
+            'A raw pointer that must be deleted',
+            'A reference to a temporary 7',
+          ],
+          1,
+          'make_unique creates the object and hands it to a unique owner.',
+        ),
+      ],
+    },
+    {
+      title: 'Let the owner free the object at scope exit',
+      explanation: [
+        'When a unique_ptr is destroyed, its destructor destroys and frees the object it owns. p->id reads a member of the owned object; it means the same as (*p).id.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\nstruct Noisy {\n  int id;\n  explicit Noisy(int i) : id(i) {}\n  ~Noisy() { std::cout << "free " << id << "\\n"; }\n};\nint main() {\n  {\n    auto p = std::make_unique<Noisy>(1);\n    std::cout << "using " << p->id << "\\n";\n  }\n  std::cout << "after\\n";\n}',
+        output: 'using 1\nfree 1\nafter',
+        explanation:
+          'p is destroyed at the end of its block, and it destroys the Noisy it owns.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\nstruct Noisy {\n  int id;\n  explicit Noisy(int i) : id(i) {}\n  ~Noisy() { std::cout << "free " << id << "\\n"; }\n};\nint main() {\n  {\n    auto a = std::make_unique<Noisy>(1);\n    auto b = std::make_unique<Noisy>(2);\n  }\n  std::cout << "done\\n";\n}',
+          [
+            'free 1\nfree 2\ndone',
+            'done\nfree 2\nfree 1',
+            'free 2\nfree 1\ndone',
+            'done',
+          ],
+          2,
+          'The owners are destroyed in reverse order, and each frees its object.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\nstruct Noisy {\n  int id;\n  explicit Noisy(int i) : id(i) {}\n  ~Noisy() { std::cout << "free " << id << "\\n"; }\n};\nint main() {\n  auto p = std::make_unique<Noisy>(4);\n  std::cout << (*p).id + p->id << "\\n";\n}',
+          ['8', 'free 4\n8', '4\nfree 4', '8\nfree 4'],
+          3,
+          '(*p).id and p->id are the same member. The object is freed when p is destroyed at the end of main.',
+        ),
+        choose(
+          'Who deletes the object created by std::make_unique?',
+          [
+            'The programmer, with delete',
+            'Nobody, so it leaks',
+            "The unique_ptr's destructor",
+            'The operating system at the next allocation',
+          ],
+          2,
+          'Owning the object means freeing it, automatically, when the owner goes away.',
+        ),
+      ],
+    },
+    {
+      title: 'Free early with reset and avoid raw new',
+      explanation: [
+        'p.reset() frees the owned object now and leaves p empty, equal to nullptr. A raw pointer from new has no owner at all: unless some code calls delete exactly once, the object leaks.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\nstruct Noisy {\n  int id;\n  explicit Noisy(int i) : id(i) {}\n  ~Noisy() { std::cout << "free " << id << "\\n"; }\n};\nint main() {\n  auto p = std::make_unique<Noisy>(3);\n  p.reset();\n  std::cout << (p == nullptr) << "\\n";\n}',
+        output: 'free 3\n1',
+        explanation:
+          'reset destroys the object immediately, and p is left empty.',
+      },
+      questions: [
+        choose(
+          'int* raw = new int(5); is never deleted. What happens?',
+          [
+            'The int is freed at scope exit',
+            'The compiler inserts the delete',
+            'It is freed when raw is reassigned',
+            'The memory leaks, because nothing frees it',
+          ],
+          3,
+          'A raw pointer does not own anything; only an explicit delete would free the int.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\nstruct Noisy {\n  int id;\n  explicit Noisy(int i) : id(i) {}\n  ~Noisy() { std::cout << "free " << id << "\\n"; }\n};\nint main() {\n  auto p = std::make_unique<Noisy>(5);\n  std::cout << "a\\n";\n  p.reset();\n  std::cout << "b\\n";\n}',
+          ['a\nb\nfree 5', 'a\nfree 5\nb', 'free 5\na\nb', 'a\nb'],
+          1,
+          'reset frees the object between the two prints; p is empty at the end, so nothing more is freed.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  std::unique_ptr<int> p;\n  std::cout << (p == nullptr) << " ";\n  p = std::make_unique<int>(9);\n  std::cout << *p << "\\n";\n}',
+          ['0 9', '1 0', '1 9', '0 0'],
+          2,
+          'A default-constructed unique_ptr is empty; afterwards it is given a new int holding 9.',
+        ),
+      ],
+    },
+  ],
+  'cpp-lvalue-rvalue': [
+    {
+      title: 'Tell named objects from temporaries',
+      explanation: [
+        'An lvalue names an object that lives on, such as a variable. An rvalue is a temporary value, such as 8 or x + 1. Overloads taking int& and int&& let a call tell them apart: lvalues bind to int&, temporaries to int&&.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint category(int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint main() {\n  int value = 4;\n  std::cout << category(value) << category(8) << "\\n";\n}',
+        output: '12',
+        explanation:
+          'value is a named object, so it picks int&; the literal 8 is a temporary, so it picks int&&.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint category(int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint main() {\n  int v = 3;\n  std::cout << category(v) << category(v + 1) << "\\n";\n}',
+          ['11', '22', '12', '21'],
+          2,
+          'v names an object; v + 1 produces a temporary result.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint category(int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint main() {\n  int a = 1;\n  int& r = a;\n  std::cout << category(r) << category(10) << category(a * 2) << "\\n";\n}',
+          ['112', '121', '222', '122'],
+          3,
+          'r names a, an lvalue; 10 and a * 2 are temporaries.',
+        ),
+        choose(
+          'Which argument binds to the int&& overload?',
+          [
+            'A named int variable',
+            'A reference to an int variable',
+            'The result of x + 1',
+            'An int member of a struct object',
+          ],
+          2,
+          'Only the arithmetic result is a temporary; the others name existing objects.',
+        ),
+      ],
+    },
+    {
+      title: 'Treat a named rvalue reference as an lvalue',
+      explanation: [
+        'A variable declared int&& has a name, so using it is an lvalue expression. The declared type says what it can bind to; the expression category says how it behaves when used.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint category(int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint main() {\n  int&& temp = 7;\n  std::cout << category(temp) << "\\n";\n}',
+        output: '1',
+        explanation:
+          'temp is declared int&&, but the expression temp names a variable, so int& is chosen.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint category(int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint pass(int&& x) {\n  return category(x);\n}\nint main() {\n  std::cout << pass(3) << "\\n";\n}',
+          ['2', '3', '1', '12'],
+          2,
+          'Inside pass, x has a name, so category(x) picks the int& overload.',
+        ),
+        choose(
+          'Why does category(r) pick int& when r is declared as int&& r = 5;?',
+          [
+            'int&& is the same type as int&',
+            'The literal 5 is an lvalue',
+            'r has a name, so the expression r is an lvalue',
+            'Overload resolution ignores reference kinds',
+          ],
+          2,
+          'Any named variable is an lvalue when used, whatever its declared reference type.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint category(int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint main() {\n  int&& r = 5;\n  r += 1;\n  std::cout << r << category(r) << "\\n";\n}',
+          ['52', '62', '51', '61'],
+          3,
+          'r refers to a temporary that lives as long as r, so it can be changed to 6; as a name it is an lvalue.',
+        ),
+      ],
+    },
+    {
+      title: 'Overload on const T& and T&&',
+      explanation: [
+        'A const int& parameter accepts anything, lvalues and temporaries alike. When an int&& overload also exists, temporaries prefer it. A plain non-const int& cannot bind to a temporary at all.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint which(const int&) {\n  return 1;\n}\nint which(int&&) {\n  return 2;\n}\nint main() {\n  int x = 0;\n  const int c = 5;\n  std::cout << which(x) << which(c) << which(9) << "\\n";\n}',
+        output: '112',
+        explanation:
+          'x and c are lvalues and go to const int&; 9 is a temporary and goes to int&&.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint which(const int&) {\n  return 1;\n}\nint which(int&&) {\n  return 2;\n}\nint main() {\n  int x = 4;\n  std::cout << which(x * 3) << which(x) << "\\n";\n}',
+          ['21', '11', '22', '12'],
+          0,
+          'x * 3 is a temporary; x is an lvalue.',
+        ),
+        choose(
+          'Only int f(const int&) is declared. Which calls compile?',
+          [
+            'Only f(x) for a variable x',
+            'Only f(5)',
+            'Both f(x) and f(5)',
+            'Neither of them',
+          ],
+          2,
+          'A const lvalue reference can bind to temporaries as well as to named objects.',
+        ),
+        choose(
+          'Why does g(5) not compile when g is declared int g(int&)?',
+          [
+            'g must return void, not int',
+            'A plain int& cannot bind to the temporary 5',
+            '5 is a long literal, not an int',
+            'g needs a second overload declared first',
+          ],
+          1,
+          'Binding a modifiable reference to a temporary is not allowed.',
+        ),
+      ],
+    },
+  ],
+  'cpp-move-cast': [
+    {
+      title: 'Turn a name into an rvalue with std::move',
+      explanation: [
+        'std::move(x) from <utility> is a cast: it turns the lvalue x into an rvalue expression, so overload resolution picks a T&& overload. It does not move anything by itself.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nint category(const int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint main() {\n  int value = 4;\n  std::cout << category(value) << category(std::move(value)) << "\\n";\n}',
+        output: '12',
+        explanation:
+          'Plain value is an lvalue; std::move(value) is an rvalue, so the int&& overload is chosen.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nint category(const int&) {\n  return 1;\n}\nint category(int&&) {\n  return 2;\n}\nint main() {\n  int x = 1;\n  std::cout << category(std::move(x)) << category(x) << "\\n";\n}',
+          ['21', '12', '22', '11'],
+          0,
+          'Only the call that wraps x in std::move passes an rvalue.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  int x = 7;\n  int y = std::move(x);\n  std::cout << x << " " << y << "\\n";\n}',
+          ['0 7', '7 0', '0 0', '7 7'],
+          3,
+          'Moving an int is just a copy, so x keeps its value.',
+        ),
+        choose(
+          'What does std::move(x), on its own, do to x?',
+          [
+            'Empties x immediately',
+            'Copies x into a temporary',
+            'Nothing by itself; it is only a cast',
+            'Deletes x at the end of the line',
+          ],
+          2,
+          'Whatever moving happens is done by the function that receives the rvalue.',
+        ),
+      ],
+    },
+    {
+      title: 'Let the receiving operation do the work',
+      explanation: [
+        'The receiving function decides what happens to an rvalue. Here two overloads only report which one was called. A std::move whose result is not passed anywhere has no effect at all.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nvoid receive(const int&) {\n  std::cout << "copy\\n";\n}\nvoid receive(int&&) {\n  std::cout << "move\\n";\n}\nint main() {\n  int a = 1;\n  receive(a);\n  receive(std::move(a));\n}',
+        output: 'copy\nmove',
+        explanation: 'The cast changes only which overload receives a.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nvoid receive(const int&) {\n  std::cout << "copy ";\n}\nvoid receive(int&&) {\n  std::cout << "move ";\n}\nint main() {\n  int a = 1;\n  receive(a);\n  receive(std::move(a));\n  receive(a + 1);\n  std::cout << "\\n";\n}',
+          [
+            'copy move copy',
+            'move move move',
+            'copy copy move',
+            'copy move move',
+          ],
+          3,
+          'a is an lvalue; std::move(a) and a + 1 are rvalues.',
+        ),
+        choose(
+          'With ints, what is x after int y = std::move(x);?',
+          [
+            '0, because x was moved from',
+            'Unchanged, because moving an int copies it',
+            'Undefined until it is assigned again',
+            'Equal to y + 1 after the move',
+          ],
+          1,
+          'There is nothing to transfer in an int, so the move is a copy.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nint total(int&& a, int&& b) {\n  return a + b;\n}\nint main() {\n  int x = 2;\n  int y = 3;\n  std::cout << total(std::move(x), std::move(y)) << x << "\\n";\n}',
+          ['50', '5', '52', '23'],
+          2,
+          'std::move lets the named ints bind to int&&; the function only reads them, so x is still 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Do not rely on a moved-from value',
+      explanation: [
+        'After a real move, such as moving a std::string, the source is valid but its value is unspecified unless the operation documents it. Do not read it expecting the old value or emptiness; give it a new value or let it be destroyed.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nint main() {\n  int x = 4;\n  int y = std::move(x);\n  x = 10;\n  std::cout << x + y << "\\n";\n}',
+        output: '14',
+        explanation:
+          'Assigning a fresh value to the moved-from variable is always fine.',
+      },
+      questions: [
+        choose(
+          'After std::string b = std::move(a);, what may you safely do with a?',
+          [
+            'Read it and expect the old text',
+            'Read it and expect an empty string',
+            'Assign it a new value or let it be destroyed',
+            'Nothing at all, not even destroy it',
+          ],
+          2,
+          'A moved-from object stays valid, but its value must not be relied on.',
+        ),
+        choose(
+          'Is a moved-from standard container guaranteed to be empty?',
+          [
+            'Yes, always',
+            'No, only valid with an unspecified value',
+            'Only a std::vector',
+            'Only if it was empty before',
+          ],
+          1,
+          'The standard leaves the moved-from value unspecified for most operations.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  int x = 4;\n  int y = std::move(x);\n  x = 10;\n  std::cout << x << y << "\\n";\n}',
+          ['104', '44', '100', '410'],
+          0,
+          'x is given 10 after the move; y holds the 4 it received.',
+        ),
+      ],
+    },
+  ],
+  'cpp-unique-transfer': [
+    {
+      title: 'Transfer ownership with std::move',
+      explanation: [
+        'A unique_ptr cannot be copied, because two owners would delete the object twice. It can be moved: auto second = std::move(first); hands the object to second and leaves first empty.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\n#include <utility>\nint main() {\n  auto first = std::make_unique<int>(7);\n  auto second = std::move(first);\n  std::cout << (first == nullptr) << " " << *second << "\\n";\n}',
+        output: '1 7',
+        explanation: 'Ownership moved to second, and first is now null.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\n#include <utility>\nint main() {\n  auto a = std::make_unique<int>(3);\n  std::unique_ptr<int> b = std::move(a);\n  *b += 1;\n  std::cout << *b << (a == nullptr) << "\\n";\n}',
+          ['31', '40', '41', '30'],
+          2,
+          'b owns the int, which becomes 4, and a is empty.',
+        ),
+        choose(
+          'What happens with auto a = std::make_unique<int>(1); auto b = a;?',
+          [
+            'b becomes a second owner of the int',
+            'a becomes null and b owns the int',
+            'b gets its own copy of the int',
+            'It does not compile: a unique_ptr cannot be copied',
+          ],
+          3,
+          'Copying is deleted for unique_ptr; ownership can only be moved.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\n#include <utility>\nint main() {\n  auto a = std::make_unique<int>(5);\n  auto b = std::move(a);\n  auto c = std::move(b);\n  std::cout << (a == nullptr) << (b == nullptr) << *c << "\\n";\n}',
+          ['115', '015', '105', '005'],
+          0,
+          'The int passed from a to b to c, leaving both earlier owners empty.',
+        ),
+      ],
+    },
+    {
+      title: 'Check the emptied source before using it',
+      explanation: [
+        'Dereferencing an empty unique_ptr is undefined behavior. After a move, test the source before reading it, for example p ? *p : -1; it can also be given a new object.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\n#include <utility>\nint main() {\n  auto first = std::make_unique<int>(4);\n  auto second = std::move(first);\n  std::cout << (first ? *first : -1) << " " << (second ? *second : -1) << "\\n";\n}',
+        output: '-1 4',
+        explanation:
+          'first is empty, so the fallback is used; second owns the 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  std::unique_ptr<int> p;\n  std::cout << (p ? *p : 0) << "\\n";\n}',
+          ['-1', '1', '0', 'null'],
+          2,
+          'A default unique_ptr is empty, so the condition is false.',
+        ),
+        choose(
+          'After auto b = std::move(a); with unique_ptrs, what does *a do?',
+          [
+            'Reads the old value',
+            'Returns 0',
+            'Moves the value back into a',
+            'Undefined behavior, because a is null',
+          ],
+          3,
+          'a no longer owns anything; there is no object to read.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\n#include <utility>\nint main() {\n  auto a = std::make_unique<int>(9);\n  auto b = std::move(a);\n  a = std::make_unique<int>(1);\n  std::cout << *a + *b << "\\n";\n}',
+          ['10', '9', '18', '1'],
+          0,
+          'a was refilled with a new int 1, while b owns the 9.',
+        ),
+      ],
+    },
+    {
+      title: 'Pass ownership into and out of functions',
+      explanation: [
+        'A function that returns std::unique_ptr gives its caller ownership. A function that takes std::unique_ptr by value takes ownership, so the caller must hand it over with std::move; to only look, take const std::unique_ptr<int>&.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\n#include <utility>\nstd::unique_ptr<int> make(int v) {\n  return std::make_unique<int>(v * 2);\n}\nint consume(std::unique_ptr<int> p) {\n  return *p + 1;\n}\nint main() {\n  auto p = make(5);\n  int r = consume(std::move(p));\n  std::cout << r << " " << (p == nullptr) << "\\n";\n}',
+        output: '11 1',
+        explanation:
+          'make returns an owner of 10; consume takes it over and returns 11, leaving p empty.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\nstd::unique_ptr<int> make(int v) {\n  return std::make_unique<int>(v * 2);\n}\nint main() {\n  auto p = make(3);\n  std::cout << *p << "\\n";\n}',
+          ['3', '9', '5', '6'],
+          3,
+          'make creates an int holding 6 and returns its owner.',
+        ),
+        choose(
+          'p is a unique_ptr variable and consume takes std::unique_ptr<int> by value. Why does consume(p) not compile?',
+          [
+            'consume needs a raw pointer',
+            'p would have to be copied, which unique_ptr forbids',
+            'p is null',
+            'Functions cannot take a unique_ptr',
+          ],
+          1,
+          'Passing an lvalue by value copies it; consume(std::move(p)) transfers instead.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\n#include <utility>\nstd::unique_ptr<int> make(int v) {\n  return std::make_unique<int>(v * 2);\n}\nint peek(const std::unique_ptr<int>& p) {\n  return *p;\n}\nint consume(std::unique_ptr<int> p) {\n  return *p + 1;\n}\nint main() {\n  auto p = make(4);\n  int a = peek(p);\n  int b = consume(std::move(p));\n  std::cout << a << " " << b << " " << (p == nullptr) << "\\n";\n}',
+          ['8 9 0', '8 8 1', '4 9 1', '8 9 1'],
+          3,
+          'peek only borrows; consume takes ownership, leaving p empty.',
+        ),
+      ],
+    },
+  ],
+  'cpp-shared-ownership': [
+    {
+      title: 'Share one object between shared_ptr copies',
+      explanation: [
+        'std::make_shared<int>(3) creates an int owned by a std::shared_ptr. Copying a shared_ptr does not copy the int: both copies own the same object, so a change through one is visible through the other.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\nint main() {\n  auto first = std::make_shared<int>(3);\n  auto second = first;\n  *second += 2;\n  std::cout << *first << "\\n";\n}',
+        output: '5',
+        explanation: 'first and second own the same int, which becomes 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(1);\n  auto b = a;\n  *a = 50;\n  std::cout << *b << "\\n";\n}',
+          ['1', '51', '50', '0'],
+          2,
+          'a and b share one int.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(1);\n  auto b = std::make_shared<int>(1);\n  *a = 50;\n  std::cout << *b << "\\n";\n}',
+          ['50', '1', '51', '0'],
+          1,
+          'Two make_shared calls create two separate ints.',
+        ),
+        choose(
+          'What does copying a shared_ptr do?',
+          [
+            'Clones the pointed-to object',
+            'Moves ownership and empties the source',
+            'Fails to compile',
+            'Adds another owner of the same object',
+          ],
+          3,
+          'Shared ownership means several pointers own one object.',
+        ),
+      ],
+    },
+    {
+      title: 'Count the owners with use_count()',
+      explanation: [
+        'A shared_ptr keeps a count of how many shared_ptrs own its object; use_count() reports it. Copies raise the count, destroying or resetting an owner lowers it, and moving transfers an owner without changing the count.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(0);\n  std::cout << a.use_count();\n  {\n    auto b = a;\n    std::cout << a.use_count();\n  }\n  std::cout << a.use_count() << "\\n";\n}',
+        output: '121',
+        explanation:
+          'b adds an owner inside the block and removes it when destroyed.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(0);\n  auto b = a;\n  auto c = b;\n  std::cout << a.use_count() << "\\n";\n}',
+          ['3', '1', '2', '0'],
+          0,
+          'a, b, and c all own the same int.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(0);\n  auto b = a;\n  b.reset();\n  std::cout << a.use_count() << (b == nullptr) << "\\n";\n}',
+          ['21', '10', '11', '01'],
+          2,
+          'reset makes b give up ownership, so only a remains.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(0);\n  {\n    auto b = a;\n    auto c = a;\n  }\n  std::cout << a.use_count() << "\\n";\n}',
+          ['3', '2', '1', '0'],
+          2,
+          'b and c stop owning when their block ends, leaving only a.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep the object alive until the last owner leaves',
+      explanation: [
+        'The shared object is destroyed when its last owner is destroyed or reset. Shared ownership is for objects that several parts of a program must keep alive independently; when one owner is enough, a unique_ptr states that more clearly.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\nstruct Noisy {\n  ~Noisy() { std::cout << "freed\\n"; }\n};\nint main() {\n  auto a = std::make_shared<Noisy>();\n  {\n    auto b = a;\n    a.reset();\n    std::cout << "still here\\n";\n  }\n  std::cout << "end\\n";\n}',
+        output: 'still here\nfreed\nend',
+        explanation:
+          'After a.reset(), b is the last owner; the object dies when b does.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\nstruct Noisy {\n  ~Noisy() { std::cout << "freed\\n"; }\n};\nint main() {\n  auto a = std::make_shared<Noisy>();\n  auto b = a;\n  a.reset();\n  b.reset();\n  std::cout << "x\\n";\n}',
+          ['x\nfreed', 'freed\nfreed\nx', 'freed\nx', 'x'],
+          2,
+          'The object is destroyed once, when the second owner lets go.',
+        ),
+        choose(
+          'When is an object held by several shared_ptrs destroyed?',
+          [
+            'When the first owner is destroyed',
+            'Only when the program exits',
+            'When use_count() is called',
+            'When the last owner is destroyed or reset',
+          ],
+          3,
+          'As long as any owner remains, the object stays alive.',
+        ),
+        choose(
+          'Why not use shared_ptr for every heap object?',
+          [
+            'It cannot hold an int',
+            'It is not part of the standard library',
+            'It always leaks memory',
+            'It blurs who owns the object and adds overhead',
+          ],
+          3,
+          'Shared ownership is a deliberate design choice, not a default.',
+        ),
+      ],
+    },
+  ],
+  'cpp-smart-pointers': [
+    {
+      title: 'Observe an object with weak_ptr',
+      explanation: [
+        'std::weak_ptr<int> w = owner; watches a shared object without owning it, so it does not raise use_count(). expired() reports whether the object has already been destroyed.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\nint main() {\n  auto owner = std::make_shared<int>(5);\n  std::weak_ptr<int> watcher = owner;\n  std::cout << owner.use_count() << " " << watcher.expired() << "\\n";\n}',
+        output: '1 0',
+        explanation:
+          'The watcher is not an owner, and the object is still alive.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto owner = std::make_shared<int>(5);\n  std::weak_ptr<int> w = owner;\n  owner.reset();\n  std::cout << w.expired() << "\\n";\n}',
+          ['0', '5', '1', '2'],
+          2,
+          'The only owner let go, so the object is gone and the weak_ptr has expired.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(1);\n  std::weak_ptr<int> w1 = a;\n  std::weak_ptr<int> w2 = a;\n  std::cout << a.use_count() << "\\n";\n}',
+          ['3', '2', '0', '1'],
+          3,
+          'Weak pointers do not count as owners.',
+        ),
+        choose(
+          'Does a weak_ptr keep its object alive?',
+          [
+            'Yes, just like a shared_ptr',
+            'Only while the weak_ptr is in scope',
+            'No, it only observes',
+            'Only if it was created first',
+          ],
+          2,
+          'A weak_ptr never extends the lifetime of the object.',
+        ),
+      ],
+    },
+    {
+      title: 'Lock a weak_ptr before using the object',
+      explanation: [
+        'w.lock() returns a shared_ptr: an owner of the object if it still exists, or an empty shared_ptr if it does not. Keep that shared_ptr while using the object, so it cannot disappear in the middle; checking expired() and then reading leaves a gap in which it could.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\nint main() {\n  auto owner = std::make_shared<int>(7);\n  std::weak_ptr<int> w = owner;\n  std::shared_ptr<int> locked = w.lock();\n  if (locked) std::cout << *locked << " " << owner.use_count() << "\\n";\n}',
+        output: '7 2',
+        explanation:
+          'lock produced a second owner, so the count is 2 while it is held.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto owner = std::make_shared<int>(3);\n  std::weak_ptr<int> w = owner;\n  owner.reset();\n  std::shared_ptr<int> p = w.lock();\n  std::cout << (p == nullptr) << "\\n";\n}',
+          ['0', '3', '1', '-1'],
+          2,
+          'The object is already gone, so lock returns an empty shared_ptr.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto owner = std::make_shared<int>(3);\n  std::weak_ptr<int> w = owner;\n  std::shared_ptr<int> p = w.lock();\n  owner.reset();\n  std::cout << *p << " " << w.expired() << "\\n";\n}',
+          ['3 1', '0 1', '0 0', '3 0'],
+          3,
+          'p became an owner before owner.reset(), so the object stays alive.',
+        ),
+        choose(
+          'Why call lock() instead of checking expired() and then reading the object?',
+          [
+            'expired() always returns false here',
+            'expired() is not a member of weak_ptr',
+            'The object can expire between the check and the read',
+            'lock() makes a fresh copy of the int',
+          ],
+          2,
+          'lock checks and takes ownership in one step.',
+        ),
+      ],
+    },
+    {
+      title: 'Test lock() as a bool',
+      explanation: [
+        'A shared_ptr converts to bool: true when it owns an object. static_cast<bool>(w.lock()) is therefore a yes-or-no answer to "is the object still there?", and it stays true as long as any owner remains.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\nint main() {\n  auto owner = std::make_shared<int>(5);\n  std::weak_ptr<int> w = owner;\n  bool before = static_cast<bool>(w.lock());\n  owner.reset();\n  bool after = static_cast<bool>(w.lock());\n  std::cout << before << after << "\\n";\n}',
+        output: '10',
+        explanation:
+          'The first lock finds the object; after the reset there is nothing left to lock.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(1);\n  auto b = a;\n  std::weak_ptr<int> w = a;\n  a.reset();\n  std::cout << static_cast<bool>(w.lock()) << "\\n";\n}',
+          ['0', '2', '1', '-1'],
+          2,
+          'b still owns the object, so lock succeeds.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  std::weak_ptr<int> w;\n  std::cout << w.expired() << static_cast<bool>(w.lock()) << "\\n";\n}',
+          ['01', '11', '00', '10'],
+          3,
+          'An empty weak_ptr observes nothing: it counts as expired and locks to an empty pointer.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\nint main() {\n  auto a = std::make_shared<int>(8);\n  std::weak_ptr<int> w = a;\n  std::shared_ptr<int> p = w.lock();\n  std::cout << (p && *p == 8) << p.use_count() << "\\n";\n}',
+          ['11', '02', '82', '12'],
+          3,
+          'p owns the 8, and together with a there are two owners.',
+        ),
+      ],
+    },
+  ],
+  'cpp-move-member': [
+    {
+      title: 'Move an owned member in a move constructor',
+      explanation: [
+        'A move constructor, Box(Box&& other), builds a new object from one that is about to be given up. For a unique_ptr member it moves the pointer across: data(std::move(other.data)). std::move is needed because other.data has a name and would otherwise be treated as something to copy.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Box {\n  std::unique_ptr<int> data;\n  explicit Box(int x) : data(std::make_unique<int>(x)) {}\n  Box(Box&& other) : data(std::move(other.data)) {}\n};\nint main() {\n  Box source(9);\n  Box destination(std::move(source));\n  std::cout << (source.data == nullptr) << " " << *destination.data << "\\n";\n}',
+        output: '1 9',
+        explanation:
+          'The int now belongs to destination, and source.data is empty.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Box {\n  std::unique_ptr<int> data;\n  explicit Box(int x) : data(std::make_unique<int>(x)) {}\n  Box(Box&& other) : data(std::move(other.data)) {}\n};\nint main() {\n  Box a(4);\n  Box b(std::move(a));\n  std::cout << (a.data ? *a.data : -1) << " " << *b.data << "\\n";\n}',
+          ['4 4', '4 -1', '-1 -1', '-1 4'],
+          3,
+          "The move constructor took a's int, so a is empty and b holds 4.",
+        ),
+        choose(
+          'Why does Box(Box&& other) : data(std::move(other.data)) {} need std::move?',
+          [
+            'unique_ptr has no constructor without it',
+            'It deletes other afterwards',
+            'other.data has a name, so without it a copy is attempted',
+            'It is optional and only documents intent',
+          ],
+          2,
+          "Named members are lvalues; the cast lets unique_ptr's move constructor be chosen.",
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Box {\n  std::unique_ptr<int> data;\n  explicit Box(int x) : data(std::make_unique<int>(x)) {}\n  Box(Box&& other) : data(std::move(other.data)) {}\n};\nint main() {\n  Box a(2);\n  Box b(std::move(a));\n  Box c(std::move(b));\n  std::cout << (a.data == nullptr) + (b.data == nullptr) << *c.data << "\\n";\n}',
+          ['22', '12', '02', '21'],
+          0,
+          'Both earlier boxes are empty (1 + 1 = 2), and c holds the 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Leave the source safe to destroy',
+      explanation: [
+        'The moved-from object is still destroyed later, so after the move it must own nothing. A moved-from unique_ptr is empty and its destructor does nothing, so the resource is released exactly once, by the new owner.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Res {\n  int id;\n  explicit Res(int i) : id(i) {}\n  ~Res() { std::cout << "release " << id << "\\n"; }\n};\nstruct Holder {\n  std::unique_ptr<Res> res;\n  explicit Holder(int id) : res(std::make_unique<Res>(id)) {}\n  Holder(Holder&& other) : res(std::move(other.res)) {}\n};\nint main() {\n  {\n    Holder a(1);\n    Holder b(std::move(a));\n  }\n  std::cout << "done\\n";\n}',
+        output: 'release 1\ndone',
+        explanation:
+          'Both holders are destroyed, but only b owns the resource, so it is released once.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Res {\n  int id;\n  explicit Res(int i) : id(i) {}\n  ~Res() { std::cout << "release " << id << "\\n"; }\n};\nstruct Holder {\n  std::unique_ptr<Res> res;\n  explicit Holder(int id) : res(std::make_unique<Res>(id)) {}\n  Holder(Holder&& other) : res(std::move(other.res)) {}\n};\nint main() {\n  Holder a(1);\n  Holder b(2);\n  Holder c(std::move(a));\n}',
+          [
+            'release 2\nrelease 1',
+            'release 1\nrelease 2\nrelease 1',
+            'release 1\nrelease 2',
+            'release 2',
+          ],
+          2,
+          'Destruction runs c, b, a: c releases 1, b releases 2, and the empty a releases nothing.',
+        ),
+        choose(
+          "A move constructor copies a raw owning pointer from other and leaves other's pointer unchanged. What goes wrong?",
+          [
+            'Nothing, because the move finished',
+            'Both objects delete the same memory',
+            'The new object ends up empty',
+            'The program does not compile',
+          ],
+          1,
+          'Two owners of one allocation mean a double delete when both are destroyed.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Res {\n  int id;\n  explicit Res(int i) : id(i) {}\n  ~Res() { std::cout << "release " << id << "\\n"; }\n};\nstruct Holder {\n  std::unique_ptr<Res> res;\n  explicit Holder(int id) : res(std::make_unique<Res>(id)) {}\n  Holder(Holder&& other) : res(std::move(other.res)) {}\n};\nint main() {\n  Holder a(7);\n  Holder b(std::move(a));\n  std::cout << (a.res == nullptr) << "\\n";\n}',
+          ['0\nrelease 7', '1', '1\nrelease 7\nrelease 7', '1\nrelease 7'],
+          3,
+          'a is empty after the move; the resource is released once, when b is destroyed.',
+        ),
+      ],
+    },
+    {
+      title: 'Rely on generated moves for simple types',
+      explanation: [
+        'A struct that declares none of its own copy, move, or destructor functions gets a generated move constructor and move assignment, which move every member. A struct with a unique_ptr member therefore moves but cannot be copied.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Pack {\n  std::unique_ptr<int> item;\n};\nint main() {\n  Pack a{std::make_unique<int>(6)};\n  Pack b = std::move(a);\n  std::cout << (a.item == nullptr) << *b.item << "\\n";\n}',
+        output: '16',
+        explanation:
+          'The generated move constructor moved the unique_ptr member.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <memory>\n#include <utility>\nstruct Pack {\n  std::unique_ptr<int> item;\n};\nint main() {\n  Pack a{std::make_unique<int>(3)};\n  Pack b{std::make_unique<int>(4)};\n  b = std::move(a);\n  std::cout << *b.item << (a.item == nullptr) << "\\n";\n}',
+          ['41', '30', '31', '40'],
+          2,
+          'Move assignment gives b the 3 (its old 4 is freed) and empties a.',
+        ),
+        choose(
+          'Why does Pack b = a; fail to compile for the Pack above?',
+          [
+            'Pack has no constructor at all',
+            'b must be declared as a reference',
+            'a is const',
+            'Pack holds a unique_ptr, so it cannot be copied',
+          ],
+          3,
+          'The generated copy constructor would have to copy the unique_ptr, which is not allowed.',
+        ),
+        choose(
+          "Which members does Pack's compiler-generated move constructor move?",
+          [
+            'Only the first declared member',
+            'Every member, each with its own move operation',
+            'None of them; it copies instead',
+            'Only the members that are unique_ptrs',
+          ],
+          1,
+          'Member-wise moving applies to all members, in declaration order.',
+        ),
+      ],
+    },
+  ],
+  'cpp-move': [
+    {
+      title: 'Mark a move that cannot throw as noexcept',
+      explanation: [
+        'Writing noexcept on a move constructor promises it will not throw. A defaulted move of members that cannot throw, such as a unique_ptr, may be marked noexcept truthfully. std::is_nothrow_move_constructible_v<T> reports whether T makes that promise.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <memory>\n#include <type_traits>\nstruct Box {\n  std::unique_ptr<int> value;\n  Box() = default;\n  Box(Box&&) noexcept = default;\n};\nint main() {\n  std::cout << std::is_nothrow_move_constructible_v<Box> << "\\n";\n}',
+        output: '1',
+        explanation:
+          'Box declares a noexcept move constructor, so the trait is true.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <type_traits>\nstruct Risky {\n  Risky() = default;\n  Risky(Risky&&) {}\n};\nint main() {\n  std::cout << std::is_nothrow_move_constructible_v<Risky> << "\\n";\n}',
+          ['1', '2', '0', '-1'],
+          2,
+          'A hand-written move constructor without noexcept makes no promise.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <type_traits>\nstruct Safe {\n  Safe() = default;\n  Safe(Safe&&) noexcept {}\n};\nstruct Risky {\n  Risky() = default;\n  Risky(Risky&&) {}\n};\nint main() {\n  std::cout << std::is_nothrow_move_constructible_v<Safe> << std::is_nothrow_move_constructible_v<Risky> << "\\n";\n}',
+          ['11', '01', '00', '10'],
+          3,
+          'Only Safe marks its move constructor noexcept.',
+        ),
+        choose(
+          'What does noexcept on a move constructor promise?',
+          [
+            'It catches every exception',
+            'It runs faster than a copy',
+            'It cannot be called directly',
+            'It will not throw',
+          ],
+          3,
+          'noexcept is a promise about exceptions, nothing more.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep the noexcept promise truthful',
+      explanation: [
+        'If a noexcept function does throw, the exception is not passed on: std::terminate ends the program. The noexcept(expression) operator asks whether an expression is declared not to throw.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint read_value() noexcept {\n  return 7;\n}\nint may_fail() {\n  return 8;\n}\nint main() {\n  std::cout << noexcept(read_value()) << noexcept(may_fail()) << "\\n";\n}',
+        output: '10',
+        explanation:
+          'Only read_value is declared noexcept; may_fail makes no promise even though it happens not to throw.',
+      },
+      questions: [
+        choose(
+          'A function marked noexcept throws an exception. What happens?',
+          [
+            'The nearest catch block handles it',
+            'The exception is silently ignored',
+            'std::terminate ends the program',
+            'noexcept is switched off at run time',
+          ],
+          2,
+          'The promise was broken, and the program cannot continue.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nvoid quiet() noexcept {}\nvoid loud() {}\nint main() {\n  std::cout << noexcept(quiet()) << noexcept(loud()) << noexcept(1 + 1) << "\\n";\n}',
+          ['111', '100', '001', '101'],
+          3,
+          'quiet promises not to throw, loud does not, and 1 + 1 cannot throw.',
+        ),
+        choose(
+          'When should a move constructor be marked noexcept?',
+          [
+            'Always, even if it may throw',
+            'Never, because exceptions must propagate',
+            'Only when its operations truly cannot throw',
+            'Only for types with no members',
+          ],
+          2,
+          'A false promise turns an exception into program termination.',
+        ),
+      ],
+    },
+    {
+      title: 'See why generic code prefers nonthrowing moves',
+      explanation: [
+        'Generic code that must not lose data, such as a vector moving its elements to new storage, moves only if the move cannot throw; otherwise it copies, so a failure leaves the originals intact. std::move_if_noexcept(x) from <utility> makes the same choice: an rvalue when the move is noexcept (or no copy exists), otherwise an lvalue that gets copied.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nstruct Safe {\n  Safe() = default;\n  Safe(const Safe&) { std::cout << "copy\\n"; }\n  Safe(Safe&&) noexcept { std::cout << "move\\n"; }\n};\nint main() {\n  Safe a;\n  Safe b = std::move_if_noexcept(a);\n}',
+        output: 'move',
+        explanation: "Safe's move cannot throw, so the move is chosen.",
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nstruct Risky {\n  Risky() = default;\n  Risky(const Risky&) { std::cout << "copy\\n"; }\n  Risky(Risky&&) { std::cout << "move\\n"; }\n};\nint main() {\n  Risky a;\n  Risky b = std::move_if_noexcept(a);\n}',
+          ['move', 'copy', 'move\ncopy', 'copy\nmove'],
+          1,
+          'The move might throw and a copy is available, so the safe copy is chosen.',
+        ),
+        choose(
+          'Why does std::vector copy, rather than move, elements whose move may throw when it grows?',
+          [
+            'Moves are always slower than copies',
+            'A vector is never allowed to move elements',
+            'A throwing move halfway would damage the old elements',
+            'The choice is made at random by the library',
+          ],
+          2,
+          'Copying keeps the original elements intact if something throws.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nstruct Only {\n  Only() = default;\n  Only(Only&&) { std::cout << "move\\n"; }\n};\nint main() {\n  Only a;\n  Only b = std::move_if_noexcept(a);\n}',
+          ['copy', 'It does not compile', 'move', 'copy\nmove'],
+          2,
+          'Only has no copy constructor, so the possibly throwing move is the only option.',
+        ),
+      ],
+    },
+  ],
+  'cpp-independent-copy': [
+    {
+      title: 'Copy a vector and get independent elements',
+      explanation: [
+        'A std::vector owns its elements. Copying it, as in std::vector<int> second = first;, copies every element into storage the new vector owns, so later changes to one vector do not affect the other.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> first{1, 2, 3};\n  std::vector<int> second = first;\n  second[0] = 100;\n  std::cout << first[0] << " " << second[0] << "\\n";\n}',
+        output: '1 100',
+        explanation:
+          'second has its own copy of the elements, so only it changes.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{5, 6};\n  auto b = a;\n  b[1] += 10;\n  std::cout << a[1] << " " << b[1] << "\\n";\n}',
+          ['16 16', '6 16', '6 6', '16 6'],
+          1,
+          'auto b = a makes an independent vector; only b[1] changes.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1};\n  std::vector<int> b = a;\n  a[0] = 9;\n  std::cout << b[0] << "\\n";\n}',
+          ['9', '0', '10', '1'],
+          3,
+          'b copied 1 before a changed.',
+        ),
+        choose(
+          'After auto copy = original; with a std::vector, how are their elements related?',
+          [
+            'They share the same storage',
+            'copy is empty until it is written',
+            'copy has its own elements with the same values',
+            'copy refers to original',
+          ],
+          2,
+          'Copying a vector copies its elements.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose between a copy and a reference',
+      explanation: [
+        "auto& alias = v; refers to the same vector, so changes through it are shared. A function parameter of type std::vector<int> receives a copy, while const std::vector<int>& borrows the caller's vector.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{4, 5};\n  auto copy = v;\n  auto& alias = v;\n  alias[0] = 0;\n  std::cout << v[0] << " " << copy[0] << "\\n";\n}',
+        output: '0 4',
+        explanation: 'alias is v itself; copy kept the original 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2};\n  auto& r = v;\n  auto c = r;\n  r[1] = 7;\n  std::cout << v[1] << c[1] << "\\n";\n}',
+          ['77', '22', '27', '72'],
+          3,
+          'r is v; c is a copy made before the change.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint bump_copy(std::vector<int> v) {\n  v[0] += 1;\n  return v[0];\n}\nint main() {\n  std::vector<int> v{3};\n  int r = bump_copy(v);\n  std::cout << r << v[0] << "\\n";\n}',
+          ['44', '33', '43', '34'],
+          2,
+          "The function changed its own copy; the caller's vector still holds 3.",
+        ),
+        choose(
+          'A function takes std::vector<int> values by value and changes it. What does the caller see?',
+          [
+            'The changed elements',
+            'An empty vector',
+            'Its own vector, unchanged',
+            'A compile error',
+          ],
+          2,
+          'The parameter is an independent copy.',
+        ),
+      ],
+    },
+    {
+      title: 'Know that copies cost time and memory',
+      explanation: [
+        'std::vector<int> big(1000, 7); holds 1000 sevens. Copying it copies all 1000 elements, so the cost grows with the size. When a function only reads a large vector, a const reference avoids that work.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> big(1000, 7);\n  std::vector<int> copy = big;\n  copy[999] = 0;\n  std::cout << big[999] << " " << copy.size() << "\\n";\n}',
+        output: '7 1000',
+        explanation:
+          'copy has its own 1000 elements; changing one leaves big unchanged.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v(3, 2);\n  auto c = v;\n  c[0] = 5;\n  std::cout << v[0] + v[1] + v[2] << "\\n";\n}',
+          ['9', '11', '5', '6'],
+          3,
+          'v holds three 2s, untouched by the change to the copy.',
+        ),
+        choose(
+          'Why pass a large vector that is only read as const std::vector<int>& rather than by value?',
+          [
+            'Vectors cannot be passed by value',
+            'References are faster for every type',
+            'const stops the vector from being freed',
+            'A by-value parameter copies every element',
+          ],
+          3,
+          'The reference avoids the copy, and const keeps the function read-only.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v(4, 1);\n  std::vector<int> w = v;\n  w[0] = 9;\n  std::cout << v.size() + w.size() << " " << v[0] << "\\n";\n}',
+          ['8 9', '4 1', '8 1', '5 1'],
+          2,
+          'Each vector has 4 elements, and v[0] is still 1.',
+        ),
+      ],
+    },
+  ],
+  'cpp-rule-zero': [
+    {
+      title: 'Let value members copy themselves',
+      explanation: [
+        'A struct whose members manage themselves, such as a std::vector, needs no hand-written copy constructor. The compiler-generated one copies each member, so copies of the struct are independent.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nstruct Record {\n  std::vector<int> values;\n};\nint main() {\n  Record first{{7, 2}};\n  Record second = first;\n  second.values[0] = 99;\n  std::cout << first.values[0] << "\\n";\n}',
+        output: '7',
+        explanation:
+          'Copying the record copied its vector, so first is unaffected.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nstruct Team {\n  std::vector<int> scores;\n  int bonus;\n};\nint main() {\n  Team a{{1, 2}, 5};\n  Team b = a;\n  b.scores[1] = 0;\n  b.bonus = 0;\n  std::cout << a.scores[1] + a.bonus << "\\n";\n}',
+          ['0', '5', '2', '7'],
+          3,
+          'Every member was copied, so a still has scores[1] = 2 and bonus = 5.',
+        ),
+        choose(
+          'Record holds a std::vector and declares no copy constructor. What does copying a Record do?',
+          [
+            'Shares the vector between both records',
+            'Fails to compile',
+            'Copies the vector, so the records are independent',
+            "Leaves the copy's vector empty",
+          ],
+          2,
+          "The generated copy constructor copies each member using that member's own copy.",
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nstruct Bag {\n  std::vector<int> items;\n};\nint main() {\n  Bag a{{1, 2, 3}};\n  Bag b = a;\n  b.items[0] = 10;\n  std::cout << a.items.size() << " " << b.items[0] << "\\n";\n}',
+          ['3 1', '4 10', '3 10', '1 10'],
+          2,
+          'b has its own three elements; only its first one changed.',
+        ),
+      ],
+    },
+    {
+      title: 'Write no special members when members manage resources',
+      explanation: [
+        "The rule of zero: if every resource is owned by a member that cleans up after itself, write none of the copy, move, or destructor functions. Adding a destructor that frees a vector's storage by hand would free it twice.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nstruct Grid {\n  std::vector<int> row;\n  std::vector<int> col;\n};\nint main() {\n  Grid a{{1, 2}, {3}};\n  Grid b{{0}, {0, 0}};\n  b = a;\n  a.row[0] = 5;\n  std::cout << b.row[0] << " " << b.col.size() << "\\n";\n}',
+        output: '1 1',
+        explanation:
+          'The generated assignment copied both vectors, so b is independent of later changes to a.',
+      },
+      questions: [
+        choose(
+          "A class holds a std::vector, and its author adds a destructor that frees the vector's storage by hand. What goes wrong?",
+          [
+            'Nothing; the extra delete is just safety',
+            'The vector frees the storage again, so it is freed twice',
+            'The vector leaks its storage instead',
+            'The class can no longer be copied',
+          ],
+          1,
+          'The vector already owns and frees its storage.',
+        ),
+        choose(
+          'What does the rule of zero recommend?',
+          [
+            'Write all five special member functions for every class',
+            'Never use classes',
+            'Let resource-owning members do the work and declare no special members',
+            'Delete the copy operations of every class',
+          ],
+          2,
+          'The members already know how to copy, move, and destroy themselves.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nstruct Grid {\n  std::vector<int> row;\n  std::vector<int> col;\n};\nint main() {\n  Grid a{{4}, {1, 2, 3}};\n  Grid b = a;\n  b.col[2] = 9;\n  std::cout << a.col[2] << b.row[0] << "\\n";\n}',
+          ['94', '34', '39', '43'],
+          1,
+          'a keeps its own col, and b.row was copied as 4.',
+        ),
+      ],
+    },
+  ],
+  'cpp-copy-assignment': [
+    {
+      title: 'Replace a value with copy assignment',
+      explanation: [
+        "a = b; on an existing vector a throws away a's old elements and copies b's. Afterwards the two are equal but still independent.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1, 2, 3};\n  std::vector<int> b{9};\n  b = a;\n  a[0] = 0;\n  std::cout << b.size() << " " << b[0] << "\\n";\n}',
+        output: '3 1',
+        explanation:
+          "b now has a copy of a's three elements; the later change to a does not reach it.",
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{4};\n  std::vector<int> b{5, 6, 7};\n  a = b;\n  std::cout << a.size() << a[2] << "\\n";\n}',
+          ['14', '34', '17', '37'],
+          3,
+          'a now holds 5, 6, 7.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1};\n  std::vector<int> b{2};\n  a = b;\n  b[0] = 3;\n  std::cout << a[0] << b[0] << "\\n";\n}',
+          ['33', '13', '23', '22'],
+          2,
+          'a copied 2; changing b afterwards does not affect it.',
+        ),
+        choose(
+          'After a = b; with vectors, what does a contain?',
+          [
+            "Its old elements followed by b's",
+            'The same storage as b',
+            "A copy of b's elements, replacing its old ones",
+            "Only b's first element",
+          ],
+          2,
+          'Assignment replaces the whole value.',
+        ),
+      ],
+    },
+    {
+      title: 'Make self-assignment safe',
+      explanation: [
+        'Assigning an object to itself, perhaps through a reference, must leave it unchanged. Standard types handle it; a hand-written assignment that frees its own data before copying from the source would destroy the very data it is about to copy.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> values{8, 1};\n  const auto& alias = values;\n  values = alias;\n  std::cout << values[0] << values.size() << "\\n";\n}',
+        output: '82',
+        explanation:
+          'alias is values itself, and assigning a vector to itself keeps its contents.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 4, 5};\n  auto& same = v;\n  v = same;\n  std::cout << v.size() << v[1] << "\\n";\n}',
+          ['00', '64', '34', '35'],
+          2,
+          'Self-assignment leaves the three elements as they were.',
+        ),
+        choose(
+          'A hand-written copy assignment frees its own storage first and then copies from other. What happens with x = x;?',
+          [
+            'Nothing unusual',
+            'It frees the data before copying it',
+            'It copies the data twice',
+            'It does not compile',
+          ],
+          1,
+          'other is x itself, so the data is gone before it is read.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Pair {\n  int a;\n  int b;\n};\nint main() {\n  Pair p{1, 2};\n  Pair& r = p;\n  p = r;\n  std::cout << p.a << p.b << "\\n";\n}',
+          ['12', '11', '22', '00'],
+          0,
+          'Assigning p to itself leaves both members unchanged.',
+        ),
+      ],
+    },
+    {
+      title: 'Tell assignment from initialization',
+      explanation: [
+        "std::vector<int> b = a; creates b as a copy (copy construction). b = a; on a b that already exists replaces its value (copy assignment). Both produce independent copies; assignment also discards b's old value.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nstruct Inventory {\n  std::vector<int> counts;\n};\nint main() {\n  Inventory a{{3, 4}};\n  Inventory b{{0}};\n  b = a;\n  b.counts[0] = 9;\n  std::cout << a.counts[0] << b.counts[0] << b.counts.size() << "\\n";\n}',
+        output: '392',
+        explanation:
+          "b received a copy of a's two counts, then changed its own first count.",
+      },
+      questions: [
+        choose(
+          'Which line performs copy assignment rather than copy construction?',
+          [
+            'std::vector<int> b = a;',
+            'std::vector<int> b(a);',
+            'auto b = a;',
+            'b = a; where b already exists',
+          ],
+          3,
+          'Only the last one gives a new value to an object that already exists.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1, 2};\n  std::vector<int> b{3};\n  std::vector<int> c{4, 5, 6};\n  a = b = c;\n  std::cout << a.size() << b.size() << "\\n";\n}',
+          ['23', '13', '33', '21'],
+          2,
+          'Assignment groups right to left: b = c first, then a = b.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nstruct Inventory {\n  std::vector<int> counts;\n};\nint main() {\n  Inventory a{{1}};\n  Inventory b{{2, 2}};\n  a = b;\n  b.counts[1] = 7;\n  std::cout << a.counts.size() << a.counts[1] << "\\n";\n}',
+          ['27', '12', '17', '22'],
+          3,
+          "a copied both of b's counts before b changed.",
+        ),
+      ],
+    },
+  ],
+  'cpp-value-semantics': [
+    {
+      title: 'Swap two vectors',
+      explanation: [
+        'a.swap(b), or std::swap(a, b) from <utility>, exchanges the entire contents of two vectors. A vector swap exchanges their internal storage instead of copying elements, so it is fast whatever the sizes.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> left{2};\n  std::vector<int> right{9, 8};\n  left.swap(right);\n  std::cout << left.size() << left[0] << " " << right[0] << "\\n";\n}',
+        output: '29 2',
+        explanation: 'left now holds 9, 8 and right holds 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1, 2, 3};\n  std::vector<int> b{4};\n  a.swap(b);\n  std::cout << a.size() << b.size() << "\\n";\n}',
+          ['31', '33', '11', '13'],
+          3,
+          'The contents trade places, sizes included.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\n#include <vector>\nint main() {\n  std::vector<int> a{5};\n  std::vector<int> b{6};\n  std::swap(a, b);\n  std::cout << a[0] << b[0] << "\\n";\n}',
+          ['56', '66', '65', '55'],
+          2,
+          'std::swap exchanges the two vectors.',
+        ),
+        choose(
+          'Why is swapping two large vectors fast?',
+          [
+            'The elements are copied in parallel',
+            'Only the first elements are swapped',
+            'They exchange internal storage, not elements',
+            'It is not fast; it copies both vectors',
+          ],
+          2,
+          "Each vector simply takes over the other's storage.",
+        ),
+      ],
+    },
+    {
+      title: 'Swap ints and structs with std::swap',
+      explanation: [
+        'std::swap works on any copyable or movable type: two ints, two structs, two vectors. For a struct it exchanges the whole objects, every member at once.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nint main() {\n  int a = 3;\n  int b = 8;\n  std::swap(a, b);\n  std::cout << a << b << "\\n";\n}',
+        output: '83',
+        explanation: 'The values of a and b are exchanged.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nstruct Quote {\n  int price;\n  int size;\n};\nint main() {\n  Quote x{10, 1};\n  Quote y{20, 2};\n  std::swap(x, y);\n  std::cout << x.price << " " << x.size << "\\n";\n}',
+          ['10 1', '20 1', '10 2', '20 2'],
+          3,
+          "Whole objects are exchanged, so x takes both of y's members.",
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  int a = 1;\n  int b = 2;\n  int c = 3;\n  std::swap(a, b);\n  std::swap(b, c);\n  std::cout << a << b << c << "\\n";\n}',
+          ['213', '321', '231', '132'],
+          2,
+          'After the first swap a is 2 and b is 1; the second swap moves 3 into b and 1 into c.',
+        ),
+        choose(
+          'A hand-written swap exchanges only the data pointer of two buffers, not their size members. What is left?',
+          [
+            'Two correctly swapped buffers',
+            'Two buffers that are both empty',
+            'A compile error in the swap',
+            'Buffers whose pointer and size disagree',
+          ],
+          3,
+          'Members that describe one another must be swapped together.',
+        ),
+      ],
+    },
+    {
+      title: 'Swap whole values and keep references in place',
+      explanation: [
+        "Swapping exchanges values, not identities: a reference to a still refers to a, which now holds the other value. Swapping complete objects keeps each object's members consistent with each other.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1, 2};\n  std::vector<int> b{3};\n  std::vector<int>& ref = a;\n  a.swap(b);\n  std::cout << ref.size() << ref[0] << "\\n";\n}',
+        output: '13',
+        explanation: 'ref still names a, and a now holds the single element 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  int x = 4;\n  int y = 9;\n  int& r = x;\n  std::swap(x, y);\n  std::cout << r << "\\n";\n}',
+          ['4', '13', '9', '0'],
+          2,
+          'r refers to x, and x now holds 9.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1};\n  std::vector<int> b{2, 3};\n  a.swap(b);\n  a.swap(b);\n  std::cout << a.size() << b.size() << "\\n";\n}',
+          ['21', '11', '22', '12'],
+          3,
+          'Swapping twice puts everything back where it started.',
+        ),
+        choose(
+          'Why swap entire objects rather than their members one by one?',
+          [
+            'Member swaps do not compile',
+            "Whole swaps keep each object's members consistent",
+            'Whole swaps copy more data',
+            'Swapping members one by one is faster',
+          ],
+          1,
+          'Swapping everything together cannot leave an object half updated.',
+        ),
+      ],
+    },
+  ],
 };
