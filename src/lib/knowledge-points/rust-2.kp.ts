@@ -6974,4 +6974,927 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'rust-binary-search': [
+    {
+      title: 'The lower bound is the first position not below the target',
+      explanation: [
+        'In a sorted slice, the lower bound of a target is the first index whose value is at least the target. If the target is present, that is its first occurrence; if not, it is where the target could be inserted while keeping the order.',
+        'If every value is smaller, the lower bound is values.len(). A plain scan from the left shows the definition directly.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn lower_bound(values: &[i32], target: i32) -> usize {\n    let mut i = 0;\n    while i < values.len() && values[i] < target {\n        i += 1;\n    }\n    i\n}\n\nfn main() {\n    let values = [2, 4, 4, 7, 9];\n    println!("{} {} {}", lower_bound(&values, 4), lower_bound(&values, 5), lower_bound(&values, 10));\n}',
+        output: '1 3 5',
+        explanation:
+          '4 first appears at index 1; 5 would go before 7 at index 3; nothing reaches 10, so the answer is the length.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn lower_bound(values: &[i32], target: i32) -> usize {\n    let mut i = 0;\n    while i < values.len() && values[i] < target {\n        i += 1;\n    }\n    i\n}\n\nfn main() {\n    let values = [1, 3, 3, 3, 8];\n    println!("{} {} {}", lower_bound(&values, 3), lower_bound(&values, 0), lower_bound(&values, 9));\n}',
+          ['3 0 5', '1 0 4', '1 0 5', '2 0 5'],
+          2,
+          'The first 3 is at index 1, every value is at least 0, and no value reaches 9.',
+        ),
+        choose(
+          'values is [10, 20, 30]. What is the lower bound of 25?',
+          ['1', '2', '3', 'None, since 25 is absent'],
+          1,
+          'Index 2 holds 30, the first value that is at least 25.',
+        ),
+        choose(
+          'A lower bound equal to values.len() means what?',
+          [
+            'The target is at the last index',
+            'The slice must be empty',
+            'The target appears more than once',
+            'Every value is smaller than the target',
+          ],
+          3,
+          'No index qualifies, so the answer is the position just past the end.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn lower_bound(values: &[i32], target: i32) -> usize {\n    let mut i = 0;\n    while i < values.len() && values[i] < target {\n        i += 1;\n    }\n    i\n}\n\nfn main() {\n    let values = [2, 5, 5, 5, 8];\n    println!("{}", lower_bound(&values, 6) - lower_bound(&values, 5));\n}',
+          ['1', '4', '3', '2'],
+          2,
+          'Between the first 5 (index 1) and the first value at least 6 (index 4) lie all the 5s.',
+        ),
+      ],
+    },
+    {
+      title: 'Halve a half-open interval until it closes',
+      explanation: [
+        'Binary search keeps the answer inside the half-open interval [low, high), starting with [0, len). It looks at mid: if values[mid] < target, the answer lies after mid, so low = mid + 1; otherwise mid may be the answer, so high = mid.',
+        'When low == high the interval is empty and low is the lower bound. Each step halves the interval, and computing mid as low + (high - low) / 2 avoids the overflow that low + high could cause.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn lower_bound(values: &[i32], target: i32) -> usize {\n    let (mut low, mut high) = (0, values.len());\n    while low < high {\n        let mid = low + (high - low) / 2;\n        println!("low {} high {} mid {}", low, high, mid);\n        if values[mid] < target {\n            low = mid + 1;\n        } else {\n            high = mid;\n        }\n    }\n    low\n}\n\nfn main() {\n    let values = [1, 3, 5, 7, 9, 11];\n    println!("{}", lower_bound(&values, 7));\n}',
+        output: 'low 0 high 6 mid 3\nlow 0 high 3 mid 1\nlow 2 high 3 mid 2\n3',
+        explanation:
+          '7 at mid 3 is not below the target, so high moves to 3; then 3 and 5 are too small, so low climbs to 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn search(values: &[i32], target: i32) -> (usize, u32) {\n    let (mut low, mut high) = (0, values.len());\n    let mut steps = 0;\n    while low < high {\n        steps += 1;\n        let mid = low + (high - low) / 2;\n        if values[mid] < target {\n            low = mid + 1;\n        } else {\n            high = mid;\n        }\n    }\n    (low, steps)\n}\n\nfn main() {\n    let values = [0, 1, 2, 3, 4, 5, 6, 7];\n    let (index, steps) = search(&values, 5);\n    println!("{} {}", index, steps);\n}',
+          ['5 8', '5 3', '5 4', '4 3'],
+          1,
+          'The interval shrinks from 8 to 3, then 1, then 0 elements: three steps for eight values.',
+        ),
+        choose(
+          'When values[mid] < target, why set low = mid + 1 rather than low = mid?',
+          [
+            'mid is too small, so it is excluded',
+            'It makes the loop run one extra time',
+            'mid + 1 avoids integer overflow',
+            'low must always stay an odd number',
+          ],
+          0,
+          'Excluding mid also guarantees the interval shrinks, so the loop ends.',
+        ),
+        choose(
+          'Why compute mid as low + (high - low) / 2 instead of (low + high) / 2?',
+          [
+            'It rounds up instead of down',
+            'It visits elements in sorted order',
+            'low + high can overflow for huge slices',
+            'Only differences may be divided by 2',
+          ],
+          2,
+          'The difference never exceeds the length, so the sum is never formed.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn lower_bound(values: &[i32], target: i32) -> usize {\n    let (mut low, mut high) = (0, values.len());\n    while low < high {\n        let mid = low + (high - low) / 2;\n        if values[mid] < target {\n            low = mid + 1;\n        } else {\n            high = mid;\n        }\n    }\n    low\n}\n\nfn main() {\n    let values = [5, 5, 5, 5];\n    println!("{} {}", lower_bound(&values, 5), lower_bound(&values, 6));\n}',
+          ['3 4', '0 4', '0 3', '2 4'],
+          1,
+          'Equal values move high left, so the search lands on the first 5; nothing reaches 6.',
+        ),
+      ],
+    },
+  ],
+  'rust-two-pointers': [
+    {
+      title: 'Move the pointer that can fix the sum',
+      explanation: [
+        'On a sorted slice, put left at the first index and right at the last. If values[left] + values[right] is too small, only moving left rightwards can increase it; if it is too large, only moving right leftwards can decrease it.',
+        'Each step rules out one element for good, so the search finishes in one pass. The loop runs while left < right, because a pair needs two different positions.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn find_pair(values: &[i32], target: i32) -> Option<(usize, usize)> {\n    if values.len() < 2 {\n        return None;\n    }\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] + values[right];\n        if sum == target {\n            return Some((left, right));\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    None\n}\n\nfn main() {\n    let values = [1, 3, 4, 6, 9];\n    println!("{:?} {:?}", find_pair(&values, 10), find_pair(&values, 2));\n}',
+        output: 'Some((0, 4)) None',
+        explanation:
+          '1 + 9 matches at once. For 2 every sum is too large, so right walks down until the pointers meet.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn find_pair(values: &[i32], target: i32) -> Option<(usize, usize)> {\n    if values.len() < 2 {\n        return None;\n    }\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] + values[right];\n        if sum == target {\n            return Some((left, right));\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    None\n}\n\nfn main() {\n    println!("{:?}", find_pair(&[1, 2, 3, 5, 8], 7));\n}',
+          ['Some((0, 3))', 'Some((1, 3))', 'Some((2, 3))', 'None'],
+          1,
+          '1 + 8 is too big, 1 + 5 too small, then 2 + 5 matches at indexes 1 and 3.',
+        ),
+        choose(
+          'The sum values[left] + values[right] is too small. Why advance left instead of right?',
+          [
+            'right must never move before left does',
+            'Advancing left skips duplicate values',
+            'Either move works on sorted input',
+            'Only moving left can raise the sum',
+          ],
+          3,
+          'In sorted order, values to the right of left are larger and values to the left of right are smaller.',
+        ),
+        choose(
+          'Why does the loop condition use left < right rather than left <= right?',
+          [
+            'left <= right would skip the first element',
+            'A pair needs two different positions',
+            'Equal indexes cause an overflow',
+            'It makes the loop twice as fast',
+          ],
+          1,
+          'With left == right, the same element would be added to itself.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn find_pair(values: &[i32], target: i32) -> Option<(usize, usize)> {\n    if values.len() < 2 {\n        return None;\n    }\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] + values[right];\n        if sum == target {\n            return Some((left, right));\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    None\n}\n\nfn main() {\n    println!("{:?} {:?}", find_pair(&[2, 5, 9], 10), find_pair(&[2, 5, 9], 7));\n}',
+          [
+            'Some((1, 1)) Some((0, 1))',
+            'None Some((0, 1))',
+            'None None',
+            'Some((0, 2)) Some((0, 1))',
+          ],
+          1,
+          '5 + 5 would need the same element twice, so 10 is not found; 2 + 5 makes 7.',
+        ),
+      ],
+    },
+    {
+      title: 'Require sorted input and widen the sum',
+      explanation: [
+        'The pointer moves are justified only by sorted order. On unsorted input, a move can skip past the values that form the answer, so the search reports false even though a pair exists.',
+        'Two large i32 values can overflow when added. Converting each with as i64 before adding keeps the sum exact.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn has_pair(values: &[i32], target: i64) -> bool {\n    if values.len() < 2 {\n        return false;\n    }\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] as i64 + values[right] as i64;\n        if sum == target {\n            return true;\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    false\n}\n\nfn main() {\n    let big = [1, i32::MAX - 1, i32::MAX];\n    println!("{} {}", has_pair(&big, 2 * i32::MAX as i64 - 1), has_pair(&[1, 9, 2, 8], 10));\n}',
+        output: 'true false',
+        explanation:
+          'The large sum fits in i64. The unsorted slice contains 1 + 9 and 2 + 8, but the moves skip both.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn has_pair(values: &[i32], target: i64) -> bool {\n    if values.len() < 2 {\n        return false;\n    }\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] as i64 + values[right] as i64;\n        if sum == target {\n            return true;\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    false\n}\n\nfn main() {\n    println!("{} {}", has_pair(&[1, 9, 2, 8], 10), has_pair(&[1, 2, 8, 9], 10));\n}',
+          ['true true', 'false false', 'false true', 'true false'],
+          2,
+          'The same values succeed once sorted, because then each move follows the order.',
+        ),
+        choose(
+          'Why convert to i64 before adding values[left] and values[right]?',
+          [
+            'i64 comparisons are faster',
+            'The target is always negative',
+            'The i32 sum can overflow',
+            'Indexes must be 64-bit',
+          ],
+          2,
+          'The sum of two i32 values can need up to 33 bits.',
+        ),
+        choose(
+          'has_pair returns false for an unsorted slice that does contain a pair. Why?',
+          [
+            'Its moves assume sorted order',
+            'It only ever checks adjacent elements',
+            'Unsorted slices cannot be indexed',
+            'It stops after the first comparison',
+          ],
+          0,
+          'Without order, a too-small sum no longer means the left value can be discarded.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn final_pointers(values: &[i32], target: i32) -> (usize, usize) {\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] + values[right];\n        if sum == target {\n            return (left, right);\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    (left, right)\n}\n\nfn main() {\n    let (left, right) = final_pointers(&[1, 4, 5, 11], 9);\n    println!("{} {}", left, right);\n}',
+          ['0 3', '2 2', '1 2', '1 3'],
+          2,
+          '1 + 11 is too big, 1 + 5 too small, and 4 + 5 matches.',
+        ),
+      ],
+    },
+  ],
+  'rust-bfs': [
+    {
+      title: 'A first-in, first-out queue visits nearer vertices first',
+      explanation: [
+        'Breadth-first search puts the start vertex in a queue, then repeatedly takes the front vertex and adds its unvisited neighbours to the back. A VecDeque with push_back and pop_front serves as the queue.',
+        'Because the queue is first in, first out, every vertex one edge away is processed before any vertex two edges away. So the first time BFS reaches a vertex, it has used the fewest possible edges.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn bfs_order(graph: &[Vec<usize>], start: usize) -> Vec<usize> {\n    let mut seen = vec![false; graph.len()];\n    let mut order = Vec::new();\n    let mut queue = std::collections::VecDeque::new();\n    seen[start] = true;\n    queue.push_back(start);\n    while let Some(node) = queue.pop_front() {\n        order.push(node);\n        for &next in &graph[node] {\n            if !seen[next] {\n                seen[next] = true;\n                queue.push_back(next);\n            }\n        }\n    }\n    order\n}\n\nfn main() {\n    let graph = vec![vec![1, 2], vec![3], vec![3], vec![]];\n    println!("{:?}", bfs_order(&graph, 0));\n}',
+        output: '[0, 1, 2, 3]',
+        explanation:
+          'Vertices 1 and 2 are one edge from 0 and come first; 3 is two edges away.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn bfs_order(graph: &[Vec<usize>], start: usize) -> Vec<usize> {\n    let mut seen = vec![false; graph.len()];\n    let mut order = Vec::new();\n    let mut queue = std::collections::VecDeque::new();\n    seen[start] = true;\n    queue.push_back(start);\n    while let Some(node) = queue.pop_front() {\n        order.push(node);\n        for &next in &graph[node] {\n            if !seen[next] {\n                seen[next] = true;\n                queue.push_back(next);\n            }\n        }\n    }\n    order\n}\n\nfn main() {\n    let graph = vec![vec![2, 1], vec![3], vec![4], vec![], vec![]];\n    println!("{:?}", bfs_order(&graph, 0));\n}',
+          [
+            '[0, 1, 2, 3, 4]',
+            '[0, 2, 4, 1, 3]',
+            '[0, 1, 3, 2, 4]',
+            '[0, 2, 1, 4, 3]',
+          ],
+          3,
+          '0 queues 2 then 1. Both are processed before 4 and 3, which they queue in that order.',
+        ),
+        choose(
+          'Why does BFS use a queue rather than a stack?',
+          [
+            'A queue uses less memory than a stack',
+            'A stack cannot store vertex numbers',
+            'So vertices are visited in numeric order',
+            'So nearer vertices are handled first',
+          ],
+          3,
+          'A stack would dive along one path first, which is depth-first search.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn bfs_order(graph: &[Vec<usize>], start: usize) -> Vec<usize> {\n    let mut seen = vec![false; graph.len()];\n    let mut order = Vec::new();\n    let mut queue = std::collections::VecDeque::new();\n    seen[start] = true;\n    queue.push_back(start);\n    while let Some(node) = queue.pop_front() {\n        order.push(node);\n        for &next in &graph[node] {\n            if !seen[next] {\n                seen[next] = true;\n                queue.push_back(next);\n            }\n        }\n    }\n    order\n}\n\nfn main() {\n    let graph = vec![vec![1], vec![2], vec![0, 3], vec![]];\n    println!("{:?}", bfs_order(&graph, 0));\n}',
+          [
+            '[0, 1, 2, 3]',
+            '[0, 1, 2, 0, 3]',
+            '[0, 1, 2]',
+            '[0, 1, 2, 0, 1, 2, 3]',
+          ],
+          0,
+          'The edge from 2 back to 0 is ignored because 0 is already marked, so the cycle is not repeated.',
+        ),
+        choose(
+          'In an unweighted graph, what does the distance BFS assigns to a vertex mean?',
+          [
+            'The number of neighbours the vertex has',
+            'The fewest edges on any path from the start',
+            'The order in which the vertex was created',
+            'The length of the longest path from the start',
+          ],
+          1,
+          'BFS reaches each vertex first along a shortest path, measured in edges.',
+        ),
+      ],
+    },
+    {
+      title: 'Mark each vertex when it enters the queue',
+      explanation: [
+        'Marking a vertex as seen at the moment it is queued means it can enter the queue only once, even if several neighbours lead to it. Marking only when it is taken out lets it be queued once per neighbour.',
+        'A distance table can double as the marks: None means not yet reached, and a vertex gets Some(distance) when it is queued. Vertices that stay None are unreachable from the start.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn hop_distances(graph: &[Vec<usize>], start: usize) -> Vec<Option<usize>> {\n    let mut dist = vec![None; graph.len()];\n    let mut queue = std::collections::VecDeque::new();\n    dist[start] = Some(0);\n    queue.push_back(start);\n    while let Some(node) = queue.pop_front() {\n        for &next in &graph[node] {\n            if dist[next].is_none() {\n                dist[next] = Some(dist[node].unwrap() + 1);\n                queue.push_back(next);\n            }\n        }\n    }\n    dist\n}\n\nfn main() {\n    let graph = vec![vec![1, 2], vec![0, 3], vec![0, 3], vec![1, 2]];\n    println!("{:?}", hop_distances(&graph, 0));\n}',
+        output: '[Some(0), Some(1), Some(1), Some(2)]',
+        explanation:
+          'Vertex 3 is a neighbour of both 1 and 2, but it already has a distance when 2 is processed, so it is queued once.',
+      },
+      questions: [
+        predictOutput(
+          'This version counts queue insertions. What does it print?',
+          'fn enqueued(graph: &[Vec<usize>], start: usize) -> usize {\n    let mut dist = vec![None; graph.len()];\n    let mut queue = std::collections::VecDeque::new();\n    let mut pushes = 1;\n    dist[start] = Some(0);\n    queue.push_back(start);\n    while let Some(node) = queue.pop_front() {\n        for &next in &graph[node] {\n            if dist[next].is_none() {\n                dist[next] = Some(dist[node].unwrap() + 1);\n                queue.push_back(next);\n                pushes += 1;\n            }\n        }\n    }\n    pushes\n}\n\nfn main() {\n    let graph = vec![vec![1, 2], vec![3], vec![3], vec![]];\n    println!("{}", enqueued(&graph, 0));\n}',
+          ['4', '5', '3', '6'],
+          0,
+          'Each of the four vertices enters the queue exactly once, including 3, which two vertices point to.',
+        ),
+        choose(
+          'A BFS marks vertices only when it pops them. Vertex 3 is a neighbour of both 1 and 2. What goes wrong?',
+          [
+            '3 is never visited at all',
+            'The distances become negative',
+            'The queue empties before 3 is reached',
+            '3 can be queued twice, repeating work',
+          ],
+          3,
+          'Both 1 and 2 see 3 as unmarked before it is popped, so both queue it.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn hop_distances(graph: &[Vec<usize>], start: usize) -> Vec<Option<usize>> {\n    let mut dist = vec![None; graph.len()];\n    let mut queue = std::collections::VecDeque::new();\n    dist[start] = Some(0);\n    queue.push_back(start);\n    while let Some(node) = queue.pop_front() {\n        for &next in &graph[node] {\n            if dist[next].is_none() {\n                dist[next] = Some(dist[node].unwrap() + 1);\n                queue.push_back(next);\n            }\n        }\n    }\n    dist\n}\n\nfn main() {\n    let graph = vec![vec![1], vec![2], vec![0], vec![], vec![3]];\n    println!("{:?}", hop_distances(&graph, 0));\n}',
+          [
+            '[Some(0), Some(1), Some(2), Some(3), None]',
+            '[Some(0), Some(1), Some(2), Some(3), Some(4)]',
+            '[Some(0), Some(1), Some(1), None, None]',
+            '[Some(0), Some(1), Some(2), None, None]',
+          ],
+          3,
+          'Vertices 3 and 4 are not reachable from 0; the edge from 4 to 3 points away from the start.',
+        ),
+        choose(
+          'Why can hop_distances use dist[next].is_none() as its not-yet-seen test?',
+          [
+            'None means the vertex has no neighbours',
+            'is_none checks whether the queue is empty',
+            'Every vertex starts out as Some(0)',
+            'A vertex gets Some when first queued',
+          ],
+          3,
+          'Setting the distance at enqueue time is the same as marking the vertex seen.',
+        ),
+      ],
+    },
+  ],
+  'rust-heap-selection': [
+    {
+      title: 'BinaryHeap hands out its greatest element first',
+      explanation: [
+        'std::collections::BinaryHeap keeps its elements partly ordered so that the greatest is always on top. push adds an element, peek shows the top, and pop removes and returns it, both as Options.',
+        'Each push and pop takes time proportional to log n, far cheaper than re-sorting a Vec after every insertion.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let mut heap = std::collections::BinaryHeap::new();\n    for n in [4, 9, 1, 7] {\n        heap.push(n);\n    }\n    println!("{:?}", heap.peek());\n    let first = heap.pop();\n    let second = heap.pop();\n    println!("{:?} {:?} {}", first, second, heap.len());\n}',
+        output: 'Some(9)\nSome(9) Some(7) 2',
+        explanation:
+          'peek shows 9 without removing it; two pops then remove 9 and 7, leaving two elements.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let mut heap = std::collections::BinaryHeap::new();\n    heap.push(3);\n    heap.push(8);\n    heap.push(5);\n    let a = heap.pop();\n    let b = heap.pop();\n    heap.push(6);\n    println!("{:?} {:?} {:?}", a, b, heap.peek());\n}',
+          [
+            'Some(3) Some(5) Some(6)',
+            'Some(8) Some(5) Some(3)',
+            'Some(8) Some(6) Some(5)',
+            'Some(8) Some(5) Some(6)',
+          ],
+          3,
+          'After 8 and 5 are popped, 3 remains; pushing 6 puts a larger value on top.',
+        ),
+        choose(
+          'What does BinaryHeap::pop return?',
+          [
+            'The most recently pushed element',
+            'The greatest element, in Some',
+            'The smallest element in the heap',
+            'The first element that was pushed',
+          ],
+          1,
+          'BinaryHeap is a max-heap: the top is always the greatest element.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let mut heap = std::collections::BinaryHeap::new();\n    for n in [5, 1, 4] {\n        heap.push(n);\n    }\n    println!("{:?}", heap.into_sorted_vec());\n}',
+          ['[1, 4, 5]', '[5, 4, 1]', '[5, 1, 4]', '[4, 5, 1]'],
+          0,
+          'into_sorted_vec returns the elements in ascending order, whatever order they were pushed in.',
+        ),
+        choose(
+          'Why use a BinaryHeap instead of sorting a Vec after every insertion?',
+          [
+            'A heap keeps every element in sorted order',
+            'push and pop cost O(log n) instead of a full sort',
+            'A Vec cannot be sorted more than once',
+            'A heap stores its elements without memory',
+          ],
+          1,
+          'A heap only maintains enough order to find the top quickly.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep the k largest values with a Reverse min-heap',
+      explanation: [
+        'std::cmp::Reverse(x) is a tuple struct that flips comparisons, so a BinaryHeap of Reverse values pops the smallest first. The wrapped value is read back as .0.',
+        'To keep the k largest values, push each value as Reverse and pop whenever the heap holds more than k. Each pop evicts the smallest value kept so far, so the k largest remain.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn top_k(values: &[i32], k: usize) -> Vec<i32> {\n    let mut heap = std::collections::BinaryHeap::new();\n    for &n in values {\n        heap.push(std::cmp::Reverse(n));\n        if heap.len() > k {\n            heap.pop();\n        }\n    }\n    let mut result: Vec<i32> = heap.into_iter().map(|r| r.0).collect();\n    result.sort();\n    result\n}\n\nfn main() {\n    println!("{:?}", top_k(&[5, 1, 9, 3, 7, 2], 3));\n}',
+        output: '[5, 7, 9]',
+        explanation:
+          'Whenever a fourth value arrives, the smallest of the four is popped; 5, 7, and 9 survive and are sorted for printing.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let mut heap = std::collections::BinaryHeap::new();\n    for n in [4, 9, 1, 7] {\n        heap.push(std::cmp::Reverse(n));\n    }\n    heap.pop();\n    println!("{:?} {}", heap.peek().map(|r| r.0), heap.len());\n}',
+          ['Some(4) 3', 'Some(7) 3', 'Some(1) 3', 'Some(4) 4'],
+          0,
+          'With Reverse, pop removes the smallest value, 1, leaving 4 on top.',
+        ),
+        choose(
+          'In top_k, why pop whenever heap.len() > k?',
+          [
+            'It removes the largest value seen so far',
+            'It evicts the smallest kept value',
+            'It keeps the heap sorted for printing',
+            'It removes any duplicate values',
+          ],
+          1,
+          'The heap’s top is its smallest member, which is the one that no longer belongs among the k largest.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn top_k(values: &[i32], k: usize) -> Vec<i32> {\n    let mut heap = std::collections::BinaryHeap::new();\n    for &n in values {\n        heap.push(std::cmp::Reverse(n));\n        if heap.len() > k {\n            heap.pop();\n        }\n    }\n    let mut result: Vec<i32> = heap.into_iter().map(|r| r.0).collect();\n    result.sort();\n    result\n}\n\nfn main() {\n    println!("{:?} {:?}", top_k(&[3, 3, 1, 3], 2), top_k(&[2, 8], 5));\n}',
+          ['[1, 3] [2, 8]', '[3] [2, 8]', '[3, 3] [8]', '[3, 3] [2, 8]'],
+          3,
+          'Duplicates are kept like any other values, and with fewer than k values nothing is evicted.',
+        ),
+        choose(
+          'Why is top_k’s heap a min-heap, via Reverse, when we want the largest values?',
+          [
+            'Reverse makes every heap operation faster',
+            'The value to evict must be on top',
+            'A max-heap cannot hold more than k values',
+            'Reverse sorts the output in descending order',
+          ],
+          1,
+          'With a max-heap, pop would remove the largest value, the opposite of what top-k needs.',
+        ),
+      ],
+    },
+  ],
+  'rust-frame-header': [
+    {
+      title: 'Read a two-byte big-endian length prefix',
+      explanation: [
+        'A length-prefixed frame starts with a fixed header, here two bytes holding the payload length as a big-endian u16, followed by that many payload bytes.',
+        'Decoding the header takes the first two bytes with bytes.get(..2)?, which gives None for a buffer that is too short, converts them to a [u8; 2], and reads them with u16::from_be_bytes.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn declared_length(bytes: &[u8]) -> Option<usize> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    Some(u16::from_be_bytes(header) as usize)\n}\n\nfn main() {\n    println!("{:?} {:?}", declared_length(&[0, 3, 7, 8, 9]), declared_length(&[1, 0]));\n}',
+        output: 'Some(3) Some(256)',
+        explanation:
+          '[0, 3] is 3 in big-endian, and [1, 0] is 256. Only the two header bytes are read.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn declared_length(bytes: &[u8]) -> Option<usize> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    Some(u16::from_be_bytes(header) as usize)\n}\n\nfn main() {\n    println!("{:?} {:?}", declared_length(&[0x01, 0x02]), declared_length(&[0, 0]));\n}',
+          [
+            'Some(513) Some(0)',
+            'Some(258) None',
+            'Some(3) Some(0)',
+            'Some(258) Some(0)',
+          ],
+          3,
+          '0x0102 is 258. A zero length is a valid header that announces an empty payload.',
+        ),
+        choose(
+          'In the frame [0, 2, 65, 66], what do the first two bytes mean?',
+          [
+            'The payload starts at index 2 and is empty',
+            'The buffer contains 2 frames',
+            'The payload is 2 bytes long',
+            'The payload is 512 bytes long',
+          ],
+          2,
+          'Read big-endian, [0, 2] is 2. Reading it little-endian would give 512.',
+        ),
+        choose(
+          'Why must the parser check that two header bytes exist before decoding them?',
+          [
+            'The header is optional in every frame',
+            'from_be_bytes accepts slices of any length',
+            'A shorter buffer has no complete header to decode',
+            'Short buffers are always empty frames',
+          ],
+          2,
+          'With fewer than two bytes, there is no length to read, and guessing would be wrong.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn declared_length(bytes: &[u8]) -> Option<usize> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    Some(u16::from_be_bytes(header) as usize)\n}\n\nfn main() {\n    println!("{:?} {:?}", declared_length(&[7]), declared_length(&[]));\n}',
+          ['Some(7) None', 'Some(1792) None', 'Some(7) Some(0)', 'None None'],
+          3,
+          'Neither buffer has two bytes, so get(..2) returns None before anything is decoded.',
+        ),
+      ],
+    },
+    {
+      title: 'A valid header does not make a complete frame',
+      explanation: [
+        'The header only claims a length. After decoding it, the parser must still check that the buffer holds that many bytes after the header.',
+        'So there are three outcomes: no complete header, a header announcing more payload than is present, and a complete frame. Bytes beyond the announced payload belong to whatever comes next.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn status(bytes: &[u8]) -> &\'static str {\n    let header: [u8; 2] = match bytes.get(..2) {\n        Some(h) => [h[0], h[1]],\n        None => return "short header",\n    };\n    let length = u16::from_be_bytes(header) as usize;\n    if bytes.len() - 2 >= length {\n        "complete"\n    } else {\n        "incomplete"\n    }\n}\n\nfn main() {\n    println!("{} / {} / {}", status(&[0]), status(&[0, 3, 1, 2]), status(&[0, 2, 1, 2]));\n}',
+        output: 'short header / incomplete / complete',
+        explanation:
+          'The second buffer announces 3 payload bytes but holds 2; the third announces 2 and holds 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn status(bytes: &[u8]) -> &\'static str {\n    let header: [u8; 2] = match bytes.get(..2) {\n        Some(h) => [h[0], h[1]],\n        None => return "short header",\n    };\n    let length = u16::from_be_bytes(header) as usize;\n    if bytes.len() - 2 >= length {\n        "complete"\n    } else {\n        "incomplete"\n    }\n}\n\nfn main() {\n    println!("{} / {} / {}", status(&[0, 0]), status(&[0, 1]), status(&[]));\n}',
+          [
+            'complete / incomplete / short header',
+            'short header / incomplete / short header',
+            'incomplete / incomplete / short header',
+            'complete / complete / short header',
+          ],
+          0,
+          'A zero-length payload needs no bytes. One announced byte is missing in the second buffer.',
+        ),
+        choose(
+          'The buffer [0, 9, 1, 2] has a header that decodes fine. Is the frame ready to read?',
+          [
+            'Yes: a valid header means a valid frame',
+            'Yes: 4 bytes are enough for any header',
+            'No: it announces 9 payload bytes, but only 2 follow',
+            'No: the header itself must be 9 bytes long',
+          ],
+          2,
+          'Header validity and payload completeness are separate checks.',
+        ),
+        choose(
+          'Why decode the header before looking at the payload at all?',
+          [
+            'The header says where this frame ends',
+            'The payload is stored in reverse order',
+            'Payload bytes cannot be read with get',
+            'Decoding the header frees the payload',
+          ],
+          0,
+          'Without the length, the parser cannot tell where this frame ends.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn status(bytes: &[u8]) -> &\'static str {\n    let header: [u8; 2] = match bytes.get(..2) {\n        Some(h) => [h[0], h[1]],\n        None => return "short header",\n    };\n    let length = u16::from_be_bytes(header) as usize;\n    if bytes.len() - 2 >= length {\n        "complete"\n    } else {\n        "incomplete"\n    }\n}\n\nfn main() {\n    println!("{} / {}", status(&[0, 1, 9, 9]), status(&[1, 0, 5]));\n}',
+          [
+            'complete / incomplete',
+            'incomplete / incomplete',
+            'complete / complete',
+            'short header / incomplete',
+          ],
+          0,
+          'The first frame needs one byte and has two; the second announces 256 bytes and has one.',
+        ),
+      ],
+    },
+  ],
+  'rust-frame-payload': [
+    {
+      title: 'Return the payload as a slice of the caller’s buffer',
+      explanation: [
+        'Once the length is known, the payload is bytes[2..2 + length]. bytes.get(2..end) returns Option<&[u8]>: None if the buffer stops early, otherwise a view of those bytes.',
+        'Returning &[u8] borrows from the caller’s buffer instead of copying. With one input reference, elision ties the result’s lifetime to that buffer.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn frame_payload(bytes: &[u8]) -> Option<&[u8]> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    let length = u16::from_be_bytes(header) as usize;\n    bytes.get(2..2 + length)\n}\n\nfn main() {\n    println!("{:?} {:?}", frame_payload(&[0, 2, 7, 8, 9]), frame_payload(&[0, 4, 7, 8]));\n}',
+        output: 'Some([7, 8]) None',
+        explanation:
+          'The first frame’s two payload bytes are present; the second announces four but has two.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn frame_payload(bytes: &[u8]) -> Option<&[u8]> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    let length = u16::from_be_bytes(header) as usize;\n    bytes.get(2..2 + length)\n}\n\nfn main() {\n    println!("{:?} {:?}", frame_payload(&[0, 0, 5]), frame_payload(&[0, 1, 5, 6]));\n}',
+          [
+            'Some([]) Some([5])',
+            'None Some([5])',
+            'Some([5]) Some([5, 6])',
+            'Some([0]) Some([5])',
+          ],
+          0,
+          'A zero length gives an empty payload, and extra bytes after the payload are not part of it.',
+        ),
+        choose(
+          'frame_payload returns Option<&[u8]>. Where do the payload bytes live?',
+          [
+            'In a new Vec the parser allocates',
+            'In a static buffer shared by all frames',
+            'In the caller’s buffer; the slice borrows them',
+            'In the two-byte header array',
+          ],
+          2,
+          'A slice is a view, so no bytes are copied.',
+        ),
+        choose(
+          'Why use bytes.get(2..end) instead of &bytes[2..end]?',
+          [
+            'get copies the bytes for safety',
+            'Slices cannot be indexed with ranges',
+            'get reverses the byte order',
+            'get returns None instead of panicking',
+          ],
+          3,
+          'Malformed input should produce a normal result, not crash the parser.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn frame_payload(bytes: &[u8]) -> Option<&[u8]> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    let length = u16::from_be_bytes(header) as usize;\n    bytes.get(2..2 + length)\n}\n\nfn main() {\n    println!(\n        "{:?} {:?}",\n        frame_payload(&[0, 3, 1, 2, 3, 4]).map(|p| p.len()),\n        frame_payload(&[0, 3, 1, 2]).map(|p| p.len())\n    );\n}',
+          ['Some(3) None', 'Some(4) None', 'Some(3) Some(2)', 'Some(5) None'],
+          0,
+          'The first payload is exactly the 3 announced bytes; the second buffer is one byte short.',
+        ),
+      ],
+    },
+    {
+      title: 'Compute the frame’s end with checked arithmetic',
+      explanation: [
+        'A parser that reads frames at an offset computes start = offset + 2 and end = start + length. With untrusted offsets and lengths, these additions can overflow, which panics in debug builds and wraps to a small, wrong end in release builds.',
+        'checked_add(...)? turns overflow into None, the same answer as any other malformed frame.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn payload_at(bytes: &[u8], offset: usize) -> Option<&[u8]> {\n    let start = offset.checked_add(2)?;\n    let header: [u8; 2] = bytes.get(offset..start)?.try_into().ok()?;\n    let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n    bytes.get(start..end)\n}\n\nfn main() {\n    let buffer = [0, 1, 42, 0, 2, 7, 8];\n    println!(\n        "{:?} {:?} {:?}",\n        payload_at(&buffer, 0),\n        payload_at(&buffer, 3),\n        payload_at(&buffer, usize::MAX)\n    );\n}',
+        output: 'Some([42]) Some([7, 8]) None',
+        explanation:
+          'Frames start at 0 and 3. An offset of usize::MAX cannot have 2 added to it, so checked_add rejects it.',
+      },
+      questions: [
+        choose(
+          'What could go wrong if end were computed as start + length with plain addition?',
+          [
+            'Overflow could panic, or wrap to a small end in release',
+            'Nothing; adding usize values never overflows',
+            'The payload would be copied twice',
+            'The header would be read as little-endian',
+          ],
+          0,
+          'A wrapped end could select the wrong bytes without any error.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn payload_at(bytes: &[u8], offset: usize) -> Option<&[u8]> {\n    let start = offset.checked_add(2)?;\n    let header: [u8; 2] = bytes.get(offset..start)?.try_into().ok()?;\n    let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n    bytes.get(start..end)\n}\n\nfn main() {\n    let buffer = [0, 1, 42, 0, 2, 7, 8];\n    println!("{:?} {:?}", payload_at(&buffer, 3), payload_at(&buffer, 1));\n}',
+          [
+            'Some([7, 8]) None',
+            'Some([7, 8]) Some([42])',
+            'None None',
+            'Some([0, 2]) None',
+          ],
+          0,
+          'Offset 1 is not a frame boundary: it reads [1, 42] as a length of 298, which the buffer cannot hold.',
+        ),
+        choose(
+          'A u16 length can never come close to usize::MAX. Why use checked_add anyway?',
+          [
+            'u16 values turn negative when converted',
+            'get requires its bounds to come from checked_add',
+            'The offset it is added to may already be near the limit',
+            'checked_add makes the parser run faster',
+          ],
+          2,
+          'The danger comes from the sum, and the offset is also input-dependent.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn payload_at(bytes: &[u8], offset: usize) -> Option<&[u8]> {\n    let start = offset.checked_add(2)?;\n    let header: [u8; 2] = bytes.get(offset..start)?.try_into().ok()?;\n    let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n    bytes.get(start..end)\n}\n\nfn main() {\n    let buffer = [0, 2, 5, 6, 0, 1, 9];\n    println!("{:?} {:?}", payload_at(&buffer, 0), payload_at(&buffer, 4));\n}',
+          [
+            'Some([5, 6]) None',
+            'Some([5]) Some([9])',
+            'Some([2, 5]) Some([1, 9])',
+            'Some([5, 6]) Some([9])',
+          ],
+          3,
+          'The first frame ends at index 4, which is where the second header begins.',
+        ),
+      ],
+    },
+  ],
+  'rust-frame-encode': [
+    {
+      title: 'Write the header, then the payload',
+      explanation: [
+        'Encoding reverses parsing: write the payload length as two big-endian bytes with to_be_bytes, then append the payload. extend_from_slice appends a slice’s bytes in order.',
+        'The final size, 2 + payload.len(), is known in advance, so Vec::with_capacity reserves it in one allocation.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn encode_frame(payload: &[u8]) -> Option<Vec<u8>> {\n    let length = u16::try_from(payload.len()).ok()?;\n    let mut output = Vec::with_capacity(2 + payload.len());\n    output.extend_from_slice(&length.to_be_bytes());\n    output.extend_from_slice(payload);\n    Some(output)\n}\n\nfn main() {\n    println!("{:?}", encode_frame(&[7, 8, 9]));\n}',
+        output: 'Some([0, 3, 7, 8, 9])',
+        explanation:
+          'The length 3 is written as [0, 3], followed by the three payload bytes.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn encode_frame(payload: &[u8]) -> Option<Vec<u8>> {\n    let length = u16::try_from(payload.len()).ok()?;\n    let mut output = Vec::with_capacity(2 + payload.len());\n    output.extend_from_slice(&length.to_be_bytes());\n    output.extend_from_slice(payload);\n    Some(output)\n}\n\nfn main() {\n    println!("{:?} {:?}", encode_frame(&[]), encode_frame(b"hi"));\n}',
+          [
+            'Some([0, 0]) Some([0, 2, 104, 105])',
+            'Some([]) Some([0, 2, 104, 105])',
+            'Some([0, 0]) Some([2, 0, 104, 105])',
+            'Some([0, 0]) Some([104, 105])',
+          ],
+          0,
+          'Even an empty payload gets a header. h and i are bytes 104 and 105.',
+        ),
+        choose(
+          'Why does the encoder reserve 2 + payload.len() bytes before writing?',
+          [
+            'The output size is known, so one allocation suffices',
+            'extend_from_slice requires capacity in advance',
+            'It writes two zero bytes for the header',
+            'It limits the payload to two bytes',
+          ],
+          0,
+          'Reserving does not add bytes; it only avoids growing the Vec in steps.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn encode_frame(payload: &[u8]) -> Option<Vec<u8>> {\n    let length = u16::try_from(payload.len()).ok()?;\n    let mut output = Vec::with_capacity(2 + payload.len());\n    output.extend_from_slice(&length.to_be_bytes());\n    output.extend_from_slice(payload);\n    Some(output)\n}\n\nfn main() {\n    let frame = encode_frame(&[0; 300]);\n    println!("{:?}", frame.map(|f| (f[0], f[1], f.len())));\n}',
+          [
+            'Some((44, 1, 302))',
+            'Some((1, 44, 300))',
+            'Some((0, 300, 302))',
+            'Some((1, 44, 302))',
+          ],
+          3,
+          '300 is 0x012C, so the header is [1, 44], and the frame is 2 bytes longer than the payload.',
+        ),
+        choose(
+          'Why does the encoder write the length with to_be_bytes?',
+          [
+            'Big-endian numbers take fewer bytes',
+            'u16 has no to_le_bytes method',
+            'The decoder reads the header as big-endian',
+            'The payload must be reversed as well',
+          ],
+          2,
+          'Encoder and decoder must agree on byte order, or the lengths will not match.',
+        ),
+      ],
+    },
+    {
+      title: 'Reject a payload too long for the header',
+      explanation: [
+        'A u16 header can describe at most 65,535 bytes. u16::try_from(payload.len()) returns an Err for anything larger, which the encoder turns into None.',
+        'Writing payload.len() as u16 would silently keep only the low 16 bits, so a 65,536-byte payload would get a header saying 0. The decoder would then split the stream in the wrong place.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let fits = u16::try_from(65535usize).ok();\n    let too_big = u16::try_from(65536usize).ok();\n    let truncated = 65536usize as u16;\n    println!("{:?} {:?} {}", fits, too_big, truncated);\n}',
+        output: 'Some(65535) None 0',
+        explanation:
+          'try_from refuses the value that does not fit, while as silently wraps it to 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn encode_frame(payload: &[u8]) -> Option<Vec<u8>> {\n    let length = u16::try_from(payload.len()).ok()?;\n    let mut output = Vec::with_capacity(2 + payload.len());\n    output.extend_from_slice(&length.to_be_bytes());\n    output.extend_from_slice(payload);\n    Some(output)\n}\n\nfn main() {\n    let large = vec![1u8; 70000];\n    let largest = vec![1u8; 65535];\n    println!("{} {:?}", encode_frame(&large).is_none(), encode_frame(&largest).map(|f| f.len()));\n}',
+          [
+            'false Some(65537)',
+            'true Some(65535)',
+            'true None',
+            'true Some(65537)',
+          ],
+          3,
+          '70,000 bytes cannot be described by a u16; 65,535 can, plus two header bytes.',
+        ),
+        choose(
+          'What header would payload.len() as u16 produce for a 65,537-byte payload?',
+          [
+            'A length of 65,535, the maximum',
+            'A length of 1, which is wrong',
+            'A compile error about narrowing',
+            'A panic at run time on overflow',
+          ],
+          1,
+          'as keeps the low 16 bits: 65,537 minus 65,536 is 1.',
+        ),
+        choose(
+          'Why is returning None better than writing a truncated length?',
+          [
+            'None frames are smaller to send',
+            'A wrong length misplaces later frames',
+            'Truncation is slower than try_from',
+            'The decoder ignores the header anyway',
+          ],
+          1,
+          'A wrong length corrupts every frame after it, while None reports the problem at its source.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    println!(\n        "{} {:?} {:?}",\n        u16::try_from(70000usize).is_err(),\n        u8::try_from(255u32).ok(),\n        u8::try_from(256u32).ok()\n    );\n}',
+          [
+            'false Some(255) None',
+            'true Some(255) Some(0)',
+            'true None None',
+            'true Some(255) None',
+          ],
+          3,
+          '255 is the largest u8, so 256 does not fit; 70,000 does not fit in a u16.',
+        ),
+      ],
+    },
+  ],
+  'rust-frame-stream': [
+    {
+      title: 'Advance past each complete frame',
+      explanation: [
+        'A stream holds frames back to back. Starting at offset 0, read the header at offset, compute start = offset + 2 and end = start + length, take bytes[start..end] as the payload, and continue from offset = end.',
+        'The loop ends when offset reaches the end of the buffer, which means every byte has been consumed by complete frames.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}\n\nfn main() {\n    println!("{:?}", decode_frames(&[0, 1, 5, 0, 2, 6, 7]));\n}',
+        output: 'Some([[5], [6, 7]])',
+        explanation:
+          'The first frame ends at index 3, where the second header starts; the second frame ends exactly at the buffer’s end.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}\n\nfn main() {\n    println!("{:?}", decode_frames(&[0, 0, 0, 1, 9]));\n}',
+          ['Some([[9]])', 'Some([[0], [9]])', 'Some([[], [9]])', 'None'],
+          2,
+          'An empty frame is still a frame: its header is followed directly by the next header.',
+        ),
+        choose(
+          'A frame’s payload ends at index end. Where does the next header start?',
+          [
+            'At end, the first byte after the payload',
+            'At end + 2, after a separator',
+            'At offset + 2, right after the old header',
+            'At index 0, since each frame restarts',
+          ],
+          0,
+          'Frames are packed with nothing between them.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}\n\nfn main() {\n    let stream = [0, 2, 1, 1, 0, 2, 2, 2, 0, 0];\n    println!("{:?}", decode_frames(&stream).map(|frames| frames.len()));\n}',
+          ['Some(2)', 'Some(3)', 'Some(10)', 'Some(4)'],
+          1,
+          'Two 2-byte frames take 8 bytes, and the final [0, 0] is an empty third frame.',
+        ),
+        choose(
+          'Why does decoding stop when offset equals bytes.len()?',
+          [
+            'The last frame is always empty',
+            'offset can never exceed the header size',
+            'Every byte has been consumed by complete frames',
+            'The loop always runs exactly twice',
+          ],
+          2,
+          'Reaching the end exactly means nothing is left over.',
+        ),
+      ],
+    },
+    {
+      title: 'Reject a trailing incomplete frame',
+      explanation: [
+        'If the bytes left at the end hold only part of a header, or a header announcing more payload than remains, the stream is truncated or malformed. Each ? in decode_frames returns None for the whole stream at that point.',
+        'Returning the frames parsed so far and dropping the rest would make a cut-off message look like a complete, shorter one.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}\n\nfn main() {\n    println!("{:?}", decode_frames(&[0, 1, 5, 0, 3, 6]));\n    println!("{:?}", decode_frames(&[0, 1, 5, 0]));\n}',
+        output: 'None\nNone',
+        explanation:
+          'The first stream’s second frame announces 3 bytes but has 1; the second stream ends inside a header.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}\n\nfn main() {\n    println!("{:?} {:?}", decode_frames(&[]), decode_frames(&[0, 2, 1]));\n}',
+          [
+            'None None',
+            'Some([]) None',
+            'Some([]) Some([[1]])',
+            'Some([[]]) None',
+          ],
+          1,
+          'An empty stream contains zero frames; the second announces 2 bytes and has only 1.',
+        ),
+        choose(
+          'A decoder returns the frames parsed so far and ignores leftover bytes. What is the risk?',
+          [
+            'It uses more memory than returning None',
+            'A cut-off message looks complete',
+            'Leftover bytes are always padding',
+            'The first frame is parsed twice',
+          ],
+          1,
+          'The caller cannot tell that data was lost.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}\n\nfn main() {\n    println!(\n        "{} {:?}",\n        decode_frames(&[0, 1, 7, 0]).is_none(),\n        decode_frames(&[0, 1, 7]).map(|frames| frames.len())\n    );\n}',
+          ['false Some(1)', 'true None', 'true Some(1)', 'false Some(2)'],
+          2,
+          'A single stray byte after a frame is half a header, so that stream is rejected; the other ends cleanly.',
+        ),
+        choose(
+          'In decode_frames, what does each ? do when its check fails?',
+          [
+            'Skips the bad frame and continues',
+            'Retries the frame at the next offset',
+            'Panics with the offset of the bad frame',
+            'Returns None for the whole stream immediately',
+          ],
+          3,
+          'The function’s result is all frames or nothing.',
+        ),
+      ],
+    },
+  ],
 };
