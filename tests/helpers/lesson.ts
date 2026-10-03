@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test';
-import type { ChoiceQuestion, Question } from '../../src/lib/curriculum';
+import type { ChoiceQuestion, Question, Skill } from '../../src/lib/curriculum';
+import { lessonSteps, POINT_PASS_CORRECT } from '../../src/lib/lesson-plan';
 import { replaceCode } from './editor';
 
 /**
@@ -98,4 +99,36 @@ export async function answerShown(
 
 export async function continueLesson(page: Page) {
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
+}
+
+/**
+ * Pass a knowledge-point lesson from its introduction: two correct answers on
+ * each point, then the code exercise where the lesson has one. Returns the
+ * number of answers given; the last one's feedback is left on screen.
+ */
+export async function completeLesson(
+  page: Page,
+  skill: Skill,
+  { code, started = false }: { code?: string; started?: boolean } = {},
+): Promise<number> {
+  if (!started)
+    await page
+      .getByRole('button', { name: 'Start lesson', exact: true })
+      .click();
+  const steps = lessonSteps(skill);
+  let answers = 0;
+  for (const [index, step] of steps.entries()) {
+    const repeats = step.kind === 'point' ? POINT_PASS_CORRECT : 1;
+    for (let repeat = 0; repeat < repeats; repeat++) {
+      await answerShown(page, step.questions, true, code);
+      answers++;
+      const last = index === steps.length - 1 && repeat === repeats - 1;
+      await expect(feedback(page)).toContainText(
+        last ? 'Lesson complete' : 'Correct',
+        { timeout: 60_000 },
+      );
+      if (!last) await continueLesson(page);
+    }
+  }
+  return answers;
 }

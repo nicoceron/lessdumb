@@ -9,7 +9,12 @@ import {
 import { createState, type LearnerState } from '../src/lib/state';
 import { earnedXp, lessonXp, REVIEW_XP } from '../src/lib/xp';
 import { signUp } from './helpers/accounts';
-import { answerChoice, feedback, shownQuestion } from './helpers/lesson';
+import {
+  answerChoice,
+  completeLesson,
+  feedback,
+  shownQuestion,
+} from './helpers/lesson';
 
 const baseURL = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 const password = 'testing-engine-users-123';
@@ -75,16 +80,7 @@ test('two authenticated learners keep separate mastery, due reviews, mistakes, c
     const mistakeSkill = skillById['print-output'];
 
     await page.goto(`/learn?skill=${masteredSkill.id}`);
-    await page.getByRole('button', { name: 'Let’s try it' }).click();
-    for (const [index, question] of masteredSkill.questions.entries()) {
-      if (question.type !== 'choice')
-        throw new Error('Expected scenario question.');
-      await answer(page, question);
-      if (index < masteredSkill.questions.length - 1)
-        await page
-          .getByRole('button', { name: 'Continue', exact: true })
-          .click();
-    }
+    const lessonAnswers = await completeLesson(page, masteredSkill);
     await expect(feedback(page)).toContainText('Lesson complete');
     const lessonReward = earnedXp(lessonXp(masteredSkill), 0, true);
     await expect
@@ -173,7 +169,7 @@ test('two authenticated learners keep separate mastery, due reviews, mistakes, c
       await answer(page, question);
       await expect
         .poll(async () => (await cloud(page))?.progress.attempts.length)
-        .toBe(5 + index);
+        .toBe(lessonAnswers + 1 + index);
       current = (await cloud(page))!;
       if (index === 0)
         await page
@@ -200,22 +196,25 @@ test('guest learning migrates durably into one account and stays out of the next
   page,
 }) => {
   const skill = skillById['ds-workloads'];
+  const point = skill.knowledgePoints![0];
   await page.goto(`/learn?skill=${skill.id}`);
-  await page.getByRole('button', { name: 'Let’s try it' }).click();
-  const question = skill.questions[0];
+  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
+  const question = await shownQuestion(page, point.questions);
   if (question.type !== 'choice')
     throw new Error('Expected scenario question.');
   await answer(page, question);
   await expect(feedback(page)).toContainText('Correct');
+  // One answer is not a finished lesson: it is point progress in the
+  // attempt, with no mastery evidence or XP yet.
+  const guestAttempt = { [point.id]: { correct: [question.id], incorrect: 0 } };
   const first = await register(page, 'guest-owner');
   await page.reload();
-  // One answer is not a finished lesson, so it carries evidence but no XP.
   await expect
     .poll(async () => (await cloud(page))?.progress.attempts.length)
     .toBe(1);
-  expect((await cloud(page))?.progress.skills[skill.id].questionIds).toEqual([
-    question.id,
-  ]);
+  const migrated = (await cloud(page))!.progress.skills[skill.id];
+  expect(migrated.lessonAttempt?.steps).toEqual(guestAttempt);
+  expect(migrated.questionIds).toEqual([]);
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem('lessdumb.guest')))
     .toBeNull();
@@ -240,9 +239,9 @@ test('guest learning migrates durably into one account and stays out of the next
   await expect
     .poll(async () => (await cloud(page))?.progress.attempts.length)
     .toBe(1);
-  expect((await cloud(page))?.progress.skills[skill.id].questionIds).toEqual([
-    question.id,
-  ]);
+  expect(
+    (await cloud(page))?.progress.skills[skill.id].lessonAttempt?.steps,
+  ).toEqual(guestAttempt);
   const cachedSecond = await page.evaluate(
     (id) =>
       JSON.parse(localStorage.getItem(`lessdumb.account.${id}`) ?? 'null'),
