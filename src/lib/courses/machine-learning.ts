@@ -231,7 +231,7 @@ const curriculum = [
     'Match your split to the future predictions you need to make.',
     ['ml-learning-tasks', 'slicing'],
     [
-      'Training data fits parameters. Validation data guides choices such as model depth or decision threshold. A final test set estimates performance after those choices are finished. Repeatedly changing a model based on test results turns the test set into another validation set.',
+      'Training data fits parameters. Validation data guides choices you make about the model, such as which features to include or how flexible it should be. A final test set estimates performance after those choices are finished. Repeatedly changing a model based on test results turns the test set into another validation set.',
       'The split must reflect deployment. For forecasting, train on earlier observations and evaluate on later ones. If several rows belong to one person, keep that person in a single partition when the goal is generalization to new people. Stratification can preserve class proportions for an ordinary independent classification split; it does not fix time or group leakage.',
     ],
     {
@@ -242,15 +242,15 @@ const curriculum = [
     },
     [
       choice(
-        'Which set should guide the choice of tree depth?',
+        'Which data should guide a choice between two candidate feature sets?',
         [
           'The final test set',
-          'Validation data or cross-validation folds',
+          'A separate validation set',
           'A copy of the target column in the features',
           'Only the first training row',
         ],
         1,
-        'Hyperparameter choices belong to validation, leaving the final test set untouched.',
+        'Model choices belong to validation, leaving the final test set untouched.',
         'Keep one set for the final estimate.',
       ),
       choice(
@@ -289,7 +289,7 @@ const curriculum = [
     [
       [
         'What is the purpose of a final test set?',
-        'Estimate performance after model and hyperparameter choices have been made.',
+        'Estimate performance once, after every model choice has been made.',
       ],
       [
         'When should a split keep groups together?',
@@ -367,7 +367,7 @@ const curriculum = [
     ['ml-data-splits', 'math-variance', 'da-categories'],
     [
       'Imputation, scaling, and category encoding turn raw features into usable model inputs. A standard scaler subtracts a training feature mean and divides by its training standard deviation. Learning those statistics from the test set leaks information, even when no target labels are involved.',
-      'A scikit-learn Pipeline joins preprocessing to an estimator. Calling fit on the training set fits each transformation and then the predictor. Calling predict on test data applies the already-fitted transformations. During cross-validation, putting the transformer inside the pipeline lets each fold learn its own statistics from its training portion.',
+      'A scikit-learn Pipeline joins preprocessing to an estimator. Calling fit on the training set fits each transformation and then the predictor. Calling predict on test data applies the already-fitted transformations. When you evaluate on several different train/validation splits, refitting the whole pipeline on each training portion lets every split learn its own statistics.',
     ],
     {
       code: 'from sklearn.preprocessing import StandardScaler\nscaler = StandardScaler().fit([[2.0], [6.0]])\nprint(scaler.transform([[4.0], [8.0]]).ravel().tolist())',
@@ -389,16 +389,16 @@ const curriculum = [
         'fit learns; transform applies.',
       ),
       choice(
-        'Why put a scaler inside a cross-validation pipeline?',
+        'You evaluate on several train/validation splits. Why refit the scaling pipeline on each split?',
         [
           'To erase labels',
-          'To guarantee perfect accuracy',
-          'To fit scaling statistics separately within each training fold',
+          'To guarantee zero validation error',
+          'To learn scaling statistics only from that split’s training rows',
           'To use future test statistics',
         ],
         2,
-        'The fold-specific training data must own all learned preprocessing statistics.',
-        'Each validation fold must stay unseen during fitting.',
+        'Each split’s training rows must own all learned preprocessing statistics.',
+        'Each validation part must stay unseen during fitting.',
       ),
       choice(
         'An unseen category arrives during prediction. What is an appropriate preparation?',
@@ -427,8 +427,8 @@ const curriculum = [
         'fit learns transformation parameters from training data; transform applies those learned parameters to data.',
       ],
       [
-        'How does a pipeline prevent preprocessing leakage during cross-validation?',
-        'Each training fold fits its own preprocessing before transforming the held-out validation fold.',
+        'How does a pipeline prevent preprocessing leakage when you evaluate on several splits?',
+        'Refitting it on each training portion learns the preprocessing from those rows before it transforms the held-out rows.',
       ],
     ],
   ),
