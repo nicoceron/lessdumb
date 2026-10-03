@@ -4,7 +4,7 @@ export const prerender = true;
 export function GET() {
   const paths = [
     '/',
-    '/catalog',
+    '/catalog/',
     ...courses.map((course) => catalogPath(course.id)),
   ];
   return new Response(

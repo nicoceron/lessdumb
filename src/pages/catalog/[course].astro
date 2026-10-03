@@ -57,7 +57,9 @@ const schema = {
     </section>
   )}
   <p>
-    <a href={`${catalogPath(course.id)}.md`}>Read this course as Markdown</a>
+    <a href={catalogPath(course.id, 'markdown')}>
+      Read this course as Markdown
+    </a>
   </p>
   <script
     type="application/ld+json"
