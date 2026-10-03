@@ -7701,4 +7701,2442 @@ int main() {
       ],
     },
   ],
+  'cpp-optional-value': [
+    {
+      title: 'An optional holds a value or nothing',
+      explanation: [
+        'std::optional<int> (from <optional>) holds either one int or no value. A default-constructed optional is empty. Assigning an int stores it; has_value() reports which state the optional is in.',
+        'value_or(fallback) returns the stored value, or fallback when the optional is empty. A stored 0 is still a value, not an empty optional.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <optional>
+int main() {
+  std::optional<int> reading;
+  std::cout << reading.has_value() << " " << reading.value_or(-1) << "\\n";
+  reading = 7;
+  std::cout << reading.has_value() << " " << reading.value_or(-1) << "\\n";
+}`,
+        output: '0 -1\n1 7',
+        explanation:
+          'reading starts empty, so value_or returns the fallback. After the assignment it holds 7.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <optional>
+int main() {
+  std::optional<int> price = 12;
+  std::cout << price.has_value() << " " << price.value_or(0) << "\\n";
+}`,
+          ['1 0', '0 12', '1 12', '12 12'],
+          2,
+          'price holds 12, so it has a value and value_or ignores the fallback.',
+        ),
+        predictOutput(
+          'The optional holds 0. What does this program print?',
+          `#include <iostream>
+#include <optional>
+int main() {
+  std::optional<int> count = 0;
+  std::cout << count.has_value() << " " << count.value_or(5) << "\\n";
+}`,
+          ['0 5', '1 5', '0 0', '1 0'],
+          3,
+          'Storing 0 is storing a value. Only an empty optional uses the fallback.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <optional>
+int main() {
+  bool available = false;
+  std::optional<int> result;
+  if (available) result = 9;
+  std::cout << result.value_or(-1) << "\\n";
+}`,
+          ['-1', '9', '0', '1'],
+          0,
+          'The assignment is skipped, so result stays empty and the fallback prints.',
+        ),
+        choose(
+          'What does a default-constructed std::optional<int> contain?',
+          ['The int 0', 'No value', 'An indeterminate int', 'The int -1'],
+          1,
+          'Default construction gives an empty optional; it does not invent an int.',
+        ),
+      ],
+    },
+    {
+      title: 'Check before reading the value',
+      explanation: [
+        'An optional converts to bool in a condition: if (slot) is true when it holds a value. After that check, *slot reads the value. Reading *slot from an empty optional is undefined behavior; slot.value() instead throws std::bad_optional_access.',
+        'Assigning std::nullopt, or calling reset(), empties an optional again.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <optional>
+int main() {
+  std::optional<int> slot = 4;
+  if (slot) std::cout << *slot + 1 << "\\n";
+  slot = std::nullopt;
+  if (slot) std::cout << *slot << "\\n";
+  else std::cout << "cleared\\n";
+}`,
+        output: '5\ncleared',
+        explanation:
+          'The first check succeeds and *slot reads 4. After std::nullopt, the check fails and the else branch runs.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <optional>
+int main() {
+  std::optional<int> a = 3;
+  std::optional<int> b;
+  int total = 0;
+  if (a) total += *a;
+  if (b) total += *b;
+  std::cout << total << "\\n";
+}`,
+          ['0', '3', '6', '4'],
+          1,
+          'Only a holds a value; the guard skips reading the empty b.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <optional>
+int main() {
+  std::optional<int> v = 8;
+  v.reset();
+  std::cout << v.has_value() << " " << v.value_or(1) << "\\n";
+}`,
+          ['1 8', '0 8', '0 1', '1 1'],
+          2,
+          'reset empties the optional, so the fallback 1 is returned.',
+        ),
+        choose(
+          'Which expression is undefined behavior when opt is an empty std::optional<int>?',
+          ['opt.has_value()', 'opt.value_or(0)', 'opt = 5', '*opt'],
+          3,
+          '* assumes a value is present and does not check.',
+        ),
+        choose(
+          'How do opt.value() and *opt differ when opt is empty?',
+          [
+            'value() throws std::bad_optional_access; *opt is undefined behavior',
+            'Both return 0',
+            'value() returns 0; *opt throws',
+            'There is no difference',
+          ],
+          0,
+          'value() is the checked access; * is unchecked.',
+        ),
+      ],
+    },
+  ],
+  'cpp-optional-search': [
+    {
+      title: 'Return std::nullopt when a search fails',
+      explanation: [
+        'A search that may find nothing can return std::optional<int>: return the index when found, and return std::nullopt otherwise. Every index, including 0, is then a genuine result, and absence has its own state.',
+        'The caller tests the optional before reading it.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <optional>
+#include <vector>
+std::optional<int> find_index(const std::vector<int>& values, int target) {
+  for (int i = 0; i < static_cast<int>(values.size()); ++i)
+    if (values[i] == target) return i;
+  return std::nullopt;
+}
+int main() {
+  std::vector<int> ids{4, 8};
+  auto hit = find_index(ids, 4);
+  auto miss = find_index(ids, 5);
+  std::cout << hit.has_value() << " " << *hit << " " << miss.has_value() << "\\n";
+}`,
+        output: '1 0 0',
+        explanation:
+          '4 is found at index 0, which is a real answer. 5 is not found, so the second optional is empty.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <optional>
+#include <vector>
+std::optional<int> find_index(const std::vector<int>& values, int target) {
+  for (int i = 0; i < static_cast<int>(values.size()); ++i)
+    if (values[i] == target) return i;
+  return std::nullopt;
+}
+int main() {
+  std::vector<int> ids{7, 3, 7};
+  std::cout << find_index(ids, 7).value_or(-1) << "\\n";
+}`,
+          ['2', '0', '1', '-1'],
+          1,
+          'The loop returns at the first match, index 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <optional>
+#include <vector>
+std::optional<int> find_index(const std::vector<int>& values, int target) {
+  for (int i = 0; i < static_cast<int>(values.size()); ++i)
+    if (values[i] == target) return i;
+  return std::nullopt;
+}
+int main() {
+  std::vector<int> ids{5, 3};
+  auto result = find_index(ids, 3);
+  if (result) std::cout << "at " << *result << "\\n";
+  else std::cout << "missing\\n";
+}`,
+          ['at 3', 'missing', 'at 1', 'at 2'],
+          2,
+          '3 is at index 1; the optional reports the index, not the value.',
+        ),
+        predictOutput(
+          'How many targets are found?',
+          `#include <iostream>
+#include <optional>
+#include <vector>
+std::optional<int> find_index(const std::vector<int>& values, int target) {
+  for (int i = 0; i < static_cast<int>(values.size()); ++i)
+    if (values[i] == target) return i;
+  return std::nullopt;
+}
+int main() {
+  std::vector<int> ids{0, 6, 9};
+  std::vector<int> targets{0, 5, 9};
+  int found = 0;
+  for (int target : targets)
+    if (find_index(ids, target)) ++found;
+  std::cout << found << "\\n";
+}`,
+          ['1', '3', '0', '2'],
+          3,
+          'Target 0 is found at index 0. The optional holds 0, which still counts as present, so 0 and 9 are both found.',
+        ),
+        choose(
+          'Why does find_index return std::optional<int> rather than a plain int?',
+          [
+            'Every int, including 0, can be a valid index, so absence needs its own representation',
+            'optional is faster to return than int',
+            'An int cannot be returned from inside a loop',
+            'optional sorts the results',
+          ],
+          0,
+          'The empty state is separate from all values, so no valid answer has to be sacrificed as a marker.',
+        ),
+      ],
+    },
+    {
+      title: 'A sentinel value can collide with real data',
+      explanation: [
+        'Returning a special value such as 0 or -1 for "not found" works only when that value can never be a real answer. When it can, the caller cannot tell a genuine result from a failure.',
+        'An optional keeps the two apart: the found value, whatever it is, lives inside it, and failure is the empty state.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <optional>
+#include <vector>
+int first_below_sentinel(const std::vector<int>& values, int limit) {
+  for (int value : values)
+    if (value < limit) return value;
+  return -1;
+}
+std::optional<int> first_below(const std::vector<int>& values, int limit) {
+  for (int value : values)
+    if (value < limit) return value;
+  return std::nullopt;
+}
+int main() {
+  std::vector<int> temps{3, -1, -4};
+  std::cout << first_below_sentinel(temps, 0) << " " << first_below_sentinel(temps, -5) << "\\n";
+  std::cout << first_below(temps, 0).has_value() << " " << first_below(temps, -5).has_value() << "\\n";
+}`,
+        output: '-1 -1\n1 0',
+        explanation:
+          'The sentinel version prints -1 both for the real reading -1 and for "nothing below -5". The optional version distinguishes them.',
+      },
+      questions: [
+        predictOutput(
+          'Index 0 holds a free item priced 0. What does this program print?',
+          `#include <iostream>
+#include <vector>
+int price_at(const std::vector<int>& prices, int index) {
+  if (index < static_cast<int>(prices.size())) return prices[index];
+  return 0;
+}
+int main() {
+  std::vector<int> prices{0, 5};
+  std::cout << price_at(prices, 0) << " " << price_at(prices, 7) << "\\n";
+}`,
+          ['0 0', '0 -1', '5 0', '0 5'],
+          0,
+          'The real price 0 and the "no such item" marker 0 print identically, so the caller cannot tell them apart.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <optional>
+#include <vector>
+std::optional<int> price_at(const std::vector<int>& prices, int index) {
+  if (index < static_cast<int>(prices.size())) return prices[index];
+  return std::nullopt;
+}
+int main() {
+  std::vector<int> prices{0, 5};
+  std::cout << price_at(prices, 0).has_value() << " " << price_at(prices, 7).has_value() << "\\n";
+}`,
+          ['0 0', '1 1', '0 1', '1 0'],
+          3,
+          'The free item is a present value; the missing index is the empty optional.',
+        ),
+        choose(
+          'A function returns -1 when no matching temperature is found. Why is this risky?',
+          [
+            '-1 cannot be returned from a function',
+            'Callers always ignore negative values',
+            '-1 can be a real temperature, so the caller cannot tell absence from a match',
+            'It is not risky if the vector is sorted',
+          ],
+          2,
+          'A sentinel must lie outside the domain of real answers; temperatures can be -1.',
+        ),
+      ],
+    },
+  ],
+  'cpp-variant-alternatives': [
+    {
+      title: 'A variant holds exactly one alternative',
+      explanation: [
+        'std::variant<int, std::string> (from <variant>) holds either an int or a std::string, one at a time. index() reports which alternative is active, counting from 0 in the order the types are listed. Assigning a value of another alternative switches to it.',
+        'A default-constructed variant holds a value-initialized first alternative, here the int 0.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <string>
+#include <variant>
+int main() {
+  std::variant<int, std::string> cell;
+  std::cout << cell.index() << " " << std::get<int>(cell) << "\\n";
+  cell = std::string("abc");
+  std::cout << cell.index() << "\\n";
+}`,
+        output: '0 0\n1',
+        explanation:
+          'cell starts as the int 0. After the string is assigned, the active alternative is index 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+#include <variant>
+int main() {
+  std::variant<int, std::string> v = 8;
+  v = std::string("hi");
+  v = 3;
+  std::cout << v.index() << " " << std::get<int>(v) << "\\n";
+}`,
+          ['1 3', '0 8', '0 3', '1 8'],
+          2,
+          'The last assignment makes the int alternative active again, holding 3.',
+        ),
+        predictOutput(
+          'The int alternative is listed second here. What does this program print?',
+          `#include <iostream>
+#include <variant>
+int main() {
+  std::variant<double, int> v = 4;
+  std::cout << v.index() << "\\n";
+}`,
+          ['0', '4', '2', '1'],
+          3,
+          '4 is an int, and int is the second listed alternative, index 1.',
+        ),
+        choose(
+          'How many values does a std::variant<int, std::string> hold at once?',
+          [
+            'Exactly one, of whichever alternative is active',
+            'One int and one string',
+            'Any number of strings',
+            'Both, but only one may be read',
+          ],
+          0,
+          'A variant stores one active alternative and tracks which one it is.',
+        ),
+        choose(
+          'What does a default-constructed std::variant<int, std::string> hold?',
+          [
+            'An empty string',
+            'Nothing',
+            'The int 0',
+            'Both an int and a string',
+          ],
+          2,
+          'Default construction value-initializes the first listed alternative.',
+        ),
+      ],
+    },
+    {
+      title: 'Query the active type before getting it',
+      explanation: [
+        'std::holds_alternative<T>(v) tests whether T is the active alternative. std::get<T>(v) returns the value when T is active and throws std::bad_variant_access when it is not; it never converts one alternative into another.',
+        'Test first, then get the matching type.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <string>
+#include <variant>
+int measure(const std::variant<int, std::string>& value) {
+  if (std::holds_alternative<int>(value)) return std::get<int>(value);
+  return static_cast<int>(std::get<std::string>(value).size());
+}
+int main() {
+  std::variant<int, std::string> a = 8;
+  std::variant<int, std::string> b = std::string("abc");
+  std::cout << measure(a) << " " << measure(b) << "\\n";
+}`,
+        output: '8 3',
+        explanation:
+          'a holds an int, which is returned directly. b holds a string, so its length is returned.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+#include <variant>
+int measure(const std::variant<int, std::string>& value) {
+  if (std::holds_alternative<int>(value)) return std::get<int>(value);
+  return static_cast<int>(std::get<std::string>(value).size());
+}
+int main() {
+  std::variant<int, std::string> a = std::string("hello");
+  std::variant<int, std::string> b = 2;
+  std::cout << measure(a) + measure(b) << "\\n";
+}`,
+          ['7', '2', '5', '3'],
+          0,
+          'The string contributes its length 5 and the int contributes 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+#include <variant>
+int main() {
+  std::variant<int, std::string> v = 1;
+  v = std::string("x");
+  std::cout << std::holds_alternative<int>(v) << " " << std::holds_alternative<std::string>(v) << "\\n";
+}`,
+          ['1 0', '1 1', '0 1', '0 0'],
+          2,
+          'After the assignment only the string alternative is active.',
+        ),
+        choose(
+          'v holds the string "7". What does std::get<int>(v) do?',
+          [
+            'Returns 7',
+            'Returns 0',
+            'Converts the string to an int',
+            'Throws std::bad_variant_access',
+          ],
+          3,
+          'get checks the active alternative and refuses a type that is not active.',
+        ),
+        predictOutput(
+          'The variant holds the text 42. What does this program print?',
+          `#include <iostream>
+#include <string>
+#include <variant>
+int measure(const std::variant<int, std::string>& value) {
+  if (std::holds_alternative<int>(value)) return std::get<int>(value);
+  return static_cast<int>(std::get<std::string>(value).size());
+}
+int main() {
+  std::variant<int, std::string> v = std::string("42");
+  std::cout << measure(v) << "\\n";
+}`,
+          ['42', '2', '0', '4'],
+          1,
+          'The active alternative is a two-character string, so measure returns its length, not a parsed number.',
+        ),
+      ],
+    },
+  ],
+  'cpp-optional': [
+    {
+      title: 'std::visit calls a visitor with the active value',
+      explanation: [
+        'std::visit(visitor, v) calls visitor with whatever v currently holds. A convenient visitor is a lambda with an auto parameter, [](const auto& x) { ... }, which works like a template: it is compiled once for each alternative.',
+        'Because of that, the visitor’s body must be valid for every alternative, not just the one active at run time.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <variant>
+int main() {
+  std::variant<int, double> v = 3;
+  std::visit([](const auto& x) { std::cout << x * 2 << "\\n"; }, v);
+  v = 1.25;
+  std::visit([](const auto& x) { std::cout << x * 2 << "\\n"; }, v);
+}`,
+        output: '6\n2.5',
+        explanation:
+          'The first visit receives the int 3; the second receives the double 1.25. x * 2 is valid for both types.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+#include <variant>
+int main() {
+  std::variant<int, std::string> v = std::string("ok");
+  std::visit([](const auto& x) { std::cout << x << "\\n"; }, v);
+}`,
+          ['0', '1', 'ok', '2'],
+          2,
+          'The visitor receives the active string and prints it; printing works for both alternatives.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <variant>
+int main() {
+  std::variant<int, double> v = 2.6;
+  int doubled = std::visit([](const auto& x) { return static_cast<int>(x * 2); }, v);
+  std::cout << doubled << "\\n";
+}`,
+          ['5', '6', '5.2', '4'],
+          0,
+          'The double 2.6 is doubled to 5.2 and then converted to the int 5.',
+        ),
+        choose(
+          'A variant<int, std::string> is visited with [](const auto& x) { return x + 1; }. Why does this not compile?',
+          [
+            'Lambdas cannot be visitors',
+            'x must not be const',
+            'The visitor must work for every alternative, and std::string + 1 is invalid',
+            'visit requires two variants',
+          ],
+          2,
+          'visit instantiates the visitor for each alternative, whichever one is active.',
+        ),
+        choose(
+          'Which alternative’s value does std::visit pass to the visitor?',
+          [
+            'The first alternative listed',
+            'The one currently active',
+            'Every alternative, in order',
+            'The last one assigned when compiling',
+          ],
+          1,
+          'visit dispatches on the variant’s run-time state.',
+        ),
+      ],
+    },
+    {
+      title: 'Branch on the alternative’s type with if constexpr',
+      explanation: [
+        'When alternatives need different code, name the parameter’s type: using T = std::decay_t<decltype(item)>;. decltype(item) is const std::string& for a string, and std::decay_t strips the const and the reference.',
+        'Then if constexpr (std::is_same_v<T, int>) selects a branch per alternative. The discarded branch is not instantiated, so item.size() can appear in the string branch only.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <string>
+#include <type_traits>
+#include <variant>
+int main() {
+  auto measure = [](const auto& item) -> int {
+    using T = std::decay_t<decltype(item)>;
+    if constexpr (std::is_same_v<T, int>) return item;
+    else return static_cast<int>(item.size());
+  };
+  std::variant<int, std::string> value = 5;
+  int a = std::visit(measure, value);
+  value = std::string("abcd");
+  std::cout << a << " " << std::visit(measure, value) << "\\n";
+}`,
+        output: '5 4',
+        explanation:
+          'For the int, the first branch returns it. For the string, the else branch returns its length.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+#include <type_traits>
+#include <variant>
+int main() {
+  auto measure = [](const auto& item) -> int {
+    using T = std::decay_t<decltype(item)>;
+    if constexpr (std::is_same_v<T, int>) return item;
+    else return static_cast<int>(item.size());
+  };
+  std::variant<int, std::string> value = std::string("abcd");
+  int a = std::visit(measure, value);
+  value = 9;
+  std::cout << a << " " << std::visit(measure, value) << "\\n";
+}`,
+          ['9 4', '4 9', '4 4', '0 9'],
+          1,
+          'The string gives its length 4; then the int 9 is returned as is.',
+        ),
+        choose(
+          'Why does the visitor need if constexpr rather than a plain if?',
+          [
+            'With a plain if, item.size() would be compiled for the int alternative too, which fails',
+            'A plain if cannot compare types',
+            'if constexpr runs faster at run time',
+            'visit forbids ordinary if statements',
+          ],
+          0,
+          'Only if constexpr discards the branch that is invalid for the current alternative.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+#include <type_traits>
+#include <variant>
+int main() {
+  auto code = [](const auto& item) -> int {
+    using T = std::decay_t<decltype(item)>;
+    if constexpr (std::is_same_v<T, int>) return 1;
+    else if constexpr (std::is_same_v<T, double>) return 2;
+    else return 3;
+  };
+  std::variant<int, double, std::string> v = 2.5;
+  int a = std::visit(code, v);
+  v = std::string("z");
+  int b = std::visit(code, v);
+  v = 7;
+  std::cout << a << " " << b << " " << std::visit(code, v) << "\\n";
+}`,
+          ['1 2 3', '2 1 3', '3 2 1', '2 3 1'],
+          3,
+          'The active alternatives are double, then string, then int.',
+        ),
+        choose(
+          'What is std::decay_t<decltype(item)> when item is a const std::string&?',
+          ['const std::string&', 'std::string&', 'std::string', 'char'],
+          2,
+          'decay_t removes the reference and the const, leaving the plain type to compare.',
+        ),
+      ],
+    },
+  ],
+  'cpp-throw-catch': [
+    {
+      title: 'throw jumps to a matching catch',
+      explanation: [
+        'throw creates an exception object and leaves the current code immediately: statements after the throw in the try block do not run. Control passes to a catch handler whose type matches, and after the handler finishes, execution continues after the whole try/catch statement.',
+        'Standard exception types such as std::invalid_argument and std::runtime_error come from <stdexcept>.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <stdexcept>
+int main() {
+  try {
+    std::cout << "start ";
+    throw std::invalid_argument("negative");
+    std::cout << "unreached ";
+  } catch (const std::invalid_argument&) {
+    std::cout << "handled ";
+  }
+  std::cout << "after\\n";
+}`,
+        output: 'start handled after',
+        explanation:
+          'The throw skips the rest of the try block, the handler runs, and the program continues after the try/catch.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+int main() {
+  int value = 5;
+  try {
+    if (value < 0) throw std::invalid_argument("negative");
+    std::cout << "ok ";
+  } catch (const std::invalid_argument&) {
+    std::cout << "bad ";
+  }
+  std::cout << "end\\n";
+}`,
+          ['ok end', 'bad end', 'ok bad end', 'end'],
+          0,
+          'Nothing is thrown, so the try block finishes and the handler is skipped.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+int main() {
+  int value = -2;
+  try {
+    if (value < 0) throw std::invalid_argument("negative");
+    std::cout << "ok ";
+  } catch (const std::invalid_argument&) {
+    std::cout << "bad ";
+  }
+  std::cout << "end\\n";
+}`,
+          ['ok end', 'ok bad end', 'bad end', 'bad'],
+          2,
+          'The throw skips "ok", the handler prints "bad", and execution continues after the try/catch.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+int checked(int value) {
+  if (value < 0) throw std::invalid_argument("negative");
+  return value * 2;
+}
+int main() {
+  int total = 0;
+  try {
+    total += checked(3);
+    total += checked(-1);
+    total += checked(5);
+  } catch (const std::invalid_argument&) {
+    total += 100;
+  }
+  std::cout << total << "\\n";
+}`,
+          ['116', '16', '106', '6'],
+          2,
+          'checked(3) adds 6. checked(-1) throws, so checked(5) never runs, and the handler adds 100.',
+        ),
+        choose(
+          'After a catch block finishes, where does execution continue?',
+          [
+            'At the statement after the throw',
+            'At the start of the try block',
+            'After the whole try/catch statement',
+            'Nowhere; the program ends',
+          ],
+          2,
+          'Exceptions do not resume; the code after the throw is abandoned.',
+        ),
+      ],
+    },
+    {
+      title: 'Handlers match by type; catch by const reference',
+      explanation: [
+        'Each catch names a type, and the first handler whose type matches the thrown object runs; a handler for a different type is skipped. Catch standard exceptions by const reference, as in catch (const std::runtime_error& e), so nothing is copied and the exact thrown object is kept.',
+        'e.what() returns the message given when the exception was created.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <stdexcept>
+int main() {
+  try {
+    throw std::runtime_error("disk full");
+  } catch (const std::invalid_argument& e) {
+    std::cout << "invalid: " << e.what() << "\\n";
+  } catch (const std::runtime_error& e) {
+    std::cout << "runtime: " << e.what() << "\\n";
+  }
+}`,
+        output: 'runtime: disk full',
+        explanation:
+          'The invalid_argument handler does not match a runtime_error, so the second handler runs.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+int main() {
+  try {
+    throw std::invalid_argument("bad id");
+  } catch (const std::invalid_argument& e) {
+    std::cout << "invalid: " << e.what() << "\\n";
+  } catch (const std::runtime_error& e) {
+    std::cout << "runtime: " << e.what() << "\\n";
+  }
+}`,
+          [
+            'runtime: bad id',
+            'invalid: bad id',
+            'invalid: invalid_argument',
+            'bad id',
+          ],
+          1,
+          'The first handler matches the thrown type and prints its message.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+int main() {
+  try {
+    throw std::out_of_range("index 9");
+  } catch (const std::out_of_range& e) {
+    std::cout << e.what() << "\\n";
+  }
+}`,
+          ['out_of_range', 'std::out_of_range: index 9', '9', 'index 9'],
+          3,
+          'what() returns exactly the message passed to the constructor.',
+        ),
+        choose(
+          'Why catch with const std::runtime_error& rather than by value?',
+          [
+            'By-value handlers never match',
+            'A reference avoids a copy and keeps the full thrown object, including derived types',
+            'const is required for what() to compile',
+            'A reference makes the handler run twice',
+          ],
+          1,
+          'Catching by value copies the object and, for a derived exception, slices it to the handler’s type.',
+        ),
+        choose(
+          'A function throws std::invalid_argument, and the only nearby handler is catch (const std::out_of_range&). What happens?',
+          [
+            'That handler runs anyway',
+            'The exception is converted to out_of_range',
+            'The handler is skipped and the exception keeps propagating to the callers',
+            'The throw statement is ignored',
+          ],
+          2,
+          'Only a matching handler can catch it; otherwise the search continues outward.',
+        ),
+      ],
+    },
+    {
+      title: 'Exceptions propagate out of called functions',
+      explanation: [
+        'A function that throws does not return. The exception passes up through each caller until an enclosing try has a matching handler.',
+        'Work done before the throw is not undone: output already printed and changes made through reference parameters remain.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <stdexcept>
+void deposit(int& balance, int amount) {
+  if (amount < 0) throw std::invalid_argument("negative deposit");
+  balance += amount;
+}
+int main() {
+  int balance = 10;
+  try {
+    deposit(balance, 5);
+    deposit(balance, -3);
+    deposit(balance, 7);
+  } catch (const std::invalid_argument& e) {
+    std::cout << e.what() << "\\n";
+  }
+  std::cout << balance << "\\n";
+}`,
+        output: 'negative deposit\n15',
+        explanation:
+          'The first deposit happens. The second throws before changing anything, so the third never runs, and main’s handler prints the message.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+void deposit(int& balance, int amount) {
+  if (amount < 0) throw std::invalid_argument("negative deposit");
+  balance += amount;
+}
+int main() {
+  int balance = 0;
+  try {
+    deposit(balance, 4);
+    deposit(balance, 6);
+    deposit(balance, -1);
+    deposit(balance, 2);
+  } catch (const std::invalid_argument&) {
+  }
+  std::cout << balance << "\\n";
+}`,
+          ['12', '10', '0', '11'],
+          1,
+          'The two deposits before the throw stay applied; the last deposit is never reached.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+int checked(int value) {
+  if (value < 0) throw std::invalid_argument("negative");
+  return value;
+}
+int sum(int a, int b) {
+  int x = checked(a);
+  int y = checked(b);
+  return x + y;
+}
+int main() {
+  try {
+    std::cout << sum(2, 3) << " ";
+    std::cout << sum(-2, 3) << " ";
+  } catch (const std::invalid_argument&) {
+    std::cout << "caught";
+  }
+  std::cout << "\\n";
+}`,
+          ['5 caught', '5 1 caught', 'caught', '5 3 caught'],
+          0,
+          'The second sum throws from checked and leaves sum without returning, so nothing more is printed before the handler.',
+        ),
+        choose(
+          'A helper throws, its caller has no try block, and main wraps the call in a try with a matching catch. Where is the exception handled?',
+          [
+            'In the helper',
+            'In the caller, which receives a default value',
+            'Nowhere; it is lost',
+            'In main’s handler, after leaving both the helper and the caller',
+          ],
+          3,
+          'The exception unwinds through every function without a matching handler.',
+        ),
+      ],
+    },
+  ],
+  'cpp-bounds-exception': [
+    {
+      title: 'at() checks the index; [] does not',
+      explanation: [
+        'v.at(i) returns the element at index i after checking that i < v.size(); if the check fails, it throws std::out_of_range. v[i] performs no check: an invalid index is undefined behavior, not an exception.',
+        'Use at() when the interface promises checked access, and handle the exception deliberately.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <stdexcept>
+#include <vector>
+int main() {
+  std::vector<int> levels{4, 9};
+  std::cout << levels.at(1) << "\\n";
+  try {
+    std::cout << levels.at(2) << "\\n";
+  } catch (const std::out_of_range&) {
+    std::cout << "out of range\\n";
+  }
+}`,
+        output: '9\nout of range',
+        explanation:
+          'Index 1 is valid. Index 2 equals size(), so at() throws before anything is printed for it.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 2, 3};
+  int value = -1;
+  try {
+    value = v.at(3);
+  } catch (const std::out_of_range&) {
+  }
+  std::cout << value << "\\n";
+}`,
+          ['3', '0', '-1', '1'],
+          2,
+          'at(3) throws before the assignment, so value keeps -1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+#include <vector>
+int main() {
+  std::vector<int> v{7};
+  try {
+    std::cout << v.at(0) << " ";
+    std::cout << v.at(1) << " ";
+  } catch (const std::out_of_range&) {
+    std::cout << "stop";
+  }
+  std::cout << "\\n";
+}`,
+          ['7 stop', '7 0 stop', 'stop', '7 7 stop'],
+          0,
+          'Index 0 is valid. Index 1 throws, so the handler prints stop.',
+        ),
+        choose(
+          'What does v[5] do when v has 3 elements?',
+          [
+            'Throws std::out_of_range',
+            'Returns 0',
+            'Returns the last element',
+            'Undefined behavior; operator[] does not check',
+          ],
+          3,
+          'Only at() checks; [] trusts the caller.',
+        ),
+        choose(
+          'Which access reports an invalid index with an exception?',
+          ['v[i]', 'v.front()', 'v.at(i)', '*(v.begin() + i)'],
+          2,
+          'at() is the checked accessor; the others assume a valid position.',
+        ),
+      ],
+    },
+    {
+      title: 'The last valid index is size() - 1',
+      explanation: [
+        'Valid indexes run from 0 to size() - 1, so at(size()) always throws; this off-by-one is the most common out_of_range. An empty vector has no valid index at all.',
+        'size() is unsigned, so size() - 1 on an empty vector wraps around to a huge number, which at() also rejects.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <stdexcept>
+#include <vector>
+int main() {
+  std::vector<int> v{3, 6, 9};
+  try {
+    std::cout << v.at(v.size() - 1) << "\\n";
+    std::cout << v.at(v.size()) << "\\n";
+  } catch (const std::out_of_range&) {
+    std::cout << "past the end\\n";
+  }
+}`,
+        output: '9\npast the end',
+        explanation:
+          'size() - 1 is the last element. size() itself is one past the end.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <cstddef>
+#include <iostream>
+#include <stdexcept>
+#include <vector>
+int safe_get(const std::vector<int>& values, std::size_t index) {
+  try {
+    return values.at(index);
+  } catch (const std::out_of_range&) {
+    return -1;
+  }
+}
+int main() {
+  std::vector<int> v{8};
+  std::cout << safe_get(v, 0) << " " << safe_get(v, 1) << "\\n";
+}`,
+          ['8 8', '8 0', '-1 -1', '8 -1'],
+          3,
+          'With one element, index 0 is the only valid index.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+#include <vector>
+int main() {
+  std::vector<int> v;
+  try {
+    std::cout << v.at(v.size() - 1) << "\\n";
+  } catch (const std::out_of_range&) {
+    std::cout << "no last element\\n";
+  }
+}`,
+          ['0', '-1', 'no last element', '1'],
+          2,
+          'size() - 1 wraps to the largest size_t value on an empty vector, and at() rejects it.',
+        ),
+        choose(
+          'A vector has 4 elements. Which call throws?',
+          ['v.at(0)', 'v.at(3)', 'v.at(4)', 'v.at(2)'],
+          2,
+          'Valid indexes are 0 to 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+#include <vector>
+int main() {
+  std::vector<int> v;
+  try {
+    std::cout << v.at(0) << "\\n";
+  } catch (const std::out_of_range&) {
+    std::cout << "empty\\n";
+  }
+}`,
+          ['0', 'empty', '-1', 'garbage'],
+          1,
+          'An empty vector has no index 0, so at(0) throws.',
+        ),
+      ],
+    },
+  ],
+  'cpp-strong-guarantee': [
+    {
+      title: 'Validate before changing anything',
+      explanation: [
+        'An operation gives the strong exception guarantee when, if it fails, all observable state is exactly as it was before the call. The simplest way to achieve it is to perform every check that can throw first, and modify state only after all of them pass.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <stdexcept>
+void set_price(int& price, int replacement) {
+  if (replacement < 0) throw std::invalid_argument("negative price");
+  price = replacement;
+}
+int main() {
+  int price = 4;
+  try {
+    set_price(price, 9);
+    set_price(price, -2);
+  } catch (const std::invalid_argument&) {
+  }
+  std::cout << price << "\\n";
+}`,
+        output: '9',
+        explanation:
+          'The first call succeeds. The second throws before the assignment, so price keeps 9.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+void set_price(int& price, int replacement) {
+  if (replacement < 0) throw std::invalid_argument("negative price");
+  price = replacement;
+}
+int main() {
+  int price = 5;
+  try {
+    set_price(price, -1);
+  } catch (const std::invalid_argument&) {
+  }
+  std::cout << price << "\\n";
+}`,
+          ['-1', '0', '5', '4'],
+          2,
+          'The check throws before anything is assigned.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+void set_range(int& low, int& high, int new_low, int new_high) {
+  if (new_low > new_high) throw std::invalid_argument("inverted");
+  low = new_low;
+  high = new_high;
+}
+int main() {
+  int low = 1;
+  int high = 5;
+  try {
+    set_range(low, high, 2, 8);
+    set_range(low, high, 9, 3);
+  } catch (const std::invalid_argument&) {
+  }
+  std::cout << low << " " << high << "\\n";
+}`,
+          ['9 3', '2 8', '1 5', '9 8'],
+          1,
+          'The valid update is applied; the inverted one is rejected before either member changes.',
+        ),
+        choose(
+          'What does the strong exception guarantee promise when an operation throws?',
+          [
+            'The program continues as if the operation had succeeded',
+            'No exception ever leaves the operation',
+            'Observable state is exactly as it was before the call',
+            'Partial changes are completed later',
+          ],
+          2,
+          'Failure has no visible effect: commit-or-nothing.',
+        ),
+        choose(
+          'Which ordering gives set_price the strong guarantee?',
+          [
+            'Validate and throw if invalid, then assign',
+            'Assign, then validate and throw if invalid',
+            'Assign 0 first, then validate',
+            'Assign, and validate after returning',
+          ],
+          0,
+          'Every throwing step must come before the first modification.',
+        ),
+      ],
+    },
+    {
+      title: 'Changing before validating leaks partial updates',
+      explanation: [
+        'If a function modifies some state and then throws, the caller sees a half-finished update. Clearing a destination before validating its replacement, or updating one of two related values before checking them together, leaves the object in a state nobody asked for.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <stdexcept>
+void set_range_unsafe(int& low, int& high, int new_low, int new_high) {
+  low = new_low;
+  if (new_low > new_high) throw std::invalid_argument("inverted");
+  high = new_high;
+}
+int main() {
+  int low = 1;
+  int high = 5;
+  try {
+    set_range_unsafe(low, high, 9, 3);
+  } catch (const std::invalid_argument&) {
+    std::cout << "rejected ";
+  }
+  std::cout << low << " " << high << "\\n";
+}`,
+        output: 'rejected 9 5',
+        explanation:
+          'The update was rejected, yet low already changed to 9, leaving an inverted range 9..5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+void replace(int& destination, int replacement) {
+  destination = 0;
+  if (replacement < 0) throw std::invalid_argument("negative");
+  destination = replacement;
+}
+int main() {
+  int destination = 4;
+  try {
+    replace(destination, -2);
+  } catch (const std::invalid_argument&) {
+  }
+  std::cout << destination << "\\n";
+}`,
+          ['4', '0', '-2', '2'],
+          1,
+          'The destination was cleared before the check failed, so the old value is lost.',
+        ),
+        predictOutput(
+          'The same unsafe function gets valid input. What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+void set_range_unsafe(int& low, int& high, int new_low, int new_high) {
+  low = new_low;
+  if (new_low > new_high) throw std::invalid_argument("inverted");
+  high = new_high;
+}
+int main() {
+  int low = 1;
+  int high = 5;
+  set_range_unsafe(low, high, 2, 8);
+  std::cout << low << " " << high << "\\n";
+}`,
+          ['1 5', '2 5', '2 8', '8 2'],
+          2,
+          'With valid input nothing throws, so the bug is invisible; tests must include a failing case.',
+        ),
+        choose(
+          'A transfer function subtracts from the source account, then validates the destination and throws. What does a caller observe after catching?',
+          [
+            'Both balances unchanged',
+            'Both balances updated',
+            'The destination credited twice',
+            'Money removed from the source but not added anywhere',
+          ],
+          3,
+          'The subtraction happened before the throw and was never undone.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+void record(int& count, int& total, int amount) {
+  ++count;
+  if (amount < 0) throw std::invalid_argument("negative");
+  total += amount;
+}
+int main() {
+  int count = 0;
+  int total = 0;
+  try {
+    record(count, total, 5);
+    record(count, total, -1);
+  } catch (const std::invalid_argument&) {
+  }
+  std::cout << count << " " << total << "\\n";
+}`,
+          ['1 5', '2 5', '2 4', '1 4'],
+          1,
+          'count was incremented before the failed check, so it no longer matches the one amount recorded in total.',
+        ),
+      ],
+    },
+    {
+      title: 'Work on a copy, then commit',
+      explanation: [
+        'When checks happen during the work rather than before it, compute the new state in a local copy and assign it to the real object only at the end. If anything throws earlier, the caller’s object was never touched.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <stdexcept>
+void apply_changes(int& balance, int first, int second) {
+  int updated = balance;
+  updated += first;
+  if (updated < 0) throw std::invalid_argument("overdrawn");
+  updated += second;
+  if (updated < 0) throw std::invalid_argument("overdrawn");
+  balance = updated;
+}
+int main() {
+  int balance = 10;
+  try {
+    apply_changes(balance, -4, -8);
+  } catch (const std::invalid_argument&) {
+    std::cout << "rejected ";
+  }
+  std::cout << balance << "\\n";
+  apply_changes(balance, -4, 3);
+  std::cout << balance << "\\n";
+}`,
+        output: 'rejected 10\n9',
+        explanation:
+          'The first call fails at the second check, but only the local copy had changed. The second call passes both checks and commits 9.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+void apply_changes(int& balance, int first, int second) {
+  int updated = balance;
+  updated += first;
+  if (updated < 0) throw std::invalid_argument("overdrawn");
+  updated += second;
+  if (updated < 0) throw std::invalid_argument("overdrawn");
+  balance = updated;
+}
+int main() {
+  int balance = 5;
+  try {
+    apply_changes(balance, 3, -10);
+  } catch (const std::invalid_argument&) {
+  }
+  std::cout << balance << "\\n";
+}`,
+          ['5', '-2', '8', '0'],
+          0,
+          'The copy reached 8 and then -2, which throws; balance was never assigned.',
+        ),
+        predictOutput(
+          'This version changes balance directly. What does it print?',
+          `#include <iostream>
+#include <stdexcept>
+void apply_in_place(int& balance, int first, int second) {
+  balance += first;
+  if (balance < 0) throw std::invalid_argument("overdrawn");
+  balance += second;
+  if (balance < 0) throw std::invalid_argument("overdrawn");
+}
+int main() {
+  int balance = 5;
+  try {
+    apply_in_place(balance, 3, -10);
+  } catch (const std::invalid_argument&) {
+  }
+  std::cout << balance << "\\n";
+}`,
+          ['5', '8', '-2', '0'],
+          2,
+          'Both changes were applied to the real balance before the second check threw.',
+        ),
+        choose(
+          'Why does working on a local copy give the strong guarantee?',
+          [
+            'Local copies cannot throw',
+            'The caller’s object is assigned only after every check has passed',
+            'Assignment undoes earlier changes',
+            'The compiler rolls back the caller’s object automatically',
+          ],
+          1,
+          'All risky steps touch only the copy; the single commit at the end cannot fail.',
+        ),
+      ],
+    },
+  ],
+  'cpp-exceptions': [
+    {
+      title: 'noexcept reports a declared contract',
+      explanation: [
+        'Declaring int f() noexcept promises that f never throws. The noexcept operator, noexcept(expression), is a compile-time bool: true when the expression is declared not to throw.',
+        'A function without the noexcept specifier counts as potentially throwing, even if its body could never throw. Built-in operations on ints are non-throwing.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int read_value() noexcept { return 7; }
+int may_fail() { return 8; }
+int main() {
+  std::cout << noexcept(read_value()) << " " << noexcept(may_fail()) << "\\n";
+}`,
+        output: '1 0',
+        explanation:
+          'read_value is declared noexcept. may_fail cannot actually throw, but it makes no promise, so the operator reports false.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int a() noexcept { return 1; }
+int b() { return 2; }
+int main() {
+  std::cout << noexcept(a()) << " " << noexcept(b()) << " " << noexcept(a() + b()) << "\\n";
+}`,
+          ['1 0 1', '1 1 0', '1 0 0', '0 0 0'],
+          2,
+          'An expression is non-throwing only if every call in it is; b() makes the sum potentially throwing.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int x = 3;
+  std::cout << noexcept(x + 1) << " " << noexcept(x * 2) << "\\n";
+}`,
+          ['1 1', '0 0', '4 6', '1 0'],
+          0,
+          'Built-in arithmetic on ints never throws, and noexcept yields a bool, not the value.',
+        ),
+        choose(
+          'Function g has no noexcept specifier, and its body only adds two ints. What is noexcept(g())?',
+          [
+            'true, because the body cannot throw',
+            'It does not compile',
+            'It depends on the arguments',
+            'false, because g is not declared noexcept',
+          ],
+          3,
+          'The operator reads the declaration, not the body.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int c() noexcept(false) { return 0; }
+int d() noexcept(true) { return 0; }
+int main() {
+  std::cout << noexcept(c()) << " " << noexcept(d()) << "\\n";
+}`,
+          ['1 0', '0 1', '0 0', '1 1'],
+          1,
+          'noexcept(false) declares a potentially throwing function; noexcept(true) is the same as plain noexcept.',
+        ),
+      ],
+    },
+    {
+      title: 'The operand of noexcept is not evaluated',
+      explanation: [
+        'Like sizeof, the noexcept operator only inspects its operand; it never runs it. Any side effect written inside noexcept(...) does not happen.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int counter = 0;
+  bool safe = noexcept(++counter);
+  std::cout << safe << " " << counter << "\\n";
+}`,
+        output: '1 0',
+        explanation:
+          'Incrementing an int cannot throw, so the result is true, but the increment never executes.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int touch(int& value) noexcept { return ++value; }
+int main() {
+  int x = 5;
+  bool b = noexcept(touch(x));
+  std::cout << b << " " << x << "\\n";
+}`,
+          ['1 6', '1 5', '0 5', '6 5'],
+          1,
+          'touch is declared noexcept, but it is not called, so x stays 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int risky(int& value) { return ++value; }
+int main() {
+  int x = 5;
+  std::cout << noexcept(risky(x)) << " " << x << "\\n";
+}`,
+          ['0 6', '1 5', '1 6', '0 5'],
+          3,
+          'risky is not declared noexcept, and the call inside the operator never runs.',
+        ),
+        choose(
+          'What happens to side effects in the expression inside noexcept(...)?',
+          [
+            'They happen once',
+            'They happen only if the result is true',
+            'They never happen; the expression is not evaluated',
+            'They happen during compilation',
+          ],
+          2,
+          'noexcept is an unevaluated context, like sizeof and decltype.',
+        ),
+      ],
+    },
+    {
+      title: 'Breaking a noexcept promise terminates the program',
+      explanation: [
+        'noexcept is a contract, not a recovery mechanism. If an exception escapes a function declared noexcept, the program calls std::terminate; no caller’s catch block ever sees it.',
+        'Mark a function noexcept only when it cannot throw, or when it catches everything that could be thrown inside it.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <stdexcept>
+int safe_parse(int value) noexcept {
+  try {
+    if (value < 0) throw std::invalid_argument("negative");
+    return value;
+  } catch (const std::invalid_argument&) {
+    return 0;
+  }
+}
+int main() {
+  std::cout << safe_parse(7) << " " << safe_parse(-7) << " " << noexcept(safe_parse(1)) << "\\n";
+}`,
+        output: '7 0 1',
+        explanation:
+          'The exception is caught inside safe_parse, so nothing escapes and the noexcept promise holds.',
+      },
+      questions: [
+        choose(
+          'An exception escapes a function declared noexcept, and the caller has a matching catch. What happens?',
+          [
+            'The caller’s handler runs',
+            'The function returns 0',
+            'std::terminate is called; the handler never runs',
+            'The exception is silently discarded',
+          ],
+          2,
+          'The noexcept boundary stops propagation by ending the program.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <stdexcept>
+int safe_parse(int value) noexcept {
+  try {
+    if (value < 0) throw std::invalid_argument("negative");
+    return value;
+  } catch (const std::invalid_argument&) {
+    return 0;
+  }
+}
+int main() {
+  std::cout << safe_parse(-3) + safe_parse(4) << "\\n";
+}`,
+          ['1', '-3', '7', '4'],
+          3,
+          'The negative input is handled inside the function and becomes 0.',
+        ),
+        choose(
+          'When is marking a function noexcept appropriate?',
+          [
+            'When it cannot throw, or catches everything that could be thrown inside it',
+            'Whenever it is called inside a try block',
+            'To make its exceptions easier to catch',
+            'Only for functions that return void',
+          ],
+          0,
+          'The promise must be true for every call, because a violation ends the program.',
+        ),
+        choose(
+          'A function declared noexcept calls a helper that may throw and catches nothing. What does noexcept(f()) report?',
+          [
+            'false, because the helper may throw',
+            'It does not compile',
+            'true, because f is declared noexcept',
+            'It depends on the helper’s arguments',
+          ],
+          2,
+          'The operator trusts the declaration; if the helper does throw at run time, the program terminates.',
+        ),
+      ],
+    },
+  ],
+  'cpp-virtual-dispatch': [
+    {
+      title: 'A virtual call uses the object’s real type',
+      explanation: [
+        'A derived class is written struct Triangle : Shape { ... }. When the base declares a member function virtual and the derived class overrides it, a call through a reference to the base, such as const Shape&, runs the version for the object’s actual type.',
+        'Without virtual, the call is chosen from the reference’s type instead. (Bases used this way also declare a virtual destructor, covered in its own lesson.)',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+struct Shape {
+  virtual ~Shape() = default;
+  virtual int sides() const { return 0; }
+};
+struct Triangle : Shape {
+  int sides() const override { return 3; }
+};
+int main() {
+  Triangle t;
+  const Shape& view = t;
+  std::cout << view.sides() << "\\n";
+}`,
+        output: '3',
+        explanation:
+          'view has type const Shape&, but it refers to a Triangle, so the Triangle override runs.',
+      },
+      questions: [
+        predictOutput(
+          'id is not virtual here. What does this program print?',
+          `#include <iostream>
+struct Base {
+  int id() const { return 1; }
+};
+struct Derived : Base {
+  int id() const { return 2; }
+};
+int main() {
+  Derived d;
+  const Base& b = d;
+  std::cout << b.id() << " " << d.id() << "\\n";
+}`,
+          ['2 2', '1 2', '1 1', '2 1'],
+          1,
+          'A non-virtual call is chosen from the static type: through Base& it runs Base::id.',
+        ),
+        predictOutput(
+          'Now id is virtual. What does this program print?',
+          `#include <iostream>
+struct Base {
+  virtual ~Base() = default;
+  virtual int id() const { return 1; }
+};
+struct Derived : Base {
+  int id() const override { return 2; }
+};
+int main() {
+  Derived d;
+  const Base& b = d;
+  std::cout << b.id() << " " << d.id() << "\\n";
+}`,
+          ['2 2', '1 2', '1 1', '2 1'],
+          0,
+          'The virtual call through b dispatches to the Derived override.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Shape {
+  virtual ~Shape() = default;
+  virtual int sides() const { return 0; }
+};
+struct Triangle : Shape {
+  int sides() const override { return 3; }
+};
+struct Square : Shape {
+  int sides() const override { return 4; }
+};
+int count(const Shape& shape) { return shape.sides(); }
+int main() {
+  Triangle t;
+  Square s;
+  std::cout << count(t) << " " << count(s) << "\\n";
+}`,
+          ['0 0', '3 3', '3 4', '4 3'],
+          2,
+          'One function written against Shape runs each object’s own override.',
+        ),
+        choose(
+          'Through `const Base& view = derived;`, which version of a virtual function runs?',
+          [
+            'Base’s, because view has type Base',
+            'Both, base first',
+            'Whichever was declared first',
+            'Derived’s, because the object is a Derived',
+          ],
+          3,
+          'Virtual dispatch follows the dynamic type of the object.',
+        ),
+      ],
+    },
+    {
+      title: 'override catches signature mistakes',
+      explanation: [
+        'A derived function overrides a virtual function only if its signature matches exactly, including const. If it differs, it is a new, unrelated function, and calls through the base still run the base version.',
+        'Writing override asks the compiler to check: a function marked override that matches no virtual base function is an error.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+struct Base {
+  virtual ~Base() = default;
+  virtual int read() const { return 1; }
+};
+struct Derived : Base {
+  int read() { return 2; }
+};
+int main() {
+  Derived d;
+  const Base& view = d;
+  std::cout << view.read() << " " << d.read() << "\\n";
+}`,
+        output: '1 2',
+        explanation:
+          'Derived::read lacks const, so it does not override. The call through view still runs Base::read. Adding override would have turned this into a compile error.',
+      },
+      questions: [
+        predictOutput(
+          'The derived parameter type differs. What does this program print?',
+          `#include <iostream>
+struct Base {
+  virtual ~Base() = default;
+  virtual int scale(int x) const { return x; }
+};
+struct Derived : Base {
+  int scale(long x) const { return static_cast<int>(x) * 2; }
+};
+int main() {
+  Derived d;
+  const Base& view = d;
+  std::cout << view.scale(5) << "\\n";
+}`,
+          ['10', '5', '0', '15'],
+          1,
+          'scale(long) is a different function, so the virtual scale(int) is not overridden.',
+        ),
+        choose(
+          'What does adding override to `int read()` (missing const) in Derived do?',
+          [
+            'Nothing; override is only documentation',
+            'It makes calls through Base run Derived::read',
+            'It adds const automatically',
+            'The compiler reports an error, because no virtual base function has that signature',
+          ],
+          3,
+          'override turns a silent mismatch into a compile error.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Base {
+  virtual ~Base() = default;
+  virtual int read() const { return 1; }
+};
+struct Derived : Base {
+  int read() const override { return 2; }
+};
+int main() {
+  Derived d;
+  const Base& view = d;
+  std::cout << view.read() << " " << d.read() << "\\n";
+}`,
+          ['1 2', '1 1', '2 2', '2 1'],
+          2,
+          'With the matching const signature, Derived::read overrides and both calls run it.',
+        ),
+        choose(
+          'Which declaration in Derived overrides `virtual int read() const` in Base?',
+          [
+            'int read();',
+            'int read() const override;',
+            'int read(int) const override;',
+            'virtual int read();',
+          ],
+          1,
+          'Name, parameters and const must all match.',
+        ),
+      ],
+    },
+    {
+      title: 'Program against an abstract interface',
+      explanation: [
+        'virtual int price(int units) const = 0; declares a pure virtual function. A class with one is abstract: it cannot be instantiated, and every concrete derived class must override the function.',
+        'Code written against const Pricer& then works with every implementation, including ones written later.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+struct Pricer {
+  virtual ~Pricer() = default;
+  virtual int price(int units) const = 0;
+};
+struct Flat : Pricer {
+  int fee;
+  explicit Flat(int f) : fee(f) {}
+  int price(int) const override { return fee; }
+};
+struct PerUnit : Pricer {
+  int rate;
+  explicit PerUnit(int r) : rate(r) {}
+  int price(int units) const override { return rate * units; }
+};
+int quote(const Pricer& pricer, int units) { return pricer.price(units); }
+int main() {
+  Flat flat(50);
+  PerUnit per_unit(7);
+  std::cout << quote(flat, 10) << " " << quote(per_unit, 10) << "\\n";
+}`,
+        output: '50 70',
+        explanation:
+          'quote knows only the Pricer interface; each object supplies its own price rule.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Pricer {
+  virtual ~Pricer() = default;
+  virtual int price(int units) const = 0;
+};
+struct Flat : Pricer {
+  int fee;
+  explicit Flat(int f) : fee(f) {}
+  int price(int) const override { return fee; }
+};
+struct PerUnit : Pricer {
+  int rate;
+  explicit PerUnit(int r) : rate(r) {}
+  int price(int units) const override { return rate * units; }
+};
+int quote(const Pricer& pricer, int units) { return pricer.price(units); }
+int main() {
+  Flat flat(20);
+  PerUnit per_unit(4);
+  std::cout << quote(flat, 3) + quote(per_unit, 3) << "\\n";
+}`,
+          ['32', '72', '24', '60'],
+          0,
+          'The flat fee ignores the units (20); per-unit pricing gives 4 * 3 = 12.',
+        ),
+        choose(
+          'Why does `Pricer p;` fail to compile?',
+          [
+            'Pricer has no constructor',
+            'Pricer has a pure virtual function, so it is abstract',
+            'Pricer’s destructor is virtual',
+            'Objects must be created with new',
+          ],
+          1,
+          'An abstract class can only be used as the base of a concrete class.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Pricer {
+  virtual ~Pricer() = default;
+  virtual int price(int units) const = 0;
+};
+struct PerUnit : Pricer {
+  int rate;
+  explicit PerUnit(int r) : rate(r) {}
+  int price(int units) const override { return rate * units; }
+};
+int quote(const Pricer& pricer, int units) { return pricer.price(units); }
+int main() {
+  PerUnit cheap(2);
+  PerUnit dear(5);
+  std::cout << quote(cheap, 4) << " " << quote(dear, 4) << "\\n";
+}`,
+          ['20 20', '8 8', '8 20', '2 5'],
+          2,
+          'Both objects use the same override with their own rate.',
+        ),
+        choose(
+          'A new pricing rule is needed. What must change in quote(const Pricer&, int)?',
+          [
+            'Nothing; a new class that overrides price works with it',
+            'quote needs a new overload',
+            'Pricer must list every derived class',
+            'quote must check the object’s type first',
+          ],
+          0,
+          'That independence from concrete types is the point of the interface.',
+        ),
+      ],
+    },
+  ],
+  'cpp-virtual-destruction': [
+    {
+      title: 'A virtual destructor runs the derived cleanup',
+      explanation: [
+        'std::unique_ptr<Base> owner = std::make_unique<Derived>(); deletes its object through a Base* when owner is destroyed. If Base’s destructor is virtual, that delete runs ~Derived first and then ~Base.',
+        'If Base’s destructor is not virtual, deleting a Derived through a Base* is undefined behavior; typically the derived cleanup is skipped.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <memory>
+struct Base {
+  virtual ~Base() { std::cout << "~Base\\n"; }
+};
+struct Derived : Base {
+  ~Derived() override { std::cout << "~Derived\\n"; }
+};
+int main() {
+  {
+    std::unique_ptr<Base> owner = std::make_unique<Derived>();
+  }
+  std::cout << "done\\n";
+}`,
+        output: '~Derived\n~Base\ndone',
+        explanation:
+          'Leaving the block destroys owner. The virtual destructor dispatches to ~Derived, which then runs ~Base.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <memory>
+struct Base {
+  virtual ~Base() = default;
+};
+struct Derived : Base {
+  int& count;
+  explicit Derived(int& c) : count(c) {}
+  ~Derived() override { ++count; }
+};
+int main() {
+  int released = 0;
+  {
+    std::unique_ptr<Base> owner = std::make_unique<Derived>(released);
+  }
+  std::cout << released << "\\n";
+}`,
+          ['0', '1', '2', '-1'],
+          1,
+          'Destroying owner runs ~Derived through the virtual destructor, which increments the counter once.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <memory>
+struct A {
+  virtual ~A() { std::cout << "A "; }
+};
+struct B : A {
+  ~B() override { std::cout << "B "; }
+};
+struct C : B {
+  ~C() override { std::cout << "C "; }
+};
+int main() {
+  {
+    std::unique_ptr<A> owner = std::make_unique<C>();
+  }
+  std::cout << "\\n";
+}`,
+          ['A B C', 'C B A', 'C A', 'A'],
+          1,
+          'Destruction runs from the most derived class back to the base.',
+        ),
+        choose(
+          'A Base without a virtual destructor owns a Derived through std::unique_ptr<Base>. What happens when the pointer is destroyed?',
+          [
+            'Only ~Base runs, and that is safe',
+            '~Derived runs automatically anyway',
+            'Compilation fails',
+            'Undefined behavior: deleting a Derived through a Base* needs a virtual destructor',
+          ],
+          3,
+          'The delete must find the most derived destructor, which requires virtual dispatch.',
+        ),
+        predictOutput(
+          'The owner is cleared early. What does this program print?',
+          `#include <iostream>
+#include <memory>
+struct Base {
+  virtual ~Base() { std::cout << "~Base\\n"; }
+};
+struct Derived : Base {
+  ~Derived() override { std::cout << "~Derived\\n"; }
+};
+int main() {
+  std::unique_ptr<Base> owner = std::make_unique<Derived>();
+  owner = nullptr;
+  std::cout << "after reset\\n";
+}`,
+          [
+            'after reset\n~Derived\n~Base',
+            '~Base\nafter reset',
+            '~Derived\n~Base\nafter reset',
+            'after reset',
+          ],
+          2,
+          'Assigning nullptr deletes the owned object immediately, before the next line runs.',
+        ),
+      ],
+    },
+    {
+      title: 'Declare the base destructor virtual once',
+      explanation: [
+        'Once a base declares virtual ~Base() = default;, every derived destructor is virtual too, whether it is written out or generated. A class meant to own derived objects through base pointers needs that one declaration.',
+        'When the exact type is known, as for a local Derived variable, the right destructors run either way; the virtual destructor matters for deletion through a base pointer.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <memory>
+struct Base {
+  virtual ~Base() = default;
+};
+struct Logger : Base {
+  int& closed;
+  explicit Logger(int& c) : closed(c) {}
+  ~Logger() override { ++closed; }
+};
+int main() {
+  int closed = 0;
+  {
+    std::unique_ptr<Base> a = std::make_unique<Logger>(closed);
+    std::unique_ptr<Base> b = std::make_unique<Logger>(closed);
+  }
+  std::cout << closed << "\\n";
+}`,
+        output: '2',
+        explanation:
+          'Each owner deletes its own Logger through Base*, and each ~Logger runs.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <memory>
+struct Base {
+  virtual ~Base() = default;
+};
+struct Logger : Base {
+  int& closed;
+  explicit Logger(int& c) : closed(c) {}
+  ~Logger() override { ++closed; }
+};
+int main() {
+  int closed = 0;
+  std::unique_ptr<Base> a = std::make_unique<Logger>(closed);
+  std::unique_ptr<Base> b = std::make_unique<Logger>(closed);
+  a = nullptr;
+  std::cout << closed << "\\n";
+}`,
+          ['0', '2', '1', '3'],
+          2,
+          'Only a’s Logger has been deleted when the count is printed; b still owns its object.',
+        ),
+        choose(
+          'Which base declaration makes destroying derived objects through std::unique_ptr<Base> safe?',
+          [
+            '~Base() = default;',
+            'Base() = default;',
+            'virtual Base();',
+            'virtual ~Base() = default;',
+          ],
+          3,
+          'The destructor itself must be virtual; constructors cannot be virtual.',
+        ),
+        predictOutput(
+          'The Derived object here is a local variable. What does this program print?',
+          `#include <iostream>
+struct Base {
+  ~Base() { std::cout << "~Base "; }
+};
+struct Derived : Base {
+  ~Derived() { std::cout << "~Derived "; }
+};
+int main() {
+  {
+    Derived d;
+  }
+  std::cout << "\\n";
+}`,
+          ['~Base', '~Derived ~Base', '~Base ~Derived', '~Derived'],
+          1,
+          'The exact type is known, so both destructors run in order even without virtual.',
+        ),
+        choose(
+          'Why is the virtual destructor needed for std::unique_ptr<Base> but not for a local Derived variable?',
+          [
+            'Deleting through Base* must find the derived destructor at run time; a local’s type is known when compiling',
+            'Local variables are never destroyed',
+            'unique_ptr cannot call non-virtual functions',
+            'It is needed in both cases',
+          ],
+          0,
+          'Virtual dispatch is required only when the static type differs from the object’s real type.',
+        ),
+      ],
+    },
+  ],
+  'cpp-avoid-slicing': [
+    {
+      title: 'Copying into a base value slices the object',
+      explanation: [
+        'Base copy = derived; copies only the Base part of the object into a new, genuine Base. The derived members and behavior are gone, so a virtual call on copy runs Base’s version.',
+        'A reference, const Base& ref = derived;, copies nothing and keeps dynamic dispatch.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+struct Base {
+  virtual ~Base() = default;
+  virtual int read() const { return 1; }
+};
+struct Derived : Base {
+  int read() const override { return 2; }
+};
+int main() {
+  Derived object;
+  Base copy = object;
+  const Base& view = object;
+  std::cout << copy.read() << " " << view.read() << "\\n";
+}`,
+        output: '1 2',
+        explanation:
+          'copy is a separate Base object; view still refers to the Derived.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Base {
+  virtual ~Base() = default;
+  virtual int value() const { return 0; }
+};
+struct Derived : Base {
+  int extra;
+  explicit Derived(int e) : extra(e) {}
+  int value() const override { return extra; }
+};
+int main() {
+  Derived d(5);
+  Base copy = d;
+  const Base& ref = d;
+  std::cout << copy.value() << " " << ref.value() << "\\n";
+}`,
+          ['5 5', '0 0', '5 0', '0 5'],
+          3,
+          'The copy has no extra member and runs Base::value; the reference reaches the Derived.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Base {
+  virtual ~Base() = default;
+  virtual int read() const { return 1; }
+};
+struct Derived : Base {
+  int read() const override { return 2; }
+};
+int main() {
+  Derived d;
+  Base b;
+  b = d;
+  std::cout << b.read() << "\\n";
+}`,
+          ['1', '2', '3', '0'],
+          0,
+          'Assigning to an existing Base copies only the base part; b stays a Base.',
+        ),
+        choose(
+          'Why does a sliced copy run Base’s version of a virtual function?',
+          [
+            'Virtual calls are disabled on copies',
+            'The copy is a genuine Base object; the derived part was never copied',
+            'The compiler chooses by declaration order',
+            'The copy still refers to the Derived object',
+          ],
+          1,
+          'A Base object has Base’s dynamic type, whatever it was copied from.',
+        ),
+      ],
+    },
+    {
+      title: 'Pass polymorphic objects by reference',
+      explanation: [
+        'A parameter of type Base, passed by value, slices every derived argument. A const Base& parameter refers to the caller’s object and keeps virtual dispatch.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+struct Base {
+  virtual ~Base() = default;
+  virtual int read() const { return 1; }
+};
+struct Derived : Base {
+  int read() const override { return 2; }
+};
+int by_value(Base item) { return item.read(); }
+int by_ref(const Base& item) { return item.read(); }
+int main() {
+  Derived d;
+  std::cout << by_value(d) << " " << by_ref(d) << "\\n";
+}`,
+        output: '1 2',
+        explanation:
+          'by_value receives a sliced Base copy; by_ref sees the Derived object.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Base {
+  virtual ~Base() = default;
+  virtual int read() const { return 1; }
+};
+struct Two : Base {
+  int read() const override { return 2; }
+};
+struct Three : Base {
+  int read() const override { return 3; }
+};
+int by_ref(const Base& item) { return item.read(); }
+int main() {
+  Two a;
+  Three b;
+  std::cout << by_ref(a) << " " << by_ref(b) << "\\n";
+}`,
+          ['1 1', '2 3', '3 2', '2 2'],
+          1,
+          'The reference parameter preserves each argument’s dynamic type.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Base {
+  virtual ~Base() = default;
+  virtual int read() const { return 1; }
+};
+struct Two : Base {
+  int read() const override { return 2; }
+};
+struct Three : Base {
+  int read() const override { return 3; }
+};
+int by_value(Base item) { return item.read(); }
+int main() {
+  Two a;
+  Three b;
+  std::cout << by_value(a) + by_value(b) << "\\n";
+}`,
+          ['5', '4', '2', '6'],
+          2,
+          'Both arguments are sliced to Base, so each call returns 1.',
+        ),
+        choose(
+          'Which parameter type keeps virtual dispatch for every derived argument?',
+          ['Base', 'Base copy', 'const Base&', 'Derived'],
+          2,
+          'Only a reference (or pointer) avoids creating a new Base object.',
+        ),
+        choose(
+          'A function takes Base by value and is called with a Derived. What does the function receive?',
+          [
+            'A new Base object copied from the Derived’s base part',
+            'The whole Derived object',
+            'A reference to the Derived object',
+            'Nothing; the call does not compile',
+          ],
+          0,
+          'Pass-by-value copy-constructs a Base, slicing the argument.',
+        ),
+      ],
+    },
+  ],
+  'cpp-polymorphism': [
+    {
+      title: 'Store a collaborator as a member',
+      explanation: [
+        'Composition builds an object from other objects: struct Processor { Scale scale; int result() const { return scale.apply(2); } }; holds a Scale and delegates part of its work to it. Processor{{3}} initializes the member with nested braces.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+struct Scale {
+  int factor;
+  int apply(int x) const { return factor * x; }
+};
+struct Processor {
+  Scale scale;
+  int result() const { return scale.apply(2); }
+};
+int main() {
+  Processor processor{{3}};
+  std::cout << processor.result() << "\\n";
+}`,
+        output: '6',
+        explanation:
+          'The inner braces build the Scale member with factor 3, and result asks it to scale 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Tax {
+  int percent;
+  int on(int amount) const { return amount * percent / 100; }
+};
+struct Invoice {
+  Tax tax;
+  int net;
+  int total() const { return net + tax.on(net); }
+};
+int main() {
+  Invoice invoice{{20}, 50};
+  std::cout << invoice.total() << "\\n";
+}`,
+          ['70', '60', '10', '50'],
+          1,
+          'The Tax member computes 20% of 50, which is 10, added to the net 50.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Scale {
+  int factor;
+  int apply(int x) const { return factor * x; }
+};
+struct Processor {
+  Scale scale;
+  int result() const { return scale.apply(2); }
+};
+int main() {
+  Processor a{{3}};
+  Processor b{{5}};
+  std::cout << a.result() << " " << b.result() << "\\n";
+}`,
+          ['6 6', '3 5', '10 6', '6 10'],
+          3,
+          'Each Processor owns its own Scale with its own factor.',
+        ),
+        choose(
+          'Processor contains a Scale member and calls scale.apply. What is the relationship?',
+          [
+            'Processor is a Scale',
+            'Processor has a Scale',
+            'Scale is a Processor',
+            'Processor overrides Scale',
+          ],
+          1,
+          'A member expresses "has-a"; inheritance expresses "is-a".',
+        ),
+      ],
+    },
+    {
+      title: 'Inherit for an interface; compose for an implementation',
+      explanation: [
+        'Use public inheritance when the derived type must be usable wherever the base interface is expected. To reuse a helper’s code, hold the helper as a member instead: inheriting from it would make all its public members part of your type’s interface and tie your type to it.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+struct Counter {
+  int count;
+  void add() { ++count; }
+};
+struct Session {
+  Counter requests;
+  void handle() { requests.add(); }
+  int handled() const { return requests.count; }
+};
+int main() {
+  Session session{{0}};
+  session.handle();
+  session.handle();
+  std::cout << session.handled() << "\\n";
+}`,
+        output: '2',
+        explanation:
+          'Session uses a Counter internally; callers see only handle and handled, not add or count.',
+      },
+      questions: [
+        choose(
+          'A Report class needs a Formatter’s helper function but should not be usable as a Formatter. Which design fits?',
+          [
+            'struct Report : Formatter { ... };',
+            'struct Formatter : Report { ... };',
+            'struct Report { Formatter formatter; ... };',
+            'Copy the helper into a global function',
+          ],
+          2,
+          'A member gives Report the behavior without claiming that a Report is a Formatter.',
+        ),
+        choose(
+          'When is public inheritance the right tool?',
+          [
+            'When the derived type must be usable wherever the base interface is expected',
+            'Whenever one class needs another class’s code',
+            'When two classes have members with the same names',
+            'Only when the base has no virtual functions',
+          ],
+          0,
+          'Inheritance is a promise of substitutability, not just a way to share code.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+struct Counter {
+  int count;
+  void add() { ++count; }
+};
+struct Session {
+  Counter requests;
+  void handle() { requests.add(); }
+  int handled() const { return requests.count; }
+};
+int main() {
+  Session first{{0}};
+  Session second{{0}};
+  first.handle();
+  first.handle();
+  second.handle();
+  first.handle();
+  std::cout << first.handled() << " " << second.handled() << "\\n";
+}`,
+          ['4 0', '3 1', '1 3', '4 4'],
+          1,
+          'Each Session has its own Counter member.',
+        ),
+        choose(
+          'Session inherits publicly from Counter only to reuse add(). What is the drawback?',
+          [
+            'Callers can call add() and change count on a Session directly, bypassing handle()',
+            'Session can no longer call add()',
+            'Inheritance makes add() slower',
+            'There is none',
+          ],
+          0,
+          'Public inheritance exposes the helper’s whole interface as part of Session’s.',
+        ),
+      ],
+    },
+  ],
 };
