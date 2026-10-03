@@ -105,9 +105,6 @@ for (const language of ['rust', 'cpp'] as const) {
     await expect(
       page.getByText(`Step 1 of ${first.stageCount}`, { exact: true }),
     ).toBeVisible();
-    await page
-      .getByRole('button', { name: 'Start lesson', exact: true })
-      .click();
     // Two correct answers on distinct variants pass each knowledge point.
     for (const point of first.knowledgePoints!)
       for (let index = 0; index < 2; index++) {

@@ -117,11 +117,6 @@ for (const id of ['cp-prefix-sums', 'cp-fenwick']) {
           skill.questions.filter((question) => question.type === 'code'),
         ]
       : skill.questions.map((question) => [question]);
-    await page
-      .getByRole('button', {
-        name: skill.knowledgePoints ? 'Start lesson' : 'Let’s try it',
-      })
-      .click();
     for (const [index, candidates] of steps.entries()) {
       const last = index === steps.length - 1;
       if (candidates[0].type === 'code' && id === 'cp-prefix-sums') {

@@ -5,12 +5,26 @@ import { plainProse } from '../../src/lib/math-text';
 import { replaceCode } from './editor';
 
 /**
+ * The question being answered now. A lesson or review page keeps every
+ * answered question above it, marked data-state="answered"; quiz and
+ * placement pages show one question at a time.
+ */
+export function currentQuestion(page: Page) {
+  return page.locator('.question-paper:not([data-state="answered"])');
+}
+
+/** Questions already answered on this page, oldest first. */
+export function answeredQuestions(page: Page) {
+  return page.locator('.question-paper[data-state="answered"]');
+}
+
+/**
  * A choice button by its authored index. Choices are shuffled per
  * presentation, so the displayed letter is not fixed; the button's name is
  * "<letter> <choice>".
  */
 export function choiceButton(page: Page, index: number) {
-  return page
+  return currentQuestion(page)
     .getByRole('group', { name: 'Choices', exact: true })
     .locator(`[data-choice="${index}"]`);
 }
@@ -46,13 +60,14 @@ export async function expectProse(locator: Locator, text: string) {
     .toBe(squashSpaces(plainProse(text)));
 }
 
-/** The prompt of the question currently shown. */
+/** The prompt of the current question (an h1 on quiz and placement pages). */
 export function prompt(page: Page) {
-  return page.locator('.question-paper h1');
+  return currentQuestion(page).locator('.question-prompt, h1');
 }
 
+/** The current question's result, announced after it is answered. */
 export function feedback(page: Page) {
-  return page.locator('.question-paper [data-slot="alert"][role="status"]');
+  return currentQuestion(page).locator('[data-slot="alert"][role="status"]');
 }
 
 /** The question on screen, identified among candidates by prompt and code. */
@@ -70,14 +85,11 @@ export async function shownQuestion<T extends Question>(
   // the whitespace that highlighting may add or drop.
   const squash = (text: string) => text.replace(/\s+/g, '');
   const shown = squash(
-    await page
-      .locator('.question-paper')
-      .first()
-      .evaluate((paper) => {
-        const copy = paper.cloneNode(true) as HTMLElement;
-        copy.querySelector('.answer-options')?.remove();
-        return copy.textContent ?? '';
-      }),
+    await currentQuestion(page).evaluate((paper) => {
+      const copy = paper.cloneNode(true) as HTMLElement;
+      copy.querySelector('.answer-options')?.remove();
+      return copy.textContent ?? '';
+    }),
   );
   const match = matches
     .filter(
@@ -138,20 +150,24 @@ export async function continueLesson(page: Page) {
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
 }
 
+/** From a completed lesson's summary, open the next scheduled task. */
+export async function openNextTask(page: Page) {
+  await page
+    .getByRole('region', { name: 'Lesson complete', exact: true })
+    .getByRole('button', { name: 'Next task', exact: true })
+    .click();
+}
+
 /**
- * Pass a knowledge-point lesson from its introduction: two correct answers on
- * each point, then the code exercise where the lesson has one. Returns the
+ * Pass a knowledge-point lesson that is open on its page: two correct answers
+ * on each point, then the code exercise where the lesson has one. Returns the
  * number of answers given; the last one's feedback is left on screen.
  */
 export async function completeLesson(
   page: Page,
   skill: Skill,
-  { code, started = false }: { code?: string; started?: boolean } = {},
+  { code }: { code?: string } = {},
 ): Promise<number> {
-  if (!started)
-    await page
-      .getByRole('button', { name: 'Start lesson', exact: true })
-      .click();
   const steps = lessonSteps(skill);
   let answers = 0;
   for (const [index, step] of steps.entries()) {

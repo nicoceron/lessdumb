@@ -5,7 +5,6 @@ import { createState } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
 import { replaceCode } from './helpers/editor';
 import {
-  answerChoice,
   answerShown,
   completeLesson,
   continueLesson,
@@ -109,42 +108,21 @@ for (const id of ['da-arrays', 'ml-linear-regression']) {
     const skill = skillById[id];
     await seedPrerequisites(page, id);
     await page.goto(`/learn?skill=${id}`);
-    if (skill.knowledgePoints) {
-      // Points pass with two correct answers each; the scientific Python
-      // exercise then completes the lesson.
-      await page
-        .getByRole('button', { name: 'Start lesson', exact: true })
-        .click();
-      for (const point of skill.knowledgePoints)
-        for (let index = 0; index < 2; index++) {
-          await answerShown(page, point.questions);
-          await expect(feedback(page)).toContainText('Correct');
-          await continueLesson(page);
-        }
-      await answerShown(
-        page,
-        skill.questions.filter((question) => question.type === 'code'),
-      );
-      await expect(feedback(page)).toContainText('Lesson complete', {
-        timeout: 60000,
-      });
-    } else {
-      await page.getByRole('button', { name: 'Let’s try it' }).click();
-      for (const question of skill.questions) {
-        if (question.type === 'choice') await answerChoice(page, question);
-        else {
-          await replaceCode(page, (question as CodeQuestion).solution);
-          await page
-            .getByRole('button', { name: 'Run & check', exact: true })
-            .click();
-        }
-        await expect(feedback(page)).toContainText(
-          question === skill.questions.at(-1) ? 'Lesson complete' : 'Correct',
-          { timeout: 60000 },
-        );
-        if (question !== skill.questions.at(-1)) await continueLesson(page);
+    // Points pass with two correct answers each; the scientific Python
+    // exercise then completes the lesson.
+    for (const point of skill.knowledgePoints!)
+      for (let index = 0; index < 2; index++) {
+        await answerShown(page, point.questions);
+        await expect(feedback(page)).toContainText('Correct');
+        await continueLesson(page);
       }
-    }
+    await answerShown(
+      page,
+      skill.questions.filter((question) => question.type === 'code'),
+    );
+    await expect(feedback(page)).toContainText('Lesson complete', {
+      timeout: 60000,
+    });
     await openFromMenu(page, /Flashcards/);
     await expect(
       page
@@ -165,12 +143,11 @@ test('data-systems scenarios teach and earn cards without a code exercise', asyn
 }) => {
   const skill = skillById['ds-workloads'];
   await page.goto(`/learn?skill=${skill.id}`);
-  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
   // Each point's worked example is a design scenario with a decision, shown
   // as text rather than as a program.
   const point = skill.knowledgePoints![0];
   expect(point.example.kind).toBe('text');
-  const teaching = page.locator('.lesson-point');
+  const teaching = page.getByRole('region', { name: point.title, exact: true });
   await expect(
     teaching.getByText(point.example.label ?? 'SCENARIO', { exact: true }),
   ).toBeVisible();
@@ -183,7 +160,7 @@ test('data-systems scenarios teach and earn cards without a code exercise', asyn
       item.questions.every((question) => question.type === 'choice'),
     ),
   ).toBe(true);
-  await completeLesson(page, skill, { started: true });
+  await completeLesson(page, skill);
   await expect(feedback(page)).toContainText('Lesson complete');
   await expect(page.locator('.cm-content')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Run & check' })).toHaveCount(
@@ -220,7 +197,6 @@ test('leaving a lesson cancels its real Python worker and locks the submitted co
     };
   });
   await page.goto('/learn');
-  await page.getByRole('button', { name: 'Start lesson' }).click();
   const skill = skillById['print-output'];
   for (const point of skill.knowledgePoints!)
     for (let index = 0; index < 2; index++) {

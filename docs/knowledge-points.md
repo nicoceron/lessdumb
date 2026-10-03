@@ -61,13 +61,13 @@ Use only what the skill's prerequisites, and earlier points of the same skill, h
 
 ## Lesson behavior
 
-A learner works through a lesson as follows:
+A lesson is one page that grows as the learner works through it:
 
 1. Read the skill's introduction (`lesson.paragraphs`).
-2. For each knowledge point in order: read its explanation and worked example, then answer its questions one at a time, unseen variants first. Two correct answers, on two different questions, pass the point. Three incorrect answers on one point fail the lesson attempt.
+2. For each knowledge point in order: read its explanation and worked example, then answer its questions, unseen variants first. Each answered question stays on the page with its explanation, and the next one is added below it. Two correct answers, on two different questions, pass the point. Three incorrect answers on one point fail the lesson attempt.
 3. For a programming skill, finish with the skill's code exercise, as its assessment policy requires. A wrong run can be fixed and run again; it costs XP but does not fail the attempt.
 
-Points passed during an attempt are provisional (`lessonAttempt` in the learner's state). They become mastery evidence together when the last step passes, so a failed attempt keeps nothing from that attempt. A failure records `lessonFailedAt` and the learner sees "Lesson failed — you'll see it again later" with a link back to Today. The scheduler then offers any other available work first. The lesson returns once the learner completes another lesson or review, or four hours after the failure (`LESSON_RETRY_DELAY_MS`), whichever comes first. If nothing else is available it is offered anyway. Opening it directly is always allowed. The retry starts from the first point. Passing every point (and the code exercise, where required) masters the skill and schedules its first review one day later, as before.
+Points passed during an attempt are provisional (`lessonAttempt` in the learner's state). They become mastery evidence together when the last step passes, so a failed attempt keeps nothing from that attempt. A failure records `lessonFailedAt` and the learner sees "Lesson failed — you'll see it again later" with a link back to Today, at the bottom of the page under everything they read and answered. The scheduler then offers any other available work first. The lesson returns once the learner completes another lesson or review, or four hours after the failure (`LESSON_RETRY_DELAY_MS`), whichever comes first. If nothing else is available it is offered anyway. Opening it directly is always allowed. The retry starts from the first point. Passing every point (and the code exercise, where required) masters the skill and schedules its first review one day later, as before.
 
 A due review asks one fresh question from each of several points, rotating which point comes first each cycle, plus code where the skill's policy requires it. For these skills a policy's `reviewAnswers` is the number of points reviewed (at most the number of points), and the code exercise is asked in addition. Knowledge-point questions satisfy a `choice` requirement. A wrong review answer records a lapse and removes evidence for that point only; the learn task that follows re-teaches just the missing point.
 
