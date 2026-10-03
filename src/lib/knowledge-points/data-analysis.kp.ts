@@ -581,6 +581,141 @@ export const knowledgePoints: KnowledgePointModule = {
     },
   ],
 
+  'da-exp-log': [
+    {
+      title: 'Apply np.exp to every entry',
+      explanation: [
+        'np.exp(a) returns a new array with $e^x$ for every entry $x$ of a: the array version of math.exp. It keeps the shape of a and always holds floats, even when a holds integers. Every result is positive, because $e^x > 0$ for every $x$.',
+        'The values usually have long decimal tails. array.round(3) rounds every entry to 3 decimals and returns a new array, ready to print with tolist().',
+      ],
+      example: {
+        code: 'import numpy as np\nz = np.array([-1.0, 0.0, 1.0])\nprint(np.exp(z).round(3).tolist())',
+        output: '[0.368, 1.0, 2.718]',
+        explanation:
+          '$e^{-1} \\approx 0.368$, $e^0 = 1$, and $e^1 \\approx 2.718$; round(3) keeps three decimals of each.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          'import numpy as np\nz = np.array([0.0, 1.0, 2.0])\nprint(np.exp(z).round(3).tolist())',
+          '[1.0, 2.718, 7.389]',
+          'np.exp applies $e^x$ to each entry: $e^0 = 1$, $e^1 \\approx 2.718$, and $e^2 \\approx 7.389$, each rounded to 3 decimals.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          'import numpy as np\ncounts = np.array([0, 1])\nresult = np.exp(counts)\nprint(result[0], result.dtype)',
+          '1.0 float64',
+          'np.exp returns floats even for an integer array, so $e^0$ prints as 1.0 and the dtype is float64.',
+        ),
+        choose(
+          'z holds -2.0, 0.0 and 3.0. Which describes np.exp(z)?',
+          [
+            'One negative, one zero, one positive',
+            'Three floats, all greater than 0',
+            'Three ints: 0, 1 and 20',
+            'One float: the largest of the three',
+          ],
+          1,
+          '$e^x$ is positive for every $x$, including negative $x$, and np.exp returns one float per entry.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          'import numpy as np\nm = np.array([[0.0, 1.0, 2.0], [3.0, 4.0, 5.0]])\nprint(np.exp(m).shape)',
+          '(2, 3)',
+          'np.exp works entry by entry, so the result keeps the shape of its input: 2 rows of 3.',
+        ),
+      ],
+    },
+    {
+      title: 'Take natural logs with np.log',
+      explanation: [
+        'np.log(a) returns the natural logarithm $\\ln x$ of every entry, the array version of math.log. np.e is the constant $e$, so np.log(np.e) is 1.0, and np.log(1.0) is 0.0. Entries between 0 and 1 have negative logs.',
+        'np.log undoes np.exp entry by entry: np.log(np.exp(z)) gives back z, apart from tiny rounding. math.log accepts a single number, so math.log(p) on an array of several values raises TypeError; use np.log for arrays.',
+      ],
+      example: {
+        code: 'import numpy as np\nx = np.array([1.0, np.e, 10.0])\nprint(np.log(x).round(3).tolist())',
+        output: '[0.0, 1.0, 2.303]',
+        explanation:
+          '$\\ln 1 = 0$, $\\ln e = 1$, and $\\ln 10 \\approx 2.303$.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          'import numpy as np\np = np.array([np.e, 1.0])\nprint(np.log(p).tolist())',
+          '[1.0, 0.0]',
+          '$\\ln e = 1$ and $\\ln 1 = 0$ exactly, so no rounding is needed.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          'import numpy as np\nx = np.array([2.0, 4.0, 0.5])\nprint(np.log(x).round(3).tolist())',
+          '[0.693, 1.386, -0.693]',
+          '$\\ln 2 \\approx 0.693$, and $\\ln 4 = 2 \\ln 2 \\approx 1.386$. 0.5 is below 1, so its log is negative: $\\ln 0.5 = -\\ln 2 \\approx -0.693$.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          'import numpy as np\nz = np.array([0.5, 2.0, 4.0])\nprint(np.log(np.exp(z)).round(6).tolist())',
+          '[0.5, 2.0, 4.0]',
+          'np.log undoes np.exp entry by entry, so the round trip gives back z.',
+        ),
+        choose(
+          'Which expression gives the natural log of every entry of an array p that holds five values?',
+          ['np.exp(p)', 'math.log(p)', 'np.log10(p)', 'np.log(p)'],
+          3,
+          'np.log works entry by entry. math.log accepts one number and raises TypeError for a longer array, np.log10 uses base 10, and np.exp is the inverse function.',
+        ),
+      ],
+    },
+    {
+      title: 'Add logs instead of multiplying probabilities',
+      explanation: [
+        'The log of a product is the sum of the logs, so np.log(p).sum() is the log of the product of the probabilities in p. Many small probabilities multiply to 0.0, but the sum of their logs stays an ordinary number. -np.log(p) turns each probability into a loss that is 0 for a probability of 1 and grows as the probability shrinks.',
+        'A sum of a NumPy array is a NumPy number; round(float(total), 3) turns it into a Python float rounded to 3 decimals. np.log needs positive entries: np.log(0) gives -inf and a negative entry gives nan, each with a RuntimeWarning instead of the ValueError that math.log raises, so check probabilities before taking logs.',
+      ],
+      example: {
+        code: 'import numpy as np\np = np.array([0.5, 0.25])\nprint((-np.log(p)).round(3).tolist())\nprint(round(float(np.log(p).sum()), 3))',
+        output: '[0.693, 1.386]\n-2.079',
+        explanation:
+          '$-\\ln 0.5 \\approx 0.693$ and $-\\ln 0.25 \\approx 1.386$. The logs sum to $\\ln(0.5 \\times 0.25) = \\ln 0.125 \\approx -2.079$.',
+      },
+      questions: [
+        typeOutput(
+          'What does this program print?',
+          'import numpy as np\np = np.array([0.5, 0.5, 0.25])\nprint(round(float(np.log(p).sum()), 3))',
+          '-2.773',
+          'The sum of the logs is the log of the product: $\\ln(0.5 \\times 0.5 \\times 0.25) = \\ln 0.0625 \\approx -2.773$.',
+        ),
+        typeOutput(
+          'What does this program print?',
+          'import numpy as np\np = np.array([0.2, 0.1])\nprint((-np.log(p)).round(3).tolist())',
+          '[1.609, 2.303]',
+          '$-\\ln 0.2 \\approx 1.609$ and $-\\ln 0.1 \\approx 2.303$: the smaller probability gets the larger loss.',
+        ),
+        choose(
+          'What does np.log(np.array([0.0, 1.0])) give?',
+          [
+            'A ValueError, as math.log(0) raises',
+            '-inf and 0.0, with a RuntimeWarning',
+            '0.0 and 0.0, since 0 is skipped',
+            'nan and 0.0, since ln 0 is undefined',
+          ],
+          1,
+          'np.log does not raise for 0: it returns -inf for that entry and warns, while $\\ln 1 = 0$. Only math.log raises ValueError.',
+        ),
+        choose(
+          'A model multiplies 2,000 probabilities near 0.01, and the product prints 0.0. Which fix keeps the information?',
+          [
+            'Round the product to 3 decimals',
+            'Call math.log on the product',
+            'Sum the entries of np.log(p)',
+            'Multiply them in sorted order',
+          ],
+          2,
+          'The product underflows to 0.0, so its log is lost. The sum of the logs is the log of the same product, and it stays an ordinary number.',
+        ),
+      ],
+    },
+  ],
+
   'da-series': [
     {
       title: 'Build a Series with labels',
