@@ -588,7 +588,7 @@ const skills: Skill[] = [
     'da-pandas',
     'Filter observations',
     'Express multiple conditions and choose rows and columns with loc.',
-    ['da-dataframes', 'da-array-indexing', 'boolean-logic'],
+    ['da-dataframes', 'da-array-indexing'],
     [
       'A column comparison produces a boolean Series with the same index as the table. table.loc[mask, ["name", "score"]] uses that mask to select rows and then selects the named columns. The result keeps the labels of its selected observations.',
       'Combine Series conditions with & for and, | for or, and ~ for not. Parenthesize every comparison: (table["score"] >= 80) & (table["active"] == True). Python\'s scalar and/or operators do not combine entire Series.',

@@ -2229,7 +2229,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-search',
     'Choose a valid midpoint',
     'Divide a nonempty half-open candidate interval.',
-    ['parameters', 'boolean-logic'],
+    ['parameters'],
     [
       'A half-open candidate interval [low, high) contains indices low through high - 1. When low < high, mid = (low + high) // 2 always belongs to that interval.',
       'Integer floor division keeps the midpoint an index. With a one-item interval, mid equals low. An empty interval has no midpoint to examine, so a binary-search loop tests low < high before indexing.',
@@ -2414,7 +2414,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-search',
     'Test one capacity with consecutive groups',
     'Greedily form the longest fitting current group.',
-    ['accumulators', 'parameters', 'truthiness'],
+    ['accumulators', 'parameters'],
     [
       'For nonnegative ordered loads and a fixed capacity, extend the current group while the next load fits. If it would overflow, open a new group with that load.',
       'An individual load above capacity makes the capacity impossible, since loads cannot be split. Taking the longest fitting prefix minimizes the groups needed for this fixed capacity. Empty loads need zero groups.',

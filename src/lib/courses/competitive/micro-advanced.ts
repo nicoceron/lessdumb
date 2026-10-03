@@ -844,7 +844,7 @@ stages('cp-segment-tree', 'cp-range', [
 stages('cp-gcd', 'cp-number-theory', [
   {
     id: 'cp-gcd-divisibility',
-    parents: ['parameters', 'boolean-logic'],
+    parents: ['parameters'],
     title: 'Test a common divisor',
     summary: 'Use exact remainders for divisibility.',
     lesson: [
@@ -1395,7 +1395,7 @@ stages('cp-sieve', 'cp-number-theory', [
 stages('cp-combinatorics', 'cp-number-theory', [
   {
     id: 'cp-combination-boundaries',
-    parents: ['comprehensions', 'parameters', 'boolean-logic'],
+    parents: ['comprehensions', 'parameters'],
     title: 'Handle empty and impossible selections',
     summary: 'Separate counting boundaries before recurrence.',
     lesson: [
@@ -1985,13 +1985,7 @@ stages('cp-greedy', 'cp-strategy', [
 stages('cp-bitmasks', 'cp-strategy', [
   {
     id: 'cp-bit-position',
-    parents: [
-      'comprehensions',
-      'parameters',
-      'ranges',
-      'truthiness',
-      'bitwise',
-    ],
+    parents: ['comprehensions', 'parameters', 'ranges', 'bitwise'],
     title: 'Read one membership bit',
     summary: 'Use a power of two to inspect a set position.',
     lesson: [
@@ -2266,11 +2260,7 @@ stages('cp-geometry', 'cp-strategy', [
   },
   {
     id: 'cp-geometry-turn-sign',
-    parents: [
-      'cp-geometry-displacement',
-      'cp-geometry-cross-product',
-      'truthiness',
-    ],
+    parents: ['cp-geometry-displacement', 'cp-geometry-cross-product'],
     title: 'Classify one turn',
     summary: 'Translate a determinant into left, right, or collinear.',
     lesson: [
@@ -2728,7 +2718,7 @@ stages('cp-knapsack', 'cp-dynamic', [
 stages('cp-subsequences', 'cp-dynamic', [
   {
     id: 'cp-subsequence-order',
-    parents: ['accumulators', 'parameters', 'boolean-logic'],
+    parents: ['accumulators', 'parameters'],
     title: 'Preserve subsequence order',
     summary: 'Select ordered values while allowing gaps.',
     lesson: [

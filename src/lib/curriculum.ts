@@ -435,7 +435,7 @@ const curriculum = [
     'first-programs',
     'Build strings',
     'Combine text and format values into readable messages.',
-    ['variables'],
+    ['numbers'],
     [
       'A string is a sequence of characters. You can join strings using +, but both operands must be strings. The len() function returns the number of characters, including spaces.',
       'An f-string begins with f before the opening quote. Expressions inside braces are evaluated and inserted into the text. This is a readable way to combine text with numbers without manually converting every value.',
@@ -492,7 +492,7 @@ const curriculum = [
     'decisions',
     'Types and conversion',
     'Recognize values and convert them when a task requires it.',
-    ['numbers', 'strings'],
+    ['strings'],
     [
       'Values have types. Common built-in types include int for whole numbers, float for decimal numbers, str for text, and bool for True or False. A string containing digits is still text until you convert it.',
       'Use int(), float(), and str() to convert suitable values. int("12") returns the number 12. Conversions can fail when the content does not fit the requested type: int("twelve") raises ValueError.',
@@ -802,7 +802,7 @@ const curriculum = [
     'sequences',
     'Collect values in lists',
     'Store an ordered collection under one name.',
-    ['types'],
+    ['comparisons'],
     [
       'A list stores an ordered collection of values between square brackets, with commas between items. An empty list is []. Lists can contain several types, although collections of similar items are often easier to work with.',
       'len(items) gives the number of items, not their total. The in operator tests whether a value is present. Order matters: [1, 2] and [2, 1] are different lists.',
@@ -1109,7 +1109,7 @@ const curriculum = [
     'sequences',
     'Group values in a tuple',
     'Store a fixed record of values and compare records.',
-    ['indexing', 'comparisons'],
+    ['indexing'],
     [
       'A tuple is an ordered, fixed group of values written with commas, usually inside parentheses: point = (3, 4). Index it like a list, so point[0] is 3, and len(point) counts its items. A one-item tuple needs a trailing comma, (5,), because (5) is just the number 5 in parentheses.',
       'Tuples are immutable: point[0] = 9 raises TypeError. Use a tuple for a record whose parts belong together, such as (row, col) or (name, score), and a list for a collection that grows. Tuples compare item by item from the left: (1, 9) < (2, 0) is True because 1 < 2 settles it, and the second items matter only when the first ones are equal.',
@@ -2314,7 +2314,7 @@ const curriculum = [
     'solve',
     'Design useful inputs',
     'Call functions with positional, keyword, and default arguments.',
-    ['return-values', 'list-mutation'],
+    ['return-values', 'list-mutation', 'truthiness'],
     [
       'A function can accept several parameters. Positional arguments match parameters in order; keyword arguments name the parameter they fill. A default value makes an argument optional when the caller omits it.',
       'Put parameters without defaults before parameters with defaults. Use immutable default values such as numbers, strings, or None. A mutable default like [] is created once and can accidentally share state across calls.',

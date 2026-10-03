@@ -810,7 +810,7 @@ assert subtree_sizes(chain) == list(range(1600, 0, -1)), "Do not recurse through
     'cp-graphs',
     'Give every vertex a place',
     'Build an adjacency representation with explicit direction and multiplicity.',
-    ['cp-undirected-edge', 'unpacking', 'truthiness'],
+    ['cp-undirected-edge', 'unpacking'],
     [
       'A graph models vertices and edges. Number vertices 0 through n-1 and allocate one neighbor list for every vertex, including isolated ones. An edge list alone cannot reveal an isolated vertex, so n is part of the input contract.',
       'For a directed edge u → v, append v only to neighbors[u]. For an undirected edge, append each endpoint to the other’s list. Retaining parallel edges preserves multiplicity; under this convention an undirected self-loop contributes two entries at its vertex. State these choices before using degrees or counting edges.',
