@@ -834,6 +834,14 @@ code {
   gap: 10px;
   padding: 0 18px 16px;
 }
+/* Why a refresh review comes before a failed lesson. */
+.ma-task-reason {
+  margin-top: -6px;
+  padding: 0 18px 12px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.5;
+}
 .ma-task-progress {
   display: flex;
   align-items: center;
@@ -1956,6 +1964,12 @@ code {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px 18px;
+}
+/* Why a review comes before a failed lesson returns. */
+.lesson-result p.lesson-refresh-note,
+.lesson-refresh-note {
+  color: var(--foreground);
+  font-weight: 550;
 }
 @media (max-width: 600px) {
   .lesson-heading h1 {

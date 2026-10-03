@@ -24,6 +24,7 @@ import {
   nextTask,
   recordLesson,
   selectQuestion,
+  STATE_VERSION,
 } from '../src/lib/learning';
 import { skills } from '../src/lib/curriculum';
 import { earnedXp, lessonXp, REVIEW_XP } from '../src/lib/xp';
@@ -225,7 +226,7 @@ describe('documented Better Auth account backend', () => {
   });
 });
 
-function progressFixture(version = 5) {
+function progressFixture(version: number = STATE_VERSION) {
   return {
     version,
     progress: {
@@ -570,8 +571,8 @@ describe('versioned per-account progress', () => {
     });
   });
 
-  it('migrates accounts saved before knowledge-point lessons and before quizzes', async () => {
-    for (const version of [1, 2, 3, 4]) {
+  it('migrates accounts saved before knowledge-point lessons, quizzes, and refreshes', async () => {
+    for (const version of [1, 2, 3, 4, 5]) {
       const { backend } = await freshBackend();
       const cookie = await register(backend);
       const legacy = progressFixture(version);
@@ -580,7 +581,7 @@ describe('versioned per-account progress', () => {
           .status,
       ).toBe(200);
       expect(await (await stateRequest(backend, cookie)).json()).toEqual({
-        state: progressFixture(5),
+        state: progressFixture(STATE_VERSION),
         revision: 1,
       });
     }
@@ -591,7 +592,7 @@ describe('versioned per-account progress', () => {
     const cookie = await register(backend);
     const state = progressFixture();
     const invalid = await stateRequest(backend, cookie, {
-      state: { ...state, version: 6 },
+      state: { ...state, version: STATE_VERSION + 1 },
       revision: 0,
     });
     expect(invalid.status).toBe(400);

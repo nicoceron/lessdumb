@@ -26,6 +26,7 @@ import {
   type QuizTask,
   type WeekDay,
 } from '../lib/dashboard';
+import { QUIZ_MAX_QUESTIONS, QUIZ_MIN_QUESTIONS } from '../lib/quiz';
 import { type LearnerState } from '../lib/state';
 import { ProgressRing } from './progress-ring';
 
@@ -314,8 +315,10 @@ function QuizCard({
       </h3>
       <div className="ma-task-detail">
         <p className="ma-muted">
-          {quiz.questions} questions from skills you have learned · {minutes}{' '}
-          minute limit. Lessons and explanations stay hidden until you finish.
+          About {quiz.questions} questions from skills you have learned, weakest
+          first · {minutes} minute limit. It ends at {QUIZ_MIN_QUESTIONS} if
+          every answer is right and asks up to {QUIZ_MAX_QUESTIONS} when results
+          are mixed. Lessons and explanations stay hidden until you finish.
         </p>
         <Button asChild className="ma-task-action">
           <a href={`/learn?quiz=next&course=${activeCourseId}`}>
@@ -363,6 +366,12 @@ function TaskCard({
           <span className="ma-task-title">{skill.title}</span>
         </button>
       </h3>
+      {task.refreshFor && (
+        <p className="ma-task-reason">
+          Before trying {task.refreshFor.title} again, let’s refresh{' '}
+          {skill.title}.
+        </p>
+      )}
       {open && (
         <div id={`${id}-detail`} className="ma-task-detail">
           <div className="ma-task-progress">

@@ -43,7 +43,25 @@ import {
   type MemoryState,
 } from './retention';
 import { createActivity, recordActivity, type ActivityState } from './activity';
+import {
+  lessonFailureStreak,
+  pendingRefreshes,
+  planRefresh,
+  REFRESH_HOLD_MS,
+  refreshPending,
+  scheduleRefresh,
+  type Refresh,
+} from './remediation';
 import { isTypedType, TYPED_RESPONSE_MAX_LENGTH } from './typed-answer';
+
+/**
+ * The learner-state schema version. 2 adds knowledge-point lesson attempts,
+ * cooldowns and task XP; 3 quizzes; 4 implicit review credit; 5 placement
+ * diagnostics; 6 prerequisite refreshes after failed lessons; 7 the variant
+ * of a generated question on attempts, quiz questions, and placement
+ * questions.
+ */
+export const STATE_VERSION = 7;
 
 export const DAY_MS = 86_400_000;
 /**
@@ -117,6 +135,8 @@ export interface SkillProgress {
   implicitCredit?: ImplicitCredit;
   /** Placed out of by a diagnostic: conditional until its first review. */
   placement?: Placement;
+  /** A review brought forward because a lesson that uses this skill failed. */
+  refresh?: Refresh;
 }
 
 /**
@@ -185,7 +205,7 @@ export interface Attempt {
 }
 
 export interface Progress {
-  version: 5;
+  version: typeof STATE_VERSION;
   skills: Record<string, SkillProgress>;
   totalXp: number;
   dailyXp: Record<string, number>;
@@ -283,7 +303,7 @@ export function emptyProgress(
   // Validate the zone at creation rather than failing only after the first answer.
   dateKey(_now, timeZone);
   return {
-    version: 5,
+    version: STATE_VERSION,
     skills: {},
     totalXp: 0,
     dailyXp: {},
@@ -391,7 +411,22 @@ export function lessonState<S extends SkillOutline>(
   };
 }
 
-/** Whether a failed lesson is still waiting for other work (see LESSON_RETRY_DELAY_MS). */
+/**
+ * Prerequisites whose refresh, scheduled by this skill's latest failed
+ * lesson, is still pending: they come before the lesson returns.
+ */
+export function lessonRefreshes(progress: Progress, skillId: string): string[] {
+  const failedAt = progress.skills[skillId]?.lessonFailedAt;
+  return failedAt === undefined
+    ? []
+    : pendingRefreshes(progress, skillId, failedAt);
+}
+
+/**
+ * Whether a failed lesson is still waiting: for the prerequisite refreshes it
+ * scheduled (up to REFRESH_HOLD_MS), or for other work (see
+ * LESSON_RETRY_DELAY_MS).
+ */
 export function lessonCoolingDown(
   progress: Progress,
   skillId: string,
@@ -400,7 +435,13 @@ export function lessonCoolingDown(
   const state = progress.skills[skillId];
   const failedAt = state?.lessonFailedAt;
   if (failedAt === undefined || currentLessonAttempt(state)) return false;
-  if (timestamp(now) >= failedAt + LESSON_RETRY_DELAY_MS) return false;
+  const time = timestamp(now);
+  if (
+    time < failedAt + REFRESH_HOLD_MS &&
+    lessonRefreshes(progress, skillId).length
+  )
+    return true;
+  if (time >= failedAt + LESSON_RETRY_DELAY_MS) return false;
   if (
     (progress.quizzes ?? []).some(
       (quiz) => quiz.completedAt !== undefined && quiz.completedAt > failedAt,
@@ -761,6 +802,8 @@ function creditable(
     state.implicitCredit?.day !== today &&
     // A placement waits for its own first review.
     !placementPending(state) &&
+    // So does a refresh a failed lesson brought forward.
+    !refreshPending(state) &&
     dateKey(
       legacyMemory(state, time).lastReviewAt,
       progress.timeZone || 'UTC',
@@ -858,6 +901,22 @@ export function reviewCoverage(
   }).length;
 }
 
+/**
+ * Why a refreshed skill is reviewed now, in the learner's words:
+ * "Before trying <lesson> again, let's refresh <skill>."
+ */
+export function refreshReason(
+  progress: Progress,
+  item: SkillOutline,
+  catalog: GraphCatalog = defaultCatalog,
+): string {
+  const lesson = progress.skills[item.id]?.refresh?.lesson;
+  const title = lesson && skillIndex(catalog).get(lesson)?.title;
+  return title
+    ? `Before trying ${title} again, let's refresh ${item.title}.`
+    : `Let's refresh ${item.title}.`;
+}
+
 export function nextTask(
   progress: Progress,
   now: Now = new Date(),
@@ -887,6 +946,11 @@ export function nextTask(
     return coverageCache.get(item.id)!;
   };
   due.sort((a, b) => {
+    // A refresh a failed lesson is waiting for goes first.
+    const refreshing =
+      Number(refreshPending(progress.skills[b.id])) -
+      Number(refreshPending(progress.skills[a.id]));
+    if (refreshing) return refreshing;
     // Keep the selected course's due retrieval ahead of its supporting ancestors.
     if (courseId && a.courseId === courseId && b.courseId !== courseId)
       return -1;
@@ -926,8 +990,9 @@ export function nextTask(
       skillId: item.id,
       mode: 'review',
       questionId: selectQuestion(progress, item, 'review').id,
-      reason:
-        'This skill is due for spaced retrieval. Recall it before looking back at the lesson.',
+      reason: refreshPending(progress.skills[item.id])
+        ? refreshReason(progress, item, catalog)
+        : 'This skill is due for spaced retrieval. Recall it before looking back at the lesson.',
     };
   }
   const ready = fresh.length ? fresh : coolingDown;
@@ -1127,8 +1192,11 @@ export function applyAttempt(
       sequence: state.attempts,
       correct: false,
     };
-    if (wasMastered)
+    if (wasMastered) {
       state.memory = reviewMemory(legacyMemory(old, time), time, 'fail');
+      // The lapse settles any pending refresh: the skill is relearned now.
+      delete state.refresh;
+    }
     state.questionIds = state.questionIds.filter((id) => id !== evidenceId);
     // An unconfirmed placement was never learned here: the whole lesson
     // returns, not just the missed point.
@@ -1208,6 +1276,7 @@ export function applyAttempt(
       state.dueAt = state.memory.dueAt;
       state.reviewQuestionIds = [];
       state.reviewHadHint = false;
+      delete state.refresh;
       // A wrong answer ends a cycle, so a completed review has no misses.
       xp = earnedXp(REVIEW_XP, 0, true);
       outcome = 'review-passed';
@@ -1291,14 +1360,50 @@ export function applyAttempt(
     outcome === 'lesson-passed' || outcome === 'review-passed'
       ? applyImplicitCredit(updated, item, time, catalog)
       : { progress: updated, credited: [] };
+  // A failed lesson brings its weakest prerequisites' reviews forward. This
+  // failure is not in the log yet, so it adds one to the streak there.
+  const refreshed =
+    outcome === 'lesson-failed'
+      ? refreshPrerequisites(
+          credit.progress,
+          item,
+          time,
+          lessonFailureStreak(progress, item.id) + 1,
+          catalog,
+          old.lessonFailedAt,
+        )
+      : { progress: credit.progress, refreshed: [] };
   return {
-    ...credit.progress,
+    ...refreshed.progress,
     attempts: [
       ...progress.attempts,
       credit.credited.length
         ? { ...attempt, credited: credit.credited }
         : attempt,
     ].slice(-MAX_RECENT_ATTEMPTS),
+  };
+}
+
+/**
+ * After `item`'s lesson fails, schedule a refresh of its weakest
+ * prerequisites (see planRefresh). `since` is the previous failure, if any.
+ */
+export function refreshPrerequisites(
+  progress: Progress,
+  item: SkillOutline,
+  time: number,
+  failures: number,
+  catalog: GraphCatalog = defaultCatalog,
+  since?: number,
+): { progress: Progress; refreshed: string[] } {
+  const plan = planRefresh(progress, item, time, failures, catalog, since);
+  if (!plan.length) return { progress, refreshed: [] };
+  const skills = { ...progress.skills };
+  for (const { id } of plan)
+    skills[id] = scheduleRefresh(skills[id], time, item.id);
+  return {
+    progress: { ...progress, skills },
+    refreshed: plan.map(({ id }) => id),
   };
 }
 

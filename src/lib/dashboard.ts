@@ -17,6 +17,7 @@ import {
   type Progress,
 } from './learning';
 import { quizStatus } from './quiz';
+import { refreshPending } from './remediation';
 import { legacyMemory, recallProbability } from './retention';
 import { lessonXp, REVIEW_XP } from './xp';
 
@@ -87,6 +88,8 @@ export interface DashboardTask {
   started: boolean;
   /** Fraction of this task's evidence already collected. */
   progress: number;
+  /** A review brought forward because this failed lesson uses the skill. */
+  refreshFor?: SkillOutline;
 }
 
 /**
@@ -131,6 +134,11 @@ export function taskQueue(
         state(item.id).dueAt! <= at,
     )
     .sort((a, b) => {
+      // A refresh a failed lesson is waiting for goes first, as in the engine.
+      const refreshing =
+        Number(refreshPending(progress.skills[b.id])) -
+        Number(refreshPending(progress.skills[a.id]));
+      if (refreshing) return refreshing;
       const order = courseFirst(a, b);
       if (order) return order;
       if (a.id === lastSkill && b.id !== lastSkill) return 1;
@@ -193,6 +201,10 @@ export function taskQueue(
     seen.add(skill.id);
     const current = state(skill.id);
     const policy = assessmentPolicy(skill);
+    const refreshFor =
+      mode === 'review' && refreshPending(progress.skills[skill.id])
+        ? byId.get(current.refresh!.lesson)
+        : undefined;
     tasks.push({
       skill,
       mode,
@@ -206,6 +218,7 @@ export function taskQueue(
                 Math.max(1, policy.reviewAnswers),
             )
           : lessonCompletion(progress, skill),
+      ...(refreshFor ? { refreshFor } : {}),
     });
     if (tasks.length >= limit) break;
   }

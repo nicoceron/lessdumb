@@ -11,6 +11,7 @@ import {
   reviewsSinceLesson,
   selectQuestion,
   type Progress,
+  STATE_VERSION,
 } from '../src/lib/learning';
 import {
   activeQuiz,
@@ -54,6 +55,12 @@ function learnUntil(progress: Progress, xp: number, at = NOW): Progress {
 
 const ready = learnUntil(emptyProgress(NOW, 'UTC'), QUIZ_XP_INTERVAL);
 
+/** The saved copy of a quiz, as its length adapts. */
+function quizIn(progress: Progress, quiz: Quiz): Quiz {
+  return progress.quizzes!.find((item) => item.id === quiz.id)!;
+}
+
+/** Answer a quiz in order until it ends, however long it grows. */
 function answerAll(
   progress: Progress,
   quiz: Quiz,
@@ -61,13 +68,13 @@ function answerAll(
   at = NOW + 60_000,
 ) {
   let result = progress;
-  quiz.questions.forEach((slot, index) => {
-    const { question } = quizQuestion(slot)!;
+  for (let index = 0; quizIn(result, quiz).completedAt === undefined; index++) {
+    const { question } = quizQuestion(quizIn(result, quiz).questions[index])!;
     const answer = correct(index)
       ? rightAnswer(question)
       : wrongAnswer(question);
     result = answerQuiz(result, quiz.id, index, answer, at);
-  });
+  }
   return result;
 }
 
@@ -237,8 +244,10 @@ describe('taking a quiz', () => {
     const next = quizStatus(more, COURSE);
     expect(next).toMatchObject({ kind: 'available', number: 2 });
     // Skills just quizzed go to the back of the line.
-    const plan = planQuiz(more, COURSE);
-    const quizzed = new Set(quiz.questions.map((slot) => slot.skillId));
+    const plan = planQuiz(more, COURSE, undefined, NOW + 120_000);
+    const quizzed = new Set(
+      quizIn(done, quiz).questions.map((slot) => slot.skillId),
+    );
     const fresh = plan.filter((slot) => !quizzed.has(slot.skillId));
     expect(plan.slice(0, fresh.length)).toEqual(fresh);
   });
@@ -252,7 +261,7 @@ describe('taking a quiz', () => {
       quizId: quiz.id,
       at: finished.completedAt,
       earned: finished.earned,
-      possible: quiz.possible,
+      possible: finished.possible,
     });
     expect(entry.skill).toBeUndefined();
   });
@@ -297,8 +306,8 @@ describe('quiz persistence', () => {
       progress: { ...createState().progress, version: 2 },
     };
     const migrated = parseStateUpdate({ state: v2, revision: 0 }).state;
-    expect(migrated.version).toBe(5);
-    expect(migrated.progress.version).toBe(5);
+    expect(migrated.version).toBe(STATE_VERSION);
+    expect(migrated.progress.version).toBe(STATE_VERSION);
     expect(migrated.progress.quizzes).toBeUndefined();
   });
 
@@ -335,7 +344,9 @@ describe('quiz persistence', () => {
       otherQuiz.id,
     ]);
     expect(merged.progress.totalXp).toBe(
-      ready.totalXp + quiz.possible + otherQuiz.possible,
+      ready.totalXp +
+        quizIn(left.progress, quiz).possible +
+        quizIn(right.progress, otherQuiz).possible,
     );
   });
 

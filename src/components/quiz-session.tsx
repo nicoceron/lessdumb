@@ -18,6 +18,10 @@ import {
   planQuiz,
   quizDeadline,
   quizQuestion,
+  QUIZ_MAX_QUESTIONS,
+  QUIZ_MIN_QUESTIONS,
+  QUIZ_SECONDS_PER_QUESTION,
+  QUIZ_TARGET_QUESTIONS,
   quizStatus,
   startQuiz,
   type Quiz,
@@ -126,8 +130,15 @@ export default function QuizSession({
         <Card className="lesson-paper lesson-intro gap-0">
           <section aria-label="Quiz instructions" className="lesson-section">
             <p className="lesson-teaching-text">
-              {status.questions} questions from skills you have learned, up to{' '}
-              {status.xp} XP. You have {minutes} minutes.
+              About {status.questions} questions from skills you have learned,
+              weakest and least recently quizzed first, worth {status.xp} XP.
+              You have {minutes} minutes.
+            </p>
+            <p className="lesson-teaching-text">
+              The length adapts to your answers: the quiz ends after{' '}
+              {QUIZ_MIN_QUESTIONS} questions if every answer is right, and asks
+              up to {QUIZ_MAX_QUESTIONS} when results are mixed. Each added
+              question adds {QUIZ_SECONDS_PER_QUESTION} seconds and its XP.
             </p>
             <p className="lesson-teaching-text">
               Lessons and explanations stay hidden until you finish. Any skill
@@ -298,6 +309,20 @@ function QuizResults({ quiz }: { quiz: Quiz }) {
         <p>
           {quiz.earned ?? 0}/{quiz.possible} XP
         </p>
+        {correct === quiz.questions.length &&
+          quiz.questions.length < QUIZ_TARGET_QUESTIONS && (
+            <p>Every answer was right, so the quiz ended early.</p>
+          )}
+        {quiz.questions.length > QUIZ_TARGET_QUESTIONS && (
+          <p>
+            Your results were mixed, so the quiz asked{' '}
+            {quiz.questions.length - QUIZ_TARGET_QUESTIONS} more{' '}
+            {quiz.questions.length - QUIZ_TARGET_QUESTIONS === 1
+              ? 'question'
+              : 'questions'}
+            .
+          </p>
+        )}
         {missed.length > 0 && <p>Due for review now: {missed.join(', ')}.</p>}
         <Button asChild className="self-start">
           <a href="/">
