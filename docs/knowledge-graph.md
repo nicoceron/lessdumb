@@ -24,9 +24,9 @@ Rust and C++ keep their edges in one explicit map each (`src/lib/courses/rust/pr
 | Machine Learning         |              89 → 56 |                  10 → 9 |        3 → 6 |
 | Data Systems             |              42 → 33 |                   7 → 7 |        3 → 3 |
 | Competitive Programming  |            683 → 373 |                  20 → 9 |       9 → 28 |
-| Rust                     |            145 → 268 |                124 → 18 |       1 → 17 |
+| Rust                     |            145 → 261 |                124 → 18 |       1 → 17 |
 | C++                      |            200 → 296 |                116 → 12 |       3 → 30 |
-| **Catalog**              |    **1,259 → 1,103** |                         |              |
+| **Catalog**              |    **1,259 → 1,096** |                         |              |
 
 Rust's figures include the 17 basics added afterwards (CEN-84), which every lesson using them now depends on. Redundant edges fell from 523 to 0. Rust and C++ gained edges because the old generators chained each skill to the previous one and omitted most real uses: 55% of Rust's and 52% of C++'s previous-skill edges were false, and dozens of skills used constructs taught only later. Competitive Programming no longer injects `parameters` into every node or chains every concept to its sibling; 231 of its removed edges named skills that are no longer ancestors at all.
 
