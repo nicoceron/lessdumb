@@ -5991,4 +5991,230 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'ml-deployment-monitoring': [
+    {
+      title: 'Validate every request against the feature schema',
+      explanation: [
+        'A deployed model receives data from systems that change. Before predicting, check each request against the schema the model was trained with: every required feature is present, each value converts to the expected type, and each lies in a plausible range. Extra keys can be ignored.',
+        'Reject or flag a request that fails these checks instead of letting the pipeline guess. A missing feature silently filled with a default produces a confident but meaningless prediction.',
+      ],
+      example: {
+        code: 'required = ["distance_km", "rain"]\nrecord = {"distance_km": "8.5", "weather": "dry"}\nmissing = [name for name in required if name not in record]\nprint(missing)\ntry:\n    print(float(record["distance_km"]))\nexcept ValueError:\n    print("bad distance")',
+        output: "['rain']\n8.5",
+        explanation:
+          'The request lacks rain, so it should be rejected or flagged. distance_km arrives as text but converts cleanly to a number.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'required = ["age", "plan", "visits"]\nrecord = {"plan": "pro", "visits": 4, "browser": "x"}\nprint([name for name in required if name not in record])',
+          ["['browser']", "['age']", "['age', 'browser']", '[]'],
+          1,
+          'Only required names are checked, so the extra browser key is ignored and age is reported missing.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def parse_age(text):\n    try:\n        age = int(text)\n    except ValueError:\n        return "rejected"\n    if age < 0 or age > 120:\n        return "rejected"\n    return age\n\nprint(parse_age("42"), parse_age("forty"), parse_age("300"))',
+          [
+            '42 forty 300',
+            '42 rejected 300',
+            '42 rejected rejected',
+            'rejected rejected rejected',
+          ],
+          2,
+          '"forty" fails the conversion, and 300 converts but is outside the plausible range.',
+        ),
+        choose(
+          'A request arrives without the rain feature. What should the serving code do?',
+          [
+            'Reject or flag the request, since the model cannot predict reliably without it',
+            'Fill rain with 0 and predict as usual',
+            'Retrain the model without rain',
+            'Return the previous request’s prediction',
+          ],
+          0,
+          'A silent default changes the input the model sees; failing visibly keeps the problem detectable.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'schema = {"distance_km": float, "items": int}\nrecord = {"distance_km": "3.2", "items": "two"}\nproblems = []\nfor name in ["distance_km", "items"]:\n    try:\n        schema[name](record[name])\n    except ValueError:\n        problems.append(name)\nprint(problems)',
+          ["['distance_km']", "['items']", "['distance_km', 'items']", '[]'],
+          1,
+          'float("3.2") succeeds, but int("two") raises ValueError, so only items is reported.',
+        ),
+      ],
+    },
+    {
+      title: 'Serve with the stored, versioned pipeline',
+      explanation: [
+        'Serving must transform inputs exactly as training did, with the same feature order and the same fitted statistics. Recomputing preprocessing on live data, or reordering columns, creates training–serving skew: the model receives numbers it was never trained on.',
+        'Save the whole fitted pipeline together with the feature list, the library versions, and a record of the training data. With these, a prediction can be reproduced later and a bad release rolled back.',
+      ],
+      example: {
+        code: 'from sklearn.preprocessing import StandardScaler\ntrain = [[10.0], [20.0], [30.0]]\nscaler = StandardScaler().fit(train)\nlive = [[40.0], [50.0]]\nprint(scaler.transform(live).round(3).tolist())\nprint(StandardScaler().fit_transform(live).round(3).tolist())',
+        output: '[[2.449], [3.674]]\n[[-1.0], [1.0]]',
+        explanation:
+          'The stored scaler shows that live values are far above the training range. Refitting on live data erases that and feeds the model ordinary-looking values.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'artifact = {"model": "delivery-v3", "features": ["distance_km", "rain"]}\nlive_features = ["rain", "distance_km"]\nprint(len(live_features) == len(artifact["features"]), live_features == artifact["features"])',
+          ['True True', 'False False', 'False True', 'True False'],
+          3,
+          'The same names arrive in a different order. A model reading columns by position would receive rain where it expects distance.',
+        ),
+        choose(
+          'What must stay identical between training and serving?',
+          [
+            'Only the model’s file name',
+            'Feature definitions, column order, and the fitted preprocessing',
+            'The number of requests per day',
+            'The training set’s target values',
+          ],
+          1,
+          'The model’s weights only make sense for inputs prepared exactly as in training.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.preprocessing import StandardScaler\nscaler = StandardScaler().fit([[0.0], [4.0]])\nbatch_a = [[2.0]]\nbatch_b = [[2.0], [100.0]]\nprint(scaler.transform(batch_a).tolist(), scaler.transform(batch_b).tolist())',
+          [
+            '[[0.0]] [[0.0], [49.0]]',
+            '[[0.0]] [[-1.0], [1.0]]',
+            '[[1.0]] [[1.0], [50.0]]',
+            '[[0.0]] [[0.0], [1.0]]',
+          ],
+          0,
+          'The stored scaler treats each row the same way regardless of what else is in the batch, so the value 2.0 always maps to 0.0.',
+        ),
+        choose(
+          'Which item is most important to store alongside the model weights?',
+          [
+            'The fitted preprocessing pipeline and the library versions used',
+            'A screenshot of the training loss',
+            'The test-set predictions only',
+            'The developer’s notebook state',
+          ],
+          0,
+          'Without the exact preprocessing and versions, the same weights can produce different predictions.',
+        ),
+      ],
+    },
+    {
+      title: 'Detect shifts in the input distribution',
+      explanation: [
+        'Covariate shift means the inputs change: live data no longer look like the training data. Compare live summaries with a training reference, such as how many training standard deviations the live mean has moved, or how category shares changed. value_counts(normalize=True) gives each category’s share.',
+        'A shift is a warning to investigate, not proof that predictions got worse. The model may still do well on the new inputs, or badly; only outcomes tell.',
+      ],
+      example: {
+        code: 'import numpy as np\ntrain = np.array([5.0, 7.0, 6.0, 8.0, 4.0])\nlive = np.array([9.0, 11.0, 10.0, 12.0])\nshift = (live.mean() - train.mean()) / train.std()\nprint(round(float(shift), 2))',
+        output: '3.18',
+        explanation:
+          'The live mean 10.5 sits more than three training standard deviations above the training mean 6, a large shift worth investigating.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ntrain = pd.Series(["card", "card", "cash", "card"])\nlive = pd.Series(["cash", "cash", "card", "cash"])\nprint(train.value_counts(normalize=True).to_dict())\nprint(live.value_counts(normalize=True).to_dict())',
+          [
+            "{'card': 3, 'cash': 1}\n{'cash': 3, 'card': 1}",
+            "{'card': 0.75, 'cash': 0.25}\n{'card': 0.75, 'cash': 0.25}",
+            "{'card': 0.75, 'cash': 0.25}\n{'cash': 0.75, 'card': 0.25}",
+            "{'card': 0.5, 'cash': 0.5}\n{'cash': 0.5, 'card': 0.5}",
+          ],
+          2,
+          'Card payments fall from three quarters of training rows to one quarter of live rows: the input mix has shifted.',
+        ),
+        choose(
+          'The live distribution of an input feature has shifted. What can you conclude right away?',
+          [
+            'Prediction quality certainly improved',
+            'Prediction quality certainly got worse',
+            'The inputs changed, and outcomes should be checked when they arrive',
+            'The model must be deleted',
+          ],
+          2,
+          'Input monitoring signals risk; only labelled outcomes show whether predictions degraded.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\ntrain = np.array([20.0, 22.0, 18.0, 20.0])\nfor live in [np.array([21.0, 19.0]), np.array([30.0, 32.0])]:\n    print(round(float((live.mean() - train.mean()) / train.std()), 2))',
+          ['0.0\n7.78', '0.0\n11.0', '1.0\n7.78', '0.0\n1.41'],
+          0,
+          'The first live batch has the training mean, 20; the second sits 11 units, about 7.78 training standard deviations, above it.',
+        ),
+        choose(
+          'What is covariate shift?',
+          [
+            'A change in the relationship between features and target',
+            'A change in the distribution of the input features',
+            'A change in the model’s file format',
+            'A change in the random seed',
+          ],
+          1,
+          'Covariate shift concerns the inputs; a changed input–target relationship is concept drift.',
+        ),
+      ],
+    },
+    {
+      title: 'Monitor outcomes over time and across groups',
+      explanation: [
+        'When true outcomes arrive, join them to the logged predictions and track performance over time, for example the fraction of correct predictions per week. A falling trend with steady inputs points to concept drift: the same inputs now lead to different outcomes.',
+        'Also compare groups such as regions or customer types, since an overall average can hide a group that is badly served. Keep the previous version deployable so a bad release can be rolled back quickly.',
+      ],
+      example: {
+        code: 'import pandas as pd\nlog = pd.DataFrame({"week": [1, 1, 1, 2, 2, 2], "predicted": [1, 0, 1, 1, 0, 1], "actual": [1, 0, 1, 0, 1, 1]})\nlog["correct"] = (log["predicted"] == log["actual"]).astype(int)\nprint(log.groupby("week")["correct"].mean().round(3).to_dict())',
+        output: '{1: 1.0, 2: 0.333}',
+        explanation:
+          'Every week-1 prediction was correct, but only one of three in week 2: a drop that calls for investigation.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nlog = pd.DataFrame({"region": ["N", "N", "S", "S", "S", "N"], "correct": [1, 1, 0, 1, 0, 1]})\nprint(round(float(log["correct"].mean()), 3))\nprint(log.groupby("region")["correct"].mean().round(3).to_dict())',
+          [
+            "0.667\n{'N': 0.667, 'S': 0.667}",
+            "0.667\n{'N': 1.0, 'S': 0.333}",
+            "0.5\n{'N': 1.0, 'S': 0.333}",
+            "0.667\n{'N': 3, 'S': 1}",
+          ],
+          1,
+          'The overall rate of 0.667 hides that every northern prediction was right and two of three southern ones were wrong.',
+        ),
+        choose(
+          'What is concept drift?',
+          [
+            'A change in the relationship between the inputs and the target',
+            'Renaming a model file',
+            'A change in the number of requests',
+            'Repeating a fixed random seed',
+          ],
+          0,
+          'The same inputs no longer imply the same outcomes, so the learned relationship goes stale.',
+        ),
+        choose(
+          'Input distributions look unchanged, but weekly error has risen steadily since a new competitor launched. What is the likely cause?',
+          [
+            'Covariate shift only',
+            'A bug in the schema check',
+            'A larger test set',
+            'Concept drift: the inputs now relate differently to the outcome',
+          ],
+          3,
+          'Stable inputs with worsening outcomes point to a changed relationship rather than changed inputs.',
+        ),
+        choose(
+          'A new model version is released, and its weekly error doubles. What should already be in place?',
+          [
+            'A plan to retrain from scratch on the test set',
+            'A way to roll back quickly to the previous version',
+            'A larger learning rate',
+            'Nothing; wait for the error to recover',
+          ],
+          1,
+          'Keeping the previous, versioned pipeline deployable limits the damage of a bad release.',
+        ),
+      ],
+    },
+  ],
 };

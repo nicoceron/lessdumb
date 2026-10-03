@@ -2081,7 +2081,7 @@ const curriculum = [
     ['ml-preprocessing', 'da-pipeline'],
     [
       'Serving a model requires the same feature definitions and fitted preprocessing used during training. Store the model together with its schema, transformation state, package versions, and training-data lineage. Validate required fields and input types at the boundary. A reproducible prediction is more than a saved weight file.',
-      'Monitor input quality, latency, failures, prediction distributions, and eventual outcomes when labels arrive. Covariate shift changes input distributions; concept drift changes the relationship between inputs and targets. An input-distribution change is a warning to investigate, not automatic proof that accuracy fell. Re-evaluate with new representative labels, compare subgroup performance, and keep a rollback path for a bad release.',
+      'Monitor input quality, latency, failures, prediction distributions, and eventual outcomes when labels arrive. Covariate shift changes input distributions; concept drift changes the relationship between inputs and targets. An input-distribution change is a warning to investigate, not automatic proof that predictions got worse. Re-evaluate with new representative labels, compare subgroup performance, and keep a rollback path for a bad release.',
     ],
     {
       code: 'expected = {"distance_km", "rain"}\nrecord = {"distance_km": 8, "rain": 0}\nmissing = sorted(expected - record.keys())\nprint(missing)\nprint(len(missing) == 0)',
@@ -2105,14 +2105,14 @@ const curriculum = [
       choice(
         'An input distribution shifts. What can you conclude immediately?',
         [
-          'Accuracy certainly rose',
-          'Accuracy certainly fell',
+          'Prediction quality certainly improved',
+          'Prediction quality certainly got worse',
           'Something changed and should be investigated with outcomes when available',
           'The target is now a different file type',
         ],
         2,
         'Input shift can signal risk without proving the direction or magnitude of predictive degradation.',
-        'Distribution monitoring is a signal, not a label-based accuracy estimate.',
+        'Distribution monitoring is a signal, not a label-based estimate of prediction quality.',
       ),
       choice(
         'What is concept drift?',
