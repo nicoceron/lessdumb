@@ -11,6 +11,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
+import { InlineText } from './inline-text';
 import {
   courses,
   skills,
@@ -129,7 +130,9 @@ function WorkedExample({
           defaultWrap
         />
       </div>
-      <p className="lesson-teaching-text">{example.explanation}</p>
+      <p className="lesson-teaching-text">
+        <InlineText text={example.explanation} />
+      </p>
     </div>
   );
 }
@@ -508,7 +511,7 @@ export default function LearningSession({
                 : [skill.summary]
               ).map((paragraph, index) => (
                 <p className="lesson-teaching-text" key={index}>
-                  {paragraph}
+                  <InlineText text={paragraph} />
                 </p>
               ))}
             </section>
@@ -614,7 +617,7 @@ function PointTeaching({
             <section aria-label="Explanation" className="lesson-section">
               {explanation.map((paragraph, index) => (
                 <p className="lesson-teaching-text" key={index}>
-                  {paragraph}
+                  <InlineText text={paragraph} />
                 </p>
               ))}
               <h3 className="lesson-example-heading">Worked example</h3>
@@ -680,7 +683,9 @@ function QuestionCard({
       <div className="question-top">
         <span className="page-eyebrow">{label}</span>
       </div>
-      <h1>{question.prompt}</h1>
+      <h1>
+        <InlineText text={question.prompt} />
+      </h1>
       {question.type === 'choice' && question.code && (
         <CodeBlock
           code={question.code}
@@ -785,7 +790,9 @@ function QuestionCard({
               {title}
               {xp > 0 && ` · +${xp} XP`}
             </strong>
-            <p>{question.explanation}</p>
+            <p>
+              <InlineText text={question.explanation} />
+            </p>
             {!feedback.correct && question.type === 'code' && (
               <Accordion type="single" collapsible className="mt-3">
                 <AccordionItem value="solution">
