@@ -654,9 +654,9 @@ while True:
     if sub == 0:
         break
     sub = (sub - 1) & mask
-print(bin(mask), matches)`,
-    '0b101 [5]',
-    'Setting items 0, 2, and 3 and then clearing item 3 leaves mask 0b101. Its submasks are 5, 4, 1, and 0, and only 5 (items 0 and 2) sums to 7.',
+print(mask, matches)`,
+    '5 [5]',
+    'Setting items 0, 2, and 3 and then clearing item 3 leaves mask 5 (binary 101). Its submasks are 5, 4, 1, and 0, and only 5 (items 0 and 2) sums to 7.',
     [
       choice(
         'Which expression tests whether index i belongs to mask?',
@@ -666,14 +666,14 @@ print(bin(mask), matches)`,
         'Construct a mask with just bit i set.',
       ),
       choice(
-        'Which expression removes item 2 from mask = 0b0110 and leaves the other bits alone?',
+        'Which expression removes item 2 from mask = 6 (binary 0110) and leaves the other bits alone?',
         ['mask ^ (1 << 3)', 'mask | (1 << 2)', 'mask - 2', 'mask & ~(1 << 2)'],
         3,
         'The complement of the single bit keeps every other position, and AND clears position 2.',
         'Build a mask that has every bit except position 2.',
       ),
       choice(
-        'Mask 0b1011 selects three items. How many submasks does the walk sub = (sub - 1) & mask visit, counting the mask and zero?',
+        'Mask 11 (binary 1011) selects three items. How many submasks does the walk sub = (sub - 1) & mask visit, counting the mask and zero?',
         ['3', '8', '11', '16'],
         1,
         'Each of the three selected items is either in or out of a submask, giving 2³ = 8.',
