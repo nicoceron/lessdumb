@@ -628,7 +628,7 @@ export const generators: GeneratorModule = {
         '$\\ln$ undoes the exponential, leaving the exponent.',
       );
     }
-    const k = r.int(2, 20);
+    const k = r.pick([2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 15, 20]);
     return typeNumber(
       `What is $e^{\\ln ${k}}$?`,
       k,
@@ -725,7 +725,7 @@ export const generators: GeneratorModule = {
   // math-power-rule: Differentiate powers of x
   'math-power-rule-kp1-q2': (r) => {
     const n = r.int(2, 5);
-    const x = r.pick([-3, -2, -1, 2, 3]);
+    const x = r.pick([-3, -2, 2, 3]);
     const value = n * x ** (n - 1);
     return typeNumber(
       `$f(x) = x^${n}$. What is $f'(${x})$?`,
@@ -986,7 +986,7 @@ export const generators: GeneratorModule = {
   // math-vector-norm: Scale vectors and make unit vectors
   'math-vector-norm-kp2-q4': (r) => {
     const n = r.int(2, 9);
-    const c = r.pick([-4, -3, -2, -0.5, 0.5, 2, 3, 4, 5]);
+    const c = r.pick([-4, -3, -2, -1.5, -0.5, 0.5, 1.5]);
     return typeNumber(
       `$\\lVert v \\rVert = ${n}$. What is $\\lVert ${num(c)}v \\rVert$?`,
       Math.abs(c) * n,

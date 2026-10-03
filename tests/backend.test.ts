@@ -651,6 +651,10 @@ describe('versioned per-account progress', () => {
             mode: 'learn',
             attemptId: crypto.randomUUID(),
             writerId: 'complete-catalog',
+            // A generated question's attempts store its variant number.
+            ...(question.variant !== undefined
+              ? { variant: question.variant }
+              : {}),
           });
         }
       }

@@ -6,6 +6,7 @@ import {
   type TypedQuestion,
 } from '../src/lib/curriculum';
 import { parseMathText } from '../src/lib/math-text';
+import { questionVariant, sampleVariants } from '../src/lib/variants';
 
 // Knowledge-point questions are checked for giveaways a learner could exploit
 // without knowing the idea. The executed-output tests in
@@ -20,18 +21,35 @@ interface Asked<Q> {
 }
 type Item = Asked<ChoiceQuestion>;
 
-const asked: Asked<ChoiceQuestion | TypedQuestion>[] = skills.flatMap((skill) =>
-  (skill.knowledgePoints ?? []).flatMap((point) =>
-    point.questions.flatMap((question) =>
-      question.type === 'code'
-        ? []
-        : [{ courseId: skill.courseId, skillId: skill.id, question }],
+/** Authored questions, one entry each: the course-wide shares count these. */
+const authored: Asked<ChoiceQuestion | TypedQuestion>[] = skills.flatMap(
+  (skill) =>
+    (skill.knowledgePoints ?? []).flatMap((point) =>
+      point.questions.flatMap((question) =>
+        question.type === 'code'
+          ? []
+          : [{ courseId: skill.courseId, skillId: skill.id, question }],
+      ),
     ),
-  ),
 );
-const items: Item[] = asked.filter(
-  (item): item is Item => item.question.type === 'choice',
+/**
+ * A generated question is asked as its variants, so every per-question rule
+ * also checks the variants the catalog validator samples.
+ */
+const variants: Asked<ChoiceQuestion | TypedQuestion>[] = authored.flatMap(
+  (item) =>
+    item.question.generated
+      ? sampleVariants().map((variant) => ({
+          ...item,
+          question: questionVariant(item.question, variant),
+        }))
+      : [],
 );
+const asked = [...authored, ...variants];
+const isChoice = (item: Asked<ChoiceQuestion | TypedQuestion>): item is Item =>
+  item.question.type === 'choice';
+const items: Item[] = asked.filter(isChoice);
+const authoredItems: Item[] = authored.filter(isChoice);
 
 /** TeX source of a math span, measured roughly as KaTeX displays it. */
 const texLength = (tex: string) =>
@@ -102,9 +120,11 @@ function lengthTells() {
     longest: group.filter((item) => isLongest(item.question)).length,
     shortest: group.filter((item) => isShortest(item.question)).length,
   });
+  // Each authored question counts once, so a generator's samples cannot
+  // outweigh the rest of its course; its own variants are checked below.
   return courses
     .map((course) => {
-      const own = items.filter((item) => item.courseId === course.id);
+      const own = authoredItems.filter((item) => item.courseId === course.id);
       return {
         course: course.id,
         conceptual: tells(own.filter((item) => !item.question.checksOutput)),
@@ -164,6 +184,33 @@ describe('knowledge point question quality', () => {
     expect(failures).toEqual([]);
   });
 
+  it('keeps each generated choice question free of a length tell across its variants', () => {
+    // A learner meets many variants of one generator, so a generator whose
+    // key is usually the longest (or shortest) choice teaches that tell.
+    const byQuestion = new Map<string, ChoiceQuestion[]>();
+    for (const { question } of items)
+      if (question.variant !== undefined)
+        byQuestion.set(question.id, [
+          ...(byQuestion.get(question.id) ?? []),
+          question,
+        ]);
+    const flagged = [...byQuestion].flatMap(([id, group]) =>
+      (
+        [
+          ['longest', isLongest],
+          ['shortest', isShortest],
+        ] as const
+      )
+        .filter(
+          ([, tell]) =>
+            group.filter((question) => tell(question)).length >
+            MAX_TELL_SHARE * group.length,
+        )
+        .map(([name]) => `${id} ${name}`),
+    );
+    expect(flagged).toEqual([]);
+  });
+
   it('never makes the correct choice far longer than every distractor', () => {
     const flagged = items
       .filter(({ question }) => {
@@ -195,6 +242,8 @@ describe('knowledge point question quality', () => {
   });
 
   it('never repeats a prompt and its code within one skill', () => {
+    // Variants of one generator may coincide with each other (selection
+    // skips a learner's recent ones), but never with another question.
     const seen = new Map<string, string>();
     const repeated: string[] = [];
     for (const { skillId, question } of asked) {
@@ -204,8 +253,9 @@ describe('knowledge point question quality', () => {
         collapse(question.code ?? ''),
       ].join('\u0000');
       const first = seen.get(key);
-      if (first) repeated.push(`${first} = ${question.id}`);
-      else seen.set(key, question.id);
+      if (first === undefined) seen.set(key, question.id);
+      else if (first !== question.id)
+        repeated.push(`${first} = ${question.id}`);
     }
     expect(repeated).toEqual([]);
   });

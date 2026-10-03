@@ -969,7 +969,7 @@ export const generators: GeneratorModule = {
   },
   // cp-sieve-square-start: Begin a prime’s marking at p × p
   'cp-sieve-square-start-kp1-q1': (r) => {
-    const p = r.pick([2, 3, 5, 7, 11]);
+    const p = r.pick([5, 7, 11, 13]);
     const limit = p * p + p * r.int(0, 5) + r.int(0, p - 1);
     const multiples: number[] = [];
     for (let m = p * p; m <= limit; m += p) multiples.push(m);
@@ -982,7 +982,7 @@ export const generators: GeneratorModule = {
   },
   // cp-sieve-square-start: Step by p and include the limit
   'cp-sieve-square-start-kp2-q2': (r) => {
-    const p = r.pick([2, 3, 5]);
+    const p = r.pick([2, 3]);
     const limit = r.int(p * p - 2, p * p + 4 * p);
     const multiples: number[] = [];
     for (let m = p * p; m <= limit; m += p) multiples.push(m);
