@@ -85,6 +85,24 @@ Reviewed October 3, 2026: every non-executed question in `quantitative-foundatio
 - **`math-distance-kp3-q1`** expects millimeters to dominate kilometers in an unscaled distance. That assumes features of similar physical size, which the explanation says ("the same physical change").
 - **Typed prompts phrased as "Which …?"** (`math-mean-kp2-q2`, `math-bernoulli-binomial-kp1-q3`, `math-gradients-kp3-q3`) or "For which $k$ …?" (`math-cosine-similarity-kp2-q3`, `math-identity-inverse-kp3-q2`). Each has one numeric answer, so only the style differs from the guide.
 
+## Python for Data Analysis
+
+Reviewed October 3, 2026: every non-executed question in `data-analysis.kp.ts`, the course's only knowledge-point file. That is 101 conceptual `choose` questions in 24 skills. The 191 executed questions were not re-graded, but their explanations were read against their code. Library behavior the keys depend on was checked with NumPy 2.5 and pandas 3.0: `astype("Int64")` on 2.5 raises `TypeError`, a `Categorical` stores an undeclared label as missing (with a deprecation warning, as the lesson says), chained assignment through a boolean mask never reaches the original table, `pd.to_numeric` raises `ValueError` by default, and `Series == None` matches nothing.
+
+**Result:** no marked answer is wrong and no distractor is also correct. One prompt depended on its neighbour and one explanation described choices that no longer exist. 2 questions needed a fix.
+
+### Errors fixed
+
+| Question                  | Problem                                                                                                                                                                          | Fix                                                                               |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `da-vectorization-kp4-q2` | "With the same $40 \times 24$ readings…" relied on `kp4-q1` to say that rows are patients and columns are hours. Reviews show one question alone.                                | "readings has one row per patient and one column per hour, shape $40 \times 24$." |
+| `da-vectorization-kp2-q3` | The explanation ended "The lists are per-column and per-row means", left over from the choices it had before CEN-111 made it a typed output question. The learner sees no lists. | "With no axis, mean averages every entry."                                        |
+
+### Debatable, left alone
+
+- **`da-transforms-kp1-q4`** asks why to use `transform` "rather than mean()", meaning the grouped mean. The distractor "mean() gives one overall value, not one per group" is true of a plain `mean()`, but the prompt is about adding each row's group mean, and the key is the only reason that applies.
+- **Explanations that name a likely wrong answer** on typed questions, such as "The mean would be 4.5" (`da-aggregations-kp2-q2`) or "Pairing by position would give 18" (`da-label-alignment-kp1-q2`), are correct and useful, so they stay.
+
 ## Competitive Programming
 
 Reviewed October 3, 2026: every non-executed question in `src/lib/knowledge-points/competitive-0.kp.ts` through `competitive-3.kp.ts`. That is 804 conceptual `choose` questions in 192 skills (38, 254, 268, and 244 per file). The 939 predict-the-output questions were not reviewed again, because the catalog tests already execute them.
