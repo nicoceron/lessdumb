@@ -239,6 +239,41 @@ const skills: Skill[] = [
   ),
 
   skill(
+    'da-exp-log',
+    'da-numpy',
+    'Exponentials and logarithms on arrays',
+    'Apply np.exp and np.log to every entry and round the results for display.',
+    ['da-vectorization', 'math-exp-log'],
+    [
+      'np.exp and np.log are the array versions of math.exp and math.log. np.exp(a) returns a new array holding $e^x$ for every entry $x$ of a, and np.log(a) holds the natural logarithm $\\ln x$ of every entry. Both keep the shape of their input and always return floats, even for an integer array. math.exp and math.log accept a single number, so passing them an array of several values raises TypeError.',
+      'Use them inside larger formulas like any other vectorized arithmetic: 1 / (1 + np.exp(-z)) evaluates $1 / (1 + e^{-z})$ for every entry of z, and -np.log(p) turns every probability in p into a loss. The log of a product is the sum of the logs, so np.log(p).sum() replaces a product of many small probabilities that would underflow to 0.0.',
+      'The results have long decimal tails, so round them for display: array.round(3) rounds every entry to 3 decimals and returns a new array, and round(float(x), 3) does the same for a single NumPy number. np.log needs positive entries. Where math.log raises ValueError, np.log(0) gives -inf and a negative entry gives nan, each with only a RuntimeWarning, so check the inputs before taking logs.',
+    ],
+    'import numpy as np\nz = np.array([0.0, 1.0, 2.0])\nprint(np.exp(z).round(3).tolist())\nprint(np.log(np.exp(z)).round(3).tolist())',
+    '[1.0, 2.718, 7.389]\n[0.0, 1.0, 2.0]',
+    'np.exp maps each entry $x$ to $e^x$, and np.log undoes it entry by entry, giving z back.',
+    [
+      exercise(
+        'Create weights holding np.exp of every score in scores, and losses holding the negative natural log of every probability in p. Keep both as NumPy arrays.',
+        'import numpy as np\nscores = np.array([0.0, 1.0, 2.0])\np = np.array([0.5, 0.25, 1.0])\n# Create weights and losses.\n',
+        'import numpy as np\nscores = np.array([0.0, 1.0, 2.0])\np = np.array([0.5, 0.25, 1.0])\nweights = np.exp(scores)\nlosses = -np.log(p)',
+        'assert isinstance(weights, np.ndarray) and weights.shape == (3,), "Apply np.exp to the whole array."\nassert np.allclose(weights, [1.0, 2.718281828459045, 7.38905609893065]), "weights holds e to the power of each score."\nassert isinstance(losses, np.ndarray) and losses.shape == (3,), "Apply np.log to the whole array."\nassert np.allclose(losses, [0.6931471805599453, 1.3862943611198906, 0.0]), "losses holds the negative natural log of each probability."',
+        'np.exp and np.log work entry by entry, so one call transforms the whole array; the minus sign applies to every log.',
+      ),
+    ],
+    [
+      [
+        'What do np.exp(a) and np.log(a) return for a NumPy array a?',
+        'A new float array of the same shape holding eˣ, or the natural log ln x, of every entry.',
+      ],
+      [
+        'How does np.log(0) differ from math.log(0)?',
+        'np.log(0) gives -inf with a RuntimeWarning; math.log(0) raises ValueError.',
+      ],
+    ],
+  ),
+
+  skill(
     'da-series',
     'da-pandas',
     'Use labeled values',

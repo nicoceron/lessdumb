@@ -774,6 +774,7 @@ const curriculum = [
     'Track weighted sums, activations, and batch shapes.',
     [
       'da-broadcasting',
+      'da-exp-log',
       'ml-logistic-regression',
       'math-matrix-multiplication',
       'math-softmax',

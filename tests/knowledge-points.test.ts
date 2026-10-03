@@ -195,6 +195,32 @@ describe('knowledge point registry', () => {
         ).toBe(true);
   });
 
+  it('varies at least 40 C++, 40 Rust, and 25 data analysis points and runs them', () => {
+    // CEN-162: points with a generated question, and the sampled variants
+    // the rustc, clang++, and Pyodide batches below execute for them.
+    const varied = (courseId: string) =>
+      skills
+        .filter((skill) => skill.courseId === courseId)
+        .flatMap((skill) => skill.knowledgePoints ?? [])
+        .filter((point) => point.questions.some((q) => q.generated));
+    const executed = (prefix: string, language: CodeLanguage) =>
+      inLanguage(programs, language).filter(
+        (program) => program.id.startsWith(prefix) && program.id.includes('#'),
+      ).length;
+    expect(varied('cpp').length).toBeGreaterThanOrEqual(40);
+    expect(varied('rust').length).toBeGreaterThanOrEqual(40);
+    expect(varied('python-data-analysis').length).toBeGreaterThanOrEqual(25);
+    expect(executed('cpp-', 'cpp')).toBeGreaterThanOrEqual(
+      40 * EXECUTED_VARIANTS.length,
+    );
+    expect(executed('rust-', 'rust')).toBeGreaterThanOrEqual(
+      40 * EXECUTED_VARIANTS.length,
+    );
+    expect(executed('da-', 'python')).toBeGreaterThanOrEqual(
+      25 * EXECUTED_VARIANTS.length,
+    );
+  });
+
   it('keeps output questions and examples runnable as complete programs', () => {
     for (const program of programs) {
       if (program.language === 'rust')
