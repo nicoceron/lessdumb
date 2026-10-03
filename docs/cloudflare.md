@@ -37,12 +37,10 @@ Then run:
 ```sh
 npm run build:cloudflare
 npx wrangler d1 migrations apply lessdumb --local
-npm run preview:cloudflare
-LESSDUMB_E2E_URL=http://127.0.0.1:4333 npm run test:e2e
-npx astro preview stop
+LESSDUMB_E2E_URL=http://127.0.0.1:4333 npm run test:e2e -- --config playwright.cloudflare.config.ts
 ```
 
-Preview uses local workerd and D1; it does not use the production database. `.dev.vars` supplies local values and is not a deployment secret source. The default `npm run build` and `npm start` remain the Node/SQLite version. Both builds use `dist`, so rebuild for the intended target before running or deploying it.
+Playwright starts the foreground preview with its native `webServer` lifecycle, waits for HTTP readiness, and stops it after the browser suite. The documented `--ignore-lock` preview flag keeps the test server in the foreground when Astro detects an agent; Playwright exclusively owns the configured port. CI has a 15-minute job limit and cancels superseded runs. Preview uses local workerd and D1; it does not use the production database. Create `.dev.vars` **before building**: the Cloudflare Vite plugin stages these local values into the generated preview configuration. They are not a deployment secret source. The default `npm run build` and `npm start` remain the Node/SQLite version. Both builds use `dist`, so rebuild for the intended target before running or deploying it.
 
 ## Runtime and storage
 
