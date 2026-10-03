@@ -23,6 +23,8 @@ import {
   reviewRequirement,
 } from '../src/lib/lesson-plan';
 import { lessonXp } from '../src/lib/xp';
+import { attachGenerators } from '../src/lib/knowledge-points';
+import { questionVariant } from '../src/lib/variants';
 import * as parts from '../src/lib/content/parts';
 import {
   catalogIndexModule,
@@ -71,7 +73,9 @@ describe('graph index', () => {
         ...skill.questions,
         ...(skill.knowledgePoints ?? []).flatMap((point) => point.questions),
       ])
-        expect(Object.keys(question).sort()).toEqual(['id', 'type']);
+        expect(Object.keys(question).sort()).toEqual(
+          question.generated ? ['generated', 'id', 'type'] : ['id', 'type'],
+        );
       for (const card of skill.flashcards)
         expect(Object.keys(card)).toEqual(['id']);
     }
@@ -133,31 +137,81 @@ describe('per-course content', () => {
       id: string;
       courseId: string;
       skills: typeof curriculum.skills;
+      generators: string[];
     }[] = await contentUnits();
     expect(units.map((unit) => unit.id)).toEqual(
       curriculum.units
         .filter((unit) => curriculum.skills.some((s) => s.unitId === unit.id))
         .map((unit) => unit.id),
     );
-    const shipped = new Map<string, unknown>();
+    const shipped = new Map<string, (typeof curriculum.skills)[number]>();
     for (const unit of units) {
       const source = contentUnitModule(unit);
-      expect(source).toMatch(/^export default JSON\.parse\(".*"\);\n$/s);
-      const skills = JSON.parse(
-        JSON.parse(source.slice('export default JSON.parse('.length, -3)),
-      ) as typeof curriculum.skills;
-      for (const skill of skills) {
+      // JSON has no functions: a unit with generated questions also imports
+      // its course's generator modules and attaches them by question ID.
+      const generated = unit.skills.some((skill) =>
+        skill.knowledgePoints?.some((point) =>
+          point.questions.some((question) => question.generated),
+        ),
+      );
+      const json = generated
+        ? /export default attachGenerators\(JSON\.parse\((".*")\), \[g0\]\);\n$/s.exec(
+            source,
+          )![1]
+        : /^export default JSON\.parse\((".*")\);\n$/s.exec(source)![1];
+      if (generated) {
+        expect(unit.generators).toEqual(
+          curriculum.generatorFiles[unit.courseId].map((name) =>
+            resolve('src/lib/knowledge-points', name),
+          ),
+        );
+        for (const path of unit.generators)
+          expect(source).toContain(`from ${JSON.stringify(path)};`);
+      } else expect(unit.generators).toEqual([]);
+      const parsed = JSON.parse(JSON.parse(json)) as typeof curriculum.skills;
+      const modules = await Promise.all(
+        unit.generators.map(
+          async (path) =>
+            (await import(path)) as {
+              generators: Parameters<typeof attachGenerators>[1][number];
+            },
+        ),
+      );
+      for (const skill of attachGenerators(
+        parsed,
+        modules.map((module) => module.generators),
+      )) {
         expect(skill.unitId).toBe(unit.id);
         expect(skill.courseId).toBe(unit.courseId);
         shipped.set(skill.id, skill);
       }
     }
-    // Every skill exactly once, with all of its content.
+    // Every skill exactly once, with all of its content, and every generated
+    // question asks the same variants as on the server.
     expect([...shipped.keys()].sort()).toEqual(
       curriculum.skills.map((skill) => skill.id).sort(),
     );
-    for (const skill of curriculum.skills)
-      expect(shipped.get(skill.id), skill.id).toEqual(skill);
+    const withoutFunctions = (value: unknown) =>
+      JSON.parse(JSON.stringify(value));
+    for (const skill of curriculum.skills) {
+      const browser = shipped.get(skill.id)!;
+      expect(withoutFunctions(browser), skill.id).toEqual(
+        withoutFunctions(skill),
+      );
+      const questions = (skill.knowledgePoints ?? []).flatMap(
+        (point) => point.questions,
+      );
+      const browserQuestions = (browser.knowledgePoints ?? []).flatMap(
+        (point) => point.questions,
+      );
+      questions.forEach((question, index) => {
+        if (!question.generated) return;
+        for (const variant of [0, 7, 31])
+          expect(
+            withoutFunctions(questionVariant(browserQuestions[index], variant)),
+          ).toEqual(withoutFunctions(questionVariant(question, variant)));
+      });
+    }
 
     // The replacement module exports what the real module exports, keys its
     // parts by unit, and loads each through its own dynamic import.
