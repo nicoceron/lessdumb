@@ -493,7 +493,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '$\\text{IQR} = Q_3 - Q_1 = 30 - 12 = 18$.',
         ),
         choose(
-          'The maximum value 60 is replaced by 600. Which summary changes?',
+          'In a dataset of nine values, the maximum, 60, is replaced by 600. Which summary changes?',
           ['The IQR', 'The range', '$Q_1$', 'The median'],
           1,
           'The range uses the maximum; the quartiles and median depend only on the middle of the order.',
@@ -926,7 +926,7 @@ export const knowledgePoints: KnowledgePointModule = {
       ),
       questions: [
         choose(
-          'In this example, why is $P(\\text{sick} \\mid \\text{positive})$ much smaller than $P(\\text{positive} \\mid \\text{sick})$?',
+          'Of 1,000 patients, 10 are sick and 9 of them test positive, and 99 of the 990 healthy ones also test positive. Why is $P(\\text{sick} \\mid \\text{positive})$ much smaller than $P(\\text{positive} \\mid \\text{sick})$?',
           [
             'The test is broken',
             'Probabilities cannot exceed 0.5',

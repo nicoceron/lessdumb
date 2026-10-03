@@ -66,6 +66,25 @@ Reviewed October 3, 2026: every non-executed question in `python-foundations.kp.
 - **`problem-solving-kp1-q1`, `kp1-q3`, `kp1-q4` and `kp3-q4`** name `count_words` without showing it. The name says what it does, and the choices make each question answerable alone.
 - **`key-functions-kp4-q4`.** The explanation says `max(words)` "picks the last word alphabetically". Strictly it compares code points, so capitals sort first, as `sorting-kp2` teaches. No choice depends on it.
 
+## Quantitative foundations
+
+Reviewed October 3, 2026: every non-executed question in `quantitative-foundations.kp.ts`, the course's only knowledge-point file. That is 406 questions in 37 skills: 238 conceptual `choose` questions and 168 `typeNumber` questions. The 70 executed questions were not re-graded, but their explanations were read against their code. For each numeric question the answer was recomputed and the tolerance checked: integer and terminating answers have none, and rounded ones (`math-sigmoid`, `math-softmax`, $e^{-3}$) use half the last digit with "to 3 decimals". Percentiles were checked against NumPy's default rule, and the sigmoid, softmax and likelihood values in Python.
+
+**Result:** no marked or typed answer is wrong, no tolerance accepts a wrong answer or rejects a right one, and no distractor is also correct. Two prompts relied on context a review does not show. 2 of 406 questions (0.5%) needed a fix.
+
+### Errors fixed
+
+| Question                  | Problem                                                                                                                                                                                                                              | Fix                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `math-probability-kp4-q1` | "In this example, why is $P(\text{sick} \mid \text{positive})$ much smaller…" pointed at the worked example's patient counts, which a review does not show.                                                                          | The prompt states the counts: 10 sick of 1,000, 9 of them positive, 99 healthy positives. |
+| `math-percentiles-kp3-q2` | "The maximum value 60 is replaced by 600" referred to the worked example's nine values. Without them the key is not unique: with four values, $Q_3$ interpolates toward the maximum, so the IQR changes too (NumPy: 17.25 → 152.25). | "In a dataset of nine values, the maximum, 60, is replaced by 600."                       |
+
+### Debatable, left alone
+
+- **`math-probability-kp2-q3`** stores its answer as `5 / 6` with tolerance 0.0005, while the authoring guide asks for the rounded value. Grading is right (`5/6`, `0.833` and `0.8333` all pass), and the accepted answer is shown as 0.833333333333.
+- **`math-distance-kp3-q1`** expects millimeters to dominate kilometers in an unscaled distance. That assumes features of similar physical size, which the explanation says ("the same physical change").
+- **Typed prompts phrased as "Which …?"** (`math-mean-kp2-q2`, `math-bernoulli-binomial-kp1-q3`, `math-gradients-kp3-q3`) or "For which $k$ …?" (`math-cosine-similarity-kp2-q3`, `math-identity-inverse-kp3-q2`). Each has one numeric answer, so only the style differs from the guide.
+
 ## Competitive Programming
 
 Reviewed October 3, 2026: every non-executed question in `src/lib/knowledge-points/competitive-0.kp.ts` through `competitive-3.kp.ts`. That is 804 conceptual `choose` questions in 192 skills (38, 254, 268, and 244 per file). The 939 predict-the-output questions were not reviewed again, because the catalog tests already execute them.
