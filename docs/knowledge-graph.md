@@ -22,13 +22,13 @@ The graph and the lessons are loaded separately (CEN-108). Before, every page do
 
 Engine functions are typed on `SkillOutline` and return content when given a full `Skill`: `selectQuestion(progress, outline, mode)` returns a question reference for scheduling, and the same call with a loaded skill returns the question to render.
 
-Course chunks are content-addressed `/_astro/` static assets, served by Cloudflare's asset layer with a one-year immutable cache, and they import only two small shared chunks (`knowledge-points` and `teaching-order`), so a deploy that does not change a course keeps its chunk URL. Gzipped sizes, measured with `npm run build`:
+Course chunks are content-addressed `/_astro/` static assets, served by Cloudflare's asset layer with a one-year immutable cache. They import only three small shared helper chunks (`knowledge-points`, `exercise`, and `teaching-order`), so a deploy that does not change a course keeps its chunk URL and returning learners keep it cached. Editing a course changes that course's chunk and the index; because the index sits in the main shared chunk, the application chunks that import it get new URLs too. Gzipped sizes (gzip level 9), measured with `npm run build`; "before" is `main` at 7699e9f:
 
 | Download                                       |                Before |  After |
 | ---------------------------------------------- | --------------------: | -----: |
 | First visit to `/` (all JavaScript)            |              1,596 KB | 236 KB |
 | Largest chunk on `/`                           |              1,454 KB |  95 KB |
-| First Python lesson (adds session + course)    |              1,816 KB | 573 KB |
+| First Python lesson (adds session + course)    |              1,816 KB | 565 KB |
 | Largest course chunk (Competitive Programming) | in the 1,454 KB chunk | 343 KB |
 
 ## Before and after
