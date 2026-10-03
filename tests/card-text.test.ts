@@ -11,6 +11,7 @@ import { isUnlocked } from '../src/lib/learning';
 import { mathSpans, plainProse } from '../src/lib/math-text';
 import { acceptedAnswer } from '../src/lib/typed-answer';
 import { createState, recordLearningAnswer } from '../src/lib/state';
+import { cardWithText } from '../src/lib/cards';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
 import { masterWithPrerequisites } from './helpers/mastery';
 
@@ -155,18 +156,28 @@ describe('card text with prose and code (CEN-128)', () => {
       },
     );
     expect(state.cards).toHaveLength(1);
-    expect(state.cards[0]).toMatchObject({
+    expect(state.cards[0]).toEqual({
       id: `mistake:${skill.id}:${question.id}`,
-      format: 'prose',
+      skillId: skill.id,
+      kind: 'mistake',
+      status: 'pending',
     });
-    expect(cardBlocks(state.cards[0].front)[0]).toEqual({
+    const card = cardWithText(state.cards[0])!;
+    expect(card.format).toBe('prose');
+    expect(cardBlocks(card.front)[0]).toEqual({
       kind: 'prose',
       text: question.prompt,
     });
     expect(parseStateUpdate({ state, revision: 0 }).state.cards).toEqual(
       state.cards,
     );
-    const broken = structuredClone(state);
+    // A card saved with its text before version 8 is still checked.
+    const saved = structuredClone(state);
+    saved.cards[0] = card;
+    expect(parseStateUpdate({ state: saved, revision: 0 }).state.cards).toEqual(
+      [card],
+    );
+    const broken = structuredClone(saved);
     (broken.cards[0] as { format: string }).format = 'html';
     expect(() => parseStateUpdate({ state: broken, revision: 0 })).toThrow(
       'state.cards[0].format must be prose.',

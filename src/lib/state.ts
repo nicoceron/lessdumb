@@ -15,16 +15,13 @@ import {
   type Progress,
   type SkillProgress,
 } from './learning';
-import type { GraphCatalog, SkillOutline } from './curriculum';
+import type { GraphCatalog } from './curriculum';
 import { defaultCatalog, skillById } from './catalog-index';
-import { contentOf } from './content';
-import { mistakeCardText } from './card-text';
-import { questionVariant } from './variants';
+import { masteryCard, mistakeCard } from './cards';
 import { mergeQuizzes, type Quiz } from './quiz';
 import { mergeDiagnostics } from './placement';
 import {
   evidenceIdFor,
-  findQuestion,
   hasKnowledgePoints,
   hasLessonEvidence,
   legacyQuestionIds,
@@ -42,7 +39,19 @@ import { activityTotals, mergeActivity } from './activity';
 import type { Refresh } from './remediation';
 import type { AnkiCard } from './anki';
 
-export interface QueuedCard extends AnkiCard {
+/**
+ * A flashcard in the learner's state. Since version 8 a card is a reference
+ * (`src/lib/cards.ts`): its text comes from the catalog. A mistake card's ID
+ * names its question (`mistake:<skill>:<question>`), and `variant` the
+ * generated variant that was missed; a mastery card's ID is its flashcard's.
+ * Cards saved before version 8 carry their text instead and keep it.
+ */
+export interface QueuedCard
+  extends
+    Pick<AnkiCard, 'id' | 'skillId' | 'kind'>,
+    Partial<Pick<AnkiCard, 'skillName' | 'front' | 'back' | 'format'>> {
+  /** The variant of a generated question a mistake card shows. */
+  variant?: number;
   status: 'pending' | 'synced';
   noteId?: number;
   lastError?: string;
@@ -52,7 +61,8 @@ export interface QueuedCard extends AnkiCard {
  * version 3 adds quizzes; version 4 adds implicit review credit; version 5
  * adds placement diagnostics; version 6 adds the pending prerequisite
  * refresh a failed lesson schedules; version 7 adds the variant number of a
- * generated question to attempts, quiz questions, and placement questions.
+ * generated question to attempts, quiz questions, and placement questions;
+ * version 8 stores new cards by reference instead of copying their text.
  */
 export interface LearnerState {
   version: typeof STATE_VERSION;
@@ -80,8 +90,7 @@ export function createState(): LearnerState {
 
 /**
  * Record an answer against the current state without replacing concurrent
- * work. The skill's content must be loaded: mistake and mastery cards carry
- * its text.
+ * work. Cards are references, so the skill's content need not be loaded.
  */
 export function recordLearningAnswer(
   state: LearnerState,
@@ -90,14 +99,7 @@ export function recordLearningAnswer(
   const progress = applyAttempt(state.progress, input);
   // A stable attempt identity can be replayed by a state updater or save retry.
   if (progress === state.progress) return state;
-  const skill = contentOf(skillById[input.skillId]);
-  if (!skill)
-    throw new Error(`Load ${input.skillId} before recording its answers.`);
-  // A generated question's card shows the variant that was missed.
-  const question = questionVariant(
-    findQuestion(skill, input.questionId)!,
-    progress.attempts.at(-1)?.variant,
-  );
+  const skill = skillById[input.skillId];
   const cards = [...state.cards];
   const cardIds = new Set(cards.map((card) => card.id));
   const add = (card: QueuedCard) => {
@@ -107,24 +109,18 @@ export function recordLearningAnswer(
   };
 
   if (!input.correct) {
-    add({
-      id: `mistake:${skill.id}:${question.id}`,
-      skillId: skill.id,
-      skillName: skill.title,
-      kind: 'mistake',
-      ...mistakeCardText(question),
-      status: 'pending',
-    });
+    // A generated question's card shows the variant that was missed: the
+    // attempt keeps its number only for a generated question.
+    add(
+      mistakeCard(
+        skill.id,
+        input.questionId,
+        progress.attempts.at(-1)?.variant,
+      ),
+    );
   }
   if (isMastered(progress, skill.id) && !isMastered(state.progress, skill.id)) {
-    for (const card of skill.flashcards) {
-      add({
-        ...card,
-        skillName: skill.title,
-        kind: 'mastery',
-        status: 'pending',
-      });
-    }
+    for (const card of skill.flashcards) add(masteryCard(skill.id, card.id));
   }
   return { ...state, progress, cards };
 }
@@ -148,10 +144,10 @@ const reviewRewardKey = (attempt: Attempt) =>
       ])
     : null;
 
-/** A saved state from an earlier schema: before refreshes, quizzes, or knowledge points. */
+/** A saved state from an earlier schema: before card references, variants, refreshes, quizzes, or knowledge points. */
 export type LegacyLearnerState = Omit<LearnerState, 'version' | 'progress'> & {
-  version: 1 | 2 | 3 | 4 | 5 | 6;
-  progress: Omit<Progress, 'version'> & { version: 1 | 2 | 3 | 4 | 5 | 6 };
+  version: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  progress: Omit<Progress, 'version'> & { version: 1 | 2 | 3 | 4 | 5 | 6 | 7 };
 };
 
 /**
@@ -164,7 +160,9 @@ export function migrateState(
   catalog: GraphCatalog = defaultCatalog,
 ): LearnerState {
   // Every later version only adds optional fields, so older progress reads
-  // as is under the current version.
+  // as is under the current version. Cards saved with their text (before
+  // version 8) keep it: rebuilding them from today's catalog could rewrite
+  // notes already in a learner's Anki collection.
   const progress = normalizeProgress(
     state.progress.version === STATE_VERSION
       ? (state.progress as Progress)
@@ -764,8 +762,7 @@ export function mergeStates(
       ? local
       : remote;
   // Reconciliation itself can complete mastery when devices supplied
-  // different answers. Cards need the skill's text: skills whose content is
-  // not loaded are queued once it is (see missingMasteryCards).
+  // different answers, which earns the skill's cards.
   return queueMasteryCards(
     {
       ...recent,
@@ -787,45 +784,28 @@ export function mergeStates(
   );
 }
 
-/** Mastered skills whose mastery cards are not all queued yet. */
-export function missingMasteryCards(
-  state: LearnerState,
-  catalog: GraphCatalog = defaultCatalog,
-): SkillOutline[] {
-  const queued = new Set(state.cards.map((card) => card.id));
-  return catalog.skills.filter((skill) => {
-    const progress = state.progress.skills[skill.id];
-    return (
-      !!progress &&
-      // Placement earns no cards, even once its first review confirms it.
-      (!progress.placement || progress.placement.demotedAt !== undefined) &&
-      skill.flashcards.some((card) => !queued.has(card.id)) &&
-      hasLessonEvidence(skill, progress.questionIds)
-    );
-  });
-}
-
 /**
- * Queue the mastery cards of every mastered skill whose content is loaded.
- * Returns the same state when nothing is added.
+ * Queue the mastery cards of every mastered skill that lacks them. Returns
+ * the same state when nothing is added.
  */
 export function queueMasteryCards(
   state: LearnerState,
   catalog: GraphCatalog = defaultCatalog,
 ): LearnerState {
+  const queued = new Set(state.cards.map((card) => card.id));
   const added: QueuedCard[] = [];
-  for (const outline of missingMasteryCards(state, catalog)) {
-    const skill = contentOf(outline);
-    if (!skill) continue;
-    const queued = new Set(state.cards.map((card) => card.id));
+  for (const skill of catalog.skills) {
+    const progress = state.progress.skills[skill.id];
+    if (
+      !progress ||
+      // Placement earns no cards, even once its first review confirms it.
+      (progress.placement && progress.placement.demotedAt === undefined) ||
+      skill.flashcards.every((card) => queued.has(card.id)) ||
+      !hasLessonEvidence(skill, progress.questionIds)
+    )
+      continue;
     for (const card of skill.flashcards)
-      if (!queued.has(card.id))
-        added.push({
-          ...card,
-          skillName: skill.title,
-          kind: 'mastery',
-          status: 'pending',
-        });
+      if (!queued.has(card.id)) added.push(masteryCard(skill.id, card.id));
   }
   return added.length ? { ...state, cards: [...state.cards, ...added] } : state;
 }

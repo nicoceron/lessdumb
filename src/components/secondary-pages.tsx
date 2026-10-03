@@ -19,6 +19,13 @@ import {
 import { exportCardsTsv } from '../lib/anki';
 import { cardBlocks } from '../lib/card-text';
 import {
+  cardSkillName,
+  cardSkills,
+  cardWithText,
+  loadCardText,
+  type CardWithText,
+} from '../lib/cards';
+import {
   authClient,
   NOTICE_PARAM,
   PASSWORD_RESET_NOTICE,
@@ -28,8 +35,9 @@ import { type PythonResult } from '../lib/python';
 import type { CodeLanguage } from '../lib/curriculum';
 import { runCode } from '../lib/code-runner';
 import { codeLanguage, codeLanguageLabels } from '../lib/code-language';
-import { type LearnerState, type QueuedCard } from '../lib/state';
+import { type LearnerState } from '../lib/state';
 import { InlineText } from './inline-text';
+import { useSkillContent } from './use-content';
 import { Pill, PageTitle, download } from './shared';
 import { Button } from './ui/button';
 import {
@@ -79,14 +87,25 @@ const CodeEditor = lazy(() => import('./code-editor'));
  * One side of a card. A mistake card made since CEN-128 is prose with code
  * blocks: prose typesets its math, code stays as written. Older cards and
  * mastery cards are plain text and show as written, TeX source included.
+ * A card stored by reference shows its text once its unit has loaded.
  */
 function CardFace({
   card,
   side,
+  loading,
 }: {
-  card: QueuedCard;
+  card: CardWithText | undefined;
   side: 'front' | 'back';
+  loading: boolean;
 }) {
+  if (!card)
+    return (
+      <span className="w-full flex-1 text-sm text-muted-foreground">
+        {loading
+          ? 'Loading this card…'
+          : 'This card’s question is no longer in the course.'}
+      </span>
+    );
   if (!card.format)
     return (
       <pre className="w-full flex-1 font-mono text-sm leading-relaxed break-words whitespace-pre-wrap">
@@ -131,9 +150,31 @@ export function Cards({
 }) {
   const [filter, setFilter] = useState('all');
   const [flipped, setFlipped] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
   const visible = state.cards.filter(
     (c) => filter === 'all' || c.status === filter,
   );
+  // Cards stored by reference take their text from their units' content.
+  const content = useSkillContent(cardSkills(visible).map((skill) => skill.id));
+  async function exportCards() {
+    setExporting(true);
+    setExportError('');
+    try {
+      const { cards } = await loadCardText(state.cards);
+      download(
+        'lessdumb-cards.tsv',
+        exportCardsTsv(cards),
+        'text/tab-separated-values',
+      );
+    } catch (error) {
+      setExportError(
+        error instanceof Error ? error.message : 'The export failed. Retry.',
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
   const metrics = [
     { value: state.cards.length, label: 'cards created' },
     {
@@ -213,19 +254,32 @@ export function Cards({
           </TabsList>
           <Button
             variant="outline"
-            onClick={() =>
-              download(
-                'lessdumb-cards.tsv',
-                exportCardsTsv(state.cards),
-                'text/tab-separated-values',
-              )
-            }
-            disabled={!state.cards.length}
+            onClick={exportCards}
+            disabled={!state.cards.length || exporting}
           >
-            <ArrowDownToLine size={16} />
+            {exporting ? (
+              <LoaderCircle size={16} className="animate-spin" />
+            ) : (
+              <ArrowDownToLine size={16} />
+            )}
             Export for Anki
           </Button>
         </div>
+        {(exportError || content.error) && (
+          <Alert variant="destructive" role="alert">
+            <AlertDescription>
+              {exportError ||
+                'Some cards could not be downloaded. Check your connection and retry.'}
+            </AlertDescription>
+            {!exportError && (
+              <AlertAction>
+                <Button variant="outline" size="xs" onClick={content.retry}>
+                  Retry
+                </Button>
+              </AlertAction>
+            )}
+          </Alert>
+        )}
         <TabsContent value={filter}>
           {visible.length ? (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -261,11 +315,12 @@ export function Cards({
                       </span>
                     </span>
                     <CardFace
-                      card={card}
+                      card={cardWithText(card)}
                       side={flipped === card.id ? 'back' : 'front'}
+                      loading={!content.ready}
                     />
                     <span className="flex items-end justify-between gap-3 text-xs text-muted-foreground">
-                      <span>{card.skillName}</span>
+                      <span>{cardSkillName(card)}</span>
                       <span className="shrink-0 text-primary">
                         {flipped === card.id
                           ? 'Show question'

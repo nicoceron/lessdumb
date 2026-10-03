@@ -5,11 +5,16 @@ import { MAX_SAVED_QUIZZES } from '../quiz';
 import { activityTotals, type ActivityState } from '../activity';
 import { TYPED_RESPONSE_MAX_LENGTH } from '../typed-answer';
 import { MAX_VARIANT } from '../variants';
+import { mistakeQuestionId } from '../cards';
 
 /** Every schema version a saved state may have; older ones migrate on read. */
 const VERSIONS = Array.from({ length: STATE_VERSION }, (_, index) => index + 1);
 
-/** The full current catalog plus every mastery/mistake card fits with headroom. */
+/**
+ * The request and device-cache limit. A learner who misses every question of
+ * the full catalog once, then masters every skill, needs well under three
+ * quarters of it: cards are references, not copies of lesson text.
+ */
 export const MAX_STATE_BODY_BYTES = 4 * 1024 * 1024;
 
 export class StateValidationError extends Error {
@@ -334,6 +339,10 @@ function validateSkill(value: unknown, path: string) {
   }
 }
 
+/**
+ * A card is a reference to catalog text (version 8) or carries the text it
+ * was saved with (`src/lib/cards.ts`).
+ */
 function validateCard(value: unknown, path: string): string {
   const card = object(value, path, [
     'id',
@@ -342,20 +351,35 @@ function validateCard(value: unknown, path: string): string {
     'front',
     'back',
     'format',
+    'variant',
     'kind',
     'status',
     'noteId',
     'lastError',
   ]);
   const id = string(card.id, `${path}.id`);
-  string(card.skillId, `${path}.skillId`);
-  string(card.skillName, `${path}.skillName`);
-  string(card.front, `${path}.front`, 100_000);
-  string(card.back, `${path}.back`, 100_000);
-  if (card.format !== undefined && card.format !== 'prose')
-    fail(`${path}.format`, 'prose');
+  const skillId = string(card.skillId, `${path}.skillId`);
   if (card.kind !== 'mastery' && card.kind !== 'mistake')
     fail(`${path}.kind`, 'mastery or mistake');
+  const saved = ['skillName', 'front', 'back', 'format'].some(
+    (key) => card[key] !== undefined,
+  );
+  if (saved) {
+    string(card.skillName, `${path}.skillName`);
+    string(card.front, `${path}.front`, 100_000);
+    string(card.back, `${path}.back`, 100_000);
+    if (card.format !== undefined && card.format !== 'prose')
+      fail(`${path}.format`, 'prose');
+  } else if (
+    card.kind === 'mistake' &&
+    mistakeQuestionId({ id, skillId }) === undefined
+  )
+    fail(`${path}.id`, 'mistake:<skill ID>:<question ID>');
+  if (card.variant !== undefined) {
+    if (saved || card.kind !== 'mistake')
+      fail(`${path}.variant`, 'set only on a mistake card without text');
+    number(card.variant, `${path}.variant`, 0, MAX_VARIANT);
+  }
   if (card.status !== 'pending' && card.status !== 'synced')
     fail(`${path}.status`, 'pending or synced');
   if (card.noteId !== undefined) number(card.noteId, `${path}.noteId`, 1);

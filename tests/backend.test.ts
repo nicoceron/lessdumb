@@ -14,6 +14,7 @@ import {
   recordLearningAnswer,
   type LearnerState,
 } from '../src/lib/state';
+import { cardWithText } from '../src/lib/cards';
 import {
   applyAttempt,
   DAY_MS,
@@ -673,11 +674,14 @@ describe('versioned per-account progress', () => {
         0,
       ),
     ).toBe(missed.size * 2);
+    // Cards are references; every one still has its text from the catalog.
+    expect(state.cards.every((card) => card.front === undefined)).toBe(true);
+    expect(state.cards.every((card) => cardWithText(card))).toBe(true);
     const body = { state, revision: 0 };
     const bytes = Buffer.byteLength(JSON.stringify(body));
-    // The old 2 MiB bound rejected this valid, finite learning history.
-    expect(bytes).toBeGreaterThan(2 * 1024 * 1024);
-    expect(bytes).toBeLessThan(MAX_STATE_BODY_BYTES);
+    // At least 25% headroom under the request limit for the catalog to grow:
+    // copying card text put this state at 98% of it (CEN-153).
+    expect(bytes).toBeLessThanOrEqual(MAX_STATE_BODY_BYTES * 0.75);
     const saved = await stateRequest(backend, cookie, body);
     expect(saved.status).toBe(200);
     expect(await (await stateRequest(backend, cookie)).json()).toEqual({

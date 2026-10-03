@@ -44,6 +44,7 @@ import {
 } from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
 import { mistakeCardText } from '../src/lib/card-text';
+import { cardWithText } from '../src/lib/cards';
 import {
   attachGenerators,
   choose,
@@ -554,9 +555,18 @@ describe('storing and rebuilding the variant asked', () => {
       variant: 5,
       response: '1',
     });
-    const card = state.cards.find(
+    const stored = state.cards.find(
       (item) => item.id === `mistake:${skill.id}:${question.id}`,
     )!;
+    // The card stores the variant number, never the question's text.
+    expect(stored).toEqual({
+      id: `mistake:${skill.id}:${question.id}`,
+      skillId: skill.id,
+      kind: 'mistake',
+      variant: 5,
+      status: 'pending',
+    });
+    const card = cardWithText(stored)!;
     expect(card).toMatchObject(mistakeCardText(variant));
     expect(card.front).toContain(variant.prompt);
     expect(card.front).not.toBe(mistakeCardText(question).front);
@@ -585,7 +595,7 @@ describe('storing and rebuilding the variant asked', () => {
     }).state;
     expect(saved.progress.attempts.at(-1)!.variant).toBe(2);
     expect(saved.version).toBe(STATE_VERSION);
-    expect(STATE_VERSION).toBe(7);
+    expect(STATE_VERSION).toBe(8);
     for (const invalid of [-1, 1.5, MAX_VARIANT + 1, '2']) {
       const bad = JSON.parse(JSON.stringify(state));
       bad.progress.attempts.at(-1).variant = invalid;
@@ -600,8 +610,8 @@ describe('storing and rebuilding the variant asked', () => {
     v6.progress.version = 6;
     delete v6.progress.attempts.at(-1).variant;
     const loaded = parseStateUpdate({ state: v6, revision: 0 }).state;
-    expect(loaded.version).toBe(7);
-    expect(loaded.progress.version).toBe(7);
+    expect(loaded.version).toBe(STATE_VERSION);
+    expect(loaded.progress.version).toBe(STATE_VERSION);
     const old = loaded.progress.attempts.at(-1)!;
     expect(old.variant).toBeUndefined();
     expect(questionVariant(question, old.variant)).toBe(question);
