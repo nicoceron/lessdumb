@@ -140,10 +140,10 @@ int main() {
         choose(
           'A function takes `const std::map<int, int>& m` and must read key 7 if it exists. Why must it use find rather than m[7]?',
           [
-            'operator[] throws when the key is absent',
+            'operator[] throws when the key is absent, so it needs a try block',
             'operator[] may insert, so a const map does not offer it',
-            'find sorts the entries before it searches',
-            'find is defined only for const maps',
+            'find sorts the entries first, so it is faster than operator[]',
+            'find is the only lookup that accepts a const key argument',
           ],
           1,
           'Because [] can insert a missing key, it is a non-const operation. find works on a const map and never changes it.',
@@ -381,9 +381,11 @@ int main() {
   std::vector<int> arrivals{4, 2, 4, 4, 7};
   std::map<int, int> first_seen;
   int inserted = 0;
-  for (int i = 0; i < static_cast<int>(arrivals.size()); ++i) {
-    auto result = first_seen.emplace(arrivals[i], i);
+  int position = 0;
+  for (int id : arrivals) {
+    auto result = first_seen.emplace(id, position);
     if (result.second) ++inserted;
+    ++position;
   }
   std::cout << inserted << " " << first_seen.at(4) << "\\n";
 }`,
@@ -532,10 +534,10 @@ int main() {
         choose(
           'An unordered_map<int, int> holds counts for keys 9, 2 and 5. What does `counts.begin()->first` give?',
           [
-            '2, the smallest key',
-            '9, the first key inserted',
-            '5, the middle key',
-            'Whichever key the hash table places first, which the program should not rely on',
+            '2, because the hash table keeps keys in ascending order',
+            '9, because the first key inserted always comes first',
+            '5, because hashing places the middle key at the front',
+            'Whichever key the hash table places first; do not rely on it',
           ],
           3,
           'unordered_map promises neither sorted nor insertion order. Its first element depends on hashing and bucket layout.',
@@ -543,10 +545,10 @@ int main() {
         choose(
           'Which way of printing counts from an unordered_map gives the same output on every standard library?',
           [
-            'Print entries from begin() to end()',
-            'Print the count of each key taken from a vector of queries, in that order',
-            'Print begin()->first as the most common key',
-            'Print the entry reached last by iteration',
+            'Print entries from begin() to end(), which follows key order',
+            'Print the count of each key from a vector of queries, in order',
+            'Print begin()->first first, since it is the most common key',
+            'Print entries in reverse, from the last bucket to the first',
           ],
           1,
           'Iteration order is unspecified, so only an order the program chooses, such as a query list, is predictable.',
@@ -655,10 +657,10 @@ int main() {
         choose(
           'Why does the winner scan loop over the input vector rather than over the unordered_map?',
           [
-            'An unordered_map cannot be iterated',
-            'The input has a fixed order, so ties resolve the same way on every run and library',
-            'Iterating an unordered_map erases its counts',
-            'counts[vote] works only inside a loop over the vector',
+            'An unordered_map cannot be iterated with a range-for loop',
+            'The input order is fixed, so ties resolve the same way everywhere',
+            'Iterating an unordered_map while reading counts erases them',
+            'counts[vote] only compiles inside a loop over the vector',
           ],
           1,
           'The vector’s order is defined by the program; the hash table’s order is not, so a scan over it could pick different tied winners.',
@@ -899,10 +901,10 @@ int main() {
         choose(
           'An order book stores ask prices as std::map keys. Why is reading the best (lowest) ask cheap?',
           [
-            'The map keeps keys sorted, so the lowest price is always at begin()',
-            'The map remembers the most recently inserted price',
-            'Reading begin() scans every entry for the minimum',
-            'The map sorts itself only when begin() is called',
+            'The map keeps keys sorted, so the lowest price is at begin()',
+            'The map caches the most recently inserted price at begin()',
+            'Reading begin() scans every entry to find the minimum price',
+            'The map sorts its entries only at the moment begin() is called',
           ],
           0,
           'Ordering is maintained on every insertion, so the minimum is always the first entry.',
@@ -969,10 +971,10 @@ int main() {
         choose(
           'A log records every login, including repeated logins by the same user ID. What does inserting all the user IDs into a std::set and reading size() give?',
           [
-            'The total number of logins',
-            'The number of distinct users who logged in',
-            'The number of repeated logins',
-            'The largest user ID',
+            'The total number of login events',
+            'The number of distinct users',
+            'The number of repeated logins only',
+            'The largest user ID that logged in',
           ],
           1,
           'Repeated IDs collapse into one element, so size() counts distinct users, not events.',
@@ -1056,10 +1058,10 @@ int main() {
         choose(
           'A program checks 10,000 IDs against a list of 500 allowed IDs. Why build a std::set from the list first?',
           [
-            'Each check becomes a fast ordered lookup instead of a scan of all 500 entries',
-            'A set check also removes the ID from the allowed list',
-            'An int cannot be compared with vector elements',
-            'A set keeps the IDs in the order they were listed',
+            'Each check becomes a fast ordered lookup instead of a full scan',
+            'A set check also removes the matched ID from the allowed list',
+            'An int cannot be compared directly with vector elements',
+            'A set keeps the IDs in the order they were originally listed',
           ],
           0,
           'A set lookup takes logarithmic time, while searching an unsorted vector examines every element in the worst case.',
@@ -2011,14 +2013,13 @@ int main() {
         ),
         predictOutput(
           'What does this program print?',
-          `#include <cstddef>
-#include <deque>
+          `#include <deque>
 #include <iostream>
 int main() {
   std::deque<int> d{2, 3};
   d.push_front(1);
   d.push_back(4);
-  for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << " ";
+  std::cout << d[0] << " " << d[1] << " " << d[2] << " " << d[3];
   std::cout << "\\n";
 }`,
           ['2 3 1 4', '1 2 3 4', '4 3 2 1', '2 3 4 1'],
@@ -2028,10 +2029,10 @@ int main() {
         choose(
           'Why is `int* p = &d[0]; std::cout << p[3];` wrong for a std::deque<int> d with five elements?',
           [
-            'The address of d[0] cannot be taken',
-            'A deque may store elements in separate blocks, so p[3] need not be d[3]',
-            'p[3] counts from the back of the deque',
-            'Deque elements are always const',
+            'Taking the address of a deque element is not allowed',
+            'Elements may sit in separate blocks, so p[3] need not be d[3]',
+            'p[3] counts from the back of the deque, not the front',
+            'Deque elements are const, so reading through p is an error',
           ],
           1,
           'Pointer arithmetic is valid only inside one array. A deque’s elements can span several blocks, so use d[3] instead.',
@@ -2059,8 +2060,7 @@ int main() {
       ],
       example: {
         language: 'cpp',
-        code: `#include <cstddef>
-#include <deque>
+        code: `#include <deque>
 #include <iostream>
 #include <vector>
 int main() {
@@ -2070,7 +2070,7 @@ int main() {
     if (value < 4) d.push_front(value);
     else d.push_back(value);
   }
-  for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << " ";
+  for (int value : d) std::cout << value << " ";
   std::cout << "\\n";
 }`,
         output: '3 1 5 8',
@@ -2080,8 +2080,7 @@ int main() {
       questions: [
         predictOutput(
           'What does this program print?',
-          `#include <cstddef>
-#include <deque>
+          `#include <deque>
 #include <iostream>
 #include <vector>
 int main() {
@@ -2091,7 +2090,7 @@ int main() {
     if (value < 5) d.push_front(value);
     else d.push_back(value);
   }
-  for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << " ";
+  for (int value : d) std::cout << value << " ";
   std::cout << "\\n";
 }`,
           ['2 1 7 9', '1 2 7 9', '2 7 1 9', '9 7 2 1'],
@@ -2119,25 +2118,24 @@ int main() {
         choose(
           'A log viewer prepends older history and appends new events. Why is a deque a better fit than a vector?',
           [
-            'A deque inserts efficiently at both ends; a vector must shift every element to insert at the front',
-            'A deque keeps its elements sorted',
-            'A vector cannot grow after construction',
-            'A deque stores all elements contiguously, so it indexes faster',
+            'A deque inserts cheaply at both ends; a vector shifts everything to insert at the front',
+            'A deque keeps its elements sorted, so history and events stay in time order',
+            'A vector cannot grow after construction, so new events would not fit',
+            'A deque stores everything contiguously, so it indexes faster than a vector',
           ],
           0,
           'Front insertion is the deque’s strength. A vector’s push at the front costs time proportional to its size.',
         ),
         predictOutput(
           'What does this program print?',
-          `#include <cstddef>
-#include <deque>
+          `#include <deque>
 #include <iostream>
 #include <vector>
 int main() {
   std::vector<int> values{1, 2, 3};
   std::deque<int> d;
   for (int value : values) d.push_front(value);
-  for (std::size_t i = 0; i < d.size(); ++i) std::cout << d[i] << " ";
+  for (int value : d) std::cout << value << " ";
   std::cout << "\\n";
 }`,
           ['1 2 3', '3 2 1', '3 1 2', '1 3 2'],
@@ -2226,56 +2224,45 @@ int main() {
     {
       title: 'Never pop an empty deque',
       explanation: [
-        'Calling front, back, pop_front or pop_back on an empty deque is undefined behavior; there is no exception to catch. Check empty() first and decide what an empty deque should produce.',
-        'When draining in a loop, remember that each pop shrinks size(). A condition such as i < d.size() changes while the loop runs, so take the count once before the loop or test empty() on each step.',
+        'Calling front, back, pop_front or pop_back on an empty deque is undefined behavior; there is no exception to catch. Check empty() first and decide what an empty deque should produce. Putting the check and the pop together in one helper function makes the rule hard to forget.',
+        'Each pop shrinks size() by one, so after as many pops as there were elements, empty() is true.',
       ],
       example: {
         language: 'cpp',
         code: `#include <deque>
 #include <iostream>
+int take(std::deque<int>& jobs) {
+  if (jobs.empty()) return -1;
+  int job = jobs.front();
+  jobs.pop_front();
+  return job;
+}
 int main() {
   std::deque<int> jobs{4, 2};
-  for (int i = 0; i < 3; ++i) {
-    if (jobs.empty()) std::cout << "idle\\n";
-    else {
-      std::cout << jobs.front() << "\\n";
-      jobs.pop_front();
-    }
-  }
+  std::cout << take(jobs) << " ";
+  std::cout << take(jobs) << " ";
+  std::cout << take(jobs) << "\\n";
 }`,
-        output: '4\n2\nidle',
+        output: '4 2 -1',
         explanation:
-          'Two passes take the two jobs. On the third pass the deque is empty, so the guard prints idle instead of popping.',
+          'The first two calls take the two jobs. The third finds the deque empty and returns -1 instead of popping.',
       },
       questions: [
         predictOutput(
-          'The loop is meant to empty the deque. What does it print?',
-          `#include <cstddef>
-#include <deque>
-#include <iostream>
-int main() {
-  std::deque<int> d{1, 2, 3, 4};
-  for (std::size_t i = 0; i < d.size(); ++i) d.pop_front();
-  std::cout << d.size() << "\\n";
-}`,
-          ['0', '2', '1', '4'],
-          1,
-          'Each pass increases i and shrinks size(): after two pops, i is 2 and size() is 2, so the loop stops early.',
-        ),
-        predictOutput(
           'What does this program print?',
-          `#include <cstddef>
-#include <deque>
+          `#include <deque>
 #include <iostream>
 int main() {
-  std::deque<int> d{1, 2, 3, 4};
-  std::size_t count = d.size();
-  for (std::size_t i = 0; i < count; ++i) d.pop_front();
+  std::deque<int> d{1, 2, 3};
+  d.pop_front();
+  d.pop_back();
+  std::cout << d.size() << " " << d.empty() << " ";
+  d.pop_front();
   std::cout << d.size() << " " << d.empty() << "\\n";
 }`,
-          ['0 1', '2 0', '0 0', '4 1'],
+          ['1 0 0 1', '2 0 1 0', '1 1 0 0', '1 0 0 0'],
           0,
-          'The count is fixed at 4 before the loop, so all four elements are popped and empty() is true.',
+          'Two pops leave one element; the third pop empties the deque, so empty() becomes true.',
         ),
         predictOutput(
           'What does this program print?',
@@ -2298,13 +2285,34 @@ int main() {
           3,
           'The first two calls take 5 and 6. The third finds the deque empty and returns -1 without popping.',
         ),
+        predictOutput(
+          'What does this program print?',
+          `#include <deque>
+#include <iostream>
+int take_last(std::deque<int>& d) {
+  if (d.empty()) return 0;
+  int value = d.back();
+  d.pop_back();
+  return value;
+}
+int main() {
+  std::deque<int> d{3, 4};
+  int total = take_last(d);
+  total += take_last(d);
+  total += take_last(d);
+  std::cout << total << "\\n";
+}`,
+          ['8', '4', '7', '3'],
+          2,
+          'The calls take 4, then 3, then find the deque empty and add the fallback 0.',
+        ),
         choose(
           'What happens if pop_front is called on an empty std::deque?',
           [
-            'Nothing; the call is ignored',
-            'It throws std::out_of_range',
-            'Undefined behavior, so the program must check empty() first',
-            'It returns -1',
+            'Nothing; the call is ignored when the deque is empty',
+            'It throws std::out_of_range, which the caller can catch',
+            'Undefined behavior; the program must check empty() first',
+            'It returns -1 to signal that nothing was removed',
           ],
           2,
           'pop_front has a precondition that the deque is nonempty; breaking it is undefined behavior, not a reported error.',
@@ -2320,34 +2328,39 @@ int main() {
         language: 'cpp',
         code: `#include <deque>
 #include <iostream>
+int next_turn(std::deque<int>& turns) {
+  int player = turns.front();
+  turns.pop_front();
+  turns.push_back(player);
+  return player;
+}
 int main() {
   std::deque<int> turns{1, 2, 3};
-  for (int step = 0; step < 4; ++step) {
-    int player = turns.front();
-    turns.pop_front();
-    turns.push_back(player);
-    std::cout << player << " ";
-  }
-  std::cout << "\\n";
+  std::cout << next_turn(turns) << " ";
+  std::cout << next_turn(turns) << " ";
+  std::cout << next_turn(turns) << " ";
+  std::cout << next_turn(turns) << "\\n";
 }`,
         output: '1 2 3 1',
         explanation:
-          'Each player moves from the front to the back after their turn, so play cycles back to 1 on the fourth step.',
+          'Each player moves from the front to the back after their turn, so play cycles back to 1 on the fourth call. The deque never becomes empty, because every popped player is pushed back.',
       },
       questions: [
         predictOutput(
           'What does this program print?',
           `#include <deque>
 #include <iostream>
+int next_turn(std::deque<int>& turns) {
+  int player = turns.front();
+  turns.pop_front();
+  turns.push_back(player);
+  return player;
+}
 int main() {
   std::deque<int> turns{7, 8};
-  for (int step = 0; step < 3; ++step) {
-    int player = turns.front();
-    turns.pop_front();
-    turns.push_back(player);
-    std::cout << player << " ";
-  }
-  std::cout << "\\n";
+  std::cout << next_turn(turns) << " ";
+  std::cout << next_turn(turns) << " ";
+  std::cout << next_turn(turns) << "\\n";
 }`,
           ['7 8 7', '7 7 7', '7 8 8', '8 7 8'],
           0,
@@ -2357,13 +2370,16 @@ int main() {
           'What does this program print?',
           `#include <deque>
 #include <iostream>
+int next_turn(std::deque<int>& turns) {
+  int player = turns.front();
+  turns.pop_front();
+  turns.push_back(player);
+  return player;
+}
 int main() {
   std::deque<int> turns{1, 2, 3};
-  for (int step = 0; step < 2; ++step) {
-    int player = turns.front();
-    turns.pop_front();
-    turns.push_back(player);
-  }
+  next_turn(turns);
+  next_turn(turns);
   std::cout << turns.front() << " " << turns.back() << "\\n";
 }`,
           ['1 3', '2 1', '3 2', '3 1'],
@@ -2374,30 +2390,31 @@ int main() {
           'Each number is the work left on a job. What does this program print?',
           `#include <deque>
 #include <iostream>
+void work_once(std::deque<int>& work) {
+  if (work.empty()) return;
+  int left = work.front() - 1;
+  work.pop_front();
+  if (left > 0) work.push_back(left);
+}
 int main() {
   std::deque<int> work{2, 1};
-  int steps = 0;
-  for (int i = 0; i < 5; ++i) {
-    if (work.size() > 0) {
-      int left = work.front() - 1;
-      work.pop_front();
-      if (left > 0) work.push_back(left);
-      ++steps;
-    }
-  }
-  std::cout << steps << " " << work.size() << "\\n";
+  work_once(work);
+  std::cout << work.size() << " ";
+  work_once(work);
+  work_once(work);
+  std::cout << work.size() << "\\n";
 }`,
-          ['5 0', '3 0', '2 1', '3 1'],
+          ['1 0', '2 0', '2 1', '3 0'],
           1,
-          'The 2 runs once and returns as 1, the original 1 finishes, then the returned 1 finishes: three steps, and nothing is left.',
+          'The 2 runs once and returns to the back as 1, so two jobs wait. The next two calls finish both 1s.',
         ),
         choose(
           'In a rotation step, why must the code read front() before calling pop_front()?',
           [
-            'pop_front returns void and destroys the element, so its value is gone afterwards',
-            'front() becomes unavailable after any push_back',
-            'pop_front moves the element to the back automatically',
-            'Reading front afterwards returns the same element anyway',
+            'pop_front returns void and destroys the element, so its value is gone',
+            'front() becomes unavailable after any push_back to the same deque',
+            'pop_front moves the element to the back, so front() is still valid',
+            'Reading front afterwards returns the same element, so order is irrelevant',
           ],
           0,
           'After pop_front the element no longer exists, and front() would return the next element.',
@@ -2476,15 +2493,12 @@ int main() {
   std::vector<int> input{7, 3, 9};
   std::queue<int> q;
   for (int value : input) q.push(value);
-  for (int i = 0; i < 2; ++i) {
-    std::cout << q.front() << " ";
-    q.pop();
-  }
-  std::cout << "\\n";
+  q.pop();
+  std::cout << q.front() << " " << q.size() << "\\n";
 }`,
-          ['9 3', '3 7', '7 3', '3 9'],
-          2,
-          'Values leave in the order they were pushed: 7, then 3.',
+          ['9 2', '3 2', '7 3', '3 3'],
+          1,
+          'Values leave in the order they were pushed, so removing one exposes 3, with two elements left.',
         ),
       ],
     },
@@ -2502,11 +2516,11 @@ int main() {
   orders.push(30);
   orders.push(99);
   orders.push(10);
-  for (int i = 0; i < 3; ++i) {
-    std::cout << orders.front() << " ";
-    orders.pop();
-  }
-  std::cout << "\\n";
+  std::cout << orders.front() << " ";
+  orders.pop();
+  std::cout << orders.front() << " ";
+  orders.pop();
+  std::cout << orders.front() << "\\n";
 }`,
         output: '30 99 10',
         explanation:
@@ -2517,16 +2531,21 @@ int main() {
           'What does this program print?',
           `#include <iostream>
 #include <queue>
+int serve(std::queue<int>& q) {
+  if (q.empty()) return -1;
+  int item = q.front();
+  q.pop();
+  return item;
+}
 int main() {
   std::queue<int> q;
   q.push(2);
   q.push(8);
   q.push(5);
-  for (int i = 0; i < 3; ++i) {
-    std::cout << q.front() << " ";
-    q.pop();
-  }
-  std::cout << "\\n";
+  int a = serve(q);
+  int b = serve(q);
+  int c = serve(q);
+  std::cout << a << " " << b << " " << c << "\\n";
 }`,
           ['8 5 2', '2 5 8', '2 8 5', '5 8 2'],
           2,
@@ -2581,19 +2600,25 @@ int main() {
         language: 'cpp',
         code: `#include <iostream>
 #include <queue>
+void step(std::queue<int>& work) {
+  if (work.empty()) {
+    std::cout << "done ";
+    return;
+  }
+  int item = work.front();
+  work.pop();
+  std::cout << item << " ";
+  if (item > 1) work.push(item - 1);
+}
 int main() {
   std::queue<int> work;
   work.push(3);
   work.push(1);
-  for (int step = 0; step < 5; ++step) {
-    if (work.empty()) std::cout << "done ";
-    else {
-      int item = work.front();
-      work.pop();
-      std::cout << item << " ";
-      if (item > 1) work.push(item - 1);
-    }
-  }
+  step(work);
+  step(work);
+  step(work);
+  step(work);
+  step(work);
   std::cout << "\\n";
 }`,
         output: '3 1 2 1 done',
@@ -2605,19 +2630,25 @@ int main() {
           'What does this program print?',
           `#include <iostream>
 #include <queue>
+void step(std::queue<int>& work) {
+  if (work.empty()) {
+    std::cout << "done ";
+    return;
+  }
+  int item = work.front();
+  work.pop();
+  std::cout << item << " ";
+  if (item > 1) work.push(item - 1);
+}
 int main() {
   std::queue<int> work;
   work.push(2);
   work.push(2);
-  for (int step = 0; step < 5; ++step) {
-    if (work.empty()) std::cout << "done ";
-    else {
-      int item = work.front();
-      work.pop();
-      std::cout << item << " ";
-      if (item > 1) work.push(item - 1);
-    }
-  }
+  step(work);
+  step(work);
+  step(work);
+  step(work);
+  step(work);
   std::cout << "\\n";
 }`,
           ['2 1 2 1 done', '2 2 1 1 done', '2 1 1 2 done', '2 2 1 1 1'],
@@ -2628,19 +2659,24 @@ int main() {
           'What does this program print?',
           `#include <iostream>
 #include <queue>
+void step(std::queue<int>& work) {
+  if (work.empty()) {
+    std::cout << "done ";
+    return;
+  }
+  int item = work.front();
+  work.pop();
+  std::cout << item << " ";
+  if (item > 1) work.push(item - 1);
+}
 int main() {
   std::queue<int> work;
   work.push(1);
   work.push(3);
-  for (int step = 0; step < 4; ++step) {
-    if (work.empty()) std::cout << "done ";
-    else {
-      int item = work.front();
-      work.pop();
-      std::cout << item << " ";
-      if (item > 1) work.push(item - 1);
-    }
-  }
+  step(work);
+  step(work);
+  step(work);
+  step(work);
   std::cout << "\\n";
 }`,
           ['3 2 1 1', '1 3 1 2', '1 2 3 1', '1 3 2 1'],
@@ -2662,26 +2698,29 @@ int main() {
           'Each item larger than 1 creates two smaller items. How many items are served?',
           `#include <iostream>
 #include <queue>
+int process(std::queue<int>& work) {
+  if (work.empty()) return 0;
+  int item = work.front();
+  work.pop();
+  if (item > 1) {
+    work.push(item - 1);
+    work.push(item - 1);
+  }
+  return 1;
+}
 int main() {
   std::queue<int> work;
   work.push(2);
-  int served = 0;
-  for (int step = 0; step < 6; ++step) {
-    if (work.size() > 0) {
-      int item = work.front();
-      work.pop();
-      ++served;
-      if (item > 1) {
-        work.push(item - 1);
-        work.push(item - 1);
-      }
-    }
-  }
+  int served = process(work);
+  served += process(work);
+  served += process(work);
+  served += process(work);
+  served += process(work);
   std::cout << served << "\\n";
 }`,
-          ['6', '2', '3', '4'],
+          ['5', '2', '3', '4'],
           2,
-          'The 2 is served and adds two 1s; those two are served and add nothing. The remaining steps find the queue empty.',
+          'The 2 is served and adds two 1s; those two are served and add nothing. The remaining calls find the queue empty and return 0.',
         ),
       ],
     },
@@ -3210,10 +3249,10 @@ int main() {
         choose(
           'Why is a comparator written with >= unsafe for std::sort?',
           [
-            'It sorts ascending instead of descending',
-            'It is slower than > but otherwise equivalent',
-            'It says an element comes before itself, breaking the strict ordering sort requires',
-            'It removes equal elements',
+            'It sorts ascending instead of descending, reversing the result',
+            'It is slower than > but always produces the same order',
+            'It says equal elements come before each other, breaking strict ordering',
+            'It removes equal elements, so duplicates disappear from the result',
           ],
           2,
           'For equal elements a >= comparator returns true both ways, which violates the strict weak ordering sort relies on.',
@@ -3283,9 +3322,9 @@ int main() {
         choose(
           'What does std::binary_search return?',
           [
-            'The index of the value, or -1',
-            'An iterator to the value',
-            'The number of times the value occurs',
+            'The index of the value, or -1 when it is absent',
+            'An iterator to the value, or end() when it is absent',
+            'The number of times the value occurs in the range',
             'true if the value is in the range, otherwise false',
           ],
           3,
@@ -3335,10 +3374,10 @@ int main() {
         choose(
           'A vector holds {7, 1, 5}, unsorted. What can be said about `std::binary_search(v.begin(), v.end(), 7)`?',
           [
-            'It returns true because 7 is present',
-            'It returns false because the vector is unsorted',
-            'Its result cannot be trusted, because the sorted-input precondition is broken',
-            'It sorts the vector first, then searches',
+            'It returns true, because 7 is present somewhere in the vector',
+            'It returns false, because binary_search rejects unsorted input',
+            'Its result cannot be trusted, because the input is not sorted',
+            'It sorts the vector first, then searches the sorted copy',
           ],
           2,
           'binary_search never sorts or checks its input; on unsorted data it may skip the half that contains the value.',
@@ -3361,10 +3400,10 @@ int main() {
         choose(
           'A vector was sorted with std::greater<int>(). Which search call is correct?',
           [
-            'std::binary_search(v.begin(), v.end(), x)',
+            'std::binary_search(v.begin(), v.end(), x, std::less<int>())',
             'std::binary_search(v.begin(), v.end(), x, std::greater<int>())',
-            'std::binary_search(v.end(), v.begin(), x)',
-            'std::binary_search(v.begin(), v.end(), -x)',
+            'std::binary_search(v.end(), v.begin(), x, std::greater<int>())',
+            'std::binary_search(v.begin(), v.end(), -x, std::less<int>())',
           ],
           1,
           'The search must use the ordering the range is sorted by; the default < assumes ascending order.',
@@ -3372,10 +3411,10 @@ int main() {
         choose(
           'Why does binary_search not fall back to checking every element when the input is unsorted?',
           [
-            'It compares only about log2(n) elements, relying on sorted order to skip the rest',
-            'It does check every element, but in reverse order',
-            'It sorts a copy first and searches that',
-            'It reports an error for unsorted input',
+            'It compares only about log2(n) elements and relies on order to skip the rest',
+            'It checks every element, but only after first reversing the range',
+            'It sorts a copy of the range first and then searches that copy',
+            'It reports an error as soon as it meets an out-of-order pair',
           ],
           0,
           'Skipping half the range at each step is the whole point; it is valid only because the order guarantees the skipped half cannot contain the value.',
@@ -3514,10 +3553,10 @@ int main() {
         choose(
           'What is the third argument of std::accumulate?',
           [
-            'The starting value of the running total, included in the result',
-            'The number of elements to add',
-            'The index to start from',
-            'A value to skip while adding',
+            'The starting value of the total, included in the result',
+            'The number of elements to add, counted from first',
+            'The index of the first element to include in the sum',
+            'A value that is skipped whenever an element equals it',
           ],
           0,
           'accumulate begins with init and adds every element of the range to it.',
@@ -3726,10 +3765,10 @@ int main() {
         choose(
           'Why can std::remove not shrink the vector?',
           [
-            'It receives only iterators, so it cannot call the vector’s member functions',
-            'Shrinking would invalidate the returned iterator',
-            'It shrinks only const vectors',
-            'It does shrink the vector when nothing is removed',
+            'It receives only iterators, so it cannot call the vector’s erase',
+            'Shrinking would invalidate the iterator that remove returns',
+            'It shrinks the vector only when it is declared const',
+            'It does shrink the vector, but only when nothing matched',
           ],
           0,
           'Algorithms work on iterator ranges. Changing size needs the container itself, through erase.',
@@ -3883,9 +3922,9 @@ int main() {
         choose(
           'What does `v.erase(std::remove(v.begin(), v.end(), x));` do when x does not occur in v?',
           [
-            'Nothing, because no element matches',
-            'It erases the last element',
-            'It throws std::out_of_range',
+            'Nothing happens, because no element matches x',
+            'It erases the last element of the vector',
+            'It throws std::out_of_range for the missing value',
             'It calls erase(end()), which is undefined behavior',
           ],
           3,
@@ -3953,10 +3992,10 @@ int main() {
         choose(
           'In `auto f = [](int x) { return x * x; };`, what is f?',
           [
-            'The int returned by the lambda',
-            'A pointer to x',
-            'A copy of the variable x',
-            'A function object that can be called as f(3)',
+            'The int that the lambda returns for x',
+            'A pointer to the lambda’s parameter x',
+            'A copy of a variable named x from main',
+            'A function object that f(3) can call',
           ],
           3,
           'The lambda expression produces a callable object; nothing is computed until f is called.',
@@ -4103,10 +4142,10 @@ int main() {
         choose(
           'Inside `[total] { total += 1; return total; }`, why does the compiler reject total += 1?',
           [
-            'total must be captured with auto',
+            'total must be captured with auto to be changed',
             'Lambdas cannot contain more than one statement',
-            'total is a parameter, not a capture',
-            'A by-value capture is read-only inside the lambda unless the lambda is marked mutable',
+            'total is a parameter of the lambda, not a capture',
+            'A by-value capture is read-only unless the lambda is mutable',
           ],
           3,
           'The captured copy is const inside an ordinary lambda.',
@@ -4264,10 +4303,10 @@ int main() {
         choose(
           'Why does `[&count] { ++count; }` compile without mutable while `[count] { ++count; }` does not?',
           [
-            'Reference captures are always mutable copies',
-            'The reference version changes the caller’s variable; the value version would change the lambda’s own read-only copy',
-            '++ is defined only for references',
-            'The value version needs a return statement',
+            'Reference captures are mutable copies, so nothing is const',
+            'The reference version changes the caller’s variable, not a copy',
+            '++ is defined only for references, never for captured copies',
+            'The value version needs a return statement to compile',
           ],
           1,
           'mutable concerns the lambda’s own copies. A reference capture owns no copy to modify.',
@@ -4298,10 +4337,10 @@ int main() {
         choose(
           'Calling the lambda returned by `auto make() { int local = 5; return [&local] { return local; }; }` is unsafe. Why?',
           [
-            'Lambdas cannot be returned from functions',
-            'local must be const to be captured',
-            'local is destroyed when make returns, so the lambda refers to a dead variable',
-            'The lambda copies local twice',
+            'Lambdas cannot be returned from functions by value',
+            'local must be declared const before it can be captured',
+            'local is destroyed when make returns, so the lambda dangles',
+            'The lambda copies local twice, so the result is doubled',
           ],
           2,
           'The reference outlives the object it names. Capturing local by value would fix it.',
@@ -4387,9 +4426,9 @@ int main() {
           'What must a predicate passed to count_if return for each element?',
           [
             'A bool saying whether to count the element',
-            'The element itself',
-            'The running count',
-            'The index of the element',
+            'The element itself, which count_if then adds',
+            'The running count so far, increased by one',
+            'The index of the element within the range',
           ],
           0,
           'count_if adds one for every true result; the predicate only decides.',
@@ -4554,10 +4593,10 @@ int main() {
         choose(
           'What do count_if and find_if return for the same predicate?',
           [
-            'Both return the number of matches',
-            'count_if returns the first match; find_if returns every match',
-            'Both return iterators',
-            'count_if returns how many elements match; find_if returns an iterator to the first match or end()',
+            'Both return the number of matching elements',
+            'count_if returns the first match; find_if returns all matches',
+            'Both return iterators to the first matching element',
+            'count_if returns a count; find_if returns the first match or end()',
           ],
           3,
           'count_if examines every element; find_if stops at the first match.',
@@ -4614,10 +4653,10 @@ int main() {
         choose(
           'What does the init capture in `[limit = max * 2] { return limit; }` create?',
           [
-            'A reference to max',
-            'A parameter named limit',
-            'A new closure member named limit, initialized once from max * 2',
-            'A copy of max that updates when max changes',
+            'A reference to max that is read on every call',
+            'A parameter named limit that callers must pass',
+            'A closure member named limit, set once from max * 2',
+            'A copy of max that updates whenever max changes',
           ],
           2,
           'An init capture is evaluated once, when the lambda is created, and stored in the closure.',
@@ -4676,10 +4715,10 @@ int main() {
         choose(
           'Why does `[owner] { return *owner; }` fail to compile when owner is a std::unique_ptr<int>?',
           [
-            'Capturing by value would copy the unique_ptr, and unique_ptr cannot be copied',
-            'Lambdas cannot dereference pointers',
-            'owner must be captured as [&owner]',
-            'unique_ptr cannot be used inside functions',
+            'Capturing by value would copy the unique_ptr, which is not allowed',
+            'Lambdas cannot dereference pointers captured from main',
+            'owner must be captured as [&owner] because it owns memory',
+            'unique_ptr cannot be used inside any lambda body',
           ],
           0,
           'A unique_ptr can only be moved. An init capture with std::move expresses the transfer.',
@@ -4751,7 +4790,7 @@ int main() {
           'The closure owned the Probe and was destroyed at the end of the block, releasing it. owner, declared outside, is empty because it was moved from.',
         ),
         predictOutput(
-          'This closure captures the owner by reference. What does this program print?',
+          'Two closures each own a Probe. What does this program print?',
           `#include <iostream>
 #include <memory>
 struct Probe {
@@ -4761,16 +4800,16 @@ struct Probe {
 };
 int main() {
   int released = 0;
-  auto owner = std::make_unique<Probe>(released);
+  auto first = [held = std::make_unique<Probe>(released)] { return held->released; };
   {
-    auto peek = [&owner] { return owner != nullptr; };
-    std::cout << peek() << " ";
+    auto second = [held = std::make_unique<Probe>(released)] { return held->released; };
+    std::cout << second() << " ";
   }
-  std::cout << released << "\\n";
+  std::cout << released << " " << first() << "\\n";
 }`,
-          ['1 1', '1 0', '0 0', '0 1'],
+          ['0 2 2', '0 1 1', '0 0 0', '1 1 1'],
           1,
-          'The closure only refers to owner, so destroying the closure releases nothing; owner still owns the Probe.',
+          'Only second is destroyed at the end of the block, releasing its Probe. first still owns its Probe, which reads the shared count, 1.',
         ),
         choose(
           'A callback must keep a unique_ptr’s object alive after the function that created the callback returns. Which capture fits?',
@@ -4904,10 +4943,10 @@ int main() {
         choose(
           'Why can one template return 3 for one call and 3.5 for another?',
           [
-            'Each call instantiates the template for its argument type, and int division truncates',
-            'Templates round their results',
-            'The second call casts the result after dividing',
-            'Templates always compute in double and convert back',
+            'Each call instantiates its own version, and int division truncates',
+            'Templates round their results to the nearest whole number',
+            'The second call casts the result to double after dividing',
+            'Templates compute in double and convert back for int callers',
           ],
           0,
           'The same expression means integer division in the int instantiation and floating-point division in the double one.',
@@ -5005,10 +5044,10 @@ int main() {
         choose(
           'Why does add(1, 2.5) fail for `template<class T> T add(T a, T b)`?',
           [
-            'Templates cannot take literals',
-            'T is deduced as int from 1 and as double from 2.5, and the deductions conflict',
-            'The sum would overflow',
-            'A double cannot be added to an int',
+            'Templates cannot take literal arguments such as 2.5',
+            'T is deduced as int and as double, and the two conflict',
+            'The sum of an int and a double would overflow T',
+            'A double cannot be added to an int inside a template',
           ],
           1,
           'Each argument deduces T independently, and the two results must agree.',
@@ -5132,7 +5171,7 @@ int main() {
     {
       title: 'Member functions use T too',
       explanation: [
-        'Member functions of a class template can use T. In template<class T> struct Range { T low; T high; T width() { return high - low; } };, width returns an int for Range<int> and a double for Range<double>.',
+        'A struct can also contain member functions: functions declared inside it that use its members directly and are called as object.name(). In a class template they can use T. In template<class T> struct Range { T low; T high; T width() { return high - low; } };, width returns an int for Range<int> and a double for Range<double>.',
       ],
       example: {
         language: 'cpp',
@@ -5271,10 +5310,10 @@ int main() {
         choose(
           'A design stores every Counter<int>’s count in one global int. What goes wrong?',
           [
-            'Globals cannot be used inside templates',
-            'All counters share one value, so updating one changes what every counter reports',
-            'Each counter gets its own copy of the global',
-            'Counter<int> and Counter<double> stop compiling',
+            'Globals cannot be used inside member functions of templates',
+            'All counters share one value, so updating one changes every counter',
+            'Each counter gets its own private copy of the global automatically',
+            'Counter<int> and Counter<double> would stop compiling',
           ],
           1,
           'Per-object state must live in members; a shared variable makes distinct objects indistinguishable.',
@@ -5502,10 +5541,10 @@ int main() {
         choose(
           'A wrapper applies std::move to its forwarding-reference parameter before passing it to a function that moves from rvalues. What can happen when a caller passes a named object it keeps using?',
           [
-            'Nothing; std::move affects only temporaries',
-            'The program fails to compile',
-            'The object is copied twice',
-            'The caller’s object may be moved from and left in an unspecified state',
+            'Nothing; std::move only affects temporaries',
+            'The program fails to compile at the call',
+            'The object is copied twice instead of once',
+            'The caller’s object may be moved from',
           ],
           3,
           'std::move unconditionally produces an rvalue, so the receiver is allowed to take the caller’s resources.',
@@ -5763,10 +5802,10 @@ int main() {
         choose(
           '`template<HasSize T> int count(const T& c)`, where HasSize requires value.size(). What happens with count(42)?',
           [
-            'It returns 0',
-            'It returns 1',
-            'It returns 42',
-            'The call is rejected because int does not satisfy HasSize',
+            'It returns 0, because int has no elements',
+            'It returns 1, because an int is one value',
+            'It returns 42, the value of the argument',
+            'The call is rejected: int does not satisfy HasSize',
           ],
           3,
           'int has no size() member, so the constraint fails and the template is not used.',
@@ -5774,10 +5813,10 @@ int main() {
         choose(
           'A template body calls items.size() and items[0]. Which constraint matches it?',
           [
-            'template<std::integral T>',
-            'A concept requiring items + items',
+            'template<std::integral T>, since sizes are integers',
+            'A concept requiring only items + items',
             'A concept requiring items.size() and items[0]',
-            'No constraint can express this',
+            'No constraint can express member operations',
           ],
           2,
           'The concept should list exactly the expressions the body uses.',
@@ -5872,10 +5911,10 @@ int main() {
         choose(
           'When is the condition of an if constexpr evaluated?',
           [
-            'Each time the function runs',
-            'Only when the condition is true',
-            'At link time',
-            'At compile time, when the template is instantiated for a type',
+            'Each time the function runs, before the branch',
+            'Only when the condition turns out to be true',
+            'At link time, when the program is assembled',
+            'At compile time, when the template is instantiated',
           ],
           3,
           'The condition must be a constant expression, and the choice is fixed per instantiation.',
@@ -5907,10 +5946,10 @@ int main() {
         choose(
           '`template<class T> T f(T v) { if (std::is_integral_v<T>) return v % 2; else return v; }` Why does f(2.5) fail to compile?',
           [
-            'An ordinary if keeps both branches, and v % 2 is invalid for double',
-            'is_integral_v cannot be used in an if',
-            'f must return int',
-            'The else branch needs a cast',
+            'A plain if keeps both branches, and v % 2 is invalid for double',
+            'is_integral_v cannot be used as the condition of an if',
+            'f must return int, so the double return path is rejected',
+            'The else branch needs a cast back to T before returning',
           ],
           0,
           'The condition is false for double, but a plain if still compiles the unused branch.',
@@ -6002,10 +6041,10 @@ int main() {
         choose(
           'Why does magnitude convert to long long before negating?',
           [
-            'Negating the minimum int would overflow, because its positive value does not fit in int',
+            'Negating the minimum int would overflow inside int',
             'long long arithmetic is faster than int arithmetic',
-            'if constexpr works only with long long',
-            'Unsigned values cannot be returned from templates',
+            'if constexpr only works with long long conditions',
+            'Unsigned values cannot be returned from a template',
           ],
           0,
           'int ranges from -2147483648 to 2147483647, so -(-2147483648) needs a wider type.',
@@ -6088,10 +6127,10 @@ int main() {
         choose(
           'Two templates differ only in return type: `template<std::integral T> int g(T)` and `template<std::integral T> long g(T)`. What happens when g(1) is called?',
           [
-            'The call is ambiguous: return types alone do not distinguish overloads',
-            'The long version is chosen for large values',
-            'The int version is chosen because 1 is an int',
-            'The compiler picks one at random',
+            'The call is ambiguous; return types do not distinguish overloads',
+            'The long version is chosen because it can hold larger values',
+            'The int version is chosen because the argument 1 is an int',
+            'The compiler picks one of the two templates at random',
           ],
           0,
           'Overload resolution looks at parameters and constraints, not at the return type.',
@@ -6133,9 +6172,9 @@ int main() {
           'Only the std::integral and std::floating_point overloads of bucket exist. What happens for a call with a struct argument?',
           [
             'No overload matches, so the call does not compile',
-            'It picks the integral overload',
-            'It picks the floating-point overload',
-            'It returns 0',
+            'It picks the integral overload as the default',
+            'It picks the floating-point overload as a fallback',
+            'It compiles and returns 0 for unknown types',
           ],
           0,
           'A struct satisfies neither concept, and there is no unconstrained fallback.',
@@ -6202,10 +6241,10 @@ int main() {
         choose(
           'Why is rank(-3) not ambiguous, even though int satisfies both constraints?',
           [
-            'The signed overload is written second',
-            'std::signed_integral is defined in terms of std::integral, so it is more constrained',
-            'A negative argument always prefers signed types',
-            'The compiler picks the first matching template',
+            'The signed overload is written second, so it wins ties',
+            'signed_integral is built on integral, so it is more constrained',
+            'A negative argument always prefers the signed overload',
+            'The compiler picks the first template that matches',
           ],
           1,
           'Subsumption makes signed_integral strictly more specific, so it wins whenever both match.',
@@ -6343,10 +6382,10 @@ int main() {
         choose(
           'A program reads a buffer size from a config file at startup. How should it check that the size is at most 4096?',
           [
-            'static_assert(size <= 4096);',
-            'Declare size constexpr after reading it',
-            'static_assert(sizeof(size) <= 4096);',
-            'An ordinary run-time check such as if (size > 4096)',
+            'static_assert(size <= 4096); right after reading it',
+            'Declare size constexpr once it has been read',
+            'static_assert(sizeof(size) <= 4096); at startup',
+            'An ordinary run-time check, such as an if statement',
           ],
           3,
           'The size exists only at run time, so only run-time code can check it.',
@@ -6468,10 +6507,10 @@ int main() {
         choose(
           'Which use requires the call to be evaluated during compilation?',
           [
-            'std::cout << square(n);',
+            'int y = square(n) + square(2);',
             'int x = square(n);',
             'static_assert(square(3) == 9);',
-            'return square(n);',
+            'return square(n) * 2;',
           ],
           2,
           'A static_assert condition must be a constant expression; the other uses accept run-time values.',
@@ -6513,10 +6552,10 @@ int main() {
         choose(
           '`int n = read_input(); constexpr int s = square(n);` Why does this not compile?',
           [
-            'square cannot be called with a variable',
-            'n is not a constant expression, so square(n) cannot initialize a constexpr variable',
-            'constexpr variables must be global',
-            'square returns the wrong type',
+            'square cannot be called with a variable argument',
+            'n is not a constant, so square(n) cannot initialize a constexpr variable',
+            'constexpr variables must be declared at namespace scope',
+            'square returns int, which constexpr variables cannot hold',
           ],
           1,
           'A constexpr variable needs a value known during compilation, and n is read at run time.',
@@ -6524,10 +6563,10 @@ int main() {
         choose(
           'Does marking a function constexpr guarantee that every call is computed during compilation?',
           [
-            'Yes, the compiler computes every call',
-            'Yes, unless the function has parameters',
+            'Yes; the compiler computes every call to it',
+            'Yes, unless the function takes parameters',
             'No; constexpr functions run only at run time',
-            'No; only calls in constant contexts are guaranteed to be computed while compiling',
+            'No; only calls in constant contexts are guaranteed',
           ],
           3,
           'Calls with run-time arguments run normally; constant contexts such as static_assert force compile-time evaluation.',
@@ -6643,10 +6682,10 @@ int main() {
         choose(
           'Given `consteval int sq(int v)`, a function `int f(int n)` calls sq(n). What happens?',
           [
-            'It compiles and runs at run time',
-            'It returns 0',
+            'It compiles and runs at run time, like constexpr',
+            'It compiles, and sq(n) always returns 0',
             'It is a compile error, because n is not a constant',
-            'It is evaluated when f is first called',
+            'It is evaluated once, when f is first called',
           ],
           2,
           'An immediate function call must be a constant expression, and n is a run-time parameter.',
@@ -6679,10 +6718,10 @@ int main() {
         choose(
           'Why would a library mark a buffer-size function consteval?',
           [
-            'To make it faster when called at run time',
-            'To guarantee the size is computed during compilation, never from run-time data',
-            'To allow it to read configuration files',
-            'To let it throw exceptions',
+            'To make it run faster when called at run time',
+            'To guarantee the size is fixed during compilation',
+            'To allow it to read configuration files at startup',
+            'To let it throw exceptions during compilation',
           ],
           1,
           'consteval turns any attempt to compute the size from run-time data into a compile error.',
@@ -6751,10 +6790,10 @@ int main() {
         choose(
           'What does `constexpr auto values = table();` achieve?',
           [
-            'table() runs every time values is read',
-            'The table is computed during compilation and stored as a constant',
-            'values refers to an array that lives inside table',
-            'The table is computed lazily, on first use',
+            'table() runs again every time values is read',
+            'The table is computed while compiling and stored as a constant',
+            'values refers to the local array inside table()',
+            'The table is computed lazily, the first time it is used',
           ],
           1,
           'A constexpr variable must be initialized by a constant expression, so table() runs in the compiler.',
@@ -6940,9 +6979,9 @@ int main() {
           'What does `static_assert(table[4] == 16);` protect against?',
           [
             'An out-of-range index arriving at run time',
-            'The table being modified at run time',
-            'Overflow inside lookup',
-            'A mistake in the table formula, caught during compilation',
+            'The table being modified while the program runs',
+            'An integer overflow inside the lookup function',
+            'A wrong table formula, caught while compiling',
           ],
           3,
           'It checks the computed contents once, in the compiler; run-time indexes need their own check.',
@@ -6951,9 +6990,9 @@ int main() {
           'Why is `static_assert(table[i] > 0);` invalid inside `int lookup(std::size_t i)`?',
           [
             'table cannot be indexed inside a static_assert',
-            'i is a run-time parameter, so table[i] is not a constant expression',
-            'static_assert accepts only ==',
-            'table is not constexpr',
+            'i is a run-time parameter, so table[i] is not constant',
+            'static_assert accepts only == comparisons',
+            'table is not constexpr, so it cannot be read',
           ],
           1,
           'The index is unknown during compilation, so the condition cannot be evaluated there.',
@@ -7135,10 +7174,10 @@ int main() {
         choose(
           'A function object counts how often it is called. Why must its operator() not be marked const?',
           [
-            'A const operator() may not modify members, and counting changes a member',
-            'const member functions cannot return int',
-            'const objects cannot be called',
-            'It must be const, or the count resets',
+            'A const operator() cannot modify members, and counting does',
+            'const member functions are not allowed to return an int',
+            'const objects of a struct type can never be called',
+            'It must be const, or the count resets after every call',
           ],
           0,
           'const promises the call leaves the object unchanged, which a counter cannot keep.',
@@ -7219,10 +7258,10 @@ int main() {
         choose(
           'What does it mean for a function receiving a std::function<int(int)> parameter?',
           [
-            'It can call the argument without knowing whether it is a lambda, function or function object',
-            'It can receive only lambdas',
+            'It can call the argument without knowing its concrete type',
+            'It can receive only lambdas, not functions or objects',
             'It must know the argument’s concrete type to call it',
-            'Its argument’s return value is discarded',
+            'It always discards the argument’s return value',
           ],
           0,
           'std::function erases the concrete callable type behind the common signature.',
@@ -7340,11 +7379,11 @@ int main() {
 #include <iostream>
 int main() {
   std::function<void()> f;
-  std::cout << static_cast<bool>(f) << " ";
+  std::cout << (f ? "set" : "empty") << " ";
   f = [] {};
-  std::cout << static_cast<bool>(f) << "\\n";
+  std::cout << (f ? "set" : "empty") << "\\n";
 }`,
-          ['1 1', '0 0', '1 0', '0 1'],
+          ['set set', 'empty empty', 'set empty', 'empty set'],
           3,
           'Default construction gives an empty function; any assigned callable, even one that does nothing, makes it non-empty.',
         ),
@@ -7354,11 +7393,11 @@ int main() {
 #include <iostream>
 int main() {
   std::function<int()> f = [] { return 4; };
-  std::cout << static_cast<bool>(f) << " ";
+  std::cout << (f ? f() : -1) << " ";
   f = nullptr;
-  std::cout << static_cast<bool>(f) << "\\n";
+  std::cout << (f ? f() : -1) << "\\n";
 }`,
-          ['1 0', '1 1', '4 0', '0 0'],
+          ['4 -1', '4 4', '-1 -1', '4 0'],
           0,
           'Assigning nullptr removes the stored callable.',
         ),
@@ -7527,8 +7566,8 @@ int main() {
         choose(
           'Why does `[count = 0]() { return ++count; }` fail to compile?',
           [
-            'count must be captured by reference',
-            'By default a lambda’s call operator is const, so its captured copies are read-only',
+            'count must be captured by reference to be changed',
+            'Its call operator is const by default, so copies are read-only',
             'Init captures cannot be modified, even with mutable',
             'A lambda without parameters cannot return a value',
           ],
@@ -7679,10 +7718,10 @@ int main() {
         choose(
           'Why can `[held = std::move(owner)] { return *held; }` not be assigned to a std::function<int()>?',
           [
-            'std::function cannot store lambdas with captures',
-            'The lambda returns int&, not int',
-            'held must be a raw pointer',
-            'std::function needs a copyable callable, and a closure that owns a unique_ptr cannot be copied',
+            'std::function cannot store lambdas that have captures',
+            'The lambda returns int& instead of int',
+            'held would have to be a raw pointer to be captured',
+            'std::function needs a copyable callable; this closure is not',
           ],
           3,
           'Copying the std::function would require copying the unique_ptr, which is not allowed.',
@@ -7829,10 +7868,10 @@ int main() {
         choose(
           'How do opt.value() and *opt differ when opt is empty?',
           [
-            'value() throws std::bad_optional_access; *opt is undefined behavior',
-            'Both return 0',
-            'value() returns 0; *opt throws',
-            'There is no difference',
+            'value() throws bad_optional_access; *opt is undefined',
+            'Both quietly return 0 for an empty optional',
+            'value() returns 0, while *opt throws an exception',
+            'There is no difference; both check for a value',
           ],
           0,
           'value() is the checked access; * is unchecked.',
@@ -7931,10 +7970,10 @@ int main() {
         choose(
           'Why does find_index return std::optional<int> rather than a plain int?',
           [
-            'Every int, including 0, can be a valid index, so absence needs its own representation',
-            'optional is faster to return than int',
-            'An int cannot be returned from inside a loop',
-            'optional sorts the results',
+            'Every int, including 0, can be a valid index, so absence needs its own state',
+            'optional is faster to return than a plain int from a loop',
+            'An int cannot be returned from inside a for loop body',
+            'optional sorts the matches so the caller sees the smallest index',
           ],
           0,
           'The empty state is separate from all values, so no valid answer has to be sacrificed as a marker.',
@@ -8008,10 +8047,10 @@ int main() {
         choose(
           'A function returns -1 when no matching temperature is found. Why is this risky?',
           [
-            '-1 cannot be returned from a function',
-            'Callers always ignore negative values',
-            '-1 can be a real temperature, so the caller cannot tell absence from a match',
-            'It is not risky if the vector is sorted',
+            '-1 cannot be returned from a function returning int',
+            'Callers always ignore negative values, so -1 is dropped',
+            '-1 can be a real temperature, so absence looks like a match',
+            'It is not risky as long as the vector is sorted first',
           ],
           2,
           'A sentinel must lie outside the domain of real answers; temperatures can be -1.',
@@ -8073,9 +8112,9 @@ int main() {
           'How many values does a std::variant<int, std::string> hold at once?',
           [
             'Exactly one, of whichever alternative is active',
-            'One int and one string',
-            'Any number of strings',
-            'Both, but only one may be read',
+            'One int and one string, side by side',
+            'Any number of strings, plus one int',
+            'Both, but only the last assigned may be read',
           ],
           0,
           'A variant stores one active alternative and tracks which one it is.',
@@ -8232,10 +8271,10 @@ int main() {
         choose(
           'A variant<int, std::string> is visited with [](const auto& x) { return x + 1; }. Why does this not compile?',
           [
-            'Lambdas cannot be visitors',
-            'x must not be const',
-            'The visitor must work for every alternative, and std::string + 1 is invalid',
-            'visit requires two variants',
+            'Lambdas cannot be used as visitors for std::visit',
+            'x must not be const when a variant holds a string',
+            'The visitor must suit every alternative, and string + 1 fails',
+            'std::visit requires at least two variants to compare',
           ],
           2,
           'visit instantiates the visitor for each alternative, whichever one is active.',
@@ -8305,10 +8344,10 @@ int main() {
         choose(
           'Why does the visitor need if constexpr rather than a plain if?',
           [
-            'With a plain if, item.size() would be compiled for the int alternative too, which fails',
-            'A plain if cannot compare types',
-            'if constexpr runs faster at run time',
-            'visit forbids ordinary if statements',
+            'A plain if would compile item.size() for the int alternative too',
+            'A plain if cannot compare two types with is_same_v',
+            'if constexpr makes the visitor run faster at run time',
+            'std::visit forbids ordinary if statements in visitors',
           ],
           0,
           'Only if constexpr discards the branch that is invalid for the current alternative.',
@@ -8508,10 +8547,10 @@ int main() {
         choose(
           'Why catch with const std::runtime_error& rather than by value?',
           [
-            'By-value handlers never match',
-            'A reference avoids a copy and keeps the full thrown object, including derived types',
-            'const is required for what() to compile',
-            'A reference makes the handler run twice',
+            'Handlers that catch by value never match anything',
+            'A reference avoids a copy and keeps the derived type intact',
+            'const is required for e.what() to compile at all',
+            'A reference makes the handler run twice for safety',
           ],
           1,
           'Catching by value copies the object and, for a derived exception, slices it to the handler’s type.',
@@ -8519,10 +8558,10 @@ int main() {
         choose(
           'A function throws std::invalid_argument, and the only nearby handler is catch (const std::out_of_range&). What happens?',
           [
-            'That handler runs anyway',
-            'The exception is converted to out_of_range',
-            'The handler is skipped and the exception keeps propagating to the callers',
-            'The throw statement is ignored',
+            'That handler runs anyway, because all exceptions match',
+            'The exception is converted to out_of_range first',
+            'The handler is skipped and the exception keeps propagating',
+            'The throw statement is ignored and execution continues',
           ],
           2,
           'Only a matching handler can catch it; otherwise the search continues outward.',
@@ -8611,10 +8650,10 @@ int main() {
         choose(
           'A helper throws, its caller has no try block, and main wraps the call in a try with a matching catch. Where is the exception handled?',
           [
-            'In the helper',
+            'In the helper, which catches its own exceptions',
             'In the caller, which receives a default value',
-            'Nowhere; it is lost',
-            'In main’s handler, after leaving both the helper and the caller',
+            'Nowhere; an exception without a nearby try is lost',
+            'In main’s handler, after leaving the helper and caller',
           ],
           3,
           'The exception unwinds through every function without a matching handler.',
@@ -8688,10 +8727,10 @@ int main() {
         choose(
           'What does v[5] do when v has 3 elements?',
           [
-            'Throws std::out_of_range',
-            'Returns 0',
-            'Returns the last element',
-            'Undefined behavior; operator[] does not check',
+            'Throws std::out_of_range, like at()',
+            'Returns 0 for any missing element',
+            'Returns the last element instead',
+            'Undefined behavior; [] does not check',
           ],
           3,
           'Only at() checks; [] trusts the caller.',
@@ -8960,10 +8999,10 @@ int main() {
         choose(
           'A transfer function subtracts from the source account, then validates the destination and throws. What does a caller observe after catching?',
           [
-            'Both balances unchanged',
-            'Both balances updated',
-            'The destination credited twice',
-            'Money removed from the source but not added anywhere',
+            'Both balances unchanged, as before the call',
+            'Both balances updated, as if it succeeded',
+            'The destination credited twice, the source once',
+            'Money removed from the source, added nowhere',
           ],
           3,
           'The subtraction happened before the throw and was never undone.',
@@ -9200,10 +9239,10 @@ int main() {
         choose(
           'What happens to side effects in the expression inside noexcept(...)?',
           [
-            'They happen once',
+            'They happen once, as for any expression',
             'They happen only if the result is true',
-            'They never happen; the expression is not evaluated',
-            'They happen during compilation',
+            'They never happen; the operand is not evaluated',
+            'They happen during compilation instead',
           ],
           2,
           'noexcept is an unevaluated context, like sizeof and decltype.',
@@ -9239,10 +9278,10 @@ int main() {
         choose(
           'An exception escapes a function declared noexcept, and the caller has a matching catch. What happens?',
           [
-            'The caller’s handler runs',
-            'The function returns 0',
+            'The caller’s matching handler runs as usual',
+            'The function returns 0 and execution continues',
             'std::terminate is called; the handler never runs',
-            'The exception is silently discarded',
+            'The exception is silently discarded at the boundary',
           ],
           2,
           'The noexcept boundary stops propagation by ending the program.',
@@ -9269,10 +9308,10 @@ int main() {
         choose(
           'When is marking a function noexcept appropriate?',
           [
-            'When it cannot throw, or catches everything that could be thrown inside it',
-            'Whenever it is called inside a try block',
-            'To make its exceptions easier to catch',
-            'Only for functions that return void',
+            'When it cannot throw, or catches everything inside',
+            'Whenever it is always called inside a try block',
+            'To make its exceptions easier for callers to catch',
+            'Only for functions whose return type is void',
           ],
           0,
           'The promise must be true for every call, because a violation ends the program.',
@@ -9425,24 +9464,24 @@ struct Base {
   virtual int scale(int x) const { return x; }
 };
 struct Derived : Base {
-  int scale(long x) const { return static_cast<int>(x) * 2; }
+  int scale(long) const { return 99; }
 };
 int main() {
   Derived d;
   const Base& view = d;
   std::cout << view.scale(5) << "\\n";
 }`,
-          ['10', '5', '0', '15'],
+          ['99', '5', '0', '10'],
           1,
           'scale(long) is a different function, so the virtual scale(int) is not overridden.',
         ),
         choose(
           'What does adding override to `int read()` (missing const) in Derived do?',
           [
-            'Nothing; override is only documentation',
-            'It makes calls through Base run Derived::read',
-            'It adds const automatically',
-            'The compiler reports an error, because no virtual base function has that signature',
+            'Nothing; override is only documentation for readers',
+            'It makes calls through Base run Derived::read anyway',
+            'It adds the missing const to Derived::read automatically',
+            'It causes a compile error: nothing virtual matches',
           ],
           3,
           'override turns a silent mismatch into a compile error.',
@@ -9543,10 +9582,10 @@ int main() {
         choose(
           'Why does `Pricer p;` fail to compile?',
           [
-            'Pricer has no constructor',
+            'Pricer has no user-written constructor',
             'Pricer has a pure virtual function, so it is abstract',
-            'Pricer’s destructor is virtual',
-            'Objects must be created with new',
+            'Pricer’s destructor is virtual, which forbids objects',
+            'Pricer objects must be created with new instead',
           ],
           1,
           'An abstract class can only be used as the base of a concrete class.',
@@ -9576,10 +9615,10 @@ int main() {
         choose(
           'A new pricing rule is needed. What must change in quote(const Pricer&, int)?',
           [
-            'Nothing; a new class that overrides price works with it',
-            'quote needs a new overload',
-            'Pricer must list every derived class',
-            'quote must check the object’s type first',
+            'Nothing; a new class overriding price works with it',
+            'quote needs a new overload for the new pricing class',
+            'Pricer must be edited to list every derived class',
+            'quote must check the object’s type before calling',
           ],
           0,
           'That independence from concrete types is the point of the interface.',
@@ -9664,10 +9703,10 @@ int main() {
         choose(
           'A Base without a virtual destructor owns a Derived through std::unique_ptr<Base>. What happens when the pointer is destroyed?',
           [
-            'Only ~Base runs, and that is safe',
-            '~Derived runs automatically anyway',
-            'Compilation fails',
-            'Undefined behavior: deleting a Derived through a Base* needs a virtual destructor',
+            'Only ~Base runs, which is safe because Base owns nothing',
+            '~Derived runs automatically anyway, then ~Base',
+            'Compilation fails, because unique_ptr requires virtual',
+            'Undefined behavior: deleting through Base* needs virtual',
           ],
           3,
           'The delete must find the most derived destructor, which requires virtual dispatch.',
@@ -9755,9 +9794,9 @@ int main() {
         choose(
           'Which base declaration makes destroying derived objects through std::unique_ptr<Base> safe?',
           [
-            '~Base() = default;',
-            'Base() = default;',
-            'virtual Base();',
+            '~Base() noexcept = default;',
+            'virtual Base() = default;',
+            'virtual void close() = 0;',
             'virtual ~Base() = default;',
           ],
           3,
@@ -9785,10 +9824,10 @@ int main() {
         choose(
           'Why is the virtual destructor needed for std::unique_ptr<Base> but not for a local Derived variable?',
           [
-            'Deleting through Base* must find the derived destructor at run time; a local’s type is known when compiling',
-            'Local variables are never destroyed',
-            'unique_ptr cannot call non-virtual functions',
-            'It is needed in both cases',
+            'Deleting through Base* must find ~Derived at run time; a local’s type is known',
+            'Local variables are never destroyed, so no destructor is needed',
+            'unique_ptr cannot call a destructor that is not virtual at all',
+            'It is needed in both cases, or ~Derived is skipped for locals too',
           ],
           0,
           'Virtual dispatch is required only when the static type differs from the object’s real type.',
@@ -9869,10 +9908,10 @@ int main() {
         choose(
           'Why does a sliced copy run Base’s version of a virtual function?',
           [
-            'Virtual calls are disabled on copies',
-            'The copy is a genuine Base object; the derived part was never copied',
-            'The compiler chooses by declaration order',
-            'The copy still refers to the Derived object',
+            'Virtual calls are disabled on any copied object',
+            'The copy is a genuine Base; the derived part was never copied',
+            'The compiler chooses the version by declaration order',
+            'The copy still refers to the original Derived object',
           ],
           1,
           'A Base object has Base’s dynamic type, whatever it was copied from.',
@@ -9960,10 +9999,10 @@ int main() {
         choose(
           'A function takes Base by value and is called with a Derived. What does the function receive?',
           [
-            'A new Base object copied from the Derived’s base part',
-            'The whole Derived object',
-            'A reference to the Derived object',
-            'Nothing; the call does not compile',
+            'A new Base copied from the Derived’s base part',
+            'The whole Derived object, including its members',
+            'A reference to the caller’s Derived object',
+            'Nothing; the call does not compile at all',
           ],
           0,
           'Pass-by-value copy-constructs a Base, slicing the argument.',
@@ -10092,10 +10131,10 @@ int main() {
         choose(
           'When is public inheritance the right tool?',
           [
-            'When the derived type must be usable wherever the base interface is expected',
-            'Whenever one class needs another class’s code',
-            'When two classes have members with the same names',
-            'Only when the base has no virtual functions',
+            'When the derived type must work wherever the base is expected',
+            'Whenever one class needs to reuse another class’s code',
+            'When two classes happen to have members with the same names',
+            'Only when the base class has no virtual functions at all',
           ],
           0,
           'Inheritance is a promise of substitutability, not just a way to share code.',
@@ -10128,13 +10167,1266 @@ int main() {
         choose(
           'Session inherits publicly from Counter only to reuse add(). What is the drawback?',
           [
-            'Callers can call add() and change count on a Session directly, bypassing handle()',
-            'Session can no longer call add()',
-            'Inheritance makes add() slower',
-            'There is none',
+            'Callers can call add() on a Session directly, bypassing handle()',
+            'Session can no longer call add() from inside handle()',
+            'Inheritance makes every call to add() slower at run time',
+            'There is none; inheritance and a member behave the same',
           ],
           0,
           'Public inheritance exposes the helper’s whole interface as part of Session’s.',
+        ),
+      ],
+    },
+  ],
+  'cpp-declaration-definition': [
+    {
+      title: 'Declare before use, define once',
+      explanation: [
+        'A declaration such as int twice(int value); introduces a function’s name and signature so that code can call it. A definition supplies the body. A call may appear before the definition as long as a declaration comes first.',
+        'The compiler checks each call against the declaration; the linker later connects the call to the single definition, which may appear later in the file or in another source file.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int twice(int value);
+int main() {
+  std::cout << twice(21) << "\\n";
+}
+int twice(int value) { return value * 2; }`,
+        output: '42',
+        explanation:
+          'The declaration above main makes the call valid; the definition below main supplies the body.',
+      },
+      questions: [
+        predictOutput(
+          'The same function is declared twice. What does this program print?',
+          `#include <iostream>
+int add(int a, int b);
+int add(int a, int b);
+int main() {
+  std::cout << add(2, 3) << "\\n";
+}
+int add(int a, int b) { return a + b; }`,
+          ['5', '10', '23', '6'],
+          0,
+          'Repeating a declaration is allowed; there is still exactly one definition.',
+        ),
+        choose(
+          'main calls total() before total’s definition, which appears later in the file. What must come before main?',
+          [
+            'A second definition of total',
+            'A declaration such as int total();',
+            'Nothing; the compiler reads ahead',
+            'An #include of a header named total',
+          ],
+          1,
+          'The compiler reads top to bottom and needs a declaration before the first call.',
+        ),
+        choose(
+          'A function is declared and called but never defined anywhere in the program. When is the problem reported?',
+          [
+            'At compile time, at the declaration',
+            'At run time, when the call executes',
+            'At link time, as an undefined reference',
+            'Never; the call returns 0',
+          ],
+          2,
+          'Each call compiles against the declaration; only the linker discovers that no definition exists.',
+        ),
+        predictOutput(
+          'The declaration omits the parameter names. What does this program print?',
+          `#include <iostream>
+int area(int, int);
+int main() {
+  std::cout << area(3, 4) << "\\n";
+}
+int area(int width, int height) { return width * height; }`,
+          ['7', '34', '0', '12'],
+          3,
+          'Parameter names in a declaration are optional; only the types form the signature.',
+        ),
+      ],
+    },
+    {
+      title: 'The declaration and definition must match',
+      explanation: [
+        'A definition matches a declaration only if the signature is identical. If the parameter types differ, the "definition" is really a separate overload. Callers that use the declared signature then find no definition, and the link fails, or they quietly reach a different overload than intended.',
+        'An ordinary function must be defined exactly once in the whole program.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int scale(int value);
+double scale(double value) { return value * 3; }
+int scale(int value) { return value * 2; }
+int main() {
+  std::cout << scale(5) << " " << scale(5.0) << "\\n";
+}`,
+        output: '10 15',
+        explanation:
+          'scale(double) is a different function from the declared scale(int). Each call picks the overload that matches its argument.',
+      },
+      questions: [
+        choose(
+          'A header declares int adjust(int);, but the source file defines int adjust(double v) { ... }. A caller writes adjust(4). What happens?',
+          [
+            'adjust(double) is called, with 4 converted to 4.0',
+            'The compiler merges the two into one function',
+            'The call compiles and returns 0 at run time',
+            'It calls adjust(int), which has no definition: link error',
+          ],
+          3,
+          'The caller sees only the declared int version; the double function is an unrelated overload.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int scale(int value);
+double scale(double value) { return value * 3; }
+int scale(int value) { return value * 2; }
+int main() {
+  std::cout << scale(2) << " " << scale(2.5) << "\\n";
+}`,
+          ['4 7', '4 5', '6 7.5', '4 7.5'],
+          3,
+          'scale(2) uses the int version; scale(2.5) uses the double version, which returns 7.5.',
+        ),
+        choose(
+          'Which pair is a matching declaration and definition?',
+          [
+            'int f(int); and int f(long x) { ... }',
+            'int f(int); and int f(int x) { ... }',
+            'int f(int); and int f() { ... }',
+            'int f(int); and int f(int x, int y) { ... }',
+          ],
+          1,
+          'Only identical parameter types make the definition belong to the declaration.',
+        ),
+        choose(
+          'How many times may an ordinary (non-inline) function be defined in a whole program?',
+          [
+            'Once per source file that calls it',
+            'Any number of times, if the bodies match',
+            'Exactly once',
+            'Twice: once declared and once defined',
+          ],
+          2,
+          'The one-definition rule allows many declarations but a single definition.',
+        ),
+      ],
+    },
+  ],
+  'cpp-namespace-qualified': [
+    {
+      title: 'Qualify a name with its namespace',
+      explanation: [
+        'namespace pricing { ... } groups names under pricing. Outside the namespace, a member is named pricing::adjust. Two namespaces can each contain an adjust without conflict, because their qualified names differ; std::cout works the same way.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+namespace pricing {
+int adjust(int value) { return value + 3; }
+}
+namespace shipping {
+int adjust(int value) { return value * 2; }
+}
+int main() {
+  std::cout << pricing::adjust(4) << " " << shipping::adjust(4) << "\\n";
+}`,
+        output: '7 8',
+        explanation: 'The qualifier picks which adjust runs.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+namespace pricing {
+int adjust(int value) { return value + 3; }
+}
+namespace shipping {
+int adjust(int value) { return value * 2; }
+}
+int main() {
+  std::cout << shipping::adjust(pricing::adjust(1)) << "\\n";
+}`,
+          ['5', '8', '6', '4'],
+          1,
+          'The inner call gives 1 + 3 = 4, and the outer call doubles it.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+namespace config {
+int limit = 10;
+}
+int limit = 3;
+int main() {
+  std::cout << limit + config::limit << "\\n";
+}`,
+          ['20', '6', '13', '10'],
+          2,
+          'The unqualified limit is the outer one, 3; config::limit is 10.',
+        ),
+        choose(
+          'Two libraries both define a function named parse. How can one program use both?',
+          [
+            'Each library uses its own namespace; callers write lib_a::parse or lib_b::parse',
+            'Rename one of the two functions at run time, before the first call',
+            'Call parse twice and keep whichever result the second call returns',
+            'It is impossible; one library has to be removed from the program',
+          ],
+          0,
+          'Namespaces make otherwise identical names distinct.',
+        ),
+        choose(
+          'What does std:: mean in std::cout?',
+          [
+            'cout is a standard type',
+            'cout is a static variable',
+            'cout is defined in the current file',
+            'cout is declared in namespace std',
+          ],
+          3,
+          'The standard library places its names in namespace std.',
+        ),
+      ],
+    },
+    {
+      title: 'Unqualified names are found from the inside out',
+      explanation: [
+        'Inside namespace pricing, a plain adjust finds pricing::adjust first, which hides an adjust declared in an enclosing scope. Outside, the plain name means the outer one.',
+        'A using-declaration, using pricing::adjust;, brings one name into the current scope. using namespace pricing; brings every name, which can make calls ambiguous when two namespaces declare the same name.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int adjust(int value) { return value - 1; }
+namespace pricing {
+int adjust(int value) { return value + 3; }
+int final_price(int value) { return adjust(value) * 10; }
+}
+int main() {
+  std::cout << pricing::final_price(2) << " " << adjust(2) << "\\n";
+}`,
+        output: '50 1',
+        explanation:
+          'Inside pricing, adjust means pricing::adjust: (2 + 3) * 10. In main, the plain adjust is the outer one.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int adjust(int value) { return value - 1; }
+namespace pricing {
+int adjust(int value) { return value + 3; }
+int final_price(int value) { return adjust(value) * 10; }
+}
+int main() {
+  std::cout << pricing::final_price(1) << " " << adjust(1) << "\\n";
+}`,
+          ['0 0', '40 0', '40 4', '0 4'],
+          1,
+          'final_price uses pricing::adjust, giving 40; main’s plain adjust subtracts 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int adjust(int value) { return value - 1; }
+namespace pricing {
+int adjust(int value) { return value + 3; }
+}
+int main() {
+  std::cout << adjust(2) << " ";
+  using pricing::adjust;
+  std::cout << adjust(2) << "\\n";
+}`,
+          ['5 5', '1 1', '1 5', '5 1'],
+          2,
+          'Before the using-declaration the outer adjust is found; after it, pricing::adjust hides the outer one in main.',
+        ),
+        choose(
+          '`using namespace a; using namespace b;` and both a and b declare int f(int). What happens with f(1)?',
+          [
+            'a::f is called because it was listed first',
+            'b::f is called because it was listed last',
+            'Both are called',
+            'The call is ambiguous and does not compile',
+          ],
+          3,
+          'Both names become visible equally, and nothing prefers one over the other.',
+        ),
+        choose(
+          'Why do style guides discourage `using namespace std;` in header files?',
+          [
+            'It injects every std name into each file that includes it',
+            'It makes every standard library function slower',
+            'It is not valid C++ inside a header file',
+            'It hides std::cout from the files that include it',
+          ],
+          0,
+          'A header’s using-directive affects code its author never sees.',
+        ),
+      ],
+    },
+  ],
+  'cpp-internal-linkage': [
+    {
+      title: 'An unnamed namespace keeps a helper private to its file',
+      explanation: [
+        'Each source file is compiled separately as a translation unit. An ordinary function has external linkage: the linker can connect it to calls from any file. A function inside an unnamed namespace, namespace { ... }, has internal linkage: it is used by its plain name in its own file and is invisible to every other file.',
+        'Marking a namespace-scope function static has the same effect.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+namespace {
+int private_adjust(int value) { return value + 4; }
+}
+int public_price(int value) { return private_adjust(value) * 2; }
+int main() {
+  std::cout << public_price(5) << "\\n";
+}`,
+        output: '18',
+        explanation:
+          'public_price can be called from other files; private_adjust only from this one. Here they compute (5 + 4) * 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+static int square(int value) { return value * value; }
+int main() {
+  std::cout << square(3) + square(4) << "\\n";
+}`,
+          ['49', '25', '14', '7'],
+          1,
+          'static only limits square to this file; within it, square works normally: 9 + 16.',
+        ),
+        choose(
+          'How is a function in an unnamed namespace called from the same file?',
+          [
+            'By its plain name, with no qualification',
+            'As anonymous::name',
+            'Only through a function pointer',
+            'It cannot be called',
+          ],
+          0,
+          'The unnamed namespace’s members are visible in the enclosing scope of that file.',
+        ),
+        choose(
+          'Which functions can code in other source files call?',
+          [
+            'Only functions in unnamed namespaces',
+            'Only static functions',
+            'Every function in the program, whatever its linkage',
+            'Functions with external linkage, declared where they are used',
+          ],
+          3,
+          'Internal linkage hides a name from the linker’s view of other files.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+namespace {
+int calls = 0;
+}
+int track() {
+  calls += 1;
+  return calls;
+}
+int main() {
+  track();
+  track();
+  std::cout << track() << "\\n";
+}`,
+          ['1', '0', '3', '2'],
+          2,
+          'calls is a file-private variable that persists between calls.',
+        ),
+      ],
+    },
+    {
+      title: 'Internal linkage prevents clashing definitions',
+      explanation: [
+        'If two source files each define int helper(int) with external linkage, the program contains two definitions of one function. That violates the one-definition rule, and the link typically fails with a duplicate symbol.',
+        'Giving each file’s helper internal linkage makes them two unrelated functions, each private to its own file.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+// a.cpp could hold: namespace { int helper(int v) { return v + 1; } }
+// b.cpp could hold: namespace { int helper(int v) { return v * 10; } }
+// Each file sees only its own helper. This program is a.cpp's view.
+namespace {
+int helper(int value) { return value + 1; }
+}
+int a_result(int value) { return helper(value); }
+int main() {
+  std::cout << a_result(4) << "\\n";
+}`,
+        output: '5',
+        explanation:
+          'With internal linkage, a.cpp’s helper and b.cpp’s helper never meet at link time, so both files can use the name.',
+      },
+      questions: [
+        choose(
+          'a.cpp and b.cpp both define `int helper(int v)` at namespace scope with external linkage and different bodies. What happens when they are linked?',
+          [
+            'The linker picks one definition at random',
+            'Each file uses its own definition automatically',
+            'It breaks the one-definition rule; linking usually fails',
+            'The second definition overrides the first one',
+          ],
+          2,
+          'External linkage means both definitions name the same function.',
+        ),
+        choose(
+          'Which fix lets each file keep its own private helper?',
+          [
+            'Declare helper once in a shared header file',
+            'Put each helper in an unnamed namespace, or make it static',
+            'Rename main in one of the two source files',
+            'Mark only one of the two helper definitions inline',
+          ],
+          1,
+          'Internal linkage makes the two definitions distinct entities.',
+        ),
+        choose(
+          'A header declares `int helper(int);`, and helper is defined in an unnamed namespace in util.cpp. main.cpp includes the header and calls helper. What happens?',
+          [
+            'Linking fails: the helper is internal to util.cpp, so the declaration has no definition',
+            'It works, because the header declares helper for every file that includes it',
+            'The compiler copies the definition from util.cpp into main.cpp automatically',
+            'It compiles and links, but helper returns 0 when called from main.cpp',
+          ],
+          0,
+          'The header promises an externally linked helper that no file provides.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+namespace {
+int helper(int value) { return value * 3; }
+}
+int first(int value) { return helper(value) + 1; }
+int second(int value) { return helper(value) - 1; }
+int main() {
+  std::cout << first(2) << " " << second(2) << "\\n";
+}`,
+          ['6 6', '7 5', '7 7', '5 7'],
+          1,
+          'Both public functions in this file share the private helper.',
+        ),
+      ],
+    },
+  ],
+  'cpp-build': [
+    {
+      title: 'inline allows one identical definition per file',
+      explanation: [
+        'A header is copied into every source file that includes it. An ordinary function or variable defined in a header would therefore be defined once per file, breaking the one-definition rule. Marking it inline permits a definition in each file, and the program behaves as if there were one entity.',
+        'inline constexpr int offset = 5; is a header-safe constant. constexpr functions and member functions defined inside a class are implicitly inline.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+namespace defaults {
+inline constexpr int offset = 5;
+inline int with_offset(int value) { return value + offset; }
+}
+int main() {
+  std::cout << defaults::with_offset(3) << " " << defaults::offset << "\\n";
+}`,
+        output: '8 5',
+        explanation:
+          'Both definitions could live in a header shared by many files; inline makes that legal.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+namespace fees {
+inline constexpr int base = 2;
+inline int total(int units) { return base + units * 3; }
+}
+int main() {
+  std::cout << fees::total(4) << "\\n";
+}`,
+          ['14', '20', '12', '9'],
+          0,
+          'total computes 2 + 4 * 3, with multiplication first.',
+        ),
+        choose(
+          'A header defines `int helper() { return 1; }` without inline, and two .cpp files include it. What happens?',
+          [
+            'Each file gets a private copy automatically',
+            'The compiler merges the two copies',
+            'Headers cannot contain function definitions',
+            'Two definitions of helper exist, so linking fails',
+          ],
+          3,
+          'Including the header twice produces two external definitions of the same function.',
+        ),
+        choose(
+          'Which header-level definition can be included in many files safely?',
+          [
+            'int limit = 10;',
+            'inline constexpr int limit = 10;',
+            'int limit() { return 10; }',
+            'double limit = 10.0;',
+          ],
+          1,
+          'Only the inline definition may appear once in every file that includes it.',
+        ),
+        choose(
+          'Which functions are implicitly inline?',
+          [
+            'constexpr functions and members defined inside a class',
+            'Every function that returns a value of any type',
+            'Only functions declared inside unnamed namespaces',
+            'Functions that are declared inside main itself',
+          ],
+          0,
+          'Those are commonly defined in headers, so the language makes them inline automatically.',
+        ),
+      ],
+    },
+    {
+      title: 'Every definition of an inline entity must be identical',
+      explanation: [
+        'inline does not merge different definitions. Every file must see exactly the same definition. If two files compile different versions, for example from different header versions, the program has undefined behavior, usually with no diagnostic: different calls may silently use different versions.',
+        'Keep the definition in one header that every user includes.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+namespace limits {
+inline constexpr int max_orders = 3;
+}
+int remaining(int placed) { return limits::max_orders - placed; }
+int main() {
+  std::cout << remaining(1) << " " << remaining(3) << "\\n";
+}`,
+        output: '2 0',
+        explanation:
+          'Every file that includes the header sees the same max_orders, so they all agree on the limit.',
+      },
+      questions: [
+        choose(
+          'a.cpp sees `inline int fee() { return 2; }` and b.cpp sees `inline int fee() { return 3; }`. What is guaranteed?',
+          [
+            'Calls return 2 in a.cpp and 3 in b.cpp',
+            'The linker always reports the mismatch as an error',
+            'Nothing: the ODR is violated and no diagnostic is required',
+            'The larger value is used everywhere in the program',
+          ],
+          2,
+          'The program is ill-formed, and the toolchain is not required to notice.',
+        ),
+        choose(
+          'How do teams keep every definition of an inline entity identical?',
+          [
+            'Copy it by hand into each source file',
+            'Give each file its own slightly different version',
+            'Define it once in a header that every user includes',
+            'Mark it extern in each file',
+          ],
+          2,
+          'One source of truth guarantees identical definitions.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+constexpr int fee(int units) { return units * 2 + 1; }
+namespace pricing {
+inline constexpr int base = fee(2);
+}
+int main() {
+  std::cout << pricing::base + fee(1) << "\\n";
+}`,
+          ['6', '8', '7', '5'],
+          1,
+          'base is fee(2) = 5 and fee(1) is 3.',
+        ),
+        choose(
+          'At namespace scope in a header, how does `inline constexpr int limit = 5;` differ from `static constexpr int limit = 5;`?',
+          [
+            'inline gives one shared entity; static gives each file its own copy',
+            'They are identical in every way, including the number of copies',
+            'static gives one shared entity; inline gives each file its own copy',
+            'inline lets limit change at run time, while static keeps it fixed',
+          ],
+          0,
+          'static gives internal linkage, so each file has a separate variable; inline keeps one entity.',
+        ),
+      ],
+    },
+  ],
+  'cpp-assert-contract': [
+    {
+      title: 'assert checks a condition the code relies on',
+      explanation: [
+        'assert(condition), from <cassert>, evaluates the condition while the program runs. If it is true, nothing happens and nothing is printed. If it is false, the program prints a diagnostic naming the file, line and expression, then aborts.',
+        'Use it to state assumptions the surrounding code depends on, such as a result the function has just computed.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <cassert>
+#include <iostream>
+int add_fee(int value) {
+  int result = value + 2;
+  assert(result == value + 2);
+  return result;
+}
+int main() {
+  std::cout << add_fee(5) << "\\n";
+}`,
+        output: '7',
+        explanation:
+          'The assertion holds, so it has no visible effect, and the result prints normally.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <cassert>
+#include <iostream>
+int main() {
+  int a = 4;
+  assert(a > 0);
+  std::cout << a * 3 << "\\n";
+}`,
+          ['1', '12', '4', '112'],
+          1,
+          'A passing assert prints nothing, and the program continues.',
+        ),
+        choose(
+          'What happens when an assert condition is false in a build where assertions are enabled?',
+          [
+            'A warning is printed and the program continues',
+            'The enclosing function returns false',
+            'Compilation fails',
+            'The program prints a diagnostic and aborts',
+          ],
+          3,
+          'assert is a run-time check that stops the program on failure.',
+        ),
+        choose(
+          'Which is a good use of assert?',
+          [
+            'assert(index < size) where callers guarantee a valid index',
+            'assert(file_opened) to handle a missing file at run time',
+            'assert(password_correct) to reject a bad login attempt',
+            'assert(input >= 0) as the only check on user input',
+          ],
+          0,
+          'assert documents a programmer’s assumption; failures that users can cause need real handling.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <cassert>
+#include <iostream>
+bool is_positive(int value) { return value > 0; }
+int main() {
+  assert(is_positive(3));
+  std::cout << is_positive(-1) << "\\n";
+}`,
+          ['1', 'false', '0', '-1'],
+          2,
+          'The assertion passes; the printed call returns false, shown as 0.',
+        ),
+      ],
+    },
+    {
+      title: 'NDEBUG removes assertions',
+      explanation: [
+        'When the macro NDEBUG is defined, as in many release builds, assert expands to nothing: its condition is not even evaluated. So an assert must never contain work the program needs, and it cannot be the only defense against bad input.',
+        'Do the work in its own statement and let the assert check only the result. Validate external input with ordinary code that runs in every build, and keep assert for conditions that indicate a bug.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <cassert>
+#include <iostream>
+int parse_count(int raw) { return raw * 2; }
+int main() {
+  int count = parse_count(21);
+  assert(count == 42);
+  std::cout << count << "\\n";
+}`,
+        output: '42',
+        explanation:
+          'The call happens in its own statement, so it runs in every build. The assert only checks the result; removing it under NDEBUG changes nothing else.',
+      },
+      questions: [
+        choose(
+          'A program contains `assert(++attempts < 5);`. What changes in a build with NDEBUG defined?',
+          [
+            'Nothing; the increment and check still happen',
+            'The assertion becomes a compile-time check',
+            'attempts is never incremented: the expression is gone',
+            'attempts is incremented twice, once per check',
+          ],
+          2,
+          'With NDEBUG, assert(expr) does not evaluate expr, side effects included.',
+        ),
+        choose(
+          'A server checks client-supplied sizes only with assert. What is the risk?',
+          [
+            'With NDEBUG the check disappears and bad sizes pass',
+            'assert is too slow for code that handles requests',
+            'assert rejects valid sizes that are larger than 0',
+            'There is no risk, because asserts always run',
+          ],
+          0,
+          'Input validation must run in every build.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <cassert>
+#include <iostream>
+int total_items(int boxes) { return boxes * 6; }
+int main() {
+  int items = total_items(4);
+  assert(items == 24);
+  std::cout << items + total_items(1) << "\\n";
+}`,
+          ['24', '6', '25', '30'],
+          3,
+          'The assertion holds and prints nothing; the output is 24 + 6.',
+        ),
+        choose(
+          'Where should a side effect, such as reading the next token, go?',
+          [
+            'Inside the assert, to keep the code to one line',
+            'In its own statement; the assert checks only the result',
+            'Inside a static_assert, so it runs while compiling',
+            'Nowhere; assertions cannot be used with variables',
+          ],
+          1,
+          'Then removing the assert in release builds removes only the check.',
+        ),
+      ],
+    },
+  ],
+  'cpp-boundary-case': [
+    {
+      title: 'Decide what an empty input produces',
+      explanation: [
+        'Before reading front(), back() or [0], decide what the function returns for an empty vector, and handle that case first. front() on an empty vector is undefined behavior, not an exception.',
+        'Boundary values also hide in initial values: starting a maximum at 0 silently assumes the input contains something at least 0.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <vector>
+int first_or(const std::vector<int>& values, int fallback) {
+  if (values.empty()) return fallback;
+  return values.front();
+}
+int main() {
+  std::cout << first_or({8, 2}, -1) << " " << first_or({}, -1) << "\\n";
+}`,
+        output: '8 -1',
+        explanation:
+          'The empty case is answered before front() could be reached.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <vector>
+int last_or(const std::vector<int>& values) {
+  return values.empty() ? -1 : values.back();
+}
+int main() {
+  std::cout << last_or({3, 5, 7}) << " " << last_or({}) << "\\n";
+}`,
+          ['7 -1', '3 -1', '7 0', '7 7'],
+          0,
+          'back() is read only for the nonempty vector.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <vector>
+int largest(const std::vector<int>& values) {
+  if (values.empty()) return -1;
+  int best = values.front();
+  for (int value : values)
+    if (value > best) best = value;
+  return best;
+}
+int main() {
+  std::cout << largest({4, 9, 2}) << " " << largest({}) << "\\n";
+}`,
+          ['9 0', '4 -1', '9 -1', '2 -1'],
+          2,
+          'The maximum starts from a real element, and the empty case returns the agreed -1.',
+        ),
+        choose(
+          'What does values.front() do when values is empty?',
+          [
+            'Returns 0',
+            'Throws std::out_of_range',
+            'Returns -1',
+            'Undefined behavior',
+          ],
+          3,
+          'front() has a nonempty precondition and does not check it.',
+        ),
+        predictOutput(
+          'This version starts best at 0. What does it print?',
+          `#include <iostream>
+#include <vector>
+int largest(const std::vector<int>& values) {
+  int best = 0;
+  for (int value : values)
+    if (value > best) best = value;
+  return best;
+}
+int main() {
+  std::cout << largest({-4, -2}) << "\\n";
+}`,
+          ['-2', '-4', '0', '-1'],
+          2,
+          'No element exceeds the starting 0, so the function reports a value that is not in the input.',
+        ),
+      ],
+    },
+    {
+      title: 'Test the boundaries with assertions',
+      explanation: [
+        'A function’s contract names its result for each boundary: empty input, a single element, all-equal elements, negative values. A test states each case with an assertion, so a regression stops the test at the exact failing case.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <cassert>
+#include <iostream>
+#include <vector>
+int largest(const std::vector<int>& values) {
+  if (values.empty()) return -1;
+  int best = values.front();
+  for (int value : values)
+    if (value > best) best = value;
+  return best;
+}
+int main() {
+  assert(largest({}) == -1);
+  assert(largest({5}) == 5);
+  assert(largest({-4, -2}) == -2);
+  assert(largest({3, 3}) == 3);
+  std::cout << "boundary checks passed\\n";
+}`,
+        output: 'boundary checks passed',
+        explanation:
+          'Every assertion holds, so the program reaches the final line.',
+      },
+      questions: [
+        choose(
+          'Which input most directly tests that largest does not assume a starting value of 0?',
+          ['{3, 8}', '{0}', '{-4, -2}', '{9, 9}'],
+          2,
+          'Only an all-negative input exposes a maximum that starts at 0.',
+        ),
+        choose(
+          'A test suite checks largest only on {4, 9, 2}. Which bug could it miss?',
+          [
+            'Reading front() of an empty vector',
+            'Returning the smallest value',
+            'Ignoring the element 9',
+            'Returning the size',
+          ],
+          0,
+          'The other bugs change the answer for this input; the empty case is never exercised.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <vector>
+int second_or(const std::vector<int>& values) {
+  return values.size() < 2 ? -1 : values[1];
+}
+int main() {
+  std::cout << second_or({7}) << " " << second_or({7, 4}) << "\\n";
+}`,
+          ['7 4', '-1 7', '-1 -1', '-1 4'],
+          3,
+          'A one-element vector has no index 1, so the guard answers -1.',
+        ),
+        choose(
+          'Which set of inputs covers the boundaries of a function that returns the first element or -1?',
+          ['{} and {5}', '{1, 2} and {3, 4}', '{5, 5, 5}', '{100}'],
+          0,
+          'The empty and single-element cases are where the guard and the read meet.',
+        ),
+      ],
+    },
+  ],
+  'cpp-property-test': [
+    {
+      title: 'Check that an inverse undoes an operation',
+      explanation: [
+        'A round-trip property says that applying an operation and then its inverse gives back the original. std::reverse (from <algorithm>) applied twice restores a range. A test keeps a copy of the input and compares with ==, which for vectors compares sizes and every element.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> values{4, 5, 6};
+  auto original = values;
+  std::reverse(values.begin(), values.end());
+  std::cout << (values == original) << " ";
+  std::reverse(values.begin(), values.end());
+  std::cout << (values == original) << "\\n";
+}`,
+        output: '0 1',
+        explanation:
+          'After one reverse the order differs; after the second, the copy and the vector match again.',
+      },
+      questions: [
+        predictOutput(
+          'The input reads the same backwards. What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> values{1, 2, 1};
+  auto original = values;
+  std::reverse(values.begin(), values.end());
+  std::cout << (values == original) << "\\n";
+}`,
+          ['0', '1', '3', '2'],
+          1,
+          'Reversing a palindrome changes nothing, so this input cannot tell one reverse from two.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> values{3, -1, 8};
+  auto original = values;
+  for (int& v : values) v += 3;
+  for (int& v : values) v -= 3;
+  std::cout << (values == original) << "\\n";
+}`,
+          ['0', '3', '1', '-1'],
+          2,
+          'Subtracting 3 exactly undoes adding 3 for these ints.',
+        ),
+        choose(
+          'Why does the round-trip test keep a separate copy named original?',
+          [
+            'The operation works in place, so the copy keeps the original to compare',
+            'Vectors cannot be compared with == unless one of them is a copy',
+            'Copying the vector first makes std::reverse run faster',
+            'auto requires a copy whenever a vector is passed to an algorithm',
+          ],
+          0,
+          'A vector copy is independent, so later changes to values do not affect it.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> values{1, 2, 3};
+  std::reverse(values.begin(), values.end());
+  for (int v : values) std::cout << v << " ";
+  std::cout << "\\n";
+}`,
+          ['1 2 3', '3 1 2', '2 1 3', '3 2 1'],
+          3,
+          'One reverse puts the elements in the opposite order.',
+        ),
+      ],
+    },
+    {
+      title: 'One example is not a proof',
+      explanation: [
+        'A property should hold for every valid input, so test many varied inputs, including boundaries. An operation that is not truly invertible may pass one convenient example and fail others.',
+        'Halving and then doubling an int, x / 2 * 2, round-trips for even numbers but not for odd ones, because integer division discards the remainder.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> inputs{8, 7, 0, -6, -3};
+  int failures = 0;
+  for (int x : inputs)
+    if (x / 2 * 2 != x) ++failures;
+  std::cout << failures << "\\n";
+}`,
+        output: '2',
+        explanation:
+          '7 becomes 6 and -3 becomes -2; the even inputs round-trip.',
+      },
+      questions: [
+        predictOutput(
+          'This test uses only even inputs. What does it print?',
+          `#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> inputs{10, 4, 2};
+  int failures = 0;
+  for (int x : inputs)
+    if (x / 2 * 2 != x) ++failures;
+  std::cout << failures << "\\n";
+}`,
+          ['0', '1', '3', '2'],
+          0,
+          'Every even number survives the round trip, so this test finds no failure and wrongly suggests the property always holds.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> inputs{1, 2, 3, 4, 5};
+  int failures = 0;
+  for (int x : inputs)
+    if (x / 2 * 2 != x) ++failures;
+  std::cout << failures << "\\n";
+}`,
+          ['2', '5', '3', '0'],
+          2,
+          'The odd inputs 1, 3 and 5 lose their remainder.',
+        ),
+        choose(
+          'A round-trip test passes for the single input 4. What can you conclude?',
+          [
+            'The property holds for every integer input',
+            'The operation is its own inverse for all values',
+            'The test is wrong, because one input is too few',
+            'Only that it holds for 4; other inputs may fail',
+          ],
+          3,
+          'A finite set of examples shows the property only for those examples.',
+        ),
+        choose(
+          'Which input set best tests that reversing twice restores a vector?',
+          [
+            '{1, 2, 3}, {4, 5, 6} and {7, 8, 9}',
+            '{}, {7}, {1, 2} and {3, 1, 2}',
+            '{5, 5, 5}, {6, 6} and {9, 9, 9, 9}',
+            '{} on its own, since it is the boundary',
+          ],
+          1,
+          'It covers empty, single-element, even and odd lengths, with distinct values that reveal order changes.',
+        ),
+      ],
+    },
+  ],
+  'cpp-testing': [
+    {
+      title: 'Floating-point results are rounded',
+      explanation: [
+        'A double stores a binary fraction, so many decimal values, such as 0.1, are stored as close approximations. 0.1 + 0.2 is therefore not exactly the double nearest 0.3, and == reports false.',
+        'std::cout shows six significant digits by default, so both values print as 0.3 even though they differ.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  double sum = 0.1 + 0.2;
+  std::cout << sum << " " << (sum == 0.3) << "\\n";
+}`,
+        output: '0.3 0',
+        explanation:
+          'The sum prints as 0.3 but differs from 0.3 in its last bits, so the comparison is false.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  double a = 0.1 * 3;
+  std::cout << (a == 0.3) << "\\n";
+}`,
+          ['1', '0', '0.3', '3'],
+          1,
+          'The rounding error in 0.1 is multiplied, so the product is not exactly the stored 0.3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  std::cout << (0.5 + 0.25 == 0.75) << "\\n";
+}`,
+          ['0', '0.75', '1', '0.5'],
+          2,
+          '0.5, 0.25 and 0.75 are exact binary fractions, so this sum is exact. The issue is representation, not == itself.',
+        ),
+        choose(
+          'Why does `0.1 + 0.2 == 0.3` evaluate to false?',
+          [
+            'The + operator truncates doubles to a fixed precision',
+            '== cannot compare doubles and always returns false',
+            'std::cout rounds the values before they are compared',
+            'The values are stored as nearby binary approximations',
+          ],
+          3,
+          'Each literal and the sum are rounded to the nearest double.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  std::cout << 0.1 + 0.2 << " " << (0.1 + 0.2 > 0.3) << "\\n";
+}`,
+          ['0.3 1', '0.3 0', '0.30000000000000004 1', '0.3 0.3'],
+          0,
+          'The default output rounds to six digits, while the comparison sees that the sum is slightly larger.',
+        ),
+      ],
+    },
+    {
+      title: 'Compare within a tolerance',
+      explanation: [
+        'Test a numeric result by checking that its distance from the expected value is small: std::abs(actual - expected) <= tolerance, with std::abs from <cmath>. The absolute value matters: without it, any result below the expected value would pass.',
+        'The tolerance must suit the computation, and a negative tolerance makes no sense.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <cmath>
+#include <iostream>
+bool within(double actual, double expected, double tolerance) {
+  return tolerance >= 0 && std::abs(actual - expected) <= tolerance;
+}
+int main() {
+  std::cout << within(0.1 + 0.2, 0.3, 1e-12) << " " << within(1.0, 1.1, 0.01) << "\\n";
+}`,
+        output: '1 0',
+        explanation:
+          'The rounding error is far below 1e-12; 1.0 and 1.1 differ by 0.1, more than 0.01.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <cmath>
+#include <iostream>
+bool within(double actual, double expected, double tolerance) {
+  return tolerance >= 0 && std::abs(actual - expected) <= tolerance;
+}
+int main() {
+  std::cout << within(2.0, 2.05, 0.1) << " " << within(2.0, 2.05, 0.01) << "\\n";
+}`,
+          ['1 1', '0 0', '0 1', '1 0'],
+          3,
+          'The difference 0.05 fits within 0.1 but not within 0.01.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <cmath>
+#include <iostream>
+bool within(double actual, double expected, double tolerance) {
+  return tolerance >= 0 && std::abs(actual - expected) <= tolerance;
+}
+int main() {
+  std::cout << within(1.0, 1.0, -1.0) << "\\n";
+}`,
+          ['1', '0', '-1', '2'],
+          1,
+          'Equal values still fail, because a negative tolerance is rejected as invalid.',
+        ),
+        choose(
+          'Which assertion checks that a computed average is 2.5 within 1e-9?',
+          [
+            'assert(avg == 2.5);',
+            'assert(avg - 2.5 <= 1e-9);',
+            'assert(std::abs(avg - 2.5) <= 1e-9);',
+            'assert(std::abs(avg) <= 2.5 + 1e-9);',
+          ],
+          2,
+          'Only the absolute difference bounds the error in both directions.',
+        ),
+        predictOutput(
+          'This version forgets std::abs. What does it print?',
+          `#include <iostream>
+bool within_wrong(double actual, double expected, double tolerance) {
+  return actual - expected <= tolerance;
+}
+int main() {
+  std::cout << within_wrong(1.0, 5.0, 0.1) << "\\n";
+}`,
+          ['0', '1', '-4', '4'],
+          1,
+          '1.0 - 5.0 is -4, which is below 0.1, so a result that is far off still passes.',
+        ),
+      ],
+    },
+    {
+      title: 'Test a computed result with a justified tolerance',
+      explanation: [
+        'A numeric test computes the result, then asserts closeness to an expected value written to a known precision. If the expected value is written to six decimal places, a tolerance around 1e-6 is justified; a much tighter one rejects correct results.',
+        'Integer arithmetic before the conversion is not rounding error: 7 / 2 is already 3 before it becomes a double, and no tolerance should hide that.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <cassert>
+#include <cmath>
+#include <iostream>
+double average(int total, int count) { return static_cast<double>(total) / count; }
+int main() {
+  double result = average(7, 3);
+  assert(std::abs(result - 2.333333) <= 1e-6);
+  std::cout << result << "\\n";
+}`,
+        output: '2.33333',
+        explanation:
+          'The cast makes the division floating-point. The expected value has six decimals, so 1e-6 is a fitting tolerance, and the assertion passes.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <cmath>
+#include <iostream>
+double average(int total, int count) { return static_cast<double>(total) / count; }
+int main() {
+  std::cout << (std::abs(average(1, 3) - 0.333333) <= 1e-5) << "\\n";
+}`,
+          ['1', '0', '0.333333', '3'],
+          0,
+          'The true value differs from 0.333333 by about 3e-7, well within 1e-5.',
+        ),
+        predictOutput(
+          'The tolerance is now 1e-9. What does this program print?',
+          `#include <cmath>
+#include <iostream>
+double average(int total, int count) { return static_cast<double>(total) / count; }
+int main() {
+  std::cout << (std::abs(average(1, 3) - 0.333333) <= 1e-9) << "\\n";
+}`,
+          ['1', '0.333333', '0', '1e-09'],
+          2,
+          'The expected value itself is only accurate to about 3e-7, so a 1e-9 tolerance rejects a correct result.',
+        ),
+        choose(
+          'An expected value is written to 6 decimal places. Which tolerance is justified?',
+          [
+            '0, because the computed result must be exact',
+            'About 1e-6, matching the expected value’s precision',
+            '1, since a large tolerance can never be wrong',
+            'A negative tolerance, to make the check strict',
+          ],
+          1,
+          'The tolerance should reflect how precisely the expected value is known.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <cmath>
+#include <iostream>
+int main() {
+  double avg = 7 / 2;
+  std::cout << (std::abs(avg - 3.5) <= 1e-9) << "\\n";
+}`,
+          ['1', '3.5', '3', '0'],
+          3,
+          '7 / 2 is integer division, giving 3 before the conversion, so the test correctly fails.',
         ),
       ],
     },
