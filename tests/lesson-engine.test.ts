@@ -17,6 +17,7 @@ import {
   LESSON_RETRY_DELAY_MS,
   lessonCoolingDown,
   lessonState,
+  lessonXpAvailable,
   nextTask,
   selectQuestion,
   type Progress,
@@ -27,6 +28,7 @@ import {
   choiceLetter,
 } from '../src/lib/choice-order';
 import {
+  legacyQuestionIds,
   lessonSteps,
   reviewCycleComplete,
   servedChoiceQuestions,
@@ -124,8 +126,12 @@ describe('knowledge-point lessons', () => {
 
   it('serves no legacy choice question and ignores answers to a later point', () => {
     const progress = fresh();
-    const legacy = skill.questions.find((q) => q.type === 'choice')!;
-    expect(() => answer(progress, legacy.id)).toThrow(
+    // The four-question lesson's choice questions are retired (CEN-117).
+    const [retired] = legacyQuestionIds(skill);
+    expect(skill.questions.map((question) => question.id)).not.toContain(
+      retired,
+    );
+    expect(() => answer(progress, retired)).toThrow(
       'This question does not belong to the skill.',
     );
     const skipped = answer(progress, p2.questions[0].id);
@@ -305,7 +311,11 @@ describe('skills without knowledge points', () => {
     unitId: 'fixture-unit',
     prerequisites: [],
     knowledgePoints: undefined,
-    questions: skillById['print-output'].questions.map((question, index) => ({
+    // Three choice checks, then the code exercise.
+    questions: [
+      ...skillById['print-output'].knowledgePoints![0].questions.slice(0, 3),
+      ...skillById['print-output'].questions,
+    ].map((question, index) => ({
       ...question,
       id: `fixture-legacy-q${index + 1}`,
     })),
@@ -439,7 +449,8 @@ function legacyState(progress: Record<string, unknown>): LegacyLearnerState {
 }
 
 describe('saved state migration, merge and validation', () => {
-  const legacyIds = skill.questions.map((question) => question.id);
+  // Saved before knowledge points: evidence names the four-question lesson.
+  const legacyIds = legacyQuestionIds(skill);
   const mastered = {
     ...getSkillState(fresh(), skill.id),
     lessonSeen: true,
@@ -464,9 +475,7 @@ describe('saved state migration, merge and validation', () => {
         lessonSeen: true,
         attempts: 2,
         correct: 2,
-        questionIds: skillById['rust-main'].questions
-          .slice(0, 2)
-          .map((q) => q.id),
+        questionIds: legacyQuestionIds(skillById['rust-main']).slice(0, 2),
         rewardedQuestionIds: [],
         mastery: 0.5,
       },
@@ -510,6 +519,61 @@ describe('saved state migration, merge and validation', () => {
     expect(getSkillState(merged.progress, skill.id).questionIds).not.toContain(
       p2.id,
     );
+  });
+
+  it('keeps attempts, reviews, mistake cards, and Anki notes that name retired questions', () => {
+    const [, q2] = legacyIds;
+    const base = legacyState({ [skill.id]: mastered });
+    const saved: LegacyLearnerState = {
+      ...base,
+      progress: {
+        ...base.progress,
+        attempts: [false, true].map((correct, index) => ({
+          id: `before-knowledge-points-${index}`,
+          skillId: skill.id,
+          questionId: q2,
+          correct,
+          mode: 'learn' as const,
+          usedHint: false,
+          at: new Date(NOW - 2000 + index * 1000).toISOString(),
+          xp: correct ? 10 : 0,
+        })),
+      },
+      cards: [
+        {
+          id: `mistake:${skill.id}:${q2}`,
+          skillId: skill.id,
+          skillName: skill.title,
+          kind: 'mistake',
+          front: 'The retired question',
+          back: 'Its answer',
+          status: 'synced',
+          noteId: 42,
+        },
+        {
+          ...skill.flashcards[0],
+          skillName: skill.title,
+          kind: 'mastery',
+          status: 'synced',
+          noteId: 43,
+        },
+      ],
+    };
+    const parsed = parseStateUpdate({ state: saved, revision: 0 }).state;
+    expect(parsed.cards).toEqual(saved.cards);
+    expect(parsed.progress.attempts).toEqual(saved.progress.attempts);
+    expect(isMastered(parsed.progress, skill.id)).toBe(true);
+    // XP earned per retired question still counts against the lesson.
+    expect(lessonXpAvailable(parsed.progress, skill)).toBe(0);
+    expect(nextTask(parsed.progress, NOW, 'python-foundations')).not.toBeNull();
+    const merged = mergeStates(parsed, { ...createState(), updatedAt: 0 });
+    expect(merged.progress.attempts).toEqual(saved.progress.attempts);
+    expect(merged.cards.slice(0, 2)).toEqual(saved.cards);
+    // The other mastery card is queued once; nothing is duplicated.
+    expect(merged.cards.map((card) => card.id)).toEqual([
+      saved.cards[0].id,
+      ...skill.flashcards.map((card) => card.id),
+    ]);
   });
 
   it('merges lesson attempts, failures and task rewards across devices', () => {

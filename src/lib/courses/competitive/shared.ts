@@ -1,4 +1,5 @@
-import type { ChoiceQuestion, CodeQuestion, Skill } from '../../curriculum';
+import type { CodeQuestion, Skill } from '../../curriculum';
+import { withExerciseId } from '../exercise';
 
 export const courseId = 'competitive-programming';
 
@@ -108,25 +109,6 @@ export function withoutShortcuts(
   );
 }
 
-export function choice(
-  prompt: string,
-  choices: string[],
-  answer: number,
-  explanation: string,
-  hint: string,
-  code?: string,
-): Omit<ChoiceQuestion, 'id'> {
-  return {
-    type: 'choice',
-    prompt,
-    choices,
-    answer,
-    explanation,
-    hint,
-    ...(code ? { code } : {}),
-  };
-}
-
 export function exercise(
   prompt: string,
   starterCode: string,
@@ -156,7 +138,8 @@ export function skill(
   code: string,
   output: string,
   explanation: string,
-  questions: (Omit<ChoiceQuestion, 'id'> | Omit<CodeQuestion, 'id'>)[],
+  /** The code exercise; choice practice lives in knowledge points. */
+  exercises: Omit<CodeQuestion, 'id'>[],
   cards: [string, string][],
 ): Skill {
   return {
@@ -171,10 +154,7 @@ export function skill(
     estimatedMinutes: 12,
     assessment: { requiredTypes: ['code', 'choice'], reviewAnswers: 2 },
     lesson: { paragraphs, example: { code, output, explanation } },
-    questions: questions.map((question, index) => ({
-      ...question,
-      id: `${id}-q${index + 1}`,
-    })),
+    questions: withExerciseId(id, exercises),
     flashcards: cards.map(([front, back], index) => ({
       id: `${id}-card${index + 1}`,
       skillId: id,
