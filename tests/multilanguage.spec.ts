@@ -27,6 +27,7 @@ import {
   feedback,
   shownQuestion,
 } from './helpers/lesson';
+import { chooseCourse } from './helpers/navigation';
 
 const baseURL = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 test.use({ baseURL });
@@ -96,12 +97,7 @@ for (const language of ['rust', 'cpp'] as const) {
     });
     expect(registration.status()).toBe(200);
     await page.goto('/courses');
-    const tile = page.locator('.ma-catalog-card').filter({
-      has: page.getByRole('heading', { name: course.title, exact: true }),
-    });
-    await tile
-      .getByRole('button', { name: 'Set learning goal', exact: true })
-      .click();
+    await chooseCourse(page, course.title);
     await expect
       .poll(async () => (await cloud(page))?.activeCourseId)
       .toBe(course.id);

@@ -54,8 +54,8 @@ async function answer(page: Page, question: ChoiceQuestion, correct = true) {
 }
 
 async function signOut(page: Page) {
-  await page.getByRole('button', { name: 'Open account', exact: true }).click();
-  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await page.getByRole('button', { name: 'Account menu', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Sign out', exact: true }).click();
   await expect(page.locator('.account-name')).toHaveText('Your learning space');
 }
 
