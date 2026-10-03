@@ -59,7 +59,7 @@ export interface DiagnosticQuestion {
   questionId: string;
   /** Seeds the shuffled choice order. */
   presentation: number;
-  /** The seed of the variant asked, for a generated question. */
+  /** The variant number asked, for a generated question (see variants.ts). */
   variant?: number;
 }
 

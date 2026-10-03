@@ -65,7 +65,7 @@ interface QuestionBase {
    * authored question that attempts without a recorded variant show.
    */
   generated?: true;
-  /** The seed of the variant this object shows, set by `questionVariant`. */
+  /** The variant number this object shows, set by `questionVariant`. */
   variant?: number;
 }
 

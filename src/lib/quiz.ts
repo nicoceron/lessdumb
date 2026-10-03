@@ -67,7 +67,7 @@ export interface QuizQuestion {
   questionId: string;
   /** Seeds the shuffled choice order, so a reload shows the same order. */
   presentation: number;
-  /** The seed of the variant asked, for a generated question. */
+  /** The variant number asked, for a generated question (see variants.ts). */
   variant?: number;
   /**
    * The authored choice index answered, the text typed for a typed question,

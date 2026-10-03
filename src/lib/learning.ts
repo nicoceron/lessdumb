@@ -200,7 +200,7 @@ export interface Attempt {
   credited?: string[];
   /** What the learner typed, for a numeric or text question. */
   response?: string;
-  /** The seed of the variant asked, for a generated question. */
+  /** The variant number asked, for a generated question (see variants.ts). */
   variant?: number;
 }
 
@@ -532,7 +532,7 @@ export function seenCounts(progress: Progress, skillId: string) {
  * question or variant remains.
  */
 export const RECENT_VARIANTS = 3;
-/** Seeds a generated question tries when looking for a variant not yet seen. */
+/** Variants a generated question tries when looking for one not yet seen. */
 const VARIANT_TRIES = 64;
 
 /** Answers on any of these questions of a skill, oldest first. */
@@ -679,7 +679,7 @@ function selectKnowledgePointQuestion(
 /**
  * The question to ask next. Scheduling needs only the outline; given a skill
  * with its content, the question comes back with its content too, and a
- * generated question as the variant to ask (its `variant` is the seed to
+ * generated question as the variant to ask (its `variant` is the number to
  * record with the answer).
  */
 export function selectQuestion<S extends SkillOutline>(

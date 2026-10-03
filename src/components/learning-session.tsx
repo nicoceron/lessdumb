@@ -104,7 +104,7 @@ interface Entry {
   number: number;
   /** How often it had been answered when shown; it fixes the choice order. */
   presentation: number;
-  /** The seed of the variant shown, for a generated question. */
+  /** The variant number shown, for a generated question. */
   variant?: number;
   /** The authored index of the selected choice, whatever position it shows at. */
   selected: number | null;
