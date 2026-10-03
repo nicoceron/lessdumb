@@ -40,31 +40,33 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 
 ## Connected course catalog
 
-| Course                   |  Skills | Questions | Executable exercises | Anki cards |
-| ------------------------ | ------: | --------: | -------------------: | ---------: |
-| Python foundations       |      48 |       192 |                   48 |         96 |
-| Quantitative foundations |      36 |       144 |                   10 |         72 |
-| Python for Data Analysis |      24 |        96 |                   24 |         48 |
-| Machine Learning         |      29 |       116 |                   21 |         58 |
-| Data Systems             |      28 |       112 |                    0 |         56 |
-| Competitive Programming  |     192 |       768 |                  192 |        384 |
-| Rust                     |     145 |       580 |                  145 |        290 |
-| C++                      |     208 |       832 |                  208 |        416 |
-| **Total**                | **710** | **2,840** |              **648** |  **1,420** |
+| Course                   |  Skills | Knowledge points | Questions | Executable exercises | Anki cards |
+| ------------------------ | ------: | ---------------: | --------: | -------------------: | ---------: |
+| Python foundations       |      48 |              165 |       682 |                   48 |         96 |
+| Quantitative foundations |      36 |              116 |       464 |                   10 |         72 |
+| Python for Data Analysis |      24 |               73 |       292 |                   24 |         48 |
+| Machine Learning         |      29 |              116 |       464 |                   21 |         58 |
+| Data Systems             |      28 |               84 |       336 |                    0 |         56 |
+| Competitive Programming  |     192 |              438 |     1,743 |                  192 |        384 |
+| Rust                     |     145 |              398 |     1,597 |                  145 |        290 |
+| C++                      |     208 |              531 |     1,870 |                  208 |        416 |
+| **Total**                | **710** |        **1,921** | **7,448** |              **648** |  **1,420** |
+
+Questions are the knowledge points' practice questions; the four-question lessons they replaced were deleted (CEN-117). The browser keeps only the graph index in memory and downloads a course's lessons when one opens ([how content is loaded](docs/knowledge-graph.md#how-the-browser-loads-the-catalog)).
 
 Choosing a course on the Courses page makes it your active course. The scheduler includes its prerequisite ancestors across courses, so missing foundations become real tasks rather than a dead end. The graph offers course paths with supporting prerequisites and an all-course view. Each node retains a domain and course identity, and its detail panel navigates both prerequisite and dependent edges.
 
 The three supplied books inform concept coverage; lessons, examples, questions, datasets, and cards are original. Source notes record exact scope: [data analysis](docs/sources/data-analysis.md), [machine learning](docs/sources/machine-learning.md), and [data systems](docs/sources/data-systems.md). The supplied data-systems early release contains chapters 1–8. The seven neural architecture skills assess concepts using choices and small Python analogues; the browser runtime does not execute TensorFlow/Keras training. This is a focused course catalog, not a reproduction of the books or their full exercise sets.
 
-Competitive Programming draws its topic paths from the supplied USACO and NeetCode reference inventories. Its 12 units cover contest reasoning, collections, prefix/window techniques, search, stacks/heaps/tries, recursion/trees, graph traversal, routes/connectivity, dynamic programming, greedy/bitmask/geometry techniques, number theory, and dynamic range queries. Each of its 48 algorithm topics has three individually taught and assessed concepts followed by the original application skill: 192 nodes with 768 checks. Stable application IDs and earned evidence remain; newly added concepts require their own proof. Every node has a real Python function assessment and connects to existing Python foundations; geometry also uses the quantitative vector branch. The course exposes the public USACO Guide and NeetCode roadmap. [Source and graph mapping](docs/sources/competitive-programming.md) records the inspected references and scope.
+Competitive Programming draws its topic paths from the supplied USACO and NeetCode reference inventories. Its 12 units cover contest reasoning, collections, prefix/window techniques, search, stacks/heaps/tries, recursion/trees, graph traversal, routes/connectivity, dynamic programming, greedy/bitmask/geometry techniques, number theory, and dynamic range queries. Each of its 48 algorithm topics has three individually taught and assessed concepts followed by the original application skill: 192 nodes, each with its own knowledge points and code assessment. Stable application IDs and earned evidence remain; newly added concepts require their own proof. Every node has a real Python function assessment and connects to existing Python foundations; geometry also uses the quantitative vector branch. The course exposes the public USACO Guide and NeetCode roadmap. [Source and graph mapping](docs/sources/competitive-programming.md) records the inspected references and scope.
 
-Rust has 35 topics of two to six skills, covering first programs, Debug output, conversions, Option and Result helpers, queues, ownership and borrowing, UTF-8, data modeling, collections, traits, lifetimes, iterators, Cargo/build concepts, testing, smart pointers, concurrency, async mechanics, unsafe invariants, FFI, algorithms, and a framed-message codec. C++ has 52 four-skill topics, covering values, bits, and control flow, pointers and references, member functions, RAII and moves, pairs, STL, generic code, errors, build/link contracts, concurrency, memory layout, measurement, ring buffers, order books, protocols, and risk checks. Both courses start from zero and have their own explicit prerequisites; Python mastery is not required. Every step has three conceptual checks, one executable assessment, a runnable lesson, and two cards. [Rust scope](docs/sources/rust.md) and [C++ sources and GetCracked mapping](docs/sources/cpp.md) record the course boundaries. GetCracked supplied topic inspiration; its repeated local inventory is not a bank of 700 distinct exercises.
+Rust has 35 topics of two to six skills, covering first programs, Debug output, conversions, Option and Result helpers, queues, ownership and borrowing, UTF-8, data modeling, collections, traits, lifetimes, iterators, Cargo/build concepts, testing, smart pointers, concurrency, async mechanics, unsafe invariants, FFI, algorithms, and a framed-message codec. C++ has 52 four-skill topics, covering values, bits, and control flow, pointers and references, member functions, RAII and moves, pairs, STL, generic code, errors, build/link contracts, concurrency, memory layout, measurement, ring buffers, order books, protocols, and risk checks. Both courses start from zero and have their own explicit prerequisites; Python mastery is not required. Every step has knowledge points with practice questions, one executable assessment, a runnable lesson, and two cards. [Rust scope](docs/sources/rust.md) and [C++ sources and GetCracked mapping](docs/sources/cpp.md) record the course boundaries. GetCracked supplied topic inspiration; its repeated local inventory is not a bank of 700 distinct exercises.
 
 The Learn and Courses pages follow the compact course/XP/task/history and course-sequence/unit patterns of [Math Academy’s official public dashboard screenshot](https://www.mathacademy.com/img/screenshots/student-dashboard.png) and its course page, with independent branding and implementation.
 
 ## Python foundations
 
-The curriculum contains **48 original skills, 192 questions, 48 runnable code exercises, and 96 mastery flashcards**, plus correction cards generated from mistakes. Each skill has three choice/prediction questions and one executable exercise.
+The curriculum contains **48 original skills, 165 knowledge points with 682 practice questions, 48 runnable code exercises, and 96 mastery flashcards**, plus correction cards generated from mistakes. Each skill teaches two to five knowledge points, then one executable exercise.
 
 | Unit                     | Skills                                                                                                                                                                                                                                                     |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -78,7 +80,7 @@ The curriculum contains **48 original skills, 192 questions, 48 runnable code ex
 | Use the standard library | Import a module; Queue and count with collections; Take the smallest item with heapq; Search a sorted list with bisect                                                                                                                                     |
 | Model data with classes  | Define a class; Give objects methods                                                                                                                                                                                                                       |
 
-Skills unlock through their graph prerequisites rather than an arbitrary calendar. Mastery requires a correct answer to **all four distinct questions without a hint**, including a passing Python exercise. Repeating one question cannot unlock a skill or farm learn XP. Hints support practice but do not count as independent mastery evidence.
+Skills unlock through their graph prerequisites rather than an arbitrary calendar. Mastery requires **passing every knowledge point** (two correct answers on different questions) and the Python exercise. Repeating one question cannot unlock a skill or farm learn XP. Hints support practice but do not count as independent mastery evidence.
 
 Initial mastery schedules a review one day later. A due review cycle needs two distinct independent answers, including executable code. Later spacing uses FSRS-6 memory state per learner and skill, with a 90% target retention and a 365-day maximum. Independent review cycles strengthen memory; cycles needing a hint receive Hard rather than Good. Defaults are shared model parameters, not individually fitted weights. A mistake removes the relevant answer evidence and prompts remediation; it does not erase unrelated prerequisite knowledge. XP and streaks reflect practice in the learner's timezone.
 
@@ -200,7 +202,11 @@ src/components/secondary-pages.tsx   Flashcards, settings, account Dialog, Code 
 src/components/ui/              shadcn/ui source components
 src/components/reui/            Free ReUI Stepper and CodeBlock
 src/components/useLearner.ts    Device persistence and account synchronization
-src/lib/curriculum.ts           Original course, unit, skill, question, card registry
+src/lib/curriculum.ts           Catalog types and the full curriculum (server, tests, build only)
+src/lib/catalog-index.ts        Graph index: every skill outline, without lesson content
+src/lib/content/                Per-course lesson content, loaded on demand in the browser
+src/lib/courses/                Course, unit, skill, exercise, and card definitions
+src/lib/knowledge-points/       Knowledge points and their practice questions
 src/lib/lesson-content.ts       Worked-example subgoals and existing-example fallback
 src/lib/learning.ts             Mastery evidence, task selection, review, XP, streaks
 src/lib/dashboard.ts            Task queue, XP summaries, completion estimate, history
@@ -224,7 +230,7 @@ docs/                          Learning, backend, and Anki implementation notes
 
 ## Growing the knowledge graph
 
-Courses, units, and skills have stable IDs. Skills declare a domain, course, unit, and explicit prerequisite IDs; a course lists its member skills. A prerequisite means the skill actually uses that rule or construct: list direct requirements only, never course position. The validator rejects implied edges and teaching orders that run backwards, and tests reject playlist-shaped courses. [Graph rules and audit](docs/knowledge-graph.md) records the rules, metrics, and known content gaps. To add content, add an original catalog module under `src/lib/courses/` and register it in `src/lib/curriculum.ts`, author its questions and cards, and run the graph validator and tests to catch missing references and cycles. Keep published IDs stable so saved progress and Anki notes continue to refer to the same concepts.
+Courses, units, and skills have stable IDs. Skills declare a domain, course, unit, and explicit prerequisite IDs; a course lists its member skills. A prerequisite means the skill actually uses that rule or construct: list direct requirements only, never course position. The validator rejects implied edges and teaching orders that run backwards, and tests reject playlist-shaped courses. [Graph rules and audit](docs/knowledge-graph.md) records the rules, metrics, and known content gaps. To add a course, add an original catalog module under `src/lib/courses/` and its knowledge points under `src/lib/knowledge-points/`, combine them in a content module under `src/lib/content/`, register that module in `src/lib/curriculum.ts` and `src/lib/content/index.ts`, and run the graph validator and tests to catch missing references and cycles. Keep published IDs stable so saved progress and Anki notes continue to refer to the same concepts.
 
 The graph, scheduler, and account-state model support additional programming languages, mathematics, physics, and natural languages. Skills can declare an assessment policy with required review question types and an answer count. Choice-only math or vocabulary skills can be mastered and reviewed without Python; the launched Python course explicitly requires code and choice evidence in its reviews. Learning functions also accept an optional catalog for independent subject registries, with cross-course prerequisites validated as one graph.
 

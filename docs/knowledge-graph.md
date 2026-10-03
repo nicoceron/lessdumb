@@ -12,6 +12,25 @@ Audited October 2, 2026 against each skill's lesson, example, questions, referen
 
 Rust and C++ keep their edges in one explicit map each (`src/lib/courses/rust/prerequisites.ts`, `src/lib/courses/cpp/prerequisites.ts`). Other courses keep edges next to each skill.
 
+## How the browser loads the catalog
+
+The graph and the lessons are loaded separately (CEN-108). Before, every page downloaded the whole curriculum in one 5.5 MB chunk (1.45 MB gzipped).
+
+- **Graph index, always loaded.** `src/lib/catalog-index.ts` exports every course, unit, and skill _outline_ (`SkillOutline`): title, summary, course, unit, prerequisites, order, stages, estimated minutes, assessment policy, and the IDs and types of its knowledge points, questions, and cards, but no lesson text. The scheduler, the graph, Learn, Courses, state merging, and validation run on it synchronously. On the server and in tests the module derives the index from the full curriculum. For the browser bundle, `scripts/catalog-index-plugin.mjs` (registered in `astro.config.mjs`) loads that module at build time, encodes the index as compact JSON (point and card IDs are generated from position, so counts recreate them), and substitutes it. `tests/catalog-index.test.ts` checks that the shipped index equals what the full curriculum derives and that the engine plans an outline exactly as the full skill.
+- **Content, one course at a time.** `src/lib/content/<course>.ts` combines a course module from `src/lib/courses/` with its `*.kp.ts` files. `src/lib/content/index.ts` loads them with dynamic `import()`, one chunk per course, and caches them in memory: `loadCourseContent(courseId)`, `loadSkill(skill)`, `loadedSkill(id)`, and `contentOf(outline)`. The lesson, quiz, and placement sessions wait for the courses they need (`useCourseContent`) and show "Loading the lesson…" meanwhile. Merged account progress can complete a skill's mastery; its cards are queued once that course's content has loaded.
+- **Server-only curriculum.** `src/lib/curriculum.ts` holds the types and the full catalog for the server, the tests, and the build. Browser code may only `import type` from it; the build fails if a client module imports it.
+
+Engine functions are typed on `SkillOutline` and return content when given a full `Skill`: `selectQuestion(progress, outline, mode)` returns a question reference for scheduling, and the same call with a loaded skill returns the question to render.
+
+Course chunks are content-addressed `/_astro/` static assets, served by Cloudflare's asset layer with a one-year immutable cache, and they import only two small shared chunks (`knowledge-points` and `teaching-order`), so a deploy that does not change a course keeps its chunk URL. Gzipped sizes, measured with `npm run build`:
+
+| Download                                       |                Before |  After |
+| ---------------------------------------------- | --------------------: | -----: |
+| First visit to `/` (all JavaScript)            |              1,596 KB | 236 KB |
+| Largest chunk on `/`                           |              1,454 KB |  95 KB |
+| First Python lesson (adds session + course)    |              1,816 KB | 573 KB |
+| Largest course chunk (Competitive Programming) | in the 1,454 KB chunk | 343 KB |
+
 ## Before and after
 
 "Ready" is the median number of available skills in a course when a learner always takes the lowest-order ready skill, with supporting courses already complete.
