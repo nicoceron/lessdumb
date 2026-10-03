@@ -3726,4 +3726,1301 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'math-vectors': [
+    {
+      title: 'Store features as an ordered vector',
+      explanation: [
+        'A vector is an ordered list of numbers, one coordinate per feature. Position carries meaning: in [bedrooms, area, price], the first coordinate is always the number of bedrooms. Two vectors can be compared or combined only when they have the same length and the same coordinate order.',
+      ],
+      example: {
+        code: 'house = [3, 120, 250]\nprint(house[1])\nprint(len(house))',
+        output: '120\n3',
+        explanation:
+          'Position 1 holds the area, and the vector has three coordinates, one per feature.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'x = [5, 0, 2, 7]\nprint(x[2])',
+          ['0', '2', '7', '5'],
+          1,
+          'Positions start at 0, so position 2 is the third coordinate.',
+        ),
+        choose(
+          'Customer vectors store [age, visits, spend]. One customer is [41, 6, 300]. What is the visits coordinate?',
+          ['41', '300', '6', '3'],
+          2,
+          'Visits is the second feature, so it is the second coordinate.',
+        ),
+        choose(
+          'Two feature vectors list the same features in different orders. What must happen before combining them?',
+          [
+            'Sort each vector by value',
+            'Add their lengths',
+            'Nothing, because order is irrelevant',
+            'Put both in the same coordinate order',
+          ],
+          3,
+          'Coordinates are matched by position, so positions must mean the same feature.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'v = [4, 1, 8]\nprint(len(v), v[0] + v[2])',
+          ['3 12', '3 5', '4 12', '2 9'],
+          0,
+          'There are 3 coordinates, and the first and last are 4 and 8.',
+        ),
+      ],
+    },
+    {
+      title: 'Add vectors and scale them',
+      explanation: [
+        'Vectors of the same length add coordinate by coordinate: [1, 2] + [3, 5] = [4, 7]. Multiplying by a number c scales every coordinate: 3 × [1, 2] = [3, 6]. In Python, + on two lists joins them instead, so vector arithmetic needs a comprehension over the positions.',
+      ],
+      example: {
+        code: 'a = [1, 2, 3]\nb = [10, 20, 30]\nprint([a[i] + b[i] for i in range(len(a))])\nprint(a + b)',
+        output: '[11, 22, 33]\n[1, 2, 3, 10, 20, 30]',
+        explanation:
+          'The comprehension adds matching coordinates; list + only concatenates.',
+      },
+      questions: [
+        choose(
+          'What is [2, −1] + [4, 3]?',
+          ['[2, −1, 4, 3]', '[6, 2]', '[8, −3]', '[6, 4]'],
+          1,
+          'Add matching coordinates: 2 + 4 and −1 + 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'v = [1, -2, 4]\nprint([3 * x for x in v])',
+          [
+            '[1, -2, 4, 1, -2, 4, 1, -2, 4]',
+            '[3, -2, 4]',
+            '[3, -6, 12]',
+            '[4, 1, 7]',
+          ],
+          2,
+          'The comprehension multiplies every coordinate by 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'a = [1, 2]\nb = [3, 4]\nprint(a + b)',
+          ['[4, 6]', '10', '[3, 8]', '[1, 2, 3, 4]'],
+          3,
+          'For Python lists, + joins them; it is not vector addition.',
+        ),
+        choose(
+          'What is 2 × [1, 0, −3] − [2, 2, 2]?',
+          ['[0, −2, −8]', '[−1, −2, −5]', '[0, 2, −4]', '[2, 0, −6]'],
+          0,
+          'Scale first to [2, 0, −6], then subtract 2 from each coordinate.',
+        ),
+      ],
+    },
+    {
+      title: 'Compute a dot product',
+      explanation: [
+        'The dot product a · b multiplies corresponding coordinates and adds the products: [2, 3] · [4, 1] = 8 + 3 = 11. The result is a single number, not a vector, and both vectors must have the same length.',
+      ],
+      example: {
+        code: 'a = [2, 3, -1]\nb = [4, 1, 5]\nprint([a[i] * b[i] for i in range(len(a))])\nprint(a[0] * b[0] + a[1] * b[1] + a[2] * b[2])',
+        output: '[8, 3, -5]\n6',
+        explanation:
+          'The coordinate products are 8, 3, and −5, and the dot product is their sum, 6.',
+      },
+      questions: [
+        choose(
+          'What is [1, −2, 3] · [4, 0, −1]?',
+          ['[4, 0, −3]', '7', '1', '−1'],
+          2,
+          '4 + 0 − 3 = 1; the dot product is a single number.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'a = [3, 1]\nb = [2, 5]\nprint([a[i] * b[i] for i in range(len(a))])',
+          ['11', '[6, 5]', '[5, 6]', '[3, 1, 2, 5]'],
+          1,
+          'The comprehension keeps the separate products; it does not add them.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'a = [2, 0, 1]\nb = [1, 4, 3]\nprint(a[0] * b[0] + a[1] * b[1] + a[2] * b[2])',
+          ['[2, 0, 3]', '11', '6', '5'],
+          3,
+          '2 × 1 + 0 × 4 + 1 × 3 = 5.',
+        ),
+        choose(
+          'Why is there no dot product of [1, 2, 3] and [4, 5]?',
+          [
+            'Dot products need sorted vectors',
+            'The lengths differ, so a coordinate has no partner',
+            'The result would be negative',
+            'One vector has an odd length',
+          ],
+          1,
+          'Every coordinate must pair with the matching coordinate of the other vector.',
+        ),
+      ],
+    },
+    {
+      title: 'Read a weighted sum as a dot product',
+      explanation: [
+        "A linear model's score is the dot product of a weight vector with a feature vector, plus an intercept: score = w · x + b. Each weight scales its own coordinate, so swapping two features without swapping their weights changes the score.",
+      ],
+      example: worked(
+        'x = [2, 3] (rooms, floors), w = [50, 20], b = 10\nw · x + b = 2 × 50 + 3 × 20 + 10',
+        '170',
+        'Each feature is multiplied by its own weight before the intercept is added.',
+      ),
+      questions: [
+        choose(
+          'w = [0.5, −1], x = [4, 2], and b = 3. What is w · x + b?',
+          ['1', '5', '3', '−1'],
+          2,
+          '0.5 × 4 − 1 × 2 + 3 = 2 − 2 + 3 = 3.',
+        ),
+        choose(
+          'w = [2, 1]. The features x = [3, 7] are accidentally entered as [7, 3]. How does w · x change?',
+          [
+            'It stays 13',
+            'It goes from 13 to 10',
+            'It goes from 17 to 13',
+            'It goes from 13 to 17',
+          ],
+          3,
+          '2 × 3 + 1 × 7 = 13, but 2 × 7 + 1 × 3 = 17.',
+        ),
+        choose(
+          'A weight is 0. What does its feature contribute to w · x?',
+          ['Its full value', 'Nothing', 'A constant 1', 'The intercept'],
+          1,
+          'Its product with the feature is 0 whatever the feature value.',
+        ),
+        choose(
+          'w = [1, 1, 1] and x = [4, 9, 2]. What is w · x?',
+          ['[4, 9, 2]', '15', '3', '72'],
+          1,
+          'With all weights 1, the dot product adds the coordinates.',
+        ),
+      ],
+    },
+  ],
+  'math-vector-norm': [
+    {
+      title: 'Compute the Euclidean norm',
+      explanation: [
+        'The Euclidean norm ‖v‖ is the length of v: square each coordinate, add the squares, and take the square root. In two dimensions this is the Pythagorean theorem: ‖[3, 4]‖ = √(9 + 16) = 5. It also equals √(v · v). In Python, x ** 0.5 is the square root of x.',
+      ],
+      example: {
+        code: 'v = [6, 8]\ntotal = 0\nfor x in v:\n    total += x * x\nprint(total, total ** 0.5)',
+        output: '100 10.0',
+        explanation:
+          'The squares 36 and 64 add to 100, and the length is its square root, 10.0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'v = [1, 2, 2]\ntotal = 0\nfor x in v:\n    total += x * x\nprint(total ** 0.5)',
+          ['9', '5.0', '3.0', '2.23606797749979'],
+          2,
+          'The squares sum to 9, and √9 = 3.0. Adding the coordinates would wrongly give 5.',
+        ),
+        choose(
+          'What is ‖[−5, 12]‖?',
+          ['7', '17', '169', '13'],
+          3,
+          '√(25 + 144) = √169 = 13.',
+        ),
+        choose(
+          'Which vector has norm 0?',
+          ['[0, 0, 0]', '[1, −1]', '[0, 1]', '[−3, 3]'],
+          0,
+          'Only the zero vector has length 0; squares of nonzero coordinates are positive.',
+        ),
+        choose(
+          'v = [3, 4] has norm 5. What is v · v?',
+          ['5', '25', '7', '12'],
+          1,
+          'v · v = 9 + 16 = 25, the square of the norm.',
+        ),
+      ],
+    },
+    {
+      title: 'Scale vectors and make unit vectors',
+      explanation: [
+        'Multiplying a vector by c multiplies its length by |c|: ‖cv‖ = |c| ‖v‖, and a length is never negative. Dividing a nonzero vector by its own norm gives a unit vector of length 1 pointing the same way, which keeps the direction and discards the size.',
+      ],
+      example: {
+        code: 'v = [3, 4]\nlength = 5\nprint([x / length for x in v])',
+        output: '[0.6, 0.8]',
+        explanation:
+          'Each coordinate is divided by the length 5; the result has length √(0.36 + 0.64) = 1.',
+      },
+      questions: [
+        choose(
+          '‖v‖ = 2. What is ‖5v‖?',
+          ['7', '10', '2', '25'],
+          1,
+          'Scaling by 5 multiplies the length by 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'v = [0, -6]\nlength = 6\nprint([x / length for x in v])',
+          ['[0, -1]', '[0.0, 1.0]', '[0.0, -1.0]', '[-6.0, 0.0]'],
+          2,
+          'Dividing keeps each sign, and / always produces floats.',
+        ),
+        choose(
+          'What is the unit vector in the direction of [5, 12]?',
+          ['[5/17, 12/17]', '[1, 1]', '[0.5, 0.5]', '[5/13, 12/13]'],
+          3,
+          'The norm is 13, so divide each coordinate by 13.',
+        ),
+        choose(
+          '‖v‖ = 3. What is ‖−2v‖?',
+          ['6', '−6', '1', '9'],
+          0,
+          'The length is multiplied by |−2| = 2; it cannot be negative.',
+        ),
+      ],
+    },
+    {
+      title: 'Compare L1 and L2 norms',
+      explanation: [
+        'The L2 (Euclidean) norm squares coordinates before adding, while the L1 norm adds their absolute values: for [3, −4], L1 = 7 and L2 = 5. Ridge regularization penalizes the squared L2 norm of the weights, Σwᵢ², which punishes one large weight heavily; lasso penalizes the L1 norm, Σ|wᵢ|, which tends to push some weights exactly to 0.',
+      ],
+      example: worked(
+        'w = [2, −1, 0]\nL1 = |2| + |−1| + |0|\nsquared L2 = 2² + (−1)² + 0²',
+        'L1 = 3, squared L2 = 5, L2 = √5 ≈ 2.24',
+        'Absolute values and squares both remove signs, but squares weigh large coordinates more.',
+      ),
+      questions: [
+        choose(
+          'What is the L1 norm of [−2, 5, −1]?',
+          ['2', '8', '30', '√30'],
+          1,
+          '2 + 5 + 1 = 8.',
+        ),
+        choose(
+          'What is the squared L2 norm of the weights [3, −1]?',
+          ['4', '2', '10', '√10'],
+          2,
+          '9 + 1 = 10.',
+        ),
+        choose(
+          'The weights [4, 0] and [2, 2] have the same L1 norm. Which has the larger squared L2 penalty?',
+          ['[2, 2]', 'They are equal', 'Neither has a penalty', '[4, 0]'],
+          3,
+          '16 for [4, 0] versus 8 for [2, 2]: squaring punishes one large weight more.',
+        ),
+        choose(
+          'Which norm does a lasso penalty use?',
+          [
+            'L1, the sum of absolute values',
+            'Squared L2, the sum of squares',
+            'The largest coordinate',
+            'The number of coordinates',
+          ],
+          0,
+          'Lasso adds the sum of absolute weights; ridge adds the sum of squares.',
+        ),
+      ],
+    },
+  ],
+  'math-distance': [
+    {
+      title: 'Compute a Euclidean distance',
+      explanation: [
+        'The distance between points a and b is the norm of their difference, ‖a − b‖: subtract coordinate by coordinate, square, add, and take the square root. The order of subtraction does not matter, because each difference is squared.',
+      ],
+      example: {
+        code: 'a = [2, 7]\nb = [5, 3]\ntotal = 0\nfor i in range(len(a)):\n    total += (a[i] - b[i]) ** 2\nprint(total ** 0.5)',
+        output: '5.0',
+        explanation:
+          'The differences −3 and 4 square to 9 and 16, which add to 25; the distance is 5.0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'a = [1, 1, 1]\nb = [3, 2, 3]\ntotal = 0\nfor i in range(len(a)):\n    total += (a[i] - b[i]) ** 2\nprint(total ** 0.5)',
+          ['9', '5.0', '3.0', '-3.0'],
+          2,
+          'The squared differences 4, 1, and 4 add to 9, and √9 = 3.0.',
+        ),
+        choose(
+          'What is the distance between [0, 6] and [8, 0]?',
+          ['14', '10', '100', '2'],
+          1,
+          '√(64 + 36) = √100 = 10.',
+        ),
+        choose(
+          'dist(a, b) = 4. What is dist(b, a)?',
+          ['−4', '16', '0', '4'],
+          3,
+          'Distance is symmetric because each difference is squared.',
+        ),
+        choose(
+          'The distance between two points is 0. What follows?',
+          [
+            'One point is the origin',
+            'The points are identical',
+            'They are perpendicular',
+            'They have equal norms but differ',
+          ],
+          1,
+          'A sum of squares is 0 only when every difference is 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Find the nearest point with squared distances',
+      explanation: [
+        'To find which of several points is nearest, compare squared distances and skip the square root: the square root keeps the order of nonnegative numbers, so the smallest squared distance belongs to the nearest point. This is how k-means assigns each point to its closest centroid.',
+      ],
+      example: {
+        code: 'point = [1, 2]\ncenters = [[0, 0], [2, 2], [5, 1]]\nprint([(point[0] - c[0]) ** 2 + (point[1] - c[1]) ** 2 for c in centers])',
+        output: '[5, 1, 17]',
+        explanation:
+          'The second center has the smallest squared distance, so it is the nearest.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'point = [3, 0]\ncenters = [[0, 0], [3, 4], [4, 1]]\nprint([(point[0] - c[0]) ** 2 + (point[1] - c[1]) ** 2 for c in centers])',
+          ['[3, 4, 1.4]', '[9, 16, 2]', '[3, 5, 2]', '[9, 25, 2]'],
+          1,
+          'The squared distances are 9 + 0, 0 + 16, and 1 + 1.',
+        ),
+        choose(
+          'The squared distances to centers A, B, and C are 12, 7, and 30. Which center is nearest?',
+          ['A', 'C', 'B', 'Take square roots first to tell'],
+          2,
+          'The smallest squared distance marks the nearest center.',
+        ),
+        choose(
+          'Why can a nearest-center search skip the square root?',
+          [
+            'Squared distances are always smaller',
+            'Square roots of distances are undefined',
+            'Centers always have unit length',
+            'The square root keeps the order of nonnegative numbers',
+          ],
+          3,
+          'If one squared distance is smaller, so is its square root.',
+        ),
+        choose(
+          'A point has squared distance 9 to A and 16 to B. What are the actual distances?',
+          ['3 and 4', '81 and 256', '4.5 and 8', '9 and 16'],
+          0,
+          'Take the square root of each squared distance.',
+        ),
+      ],
+    },
+    {
+      title: 'Scale features before measuring distance',
+      explanation: [
+        'A distance adds squared differences from every feature, so a feature measured in large units dominates. Income in dollars, with differences in the thousands, swamps age in years, with differences in the tens, unless both are standardized first, for example as z-scores.',
+      ],
+      example: worked(
+        'a = [30 years, 50,000 dollars], b = [60 years, 51,000 dollars]\nsquared differences: 30² = 900 and 1,000² = 1,000,000',
+        'income contributes over 99.9% of the squared distance',
+        'A 30-year age gap is nearly invisible next to a 1,000-dollar income gap.',
+      ),
+      questions: [
+        choose(
+          'Feature 1 is recorded in kilometers and feature 2 in millimeters. Which dominates unscaled distances?',
+          ['Kilometers', 'Millimeters', 'Both equally', 'Neither'],
+          1,
+          'The same physical change produces far larger numbers in millimeters.',
+        ),
+        choose(
+          'A height feature changes from meters to centimeters. What happens to its contribution to a squared distance?',
+          [
+            'It grows 100 times',
+            'It is unchanged',
+            'It grows 10,000 times',
+            'It shrinks 100 times',
+          ],
+          2,
+          'Each difference grows 100 times, so its square grows 100² times.',
+        ),
+        choose(
+          'What is a sound step before clustering customers by age and income?',
+          [
+            'Sort the customers by income',
+            'Drop the age feature',
+            'Square the income values',
+            'Standardize both features',
+          ],
+          3,
+          'Standardizing puts both features on comparable scales.',
+        ),
+        choose(
+          'After standardizing, two points differ by 3 in one feature and 4 in the other. What is their distance?',
+          ['7', '5', '25', '12'],
+          1,
+          '√(9 + 16) = 5.',
+        ),
+      ],
+    },
+  ],
+  'math-cosine-similarity': [
+    {
+      title: 'Compute cosine similarity',
+      explanation: [
+        'Cosine similarity divides the dot product by both lengths: cos(a, b) = (a · b) / (‖a‖ ‖b‖). The result is the cosine of the angle between the vectors, and it always lies between −1 and 1.',
+      ],
+      example: {
+        code: 'a = [1, 0]\nb = [3, 4]\ndot = a[0] * b[0] + a[1] * b[1]\nprint(dot / (1 * 5))',
+        output: '0.6',
+        explanation:
+          'a · b = 3, ‖a‖ = 1, and ‖b‖ = 5, so the cosine similarity is 3 / 5 = 0.6.',
+      },
+      questions: [
+        choose(
+          'a · b = 6, ‖a‖ = 2, and ‖b‖ = 5. What is the cosine similarity?',
+          ['60', '0.6', '3', '1.2'],
+          1,
+          '6 / (2 × 5) = 0.6.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'a = [2, 2]\nb = [0, 3]\ndot = a[0] * b[0] + a[1] * b[1]\nnorm_a = (a[0] ** 2 + a[1] ** 2) ** 0.5\nnorm_b = (b[0] ** 2 + b[1] ** 2) ** 0.5\nprint(dot / (norm_a * norm_b))',
+          ['6', '0.5', '0.7071067811865475', '1.0'],
+          2,
+          '6 / (√8 × 3) = 1 / √2 ≈ 0.707: an angle of 45°.',
+        ),
+        choose(
+          'What is the cosine similarity of [4, 0] and [0, −2]?',
+          ['−1', '1', '0', '−8'],
+          2,
+          'The dot product is 0, so the vectors are perpendicular.',
+        ),
+        choose(
+          'What is the cosine similarity of [1, 2, 2] and [2, 4, 4]?',
+          ['2', '0.5', '9', '1'],
+          3,
+          'The second vector is twice the first, so they point the same way.',
+        ),
+      ],
+    },
+    {
+      title: 'Interpret aligned, orthogonal, and opposite vectors',
+      explanation: [
+        'Cosine similarity 1 means the vectors point the same way, 0 means they are perpendicular (orthogonal), and −1 means they point in opposite directions. Two nonzero vectors are orthogonal exactly when their dot product is 0, because the norms in the denominator are positive.',
+      ],
+      example: worked(
+        '[1, 2] · [2, −1] = 2 − 2 = 0\n[1, 2] · [−2, −4] = −2 − 8 = −10 = −(√5 × √20)',
+        'the first pair is orthogonal; the second pair points in opposite directions, with cosine −1',
+        '[−2, −4] is −2 times [1, 2], so it points exactly the other way.',
+      ),
+      questions: [
+        choose(
+          'Which pair of vectors is orthogonal?',
+          [
+            '[2, 3] and [4, 6]',
+            '[2, 3] and [3, −2]',
+            '[1, 0] and [1, 1]',
+            '[2, 3] and [−2, −3]',
+          ],
+          1,
+          '2 × 3 + 3 × (−2) = 0.',
+        ),
+        choose(
+          'The cosine similarity of two vectors is −1. What is true of them?',
+          [
+            'They are orthogonal',
+            'They are identical',
+            'They point in opposite directions',
+            'One of them is zero',
+          ],
+          2,
+          'A cosine of −1 means an angle of 180°.',
+        ),
+        choose(
+          'For which k is [k, 2] orthogonal to [3, 6]?',
+          ['4', '−1', '1', '−4'],
+          3,
+          '3k + 12 = 0 gives k = −4.',
+        ),
+        choose(
+          'Two nonzero vectors have a positive dot product. What can you say about the angle between them?',
+          [
+            'It is less than 90°',
+            'It is exactly 90°',
+            'It is more than 90°',
+            'It is 180°',
+          ],
+          0,
+          'A positive dot product gives a positive cosine.',
+        ),
+      ],
+    },
+    {
+      title: 'Compare direction rather than size',
+      explanation: [
+        'Scaling a vector by a positive number changes its dot products and its length by the same factor, so cosine similarity does not change. That makes it useful when only the mix of coordinates matters, such as the proportions of words in two documents of very different lengths. The dot product, by contrast, grows with length.',
+      ],
+      example: worked(
+        'document A word counts [2, 1, 0], document B [20, 10, 0]\ncos(A, B) = 50 / (√5 × √500)\nA · B = 50 but A · A = 5',
+        'cos(A, B) = 1: the same topic mix, despite very different dot products',
+        'B is ten times A, so their directions match exactly.',
+      ),
+      questions: [
+        choose(
+          'cos(a, b) = 0.4. What is cos(3a, b)?',
+          ['1.2', '0.4', '0.13', '1'],
+          1,
+          'The factor 3 cancels between the dot product and ‖3a‖.',
+        ),
+        choose(
+          'Document A has word counts [1, 3] and B has [10, 30]. What is their cosine similarity?',
+          ['0.1', '10', '1', '0'],
+          2,
+          'B is ten times A, so they point the same way.',
+        ),
+        choose(
+          'Which comparison ignores how long two documents are?',
+          [
+            'The dot product of their word counts',
+            'The Euclidean distance between their counts',
+            'The difference in their total counts',
+            'The cosine similarity of their word counts',
+          ],
+          3,
+          'Only cosine similarity is unchanged by positive scaling.',
+        ),
+        choose(
+          'cos(a, b) = 0.5. What is cos(−a, b)?',
+          ['−0.5', '0.5', '1.5', '0'],
+          0,
+          'Negating a flips the sign of the dot product but not the norms.',
+        ),
+      ],
+    },
+  ],
+  'math-matrices': [
+    {
+      title: 'Read the shape and entries of a matrix',
+      explanation: [
+        'A matrix with m rows and n columns has shape m × n. In math notation A_ij is the entry in row i and column j, counting from 1. A data matrix stores one observation per row and one feature per column.',
+      ],
+      example: worked(
+        'A = [[4, 0, 7],\n     [1, 9, 2]]',
+        'shape 2 × 3; A₁₃ = 7; A₂₁ = 1',
+        'Rows are counted first, then columns.',
+      ),
+      questions: [
+        choose(
+          'A matrix has 3 rows and 5 columns. What is its shape?',
+          ['5 × 3', '3 × 5', '15', '8'],
+          1,
+          'Shape lists rows, then columns.',
+        ),
+        choose(
+          'A = [[1, 2], [3, 4], [5, 6]]. What is A₃₂, the entry in row 3 and column 2, counting from 1?',
+          ['5', '4', '6', '3'],
+          2,
+          'Row 3 is [5, 6], and its second entry is 6.',
+        ),
+        choose(
+          'A data matrix has shape 1,000 × 8. How many observations does it hold?',
+          ['8', '8,000', '1,008', '1,000'],
+          3,
+          'Rows are observations; the 8 columns are features.',
+        ),
+        choose(
+          'In a data matrix, what does one row represent?',
+          [
+            'One observation',
+            'One feature across all observations',
+            'The mean of each feature',
+            'The target values',
+          ],
+          0,
+          'Each row is one observation’s feature vector.',
+        ),
+      ],
+    },
+    {
+      title: 'Index a matrix stored as lists of rows',
+      explanation: [
+        'In Python, a matrix can be a list of row lists. A[i] is row i, and A[i][j] is the entry in row i and column j, with positions counting from 0. len(A) is the number of rows, and len(A[0]) is the number of columns.',
+      ],
+      example: {
+        code: 'A = [[4, 0, 7], [1, 9, 2]]\nprint(A[1])\nprint(A[0][2])\nprint(len(A), len(A[0]))',
+        output: '[1, 9, 2]\n7\n2 3',
+        explanation:
+          'A[1] is the second row, A[0][2] is the first row’s third entry, and the shape is 2 × 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'A = [[5, 6], [7, 8], [9, 10]]\nprint(A[2][1])',
+          ['8', '9', '10', '7'],
+          2,
+          'A[2] is the third row [9, 10], and position 1 holds 10.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'A = [[5, 6], [7, 8], [9, 10]]\nprint(len(A), len(A[0]))',
+          ['2 3', '3 2', '6 2', '3 3'],
+          1,
+          'There are 3 row lists, each with 2 entries.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'A = [[1, 2, 3], [4, 5, 6]]\nprint([row[0] for row in A])',
+          ['[1, 2, 3]', '[4, 5, 6]', '[1, 2]', '[1, 4]'],
+          3,
+          'Taking position 0 of each row collects the first column.',
+        ),
+        choose(
+          'Which Python expression gives the math entry A₂₁, row 2 and column 1?',
+          ['A[1][0]', 'A[2][1]', 'A[0][1]', 'A[1][2]'],
+          0,
+          'Python counts from 0, so row 2 is index 1 and column 1 is index 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Transpose a matrix',
+      explanation: [
+        'The transpose Aᵀ turns each row into a column: (Aᵀ)_ij = A_ji. An m × n matrix becomes n × m, and transposing twice gives back A. A square matrix with A = Aᵀ is symmetric: it mirrors across its diagonal. In Python, building column j as a list for each j gives the transpose.',
+      ],
+      example: {
+        code: 'A = [[1, 2, 3], [4, 5, 6]]\nprint([[A[i][j] for i in range(len(A))] for j in range(len(A[0]))])',
+        output: '[[1, 4], [2, 5], [3, 6]]',
+        explanation:
+          'For each column position j, the inner comprehension collects that entry from every row.',
+      },
+      questions: [
+        choose(
+          'What is the transpose of [[1, 2], [3, 4]]?',
+          [
+            '[[4, 3], [2, 1]]',
+            '[[1, 3], [2, 4]]',
+            '[[2, 1], [4, 3]]',
+            '[[1, 2], [3, 4]]',
+          ],
+          1,
+          'The first row of the transpose is the first column, [1, 3].',
+        ),
+        choose(
+          'X has shape 100 × 4. What is the shape of Xᵀ?',
+          ['100 × 4', '4 × 4', '4 × 100', '100 × 100'],
+          2,
+          'Transposing swaps the numbers of rows and columns.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'A = [[1, 2], [3, 4], [5, 6]]\nprint([[A[i][j] for i in range(len(A))] for j in range(len(A[0]))])',
+          [
+            '[[1, 2], [3, 4], [5, 6]]',
+            '[[2, 1], [4, 3], [6, 5]]',
+            '[[1, 4], [2, 5], [3, 6]]',
+            '[[1, 3, 5], [2, 4, 6]]',
+          ],
+          3,
+          'The 3 × 2 matrix becomes 2 × 3; each new row is an old column.',
+        ),
+        choose(
+          'Which matrix is symmetric?',
+          [
+            '[[1, 7], [7, 2]]',
+            '[[1, 7], [2, 1]]',
+            '[[0, 1], [−1, 0]]',
+            '[[1, 2, 3], [2, 1, 3]]',
+          ],
+          0,
+          'It is square and its off-diagonal entries match: A₁₂ = A₂₁ = 7.',
+        ),
+      ],
+    },
+  ],
+  'math-matrix-vector': [
+    {
+      title: 'Multiply a matrix by a vector row by row',
+      explanation: [
+        'Ax is the vector of dot products of each row of A with x. A must have as many columns as x has coordinates, and the result has one entry per row of A.',
+      ],
+      example: {
+        code: 'A = [[1, 2], [3, 4], [0, -1]]\nx = [5, 6]\nprint([row[0] * x[0] + row[1] * x[1] for row in A])',
+        output: '[17, 39, -6]',
+        explanation: 'Each row is dotted with x: 5 + 12, 15 + 24, and 0 − 6.',
+      },
+      questions: [
+        choose(
+          'What is [[1, 0], [0, 1]] times [7, 3]?',
+          ['[3, 7]', '[7, 3]', '[10, 10]', '[7, 0]'],
+          1,
+          'Row [1, 0] picks 7 and row [0, 1] picks 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'A = [[2, 1], [0, 3]]\nx = [4, -1]\nprint([row[0] * x[0] + row[1] * x[1] for row in A])',
+          ['[8, -3]', '[2, 3]', '[7, -3]', '[8, 0, 4, -3]'],
+          2,
+          '2 × 4 + 1 × (−1) = 7 and 0 × 4 + 3 × (−1) = −3.',
+        ),
+        choose(
+          'What is [[1, 2, 3]] times [1, 1, 1]?',
+          ['[1, 2, 3]', '[3]', '6 × 3', '[6]'],
+          3,
+          'The single row gives a single dot product: 1 + 2 + 3.',
+        ),
+        choose(
+          'What is [[3, −1], [2, 2]] times [1, 2]?',
+          ['[1, 6]', '[3, 4]', '[5, 3]', '[1, 4]'],
+          0,
+          '3 − 2 = 1 and 2 + 4 = 6.',
+        ),
+      ],
+    },
+    {
+      title: 'Check shapes before multiplying',
+      explanation: [
+        'An m × n matrix times an n-coordinate vector gives an m-coordinate vector: the inner sizes must match. If x has the wrong length, some row entry has no partner coordinate and the product is undefined, which usually signals a feature-order or data-preparation bug.',
+      ],
+      example: worked(
+        'A: 4 × 3, x: 3 coordinates\nA: 4 × 3, x: 4 coordinates',
+        'Ax has 4 coordinates; the second product is undefined',
+        'Each of the 4 rows needs exactly 3 partner coordinates.',
+      ),
+      questions: [
+        choose(
+          'A has shape 5 × 2 and x has 2 coordinates. How many coordinates does Ax have?',
+          ['2', '5', '10', '7'],
+          1,
+          'One dot product per row of A.',
+        ),
+        choose(
+          'A has shape 3 × 6. For which x is Ax defined?',
+          [
+            'x with 3 coordinates',
+            'x with 9 coordinates',
+            'x with 6 coordinates',
+            'Any x',
+          ],
+          2,
+          'x needs one coordinate per column of A.',
+        ),
+        choose(
+          'X has shape 200 × 5 and w has 4 coordinates. What is Xw?',
+          [
+            'A 200-coordinate vector',
+            'A 5-coordinate vector',
+            'A 4-coordinate vector',
+            'Undefined, because 5 ≠ 4',
+          ],
+          3,
+          'Each row has 5 entries but w has only 4.',
+        ),
+        choose(
+          'A is 1 × 3 and x has 3 coordinates. What is Ax?',
+          [
+            'A single number, as a 1-coordinate vector',
+            'A 3-coordinate vector',
+            'A 1 × 3 matrix',
+            'Undefined',
+          ],
+          0,
+          'One row gives one dot product.',
+        ),
+      ],
+    },
+    {
+      title: 'Predict for many observations at once',
+      explanation: [
+        "Stack the observations as the rows of X and put the weights in w. Then Xw gives every observation's weighted sum in one product, and Xw + b adds the intercept to each entry. This is how a linear model predicts for a whole dataset.",
+      ],
+      example: worked(
+        'X = [[1, 2], [3, 0], [0, 1]], w = [10, 5], b = 1\nXw = [10 + 10, 30 + 0, 0 + 5]',
+        'predictions Xw + b = [21, 31, 6]',
+        'Each row of X is one observation, so each entry is one prediction.',
+      ),
+      questions: [
+        choose(
+          'X = [[2, 1], [0, 4]], w = [3, −1], and b = 0. What are the predictions Xw + b?',
+          ['[6, −4]', '[5, −4]', '[5, 4]', '[3, 3]'],
+          1,
+          '6 − 1 = 5 and 0 − 4 = −4.',
+        ),
+        choose(
+          'X = [[1, 1], [2, 3]], w = [2, 2], and b = 10. What is the second prediction?',
+          ['10', '14', '20', '15'],
+          2,
+          '2 × 2 + 3 × 2 + 10 = 20.',
+        ),
+        choose(
+          'A model has 3 weights and predicts for 50 observations. What is the shape of X?',
+          ['3 × 50', '50 × 50', '3 × 3', '50 × 3'],
+          3,
+          'One row per observation and one column per weight.',
+        ),
+        choose(
+          'In Xw + b, how many times is the intercept b added?',
+          [
+            'Once per observation',
+            'Once in total',
+            'Once per feature',
+            'Never',
+          ],
+          0,
+          'Every prediction gets its own copy of the intercept.',
+        ),
+      ],
+    },
+  ],
+  'math-matrix-multiplication': [
+    {
+      title: 'Check shapes for a matrix product',
+      explanation: [
+        'AB is defined when the number of columns of A equals the number of rows of B. For shapes (m × n)(n × p), the inner n must match, and the result is m × p.',
+      ],
+      example: worked(
+        '(2 × 3)(3 × 4)\n(3 × 4)(2 × 3)',
+        '2 × 4; undefined because 4 ≠ 2',
+        'Compare the inner sizes; the outer sizes give the result.',
+      ),
+      questions: [
+        choose(
+          'A is 5 × 2 and B is 2 × 7. What is the shape of AB?',
+          ['2 × 2', '5 × 7', '7 × 5', 'Undefined'],
+          1,
+          'The inner 2s match, leaving 5 × 7.',
+        ),
+        choose(
+          'A and B are both 3 × 4. Is AB defined?',
+          ['Yes, 3 × 4', 'Yes, 4 × 4', 'No, because 4 ≠ 3', 'Yes, 3 × 3'],
+          2,
+          'A has 4 columns but B has 3 rows.',
+        ),
+        choose(
+          'X is 32 × 10 and W is 10 × 16. What shape is XW?',
+          [
+            '10 rows and 10 columns',
+            '32 rows and 10 columns',
+            '16 rows and 32 columns',
+            '32 rows and 16 columns',
+          ],
+          3,
+          '(32 × 10)(10 × 16) = 32 × 16.',
+        ),
+        choose(
+          'A is 4 × 1 and B is 1 × 4. What is the shape of AB?',
+          ['4 × 4', '1 × 1', '4 × 1', 'Undefined'],
+          0,
+          'The inner 1s match, leaving the outer 4 × 4.',
+        ),
+      ],
+    },
+    {
+      title: 'Compute an entry of a matrix product',
+      explanation: [
+        'The entry of AB in row i and column j is row i of A dotted with column j of B. Computing every entry gives the full product, and each column of AB is A times the matching column of B.',
+      ],
+      example: {
+        code: 'A = [[1, 2], [3, 4]]\nB = [[5, 6], [7, 8]]\nprint(A[0][0] * B[0][1] + A[0][1] * B[1][1])',
+        output: '22',
+        explanation:
+          'Row 1 of A, [1, 2], dotted with column 2 of B, [6, 8], gives 6 + 16 = 22. The full product is [[19, 22], [43, 50]].',
+      },
+      questions: [
+        choose(
+          'A = [[1, 2], [3, 4]] and B = [[5, 6], [7, 8]]. What is the entry of AB in row 2, column 1?',
+          ['50', '43', '19', '23'],
+          1,
+          'Row [3, 4] dotted with column [5, 7]: 15 + 28 = 43.',
+        ),
+        predictOutput(
+          'This program computes the row 2, column 2 entry of AB. What does it print?',
+          'A = [[2, 0], [1, 3]]\nB = [[1, 4], [2, 5]]\nprint(A[1][0] * B[0][1] + A[1][1] * B[1][1])',
+          ['8', '15', '19', '7'],
+          2,
+          'Row [1, 3] dotted with column [4, 5]: 4 + 15 = 19.',
+        ),
+        choose(
+          'What is [[1, 1], [0, 1]] times [[2, 0], [3, 1]]?',
+          [
+            '[[2, 0], [0, 1]]',
+            '[[2, 1], [3, 2]]',
+            '[[3, 1], [3, 1]]',
+            '[[5, 1], [3, 1]]',
+          ],
+          3,
+          'Row [1, 1] gives 2 + 3 and 0 + 1; row [0, 1] gives 3 and 1.',
+        ),
+        choose(
+          'Which expression describes column j of AB?',
+          [
+            'A times column j of B',
+            'Row j of A times B',
+            'Column j of A times column j of B',
+            'The sum of column j of A',
+          ],
+          0,
+          'Every entry of column j uses column j of B with a row of A.',
+        ),
+      ],
+    },
+    {
+      title: 'Respect order and transposes in products',
+      explanation: [
+        'Matrix multiplication is not commutative: AB and BA usually differ, and one can be undefined while the other is defined. Transposing a product reverses the order: (AB)ᵀ = BᵀAᵀ. A dense layer computes XW with X as batch × inputs and W as inputs × outputs; WX would not match the shapes.',
+      ],
+      example: worked(
+        'A = [[0, 1], [0, 0]], B = [[0, 0], [1, 0]]\nAB = [[1, 0], [0, 0]]\nBA = [[0, 0], [0, 1]]',
+        'AB ≠ BA',
+        'Even square matrices of the same shape usually give different products in the two orders.',
+      ),
+      questions: [
+        choose(
+          'A is 2 × 3 and B is 3 × 2. What are the shapes of AB and BA?',
+          ['Both 2 × 2', '2 × 2 and 3 × 3', 'Both 3 × 3', '2 × 3 and 3 × 2'],
+          1,
+          '(2 × 3)(3 × 2) = 2 × 2, while (3 × 2)(2 × 3) = 3 × 3.',
+        ),
+        choose(
+          'Which expression equals (AB)ᵀ?',
+          ['AᵀBᵀ', 'BA', 'BᵀAᵀ', 'ABᵀ'],
+          2,
+          'Transposing a product reverses the order of its factors.',
+        ),
+        choose(
+          'X is 64 × 20 and W is 20 × 10. Which product gives the layer output?',
+          ['WX', 'XᵀW', 'WᵀX', 'XW'],
+          3,
+          '(64 × 20)(20 × 10) = 64 × 10: one output row per example.',
+        ),
+        choose(
+          'AB = BA for two particular square matrices. What does this show?',
+          [
+            'These two happen to commute; most pairs do not',
+            'Matrix multiplication is always commutative',
+            'A and B must be equal',
+            'Both must be zero',
+          ],
+          0,
+          'Some pairs commute, such as a matrix and the identity, but it is not the general rule.',
+        ),
+      ],
+    },
+  ],
+  'math-identity-inverse': [
+    {
+      title: 'Multiply by the identity',
+      explanation: [
+        'The identity matrix I has 1s on its diagonal and 0s elsewhere. It changes nothing: AI = IA = A and Ix = x, just as multiplying a number by 1 does. The matrix cI scales every vector by c.',
+      ],
+      example: {
+        code: 'I = [[1, 0], [0, 1]]\nx = [7, -2]\nprint([row[0] * x[0] + row[1] * x[1] for row in I])',
+        output: '[7, -2]',
+        explanation: 'Each row of I picks out one coordinate of x, so Ix = x.',
+      },
+      questions: [
+        choose(
+          'What is the 3 × 3 identity matrix times [4, 5, 6]?',
+          ['[1, 1, 1]', '[4, 5, 6]', '[15]', '[6, 5, 4]'],
+          1,
+          'The identity leaves every vector unchanged.',
+        ),
+        choose(
+          'A is 2 × 2. What is IA?',
+          ['I', 'Aᵀ', 'A', '2A'],
+          2,
+          'Multiplying by the identity on either side returns A.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'M = [[3, 0], [0, 3]]\nx = [2, -1]\nprint([row[0] * x[0] + row[1] * x[1] for row in M])',
+          ['[2, -1]', '[5, 2]', '[6, 3]', '[6, -3]'],
+          3,
+          'M = 3I scales every coordinate by 3.',
+        ),
+        choose(
+          'Which matrix is the 2 × 2 identity?',
+          [
+            '[[1, 0], [0, 1]]',
+            '[[1, 1], [1, 1]]',
+            '[[0, 1], [1, 0]]',
+            '[[1, 0], [0, 0]]',
+          ],
+          0,
+          'Ones on the diagonal, zeros elsewhere.',
+        ),
+      ],
+    },
+    {
+      title: 'Compute a 2 × 2 determinant and inverse',
+      explanation: [
+        'For A = [[a, b], [c, d]], the determinant is ad − bc. When it is not 0, A⁻¹ = (1 / (ad − bc)) [[d, −b], [−c, a]]: swap the diagonal entries, negate the off-diagonal entries, and divide by the determinant. Check by multiplying: A⁻¹A = I.',
+      ],
+      example: worked(
+        'A = [[4, 7], [2, 6]]\ndet = 4 × 6 − 7 × 2 = 10\nA⁻¹ = (1/10) [[6, −7], [−2, 4]]',
+        'A⁻¹ = [[0.6, −0.7], [−0.2, 0.4]]',
+        'Check one entry of A⁻¹A: 0.6 × 4 − 0.7 × 2 = 1.',
+      ),
+      questions: [
+        choose(
+          'What is the determinant of [[3, 1], [4, 2]]?',
+          ['10', '2', '−2', '5'],
+          1,
+          '3 × 2 − 1 × 4 = 2.',
+        ),
+        choose(
+          'What is the inverse of [[2, 0], [0, 4]]?',
+          [
+            '[[−2, 0], [0, −4]]',
+            '[[4, 0], [0, 2]]',
+            '[[0.5, 0], [0, 0.25]]',
+            '[[2, 0], [0, 4]]',
+          ],
+          2,
+          'A diagonal matrix is inverted by taking the reciprocal of each diagonal entry.',
+        ),
+        choose(
+          'A = [[1, 2], [1, 3]] has determinant 1. What is A⁻¹?',
+          [
+            '[[1, −2], [−1, 3]]',
+            '[[3, 2], [1, 1]]',
+            '[[−3, 2], [1, −1]]',
+            '[[3, −2], [−1, 1]]',
+          ],
+          3,
+          'Swap the diagonal to 3 and 1, negate the off-diagonal to −2 and −1, and divide by 1.',
+        ),
+        choose(
+          'A is invertible. What is A⁻¹A?',
+          ['A', 'I', '0', 'A²'],
+          1,
+          'An inverse undoes A, leaving the identity.',
+        ),
+      ],
+    },
+    {
+      title: 'Recognize when no inverse exists',
+      explanation: [
+        'A square matrix has no inverse when its determinant is 0. Then A sends some nonzero vector to the zero vector, so different inputs share an output and the effect cannot be undone. In a 2 × 2 matrix this happens exactly when one row is a multiple of the other.',
+      ],
+      example: worked(
+        'A = [[1, 2], [2, 4]]\ndet = 1 × 4 − 2 × 2 = 0\nA[2, −1] = [2 − 2, 4 − 4]',
+        'A[2, −1] = [0, 0], so A has no inverse',
+        'The second row is twice the first, and A flattens the direction [2, −1] to zero.',
+      ),
+      questions: [
+        choose(
+          'Which matrix has no inverse?',
+          [
+            '[[2, 1], [1, 2]]',
+            '[[3, 6], [1, 2]]',
+            '[[1, 0], [0, 5]]',
+            '[[0, 2], [3, 0]]',
+          ],
+          1,
+          '3 × 2 − 6 × 1 = 0; the first row is 3 times the second.',
+        ),
+        choose(
+          'For which k does [[k, 4], [1, 2]] have no inverse?',
+          ['4', '0', '2', '−2'],
+          2,
+          'The determinant 2k − 4 is 0 when k = 2.',
+        ),
+        choose(
+          'A sends a nonzero vector v to [0, 0]. What follows?',
+          [
+            'A is the identity',
+            'A is symmetric',
+            'v must be the zero vector',
+            'A has no inverse',
+          ],
+          3,
+          'v and the zero vector share the output 0, so no matrix can undo A.',
+        ),
+        choose(
+          'Ax = b has exactly one solution, x = A⁻¹b. What must be true of A?',
+          [
+            'Its determinant is not 0',
+            'It is symmetric',
+            'All its entries are positive',
+            'It is the identity',
+          ],
+          0,
+          'The inverse exists exactly when the determinant is nonzero.',
+        ),
+      ],
+    },
+  ],
+  'math-eigenvectors': [
+    {
+      title: 'Check whether a vector is an eigenvector',
+      explanation: [
+        'v is an eigenvector of A when Av is a multiple of v: Av = λv for some number λ, the eigenvalue. To check, compute Av and see whether every coordinate is the same multiple of the matching coordinate of v. The zero vector never counts as an eigenvector.',
+      ],
+      example: {
+        code: 'A = [[2, 1], [1, 2]]\nv = [1, -1]\nprint([row[0] * v[0] + row[1] * v[1] for row in A])',
+        output: '[1, -1]',
+        explanation:
+          'Av equals v itself, so v is an eigenvector with eigenvalue 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'A = [[3, 1], [0, 2]]\nv = [1, 0]\nprint([row[0] * v[0] + row[1] * v[1] for row in A])',
+          ['[1, 0]', '[3, 0]', '[3, 1]', '[0, 2]'],
+          1,
+          'Av = [3, 0] = 3v, so [1, 0] is an eigenvector with eigenvalue 3.',
+        ),
+        choose(
+          'A = [[2, 1], [1, 2]]. Is [1, 2] an eigenvector?',
+          [
+            'Yes, with eigenvalue 4',
+            'Yes, with eigenvalue 2',
+            'No, because A[1, 2] = [4, 5] is not a multiple of [1, 2]',
+            'Only after normalizing it',
+          ],
+          2,
+          '4 = 4 × 1 but 5 ≠ 4 × 2, so A turns the vector.',
+        ),
+        choose(
+          'Av = [6, −3] for v = [2, −1]. What is the eigenvalue?',
+          ['−3', '6', '2', '3'],
+          3,
+          '[6, −3] = 3 × [2, −1].',
+        ),
+        choose(
+          'Why is the zero vector excluded as an eigenvector?',
+          [
+            'A0 = λ0 holds for every λ, so it identifies nothing',
+            'It has no coordinates',
+            'A cannot multiply it',
+            'Its norm is 1',
+          ],
+          0,
+          'Every matrix sends 0 to 0, so it would fit every eigenvalue.',
+        ),
+      ],
+    },
+    {
+      title: 'Find the eigenvalues of a 2 × 2 matrix',
+      explanation: [
+        'Av = λv means (A − λI)v = 0 for a nonzero v, so A − λI must have no inverse: det(A − λI) = 0. For a 2 × 2 matrix this is a quadratic equation in λ. A diagonal matrix’s eigenvalues are its diagonal entries, with the coordinate directions as eigenvectors.',
+      ],
+      example: worked(
+        'A = [[4, 1], [2, 3]]\ndet(A − λI) = (4 − λ)(3 − λ) − 1 × 2\n= λ² − 7λ + 10 = (λ − 5)(λ − 2)',
+        'λ = 5 or λ = 2',
+        'Subtract λ from the diagonal, take the determinant, and solve for the λ that makes it 0.',
+      ),
+      questions: [
+        choose(
+          'What are the eigenvalues of [[7, 0], [0, −2]]?',
+          ['5 and 0', '7 and −2', '7 and 0', '0 and −2'],
+          1,
+          'A diagonal matrix only stretches each coordinate direction by its diagonal entry.',
+        ),
+        choose(
+          'A = [[3, 1], [1, 3]]. Which equation gives its eigenvalues?',
+          ['3λ − 1 = 0', '(3 − λ)² + 1 = 0', '(3 − λ)² − 1 = 0', 'λ² − 9 = 0'],
+          2,
+          'det(A − λI) = (3 − λ)(3 − λ) − 1 × 1.',
+        ),
+        choose(
+          'det(A − λI) = (5 − λ)(1 − λ). What are the eigenvalues?',
+          ['5 and −1', '6 and 0', '4 and 1', '5 and 1'],
+          3,
+          'The product is 0 when λ = 5 or λ = 1.',
+        ),
+        choose(
+          'Why must det(A − λI) be 0 at an eigenvalue?',
+          [
+            'Every determinant is 0',
+            'A − λI sends a nonzero v to 0, so it has no inverse',
+            'λ must equal 0',
+            'A must be the identity',
+          ],
+          1,
+          'A matrix that collapses a nonzero vector has determinant 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Read a covariance matrix',
+      explanation: [
+        'For features x₁, …, xₖ, the covariance matrix Σ holds Var(xᵢ) in diagonal position i and cov(xᵢ, xⱼ) in position (i, j). Since cov(xᵢ, xⱼ) = cov(xⱼ, xᵢ), Σ is symmetric and k × k. For a centered data matrix X with n rows, Σ = XᵀX / n.',
+      ],
+      example: worked(
+        'centered features: x₁ = [−1, 1], x₂ = [−3, 3]\nVar(x₁) = 1, Var(x₂) = 9, cov(x₁, x₂) = (3 + 3) / 2 = 3',
+        'Σ = [[1, 3], [3, 9]]',
+        'Variances sit on the diagonal and the shared covariance fills both off-diagonal positions.',
+      ),
+      questions: [
+        choose(
+          'Σ = [[4, −1], [−1, 9]]. What is the variance of the second feature?',
+          ['−1', '4', '9', '3'],
+          2,
+          'The second diagonal entry is Var(x₂).',
+        ),
+        choose(
+          'Σ = [[4, −1], [−1, 9]]. What is the covariance of the two features?',
+          ['4', '−1', '9', '13'],
+          1,
+          'Off-diagonal entries are covariances.',
+        ),
+        choose(
+          'Why is every covariance matrix symmetric?',
+          [
+            'All its variances are equal',
+            'Its entries are positive',
+            'It is the identity',
+            'cov(xᵢ, xⱼ) = cov(xⱼ, xᵢ)',
+          ],
+          3,
+          'The products of paired deviations are the same in either order.',
+        ),
+        choose(
+          'A dataset has 6 features. What is the shape of its covariance matrix?',
+          ['6 × 6', 'n × 6', '6 × 1', '36 × 1'],
+          0,
+          'There is one row and one column per feature.',
+        ),
+      ],
+    },
+    {
+      title: 'Read principal components from eigenvalues',
+      explanation: [
+        'The eigenvectors of a covariance matrix are perpendicular directions, and each eigenvalue is the variance of the data along its eigenvector. PCA orders the eigenvectors by eigenvalue, so the first principal component is the direction of greatest variance. A component’s share of the total variance is its eigenvalue divided by the sum of all eigenvalues, and that sum equals the sum of the feature variances.',
+      ],
+      example: worked(
+        'Σ = [[5, 2], [2, 2]]\nΣ[2, 1] = [12, 6] = 6[2, 1]\nΣ[1, −2] = [1, −2] = 1[1, −2]\n[2, 1] · [1, −2] = 0',
+        'the first component [2, 1] explains 6 / 7 ≈ 86% of the variance',
+        'The eigenvalues 6 and 1 add up to 7, the sum of the diagonal variances 5 and 2.',
+      ),
+      questions: [
+        choose(
+          'A covariance matrix has eigenvalues 8, 1.5, and 0.5. What share of the variance do the first two components keep?',
+          ['80%', '95%', '15%', '90%'],
+          1,
+          '(8 + 1.5) / 10 = 0.95.',
+        ),
+        choose(
+          'Σ = [[3, 0], [0, 7]]. Which direction is the first principal component?',
+          ['[1, 0]', '[1, 1]', '[0, 1]', '[3, 7]'],
+          2,
+          'The second feature has the larger variance, 7, along [0, 1].',
+        ),
+        choose(
+          'The feature variances are 4 and 6. What is the sum of the covariance matrix’s eigenvalues?',
+          ['24', '2', '5', '10'],
+          3,
+          'The eigenvalues add up to the sum of the diagonal variances.',
+        ),
+        choose(
+          'Two principal directions of a covariance matrix are [1, 1] and [1, −1]. What is their dot product?',
+          ['0', '1', '2', '−1'],
+          0,
+          'Principal directions are perpendicular.',
+        ),
+      ],
+    },
+  ],
 };

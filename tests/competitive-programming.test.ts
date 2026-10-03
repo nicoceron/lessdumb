@@ -12,6 +12,7 @@ import {
   getSkillState,
   isUnlocked,
   nextTask,
+  selectQuestion,
   type Progress,
 } from '../src/lib/learning';
 import { createState, recordLearningAnswer } from '../src/lib/state';
@@ -85,7 +86,11 @@ describe('competitive programming in the shared knowledge graph', () => {
       master(createState().progress, 'cp-geometry'),
       'cp-greedy',
     );
-    const ancestor = skillById['math-vectors'].questions[0];
+    const ancestor = selectQuestion(
+      progress,
+      skillById['math-vectors'],
+      'review',
+    );
     progress = applyAttempt(
       progress,
       {
@@ -112,16 +117,7 @@ describe('competitive programming in the shared knowledge graph', () => {
         NOW + DAY_MS,
       ),
     ).toThrow('prerequisites');
-    const restored = applyAttempt(
-      progress,
-      {
-        skillId: 'math-vectors',
-        questionId: ancestor.id,
-        correct: true,
-        mode: 'learn',
-      },
-      NOW + DAY_MS,
-    );
+    const restored = masterSkill(progress, 'math-vectors', NOW + DAY_MS);
     expect(isUnlocked(restored, 'cp-geometry')).toBe(true);
     expect(getSkillState(restored, 'cp-greedy')).toEqual(
       getSkillState(progress, 'cp-greedy'),
