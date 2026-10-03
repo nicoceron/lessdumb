@@ -373,7 +373,7 @@ export const multistepProblems: MultistepModule = {
             '$v$ is twice as long as $u$. Why is their cosine similarity still 1?',
             [
               'Cosine compares direction, and $v$ points the same way',
-              'Cosine ignores length only when the lengths match',
+              'Cosine ignores length only when the two lengths match exactly',
               'Both vectors have a zero in the third position',
               'A dot product can never be larger than 1',
             ],

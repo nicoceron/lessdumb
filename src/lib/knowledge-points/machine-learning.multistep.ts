@@ -3,6 +3,7 @@ import {
   part,
   typeNumber,
   typeOutput,
+  typeText,
   type MultistepModule,
 } from './authoring';
 
@@ -76,7 +77,7 @@ export const multistepProblems: MultistepModule = {
               'Overfitting: training error is far below validation error',
               'Underfitting: both errors are high and close together',
               'A good fit: training error is the lowest of the three',
-              'Nothing yet: errors cannot be compared across data sets',
+              'Nothing yet: errors on different data sets cannot be compared',
             ],
             0,
             'Without a penalty the model fits the training data closely (0.10) but does much worse on new data (2.40).',
@@ -279,7 +280,7 @@ export const multistepProblems: MultistepModule = {
             'Why does the output layer use 3 units with softmax?',
             [
               'Each example belongs to exactly one of three classes',
-              'Each example has three independent yes or no labels',
+              'Each example has three independent yes-or-no labels to predict',
               'The model predicts three unbounded numbers at once',
               'Softmax keeps the three outputs from summing to 1',
             ],
@@ -289,16 +290,10 @@ export const multistepProblems: MultistepModule = {
         ),
         part(
           'ml-keras-workflow-kp2',
-          choose(
-            'Which loss fits labels stored as class indices?',
-            [
-              '`"sparse_categorical_crossentropy"`',
-              '`"categorical_crossentropy"`',
-              '`"binary_crossentropy"`',
-              '`"mean_squared_error"`',
-            ],
-            0,
-            'The sparse version takes an integer class per example; the plain categorical loss expects one-hot rows.',
+          typeText(
+            'Labels are stored as class indices. Type the name of the Keras loss that fits them.',
+            ['sparse_categorical_crossentropy'],
+            'The sparse version takes an integer class per example; `"categorical_crossentropy"` expects one-hot rows instead.',
           ),
         ),
         part(

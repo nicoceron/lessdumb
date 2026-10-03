@@ -193,7 +193,7 @@ def schedule(n, edges):
             'Why must the cache key hold both `r` and `c`?',
             [
               'Cells in one row can have different numbers of routes',
-              'A dictionary key must always be a pair of numbers',
+              'A dictionary key must always be a pair of numbers in Python',
               'The key must change on every call to save time',
               'The row alone would make the cache too large',
             ],
@@ -346,7 +346,7 @@ def islands(grid):
             'Why is a cell added to `seen` when it is pushed rather than when it is popped?',
             [
               'So no cell is pushed twice while it waits on the stack',
-              'So the stack pops the cells in reading order',
+              'So the stack pops the island’s cells in reading order, top first',
               'So water cells are never added to the stack',
               'So the fill stops at the edge of the map',
             ],
@@ -405,7 +405,7 @@ graph = {0: [1, 2], 1: [3], 2: [3, 4], 3: [5], 4: [5], 5: []}`,
             [
               'Its first distance is final: later discoveries are no shorter',
               'Vertex 2 is processed before vertex 1, so it wins',
-              'Each vertex stores the larger of its two distances',
+              'Each vertex keeps the larger of the two distances it was given',
               'The second discovery is the one that sets the distance',
             ],
             0,

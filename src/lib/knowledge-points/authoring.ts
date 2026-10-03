@@ -153,6 +153,24 @@ export function part(point: string, question: AnswerDraft): PartDraft {
 }
 
 /**
+ * Authoring helper for a multistep part that asks exactly what the setup's
+ * program prints. Catalog tests run the setup's code and compare.
+ */
+export function typeSetupOutput(
+  prompt: string,
+  output: string,
+  explanation: string,
+): Omit<TextQuestion, 'id'> {
+  return {
+    type: 'text',
+    prompt,
+    answers: [output],
+    explanation,
+    checksOutput: true,
+  };
+}
+
+/**
  * A question generator: one concrete question of the same type as the
  * authored question it varies, built with the same helpers (`typeNumber`,
  * `typeOutput`, `choose`, …). Draw every number from `r`, never from

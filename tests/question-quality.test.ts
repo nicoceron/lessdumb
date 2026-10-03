@@ -21,16 +21,31 @@ interface Asked<Q> {
 }
 type Item = Asked<ChoiceQuestion>;
 
-/** Authored questions, one entry each: the course-wide shares count these. */
+/**
+ * Authored questions, one entry each: the course-wide shares count these.
+ * Multistep parts (CEN-163) are questions too; a part without code of its
+ * own is about its setup's code, which it is shown with.
+ */
 const authored: Asked<ChoiceQuestion | TypedQuestion>[] = skills.flatMap(
-  (skill) =>
-    (skill.knowledgePoints ?? []).flatMap((point) =>
+  (skill) => [
+    ...(skill.knowledgePoints ?? []).flatMap((point) =>
       point.questions.flatMap((question) =>
         question.type === 'code'
           ? []
           : [{ courseId: skill.courseId, skillId: skill.id, question }],
       ),
     ),
+    ...(skill.multistep ?? []).flatMap((problem) =>
+      problem.parts.map((part) => ({
+        courseId: skill.courseId,
+        skillId: skill.id,
+        question: {
+          ...part,
+          code: part.code ?? problem.setup.code,
+        } as ChoiceQuestion | TypedQuestion,
+      })),
+    ),
+  ],
 );
 /**
  * A generated question is asked as its variants, so every per-question rule
@@ -154,6 +169,18 @@ const plain = (text: string) =>
   collapse(text.toLowerCase().replace(/[.,;:!?'’]/g, ' '));
 
 describe('knowledge point question quality', () => {
+  it('checks multistep parts, choice parts included', () => {
+    const parts = authored.filter(({ question }) => question.id.includes('#p'));
+    expect(parts.length).toBeGreaterThan(200);
+    expect(parts.filter(isChoice).length).toBeGreaterThanOrEqual(50);
+    // Their own choices pass the same giveaway limits as a group.
+    const choices = parts.filter(isChoice);
+    const share = (tell: (question: ChoiceQuestion) => boolean) =>
+      choices.filter((item) => tell(item.question)).length / choices.length;
+    expect(share(isLongest)).toBeLessThanOrEqual(MAX_TELL_SHARE);
+    expect(share(isShortest)).toBeLessThanOrEqual(MAX_TELL_SHARE);
+  });
+
   it('reports and limits how often the correct choice is the longest or shortest', () => {
     const rows = lengthTells();
     console.table(
