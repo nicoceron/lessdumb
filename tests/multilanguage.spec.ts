@@ -7,6 +7,7 @@ import {
   type CodeLanguage,
 } from '../src/lib/curriculum';
 import {
+  isMastered,
   isUnlocked,
   MAX_RECENT_ATTEMPTS,
   selectQuestion,
@@ -16,8 +17,16 @@ import {
   recordLearningAnswer,
   type LearnerState,
 } from '../src/lib/state';
+import { findQuestion } from '../src/lib/lesson-plan';
+import { earnedXp, lessonXp, REVIEW_XP } from '../src/lib/xp';
 import { signUp } from './helpers/accounts';
 import { replaceCode as fillCode } from './helpers/editor';
+import {
+  answerChoice,
+  continueLesson,
+  feedback,
+  shownQuestion,
+} from './helpers/lesson';
 
 const baseURL = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 test.use({ baseURL });
@@ -58,17 +67,8 @@ async function runAndCheck(page: Page) {
 }
 
 async function answer(page: Page, question: Question) {
-  if (question.type === 'choice') {
-    await page
-      .getByRole('button', {
-        name: `${String.fromCharCode(65 + question.answer)} ${question.choices[question.answer]}`,
-        exact: true,
-      })
-      .click();
-    await page
-      .getByRole('button', { name: 'Check answer', exact: true })
-      .click();
-  } else {
+  if (question.type === 'choice') await answerChoice(page, question);
+  else {
     await fillCode(page, question.solution);
     await runAndCheck(page);
   }
@@ -108,24 +108,22 @@ for (const language of ['rust', 'cpp'] as const) {
     await page.goto(`/learn?skill=${first.id}`);
     await expect(page.getByText('Step 1 of 4', { exact: true })).toBeVisible();
     await page
-      .getByRole('button', { name: 'Let’s try it', exact: true })
+      .getByRole('button', { name: 'Start lesson', exact: true })
       .click();
-    for (const question of first.questions.filter(
-      (item) => item.type === 'choice',
-    )) {
-      await answer(page, question);
-      await expect(
-        page.getByText('That’s a small win.', { exact: true }),
-      ).toBeVisible();
-      await page.getByRole('button', { name: 'Continue', exact: true }).click();
-    }
+    // Two correct answers on distinct variants pass each knowledge point.
+    for (const point of first.knowledgePoints!)
+      for (let index = 0; index < 2; index++) {
+        await answer(page, await shownQuestion(page, point.questions));
+        await expect(feedback(page)).toContainText('Correct');
+        await continueLesson(page);
+      }
+    const pointAnswers = first.knowledgePoints!.length * 2;
     await expect
-      .poll(
-        async () =>
-          (await cloud(page)).progress.skills[first.id]?.questionIds.length,
-      )
-      .toBe(3);
+      .poll(async () => (await cloud(page)).progress.skills[first.id]?.attempts)
+      .toBe(pointAnswers);
     const partial = await cloud(page);
+    // Points stay provisional until the code exercise completes the lesson.
+    expect(partial.progress.skills[first.id].questionIds).toEqual([]);
     expect(partial.progress.skills[first.id].memory).toBeUndefined();
     expect(isUnlocked(partial.progress, second.id)).toBe(false);
     const exercise = first.questions.find((item) => item.type === 'code')!;
@@ -171,25 +169,21 @@ for (const language of ['rust', 'cpp'] as const) {
         : '#include <cstdlib>\nint solve(int) { std::exit(0); }',
     );
     await runAndCheck(page);
-    await expect(
-      page.getByText('A useful mistake. Let’s work through it.', {
-        exact: true,
-      }),
-    ).toBeVisible({ timeout: 45_000 });
+    await expect(feedback(page)).toContainText('Incorrect', {
+      timeout: 45_000,
+    });
     await expect
       .poll(async () => (await cloud(page)).progress.skills[first.id]?.attempts)
-      .toBe(4);
-    expect((await cloud(page)).progress.skills[first.id].mastery).toBe(0.75);
+      .toBe(pointAnswers + 1);
+    expect((await cloud(page)).progress.skills[first.id].mastery).toBe(0);
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
 
     // The real provider must reject unfinished work, then accept the actual contract.
     await fillCode(page, exercise.starterCode);
     await runAndCheck(page);
-    await expect(
-      page.getByText('A useful mistake. Let’s work through it.', {
-        exact: true,
-      }),
-    ).toBeVisible({ timeout: 45_000 });
+    await expect(feedback(page)).toContainText('Incorrect', {
+      timeout: 45_000,
+    });
     await expect
       .poll(
         async () =>
@@ -199,9 +193,12 @@ for (const language of ['rust', 'cpp'] as const) {
       .toBe(1);
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
     await answer(page, exercise);
-    await expect(
-      page.getByText('Skill mastered. A new connection made.', { exact: true }),
-    ).toBeVisible({ timeout: 45_000 });
+    // Two failed runs cost one XP each from the lesson's award.
+    const lessonReward = earnedXp(lessonXp(first), 2, true);
+    await expect(feedback(page)).toContainText(
+      `Lesson complete · +${lessonReward} XP`,
+      { timeout: 45_000 },
+    );
     await expect
       .poll(async () => (await cloud(page)).progress.skills[first.id]?.mastery)
       .toBe(1);
@@ -213,7 +210,7 @@ for (const language of ['rust', 'cpp'] as const) {
       )
       .toBe(2);
     const acquired = await cloud(page);
-    expect(acquired.progress.totalXp).toBe(45);
+    expect(acquired.progress.totalXp).toBe(lessonReward);
     expect(acquired.progress.skills[first.id].memory?.algorithm).toBe('fsrs-6');
     expect(acquired.progress.skills[first.id].intervalDays).toBe(1);
     expect(isUnlocked(acquired.progress, second.id)).toBe(true);
@@ -244,11 +241,15 @@ for (const language of ['rust', 'cpp'] as const) {
     await page.clock.setFixedTime(due);
     await page.goto(`/learn?skill=${first.id}&mode=review`);
     await expect(
-      page.getByText('Spaced review', { exact: true }),
+      page
+        .locator('.lesson-session-stats')
+        .getByText('Review', { exact: true }),
     ).toBeVisible();
     let stored = acquired;
     const types: Question['type'][] = [];
-    for (let index = 0; index < 2; index++) {
+    const learned = acquired.progress.skills[first.id].attempts;
+    // One fresh variant of each point, then the compiled exercise.
+    for (let index = 0; index < 3; index++) {
       const question = selectQuestion(stored.progress, first, 'review');
       types.push(question.type);
       await answer(page, question);
@@ -256,9 +257,9 @@ for (const language of ['rust', 'cpp'] as const) {
         .poll(
           async () => (await cloud(page)).progress.skills[first.id].attempts,
         )
-        .toBe(7 + index);
+        .toBe(learned + 1 + index);
       stored = await cloud(page);
-      if (index === 0) {
+      if (index < 2) {
         expect(stored.progress.skills[first.id].memory).toEqual(
           acquired.progress.skills[first.id].memory,
         );
@@ -267,12 +268,14 @@ for (const language of ['rust', 'cpp'] as const) {
           .click();
       }
     }
-    expect(new Set(types)).toEqual(new Set(['code', 'choice']));
+    expect(types).toEqual(['choice', 'choice', 'code']);
     expect(stored.progress.skills[first.id].reviewCount).toBe(1);
     expect(stored.progress.skills[first.id].memory!.reps).toBe(
       acquired.progress.skills[first.id].memory!.reps + 1,
     );
-    expect(stored.progress.totalXp).toBe(58);
+    expect(stored.progress.totalXp).toBe(
+      lessonReward + earnedXp(REVIEW_XP, 0, true),
+    );
     expect(stored.cards).toHaveLength(3);
     await page.reload();
     expect((await cloud(page)).progress.skills[first.id].memory).toEqual(
@@ -332,12 +335,21 @@ test('a full catalog with mistake cards survives guest reload, account migration
   let state = createState();
   state.activeCourseId = 'cpp';
   const remaining = new Map(skills.map((skill) => [skill.id, skill]));
+  // Every question a lesson serves is missed once, then answered.
+  const missed = new Set<string>();
   while (remaining.size) {
     const skill = [...remaining.values()].find((item) =>
       isUnlocked(state.progress, item.id),
     );
     if (!skill) throw new Error('Unreachable prerequisite path.');
-    for (const question of skill.questions) {
+    for (
+      let index = 0;
+      !isMastered(state.progress, skill.id) && index < 64;
+      index++
+    ) {
+      const question = selectQuestion(state.progress, skill, 'learn');
+      expect(findQuestion(skill, question.id)).toBe(question);
+      missed.add(question.id);
       for (const correct of [false, true])
         state = recordLearningAnswer(state, {
           skillId: skill.id,
@@ -350,10 +362,9 @@ test('a full catalog with mistake cards survives guest reload, account migration
     }
     remaining.delete(skill.id);
   }
-  const cardCount = skills.reduce(
-    (sum, skill) => sum + skill.questions.length + skill.flashcards.length,
-    0,
-  );
+  const cardCount =
+    missed.size +
+    skills.reduce((sum, skill) => sum + skill.flashcards.length, 0);
   expect(state.cards).toHaveLength(cardCount);
   expect(state.progress.attempts).toHaveLength(MAX_RECENT_ATTEMPTS);
   expect(Buffer.byteLength(JSON.stringify(state))).toBeGreaterThan(

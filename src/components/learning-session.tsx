@@ -353,16 +353,16 @@ export default function LearningSession({
         <h1>
           {params.get('mode') === 'review'
             ? 'Your reviews are all caught up.'
-            : 'Nothing else is ready right now.'}
+            : 'A foundation worth building on.'}
         </h1>
         <p>
           {sessionCount
-            ? `${sessionCount} answers. ${sessionXp} XP earned this session.`
+            ? `${sessionCount} learning checks. ${sessionXp} XP earned this session.`
             : 'Come back when your next spaced review is due.'}
         </p>
         <Button asChild variant="default">
           <a href="/graph">
-            See your knowledge graph <ArrowRight size={17} />
+            See your growing graph <ArrowRight size={17} />
           </a>
         </Button>
         <Button asChild variant="link" className="h-auto justify-start p-0">
@@ -377,7 +377,7 @@ export default function LearningSession({
       <div className="empty-state">
         <LockKeyhole />
         <h1>{skill ? 'Build the foundation first.' : 'Skill not found.'}</h1>
-        <p>Master this skill’s prerequisites to unlock it.</p>
+        <p>Prerequisites give every new idea somewhere to land.</p>
         <Button asChild variant="default">
           <a href="/graph">
             Explore the knowledge graph <ArrowRight size={18} />
