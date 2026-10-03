@@ -1291,6 +1291,174 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'ml-overfitting': [
+    {
+      title: 'Compare training and validation error',
+      explanation: [
+        'Training error measures how well a model fits the rows it learned from; validation error measures how well it predicts rows it never saw. The gap between them shows how much of the fit fails to carry over.',
+        'A small training error with a much larger validation error is overfitting. High error on both, with a small gap, is underfitting. Good generalization means a low validation error with a small gap.',
+      ],
+      example: {
+        code: 'train = 0.4\nvalidation = 6.2\nprint(round(validation - train, 1))',
+        output: '5.8',
+        explanation:
+          'The model fits its training rows almost perfectly but misses new rows badly. A gap this large relative to the training error is the signature of overfitting.',
+      },
+      questions: [
+        choose(
+          'Training MSE is 0.3 and validation MSE is 8.1. What is the clearest diagnosis?',
+          [
+            'Underfitting',
+            'Overfitting',
+            'Good generalization',
+            'Too little training error',
+          ],
+          1,
+          'The model fits seen rows far better than unseen ones, so its fit does not carry over.',
+        ),
+        choose(
+          'Training MSE is 9.6 and validation MSE is 9.9, while predicting the mean gives 10.2. What does this suggest?',
+          [
+            'Overfitting',
+            'A leaked validation set',
+            'Underfitting',
+            'A perfect fit',
+          ],
+          2,
+          'Both errors are high and barely beat a constant baseline, so the model misses real structure.',
+        ),
+        predictOutput(
+          'Each pair is (training MSE, validation MSE). What does this program print?',
+          'models = {"shallow": (5.1, 5.4), "medium": (2.2, 2.6), "deep": (0.1, 7.9)}\nfor name, (train, val) in models.items():\n    print(name, round(val - train, 1))',
+          [
+            'shallow 0.3\nmedium 0.4\ndeep 7.8',
+            'shallow 5.4\nmedium 2.6\ndeep 7.9',
+            'shallow 0.3\nmedium 0.4\ndeep 0.1',
+            'shallow -0.3\nmedium -0.4\ndeep -7.8',
+          ],
+          0,
+          'Each line subtracts training error from validation error. The deep model has by far the largest gap.',
+        ),
+        choose(
+          'Which model from the previous table generalizes best?',
+          [
+            'shallow, because its gap is smallest',
+            'deep, because its training error is lowest',
+            'medium, because its validation error is lowest',
+            'All three equally',
+          ],
+          2,
+          'Generalization is judged by error on unseen rows; medium has the lowest validation error with a small gap.',
+        ),
+      ],
+    },
+    {
+      title: 'Read a learning curve',
+      explanation: [
+        'A learning curve records training and validation error as the training set grows. With few rows a flexible model can fit them all, so training error starts low and validation error high.',
+        'More rows make memorizing harder: training error rises a little and validation error falls, so the gap narrows. If both curves level off at a high error, the model underfits and more data will not help; a simpler or richer model is the fix, not more rows.',
+      ],
+      example: {
+        code: 'sizes = [50, 100, 200, 400]\ntrain = [0.5, 1.1, 1.6, 1.8]\nval = [6.0, 4.1, 2.9, 2.3]\nfor size, t, v in zip(sizes, train, val):\n    print(size, round(v - t, 1))',
+        output: '50 5.5\n100 3.0\n200 1.3\n400 0.5',
+        explanation:
+          'The gap shrinks from 5.5 to 0.5 as data grows: the extra rows stop the model from fitting details that do not generalize.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'train = [6.8, 7.0, 7.1]\nval = [7.4, 7.3, 7.3]\ngaps = [round(v - t, 1) for t, v in zip(train, val)]\nprint(gaps)',
+          [
+            '[7.4, 7.3, 7.3]',
+            '[0.6, 0.3, 0.2]',
+            '[-0.6, -0.3, -0.2]',
+            '[0.2, 0.3, 0.6]',
+          ],
+          1,
+          'Each gap subtracts training error from validation error at the same training size.',
+        ),
+        choose(
+          'In the previous curve, both errors stay near 7 while the gap is already small. What will doubling the data most likely do?',
+          [
+            'Cut validation error in half',
+            'Cause overfitting',
+            'Change little, because the model underfits',
+            'Raise training error above validation error',
+          ],
+          2,
+          'When both curves level off high with a small gap, the model lacks capacity; more rows do not add it.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'train = [0.2, 0.6, 0.9, 1.2]\nval = [5.0, 3.1, 2.0, 1.5]\nprint(round(val[-1] - train[-1], 1) < round(val[0] - train[0], 1))',
+          ['False', '0.3', '4.8', 'True'],
+          3,
+          'The last gap is 0.3 and the first is 4.8, so the curve narrows as data grows.',
+        ),
+        choose(
+          'A learning curve shows a large gap that is still shrinking at the largest training size. Which step is most promising?',
+          [
+            'Collect more training rows',
+            'Evaluate on the training rows instead',
+            'Make the model more flexible',
+            'Remove the validation set',
+          ],
+          0,
+          'A shrinking gap means more data is still helping the model generalize.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose complexity on validation data',
+      explanation: [
+        'More complexity always lowers training error, so training error cannot choose a model. Pick the complexity, such as a tree depth or polynomial degree, with the lowest validation error.',
+        'Keep the test set for one final check after all choices are made. Choosing by test error turns the test set into another validation set, and the final score becomes optimistic.',
+      ],
+      example: {
+        code: 'train = [3.0, 1.5, 0.4, 0.0]\nval = [3.4, 2.1, 2.6, 5.3]\nbest = 0\nfor i, error in enumerate(val):\n    if error < val[best]:\n        best = i\nprint(best, train[best])',
+        output: '1 1.5',
+        explanation:
+          'Position 1 has the lowest validation error. The most complex model, at position 3, has zero training error but generalizes worst.',
+      },
+      questions: [
+        predictOutput(
+          'Each pair is (model, validation MSE). What does this program print?',
+          'results = [("linear", 2.8), ("tree", 2.1), ("forest", 2.3)]\nbest_name, best_error = results[0]\nfor name, error in results:\n    if error < best_error:\n        best_name, best_error = name, error\nprint(best_name)',
+          ['linear', 'forest', 'tree', '2.1'],
+          2,
+          'The loop keeps the name with the lowest validation error, which is the tree at 2.1.',
+        ),
+        choose(
+          'Why not pick the depth with the lowest training error?',
+          [
+            'Training error is always zero',
+            'Deeper models always have lower training error, even when they generalize worse',
+            'Training error cannot be computed for trees',
+            'It would leak the test set',
+          ],
+          1,
+          'Training error keeps falling with complexity, so it would always choose the most complex model.',
+        ),
+        choose(
+          'You tried 30 depths and chose the one with the best test error. What is wrong with reporting that test error?',
+          [
+            'Nothing, the test set was never trained on',
+            'Test error is always higher than validation error',
+            'It is optimistic, because the test set was used to choose',
+            'Depth cannot be tuned',
+          ],
+          2,
+          'Selecting on the test set fits the choice to it, so it no longer measures performance on new data.',
+        ),
+        choose(
+          'Validation MSE by degree is 4.0, 2.2, 2.4, 3.9 for degrees 1 to 4. Which degree should you keep?',
+          ['Degree 4', 'Degree 1', 'Degree 3', 'Degree 2'],
+          3,
+          'Degree 2 has the lowest validation error; higher degrees fit training rows better but generalize worse.',
+        ),
+      ],
+    },
+  ],
   'ml-regularization': [
     {
       title: 'Diagnose overfitting and underfitting',
