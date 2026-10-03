@@ -15,6 +15,8 @@ import {
 import { createState, type LearnerState } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
 import { replaceCode } from './helpers/editor';
+import { answerChoice as submitChoice } from './helpers/lesson';
+import { masterSkill } from './helpers/mastery';
 
 const origin = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 const password = 'granular-engine-browser-123';
@@ -32,13 +34,7 @@ function master(state: LearnerState, id: string, at: number) {
   if (isMastered(state.progress, id)) return;
   const skill = skillById[id];
   skill.prerequisites.forEach((parent) => master(state, parent, at));
-  for (const question of skill.questions) {
-    state.progress = applyAttempt(
-      state.progress,
-      { skillId: id, questionId: question.id, correct: true, mode: 'learn' },
-      at,
-    );
-  }
+  state.progress = masterSkill(state.progress, id, at);
 }
 
 async function save(
@@ -55,14 +51,7 @@ async function save(
 }
 
 async function answerChoice(page: Page, question: ChoiceQuestion) {
-  await expect(page.locator('.question-paper h1')).toHaveText(question.prompt);
-  await page
-    .getByRole('button', {
-      name: `${String.fromCharCode(65 + question.answer)} ${question.choices[question.answer]}`,
-      exact: true,
-    })
-    .click();
-  await page.getByRole('button', { name: 'Check answer', exact: true }).click();
+  await submitChoice(page, question);
 }
 
 async function answerCode(
@@ -133,14 +122,11 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
   for (const question of atomic.questions) {
     if (question.type === 'choice') {
       await answerChoice(page, question);
-      await expect(feedback).toContainText('That’s a small win.');
+      await expect(feedback).toContainText('Correct');
       await page.getByRole('button', { name: 'Continue', exact: true }).click();
     } else {
       await answerCode(page, question, 'pass');
-      await expect(feedback).toContainText(
-        'A useful mistake. Let’s work through it.',
-        { timeout: 60_000 },
-      );
+      await expect(feedback).toContainText('Incorrect', { timeout: 60_000 });
       await expect
         .poll(async () => (await cloud(page)).state?.cards.length)
         .toBe(1);
@@ -153,10 +139,9 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
       });
       await page.getByRole('button', { name: 'Continue', exact: true }).click();
       await answerCode(page, question, question.solution);
-      await expect(feedback).toContainText(
-        'Skill mastered. A new connection made.',
-        { timeout: 60_000 },
-      );
+      await expect(feedback).toContainText('Lesson complete', {
+        timeout: 60_000,
+      });
     }
   }
   await expect
@@ -230,7 +215,9 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
     await reviewPage.clock.setFixedTime(reviewTime);
     await reviewPage.goto('/learn?mode=review');
     await expect(
-      reviewPage.getByText('Spaced review', { exact: true }),
+      reviewPage
+        .locator('.lesson-session-stats')
+        .getByText('Review', { exact: true }),
     ).toBeVisible();
     let current = (await cloud(reviewPage)).state!;
     const visited: string[] = [];

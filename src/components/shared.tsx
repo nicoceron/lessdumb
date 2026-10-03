@@ -41,26 +41,16 @@ export function download(
 }
 
 export function PageTitle({
-  eyebrow,
   title,
   description,
 }: {
-  eyebrow: string;
   title: string;
-  description: string;
+  description?: string;
 }) {
   return (
-    <>
-      <div className="page-eyebrow">
-        <span className="eyebrow-line" />
-        {eyebrow}
-      </div>
-      <div className="page-heading compact">
-        <div>
-          <h1>{title}</h1>
-          <p>{description}</p>
-        </div>
-      </div>
-    </>
+    <div className="page-heading">
+      <h1>{title}</h1>
+      {description && <p>{description}</p>}
+    </div>
   );
 }
