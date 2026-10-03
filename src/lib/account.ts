@@ -5,6 +5,7 @@ export interface AccountUser {
   id: string;
   name: string;
   email: string;
+  emailVerified?: boolean;
 }
 export interface AccountSession {
   user: AccountUser;
@@ -33,6 +34,32 @@ interface AccountAuthClient {
     email: (input: { email: string; password: string }) => Promise<AuthResult>;
   };
   signOut: () => Promise<AuthResult>;
+  requestPasswordReset: (email: string) => Promise<AuthResult>;
+  resetPassword: (token: string, newPassword: string) => Promise<AuthResult>;
+  sendVerificationEmail: (email: string) => Promise<AuthResult>;
+  deleteUser: (userId: string, password: string) => Promise<AuthResult>;
+}
+
+/** One-time messages the app shows after a redirect, then removes from the URL. */
+export const NOTICE_PARAM = 'notice';
+export const EMAIL_VERIFIED_NOTICE = 'email-verified';
+export const ACCOUNT_DELETED_NOTICE = 'account-deleted';
+export const PASSWORD_RESET_NOTICE = 'password-reset';
+/** Better Auth appends `error=<code>` here when a verification link fails. */
+const verifiedCallback = `/?${NOTICE_PARAM}=${EMAIL_VERIFIED_NOTICE}`;
+
+/** Removes a deleted account's progress copy from this browser. */
+function forgetAccountOnDevice(userId: string) {
+  try {
+    localStorage.removeItem(`lessdumb.account.${userId}`);
+    const claim = JSON.parse(
+      localStorage.getItem('lessdumb.guest-import') ?? 'null',
+    );
+    if (claim?.owner === userId)
+      localStorage.removeItem('lessdumb.guest-import');
+  } catch {
+    /* Storage may be unavailable; the server copy is already gone. */
+  }
 }
 
 /** Keep library generics inside this adapter; callers use a small public contract. */
@@ -53,7 +80,11 @@ export const authClient: AccountAuthClient = {
       },
     };
   },
-  signUp: { email: async (input) => client.signUp.email(input) },
+  signUp: {
+    // The verification link (sent only while email is enabled) returns here.
+    email: async (input) =>
+      client.signUp.email({ ...input, callbackURL: verifiedCallback }),
+  },
   signIn: { email: async (input) => client.signIn.email(input) },
   signOut: async () =>
     client.signOut({
@@ -61,6 +92,23 @@ export const authClient: AccountAuthClient = {
         // A fresh document cannot retain the SDK's previous account if the
         // post-sign-out session refresh fails after the server revoked it.
         onSuccess: () => window.location.reload(),
+      },
+    }),
+  requestPasswordReset: async (email) =>
+    client.requestPasswordReset({ email, redirectTo: '/reset-password' }),
+  resetPassword: async (token, newPassword) =>
+    client.resetPassword({ token, newPassword }),
+  sendVerificationEmail: async (email) =>
+    client.sendVerificationEmail({ email, callbackURL: verifiedCallback }),
+  deleteUser: async (userId, password) =>
+    client.deleteUser({
+      password,
+      fetchOptions: {
+        // Like sign-out, a fresh document drops the deleted account's SDK state.
+        onSuccess: () => {
+          forgetAccountOnDevice(userId);
+          window.location.assign(`/?${NOTICE_PARAM}=${ACCOUNT_DELETED_NOTICE}`);
+        },
       },
     }),
 };

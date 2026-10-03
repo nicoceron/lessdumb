@@ -34,7 +34,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
 - **Flashcards:** receive recall cards after mastery and correction cards after mistakes; connect Anki or export a tab-separated deck.
 - **Code lab:** experiment with real Python, Rust, or C++ in a separate playground without changing mastery.
-- **Accounts and settings:** create an email/password account, save progress across browsers using the same server, configure Anki, and export a JSON backup.
+- **Accounts and settings:** create an email/password account, save progress across browsers using the same server, delete the account and its progress, configure Anki, and export a JSON backup.
 
 You can start as a guest. Guest progress is saved on the device; creating a new account can carry that progress into the account. Signed-in learners retain a device copy while account sync is unavailable and can retry from Settings.
 
@@ -88,7 +88,7 @@ See [the engine audit](docs/engine-audit.md), [per-user isolation evidence](docs
 
 ## Real Python in the browser
 
-Exercises and the lab use **Pyodide**, a WebAssembly Python runtime, through a dedicated Web Worker. Exercise assertions run against the learner's actual variables, functions, and captured output. Each run gets a separate namespace and worker; execution is terminated after 30 seconds so an infinite loop does not block the application. Learner code is not executed on the account server.
+Exercises and the lab use **Pyodide**, a WebAssembly Python runtime, through a dedicated Web Worker. Exercise assertions run against the learner's actual variables, functions, and captured output. Each run gets a separate namespace and worker; execution is terminated after 30 seconds so an infinite loop does not block the application. Timed Competitive Programming checks scale their limit to the device: the first timed run in a tab times a fixed benchmark in the worker, and a slower device gets a proportionally longer limit. Learner code is not executed on the account server.
 
 The editor uses CodeMirror with matching language syntax support. The bundled runtime is a substantial download on first use. General-purpose third-party package installation is outside this MVP.
 
@@ -111,7 +111,7 @@ On the first account request, the server initializes:
 
 The `data/` directory is ignored by Git. Keep it to preserve local accounts and progress. No Supabase project or external account provider is required. The default local setup trusts `http://localhost:4321` and `http://127.0.0.1:4321`; set `BETTER_AUTH_URL` when changing the origin.
 
-The MVP does not send verification or password-reset emails. Email is a login identifier and is not marked as verified. Read [backend documentation](docs/backend.md) for the account API, migrations, and server configuration.
+Password reset and email verification are built in but **off until a sending domain is configured** ([turning email on](docs/cloudflare.md#turn-on-email)). While email is off, the app offers neither, and email is a login identifier that is not marked as verified. Learners can delete their account and its progress from the account dialog. Read [backend documentation](docs/backend.md) for the account API, migrations, and server configuration.
 
 ## Connect your Anki account
 
@@ -202,6 +202,8 @@ src/components/ui/              shadcn/ui source components
 src/components/reui/            Free ReUI Stepper and CodeBlock
 src/components/useLearner.ts    Device persistence and account synchronization
 src/lib/curriculum.ts           Catalog types and the full curriculum (server, tests, build only)
+src/lib/math-text.ts            $…$ and $$…$$ math in prose: parsing and validation
+src/lib/katex-render.ts         KaTeX renderer, loaded only on pages whose text has math
 src/lib/catalog-index.ts        Graph index: every skill outline, without lesson content
 src/lib/content/                Per-course lesson content, loaded on demand in the browser
 src/lib/courses/                Course, unit, skill, exercise, and card definitions
@@ -236,4 +238,4 @@ The implemented catalog includes Python, quantitative foundations, Python for Da
 
 ## MVP boundaries
 
-FSRS adapts stability, difficulty, and spacing per learner and skill, using shared default weights that have not been fitted or validated on lessdumb learners. Each skill teaches two to five knowledge points with a finite authored question bank; there is no unlimited generated question bank or automatic transfer credit between subjects. The placement test, implicit review weights, and quiz rules are documented heuristics, not models fitted on lessdumb learners. Account email delivery/recovery and a backup-import interface are not implemented. The app provides exports, local persistence, and account sync on the deployed server.
+FSRS adapts stability, difficulty, and spacing per learner and skill, using shared default weights that have not been fitted or validated on lessdumb learners. Each skill teaches two to five knowledge points with a finite authored question bank; there is no unlimited generated question bank or automatic transfer credit between subjects. The placement test, implicit review weights, and quiz rules are documented heuristics, not models fitted on lessdumb learners. Account email delivery stays off until the owner configures a sending domain, so password recovery is unavailable until then. A backup-import interface is not implemented. The app provides exports, local persistence, and account sync on the deployed server.

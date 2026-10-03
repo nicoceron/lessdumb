@@ -54,7 +54,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'import numpy as np\ngrid = np.array([[2, 4, 6], [1, 3, 5]])\nprint(grid.size)\nprint(grid.ndim)\nprint(len(grid))',
         output: '6\n2\n2',
         explanation:
-          'The shape is (2, 3), so size is 2 × 3 = 6 and there are 2 axes. len counts the 2 rows.',
+          'The shape is (2, 3), so size is $2 \\times 3 = 6$ and there are 2 axes. len counts the 2 rows.',
       },
       questions: [
         predictOutput(
@@ -62,7 +62,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import numpy as np\nflags = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [1, 1, 0, 0]])\nprint(flags.size)',
           ['3', '4', '12', '7'],
           2,
-          'The shape is (3, 4), and size multiplies the axis lengths: 3 × 4 = 12.',
+          'The shape is (3, 4), and size multiplies the axis lengths: $3 \\times 4 = 12$.',
         ),
         predictOutput(
           'What does this program print?',
@@ -87,7 +87,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'ndim 2, size 20',
           ],
           3,
-          'Two lengths in the shape means two axes, and 5 × 4 = 20 entries.',
+          'Two lengths in the shape means two axes, and $5 \\times 4 = 20$ entries.',
         ),
       ],
     },
@@ -171,7 +171,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import numpy as np\nunits = np.array([2, 3])\nprice = np.array([10, 20])\nprint((units * price).tolist())',
           ['[20, 60]', '[12, 23]', '80', '[2, 3, 10, 20]'],
           0,
-          'Equal shapes combine position by position: 2 × 10 and 3 × 20. Nothing is summed.',
+          'Equal shapes combine position by position: $2 \\times 10$ and $3 \\times 20$. Nothing is summed.',
         ),
         predictOutput(
           'What does this program print?',
@@ -207,7 +207,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import numpy as np\nscores = np.array([3, 5, 10])\nprint(scores.sum())\nprint(scores.mean())',
           ['18\n6', '18\n6.0', '3\n6.0', '18\n9.0'],
           1,
-          '3 + 5 + 10 = 18, and 18 / 3 = 6.0; a mean is always a float.',
+          '$3 + 5 + 10 = 18$, and $18 / 3 = 6.0$; a mean is always a float.',
         ),
         predictOutput(
           'What does this program print?',
@@ -221,15 +221,15 @@ export const knowledgePoints: KnowledgePointModule = {
           'import numpy as np\ngrid = np.array([[2, 2], [4, 8]])\nprint(grid.mean())',
           ['4.0', '[3.0, 5.0]', '16', '[2.0, 6.0]'],
           0,
-          'The four entries add to 16, and 16 / 4 = 4.0. The lists are per-column and per-row means.',
+          'The four entries add to 16, and $16 / 4 = 4.0$. The lists are per-column and per-row means.',
         ),
         choose(
-          'A 3 × 4 array of daily step counts is reduced with .sum() and no axis. What do you get?',
+          'A $3 \\times 4$ array of daily step counts is reduced with .sum() and no axis. What do you get?',
           [
             'One total for each of the 3 rows',
             'A single total of all 12 entries',
             'One total for each of the 4 columns',
-            'A 3 × 4 array of running totals',
+            'A $3 \\times 4$ array of running totals',
           ],
           1,
           'Without an axis, the reduction combines every entry into one value.',
@@ -303,7 +303,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Averaging across the hour columns (axis=1) leaves one mean per patient row.',
         ),
         choose(
-          'With the same 40 × 24 readings, how many values does readings.mean(axis=0) return, and what does each describe?',
+          'With the same $40 \\times 24$ readings, how many values does readings.mean(axis=0) return, and what does each describe?',
           [
             '40, one per patient',
             '24, one per hour',
@@ -771,7 +771,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import pandas as pd\ns = pd.Series({"x": 4, "y": 10, "z": 1})\nprint(s.mean())',
           ['15', '5.0', '10', '4.0'],
           1,
-          'The values add to 15, and 15 / 3 = 5.0.',
+          'The values add to 15, and $15 / 3 = 5.0$.',
         ),
         predictOutput(
           'What does this program print?',
@@ -900,7 +900,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'import pandas as pd\ncart = pd.DataFrame({"item": ["tea", "mug"], "qty": [3, 2], "price": [4, 7]})\ncart["cost"] = cart["qty"] * cart["price"]\ncart["qty"] = cart["qty"] + 1\nprint(cart["cost"].tolist())\nprint(cart["qty"].tolist())\nprint(cart.shape)',
         output: '[12, 14]\n[4, 3]\n(2, 4)',
         explanation:
-          'cost is computed per row (3 × 4, 2 × 7) and added as a fourth column. Reassigning qty replaces that column without adding another.',
+          'cost is computed per row ($3 \\times 4$, $2 \\times 7$) and added as a fourth column. Reassigning qty replaces that column without adding another.',
       },
       questions: [
         predictOutput(
@@ -908,7 +908,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import pandas as pd\nt = pd.DataFrame({"w": [2, 5], "h": [3, 4]})\nt["area"] = t["w"] * t["h"]\nprint(t["area"].tolist())',
           ['26', '[10, 12]', '[2, 5, 3, 4]', '[6, 20]'],
           3,
-          'Each row multiplies its own w and h: 2 × 3 and 5 × 4.',
+          'Each row multiplies its own w and h: $2 \\times 3$ and $5 \\times 4$.',
         ),
         predictOutput(
           'What does this program print?',
@@ -1655,7 +1655,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'After coercing a column of 1,000 values, 40 are missing. Before coercion, 35 were already missing. How many tokens did conversion reject?',
           ['40', '5', '75', '35'],
           1,
-          'Only the missing values that were present before count as rejections: 40 − 35.',
+          'Only the missing values that were present before count as rejections: $40 - 35$.',
         ),
         choose(
           'Why count raw.notna() & converted.isna() rather than converted.isna()?',
@@ -2391,7 +2391,7 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Melt wide columns into long rows',
       explanation: [
         'A wide table has one column per repeated measurement, such as jan and feb. A long table has one row per measurement, with one column naming the measurement and one holding its value. .melt(id_vars=["site"], var_name="month", value_name="sales") converts wide to long.',
-        'Each id row contributes one row per melted column, so the long table has rows × melted columns rows. pandas lists every row for the first melted column, then every row for the next.',
+        'Each id row contributes one row per melted column, so the long table has $\\text{rows} \\times \\text{melted columns}$ rows. pandas lists every row for the first melted column, then every row for the next.',
       ],
       example: {
         code: 'import pandas as pd\nwide = pd.DataFrame({"site": ["A", "B"], "jan": [3, 5], "feb": [4, 6]})\nlong = wide.melt(id_vars=["site"], var_name="month", value_name="sales")\nprint(long.shape)\nprint(long["month"].tolist())\nprint(long["sales"].tolist())',
@@ -2423,7 +2423,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A wide table has a student id and 4 test columns for 50 students. How many rows does melting the test columns produce?',
           ['54', '50', '4', '200'],
           3,
-          'Each of the 50 students contributes one row per test: 50 × 4.',
+          'Each of the 50 students contributes one row per test: $50 \\times 4$.',
         ),
         choose(
           'In wide.melt(id_vars=["site"], ...), what is the role of site?',
@@ -2448,7 +2448,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'import pandas as pd\nlong = pd.DataFrame({"site": ["A", "A", "B"], "month": ["jan", "feb", "jan"], "sales": [3, 4, 5]})\nwide = long.pivot(index="site", columns="month", values="sales")\nprint(wide.shape)\nprint(wide.loc["A", "feb"])\nprint(wide.loc["B", "feb"])',
         output: '(2, 2)\n4.0\nnan',
         explanation:
-          'Two sites and two months give a 2 × 2 table. B has no feb row, so that cell is missing and the feb column holds floats.',
+          'Two sites and two months give a $2 \\times 2$ table. B has no feb row, so that cell is missing and the feb column holds floats.',
       },
       questions: [
         predictOutput(
@@ -2766,7 +2766,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import pandas as pd\ns = pd.Series([2, 4, 99])\nprint(s.median())\nprint(s.mean())',
           ['35.0\n4.0', '4.0\n4.0', '4.0\n35.0', '2.0\n35.0'],
           2,
-          'The middle of 2, 4, 99 is 4; the mean is 105 / 3 = 35.',
+          'The middle of 2, 4, 99 is 4; the mean is $105 / 3 = 35$.',
         ),
         predictOutput(
           'What does this program print?',
@@ -2962,7 +2962,7 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Compute shares within a group',
       explanation: [
         'A share is a row’s value divided by its group total: value / transform("sum"). The shares in each group add up to 1, which makes groups of different sizes comparable.',
-        'A group whose total is 0 has no meaningful shares: 0 / 0 gives NaN. Decide how to report such groups before publishing.',
+        'A group whose total is 0 has no meaningful shares: $0 / 0$ gives NaN. Decide how to report such groups before publishing.',
       ],
       example: {
         code: 'import pandas as pd\nd = pd.DataFrame({"region": ["N", "N", "S", "S"], "units": [30, 10, 0, 0]})\nshare = d["units"] / d.groupby("region")["units"].transform("sum")\nprint(share.tolist())',
@@ -2981,7 +2981,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[0.25, 0.75, 1.0]',
           ],
           3,
-          'Group a totals 4, so its rows are 1/4 and 3/4; group b’s only row is all of its total.',
+          'Group a totals 4, so its rows are $1/4$ and $3/4$; group b’s only row is all of its total.',
         ),
         predictOutput(
           'What does this program print?',
@@ -3010,7 +3010,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'They become NaN, so the report needs a rule for that region',
           ],
           3,
-          '0 / 0 is undefined, which pandas shows as NaN rather than raising an error.',
+          '$0 / 0$ is undefined, which pandas shows as NaN rather than raising an error.',
         ),
       ],
     },
@@ -3077,7 +3077,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Control incomplete windows with min_periods',
       explanation: [
-        'By default a window needs all its rows, so the first window − 1 results are NaN. min_periods sets how many rows are enough: with min_periods=1, the first result is just the first value, the second averages two values, and so on.',
+        'By default a window needs all its rows, so the first $\\text{window} - 1$ results are NaN. min_periods sets how many rows are enough: with min_periods=1, the first result is just the first value, the second averages two values, and so on.',
         'That fills the gap but changes the evidence: early results rest on fewer observations than later ones. Choose min_periods deliberately and say so when reporting.',
       ],
       example: {
@@ -3098,7 +3098,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[5.0, 15.0, 25.0]',
           ],
           2,
-          'The first window holds only 10, and min_periods=1 accepts it; its mean is 10, not 10 / 2.',
+          'The first window holds only 10, and min_periods=1 accepts it; its mean is 10, not $10 / 2$.',
         ),
         predictOutput(
           'What does this program print?',
@@ -3587,7 +3587,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import pandas as pd\ns = pd.Series([1, 2, 3, 4, 90])\nprint(s.mean())\nprint(s.median())',
           ['3.0\n20.0', '20.0\n3.0', '20.0\n20.0', '22.5\n3.0'],
           1,
-          'The mean is 100 / 5 = 20; the middle value of the sorted five is 3.',
+          'The mean is $100 / 5 = 20$; the middle value of the sorted five is 3.',
         ),
         predictOutput(
           'What does this program print?',
@@ -3619,7 +3619,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Read a correlation without claiming a cause',
       explanation: [
-        'x.corr(y) measures how closely two columns follow a straight-line pattern across paired rows. It is 1.0 when the points lie exactly on a rising line, −1.0 on a falling line, and near 0 when there is no straight-line pattern.',
+        'x.corr(y) measures how closely two columns follow a straight-line pattern across paired rows. It is $1.0$ when the points lie exactly on a rising line, $-1.0$ on a falling line, and near 0 when there is no straight-line pattern.',
         'Correlation is association, not causation. Ice-cream sales and drownings both rise in summer because of a third factor, heat. Shared trends, selected samples and confounding variables can all create correlation.',
       ],
       example: {

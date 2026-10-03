@@ -16,6 +16,7 @@ import {
   assessmentPolicy,
   encompassedBy as encompassedIn,
 } from './catalog-outline';
+import { mathSpans, mathTextErrors, mathTextFields } from './math-text';
 export {
   assessmentPolicy,
   DEFAULT_ENCOMPASS_WEIGHT,
@@ -205,10 +206,15 @@ export function encompassedBy<S extends SkillOutline = Skill>(
   return encompassedIn(skillId, registry);
 }
 
-/** Checks the registry contract before any scheduler or graph renderer uses it. */
+/**
+ * Checks the registry contract before any scheduler or graph renderer uses it.
+ * `checkTex` returns a TeX parse error, if any; tests pass KaTeX's parser so
+ * this module and the client bundle stay free of KaTeX.
+ */
 export function validateCurriculum(
   registry: Skill[] = skills,
   catalog: Pick<CurriculumCatalog, 'courses' | 'units'> = defaultCatalog,
+  checkTex?: (tex: string, displayMode: boolean) => string | undefined,
 ): string[] {
   const errors: string[] = [];
   const ids = new Set(registry.map((item) => item.id));
@@ -430,6 +436,13 @@ export function validateCurriculum(
       )
         errors.push(`${question.id}: code language must match its course.`);
     }
+    // Prose marks math with $…$ or $$…$$; a literal dollar is written \$.
+    for (const [location, text] of mathTextFields(item))
+      for (const error of [
+        ...mathTextErrors(text),
+        ...mathSpans(text).map(({ tex, display }) => checkTex?.(tex, display)),
+      ])
+        if (error) errors.push(`${location}: ${error}`);
     for (const card of item.flashcards) {
       if (cards.has(card.id)) errors.push(`Duplicate flashcard ID ${card.id}.`);
       cards.add(card.id);

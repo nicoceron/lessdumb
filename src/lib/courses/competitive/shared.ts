@@ -3,12 +3,24 @@ import { withExerciseId } from '../exercise';
 
 export const courseId = 'competitive-programming';
 
-/** Seconds a hidden large case may take. Brute force needs far longer. */
+/**
+ * Seconds a hidden large case may take on the reference machine. The runner
+ * multiplies it by the device's measured slowness (`__lessdumb_time_scale`,
+ * see public/python-runtime.mjs), so a slow phone gets a longer limit and a
+ * fast computer a shorter one. Each case is sized so that, on the reference
+ * machine, the reference solution has at least 8× headroom and every brute
+ * force in tests/helpers/competitive-shortcuts.ts needs at least 8× the limit;
+ * calibration keeps both margins on other devices. A case may pass its own
+ * base limit to `_check_time` when no size achieves both: the sieve's trial
+ * division is only about 18× slower than the sieve, so it uses 1.5 s, which
+ * leaves 5× headroom and 3.5× over the limit.
+ */
 export const TIME_LIMIT_SECONDS = 3;
 
 // Shared by every large case: deterministic pseudo-random input, an
 // order-sensitive checksum for big results, and a wall-clock check whose
-// message names the faster idea. Underscored names avoid learner globals.
+// message names the faster idea and the limit on this device. Underscored
+// names avoid learner globals.
 const largeCaseHelpers = `import time as _time
 
 def _numbers(count, low, high, seed):
@@ -37,8 +49,9 @@ def _timed(function, *arguments):
     result = function(*arguments)
     return result, _time.perf_counter() - start
 
-def _check_time(seconds, case, advice):
-    assert seconds < ${TIME_LIMIT_SECONDS}, f"{case} took {seconds:.1f} s; the limit is ${TIME_LIMIT_SECONDS} s. {advice}"`;
+def _check_time(seconds, case, advice, base=${TIME_LIMIT_SECONDS}):
+    limit = base * globals().get("__lessdumb_time_scale", 1)
+    assert seconds < limit, f"{case} took {seconds:.1f} s; the limit on this device is {limit:.3g} s. {advice}"`;
 
 /**
  * Appends a hidden large case after the small correctness checks, so an

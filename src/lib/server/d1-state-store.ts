@@ -26,6 +26,12 @@ export function d1StateStore(database: D1Database): StateStore {
         await database.prepare(select).bind(userId).first<Row>(),
       );
     },
+    async remove(userId) {
+      await database
+        .prepare('DELETE FROM learner_state WHERE user_id = ?')
+        .bind(userId)
+        .run();
+    },
     async write(userId, state, revision) {
       const source = await encodeState(state);
       // Each mutation checks its revision atomically. D1 batch is a transaction:

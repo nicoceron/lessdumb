@@ -297,7 +297,7 @@ const curriculum = [
     'Connect feature coefficients, intercepts, and least-squares predictions.',
     ['ml-baselines', 'da-exploration', 'methods', 'math-matrix-vector'],
     [
-      'A linear model predicts an intercept plus a weighted sum of input features: prediction = b + w1*x1 + ... . The model is linear in its learned coefficients; you can still supply transformed features such as a squared input. Least squares chooses coefficients to minimize the sum of squared training residuals.',
+      'A linear model predicts an intercept plus a weighted sum of input features: $\\text{prediction} = b + w_1 x_1 + \\cdots$. The model is linear in its learned coefficients; you can still supply transformed features such as a squared input. Least squares chooses coefficients to minimize the sum of squared training residuals.',
       'scikit-learn LinearRegression expects a two-dimensional feature matrix with one row per observation and one column per feature. fit(X, y) estimates coefficients; predict(new_X) applies them. A coefficient describes a conditional relationship inside the model and is not automatically a causal effect.',
     ],
     {
@@ -334,7 +334,7 @@ const curriculum = [
     'Update parameters in the direction that locally reduces a loss.',
     ['math-gradients', 'ml-baselines', 'math-convexity'],
     [
-      'A gradient tells you how a loss changes when each parameter changes. Gradient descent updates a parameter vector by subtracting learning_rate times the gradient. For the scalar loss L(w) = (w - target)^2, the derivative is 2*(w - target). The subtraction moves toward the target when the step size is suitable.',
+      'A gradient tells you how a loss changes when each parameter changes. Gradient descent updates a parameter vector by subtracting learning_rate times the gradient. For the scalar loss $L(w) = (w - \\text{target})^2$, the derivative is $2(w - \\text{target})$. The subtraction moves toward the target when the step size is suitable.',
       'A very small learning rate can make progress slow; a very large one can overshoot or diverge. Batch gradient descent uses all training examples per update. Stochastic descent uses one; mini-batch descent uses a small group. A loss can have several valleys, so a zero gradient does not by itself prove that you found the best possible solution.',
     ],
     {
@@ -413,8 +413,8 @@ const curriculum = [
     'Use logistic scores and thresholds for binary classification.',
     ['ml-linear-regression', 'math-probability', 'math-sigmoid', 'math-exp-log'],
     [
-      'Binary logistic regression forms a linear score and applies the sigmoid: probability = 1 / (1 + exp(-score)). A score of zero maps to probability 0.5. Positive scores map above 0.5 and negative scores below it. Despite its name, logistic regression is commonly used for classification.',
-      'A probability estimate and a class decision are separate outputs. A threshold converts probabilities into labels, for example positive when p >= 0.7. Raising the threshold reduces the set of predicted positives; lowering it expands that set. Select a threshold using validation data and error costs. A probability-shaped output also needs calibration checks before being trusted as a frequency estimate.',
+      'Binary logistic regression forms a linear score and applies the sigmoid: $\\text{probability} = \\frac{1}{1 + \\exp(-\\text{score})}$. A score of zero maps to probability 0.5. Positive scores map above 0.5 and negative scores below it. Despite its name, logistic regression is commonly used for classification.',
+      'A probability estimate and a class decision are separate outputs. A threshold converts probabilities into labels, for example positive when $p \\ge 0.7$. Raising the threshold reduces the set of predicted positives; lowering it expands that set. Select a threshold using validation data and error costs. A probability-shaped output also needs calibration checks before being trusted as a frequency estimate.',
     ],
     {
       code: 'import math\nprobabilities = [1 / (1 + math.exp(-s)) for s in [-2, 0, 2]]\nprint([round(p, 3) for p in probabilities])\nprint([int(p >= 0.7) for p in probabilities])',
@@ -604,7 +604,7 @@ const curriculum = [
     ['ml-overfitting', 'ml-preprocessing', 'dictionary-loops'],
     [
       'A decision tree repeatedly asks feature-threshold questions and routes a row down one branch until it reaches a leaf. A classification leaf predicts a class or class proportions; a regression leaf predicts a numeric summary. Training chooses splits that improve a criterion such as Gini impurity or squared error.',
-      'For class proportions p1, p2, ..., Gini impurity is 1 - sum(pi^2). A pure node has impurity zero. Deep trees can memorize small training details, so validate constraints such as max_depth and min_samples_leaf. Trees usually do not need feature standardization because a consistent monotonic rescaling preserves possible threshold splits.',
+      'For class proportions $p_1, p_2, \\ldots$, Gini impurity is $1 - \\sum p_i^2$. A pure node has impurity zero. Deep trees can memorize small training details, so validate constraints such as max_depth and min_samples_leaf. Trees usually do not need feature standardization because a consistent monotonic rescaling preserves possible threshold splits.',
     ],
     {
       code: 'from sklearn.tree import DecisionTreeClassifier\nmodel = DecisionTreeClassifier(max_depth=1, random_state=0).fit([[1], [2], [8], [9]], [0, 0, 1, 1])\nprint(model.predict([[0], [10]]).tolist())',
@@ -830,7 +830,7 @@ const curriculum = [
     'Apply the chain rule from a prediction error to its weights.',
     ['ml-gradient-descent', 'ml-neural-layers'],
     [
-      'Backpropagation applies the chain rule to compute how each parameter influences a final loss. For prediction p = w*x + b and loss L = (p-y)^2, dL/dp = 2*(p-y). Multiplying by dp/dw = x gives dL/dw = 2*(p-y)*x; multiplying by dp/db = 1 gives dL/db = 2*(p-y).',
+      'Backpropagation applies the chain rule to compute how each parameter influences a final loss. For prediction $p = wx + b$ and loss $L = (p - y)^2$, $\\frac{dL}{dp} = 2(p - y)$. Multiplying by $\\frac{dp}{dw} = x$ gives $\\frac{dL}{dw} = 2(p - y)x$; multiplying by $\\frac{dp}{db} = 1$ gives $\\frac{dL}{db} = 2(p - y)$.',
       'A forward pass computes predictions and intermediate values. A backward pass uses those values to compute gradients. An optimizer then applies parameter updates; backpropagation and the update are separate operations. Automatic differentiation frameworks perform this bookkeeping for a computation graph, but the derivatives still follow the same chain rule. The exercise calculates a simple scalar case directly in Python.',
     ],
     {

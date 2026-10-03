@@ -24,7 +24,16 @@ type ExecutePython = (
   runtime: PyodideInterface,
   code: string,
   tests?: string,
+  options?: { timeScale?: number },
 ) => Promise<PythonResult>;
+interface Calibration {
+  CALIBRATION_REFERENCE_SECONDS: number;
+  MIN_TIME_SCALE: number;
+  MAX_TIME_SCALE: number;
+  calibrate: (runtime: PyodideInterface) => Promise<number>;
+  timeScale: (seconds: unknown) => number;
+  usesTimeScale: (tests: string) => boolean;
+}
 const exercises = skills.flatMap((skill) =>
   skill.questions.filter(
     (question): question is CodeQuestion =>
@@ -169,6 +178,70 @@ describe('real Pyodide curriculum execution', () => {
       passed: true,
     });
   });
+
+  it('gives the checks the device time scale, which learner code cannot forge', async () => {
+    expect(
+      await executePython(runtime, '', 'assert __lessdumb_time_scale == 1'),
+    ).toMatchObject({ passed: true });
+    expect(
+      await executePython(
+        runtime,
+        '__lessdumb_time_scale = 99',
+        'assert __lessdumb_time_scale == 2.5',
+        { timeScale: 2.5 },
+      ),
+    ).toMatchObject({ passed: true });
+  });
+
+  it('times the fixed calibration benchmark', async () => {
+    const { calibrate }: Calibration = await import(runtimeUrl);
+    const seconds = await calibrate(runtime);
+    expect(seconds).toBeGreaterThan(0);
+    expect(seconds).toBeLessThan(5);
+  });
+});
+
+describe('device calibration', () => {
+  let calibration: Calibration;
+  beforeAll(async () => {
+    calibration = await import(runtimeUrl);
+  });
+
+  it('scales limits by the device’s slowness relative to the reference machine', () => {
+    const { timeScale, CALIBRATION_REFERENCE_SECONDS: reference } = calibration;
+    expect(timeScale(reference)).toBe(1);
+    // A device six times slower, such as a low-end phone, gets six times the limit.
+    expect(timeScale(reference * 6)).toBe(6);
+    expect(timeScale(reference * 2.47)).toBe(2.5);
+    // A faster device gets a proportionally shorter one.
+    expect(timeScale(reference / 1.5)).toBe(0.7);
+  });
+
+  it('clamps extreme measurements and ignores invalid ones', () => {
+    const {
+      timeScale,
+      CALIBRATION_REFERENCE_SECONDS: reference,
+      MIN_TIME_SCALE,
+      MAX_TIME_SCALE,
+    } = calibration;
+    expect(MIN_TIME_SCALE).toBe(0.5);
+    expect(MAX_TIME_SCALE).toBe(10);
+    expect(timeScale(reference / 10)).toBe(MIN_TIME_SCALE);
+    expect(timeScale(reference * 40)).toBe(MAX_TIME_SCALE);
+    for (const invalid of [0, -1, Number.NaN, Infinity, undefined, '0.1'])
+      expect(timeScale(invalid)).toBe(1);
+  });
+
+  it('benchmarks only for checks that read the scale', () => {
+    const { usesTimeScale } = calibration;
+    const timed = exercises.filter((exercise) =>
+      exercise.tests.includes('_check_time('),
+    );
+    expect(timed.length).toBeGreaterThanOrEqual(41);
+    for (const exercise of timed)
+      expect(usesTimeScale(exercise.tests)).toBe(true);
+    expect(usesTimeScale('assert answer == 4')).toBe(false);
+  });
 });
 
 class MockWorker {
@@ -177,7 +250,12 @@ class MockWorker {
   onmessage: ((event: { data: any }) => void) | null = null;
   onerror: (() => void) | null = null;
   onmessageerror: (() => void) | null = null;
-  message: { id: string; code: string; tests: string } | null = null;
+  message: {
+    id: string;
+    code: string;
+    tests: string;
+    calibration?: number;
+  } | null = null;
   terminations = 0;
   constructor(url: string, options: { type: string }) {
     expect(url).toBe('/python-worker.mjs');
@@ -332,6 +410,42 @@ describe('browser runner lifecycle', () => {
     expect(MockWorker.instances[0].terminations).toBe(1);
   });
 
+  it('keeps the device calibration for later runs and pages in the same tab', async () => {
+    const stored = new Map<string, string>();
+    vi.stubGlobal('sessionStorage', {
+      getItem: (key: string) => stored.get(key) ?? null,
+      setItem: (key: string, value: string) => stored.set(key, value),
+    });
+    vi.resetModules();
+    const { runPython: firstPage } = await import('../src/lib/python');
+    const finished = {
+      output: '',
+      passed: true,
+      error: null,
+      infrastructure: false,
+    };
+    const first = firstPage('', 'timed checks');
+    const [one] = MockWorker.instances;
+    expect(one.message?.calibration).toBeUndefined();
+    one.reply({ calibration: 'fast' });
+    one.reply({ calibration: 0.075 });
+    expect(one.terminations).toBe(0);
+    one.reply(finished);
+    expect(await first).toEqual(finished);
+    const second = firstPage('', 'timed checks');
+    expect(MockWorker.instances[1].message?.calibration).toBe(0.075);
+    MockWorker.instances[1].reply(finished);
+    await second;
+    expect(stored.get('lessdumb:python-calibration')).toBe('0.075');
+
+    vi.resetModules();
+    const { runPython: nextPage } = await import('../src/lib/python');
+    const third = nextPage('', 'timed checks');
+    expect(MockWorker.instances[2].message?.calibration).toBe(0.075);
+    MockWorker.instances[2].reply(finished);
+    await third;
+  });
+
   it('starts a separate execution deadline after Pyodide is ready and terminates infinite runs', async () => {
     vi.useFakeTimers();
     const running = runPython('while True: pass');
@@ -357,6 +471,9 @@ class RealNodeBrowserWorker {
   onmessageerror: (() => void) | null = null;
   readonly ready: Promise<void>;
   readonly terminated: Promise<number>;
+  /** Messages the page sent and the worker posted back, in order. */
+  readonly sent: any[] = [];
+  readonly posted: any[] = [];
   private readonly nodeWorker: NodeWorker;
   private reportReady!: () => void;
   private reportTermination!: (code: number) => void;
@@ -397,6 +514,7 @@ class RealNodeBrowserWorker {
       ),
     );
     this.nodeWorker.on('message', (data) => {
+      this.posted.push(data);
       this.onmessage?.({ data });
       if (data.ready) this.reportReady();
     });
@@ -405,6 +523,7 @@ class RealNodeBrowserWorker {
     RealNodeBrowserWorker.instances.push(this);
   }
   postMessage(data: unknown) {
+    this.sent.push(data);
     this.nodeWorker.postMessage(data);
   }
   terminate() {
@@ -462,4 +581,23 @@ describe('real production worker isolation and termination', () => {
       output: '42\n',
     });
   }, 30_000);
+
+  it('benchmarks the device once for timed checks and reuses the measurement', async () => {
+    vi.stubGlobal('sessionStorage', undefined);
+    vi.resetModules();
+    const { runPython: fresh } = await import('../src/lib/python');
+    const timed = 'assert 0.5 <= __lessdumb_time_scale <= 10';
+    expect(await fresh('print(1)')).toMatchObject({ passed: true });
+    expect(await fresh('', timed)).toMatchObject({ passed: true });
+    expect(await fresh('', timed)).toMatchObject({ passed: true });
+    const [untimed, first, second] = RealNodeBrowserWorker.instances;
+    const measured = (worker: RealNodeBrowserWorker) =>
+      worker.posted.filter((message) => 'calibration' in message);
+    expect(measured(untimed)).toEqual([]);
+    expect(first.sent[0].calibration).toBeUndefined();
+    const [{ calibration }] = measured(first);
+    expect(calibration).toBeGreaterThan(0);
+    expect(second.sent[0].calibration).toBe(calibration);
+    expect(measured(second)).toEqual([]);
+  }, 60_000);
 });
