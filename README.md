@@ -2,7 +2,9 @@
 
 Learn deliberately. Remember automatically.
 
-lessdumb is a working adaptive learning MVP built with Astro, React, shadcn/ui, and free ReUI components. It combines a prerequisite knowledge graph, original lessons, real Python, Rust, and C++ exercises, evidence-based progression, spaced review, account persistence, and automatic Anki card creation. The application runs locally with free tools and no paid backend dependency.
+lessdumb is a working adaptive learning MVP built with Astro, React, shadcn/ui, and free ReUI components. It combines a prerequisite knowledge graph, original lessons, real Python, Rust, and C++ exercises, evidence-based progression, spaced review, account persistence, and automatic Anki card creation. The application runs locally with free tools and is deployed on Cloudflare Workers with D1 account storage.
+
+Public application: [lessdumb.nicocerond.workers.dev](https://lessdumb.nicocerond.workers.dev). [Cloudflare deployment and verification](docs/cloudflare.md).
 
 ## Quickstart
 
@@ -27,6 +29,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 
 - **Today:** follow the next adaptive task, set a daily XP goal, and see your practice history and streak.
 - **My learning:** choose from 609 connected skills across eight courses through short explanations, examples, prediction questions, and executable exercises.
+- **Lessons:** move through introduction slides and worked examples, follow labelled subgoals, then practice with a visible evidence checklist. Revisit the teaching material while keeping your pending choice or code; assisted answers remain separate from independent mastery.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
 - **Flashcards:** receive recall cards after mastery and correction cards after mistakes; connect Anki or export a tab-separated deck.
 - **Code lab:** experiment with real Python, Rust, or C++ in a separate playground without changing mastery.
@@ -178,16 +181,20 @@ Playwright uses an already running server; it does not start one automatically. 
 
 The October 2, 2026 eight-course release passed **727 Vitest tests, 31 Playwright tests, formatting, type checks, and the production build**. Browser coverage includes atomic topic stages, adaptive review interleaving, two authenticated learners with different mastery/review/mistake histories, durable guest migration, delayed account and Anki responses within the same document, initial session failures and confirmed sign-out, real NumPy/scikit-learn execution, real Python/Rust/C++ grading with earned cards and due reviews, advanced compiled-library contracts, the full-catalog mistake/repair snapshot, prerequisite lapse gating, and Sheet/Dialog keyboard focus with deliberately delayed hydration. Live compiled assessments retry at most once for infrastructure failures after checking that evidence and cards remain unchanged; actual grading failures are never retried or replaced with simulated success.
 
+The 0.7.0 instructional-player update passed **723 Vitest tests and 36 Playwright tests**, plus formatting, type checks, and the production build. New coverage verifies reading without evidence or card awards, source/result preservation across all 609 skills, retained choice/editor state after reference lookup, assisted-answer handling, due-review memory protection, mobile keyboard controls, text scenarios, and an independent first answer after advancing to a newly selected lesson.
+
 ## Project structure
 
 ```text
 src/components/App.tsx          Workspace, course goals, knowledge graph
 src/components/learning-session.tsx  Lessons, assessment, language-aware grading
+src/components/lesson-player.tsx     Introduction slides and worked-example player
 src/components/secondary-pages.tsx   Flashcards, settings, account Dialog, Code lab
 src/components/ui/              shadcn/ui source components
 src/components/reui/            Free ReUI Stepper and CodeBlock
 src/components/useLearner.ts    Device persistence and account synchronization
 src/lib/curriculum.ts           Original course, unit, skill, question, card registry
+src/lib/lesson-content.ts       Worked-example subgoals and existing-example fallback
 src/lib/learning.ts             Mastery evidence, task selection, review, XP, streaks
 src/lib/retention.ts            Per-learner FSRS memory and recall estimates
 src/lib/activity.ts             Durable offline answer counters

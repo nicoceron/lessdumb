@@ -244,7 +244,7 @@ for (const language of ['rust', 'cpp'] as const) {
     await page.clock.setFixedTime(due);
     await page.goto(`/learn?skill=${first.id}&mode=review`);
     await expect(
-      page.getByText('SPACED REVIEW', { exact: true }),
+      page.getByText('Spaced review', { exact: true }),
     ).toBeVisible();
     let stored = acquired;
     const types: Question['type'][] = [];

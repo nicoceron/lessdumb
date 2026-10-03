@@ -7,3 +7,6 @@ test-results/
 playwright-report/
 tmp/
 package-lock.json
+
+.wrangler/
+worker-configuration.d.ts

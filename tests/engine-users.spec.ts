@@ -162,7 +162,7 @@ test('two authenticated learners keep separate mastery, due reviews, mistakes, c
     await page.clock.setFixedTime(reviewTime);
     await page.goto('/learn?mode=review');
     await expect(
-      page.getByText('SPACED REVIEW', { exact: true }),
+      page.getByText('Spaced review', { exact: true }),
     ).toBeVisible();
     let current = (await cloud(page))!;
     for (let index = 0; index < 2; index++) {

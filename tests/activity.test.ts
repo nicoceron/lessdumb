@@ -123,7 +123,7 @@ describe('durable per-writer activity counters', () => {
     const base = createActivity(2, 1);
     const before = JSON.stringify(base);
     const one = recordActivity(base, true);
-    expect(one.writers[defaultActivityWriterId]).toEqual({
+    expect(one.writers[defaultActivityWriterId()]).toEqual({
       attempts: 1,
       correct: 1,
     });

@@ -166,10 +166,16 @@ test('data-systems scenarios teach and earn cards without a code exercise', asyn
 }) => {
   const skill = skillById['ds-workloads'];
   await page.goto(`/learn?skill=${skill.id}`);
+  await page
+    .getByRole('navigation', { name: 'Lesson outline', exact: true })
+    .getByRole('button', { name: 'Worked scenario', exact: true })
+    .click();
   await expect(
     page.getByText('Design scenario', { exact: true }),
   ).toBeVisible();
-  await expect(page.getByText('DECISION', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Next slide', exact: true }).click();
+  await page.getByRole('button', { name: 'Next slide', exact: true }).click();
+  await expect(page.getByText('Decision', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Let’s try it' }).click();
   for (const question of skill.questions) {
     if (question.type !== 'choice')

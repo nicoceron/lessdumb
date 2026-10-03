@@ -1,7 +1,12 @@
 import { randomBytes } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { betterAuth, type BetterAuthOptions } from 'better-auth';
+import { betterAuth } from 'better-auth';
+import { authOptions as createAuthOptions } from './auth-options';
+import { sqliteStateStore } from './sqlite-state-store';
+import type { Backend, BackendAuth } from './backend-contract';
+export type { Backend } from './backend-contract';
+export { SESSION_READ_RATE_LIMIT } from './auth-options';
 import { getMigrations } from 'better-auth/db/migration';
 import Database from 'better-sqlite3';
 
@@ -13,28 +18,12 @@ export interface BackendOptions {
   rateLimit?: boolean;
 }
 
-// Navigation, focus refreshes, and multiple tabs all validate their session.
-// Keep reads bounded without applying the tighter credential-operation quota.
-export const SESSION_READ_RATE_LIMIT = { window: 60, max: 600 } as const;
-
-interface BackendAuth {
-  handler: (request: Request) => Promise<Response>;
-  api: {
-    getSession: (input: {
-      headers: Headers;
-    }) => Promise<{ user: { id: string } } | null>;
-  };
-  options: { baseURL: string; trustedOrigins: string[] };
-}
-export interface Backend {
-  auth: BackendAuth;
+export interface NodeBackend extends Backend {
   database: Database.Database;
-  ready: () => Promise<void>;
-  close: () => void;
 }
 
 /** One database connection and one migration promise for the Node process. */
-export function createBackend(options: BackendOptions): Backend {
+export function createBackend(options: BackendOptions): NodeBackend {
   if (options.databasePath !== ':memory:')
     mkdirSync(dirname(options.databasePath), { recursive: true });
   const database = new Database(options.databasePath);
@@ -42,37 +31,7 @@ export function createBackend(options: BackendOptions): Backend {
   database.pragma('journal_mode = WAL');
   database.pragma('busy_timeout = 5000');
 
-  const authOptions = {
-    appName: 'lessdumb',
-    database,
-    secret: options.secret,
-    baseURL: options.baseURL,
-    trustedOrigins: options.trustedOrigins ?? [new URL(options.baseURL).origin],
-    emailAndPassword: {
-      enabled: true,
-      minPasswordLength: 8,
-      maxPasswordLength: 128,
-    },
-    session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 },
-    rateLimit: {
-      enabled: options.rateLimit ?? true,
-      storage: 'database',
-      window: 60,
-      max: 100,
-      customRules: {
-        '/get-session': SESSION_READ_RATE_LIMIT,
-        '/sign-in/email': { window: 60, max: 10 },
-        '/sign-up/email': { window: 60, max: 10 },
-      },
-    },
-    advanced: {
-      cookiePrefix: 'lessdumb',
-      // Keep the same protection in tests; Better Auth otherwise relaxes it in NODE_ENV=test.
-      disableCSRFCheck: false,
-      disableOriginCheck: false,
-      defaultCookieAttributes: { httpOnly: true, sameSite: 'lax' },
-    },
-  } satisfies BetterAuthOptions;
+  const authOptions = createAuthOptions(options, database);
 
   let auth: BackendAuth | undefined;
   let initialization: Promise<void> | undefined;
@@ -112,6 +71,7 @@ export function createBackend(options: BackendOptions): Backend {
       return auth;
     },
     database,
+    states: sqliteStateStore(database),
     ready,
     close: () => database.close(),
   };
