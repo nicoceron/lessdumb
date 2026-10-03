@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { defaultCatalog, skills } from '../src/lib/curriculum';
+import {
+  defaultCatalog,
+  skillById,
+  skills,
+  type CurriculumCatalog,
+} from '../src/lib/curriculum';
 import {
   applyAttempt,
   dateKey,
@@ -13,9 +18,26 @@ import {
   type LearnerState,
 } from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
+import { earnedXp, lessonXp } from '../src/lib/xp';
+import { lessonAnswerIds, masterSkill } from './helpers/mastery';
 
 const skill = skills.find((candidate) => candidate.prerequisites.length === 0)!;
+// The questions that teach this skill's lesson, in the order they pass it.
+const lessonPath = lessonAnswerIds(skill.id);
+const LESSON_XP = earnedXp(lessonXp(skill), 0, true);
 const start = Date.parse('2026-10-01T12:00:00.000Z');
+// A skill without knowledge points keeps per-question evidence; test it on a
+// catalog where one choice-only skill has its knowledge points removed.
+const legacySkill = {
+  ...skillById['ds-workloads'],
+  knowledgePoints: undefined,
+};
+const legacyCatalog: CurriculumCatalog = {
+  ...defaultCatalog,
+  skills: defaultCatalog.skills.map((item) =>
+    item.id === legacySkill.id ? legacySkill : item,
+  ),
+};
 function answer(
   state: LearnerState,
   index: number,
@@ -29,12 +51,19 @@ function answer(
       state.progress,
       {
         skillId: skill.id,
-        questionId: skill.questions[index].id,
+        questionId: lessonPath[index],
         correct,
         mode: 'learn',
       },
       at,
     ),
+  };
+}
+function master(state: LearnerState, at: number, skillId = skill.id) {
+  return {
+    ...state,
+    updatedAt: at,
+    progress: masterSkill(state.progress, skillId, at),
   };
 }
 function baseline() {
@@ -73,7 +102,7 @@ describe('recording learning answers against current state', () => {
     const before = structuredClone(latest);
     const result = recordLearningAnswer(latest, {
       skillId: skill.id,
-      questionId: skill.questions[0].id,
+      questionId: lessonPath[0],
       correct: true,
       mode: 'learn',
     });
@@ -84,7 +113,12 @@ describe('recording learning answers against current state', () => {
     );
     expect(result.progress.attempts).toHaveLength(2);
     expect(result.progress.attempts[0]).toEqual(before.progress.attempts[0]);
-    expect(result.progress.totalXp).toBe(before.progress.totalXp + 10);
+    // One step of a lesson is not a completed task, so it pays no XP yet.
+    expect(result.progress.attempts[1]).toMatchObject({
+      questionId: lessonPath[0],
+      xp: 0,
+    });
+    expect(result.progress.totalXp).toBe(before.progress.totalXp);
     expect(result.cards).toEqual(before.cards);
     expect(result.cards[0]).toBe(latest.cards[0]);
     expect(result.dailyGoal).toBe(100);
@@ -97,7 +131,7 @@ describe('recording learning answers against current state', () => {
   it('deduplicates repeated mistake cards without replacing their synced Anki metadata', () => {
     const input = {
       skillId: skill.id,
-      questionId: skill.questions[0].id,
+      questionId: lessonPath[0],
       correct: false,
       mode: 'learn' as const,
     };
@@ -123,7 +157,8 @@ describe('recording learning answers against current state', () => {
       status: 'synced',
       noteId: 809,
     });
-    const question = skill.questions[0];
+    const question = skill.knowledgePoints![0].questions[0];
+    expect(question.id).toBe(input.questionId);
     expect(result.cards[0].front).toContain(question.prompt);
     if (question.type === 'choice') {
       expect(result.cards[0].back).toBe(
@@ -137,7 +172,7 @@ describe('recording learning answers against current state', () => {
     const input = {
       attemptId: '10456670-4979-4a8e-9f43-4d2e2f088d0a',
       skillId: skill.id,
-      questionId: skill.questions[0].id,
+      questionId: lessonPath[0],
       correct: true,
       mode: 'learn' as const,
     };
@@ -155,7 +190,12 @@ describe('recording learning answers against current state', () => {
     expect(replayed).toBe(latest);
     expect(replayed).toEqual(before);
     expect(replayed.progress.attempts).toHaveLength(2);
-    expect(replayed.progress.totalXp).toBe(10);
+    expect(replayed.progress.skills[skill.id].lessonAttempt?.steps).toEqual({
+      [skill.knowledgePoints![0].id]: {
+        correct: [lessonPath[0]],
+        incorrect: 0,
+      },
+    });
     expect(replayed.cards).toHaveLength(1);
   });
 
@@ -179,7 +219,8 @@ describe('recording learning answers against current state', () => {
       mode: 'learn',
     });
     expect(isMastered(mastered.progress, systemsSkill.id)).toBe(true);
-    expect(mastered.progress.totalXp).toBe(40);
+    const systemsXp = earnedXp(lessonXp(systemsSkill), 0, true);
+    expect(mastered.progress.totalXp).toBe(systemsXp);
     expect(mastered.cards).toEqual(
       systemsSkill.flashcards.map((card) => ({
         ...card,
@@ -195,7 +236,7 @@ describe('recording learning answers against current state', () => {
       mode: 'learn',
     });
     expect(repeated.cards).toEqual(mastered.cards);
-    expect(repeated.progress.totalXp).toBe(40);
+    expect(repeated.progress.totalXp).toBe(systemsXp);
   });
 
   it('includes the executable solution in a code-exercise mistake card', () => {
@@ -230,39 +271,47 @@ describe('recording learning answers against current state', () => {
 });
 
 describe('device progress reconciliation', () => {
-  it('credits different questions answered offline on the same day', () => {
+  const otherSkill = skills.find(
+    (candidate) =>
+      candidate.prerequisites.length === 0 && candidate.id !== skill.id,
+  )!;
+  const OTHER_XP = earnedXp(lessonXp(otherSkill), 0, true);
+
+  it('credits different lessons completed offline on the same day', () => {
     const shared = baseline();
-    const local = answer(shared, 0, start + 1);
-    const remote = answer(shared, 1, start + 1);
+    const local = master(shared, start + 1);
+    const remote = master(shared, start + 1, otherSkill.id);
     const combined = mergeStates(local, remote);
-    expect(combined.progress.totalXp).toBe(20);
+    expect(combined.progress.totalXp).toBe(LESSON_XP + OTHER_XP);
     expect(
       combined.progress.dailyXp[dateKey(start, combined.progress.timeZone)],
-    ).toBe(20);
+    ).toBe(LESSON_XP + OTHER_XP);
     expect(
       combined.progress.attempts.reduce((sum, attempt) => sum + attempt.xp, 0),
-    ).toBe(20);
-    expect(mergeStates(combined, local).progress.totalXp).toBe(20);
+    ).toBe(LESSON_XP + OTHER_XP);
+    expect(mergeStates(combined, local).progress.totalXp).toBe(
+      LESSON_XP + OTHER_XP,
+    );
     expect(mergeStates(combined, combined)).toEqual(combined);
   });
 
-  it('credits the same question only once even when offline attempt IDs differ', () => {
+  it('credits the same lesson only once even when offline attempt IDs differ', () => {
     const shared = baseline();
-    const local = answer(shared, 0, start + 1);
-    const remote = answer(shared, 0, start + 2);
+    const local = master(shared, start + 1);
+    const remote = master(shared, start + 2);
     const combined = mergeStates(local, remote);
-    expect(combined.progress.totalXp).toBe(10);
+    expect(combined.progress.totalXp).toBe(LESSON_XP);
     expect(
       combined.progress.dailyXp[dateKey(start, combined.progress.timeZone)],
-    ).toBe(10);
-    expect(combined.progress.attempts).toHaveLength(2);
-    expect(combined.progress.attempts.map((attempt) => attempt.xp)).toEqual([
-      10, 0,
-    ]);
-    expect(combined.progress.skills[skill.id].rewardedQuestionIds).toEqual([
-      skill.questions[0].id,
-    ]);
-    expect(mergeStates(combined, remote).progress.totalXp).toBe(10);
+    ).toBe(LESSON_XP);
+    expect(combined.progress.attempts).toHaveLength(lessonPath.length * 2);
+    expect(
+      combined.progress.attempts
+        .filter((attempt) => attempt.xp > 0)
+        .map((attempt) => [attempt.at, attempt.xp]),
+    ).toEqual([[new Date(start + 1).toISOString(), LESSON_XP]]);
+    expect(combined.progress.skills[skill.id].lessonRewarded).toBe(true);
+    expect(mergeStates(combined, remote).progress.totalXp).toBe(LESSON_XP);
     expect(mergeStates(combined, combined)).toEqual(combined);
   });
 
@@ -271,84 +320,102 @@ describe('device progress reconciliation', () => {
     const day = dateKey(start, shared.progress.timeZone);
     shared.progress.totalXp = 50;
     shared.progress.dailyXp[day] = 50;
-    const local = answer(shared, 1, start + 1);
-    const remote = answer(shared, 2, start + 2);
+    const local = master(shared, start + 1);
+    const remote = master(shared, start + 2, otherSkill.id);
     const combined = mergeStates(local, remote);
-    expect(combined.progress.totalXp).toBe(70);
-    expect(combined.progress.dailyXp[day]).toBe(70);
-    expect(mergeStates(combined, local).progress.totalXp).toBe(70);
+    expect(combined.progress.totalXp).toBe(50 + LESSON_XP + OTHER_XP);
+    expect(combined.progress.dailyXp[day]).toBe(50 + LESSON_XP + OTHER_XP);
+    expect(mergeStates(combined, local).progress.totalXp).toBe(
+      50 + LESSON_XP + OTHER_XP,
+    );
     expect(mergeStates(combined, combined)).toEqual(combined);
   });
 
-  it('uses the permanent reward ledger when an old rewarded attempt has been truncated', () => {
-    const historical = answer(baseline(), 0, start + 1);
+  it('uses the permanent lesson reward ledger when an old rewarded attempt has been truncated', () => {
+    const historical = master(baseline(), start + 1);
     historical.progress.attempts = [];
-    const replayed = answer(baseline(), 0, start + 2);
+    const replayed = master(baseline(), start + 2);
     const combined = mergeStates(historical, replayed);
-    expect(combined.progress.totalXp).toBe(10);
+    expect(combined.progress.totalXp).toBe(LESSON_XP);
     expect(
       combined.progress.dailyXp[dateKey(start, combined.progress.timeZone)],
-    ).toBe(10);
-    expect(combined.progress.attempts[0].xp).toBe(0);
-    expect(answer(combined, 0, start + 3).progress.totalXp).toBe(10);
-    expect(mergeStates(combined, replayed).progress.totalXp).toBe(10);
+    ).toBe(LESSON_XP);
+    expect(
+      combined.progress.attempts.every((attempt) => attempt.xp === 0),
+    ).toBe(true);
+    expect(mergeStates(combined, replayed).progress.totalXp).toBe(LESSON_XP);
   });
 
-  it('deduplicates shared attempts while preserving distinct offline mastery evidence and XP ledgers', () => {
-    let shared = baseline();
-    skill.questions.slice(0, -2).forEach((_, index) => {
-      shared = answer(shared, index, start + index + 1);
+  it('deduplicates shared attempts while preserving distinct offline mastery evidence', () => {
+    const questions = legacySkill.questions;
+    const apply = (state: LearnerState, index: number, at: number) => ({
+      ...state,
+      updatedAt: at,
+      progress: applyAttempt(
+        state.progress,
+        {
+          skillId: legacySkill.id,
+          questionId: questions[index].id,
+          correct: true,
+          mode: 'learn',
+        },
+        at,
+        legacyCatalog,
+      ),
     });
-    const local = answer(
+    let shared = baseline();
+    questions.slice(0, -2).forEach((_, index) => {
+      shared = apply(shared, index, start + index + 1);
+    });
+    const local = apply(
       shared,
-      skill.questions.length - 2,
-      start + skill.questions.length - 1,
+      questions.length - 2,
+      start + questions.length - 1,
     );
-    const remote = answer(
+    const remote = apply(
       shared,
-      skill.questions.length - 1,
-      start + skill.questions.length,
+      questions.length - 1,
+      start + questions.length,
     );
-    const combined = mergeStates(local, remote);
-    expect(combined.progress.attempts).toHaveLength(skill.questions.length);
-    expect(combined.progress.skills[skill.id].attempts).toBe(
-      skill.questions.length,
+    const combined = mergeStates(local, remote, legacyCatalog);
+    const legacyAttempts = combined.progress.attempts.filter(
+      (attempt) => attempt.skillId === legacySkill.id,
     );
-    expect(combined.progress.skills[skill.id].rewardedQuestionIds).toEqual(
-      expect.arrayContaining(skill.questions.map((question) => question.id)),
+    expect(legacyAttempts).toHaveLength(questions.length);
+    expect(combined.progress.skills[legacySkill.id].attempts).toBe(
+      questions.length,
     );
-    expect(isMastered(combined.progress, skill.id)).toBe(true);
+    expect(isMastered(combined.progress, legacySkill.id, legacyCatalog)).toBe(
+      true,
+    );
     expect(combined.cards).toEqual(
       expect.arrayContaining(
-        skill.flashcards.map((card) =>
+        legacySkill.flashcards.map((card) =>
           expect.objectContaining({ id: card.id, status: 'pending' }),
         ),
       ),
     );
-    expect(combined.progress.skills[skill.id].dueAt).toBe(
-      start + skill.questions.length + 86_400_000,
+    expect(combined.progress.skills[legacySkill.id].dueAt).toBe(
+      start + questions.length + 86_400_000,
     );
     expect(parseStateUpdate({ state: combined, revision: 0 }).state).toEqual(
       combined,
     );
-    expect(mergeStates(combined, combined)).toEqual(combined);
+    expect(mergeStates(combined, combined, legacyCatalog)).toEqual(combined);
   });
 
-  it('keeps a later failure and prevents relearning a previously rewarded question from farming XP', () => {
-    let mastered = baseline();
-    skill.questions.forEach((_, index) => {
-      mastered = answer(mastered, index, start + index + 1);
-    });
+  it('keeps a later failure and prevents relearning a previously rewarded lesson from farming XP', () => {
+    const mastered = master(baseline(), start + 1);
     const failed = answer(mastered, 0, start + 20, false);
     const merged = mergeStates(mastered, failed);
     expect(isMastered(merged.progress, skill.id)).toBe(false);
     expect(merged.progress.skills[skill.id].questionIds).not.toContain(
-      skill.questions[0].id,
+      skill.knowledgePoints![0].id,
     );
-    expect(merged.progress.attempts).toHaveLength(skill.questions.length + 1);
-    expect(answer(merged, 0, start + 21).progress.totalXp).toBe(
-      merged.progress.totalXp,
-    );
+    expect(merged.progress.attempts).toHaveLength(lessonPath.length + 1);
+    const relearned = master(merged, start + 21);
+    expect(isMastered(relearned.progress, skill.id)).toBe(true);
+    expect(relearned.progress.totalXp).toBe(merged.progress.totalXp);
     expect(merged.progress.skills[skill.id].consecutiveCorrect).toBe(0);
   });
 
@@ -424,6 +491,7 @@ describe('device progress reconciliation', () => {
   it('creates mastery cards for an extensible choice-only subject catalog', () => {
     const choiceOnly = {
       ...skill,
+      knowledgePoints: undefined,
       id: 'language:greetings',
       title: 'Greetings',
       questions: skill.questions.filter(

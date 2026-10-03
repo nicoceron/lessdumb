@@ -1,9 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 import { skillById, type CodeQuestion } from '../src/lib/curriculum';
-import { applyAttempt, coursePath } from '../src/lib/learning';
+import { coursePath } from '../src/lib/learning';
 import { createState, type LearnerState } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
 import { replaceCode as writeCode } from './helpers/editor';
+import { answerChoice } from './helpers/lesson';
+import { masterSkill } from './helpers/mastery';
+import { chooseCourse, expectActiveCourse } from './helpers/navigation';
 
 const origin = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 const courseId = 'competitive-programming';
@@ -24,13 +27,7 @@ async function account(page: Page, target?: string) {
       if (done.has(id)) return;
       const skill = skillById[id];
       skill.prerequisites.forEach(master);
-      for (const question of skill.questions)
-        state.progress = applyAttempt(state.progress, {
-          skillId: id,
-          questionId: question.id,
-          correct: true,
-          mode: 'learn',
-        });
+      state.progress = masterSkill(state.progress, id);
       done.add(id);
     }
     skillById[target].prerequisites.forEach(master);
@@ -53,13 +50,7 @@ test('a saved contest goal exposes its complete graph and navigates both referen
 }) => {
   await account(page);
   await page.goto('/courses');
-  const card = page.locator('.ma-catalog-card').filter({
-    has: page.getByRole('heading', {
-      name: 'Competitive Programming',
-      exact: true,
-    }),
-  });
-  await card.getByRole('button', { name: 'Set learning goal' }).click();
+  await chooseCourse(page, 'Competitive Programming');
   await expect(
     page.getByRole('link', { name: 'USACO Guide', exact: true }),
   ).toHaveAttribute('href', 'https://usaco.guide/');
@@ -71,7 +62,7 @@ test('a saved contest goal exposes its complete graph and navigates both referen
     .toBe(courseId);
   await page.goto('/');
   await page.reload();
-  await expect(page.getByLabel('CURRENT COURSE')).toHaveValue(courseId);
+  await expectActiveCourse(page, 'Competitive Programming');
   await page.goto(`/graph?course=${courseId}`);
   await expect(page.getByLabel('Graph course')).toHaveValue(courseId);
   await expect(page.locator('.graph-node')).toHaveCount(
@@ -118,27 +109,16 @@ for (const id of ['cp-prefix-sums', 'cp-fenwick']) {
     await page.goto(`/learn?skill=${id}`);
     await page.getByRole('button', { name: 'Let’s try it' }).click();
     for (const question of skill.questions) {
-      if (question.type === 'choice') {
-        await page
-          .getByRole('button', {
-            name: `${String.fromCharCode(65 + question.answer)} ${question.choices[question.answer]}`,
-            exact: true,
-          })
-          .click();
-        await page
-          .getByRole('button', { name: 'Check answer', exact: true })
-          .click();
-      } else {
+      if (question.type === 'choice') await answerChoice(page, question);
+      else {
         if (id === 'cp-prefix-sums') {
           await writeCode(page, 'pass');
           await page
             .getByRole('button', { name: 'Run & check', exact: true })
             .click();
           await expect(
-            page.getByText('A useful mistake. Let’s work through it.', {
-              exact: true,
-            }),
-          ).toBeVisible({ timeout: 60000 });
+            page.locator('.question-paper [data-slot="alert"][role="status"]'),
+          ).toContainText('Incorrect', { timeout: 60000 });
           await page
             .getByRole('button', { name: 'Continue', exact: true })
             .click();
@@ -153,9 +133,7 @@ for (const id of ['cp-prefix-sums', 'cp-fenwick']) {
       );
       await expect(feedback).toBeVisible({ timeout: 60000 });
       await expect(feedback).toContainText(
-        question === skill.questions.at(-1)
-          ? 'Skill mastered. A new connection made.'
-          : 'That’s a small win.',
+        question === skill.questions.at(-1) ? 'Lesson complete' : 'Correct',
       );
       if (question !== skill.questions.at(-1))
         await page
