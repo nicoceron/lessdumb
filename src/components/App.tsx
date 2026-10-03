@@ -51,15 +51,18 @@ import {
   skillById,
   units,
   type Skill,
-  assessmentPolicy,
 } from '../lib/curriculum';
 import {
   getSkillState,
   getStats,
   isUnlocked,
+  lessonCoolingDown,
+  lessonState,
+  lessonXpAvailable,
   nextTask,
   coursePath,
 } from '../lib/learning';
+import { REVIEW_XP } from '../lib/xp';
 import { createAnkiClient, type AnkiClient } from '../lib/anki';
 import { type LearnerState } from '../lib/state';
 import { legacyMemory, recallProbability } from '../lib/retention';
@@ -409,6 +412,8 @@ function Dashboard({
   const candidates = path.filter(
     (s) =>
       isUnlocked(state.progress, s.id) &&
+      // A lesson failed moments ago waits behind other work.
+      !lessonCoolingDown(state.progress, s.id) &&
       (getSkillState(state.progress, s.id).mastery < 1 ||
         (getSkillState(state.progress, s.id).dueAt ?? Infinity) <= Date.now()),
   );
@@ -529,24 +534,17 @@ function Dashboard({
               const p = getSkillState(state.progress, skill.id);
               const review = p.mastery >= 1;
               const prerequisite = skill.courseId !== course.id;
-              const earned = p.rewardedQuestionIds;
               const xp = review
-                ? skill.questions
-                    .filter((q) => !p.reviewQuestionIds.includes(q.id))
-                    .map((q) => (q.type === 'code' ? 8 : 5))
-                    .sort((a, b) => b - a)
-                    .slice(
-                      0,
-                      Math.max(
-                        0,
-                        assessmentPolicy(skill).reviewAnswers -
-                          p.reviewQuestionIds.length,
-                      ),
-                    )
-                    .reduce((n, x) => n + x, 0)
-                : skill.questions
-                    .filter((q) => !earned.includes(q.id))
-                    .reduce((n, q) => n + (q.type === 'code' ? 15 : 10), 0);
+                ? REVIEW_XP
+                : lessonXpAvailable(state.progress, skill);
+              // Steps passed in an unfinished attempt count toward the bar.
+              const steps = lessonState(state.progress, skill).steps;
+              const completion = review
+                ? 1
+                : steps.filter(
+                    (step) =>
+                      step.status === 'done' || step.status === 'passed',
+                  ).length / (steps.length || 1);
               return (
                 <Card
                   className={`gap-0 ma-panel ma-task ${index === 0 ? 'primary-task' : ''}`}
@@ -573,17 +571,17 @@ function Dashboard({
                         </Badge>
                       )}
                     </strong>
-                    <span>Up to {xp} XP</span>
+                    <span>{xp} XP</span>
                   </div>
                   <h3>{skill.title}</h3>
                   <p>{skill.summary}</p>
-                  {(index === 0 || p.mastery > 0) && (
+                  {(index === 0 || completion > 0) && (
                     <div className="task-progress">
                       <Progress
-                        value={p.mastery * 100}
+                        value={completion * 100}
                         aria-label={`${skill.title} mastery`}
                       />
-                      <span>{Math.round(p.mastery * 100)}%</span>
+                      <span>{Math.round(completion * 100)}%</span>
                     </div>
                   )}
                   {index === 0 && (
@@ -1219,8 +1217,7 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                         Date.now(),
                       ) * 100,
                     )}
-                    %. Your independent answers, hints, and mistakes shape this
-                    schedule.
+                    %. Your answers, reviews, and mistakes shape this schedule.
                   </p>
                 </div>
               );

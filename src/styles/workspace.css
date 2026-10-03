@@ -1802,3 +1802,166 @@ code {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Lesson page: one column, progress markers, one question at a time. */
+.lesson-page {
+  max-width: 820px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.lesson-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.lesson-heading .lesson-course-path {
+  color: var(--muted-foreground);
+}
+.lesson-heading h1 {
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.4px;
+  overflow-wrap: anywhere;
+}
+.lesson-heading .lesson-session-stats {
+  justify-content: flex-start;
+  gap: 8px;
+}
+.lesson-markers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  list-style: none;
+  margin: 18px 0;
+  padding: 0;
+}
+.lesson-marker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.lesson-marker-dot {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-size: 12px;
+  background: var(--card);
+}
+.lesson-marker-label {
+  overflow-wrap: anywhere;
+}
+.lesson-marker.is-done {
+  color: #22634c;
+}
+.lesson-marker.is-done .lesson-marker-dot {
+  color: #fff;
+  background: #22634c;
+  border-color: #22634c;
+}
+.lesson-marker.is-current {
+  color: var(--foreground);
+  font-weight: 600;
+}
+.lesson-marker.is-current .lesson-marker-dot {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.lesson-page .lesson-paper {
+  margin-bottom: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  min-width: 0;
+}
+.lesson-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.lesson-intro .lesson-section {
+  padding: 26px 30px;
+}
+.lesson-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 30px;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.lesson-point {
+  padding: 22px 30px 8px;
+}
+.lesson-point h2 {
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.lesson-example-heading {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 650;
+}
+.lesson-example {
+  min-width: 0;
+}
+.lesson-example .lesson-example-code {
+  margin-top: 0;
+}
+.lesson-example .lesson-teaching-text {
+  margin-top: 14px;
+}
+.lesson-result {
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 30px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.lesson-result > svg {
+  color: var(--destructive);
+}
+.lesson-result h1 {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.lesson-result p {
+  color: var(--muted-foreground);
+  line-height: 1.7;
+}
+@media (max-width: 600px) {
+  .lesson-heading h1 {
+    font-size: 22px;
+  }
+  .lesson-intro .lesson-section,
+  .lesson-actions {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .lesson-point {
+    padding: 18px 20px 6px;
+  }
+  .lesson-result {
+    padding: 24px 20px;
+  }
+}
