@@ -510,6 +510,43 @@ const definitions: Definition[] = [
     ],
   },
   {
+    id: 'math-exp-log',
+    unitId: 'math-functions-growth',
+    title: 'Exponentials and logarithms in Python',
+    prerequisites: ['math-logarithms', 'imports'],
+    summary:
+      'Evaluate exponentials and natural logarithms with math.exp and math.log.',
+    paragraphs: [
+      'The math module computes the two functions behind most machine-learning formulas. math.exp(x) returns $e^x$ as a float, and math.e is the constant $e \\approx 2.718281828459045$, so math.exp(1) equals math.e. math.log(x) is the natural logarithm $\\ln x$, which undoes math.exp: math.log(math.exp(3)) gives back 3.0. math.log(x, b) uses base $b$, and math.log2 and math.log10 are shortcuts for bases 2 and 10.',
+      'math.log accepts only positive numbers: math.log(0) and math.log(-1) raise ValueError, matching the rule that $e^k$ is always positive. Floats have limits too. A product of many small probabilities underflows to 0.0, but the sum of their logs stays an ordinary number, which is why models compare and maximize sums of logs.',
+    ],
+    example: {
+      code: 'import math\nprint(math.exp(0), math.exp(1))\nprint(math.log(math.exp(3)))\nprint(math.log2(32), math.log10(0.01))',
+      output: '1.0 2.718281828459045\n3.0\n5.0 -2.0',
+      explanation:
+        '$e^0 = 1$ and $e^1 = e$. math.log undoes math.exp, returning the exponent 3. $2^5 = 32$ and $10^{-2} = 0.01$, so the base-2 and base-10 logs are 5 and $-2$.',
+    },
+    exercise: {
+      prompt:
+        'A model gives the true label probability p = 0.8. Import math, set loss to the negative natural log of p using math.log, and set recovered to math.exp(-loss), which undoes the log.',
+      starter: '# Import math here.\np = 0.8\n# Set loss and recovered.\n',
+      solution:
+        'import math\np = 0.8\nloss = -math.log(p)\nrecovered = math.exp(-loss)',
+      tests:
+        'assert abs(loss - 0.2231435513142097) < 1e-9, "-ln(0.8) is about 0.2231."\nassert abs(recovered - 0.8) < 1e-12, "exp undoes log, giving back 0.8."',
+    },
+    cards: [
+      [
+        'What do math.exp(x) and math.log(x) compute?',
+        'eˣ and the natural logarithm ln x; each undoes the other.',
+      ],
+      [
+        'What does math.log(0) do?',
+        'It raises ValueError: logarithms are defined only for positive inputs.',
+      ],
+    ],
+  },
+  {
     id: 'math-sigmoid',
     unitId: 'math-functions-growth',
     title: 'The sigmoid function',

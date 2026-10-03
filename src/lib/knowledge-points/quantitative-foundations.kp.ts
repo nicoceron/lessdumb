@@ -5121,4 +5121,142 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'math-exp-log': [
+    {
+      title: 'Compute e to a power with math.exp',
+      explanation: [
+        'After import math, math.exp(x) returns $e^x$ as a float, and math.e is the constant $e$ itself. math.exp(0) is 1.0, math.exp(1) equals math.e, and a negative exponent gives a reciprocal: math.exp(-1) is $1 / e \\approx 0.368$.',
+        '$e^x$ is positive for every $x$ and grows very fast. math.exp(-50) is a tiny positive float, while math.exp(1000) is too large for a float, so Python raises OverflowError.',
+      ],
+      example: {
+        code: 'import math\nprint(math.exp(0))\nprint(math.exp(1))\nprint(math.exp(1) == math.e, math.exp(-1) > 0)',
+        output: '1.0\n2.718281828459045\nTrue True',
+        explanation:
+          '$e^0 = 1$, returned as a float. $e^1$ is the constant $e$, so the comparison is True, and $e^{-1} = 1 / e$ is still positive.',
+      },
+      questions: [
+        predictOutput(
+          'What is printed?',
+          'import math\nprint(math.exp(0) + math.exp(0))',
+          ['2', '0.0', '2.0', '2.718281828459045'],
+          2,
+          '$e^0 = 1$, and math.exp always returns a float, so the sum is 2.0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import math\nprint(math.exp(2) > 7, math.exp(-2) > 0)',
+          ['True True', 'True False', 'False True', 'False False'],
+          0,
+          '$e^2 \\approx 7.39$, and $e$ raised to any power is positive, even a negative one.',
+        ),
+        choose(
+          'Which expression computes $e^{-z}$ for a score z?',
+          ['math.e(-z)', '-math.exp(z)', 'math.exp(z) ** -z', 'math.exp(-z)'],
+          3,
+          'math.exp takes the exponent as its argument. math.e is a number, not a function, and $-e^z$ is negative.',
+        ),
+        predictOutput(
+          'What is the output?',
+          'import math\nprint(math.exp(1) == math.e, math.exp(-1) < 0)',
+          ['True True', 'False False', 'False True', 'True False'],
+          3,
+          'math.exp(1) is exactly the stored constant $e$, and $e^{-1} = 1 / e$ is positive.',
+        ),
+      ],
+    },
+    {
+      title: 'Undo exponentials with math.log',
+      explanation: [
+        'math.log(x) returns the natural logarithm $\\ln x$: the exponent that $e$ must be raised to in order to give $x$. It undoes math.exp, so math.log(math.exp(3)) is 3.0, and math.log(1) is 0.0. A second argument picks another base: math.log(8, 2) is 3.0. math.log2(x) and math.log10(x) are shortcuts for bases 2 and 10.',
+        'Only positive numbers have a logarithm, because $e^k$ is positive for every $k$. math.log(0) and math.log(-4) raise ValueError instead of returning a number.',
+      ],
+      example: {
+        code: 'import math\nprint(math.log(1))\nprint(math.log(math.exp(3)))\nprint(math.log2(32), math.log10(0.01))',
+        output: '0.0\n3.0\n5.0 -2.0',
+        explanation:
+          '$e^0 = 1$, so $\\ln 1 = 0$. $\\ln$ undoes $e^x$ and returns 3. $2^5 = 32$ and $10^{-2} = 0.01$.',
+      },
+      questions: [
+        predictOutput(
+          'What is printed?',
+          'import math\nprint(math.log(math.exp(5)))',
+          ['148.4131591025766', '5.0', '1.6094379124341003', '0.0'],
+          1,
+          'math.log undoes math.exp, so the result is the exponent 5, as a float.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import math\nprint(math.log2(64), math.log10(100))',
+          ['8.0 10.0', '6 2', '6.0 2.0', '32.0 50.0'],
+          2,
+          '$2^6 = 64$ and $10^2 = 100$, and the log functions return floats.',
+        ),
+        choose(
+          'What happens when a program calls math.log(-2)?',
+          [
+            'It returns -0.6931471805599453',
+            'It raises ValueError',
+            'It returns 0.0',
+            'It returns the log of 2',
+          ],
+          1,
+          'No power of $e$ is negative, so math.log refuses negative inputs instead of returning a number.',
+        ),
+        predictOutput(
+          'What is the output?',
+          'import math\nprint(math.log(8, 2) + math.log(1))',
+          ['4.0', '3', '2.0794415416798357', '3.0'],
+          3,
+          'math.log(8, 2) asks which power of 2 gives 8, which is 3.0, and $\\ln 1$ adds 0.0.',
+        ),
+      ],
+    },
+    {
+      title: 'Add logs instead of multiplying small probabilities',
+      explanation: [
+        '$\\ln(xy) = \\ln x + \\ln y$, so math.log(a * b) equals math.log(a) + math.log(b), up to float rounding. Taking logs turns a long product into a sum.',
+        'This matters for probabilities. Multiplying hundreds of values such as 0.01 underflows: the true product is smaller than the smallest positive float, so Python stores 0.0, and every comparison between such products is lost. The sum of their logs is an ordinary negative number, and math.exp turns a log back into a probability whenever that probability is large enough to store.',
+      ],
+      example: {
+        code: 'import math\np = 0.01\nprint(p ** 200)\nprint(200 * math.log(p))',
+        output: '0.0\n-921.0340371976182',
+        explanation:
+          '$0.01^{200} = 10^{-400}$, far below the smallest float, so the product becomes 0.0. The log of the same product, $200 \\ln 0.01$, is an ordinary float.',
+      },
+      questions: [
+        predictOutput(
+          'What is printed?',
+          'import math\ntotal = math.log(0.5) + math.log(0.5)\nprint(math.exp(total))',
+          ['1.0', '0.25', '0.5', '-1.3862943611198906'],
+          1,
+          'Adding the logs multiplies the probabilities, and math.exp turns the sum back into $0.5 \\times 0.5 = 0.25$.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import math\nprint(0.001 ** 120, 120 * math.log(0.001) < 0)',
+          ['1e-360 True', '0.0 False', '0.0 True', '1e-360 False'],
+          2,
+          '$10^{-360}$ is too small for a float, so the product underflows to 0.0. Its log, $120 \\ln 0.001$, is negative.',
+        ),
+        choose(
+          'Two models give 400 observations each a probability, and both products print 0.0. How can you still tell which model fits the data better?',
+          [
+            'Compare the sums of math.log of each probability; the larger sum fits better',
+            'Print the products with more decimal places',
+            'Pick either model, because both products are equally 0',
+            'Multiply each product by 400 before comparing them',
+          ],
+          0,
+          'The products underflowed, but $\\ln$ is increasing, so the larger log-sum still marks the larger true product.',
+        ),
+        predictOutput(
+          'What is the output?',
+          'import math\nlog_p = math.log(0.2) + math.log(0.5)\nprint(math.exp(log_p) < 0.11, log_p < 0)',
+          ['False True', 'True False', 'False False', 'True True'],
+          3,
+          'The sum of logs is $\\ln(0.2 \\times 0.5) = \\ln 0.1$, which is negative, and math.exp turns it back into about 0.1.',
+        ),
+      ],
+    },
+  ],
 };

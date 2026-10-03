@@ -11431,4 +11431,807 @@ int main() {
       ],
     },
   ],
+  'cpp-auto-parameters': [
+    {
+      title: 'An auto parameter accepts any argument type',
+      explanation: [
+        'Writing auto for a lambda parameter makes the lambda generic. The compiler handles each call separately: twice(3) builds a version of the body for int, and twice(1.25) builds another for double. Each version keeps its argument’s type, so the int call returns an int and the double call returns a double.',
+        'A parameter declared int instead converts every argument to int before the body runs, so a double argument loses its fraction.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  auto twice = [](auto value) { return value + value; };
+  std::cout << twice(3) << " " << twice(1.25) << "\\n";
+}`,
+        output: '6 2.5',
+        explanation:
+          'twice(3) runs the int version and returns 6; twice(1.25) runs the double version and returns 2.5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto half = [](auto v) { return v / 2; };
+  std::cout << half(7) << " " << half(7.0) << "\\n";
+}`,
+          ['3.5 3.5', '3 3', '3 3.5', '3.5 3'],
+          2,
+          'half(7) divides two ints and truncates to 3; half(7.0) divides a double and gives 3.5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto add = [](auto a, auto b) { return a + b; };
+  std::cout << add(2, 3) << " " << add(2, 0.5) << "\\n";
+}`,
+          ['5 2.5', '5 2', '5 3', '5.0 2.5'],
+          0,
+          'Each auto parameter takes its own argument’s type. 2 + 0.5 mixes int and double, so the result is the double 2.5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto twice = [](int v) { return v + v; };
+  auto generic = [](auto v) { return v + v; };
+  std::cout << twice(2.5) << " " << generic(2.5) << "\\n";
+}`,
+          ['5 5', '4 4', '5 4', '4 5'],
+          3,
+          'The int parameter turns 2.5 into 2 before adding; the auto parameter keeps the double.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto same = [](auto a, auto b) { return a == b; };
+  std::cout << same(1, 1.0) << " " << same(3, 4) << "\\n";
+}`,
+          ['0 0', '1 0', '1 1', '0 1'],
+          1,
+          'Comparing int 1 with double 1.0 converts to a common type and finds them equal; 3 and 4 differ.',
+        ),
+      ],
+    },
+    {
+      title: 'Read arguments with const auto&',
+      explanation: [
+        'auto value copies each argument. For a large argument such as a std::vector, write const auto& instead: the parameter refers to the caller’s object without copying it, and const forbids changing it through that reference.',
+        'Generic lambdas often take two const auto& parameters, as a comparator does. The same lambda then works for ints, doubles, or the elements and vectors you pass to it, as long as the body’s operations exist for those types.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <vector>
+int main() {
+  auto first = [](const auto& items) { return items[0]; };
+  std::vector<int> counts{4, 8};
+  std::vector<double> prices{2.5, 1.0};
+  std::cout << first(counts) << " " << first(prices) << "\\n";
+}`,
+        output: '4 2.5',
+        explanation:
+          'The same lambda reads element 0 of a vector of ints and of a vector of doubles, without copying either vector.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <vector>
+int main() {
+  auto last = [](const auto& items) { return items[items.size() - 1]; };
+  std::vector<int> a{1, 2, 3};
+  std::vector<double> b{0.5, 0.25};
+  std::cout << last(a) << " " << last(b) << "\\n";
+}`,
+          ['1 0.5', '3 0.5', '2 0.25', '3 0.25'],
+          3,
+          'items.size() - 1 is the last index in each vector, whatever its element type.',
+        ),
+        choose(
+          'Which parameter lets a generic lambda read a large vector without copying it and without being able to change it?',
+          [
+            'auto items',
+            'const auto& items',
+            'auto& items',
+            'const auto items',
+          ],
+          1,
+          'auto and const auto copy the argument; auto& avoids the copy but allows changes.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto less = [](const auto& a, const auto& b) { return a < b; };
+  std::cout << less(2, 9) << " " << less(2.5, 0.5) << "\\n";
+}`,
+          ['1 0', '0 1', '1 1', '0 0'],
+          0,
+          '2 < 9 is true; 2.5 < 0.5 is false. One comparator handles both types.',
+        ),
+        choose(
+          'What happens when [](const auto& items) { items[0] = 0; } is called with a std::vector<int>?',
+          [
+            'It sets the caller’s first element to 0',
+            'It changes a private copy and leaves the caller’s vector alone',
+            'It does not compile, because items is a reference to const',
+            'It compiles only when the vector is empty',
+          ],
+          2,
+          'const forbids assigning through the reference, and the error appears when the body is compiled for std::vector<int>.',
+        ),
+      ],
+    },
+  ],
+  'cpp-decltype-decay': [
+    {
+      title: 'decltype names the declared type of a variable',
+      explanation: [
+        'decltype(x) is the type x was declared with. After int count = 3;, decltype(count) is int, so decltype(count) copy = count; declares another int. For a reference declared int& alias = count;, decltype(alias) is int&, reference included, and for const int limit = 5; it is const int.',
+        'std::is_same_v<A, B>, from <type_traits>, is true only when A and B are exactly the same type, so it shows what decltype produced.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <type_traits>
+int main() {
+  int count = 3;
+  int& alias = count;
+  decltype(count) copy = count;
+  copy += 1;
+  std::cout << std::is_same_v<decltype(count), int> << " "
+            << std::is_same_v<decltype(alias), int> << " "
+            << std::is_same_v<decltype(alias), int&> << " " << count << " " << copy << "\\n";
+}`,
+        output: '1 0 1 3 4',
+        explanation:
+          'decltype(count) is int, so copy is an independent int: it becomes 4 while count stays 3. decltype(alias) is int&, which is not the same type as int.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  double rate = 0.5;
+  decltype(rate) doubled = rate * 2;
+  std::cout << doubled / 4 << "\\n";
+}`,
+          ['0', '1', '0.25', '0.5'],
+          2,
+          'decltype(rate) is double, so doubled is 1.0 and 1.0 / 4 is 0.25. An int would have given 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  int total = 7;
+  int& ref = total;
+  std::cout << std::is_same_v<decltype(ref), int> << std::is_same_v<decltype(ref), int&> << "\\n";
+}`,
+          ['10', '01', '11', '00'],
+          1,
+          'ref was declared as int&, and decltype keeps the reference.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  const int limit = 5;
+  std::cout << std::is_same_v<decltype(limit), int> << " " << std::is_same_v<decltype(limit), const int> << "\\n";
+}`,
+          ['1 0', '1 1', '0 0', '0 1'],
+          3,
+          'decltype keeps const, so the declared type is const int, not int.',
+        ),
+        choose(
+          'alias is declared int& alias = count;. What does decltype(alias) other = count; declare?',
+          [
+            'Another reference to count',
+            'A new int initialized with a copy of count',
+            'A pointer to count',
+            'Nothing; decltype cannot declare variables',
+          ],
+          0,
+          'decltype(alias) is int&, so other is a second reference bound to count.',
+        ),
+      ],
+    },
+    {
+      title: 'std::decay_t strips const and references',
+      explanation: [
+        'std::decay_t<T>, from <type_traits>, is the plain type a by-value copy of T would have: it removes a reference and then a top-level const. std::decay_t<const int&> is int, and std::decay_t<int> stays int.',
+        'This matters in generic lambdas. Inside [](const auto& x) { ... }, decltype(x) for an int argument is const int&, which is not the same type as int. Compare std::decay_t<decltype(x)> with int instead, and give it a short name with using T = std::decay_t<decltype(x)>;.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <type_traits>
+int main() {
+  auto describe = [](const auto& x) {
+    std::cout << std::is_same_v<decltype(x), int> << " "
+              << std::is_same_v<std::decay_t<decltype(x)>, int> << "\\n";
+  };
+  describe(42);
+}`,
+        output: '0 1',
+        explanation:
+          'decltype(x) is const int&, so the first test fails. After decay_t removes const and &, the type is int.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  std::cout << std::is_same_v<std::decay_t<const double&>, double> << " "
+            << std::is_same_v<std::decay_t<int&>, int> << "\\n";
+}`,
+          ['0 0', '1 0', '0 1', '1 1'],
+          3,
+          'decay_t removes the reference and the const in both cases, leaving double and int.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  auto check = [](const auto& x) {
+    using T = std::decay_t<decltype(x)>;
+    std::cout << std::is_same_v<T, int> << std::is_same_v<T, double> << "\\n";
+  };
+  check(2.5);
+  check(7);
+}`,
+          ['01\n10', '10\n01', '00\n00', '01\n01'],
+          0,
+          '2.5 is a double and 7 is an int; T names the plain type of each argument.',
+        ),
+        choose(
+          'Inside [](const auto& x) { ... } called with an int, why is std::is_same_v<decltype(x), int> false?',
+          [
+            'The int argument is converted to double inside a generic lambda',
+            'decltype(x) is const int&, which differs from int until decay_t strips const and &',
+            'is_same_v compares values, and x is not equal to int',
+            'decltype works only on variables declared outside the lambda',
+          ],
+          1,
+          'The parameter is a reference to const, and decltype reports that full type.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  using T = std::decay_t<const int&>;
+  T value = 5;
+  value += 1;
+  std::cout << value << "\\n";
+}`,
+          ['5', 'Compilation fails', '1', '6'],
+          3,
+          'T is plain int, without const, so value can be changed. A const int would reject +=.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose behavior by the deduced type',
+      explanation: [
+        'Combine the two: name the plain type with using T = std::decay_t<decltype(x)>; and branch on std::is_same_v<T, int>. An ordinary if works when every branch compiles for every argument type, as with arithmetic that works on both int and double.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <type_traits>
+int main() {
+  auto cents = [](const auto& amount) {
+    using T = std::decay_t<decltype(amount)>;
+    long long result = 0;
+    if (std::is_same_v<T, int>) {
+      result = amount;
+    } else {
+      result = static_cast<long long>(amount * 100 + 0.5);
+    }
+    return result;
+  };
+  std::cout << cents(250) << " " << cents(1.5) << "\\n";
+}`,
+        output: '250 150',
+        explanation:
+          'An int amount already counts cents. A double amount counts dollars, so it is scaled by 100 and rounded.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  auto cents = [](const auto& amount) {
+    using T = std::decay_t<decltype(amount)>;
+    long long result = 0;
+    if (std::is_same_v<T, int>) {
+      result = amount;
+    } else {
+      result = static_cast<long long>(amount * 100 + 0.5);
+    }
+    return result;
+  };
+  std::cout << cents(75) << " " << cents(0.25) << "\\n";
+}`,
+          ['7500 25', '75 0', '75 25', '7500 0'],
+          2,
+          '75 is an int and is kept; 0.25 is a double and becomes 25 cents.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  auto label = [](const auto& v) {
+    using T = std::decay_t<decltype(v)>;
+    if (std::is_same_v<T, double>) {
+      std::cout << "real ";
+    } else {
+      std::cout << "whole ";
+    }
+  };
+  label(3);
+  label(3.0);
+  label(-1);
+  std::cout << "\\n";
+}`,
+          [
+            'whole whole whole',
+            'real real whole',
+            'whole real real',
+            'whole real whole',
+          ],
+          3,
+          '3 and -1 are ints, and 3.0 is a double, whatever their values.',
+        ),
+        choose(
+          'A generic lambda tests std::is_same_v<decltype(x), int> on a const auto& parameter and never takes the int branch. Which test fixes it?',
+          [
+            'std::is_same_v<decltype(x), int&>',
+            'std::is_same_v<x, int>',
+            'std::is_same_v<std::decay_t<decltype(x)>, int>',
+            'std::is_same_v<decltype(x), auto>',
+          ],
+          2,
+          'decltype(x) is const int&; only its decayed type equals int.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  auto is_int = [](const auto& v) { return std::is_same_v<std::decay_t<decltype(v)>, int>; };
+  std::cout << is_int(1) + is_int(2.0) + is_int(3) + is_int('a') << "\\n";
+}`,
+          ['3', '2', '4', '1'],
+          1,
+          '1 and 3 are ints. 2.0 is a double, and the character literal is a char, a different type from int.',
+        ),
+      ],
+    },
+  ],
+  'cpp-mutable-lambda': [
+    {
+      title: 'mutable lets a lambda change its own copy',
+      explanation: [
+        'A by-value capture is read-only inside the lambda, so [count] { ++count; } does not compile. Writing mutable after the parameter list lifts that restriction: [count]() mutable { return ++count; } changes the closure’s own copy.',
+        'That copy lives inside the closure object, so a change persists from one call to the next. The original variable is untouched, because the closure never refers to it.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int count = 0;
+  auto tick = [count]() mutable { return ++count; };
+  int first = tick();
+  int second = tick();
+  std::cout << first << " " << second << " " << count << "\\n";
+}`,
+        output: '1 2 0',
+        explanation:
+          'Each call increments the closure’s copy, so the results are 1 and then 2. The original count is still 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int total = 10;
+  auto add = [total](int x) mutable {
+    total += x;
+    return total;
+  };
+  add(5);
+  int result = add(1);
+  std::cout << result << " " << total << "\\n";
+}`,
+          ['11 10', '16 10', '16 16', '11 16'],
+          1,
+          'The closure’s copy grows to 15 and then 16; the original total stays 10.',
+        ),
+        choose(
+          'Why does [count] { ++count; } fail to compile?',
+          [
+            'count must be captured by reference to be read at all',
+            'Lambdas cannot use the ++ operator',
+            'count is copied only when the lambda is called',
+            'A by-value capture is read-only unless the lambda is mutable',
+          ],
+          3,
+          'Without mutable, the closure’s copies are const inside its body.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int start = 3;
+  auto next = [start]() mutable {
+    start *= 2;
+    return start;
+  };
+  next();
+  next();
+  int third = next();
+  std::cout << third << " " << start << "\\n";
+}`,
+          ['24 3', '6 3', '24 24', '12 3'],
+          0,
+          'The copy doubles on every call: 6, 12, then 24. The original start is still 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int n = 0;
+  auto step = [n]() mutable {
+    n += 5;
+    return n;
+  };
+  int last = 0;
+  for (int i = 0; i < 4; ++i) last = step();
+  std::cout << last << " " << n << "\\n";
+}`,
+          ['5 0', '20 20', '0 0', '20 0'],
+          3,
+          'Four calls add 5 each time to the closure’s copy. n in main never changes.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose a mutable copy or a reference capture',
+      explanation: [
+        'Decide by who should see the change. [&count] changes the caller’s variable and needs no mutable, because the lambda modifies the variable it refers to, not a copy it owns. [count]() mutable changes only the closure’s copy.',
+        'Use a reference capture when the caller needs the result afterwards; use mutable when the state belongs to the lambda, as in a generator that hands out the next ID.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int shared = 0;
+  int own = 0;
+  auto by_ref = [&shared] { ++shared; };
+  auto by_copy = [own]() mutable { return ++own; };
+  by_ref();
+  by_ref();
+  by_copy();
+  int seen = by_copy();
+  std::cout << shared << " " << own << " " << seen << "\\n";
+}`,
+        output: '2 0 2',
+        explanation:
+          'by_ref changed shared itself. by_copy counted to 2 in its own copy and left own at 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int a = 1;
+  auto ref = [&a] { a *= 3; };
+  auto copy = [a]() mutable {
+    a *= 3;
+    return a;
+  };
+  ref();
+  int c = copy();
+  std::cout << a << " " << c << "\\n";
+}`,
+          ['3 9', '1 3', '3 3', '9 3'],
+          2,
+          'copy took its snapshot, 1, when it was created, before ref() tripled a to 3. copy() returns 1 * 3.',
+        ),
+        choose(
+          'A lambda must count events so that main can print the total afterwards. Which lambda fits?',
+          [
+            '[events]() mutable { ++events; }',
+            '[&events] { ++events; }',
+            '[events] { return events + 1; }',
+            '[events] { ++events; }',
+          ],
+          1,
+          'Only the reference capture changes the variable main prints; the others change or read a copy.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int hits = 0;
+  auto record = [hits]() mutable { ++hits; };
+  record();
+  record();
+  std::cout << hits << "\\n";
+}`,
+          ['0', '2', '1', '3'],
+          0,
+          'record increments its own copy; main’s hits is never changed.',
+        ),
+        choose(
+          'Why does [&total] { total += 5; } compile without mutable?',
+          [
+            'mutable is implied for any lambda that uses +=',
+            'Reference captures are copied when the lambda is called',
+            'total becomes a global variable inside the lambda',
+            'It changes the variable it refers to, not a copy stored in the closure',
+          ],
+          3,
+          'mutable is about the closure’s own copies; a reference capture owns no copy.',
+        ),
+      ],
+    },
+    {
+      title: 'Each copy of a closure keeps its own state',
+      explanation: [
+        'A lambda object can be copied like any other value. auto backup = counter; copies the closure together with its current captured state, and from then on the two copies change independently.',
+        'This matters when code stores or passes the lambda by value: the copy that gets called advances, and the original does not.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int n = 0;
+  auto counter = [n]() mutable { return ++n; };
+  counter();
+  auto copy = counter;
+  copy();
+  copy();
+  int a = counter();
+  int b = copy();
+  std::cout << a << " " << b << "\\n";
+}`,
+        output: '2 4',
+        explanation:
+          'copy started from counter’s state after one call. Its two calls do not reach counter, whose next call returns 2; copy’s third call returns 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int n = 10;
+  auto a = [n]() mutable {
+    n -= 1;
+    return n;
+  };
+  auto b = a;
+  a();
+  a();
+  int x = a();
+  int y = b();
+  std::cout << x << " " << y << "\\n";
+}`,
+          ['7 7', '9 9', '7 9', '6 9'],
+          2,
+          'b was copied before any call, so its first call returns 9 while a has reached 7.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int n = 0;
+  auto gen = [n]() mutable {
+    n += 2;
+    return n;
+  };
+  auto saved = gen;
+  gen();
+  gen();
+  auto later = gen;
+  int x = saved();
+  int y = later();
+  std::cout << x << " " << y << "\\n";
+}`,
+          ['6 6', '2 2', '6 2', '2 6'],
+          3,
+          'saved copied the starting state, so it returns 2. later copied the state after two calls, so it returns 6.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int n = 0;
+  auto counter = [n]() mutable { return ++n; };
+  counter();
+  counter();
+  counter();
+  auto backup = counter;
+  counter();
+  counter();
+  std::cout << backup() << "\\n";
+}`,
+          ['4', '6', '1', '3'],
+          0,
+          'backup copied the state after three calls, so its next call returns 4; counter’s later calls do not reach it.',
+        ),
+      ],
+    },
+  ],
+  'cpp-generic-lambdas': [
+    {
+      title: 'One closure shares its captures across argument types',
+      explanation: [
+        'A generic lambda is a single closure object. Calling it with an int and then with a double runs two compiled versions of its body, but both versions read and write the same captured variables, so mutable state accumulates across every call, whatever the argument type. A parameter the body never reads can be left unnamed, as in (const auto&).',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int calls = 0;
+  auto count = [calls](const auto&) mutable {
+    calls += 1;
+    return calls;
+  };
+  int a = count(7);
+  int b = count(2.5);
+  int c = count(3);
+  std::cout << a << " " << b << " " << c << " " << calls << "\\n";
+}`,
+        output: '1 2 3 0',
+        explanation:
+          'The int and double calls share one captured counter, so it reaches 3. main’s calls is untouched because the lambda owns a copy.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  double sum = 0;
+  auto add = [sum](const auto& value) mutable {
+    sum += value;
+    return sum;
+  };
+  add(2);
+  add(0.5);
+  double total = add(1);
+  std::cout << total << " " << sum << "\\n";
+}`,
+          ['1 0', '3.5 3.5', '3.5 0', '1 3.5'],
+          2,
+          'All three calls add to the same captured sum, whatever the argument type; main’s sum stays 0.',
+        ),
+        choose(
+          'A mutable generic lambda is called with ints and with doubles. How many copies of its captured state exist?',
+          [
+            'One, shared by the versions of the body for every argument type',
+            'One per argument type, created by each compiled version',
+            'One per call, created when the call starts',
+            'None, because generic lambdas cannot capture',
+          ],
+          0,
+          'The closure object holds the captures once; each compiled body works on those same members.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int seen = 0;
+  auto note = [seen](const auto& value) mutable {
+    seen += 1;
+    return seen * 10 + value;
+  };
+  note(1);
+  note(1.5);
+  std::cout << note(2) << "\\n";
+}`,
+          ['12', '22', '32', '30'],
+          2,
+          'The third call is the closure’s third, so seen is 3 and the result is 3 * 10 + 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Combine type dispatch with a running total',
+      explanation: [
+        'Put the pieces together: keep the shared total in the capture list, mark the lambda mutable, name the argument’s plain type with using T = std::decay_t<decltype(x)>;, and branch on it. One lambda can then accept cents as ints and dollars as doubles and keep a single running total.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <type_traits>
+int main() {
+  long long total = 0;
+  auto add = [total](const auto& amount) mutable {
+    using T = std::decay_t<decltype(amount)>;
+    if (std::is_same_v<T, int>) {
+      total += amount;
+    } else {
+      total += static_cast<long long>(amount * 100 + 0.5);
+    }
+    return total;
+  };
+  add(250);
+  add(1.5);
+  std::cout << add(99) << "\\n";
+}`,
+        output: '499',
+        explanation:
+          '250 cents, then 1.5 dollars as 150 cents, then 99 cents: one total of 499.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  long long total = 0;
+  auto add = [total](const auto& amount) mutable {
+    using T = std::decay_t<decltype(amount)>;
+    if (std::is_same_v<T, int>) {
+      total += amount;
+    } else {
+      total += static_cast<long long>(amount * 100 + 0.5);
+    }
+    return total;
+  };
+  add(0.25);
+  std::cout << add(5) << "\\n";
+}`,
+          ['5', '25', '30', '530'],
+          2,
+          '0.25 dollars adds 25 cents, and the int 5 adds 5 more, all in one total.',
+        ),
+        predictOutput(
+          'This version tests decltype directly. What does it print?',
+          `#include <iostream>
+#include <type_traits>
+int main() {
+  long long total = 0;
+  auto add = [total](const auto& amount) mutable {
+    if (std::is_same_v<decltype(amount), int>) {
+      total += amount;
+    } else {
+      total += static_cast<long long>(amount * 100 + 0.5);
+    }
+    return total;
+  };
+  std::cout << add(3) << "\\n";
+}`,
+          ['3', '300', '0', '303'],
+          1,
+          'decltype(amount) is const int&, never int, so the int 3 is treated as dollars and becomes 300.',
+        ),
+        choose(
+          'Two generic lambdas each keep a captured total. One is called with ints, the other with doubles. How do you get one combined total?',
+          [
+            'Call one lambda for both kinds, so a single closure keeps the total',
+            'Mark both lambdas mutable, which makes them share captures',
+            'Capture the total by value in both lambdas',
+            'Use auto instead of const auto& for the parameters',
+          ],
+          0,
+          'Each closure owns its own captures; only one closure holds one total.',
+        ),
+      ],
+    },
+  ],
 };
