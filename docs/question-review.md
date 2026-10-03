@@ -54,6 +54,18 @@ Outside the Rust and C++ review, these edits also fixed:
 - `ml-overfitting-kp1-q4` and `kp2-q2`: prompts that pointed at "the previous table" and "the previous curve" now state the numbers.
 - Four distractors written during this work were replaced on review because they were defensibly correct or too close to the key: "A, B, C, D and E" as the nodes reachable from A (A reaches itself by a path of length 0), "Count all users who have an email" as a query an email index cannot help, "301 writes" for 300 embedded copies (the supplier's own record would make 301), and `O((V + E) log V)` for lazy-heap Dijkstra with parallel edges (equal to the key whenever E is polynomial in V).
 
+## Python foundations
+
+Reviewed October 3, 2026: every non-executed question in `python-foundations.kp.ts`, the course's only knowledge-point file. That is 214 conceptual `choose` questions in 49 skills. The 480 executed questions (`typeOutput` and `predictOutput`) were not re-graded, since the catalog tests run them, but their explanations were read against their code. Each question was checked against its point's explanation and worked example: the marked answer, every distractor, the explanation, and whether the point teaches enough to answer. Disputed behavior was settled in CPython 3.14, for example the `heapify` result quoted in `heapq-module-kp2-q2` and the call counts in the `decorators-kp3` explanation (177 body runs for an uncached `fib(10)`, over two million for `fib(30)`).
+
+**Result:** no errors. No marked answer is wrong, no distractor is also correct, and no explanation contradicts its point or code. 0 of 214 questions needed a fix.
+
+### Debatable, left alone
+
+- **`print-output-kp2-q4`.** "A program has two print() calls. How many lines does it output?" expects two. A call such as `print("a\nb")` would print more, but the first lesson has not taught escape sequences, and the point states the rule the question tests.
+- **`problem-solving-kp1-q1`, `kp1-q3`, `kp1-q4` and `kp3-q4`** name `count_words` without showing it. The name says what it does, and the choices make each question answerable alone.
+- **`key-functions-kp4-q4`.** The explanation says `max(words)` "picks the last word alphabetically". Strictly it compares code points, so capitals sort first, as `sorting-kp2` teaches. No choice depends on it.
+
 ## Competitive Programming
 
 Reviewed October 3, 2026: every non-executed question in `src/lib/knowledge-points/competitive-0.kp.ts` through `competitive-3.kp.ts`. That is 804 conceptual `choose` questions in 192 skills (38, 254, 268, and 244 per file). The 939 predict-the-output questions were not reviewed again, because the catalog tests already execute them.
