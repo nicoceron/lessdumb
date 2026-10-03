@@ -1,4 +1,4 @@
-import { choose, predictOutput, type KnowledgePointModule } from '.';
+import { choose, predictOutput, type KnowledgePointModule } from './authoring';
 
 // C++ units cpp-containers, cpp-generic, cpp-errors and cpp-tooling.
 export const knowledgePoints: KnowledgePointModule = {
@@ -2992,6 +2992,2534 @@ int main() {
           ],
           2,
           'Stopping the read leaves the remaining input untouched; rejecting would consume and lose it.',
+        ),
+      ],
+    },
+  ],
+  'cpp-sort-order': [
+    {
+      title: 'Sort a whole range in place',
+      explanation: [
+        'std::sort(v.begin(), v.end()) (from <algorithm>) rearranges the elements of the range into ascending order. It works in place: the vector itself changes, and duplicate values are kept.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> prices{9, 2, 4, 2};
+  std::sort(prices.begin(), prices.end());
+  for (int price : prices) std::cout << price << " ";
+  std::cout << "\\n";
+}`,
+        output: '2 2 4 9',
+        explanation:
+          'The same vector now holds its four values in ascending order; both copies of 2 are still there.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{5, -1, 3};
+  std::sort(v.begin(), v.end());
+  std::cout << v.front() << " " << v.back() << "\\n";
+}`,
+          ['5 3', '-1 5', '5 -1', '-1 3'],
+          1,
+          'After sorting, the smallest value is at the front and the largest at the back.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{4, 4, 1};
+  std::sort(v.begin(), v.end());
+  for (int x : v) std::cout << x << " ";
+  std::cout << "\\n";
+}`,
+          ['1 4', '4 4 1', '1 4 4', '4 1'],
+          2,
+          'sort only reorders; it keeps every element, including the duplicate 4.',
+        ),
+        choose(
+          'After `std::sort(v.begin(), v.end());`, what has happened to v?',
+          [
+            'Nothing; sort returns a new sorted vector',
+            'v holds only its distinct values, ascending',
+            'v is now in descending order',
+            'v itself now holds its elements in ascending order',
+          ],
+          3,
+          'sort works in place through the iterators and returns nothing; ascending order is the default.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{30, 10, 20, 10};
+  std::sort(v.begin(), v.end());
+  std::cout << v[1] << " " << v[2] << "\\n";
+}`,
+          ['10 20', '20 30', '10 10', '30 10'],
+          0,
+          'The sorted vector is 10 10 20 30, so indexes 1 and 2 hold 10 and 20.',
+        ),
+      ],
+    },
+    {
+      title: 'Sort only part of a range',
+      explanation: [
+        'sort accepts any half-open iterator range, not only a whole container. std::sort(v.begin(), v.begin() + 3) sorts the first three elements and leaves the rest exactly where they were.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{8, 5, 9, 1, 3};
+  std::sort(v.begin(), v.begin() + 3);
+  for (int x : v) std::cout << x << " ";
+  std::cout << "\\n";
+}`,
+        output: '5 8 9 1 3',
+        explanation:
+          'Only 8, 5 and 9 are inside the range, so they become 5 8 9. The 1 and 3 after it are untouched.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{6, 2, 7, 1};
+  std::sort(v.begin(), v.begin() + 2);
+  for (int x : v) std::cout << x << " ";
+  std::cout << "\\n";
+}`,
+          ['1 2 6 7', '2 6 7 1', '2 6 1 7', '6 2 1 7'],
+          1,
+          'The range covers only the first two elements, so 6 and 2 swap and 7, 1 stay as they were.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{9, 4, 8, 3};
+  std::sort(v.begin() + 1, v.end());
+  for (int x : v) std::cout << x << " ";
+  std::cout << "\\n";
+}`,
+          ['3 4 8 9', '4 8 9 3', '9 8 4 3', '9 3 4 8'],
+          3,
+          'The range starts at index 1, so 9 stays first and the other three are sorted.',
+        ),
+        choose(
+          'Which call sorts only the last two elements of a five-element vector v?',
+          [
+            'std::sort(v.begin() + 2, v.end())',
+            'std::sort(v.end() - 2, v.end())',
+            'std::sort(v.end() - 2, v.end() + 1)',
+            'std::sort(v.begin(), v.begin() + 2)',
+          ],
+          1,
+          'v.end() - 2 is the first of the last two elements, and v.end() ends the range. The other ranges cover three elements, run past the end, or cover the first two.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{3, 1, 2};
+  std::sort(v.begin(), v.begin() + 1);
+  for (int x : v) std::cout << x << " ";
+  std::cout << "\\n";
+}`,
+          ['1 2 3', '1 3 2', '3 1 2', '3 2 1'],
+          2,
+          'A one-element range is already sorted, so nothing moves.',
+        ),
+      ],
+    },
+    {
+      title: 'Sort descending with a strict comparator',
+      explanation: [
+        'A third argument supplies the ordering. std::greater<int>() (from <functional>) compares with >, so std::sort(v.begin(), v.end(), std::greater<int>()) sorts in descending order.',
+        'The comparator must be strict: it must return false when two elements are equal. A comparison with <= or >= breaks that rule, and sort may then misbehave or even read outside the range.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{4, 9, 1};
+  std::sort(v.begin(), v.end(), std::greater<int>());
+  for (int x : v) std::cout << x << " ";
+  std::cout << "\\n";
+}`,
+        output: '9 4 1',
+        explanation:
+          'With std::greater, an element comes first when it is larger, so the result is descending.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{2, 8, 5, 8};
+  std::sort(v.begin(), v.end(), std::greater<int>());
+  for (int x : v) std::cout << x << " ";
+  std::cout << "\\n";
+}`,
+          ['2 5 8 8', '8 5 2', '8 8 5 2', '8 2 5 8'],
+          2,
+          'Descending order keeps both 8s, which come first.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{-3, 0, -7};
+  std::sort(v.begin(), v.end(), std::greater<int>());
+  std::cout << v.front() << "\\n";
+}`,
+          ['-7', '0', '-3', '7'],
+          1,
+          'The largest value comes first in descending order, and 0 is larger than any negative number.',
+        ),
+        choose(
+          'Why is a comparator written with >= unsafe for std::sort?',
+          [
+            'It sorts ascending instead of descending',
+            'It is slower than > but otherwise equivalent',
+            'It says an element comes before itself, breaking the strict ordering sort requires',
+            'It removes equal elements',
+          ],
+          2,
+          'For equal elements a >= comparator returns true both ways, which violates the strict weak ordering sort relies on.',
+        ),
+        choose(
+          'Which call sorts a vector<int> v from largest to smallest?',
+          [
+            'std::sort(v.begin(), v.end(), std::greater<int>())',
+            'std::sort(v.end(), v.begin())',
+            'std::sort(v.begin(), v.end())',
+            'std::sort(v.begin(), v.end(), std::less<int>())',
+          ],
+          0,
+          'std::greater orders larger values first. Swapping the iterators does not reverse the order; it is an invalid range.',
+        ),
+      ],
+    },
+  ],
+  'cpp-binary-search': [
+    {
+      title: 'Ask whether a sorted range contains a value',
+      explanation: [
+        'std::binary_search(first, last, value) returns true if value occurs in the sorted range [first, last). It halves the range at each step, so it needs about log2(n) comparisons instead of examining every element.',
+        'It answers only yes or no; it does not report where the value is.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{2, 4, 9};
+  std::cout << std::binary_search(v.begin(), v.end(), 4) << " " << std::binary_search(v.begin(), v.end(), 5) << "\\n";
+}`,
+        output: '1 0',
+        explanation:
+          'The vector is already sorted. 4 is present and 5 is not, and a bool prints as 1 or 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 3, 5, 7};
+  std::cout << std::binary_search(v.begin(), v.end(), 7) << " " << std::binary_search(v.begin(), v.end(), 0) << "\\n";
+}`,
+          ['1 0', '3 -1', '0 1', '1 1'],
+          0,
+          '7 is present and 0 is not. binary_search returns a bool, not a position.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{9, 2, 4};
+  std::sort(v.begin(), v.end());
+  std::cout << std::binary_search(v.begin(), v.end(), 9) << "\\n";
+}`,
+          ['0', '2', '1', '9'],
+          2,
+          'After sorting, the range is 2 4 9, and 9 is found.',
+        ),
+        choose(
+          'What does std::binary_search return?',
+          [
+            'The index of the value, or -1',
+            'An iterator to the value',
+            'The number of times the value occurs',
+            'true if the value is in the range, otherwise false',
+          ],
+          3,
+          'It reports only presence, as a bool.',
+        ),
+        predictOutput(
+          'How many queries are found?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{10, 20, 30};
+  std::vector<int> queries{20, 25, 30, 5};
+  int found = 0;
+  for (int q : queries)
+    if (std::binary_search(v.begin(), v.end(), q)) ++found;
+  std::cout << found << "\\n";
+}`,
+          ['3', '2', '1', '4'],
+          1,
+          'Only 20 and 30 occur exactly; binary_search does not accept nearby values.',
+        ),
+      ],
+    },
+    {
+      title: 'Search with the order the range was sorted by',
+      explanation: [
+        'binary_search assumes the range is already sorted by the same comparison it uses. On an unsorted range it can answer false for a value that is present, because it discards halves based on an order that is not there.',
+        'If the range was sorted with a custom comparator, such as std::greater<int>() for descending order, pass that same comparator to binary_search.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{3, 8, 1, 6};
+  std::sort(v.begin(), v.end(), std::greater<int>());
+  std::cout << std::binary_search(v.begin(), v.end(), 6, std::greater<int>()) << "\\n";
+}`,
+        output: '1',
+        explanation:
+          'The range is 8 6 3 1, sorted descending, and the search uses the same std::greater ordering, so it finds 6.',
+      },
+      questions: [
+        choose(
+          'A vector holds {7, 1, 5}, unsorted. What can be said about `std::binary_search(v.begin(), v.end(), 7)`?',
+          [
+            'It returns true because 7 is present',
+            'It returns false because the vector is unsorted',
+            'Its result cannot be trusted, because the sorted-input precondition is broken',
+            'It sorts the vector first, then searches',
+          ],
+          2,
+          'binary_search never sorts or checks its input; on unsorted data it may skip the half that contains the value.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{4, 10, 7};
+  std::sort(v.begin(), v.end(), std::greater<int>());
+  std::cout << std::binary_search(v.begin(), v.end(), 7, std::greater<int>()) << " " << std::binary_search(v.begin(), v.end(), 5, std::greater<int>()) << "\\n";
+}`,
+          ['0 1', '1 1', '1 0', '7 0'],
+          2,
+          'Sorting and searching use the same descending order, so 7 is found and 5 correctly is not.',
+        ),
+        choose(
+          'A vector was sorted with std::greater<int>(). Which search call is correct?',
+          [
+            'std::binary_search(v.begin(), v.end(), x)',
+            'std::binary_search(v.begin(), v.end(), x, std::greater<int>())',
+            'std::binary_search(v.end(), v.begin(), x)',
+            'std::binary_search(v.begin(), v.end(), -x)',
+          ],
+          1,
+          'The search must use the ordering the range is sorted by; the default < assumes ascending order.',
+        ),
+        choose(
+          'Why does binary_search not fall back to checking every element when the input is unsorted?',
+          [
+            'It compares only about log2(n) elements, relying on sorted order to skip the rest',
+            'It does check every element, but in reverse order',
+            'It sorts a copy first and searches that',
+            'It reports an error for unsorted input',
+          ],
+          0,
+          'Skipping half the range at each step is the whole point; it is valid only because the order guarantees the skipped half cannot contain the value.',
+        ),
+      ],
+    },
+    {
+      title: 'Sort once, then search many times',
+      explanation: [
+        'Sorting costs about n log n comparisons and each binary search about log n. When many queries hit the same data, sort once and then search for each query; sorting again for every query wastes that work.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> allowed{42, 7, 19, 3};
+  std::sort(allowed.begin(), allowed.end());
+  std::vector<int> requests{19, 20, 3};
+  for (int r : requests)
+    std::cout << r << (std::binary_search(allowed.begin(), allowed.end(), r) ? " yes" : " no") << "\\n";
+}`,
+        output: '19 yes\n20 no\n3 yes',
+        explanation:
+          'The list is sorted once to 3 7 19 42, then each request is answered with one binary search.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> allowed{5, 1, 9};
+  std::sort(allowed.begin(), allowed.end());
+  std::vector<int> requests{9, 2};
+  for (int r : requests) std::cout << std::binary_search(allowed.begin(), allowed.end(), r) << " ";
+  std::cout << "\\n";
+}`,
+          ['1 0', '0 1', '1 1', '2 0'],
+          0,
+          '9 is in the sorted list 1 5 9; 2 is not.',
+        ),
+        predictOutput(
+          'How many queries are found?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> data{15, 3, 8, 12};
+  std::sort(data.begin(), data.end());
+  std::vector<int> queries{8, 9, 15, 3, 4};
+  int found = 0;
+  for (int q : queries)
+    if (std::binary_search(data.begin(), data.end(), q)) ++found;
+  std::cout << found << "\\n";
+}`,
+          ['2', '4', '3', '5'],
+          2,
+          '8, 15 and 3 are present; 9 and 4 are not.',
+        ),
+        choose(
+          'A program answers 1,000 membership queries on 100,000 values that never change. Which plan fits?',
+          [
+            'Sort before every query, then binary_search',
+            'binary_search the unsorted vector',
+            'Sort after all the queries are answered',
+            'Sort once, then binary_search for each query',
+          ],
+          3,
+          'One sort pays for all the queries; every other plan either repeats the sort or searches unsorted data.',
+        ),
+      ],
+    },
+  ],
+  'cpp-accumulate-seed': [
+    {
+      title: 'Add a range to a starting value',
+      explanation: [
+        'std::accumulate(first, last, init) (from <numeric>) starts a running total at init, adds each element in turn, and returns the total. The seed is part of the result: a seed of 10 adds 10 to the sum, and an empty range returns the seed itself.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<int> v{3, 4, 5};
+  std::cout << std::accumulate(v.begin(), v.end(), 0) << " " << std::accumulate(v.begin(), v.end(), 100) << "\\n";
+}`,
+        output: '12 112',
+        explanation:
+          'The elements add up to 12. Starting from 100 instead of 0 gives 112.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<int> v{2, 7, 1};
+  std::cout << std::accumulate(v.begin(), v.end(), 5) << "\\n";
+}`,
+          ['10', '15', '5', '17'],
+          1,
+          'The elements sum to 10, and the seed 5 is added to that total.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<int> empty;
+  std::cout << std::accumulate(empty.begin(), empty.end(), 7) << "\\n";
+}`,
+          ['0', '-1', '7', '1'],
+          2,
+          'With no elements to add, accumulate returns the seed unchanged.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<int> v{10, 20, 30};
+  std::cout << std::accumulate(v.begin() + 1, v.end(), 0) << "\\n";
+}`,
+          ['60', '30', '40', '50'],
+          3,
+          'The range starts at index 1, so only 20 and 30 are added.',
+        ),
+        choose(
+          'What is the third argument of std::accumulate?',
+          [
+            'The starting value of the running total, included in the result',
+            'The number of elements to add',
+            'The index to start from',
+            'A value to skip while adding',
+          ],
+          0,
+          'accumulate begins with init and adds every element of the range to it.',
+        ),
+      ],
+    },
+    {
+      title: 'The seed sets the running total’s type',
+      explanation: [
+        'accumulate keeps its running total in the type of init, not in the element type. With an int seed of 0, every partial sum of doubles is converted back to int, so the fraction is lost at each step. Seed with 0.0 to sum doubles.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<double> parts{1.5, 2.5};
+  std::cout << std::accumulate(parts.begin(), parts.end(), 0) << " " << std::accumulate(parts.begin(), parts.end(), 0.0) << "\\n";
+}`,
+        output: '3 4',
+        explanation:
+          'With seed 0, the total is an int: 0 + 1.5 becomes 1, then 1 + 2.5 becomes 3. With seed 0.0 the total stays a double and reaches 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<double> halves{0.5, 0.5, 0.5, 0.5};
+  std::cout << std::accumulate(halves.begin(), halves.end(), 0) << "\\n";
+}`,
+          ['2', '0', '1', '4'],
+          1,
+          'Each step computes 0 + 0.5 and stores it back in an int, which truncates to 0, so the total never grows.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<double> parts{1.9, 1.9};
+  std::cout << std::accumulate(parts.begin(), parts.end(), 0) << "\\n";
+}`,
+          ['3.8', '3', '2', '4'],
+          2,
+          '0 + 1.9 truncates to 1, then 1 + 1.9 = 2.9 truncates to 2. Truncation happens at every step, not once at the end.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<double> parts{2.25, 0.75};
+  std::cout << std::accumulate(parts.begin(), parts.end(), 0.0) << "\\n";
+}`,
+          ['2', '3.75', '3', '2.25'],
+          2,
+          'A double seed keeps the fractions: 2.25 + 0.75 is exactly 3, which prints as 3.',
+        ),
+        choose(
+          '`std::accumulate(prices.begin(), prices.end(), 0)` sums a vector<double>. What is wrong?',
+          [
+            'Nothing; the result is converted to double at the end',
+            'accumulate cannot sum doubles',
+            'The seed must be the first element',
+            'The running total is an int, so each partial sum loses its fraction',
+          ],
+          3,
+          'The literal 0 is an int, so the total is an int throughout. Use 0.0.',
+        ),
+      ],
+    },
+    {
+      title: 'Seed wide enough for the total',
+      explanation: [
+        'The same rule applies to integers. Adding two ints near 2,000,000,000 in an int total overflows, which is undefined behavior. A long long seed, 0LL, makes every partial sum a long long, so the total fits.',
+        'Converting the result afterwards cannot help: by then the overflow has already happened inside accumulate.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<int> volumes{2000000000, 2000000000};
+  long long total = std::accumulate(volumes.begin(), volumes.end(), 0LL);
+  std::cout << total << "\\n";
+}`,
+        output: '4000000000',
+        explanation:
+          'The seed is a long long, so each addition happens in long long, and 4,000,000,000 fits.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<int> v{2000000000, 1000000000, 500000000};
+  std::cout << std::accumulate(v.begin(), v.end(), 0LL) << "\\n";
+}`,
+          ['-794967296', '3500000000', '2147483647', '3.5e+09'],
+          1,
+          'With a long long seed, every partial sum fits, and the exact total prints.',
+        ),
+        choose(
+          'Which call correctly sums a vector<int> whose total may exceed 3,000,000,000?',
+          [
+            'long long total = std::accumulate(v.begin(), v.end(), 0);',
+            'static_cast<long long>(std::accumulate(v.begin(), v.end(), 0))',
+            'std::accumulate(v.begin(), v.end(), 0LL)',
+            'std::accumulate(v.begin(), v.end(), 0u)',
+          ],
+          2,
+          'Only a long long seed makes the additions themselves wide. The other forms widen after the int total has overflowed, or wrap at about 4.29 billion.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 2, 2};
+  double mean = std::accumulate(v.begin(), v.end(), 0.0) / v.size();
+  std::cout << mean << "\\n";
+}`,
+          ['1', '1.66667', '1.67', '2'],
+          1,
+          'The double seed makes the total 5.0, so the division is floating-point: 5 / 3 prints as 1.66667.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <numeric>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 2, 4};
+  std::cout << std::accumulate(v.begin(), v.end(), 0LL) / 2 << "\\n";
+}`,
+          ['3.5', '4', '7', '3'],
+          3,
+          'The total 7 is a long long, so dividing by 2 is integer division and gives 3.',
+        ),
+      ],
+    },
+  ],
+  'cpp-algorithms': [
+    {
+      title: 'std::remove compacts but does not shrink',
+      explanation: [
+        'std::remove(first, last, value) (from <algorithm>) moves every element not equal to value toward the front, keeping their order, and returns an iterator to the new logical end. It cannot change the vector’s size, because it receives only iterators, not the vector.',
+        'Elements from the returned iterator to end() are leftovers with unspecified values. The number kept is the distance from begin() to the returned iterator.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{2, 3, 2, 4};
+  auto logical_end = std::remove(v.begin(), v.end(), 2);
+  std::cout << v.size() << " " << (logical_end - v.begin()) << "\\n";
+  for (auto it = v.begin(); it != logical_end; ++it) std::cout << *it << " ";
+  std::cout << "\\n";
+}`,
+        output: '4 2\n3 4',
+        explanation:
+          'The vector still has 4 elements, but only the first 2, 3 and 4, are kept values.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{5, 1, 5, 5, 2};
+  auto logical_end = std::remove(v.begin(), v.end(), 5);
+  std::cout << v.size() << " " << (logical_end - v.begin()) << "\\n";
+}`,
+          ['2 2', '5 3', '5 2', '2 5'],
+          2,
+          'remove does not shrink the vector, which still has 5 elements; only 1 and 2 are kept.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{7, 0, 8, 0, 9};
+  auto logical_end = std::remove(v.begin(), v.end(), 0);
+  for (auto it = v.begin(); it != logical_end; ++it) std::cout << *it << " ";
+  std::cout << "\\n";
+}`,
+          ['7 0 8 0 9', '9 8 7', '8 9', '7 8 9'],
+          3,
+          'The kept values are moved to the front in their original order.',
+        ),
+        choose(
+          'Why can std::remove not shrink the vector?',
+          [
+            'It receives only iterators, so it cannot call the vector’s member functions',
+            'Shrinking would invalidate the returned iterator',
+            'It shrinks only const vectors',
+            'It does shrink the vector when nothing is removed',
+          ],
+          0,
+          'Algorithms work on iterator ranges. Changing size needs the container itself, through erase.',
+        ),
+        predictOutput(
+          'Nothing matches. What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 2};
+  auto logical_end = std::remove(v.begin(), v.end(), 9);
+  std::cout << (logical_end == v.end()) << "\\n";
+}`,
+          ['0', '1', '2', '9'],
+          1,
+          'Every element is kept, so the logical end is the real end.',
+        ),
+      ],
+    },
+    {
+      title: 'Erase the leftover tail',
+      explanation: [
+        'The erase-remove idiom finishes the job: v.erase(std::remove(v.begin(), v.end(), x), v.end()); erases everything from the logical end to the real end, so size() drops to the number of kept elements. The kept elements stay in their original relative order.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{2, 3, 2, 4};
+  v.erase(std::remove(v.begin(), v.end(), 2), v.end());
+  std::cout << v.size() << ":";
+  for (int x : v) std::cout << " " << x;
+  std::cout << "\\n";
+}`,
+        output: '2: 3 4',
+        explanation:
+          'remove compacts 3 and 4 to the front, and erase deletes the two leftovers, so the vector really has two elements.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 9, 1, 9, 1};
+  v.erase(std::remove(v.begin(), v.end(), 1), v.end());
+  std::cout << v.size() << ":";
+  for (int x : v) std::cout << " " << x;
+  std::cout << "\\n";
+}`,
+          ['2: 9 9', '3: 1 1 1', '5: 9 9 1 9 1', '2: 9 1'],
+          0,
+          'All three 1s are removed and the tail erased, leaving the two 9s.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{3, 3, 3};
+  v.erase(std::remove(v.begin(), v.end(), 3), v.end());
+  std::cout << v.size() << " " << v.empty() << "\\n";
+}`,
+          ['3 0', '1 0', '0 1', '0 0'],
+          2,
+          'Every element matched, so the logical end is begin() and erase removes everything.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{4, 5};
+  v.erase(std::remove(v.begin(), v.end(), 6), v.end());
+  std::cout << v.size() << "\\n";
+}`,
+          ['1', '0', '6', '2'],
+          3,
+          'Nothing matches 6, so remove returns end() and erasing the empty range [end, end) changes nothing.',
+        ),
+        choose(
+          'Which statement removes every 0 from vector<int> v and shrinks it?',
+          [
+            'std::remove(v.begin(), v.end(), 0);',
+            'v.erase(std::remove(v.begin(), v.end(), 0), v.end());',
+            'v.erase(v.begin(), std::remove(v.begin(), v.end(), 0));',
+            'v.erase(std::remove(v.begin(), v.end(), 0));',
+          ],
+          1,
+          'Erase from the logical end to the real end. The third form erases the kept values instead, and the last erases only one element.',
+        ),
+      ],
+    },
+    {
+      title: 'Pass both iterators to erase',
+      explanation: [
+        'v.erase(it) with one argument erases a single element. Forgetting the second argument, as in v.erase(std::remove(...)), erases only the first leftover, so the vector keeps stale elements whenever two or more values were removed.',
+        'Worse, when nothing matches, remove returns end(), and erase(end()) is undefined behavior. Always write v.erase(std::remove(...), v.end()).',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{2, 3, 2, 4, 2};
+  v.erase(std::remove(v.begin(), v.end(), 2));
+  std::vector<int> w{2, 3, 2, 4, 2};
+  w.erase(std::remove(w.begin(), w.end(), 2), w.end());
+  std::cout << v.size() << " " << w.size() << "\\n";
+}`,
+        output: '4 2',
+        explanation:
+          'Three 2s were removed, but the one-argument erase deleted only one leftover, so v still has 4 elements. w is correct.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{8, 1, 8, 8};
+  v.erase(std::remove(v.begin(), v.end(), 8));
+  std::cout << v.size() << "\\n";
+}`,
+          ['1', '3', '2', '4'],
+          1,
+          'Only 1 is kept, but erase with one iterator deletes a single leftover, leaving 3 elements.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{8, 1, 8, 8};
+  v.erase(std::remove(v.begin(), v.end(), 8), v.end());
+  std::cout << v.size() << "\\n";
+}`,
+          ['3', '0', '1', '4'],
+          2,
+          'Erasing from the logical end to end() removes all three leftovers.',
+        ),
+        choose(
+          'What does `v.erase(std::remove(v.begin(), v.end(), x));` do when x does not occur in v?',
+          [
+            'Nothing, because no element matches',
+            'It erases the last element',
+            'It throws std::out_of_range',
+            'It calls erase(end()), which is undefined behavior',
+          ],
+          3,
+          'remove returns end() when nothing matches, and erasing the element at end() is invalid because there is none.',
+        ),
+        predictOutput(
+          'Exactly one element matches. What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{5, 6, 7};
+  v.erase(std::remove(v.begin(), v.end(), 6));
+  for (int x : v) std::cout << x << " ";
+  std::cout << "\\n";
+}`,
+          ['5 7', '5 6', '5 7 7', '7'],
+          0,
+          'With one match there is one leftover, so the one-argument erase happens to work. That is why this bug hides in tests with a single match.',
+        ),
+      ],
+    },
+  ],
+  'cpp-lambda-value-capture': [
+    {
+      title: 'Write and call a lambda',
+      explanation: [
+        'A lambda expression creates an unnamed function object. [] starts the capture list, (int x) lists the parameters, and the body in braces computes the result. Store the lambda with auto and call it like a function.',
+        'Creating a lambda does not run it; the body runs each time the lambda is called.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  auto twice = [](int x) { return x * 2; };
+  std::cout << twice(4) << " " << twice(-3) << "\\n";
+}`,
+        output: '8 -6',
+        explanation:
+          'twice holds the lambda. Each call runs its body with the given argument.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto add = [](int a, int b) { return a + b; };
+  std::cout << add(2, 5) * 3 << "\\n";
+}`,
+          ['17', '21', '10', '7'],
+          1,
+          'add(2, 5) returns 7 first, and then the result is multiplied by 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  auto inc = [](int x) { return x + 1; };
+  std::cout << inc(inc(5)) << "\\n";
+}`,
+          ['6', '5', '7', '11'],
+          2,
+          'The inner call returns 6, and the outer call adds one more.',
+        ),
+        choose(
+          'In `auto f = [](int x) { return x * x; };`, what is f?',
+          [
+            'The int returned by the lambda',
+            'A pointer to x',
+            'A copy of the variable x',
+            'A function object that can be called as f(3)',
+          ],
+          3,
+          'The lambda expression produces a callable object; nothing is computed until f is called.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int value = 3;
+  auto bump = [](int x) { return x + 10; };
+  std::cout << value << "\\n";
+}`,
+          ['3', '13', '10', '0'],
+          0,
+          'Defining bump does not call it, and nothing passes value to it, so value is still 3.',
+        ),
+      ],
+    },
+    {
+      title: '[value] copies the variable when the lambda is created',
+      explanation: [
+        'To use a local variable inside a lambda, name it in the capture list. [value] captures by value: the lambda stores its own copy, taken at the moment the lambda is created.',
+        'Later changes to the original variable do not reach that copy, so every call sees the snapshot.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int limit = 4;
+  auto saved = [limit] { return limit; };
+  limit += 10;
+  std::cout << saved() << " " << limit << "\\n";
+}`,
+        output: '4 14',
+        explanation:
+          'saved copied 4 when it was created. Adding 10 to limit afterwards changes only the original.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int rate = 3;
+  auto cost = [rate](int n) { return n * rate; };
+  rate = 5;
+  std::cout << cost(2) << "\\n";
+}`,
+          ['10', '6', '15', '5'],
+          1,
+          'cost captured rate when it was 3, so cost(2) is 2 * 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int rate = 3;
+  rate = 5;
+  auto cost = [rate](int n) { return n * rate; };
+  std::cout << cost(2) << "\\n";
+}`,
+          ['6', '15', '3', '10'],
+          3,
+          'This time the lambda is created after the change, so its copy holds 5.',
+        ),
+        choose(
+          'A lambda is created with [count] while count is 2. Afterwards count becomes 9. What does the lambda see when it is called?',
+          [
+            '9, the current value',
+            '0, because captured copies start empty',
+            '2, the copy made when the lambda was created',
+            '11, the sum of both values',
+          ],
+          2,
+          'A by-value capture is a snapshot taken at creation.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int base = 10;
+  int bonus = 1;
+  auto score = [base](int points) { return base + points; };
+  base = 20;
+  bonus = 5;
+  std::cout << score(bonus) << "\\n";
+}`,
+          ['25', '21', '15', '11'],
+          2,
+          'base was captured as 10, while bonus is passed as an argument at the call, when it is 5.',
+        ),
+      ],
+    },
+    {
+      title: 'Each lambda keeps its own snapshot',
+      explanation: [
+        'Each lambda expression makes its copy when it is evaluated, so two lambdas created at different times hold different snapshots of the same variable, and neither follows later changes.',
+        'A by-value capture is also read-only inside the lambda by default, so calling the lambda cannot change its snapshot either.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int price = 100;
+  auto morning = [price] { return price; };
+  price = 120;
+  auto noon = [price] { return price; };
+  price = 90;
+  std::cout << morning() << " " << noon() << " " << price << "\\n";
+}`,
+        output: '100 120 90',
+        explanation:
+          'morning copied 100 and noon copied 120. The final change to 90 affects only price.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int level = 1;
+  auto a = [level] { return level * 10; };
+  level = 2;
+  auto b = [level] { return level * 10; };
+  level = 3;
+  std::cout << a() + b() << "\\n";
+}`,
+          ['30', '60', '40', '20'],
+          0,
+          'a holds 1 and b holds 2, so the calls return 10 and 20.',
+        ),
+        predictOutput(
+          'The lambda captures a reference variable by value. What does this program print?',
+          `#include <iostream>
+int main() {
+  int value = 4;
+  int& alias = value;
+  auto snap = [alias] { return alias; };
+  value = 8;
+  std::cout << snap() << "\\n";
+}`,
+          ['8', '4', '0', '12'],
+          1,
+          'Capturing alias by value copies the int it refers to, 4. The copy does not follow value afterwards.',
+        ),
+        choose(
+          'Inside `[total] { total += 1; return total; }`, why does the compiler reject total += 1?',
+          [
+            'total must be captured with auto',
+            'Lambdas cannot contain more than one statement',
+            'total is a parameter, not a capture',
+            'A by-value capture is read-only inside the lambda unless the lambda is marked mutable',
+          ],
+          3,
+          'The captured copy is const inside an ordinary lambda.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int x = 2;
+  auto f = [x](int y) { return x * y; };
+  x = f(3);
+  std::cout << x << " " << f(3) << "\\n";
+}`,
+          ['6 18', '6 6', '2 6', '18 18'],
+          1,
+          'Assigning f(3) to x changes the original to 6, but the lambda’s copy is still 2, so f(3) is 6 again.',
+        ),
+      ],
+    },
+  ],
+  'cpp-lambda-reference-capture': [
+    {
+      title: '[&value] reads the live variable',
+      explanation: [
+        '[&value] captures by reference: the lambda refers to the original variable instead of copying it. Each call reads the variable’s current value, so changes made after the lambda was created are visible.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int value = 4;
+  auto live = [&value] { return value; };
+  value += 3;
+  std::cout << live() << "\\n";
+}`,
+        output: '7',
+        explanation: 'live reads value at the call, after it has become 7.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int rate = 3;
+  auto cost = [&rate](int n) { return n * rate; };
+  rate = 5;
+  std::cout << cost(2) << "\\n";
+}`,
+          ['6', '10', '15', '5'],
+          1,
+          'The reference capture sees rate’s current value, 5.',
+        ),
+        predictOutput(
+          'One variable is captured by value and one by reference. What does this program print?',
+          `#include <iostream>
+int main() {
+  int a = 1;
+  int b = 1;
+  auto f = [a, &b] { return a * 10 + b; };
+  a = 2;
+  b = 2;
+  std::cout << f() << "\\n";
+}`,
+          ['11', '21', '12', '22'],
+          2,
+          'a was copied as 1; b is read live as 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int level = 1;
+  auto read = [&level] { return level; };
+  int before = read();
+  level = 9;
+  std::cout << before << " " << read() << "\\n";
+}`,
+          ['1 1', '9 9', '9 1', '1 9'],
+          3,
+          'before stored the result of the first call. The second call reads the updated level.',
+        ),
+        choose(
+          'A lambda must always report the current value of a counter that keeps changing. Which capture fits?',
+          ['[&counter]', '[counter]', '[]', '[counter = 0]'],
+          0,
+          'Only a reference capture reads the variable at each call; the others hold fixed copies or nothing.',
+        ),
+      ],
+    },
+    {
+      title: 'Change the original through a reference capture',
+      explanation: [
+        'A reference capture can also modify the original. [&count] { ++count; } increments the caller’s variable each time it is called. No mutable keyword is needed, because the lambda changes the referenced variable, not a copy it owns.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int count = 0;
+  auto tick = [&count] { ++count; };
+  tick();
+  tick();
+  tick();
+  std::cout << count << "\\n";
+}`,
+        output: '3',
+        explanation: 'Each call increments the same variable, count.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int total = 5;
+  auto add = [&total](int x) { total += x; };
+  add(2);
+  add(3);
+  std::cout << total << "\\n";
+}`,
+          ['5', '8', '10', '7'],
+          2,
+          'Both calls add to the original total: 5 + 2 + 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int n = 1;
+  auto snapshot = [n] { return n; };
+  auto grow = [&n] { n *= 4; };
+  grow();
+  std::cout << n << " " << snapshot() << "\\n";
+}`,
+          ['4 4', '1 1', '4 1', '1 4'],
+          2,
+          'grow changes the original n to 4. snapshot copied n before that and still holds 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int stock = 10;
+  auto take = [&stock](int k) {
+    stock -= k;
+    return stock;
+  };
+  int left = take(3);
+  take(4);
+  std::cout << left << " " << stock << "\\n";
+}`,
+          ['7 3', '3 3', '7 7', '10 3'],
+          0,
+          'left saved the 7 returned by the first call. The second call reduces stock itself to 3.',
+        ),
+        choose(
+          'Why does `[&count] { ++count; }` compile without mutable while `[count] { ++count; }` does not?',
+          [
+            'Reference captures are always mutable copies',
+            'The reference version changes the caller’s variable; the value version would change the lambda’s own read-only copy',
+            '++ is defined only for references',
+            'The value version needs a return statement',
+          ],
+          1,
+          'mutable concerns the lambda’s own copies. A reference capture owns no copy to modify.',
+        ),
+      ],
+    },
+    {
+      title: 'A captured reference must outlive the lambda',
+      explanation: [
+        'A reference capture stores no copy, so it is valid only while the original variable exists. A lambda that captures a function’s local or parameter by reference and is returned from that function refers to a destroyed variable; calling it is undefined behavior.',
+        'When a lambda may outlive the scope it was created in, capture by value. A function can return a lambda by declaring its return type as auto.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+auto make_scaler(int factor) {
+  return [factor](int x) { return x * factor; };
+}
+int main() {
+  auto triple = make_scaler(3);
+  std::cout << triple(5) << "\\n";
+}`,
+        output: '15',
+        explanation:
+          'factor ends when make_scaler returns. Capturing it by value copies 3 into the lambda, so triple still works afterwards. With [&factor], triple would refer to a destroyed parameter.',
+      },
+      questions: [
+        choose(
+          'Calling the lambda returned by `auto make() { int local = 5; return [&local] { return local; }; }` is unsafe. Why?',
+          [
+            'Lambdas cannot be returned from functions',
+            'local must be const to be captured',
+            'local is destroyed when make returns, so the lambda refers to a dead variable',
+            'The lambda copies local twice',
+          ],
+          2,
+          'The reference outlives the object it names. Capturing local by value would fix it.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+auto make_adder(int offset) {
+  return [offset](int x) { return x + offset; };
+}
+int main() {
+  auto add4 = make_adder(4);
+  auto add9 = make_adder(9);
+  std::cout << add4(10) << " " << add9(10) << "\\n";
+}`,
+          ['14 19', '19 19', '14 14', '13 19'],
+          0,
+          'Each call to make_adder creates a separate lambda with its own copy of offset.',
+        ),
+        choose(
+          'Which lambda is safe to store and call after the current function returns?',
+          [
+            '[&total] { return total; } where total is a local',
+            '[&] { return total; } where total is a local',
+            '[&total] { return total + 1; } where total is a parameter',
+            '[total] { return total; } where total is a local',
+          ],
+          3,
+          'Only the by-value capture keeps its own copy after the local is destroyed.',
+        ),
+      ],
+    },
+  ],
+  'cpp-lambda-predicate': [
+    {
+      title: 'count_if counts the elements a predicate accepts',
+      explanation: [
+        'A predicate is a callable that takes one element and returns bool. std::count_if(first, last, pred) (from <algorithm>) calls pred on every element of the range and counts the true results.',
+        'The count has a signed integer type, std::ptrdiff_t; static_cast<int> converts it when an int is wanted.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> changes{3, -1, 4, -5, 0};
+  int drops = static_cast<int>(std::count_if(changes.begin(), changes.end(), [](int x) { return x < 0; }));
+  std::cout << drops << "\\n";
+}`,
+        output: '2',
+        explanation:
+          'The predicate is true for -1 and -5 only; 0 is not less than 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{2, 7, 4, 9, 6};
+  std::cout << std::count_if(v.begin(), v.end(), [](int x) { return x > 5; }) << "\\n";
+}`,
+          ['2', '3', '5', '4'],
+          1,
+          '7, 9 and 6 are greater than 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{0, 1, 0, 0};
+  std::cout << std::count_if(v.begin(), v.end(), [](int x) { return x == 0; }) << "\\n";
+}`,
+          ['1', '4', '0', '3'],
+          3,
+          'Three elements are equal to 0.',
+        ),
+        choose(
+          'What must a predicate passed to count_if return for each element?',
+          [
+            'A bool saying whether to count the element',
+            'The element itself',
+            'The running count',
+            'The index of the element',
+          ],
+          0,
+          'count_if adds one for every true result; the predicate only decides.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{-1, -2, 3, -4};
+  std::cout << std::count_if(v.begin() + 1, v.end(), [](int x) { return x < 0; }) << "\\n";
+}`,
+          ['3', '1', '2', '4'],
+          2,
+          'The range starts at index 1, so -1 is not examined; -2 and -4 are counted.',
+        ),
+      ],
+    },
+    {
+      title: 'Capture the threshold the predicate needs',
+      explanation: [
+        'A predicate often needs an outside value, such as a threshold. Capture it: [threshold](int x) { return x > threshold; }. Because the capture is by value, the predicate holds a snapshot and is safe to keep or pass along.',
+        'Read the comparison carefully: > excludes elements equal to the threshold, while >= includes them.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 5, 8, 5};
+  int threshold = 5;
+  std::cout << std::count_if(v.begin(), v.end(), [threshold](int x) { return x > threshold; }) << " " << std::count_if(v.begin(), v.end(), [threshold](int x) { return x >= threshold; }) << "\\n";
+}`,
+        output: '1 3',
+        explanation:
+          'Only 8 is strictly greater than 5. With >=, both 5s also count.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{10, 20, 30, 20};
+  int limit = 20;
+  std::cout << std::count_if(v.begin(), v.end(), [limit](int x) { return x >= limit; }) << "\\n";
+}`,
+          ['1', '2', '3', '4'],
+          2,
+          '20, 30 and the second 20 are at least 20.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{10, 20, 30, 20};
+  int limit = 20;
+  std::cout << std::count_if(v.begin(), v.end(), [limit](int x) { return x > limit; }) << "\\n";
+}`,
+          ['1', '3', '2', '0'],
+          0,
+          'Only 30 is strictly greater than 20.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 5, 12};
+  int limit = 2;
+  auto above = [limit](int x) { return x > limit; };
+  limit = 10;
+  std::cout << std::count_if(v.begin(), v.end(), above) << "\\n";
+}`,
+          ['1', '2', '3', '0'],
+          1,
+          'above captured limit when it was 2, so 5 and 12 count. The later change to 10 does not reach the copy.',
+        ),
+        choose(
+          'A filter counts readings strictly above max_ok. Which predicate is right?',
+          [
+            '[max_ok](int r) { return r >= max_ok; }',
+            '[](int r) { return r > max_ok; }',
+            '[max_ok](int r) { return max_ok > r; }',
+            '[max_ok](int r) { return r > max_ok; }',
+          ],
+          3,
+          'The predicate must capture max_ok and compare with >. Without the capture, max_ok cannot be used in the body.',
+        ),
+      ],
+    },
+    {
+      title: 'find_if returns the first match',
+      explanation: [
+        'std::find_if(first, last, pred) returns an iterator to the first element for which pred is true, or last if none matches. As with any search, compare the result with end() before dereferencing it.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{4, 9, 2, 11};
+  auto big = std::find_if(v.begin(), v.end(), [](int x) { return x > 8; });
+  auto huge = std::find_if(v.begin(), v.end(), [](int x) { return x > 20; });
+  std::cout << *big << " " << (huge == v.end()) << "\\n";
+}`,
+        output: '9 1',
+        explanation:
+          '9 is the first element above 8, even though 11 also matches. Nothing is above 20, so huge equals end().',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{3, 6, 8};
+  auto it = std::find_if(v.begin(), v.end(), [](int x) { return x > 5; });
+  std::cout << (it == v.end() ? -1 : *it) << "\\n";
+}`,
+          ['8', '6', '2', '-1'],
+          1,
+          'find_if stops at the first match, 6.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{5, 0, -2, -7};
+  auto it = std::find_if(v.begin(), v.end(), [](int x) { return x < 0; });
+  std::cout << (it - v.begin()) << "\\n";
+}`,
+          ['2', '3', '-2', '1'],
+          0,
+          'The first negative element, -2, is at index 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 2, 3};
+  int limit = 3;
+  auto it = std::find_if(v.begin(), v.end(), [limit](int x) { return x > limit; });
+  std::cout << (it == v.end() ? -1 : *it) << "\\n";
+}`,
+          ['3', '0', '-1', '1'],
+          2,
+          'No element is greater than 3, so find_if returns end() and the fallback prints.',
+        ),
+        choose(
+          'What do count_if and find_if return for the same predicate?',
+          [
+            'Both return the number of matches',
+            'count_if returns the first match; find_if returns every match',
+            'Both return iterators',
+            'count_if returns how many elements match; find_if returns an iterator to the first match or end()',
+          ],
+          3,
+          'count_if examines every element; find_if stops at the first match.',
+        ),
+      ],
+    },
+  ],
+  'cpp-lambdas': [
+    {
+      title: 'An init capture creates a new closure member',
+      explanation: [
+        'An init capture, [name = expression], declares a new variable inside the closure and initializes it from any expression when the lambda is created. It captures a computed value or gives a capture a new name.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int main() {
+  int a = 2;
+  int b = 3;
+  auto scale = [sum = a + b](int x) { return x * sum; };
+  a = 100;
+  std::cout << scale(2) << "\\n";
+}`,
+        output: '10',
+        explanation:
+          'sum was initialized once to 5 when the lambda was created; changing a afterwards has no effect.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int width = 4;
+  auto area = [w = width * 2](int h) { return w * h; };
+  width = 1;
+  std::cout << area(3) << "\\n";
+}`,
+          ['12', '3', '24', '6'],
+          2,
+          'w was computed as 8 when area was created, so area(3) is 24.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int main() {
+  int count = 7;
+  auto next = [n = count] { return n + 1; };
+  std::cout << next() << " " << count << "\\n";
+}`,
+          ['8 7', '8 8', '7 7', '7 8'],
+          0,
+          'n is a copy of count, so the call returns 8 and count is unchanged.',
+        ),
+        choose(
+          'What does the init capture in `[limit = max * 2] { return limit; }` create?',
+          [
+            'A reference to max',
+            'A parameter named limit',
+            'A new closure member named limit, initialized once from max * 2',
+            'A copy of max that updates when max changes',
+          ],
+          2,
+          'An init capture is evaluated once, when the lambda is created, and stored in the closure.',
+        ),
+      ],
+    },
+    {
+      title: 'Move a unique_ptr into the closure',
+      explanation: [
+        'A std::unique_ptr cannot be copied, so the capture [owner] does not compile. An init capture can move it instead: [held = std::move(owner)] transfers ownership into the closure.',
+        'Afterwards owner is empty (equal to nullptr), and the closure is the only owner.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <memory>
+#include <utility>
+int main() {
+  auto owner = std::make_unique<int>(12);
+  auto read = [held = std::move(owner)] { return *held; };
+  std::cout << read() << " " << (owner == nullptr) << "\\n";
+}`,
+        output: '12 1',
+        explanation:
+          'held now owns the int 12. The move left owner empty, so the comparison prints 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <memory>
+#include <utility>
+int main() {
+  auto owner = std::make_unique<int>(5);
+  auto doubled = [held = std::move(owner)] { return *held * 2; };
+  std::cout << doubled() << " " << (owner == nullptr) << "\\n";
+}`,
+          ['10 0', '10 1', '5 1', '0 1'],
+          1,
+          'The closure owns the 5 and returns 10; the moved-from owner is empty.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <memory>
+#include <utility>
+int main() {
+  auto owner = std::make_unique<int>(7);
+  auto task = [held = std::move(owner)] { return *held + 1; };
+  std::cout << (owner ? *owner : -1) << " " << task() << "\\n";
+}`,
+          ['7 8', '-1 7', '-1 8', '0 8'],
+          2,
+          'owner was emptied by the move, so the guard prints -1. The closure still reads its 7 and adds 1.',
+        ),
+        choose(
+          'Why does `[owner] { return *owner; }` fail to compile when owner is a std::unique_ptr<int>?',
+          [
+            'Capturing by value would copy the unique_ptr, and unique_ptr cannot be copied',
+            'Lambdas cannot dereference pointers',
+            'owner must be captured as [&owner]',
+            'unique_ptr cannot be used inside functions',
+          ],
+          0,
+          'A unique_ptr can only be moved. An init capture with std::move expresses the transfer.',
+        ),
+        choose(
+          'After `auto f = [held = std::move(owner)] { return *held; };`, which statement about owner is true?',
+          [
+            'owner still points to the same int as held',
+            'owner is empty; dereferencing it is undefined behavior',
+            'owner was destroyed and cannot be named any more',
+            'owner holds a copy of the int',
+          ],
+          1,
+          'Moving a unique_ptr transfers the pointer and leaves the source equal to nullptr. The variable still exists, but has nothing to dereference.',
+        ),
+      ],
+    },
+    {
+      title: 'The closure owns the object until it is destroyed',
+      explanation: [
+        'Once ownership moves into a closure, the owned object lives exactly as long as the closure. When the closure goes out of scope, its unique_ptr member is destroyed and deletes the object, once.',
+        'Capturing a local unique_ptr by reference instead ties the closure to that local; if the closure outlives the local’s scope, it refers to a destroyed owner.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <memory>
+#include <utility>
+struct Probe {
+  int& released;
+  explicit Probe(int& count) : released(count) {}
+  ~Probe() { ++released; }
+};
+int main() {
+  int released = 0;
+  {
+    auto owner = std::make_unique<Probe>(released);
+    auto task = [held = std::move(owner)] { return held->released; };
+    std::cout << task() << " ";
+  }
+  std::cout << released << "\\n";
+}`,
+        output: '0 1',
+        explanation:
+          'Inside the block the Probe is alive, so the count is 0. Leaving the block destroys task, whose member deletes the Probe exactly once; the empty owner deletes nothing.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <memory>
+#include <utility>
+struct Probe {
+  int& released;
+  explicit Probe(int& count) : released(count) {}
+  ~Probe() { ++released; }
+};
+int main() {
+  int released = 0;
+  auto owner = std::make_unique<Probe>(released);
+  {
+    auto task = [held = std::move(owner)] { return held != nullptr; };
+    std::cout << task() << " ";
+  }
+  std::cout << released << " " << (owner == nullptr) << "\\n";
+}`,
+          ['1 0 1', '1 1 0', '1 1 1', '0 0 1'],
+          2,
+          'The closure owned the Probe and was destroyed at the end of the block, releasing it. owner, declared outside, is empty because it was moved from.',
+        ),
+        predictOutput(
+          'This closure captures the owner by reference. What does this program print?',
+          `#include <iostream>
+#include <memory>
+struct Probe {
+  int& released;
+  explicit Probe(int& count) : released(count) {}
+  ~Probe() { ++released; }
+};
+int main() {
+  int released = 0;
+  auto owner = std::make_unique<Probe>(released);
+  {
+    auto peek = [&owner] { return owner != nullptr; };
+    std::cout << peek() << " ";
+  }
+  std::cout << released << "\\n";
+}`,
+          ['1 1', '1 0', '0 0', '0 1'],
+          1,
+          'The closure only refers to owner, so destroying the closure releases nothing; owner still owns the Probe.',
+        ),
+        choose(
+          'A callback must keep a unique_ptr’s object alive after the function that created the callback returns. Which capture fits?',
+          [
+            '[&owner]',
+            '[held = owner.get()]',
+            '[owner]',
+            '[held = std::move(owner)]',
+          ],
+          3,
+          'Moving the owner into the closure makes the closure responsible for the object. A reference or raw pointer would dangle, and [owner] does not compile.',
+        ),
+      ],
+    },
+  ],
+  'cpp-function-template': [
+    {
+      title: 'One template, one function per type',
+      explanation: [
+        'A function template is a pattern: template<class T> T twice(T x) { return x + x; } defines twice for any type T that supports +. Each call instantiates the pattern for its argument type, so twice(3) uses an int version and twice(1.25) a double version.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+template<class T> T twice(T x) { return x + x; }
+int main() {
+  std::cout << twice(3) << " " << twice(1.25) << "\\n";
+}`,
+        output: '6 2.5',
+        explanation:
+          'The compiler generates twice<int> for 3 and twice<double> for 1.25.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> T square(T x) { return x * x; }
+int main() {
+  std::cout << square(5) << " " << square(0.5) << "\\n";
+}`,
+          ['25 0', '25 0.25', '25 0.5', '10 1'],
+          1,
+          'square<int>(5) is 25 and square<double>(0.5) is 0.25; each call keeps its own type.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> T larger(T a, T b) { return a < b ? b : a; }
+int main() {
+  std::cout << larger(3, 8) << " " << larger(2.5, -1.5) << "\\n";
+}`,
+          ['8 2.5', '3 2.5', '8 -1.5', '8 2'],
+          0,
+          'Each instantiation compares two values of its own type and returns the larger.',
+        ),
+        choose(
+          'What does the compiler do with `template<class T> T twice(T x)` when a program calls twice(4) and twice(4.5)?',
+          [
+            'Converts both calls to double',
+            'Uses one function that checks the type at run time',
+            'Reports an error because T would have two types',
+            'Generates two functions, one for int and one for double',
+          ],
+          3,
+          'Each distinct T produces its own instantiation at compile time.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> T at_least(T x, T low) { return x < low ? low : x; }
+int main() {
+  std::cout << at_least(-4, 0) << " " << at_least(2.5, 1.0) << "\\n";
+}`,
+          ['-4 2.5', '0 1', '0 2.5', '-4 1'],
+          2,
+          '-4 is below 0, so 0 is returned. 2.5 is above 1.0, so it is returned unchanged.',
+        ),
+      ],
+    },
+    {
+      title: 'The type decides what the operators do',
+      explanation: [
+        'Inside an instantiation, T is a real type, and operators behave as they do for that type. A template that divides performs integer division when T is int and floating-point division when T is double, from the same source text.',
+        'The body must also make sense for each type it is used with. An operation the type does not support is an error in that instantiation only.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+template<class T> T average(T a, T b) { return (a + b) / 2; }
+int main() {
+  std::cout << average(3, 4) << " " << average(3.0, 4.0) << "\\n";
+}`,
+        output: '3 3.5',
+        explanation:
+          'average<int> divides 7 by 2 with integer division, giving 3. average<double> gives 3.5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> T half(T x) { return x / 2; }
+int main() {
+  std::cout << half(7) << " " << half(7.0) << "\\n";
+}`,
+          ['3.5 3.5', '3 3', '4 3.5', '3 3.5'],
+          3,
+          'half<int> truncates 3.5 to 3; half<double> keeps 3.5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> T half(T x) { return x / 2; }
+int main() {
+  std::cout << half(-7) << "\\n";
+}`,
+          ['-4', '-3', '-3.5', '3'],
+          1,
+          'T is int, and integer division truncates toward zero, so -3.5 becomes -3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> T ratio(T a, T b) { return a / b; }
+int main() {
+  std::cout << ratio(1, 4) * 4 << " " << ratio(1.0, 4.0) * 4 << "\\n";
+}`,
+          ['1 1', '0 0', '0 1', '0.25 1'],
+          2,
+          'ratio<int>(1, 4) is 0, and 0 * 4 is 0. ratio<double> gives 0.25, and 0.25 * 4 is 1.',
+        ),
+        choose(
+          'Why can one template return 3 for one call and 3.5 for another?',
+          [
+            'Each call instantiates the template for its argument type, and int division truncates',
+            'Templates round their results',
+            'The second call casts the result after dividing',
+            'Templates always compute in double and convert back',
+          ],
+          0,
+          'The same expression means integer division in the int instantiation and floating-point division in the double one.',
+        ),
+      ],
+    },
+  ],
+  'cpp-template-deduction': [
+    {
+      title: 'T is deduced from the arguments',
+      explanation: [
+        'When a function template is called without angle brackets, the compiler deduces T by matching each parameter with its argument’s type: mid(1, 2) deduces T = int, and mid(1.0, 2.0) deduces T = double. The deduced type is then used everywhere T appears, including the return type.',
+        'Only the arguments matter. Storing the result in a double does not change a T that was deduced as int.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+template<class T> T mid(T a, T b) { return (a + b) / 2; }
+int main() {
+  double r = mid(1, 2);
+  std::cout << mid(1.0, 2.0) << " " << r << "\\n";
+}`,
+        output: '1.5 1',
+        explanation:
+          'mid(1.0, 2.0) deduces double and returns 1.5. mid(1, 2) deduces int and returns 1 before the result is converted to the double r.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> T mid(T a, T b) { return (a + b) / 2; }
+int main() {
+  double result = mid(4, 7);
+  std::cout << result << "\\n";
+}`,
+          ['5.5', '5', '6', '5.0'],
+          1,
+          'Both arguments are int, so T is int and the division truncates to 5. The double variable receives 5.',
+        ),
+        choose(
+          'For `template<class T> T add(T a, T b)`, what is T in the call add(4, 9)?',
+          [
+            'double',
+            'It depends on where the result is stored',
+            'int',
+            'long long',
+          ],
+          2,
+          'Both arguments are int literals, so T is deduced as int.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> T mid(T a, T b) { return (a + b) / 2; }
+int main() {
+  double price = 2.5;
+  int qty = 2;
+  std::cout << mid(price, 4.5) << " " << mid(qty, 5) << "\\n";
+}`,
+          ['3.5 3.5', '3.5 3', '3 3', '7 7'],
+          1,
+          'The first call deduces double and gives 3.5; the second deduces int and truncates 3.5 to 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> T scale(T x, T factor) { return x * factor; }
+int main() {
+  std::cout << scale(3, 2) << " " << scale(0.5, 3.0) << "\\n";
+}`,
+          ['6 1', '6 1.5', '6.0 1.5', '5 3.5'],
+          1,
+          'scale(3, 2) deduces int; scale(0.5, 3.0) deduces double, so the result keeps its fraction.',
+        ),
+      ],
+    },
+    {
+      title: 'Resolve conflicting deductions explicitly',
+      explanation: [
+        'If two parameters both use T, every argument must deduce the same T. add(1, 2.5) deduces int from 1 and double from 2.5, so the call does not compile; deduction never tries conversions.',
+        'Supplying the type explicitly, as in add<double>(1, 2.5), skips deduction: T is double, and 1 is converted to 1.0 like an ordinary function argument. Explicit arguments can also narrow: add<int>(1, 2.5) converts 2.5 to 2, which compilers usually warn about.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+template<class T> T add(T a, T b) { return a + b; }
+int main() {
+  std::cout << add<double>(3, 0.5) << " " << add<int>(3, 0.5) << "\\n";
+}`,
+        output: '3.5 3',
+        explanation:
+          'With T = double, 3 becomes 3.0 and the sum is 3.5. With T = int, 0.5 becomes 0 and the sum is 3.',
+      },
+      questions: [
+        choose(
+          'Why does add(1, 2.5) fail for `template<class T> T add(T a, T b)`?',
+          [
+            'Templates cannot take literals',
+            'T is deduced as int from 1 and as double from 2.5, and the deductions conflict',
+            'The sum would overflow',
+            'A double cannot be added to an int',
+          ],
+          1,
+          'Each argument deduces T independently, and the two results must agree.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> T add(T a, T b) { return a + b; }
+int main() {
+  std::cout << add<double>(1, 2.5) << "\\n";
+}`,
+          ['3', '3.5', '4', '2.5'],
+          1,
+          'T is double, so 1 becomes 1.0 and the sum is 3.5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> T add(T a, T b) { return a + b; }
+int main() {
+  std::cout << add<int>(1, 2.5) << "\\n";
+}`,
+          ['3.5', '4', '2', '3'],
+          3,
+          'T is int, so 2.5 is converted to 2 before the addition.',
+        ),
+        choose(
+          'Which call compiles and returns 7.5 for `template<class T> T add(T a, T b)`?',
+          [
+            'add(5, 2.5)',
+            'add<int>(5, 2.5)',
+            'add<double>(5, 2.5)',
+            'add(5.0, 2)',
+          ],
+          2,
+          'add(5, 2.5) and add(5.0, 2) have conflicting deductions; add<int> drops the fraction.',
+        ),
+      ],
+    },
+  ],
+  'cpp-class-template': [
+    {
+      title: 'A class template makes a family of types',
+      explanation: [
+        'template<class T> struct Slot { T value; }; describes a struct for any type T. Slot<int> and Slot<double> are distinct, complete types, each made by substituting its argument for T. Brace initialization works as for any aggregate struct.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+template<class T> struct Slot {
+  T value;
+};
+int main() {
+  Slot<int> count{7};
+  Slot<double> weight{2.5};
+  std::cout << count.value + 1 << " " << weight.value * 2 << "\\n";
+}`,
+        output: '8 5',
+        explanation:
+          'count.value is an int and weight.value a double; each member has the type chosen in the angle brackets.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> struct Pair {
+  T first;
+  T second;
+};
+int main() {
+  Pair<int> p{3, 4};
+  Pair<double> q{0.5, 1.5};
+  std::cout << p.first + p.second << " " << q.first + q.second << "\\n";
+}`,
+          ['7 2', '7 1', '7 2.0', '34 0.51.5'],
+          0,
+          'Pair<int> holds two ints and Pair<double> two doubles; 0.5 + 1.5 is 2, which prints as 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> struct Slot {
+  T value;
+};
+int main() {
+  Slot<int> a{9};
+  Slot<double> b{9};
+  std::cout << a.value / 2 << " " << b.value / 2 << "\\n";
+}`,
+          ['4.5 4.5', '4 4', '4 4.5', '5 4.5'],
+          2,
+          'a.value is the int 9, so integer division gives 4. b.value is the double 9.0, so the result is 4.5.',
+        ),
+        choose(
+          'How are Slot<int> and Slot<double> related?',
+          [
+            'They are one type with a run-time flag',
+            'Slot<double> is derived from Slot<int>',
+            'Slot<int> converts automatically to Slot<double>',
+            'They are two distinct types generated from one template',
+          ],
+          3,
+          'Each template argument produces a separate class type.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> struct Slot {
+  T value;
+};
+int main() {
+  Slot<double> s{3};
+  std::cout << s.value / 2 << "\\n";
+}`,
+          ['1', '1.5', '2', '0'],
+          1,
+          'The member is a double, so the int 3 is stored as 3.0 and dividing by 2 gives 1.5.',
+        ),
+      ],
+    },
+    {
+      title: 'Member functions use T too',
+      explanation: [
+        'Member functions of a class template can use T. In template<class T> struct Range { T low; T high; T width() { return high - low; } };, width returns an int for Range<int> and a double for Range<double>.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+template<class T> struct Range {
+  T low;
+  T high;
+  T width() { return high - low; }
+};
+int main() {
+  Range<int> days{3, 10};
+  Range<double> span{0.5, 2.0};
+  std::cout << days.width() << " " << span.width() << "\\n";
+}`,
+        output: '7 1.5',
+        explanation: 'Each instantiation computes the width in its own type.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> struct Box {
+  T value;
+  T doubled() { return value * 2; }
+};
+int main() {
+  Box<int> b{21};
+  std::cout << b.doubled() << "\\n";
+}`,
+          ['21', '42', '2', '212'],
+          1,
+          'doubled multiplies the member by 2 in the instantiated type.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> struct Scale {
+  T factor;
+  T apply(T x) { return x * factor; }
+};
+int main() {
+  Scale<int> s{3};
+  Scale<double> d{0.5};
+  std::cout << s.apply(4) << " " << d.apply(3) << "\\n";
+}`,
+          ['12 1', '7 3.5', '12 1.5', '12 3'],
+          2,
+          'Scale<double>::apply takes a double, so 3 becomes 3.0 and the result is 1.5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> struct Range {
+  T low;
+  T high;
+  T width() { return high - low; }
+};
+int main() {
+  Range<int> a{1, 4};
+  Range<double> b{1, 4};
+  std::cout << a.width() / 2 << " " << b.width() / 2 << "\\n";
+}`,
+          ['1.5 1.5', '1 1', '2 1.5', '1 1.5'],
+          3,
+          'Both widths are 3, but in Range<int> it is an int, so dividing by 2 gives 1.',
+        ),
+        choose(
+          'In `template<class T> struct Box { T value; T get() { return value; } };`, what is the return type of get() for Box<double>?',
+          ['double', 'int', 'T, decided at run time', 'auto'],
+          0,
+          'T is replaced by double throughout the instantiation, including member function signatures.',
+        ),
+      ],
+    },
+    {
+      title: 'Each object keeps its own state',
+      explanation: [
+        'Every object of a class template type has its own members. Two Counter<int> objects count independently, and a copy is a separate object from then on. Keep per-object state in members, not in a variable shared by every object.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+template<class T> struct Counter {
+  T count;
+  void add(T amount) { count += amount; }
+};
+int main() {
+  Counter<int> a{0};
+  Counter<int> b{10};
+  a.add(2);
+  b.add(2);
+  a.add(5);
+  std::cout << a.count << " " << b.count << "\\n";
+}`,
+        output: '7 12',
+        explanation:
+          'a and b each have their own count member, so their updates do not mix.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> struct Counter {
+  T count;
+  void add(T amount) { count += amount; }
+};
+int main() {
+  Counter<double> c{0.5};
+  Counter<int> d{1};
+  c.add(0.25);
+  c.add(0.25);
+  d.add(2);
+  std::cout << c.count << " " << d.count << "\\n";
+}`,
+          ['1 3', '0.75 3', '1 2', '1.0 3'],
+          0,
+          'c adds two quarters to 0.5, reaching 1, which prints as 1. d goes from 1 to 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> struct Counter {
+  T count;
+  void add(T amount) { count += amount; }
+};
+int main() {
+  Counter<int> a{1};
+  Counter<int> b = a;
+  b.add(4);
+  std::cout << a.count << " " << b.count << "\\n";
+}`,
+          ['5 5', '1 1', '1 5', '5 1'],
+          2,
+          'b is a copy, so it has its own count; changing it leaves a at 1.',
+        ),
+        choose(
+          'A design stores every Counter<int>’s count in one global int. What goes wrong?',
+          [
+            'Globals cannot be used inside templates',
+            'All counters share one value, so updating one changes what every counter reports',
+            'Each counter gets its own copy of the global',
+            'Counter<int> and Counter<double> stop compiling',
+          ],
+          1,
+          'Per-object state must live in members; a shared variable makes distinct objects indistinguishable.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+template<class T> struct Counter {
+  T count;
+  void add(T amount) { count += amount; }
+};
+int main() {
+  Counter<int> whole{0};
+  Counter<double> part{0};
+  whole.add(3);
+  part.add(1.5);
+  whole.add(1);
+  std::cout << whole.count << " " << part.count << "\\n";
+}`,
+          ['4 1.5', '4 1', '3 1.5', '4.5 1.5'],
+          0,
+          'Each object accumulates only its own additions, in its own type.',
+        ),
+      ],
+    },
+  ],
+  'cpp-templates': [
+    {
+      title: 'A forwarding reference accepts both categories',
+      explanation: [
+        'In template<class T> int relay(T&& value), the parameter T&& is a forwarding reference. It binds to an lvalue, with T deduced as int&, and to an rvalue, with T deduced as plain int.',
+        'Inside the function, value has a name, so the expression value is always an lvalue. Passing it on unchanged selects the lvalue overload even when the caller passed a temporary.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+int category(int&) { return 1; }
+int category(int&&) { return 2; }
+template<class T> int relay(T&& value) { return category(value); }
+int main() {
+  int x = 4;
+  std::cout << relay(x) << " " << relay(5) << "\\n";
+}`,
+        output: '1 1',
+        explanation:
+          'relay accepts both x and the temporary 5, but inside relay the named parameter is an lvalue, so category(int&) runs both times.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+int category(int&) { return 1; }
+int category(int&&) { return 2; }
+template<class T> int relay(T&& value) { return category(value); }
+int main() {
+  int x = 4;
+  std::cout << category(x) << " " << category(5) << " " << relay(5) << "\\n";
+}`,
+          ['1 2 2', '1 1 1', '2 2 1', '1 2 1'],
+          3,
+          'Called directly, the temporary 5 selects int&&. Through relay it arrives as a named parameter, an lvalue.',
+        ),
+        choose(
+          'In `template<class T> void f(T&& v)`, what is T when f is called with an int variable x?',
+          ['int', 'int&', 'int&&', 'const int'],
+          1,
+          'For an lvalue argument, a forwarding reference deduces T as an lvalue reference type.',
+        ),
+        choose(
+          'Inside `template<class T> int relay(T&& value)`, why does category(value) pick the int& overload even for relay(5)?',
+          [
+            '5 is converted to an lvalue before the call',
+            'T&& always means an lvalue reference',
+            'value has a name, so the expression value is an lvalue',
+            'Overloads taking int&& are never selected from templates',
+          ],
+          2,
+          'Value category belongs to expressions, and a named variable is an lvalue whatever its declared type.',
+        ),
+      ],
+    },
+    {
+      title: 'std::forward<T> restores the caller’s category',
+      explanation: [
+        'std::forward<T>(value) (from <utility>) casts value back to the category the caller supplied: an lvalue stays an lvalue, and an rvalue becomes an rvalue again. It can do this because T records the category, int& for lvalues and plain int for rvalues.',
+        'Always forward with the deduced template parameter, std::forward<T>, not a hand-written type.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <utility>
+int category(int&) { return 1; }
+int category(int&&) { return 2; }
+template<class T> int dispatch(T&& value) { return category(std::forward<T>(value)); }
+int main() {
+  int x = 4;
+  std::cout << dispatch(x) << " " << dispatch(5) << "\\n";
+}`,
+        output: '1 2',
+        explanation:
+          'For x, T is int& and forward yields an lvalue. For 5, T is int and forward yields an rvalue.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <utility>
+int category(int&) { return 1; }
+int category(int&&) { return 2; }
+template<class T> int dispatch(T&& value) { return category(std::forward<T>(value)); }
+int main() {
+  int a = 1;
+  std::cout << dispatch(a) << " " << dispatch(a + 1) << "\\n";
+}`,
+          ['1 1', '2 2', '1 2', '2 1'],
+          2,
+          'a is an lvalue, but a + 1 produces a temporary, an rvalue, and forward preserves each.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <utility>
+int category(int&) { return 1; }
+int category(int&&) { return 2; }
+template<class T> int dispatch(T&& value) { return category(std::forward<T>(value)); }
+int main() {
+  int a = 1;
+  std::cout << dispatch(std::move(a)) << " " << dispatch(a) << "\\n";
+}`,
+          ['2 1', '2 2', '1 1', '1 2'],
+          0,
+          'std::move(a) is an rvalue expression for that call only; naming a again later gives an lvalue.',
+        ),
+        choose(
+          'Which body passes value on with the category the caller used?',
+          [
+            'return category(value);',
+            'return category(std::move(value));',
+            'return category(static_cast<int&>(value));',
+            'return category(std::forward<T>(value));',
+          ],
+          3,
+          'Only std::forward<T> uses the deduced T to choose between lvalue and rvalue.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <utility>
+int category(int&) { return 1; }
+int category(int&&) { return 2; }
+template<class T> int dispatch(T&& value) { return category(std::forward<T>(value)); }
+int main() {
+  int stored = 3;
+  int total = dispatch(stored) + dispatch(7) + dispatch(stored);
+  std::cout << total << "\\n";
+}`,
+          ['4', '5', '6', '3'],
+          0,
+          'The two calls with stored return 1 each and the temporary 7 returns 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Forward arguments instead of moving them',
+      explanation: [
+        'Replacing std::forward<T> with std::move turns every argument into an rvalue, including the caller’s named variables. A move-aware receiver may then take over an object the caller still intends to use.',
+        'std::move is for an object you own and are finished with. std::forward<T> is for passing on an argument received through T&&.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <utility>
+int category(int&) { return 1; }
+int category(int&&) { return 2; }
+template<class T> int moving(T&& value) { return category(std::move(value)); }
+template<class T> int forwarding(T&& value) { return category(std::forward<T>(value)); }
+int main() {
+  int x = 4;
+  std::cout << moving(x) << " " << forwarding(x) << "\\n";
+}`,
+        output: '2 1',
+        explanation:
+          'moving casts the caller’s lvalue x to an rvalue; forwarding keeps it an lvalue.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <utility>
+int category(int&) { return 1; }
+int category(int&&) { return 2; }
+template<class T> int moving(T&& value) { return category(std::move(value)); }
+template<class T> int forwarding(T&& value) { return category(std::forward<T>(value)); }
+int main() {
+  int x = 4;
+  std::cout << moving(x) << " " << moving(5) << " " << forwarding(5) << "\\n";
+}`,
+          ['1 2 2', '1 2 1', '2 2 2', '2 2 1'],
+          2,
+          'moving makes everything an rvalue, and forwarding keeps the temporary 5 an rvalue.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <utility>
+void store(const int&) { std::cout << "copy "; }
+void store(int&&) { std::cout << "move "; }
+template<class T> void relay(T&& value) { store(std::forward<T>(value)); }
+int main() {
+  int a = 1;
+  relay(a);
+  relay(2);
+  relay(std::move(a));
+  std::cout << "\\n";
+}`,
+          [
+            'copy move copy',
+            'move move move',
+            'copy copy move',
+            'copy move move',
+          ],
+          3,
+          'a is forwarded as an lvalue and copied; the temporary and std::move(a) arrive as rvalues and select the moving overload.',
+        ),
+        choose(
+          'A wrapper applies std::move to its forwarding-reference parameter before passing it to a function that moves from rvalues. What can happen when a caller passes a named object it keeps using?',
+          [
+            'Nothing; std::move affects only temporaries',
+            'The program fails to compile',
+            'The object is copied twice',
+            'The caller’s object may be moved from and left in an unspecified state',
+          ],
+          3,
+          'std::move unconditionally produces an rvalue, so the receiver is allowed to take the caller’s resources.',
+        ),
+        choose(
+          'When is std::move the right tool rather than std::forward<T>?',
+          [
+            'When the code owns a named object and is finished with it',
+            'When passing on a T&& parameter in a template',
+            'Whenever the argument might be an lvalue',
+            'Never; std::forward replaces std::move',
+          ],
+          0,
+          'move expresses "I am done with this object"; forward expresses "pass this on as the caller gave it".',
         ),
       ],
     },
