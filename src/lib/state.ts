@@ -49,8 +49,8 @@ export interface QueuedCard extends AnkiCard {
 /**
  * Version 2 adds knowledge-point lesson attempts, cooldowns and task XP;
  * version 3 adds quizzes; version 4 adds implicit review credit; version 5
- * adds placement diagnostics; version 6 adds prerequisite refreshes after a
- * failed lesson and the count of failed attempts in a row.
+ * adds placement diagnostics; version 6 adds the pending prerequisite
+ * refresh a failed lesson schedules.
  */
 export interface LearnerState {
   version: typeof STATE_VERSION;
@@ -237,7 +237,7 @@ function mergePlacement(
   return settled(right) > settled(left) ? right : left;
 }
 
-/** The more recent refresh; on a tie, the stable lesson order. */
+/** The more recent refresh; on a tie, the first lesson by ID. */
 function latestRefresh(left?: Refresh, right?: Refresh): Refresh | undefined {
   if (!left || !right) return left ?? right;
   return right.at > left.at ||
@@ -649,7 +649,7 @@ export function mergeStates(
         mastery === 1 &&
         !!refresh &&
         !!memory &&
-        refresh.basis === memory.lastReviewAt &&
+        memory.lastReviewAt < refresh.at &&
         dueAt !== null &&
         refresh.at >= (implicitCredit?.at ?? -Infinity);
       if (refreshPending && dueAt! > refresh!.at) dueAt = refresh!.at;
@@ -664,16 +664,10 @@ export function mergeStates(
           : Math.max(a.lessonFailedAt ?? 0, b.lessonFailedAt ?? 0);
       const lessonAttempt =
         mastery === 1 ? undefined : mergeLessonAttempt(a, b, lessonFailedAt);
-      // Failures in a row end with a pass, which masters the skill.
-      const lessonFailures =
-        mastery === 1
-          ? 0
-          : Math.max(a.lessonFailures ?? 0, b.lessonFailures ?? 0);
       const {
         lessonAttempt: _attempt,
         implicitCredit: _credit,
         placement: _placement,
-        lessonFailures: _failures,
         refresh: _refresh,
         ...rest
       } = latest;
@@ -686,7 +680,6 @@ export function mergeStates(
           ...(implicitCredit && !refreshPending ? { implicitCredit } : {}),
           ...(lessonAttempt ? { lessonAttempt } : {}),
           ...(lessonFailedAt !== undefined ? { lessonFailedAt } : {}),
-          ...(lessonFailures ? { lessonFailures } : {}),
           ...(refreshPending ? { refresh } : {}),
           ...(a.lessonRewarded || b.lessonRewarded
             ? { lessonRewarded: true }

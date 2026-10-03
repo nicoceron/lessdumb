@@ -1,7 +1,6 @@
 import { courses } from '../catalog-index';
 import { migrateState, type LearnerState } from '../state';
 import { STATE_VERSION } from '../learning';
-import { MAX_REFRESHES } from '../remediation';
 import { MAX_SAVED_QUIZZES } from '../quiz';
 import { activityTotals, type ActivityState } from '../activity';
 import { TYPED_RESPONSE_MAX_LENGTH } from '../typed-answer';
@@ -163,7 +162,6 @@ const SKILL_FIELDS = [
   'lessonRewarded',
   'implicitCredit',
   'placement',
-  'lessonFailures',
   'refresh',
 ];
 
@@ -250,14 +248,11 @@ function validateSkill(value: unknown, path: string) {
   }
   if (skill.lessonFailedAt !== undefined)
     timestamp(skill.lessonFailedAt, `${path}.lessonFailedAt`);
-  if (skill.lessonFailures !== undefined)
-    number(skill.lessonFailures, `${path}.lessonFailures`, 1, attempts);
   if (skill.refresh !== undefined) {
     const at = `${path}.refresh`;
-    const refresh = object(skill.refresh, at, ['at', 'lesson', 'basis']);
-    timestamp(refresh.at, `${at}.at`);
+    const refresh = object(skill.refresh, at, ['lesson', 'at']);
     string(refresh.lesson, `${at}.lesson`);
-    timestamp(refresh.basis, `${at}.basis`);
+    timestamp(refresh.at, `${at}.at`);
   }
   if (skill.lessonAttempt !== undefined) {
     const lesson = object(skill.lessonAttempt, `${path}.lessonAttempt`, [
@@ -563,7 +558,6 @@ function validateAttempt(value: unknown, path: string): string {
     'outcome',
     'quizId',
     'credited',
-    'refreshed',
     'response',
   ]);
   const id = string(attempt.id, `${path}.id`);
@@ -578,8 +572,6 @@ function validateAttempt(value: unknown, path: string): string {
     string(attempt.response, `${path}.response`, TYPED_RESPONSE_MAX_LENGTH);
   if (attempt.credited !== undefined)
     strings(attempt.credited, `${path}.credited`, 100);
-  if (attempt.refreshed !== undefined)
-    strings(attempt.refreshed, `${path}.refreshed`, MAX_REFRESHES);
   isoTimestamp(attempt.at, `${path}.at`);
   number(attempt.xp, `${path}.xp`, 0, 10_000);
   if (attempt.reviewDueAt !== undefined)

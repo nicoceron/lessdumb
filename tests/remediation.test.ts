@@ -19,6 +19,7 @@ import {
 } from '../src/lib/learning';
 import {
   FIRST_FAILURE_THRESHOLD,
+  lessonFailureStreak,
   MAX_COUNTED_MISTAKES,
   planRefresh,
   prerequisiteWeakness,
@@ -135,8 +136,9 @@ function failLesson(progress: Progress, at: number): Progress {
   return result;
 }
 
-const lastFailure = (progress: Progress) =>
-  progress.attempts.findLast((attempt) => attempt.outcome === 'lesson-failed')!;
+/** What the latest failure refreshed, still pending. */
+const refreshedBy = (progress: Progress) => lessonRefreshes(progress, LESSON);
+const streak = (progress: Progress) => lessonFailureStreak(progress, LESSON);
 
 /** Complete one review cycle of a due skill. */
 function review(progress: Progress, skillId: string, at: number): Progress {
@@ -262,12 +264,11 @@ describe('remediation after a failed lesson', () => {
     const start = baseline();
     let progress = failLesson(start, NOW);
     progress = failLesson(progress, NOW + HOUR);
-    expect(getSkillState(progress, LESSON).lessonFailures).toBe(2);
+    expect(streak(progress)).toBe(2);
     const failures = progress.attempts.filter(
       (attempt) => attempt.outcome === 'lesson-failed',
     );
     expect(failures).toHaveLength(2);
-    expect(failures.every((attempt) => !attempt.refreshed)).toBe(true);
     for (const id of Object.keys(start.skills)) {
       expect(getSkillState(progress, id).dueAt).toBe(
         getSkillState(start, id).dueAt,
@@ -294,21 +295,17 @@ describe('remediation after a failed lesson', () => {
     expect(REPEAT_FAILURE_THRESHOLD).toBe(1);
     // A first failure refreshes only clearly weak prerequisites.
     const first = failLesson(start, NOW);
-    expect(lastFailure(first).refreshed).toBeUndefined();
-    expect(getSkillState(first, LESSON).lessonFailures).toBe(1);
+    expect(refreshedBy(first)).toEqual([]);
+    expect(streak(first)).toBe(1);
     expect(getSkillState(first, TUPLES).dueAt).toBe(NOW + 30 * DAY_MS);
 
     const second = failLesson(first, NOW + HOUR);
     const failedAt = getSkillState(second, LESSON).lessonFailedAt!;
-    expect(getSkillState(second, LESSON).lessonFailures).toBe(2);
-    expect(lastFailure(second).refreshed).toEqual([TUPLES]);
+    expect(streak(second)).toBe(2);
+    expect(refreshedBy(second)).toEqual([TUPLES]);
     expect(getSkillState(second, TUPLES)).toMatchObject({
       dueAt: failedAt,
-      refresh: {
-        at: failedAt,
-        lesson: LESSON,
-        basis: NOW - 10 * DAY_MS,
-      },
+      refresh: { lesson: LESSON, at: failedAt },
     });
     // Memory is untouched; for-loops is solid and stays on schedule.
     expect(getSkillState(second, TUPLES).memory).toEqual(
@@ -371,7 +368,7 @@ describe('remediation after a failed lesson', () => {
     ]);
     const failed = failLesson(start, NOW);
     const at = getSkillState(failed, LESSON).lessonFailedAt!;
-    expect(lastFailure(failed).refreshed).toEqual([TUPLES, LOOPS]);
+    expect(refreshedBy(failed)).toEqual([TUPLES, LOOPS]);
     expect(nextTask(failed, at + 1, COURSE)).toMatchObject({
       skillId: TUPLES,
       reason: message(TUPLES),
@@ -414,7 +411,7 @@ describe('remediation after a failed lesson', () => {
       planRefresh(start, skillById[LESSON], NOW, 1, defaultCatalog),
     ).toMatchObject([{ id: INDEXING, depth: 2, score: 3 }]);
     const deep = failLesson(start, NOW);
-    expect(lastFailure(deep).refreshed).toEqual([INDEXING]);
+    expect(refreshedBy(deep)).toEqual([INDEXING]);
     expect(nextTask(deep, NOW + 10, COURSE)).toMatchObject({
       skillId: INDEXING,
       mode: 'review',
@@ -428,7 +425,7 @@ describe('remediation after a failed lesson', () => {
       dueAt: NOW - DAY_MS,
     }));
     const failed = failLesson(direct, NOW);
-    expect(lastFailure(failed).refreshed).toEqual([LOOPS]);
+    expect(refreshedBy(failed)).toEqual([LOOPS]);
     expect(getSkillState(failed, INDEXING).refresh).toBeUndefined();
     expect(nextTask(failed, NOW + 10, COURSE)?.skillId).toBe(LOOPS);
   });
@@ -440,7 +437,7 @@ describe('remediation after a failed lesson', () => {
     start = withSkill(start, LISTS, unstable);
     let progress = failLesson(start, NOW);
     const firstFailure = getSkillState(progress, LESSON).lessonFailedAt!;
-    expect(lastFailure(progress).refreshed).toEqual([TUPLES]);
+    expect(refreshedBy(progress)).toEqual([TUPLES]);
     progress = review(progress, TUPLES, NOW + HOUR);
     // Its recent mistakes still count, but its recall was checked after the failure.
     const tuples = skillById[TUPLES];
@@ -452,8 +449,8 @@ describe('remediation after a failed lesson', () => {
         .score,
     ).toBe(0);
     progress = failLesson(progress, NOW + 2 * HOUR);
-    expect(getSkillState(progress, LESSON).lessonFailures).toBe(2);
-    expect(lastFailure(progress).refreshed).toEqual([LISTS]);
+    expect(streak(progress)).toBe(2);
+    expect(refreshedBy(progress)).toEqual([LISTS]);
     expect(getSkillState(progress, TUPLES).refresh).toBeUndefined();
   });
 
@@ -511,7 +508,7 @@ describe('remediation after a failed lesson', () => {
         NOW + 2 * HOUR,
       );
     expect(isMastered(passed, LESSON)).toBe(true);
-    expect(getSkillState(passed, LESSON).lessonFailures).toBeUndefined();
+    expect(streak(passed)).toBe(0);
   });
 });
 
@@ -527,8 +524,37 @@ describe('refresh persistence', () => {
   const failed = failLesson(weak, NOW);
   const failedAt = getSkillState(failed, LESSON).lessonFailedAt!;
 
-  it('validates refreshes and failure counts and rejects malformed ones', () => {
-    expect(lastFailure(failed).refreshed).toEqual([TUPLES]);
+  it('stores only a small marker per refreshed prerequisite', () => {
+    // Saved state is near its size cap (CEN-153): the failure streak and the
+    // refreshed list are derived from the attempts and FSRS memory.
+    const before = getSkillState(weak, TUPLES);
+    const after = getSkillState(failed, TUPLES);
+    expect(after).toEqual({
+      ...before,
+      dueAt: failedAt,
+      refresh: { lesson: LESSON, at: failedAt },
+    });
+    expect(
+      JSON.stringify(after).length - JSON.stringify(before).length,
+    ).toBeLessThan(60);
+    // The failed lesson and its answers carry nothing new.
+    const lesson = getSkillState(failed, LESSON);
+    expect(Object.keys(lesson)).not.toContain('refresh');
+    expect(failed.attempts.at(-1)).toEqual({
+      id: failed.attempts.at(-1)!.id,
+      skillId: LESSON,
+      questionId: failed.attempts.at(-1)!.questionId,
+      correct: false,
+      mode: 'learn',
+      usedHint: false,
+      at: new Date(failedAt).toISOString(),
+      xp: 0,
+      outcome: 'lesson-failed',
+    });
+  });
+
+  it('validates refreshes and rejects malformed ones', () => {
+    expect(refreshedBy(failed)).toEqual([TUPLES]);
     const saved = state(failed, NOW + 10);
     expect(parseStateUpdate({ state: saved, revision: 0 }).state).toEqual(
       saved,
@@ -547,13 +573,11 @@ describe('refresh persistence', () => {
       copy.progress.skills[TUPLES].refresh!.lesson = '';
     });
     reject((copy) => {
-      copy.progress.skills[TUPLES].refresh!.basis = -1;
+      copy.progress.skills[TUPLES].refresh!.at = -1;
     });
     reject((copy) => {
-      copy.progress.skills[LESSON].lessonFailures = 0;
-    });
-    reject((copy) => {
-      lastFailure(copy.progress).refreshed = [TUPLES, LOOPS, INDEXING];
+      delete (copy.progress.skills[TUPLES].refresh as { lesson?: string })
+        .lesson;
     });
   });
 
@@ -568,7 +592,7 @@ describe('refresh persistence', () => {
         dueAt: failedAt,
         refresh: { at: failedAt, lesson: LESSON },
       });
-      expect(getSkillState(merged.progress, LESSON).lessonFailures).toBe(1);
+      expect(streak(merged.progress)).toBe(1);
       expect(lessonRefreshes(merged.progress, LESSON)).toEqual([TUPLES]);
       expect(nextTask(merged.progress, failedAt + 1, COURSE)?.skillId).toBe(
         TUPLES,
@@ -609,7 +633,7 @@ describe('refresh persistence', () => {
     expect(loaded.progress.skills).toEqual(placed.skills);
     // The engine runs on it: its first failure refreshes as usual.
     const refailed = failLesson(loaded.progress, NOW);
-    expect(lastFailure(refailed).refreshed).toEqual([TUPLES]);
-    expect(getSkillState(refailed, LESSON).lessonFailures).toBe(1);
+    expect(refreshedBy(refailed)).toEqual([TUPLES]);
+    expect(streak(refailed)).toBe(1);
   });
 });

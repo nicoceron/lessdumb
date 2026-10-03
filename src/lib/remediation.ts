@@ -53,15 +53,15 @@ export const REFRESH_HOLD_MS = DAY;
 
 /**
  * A review brought forward because a lesson that uses this skill failed. It
- * is due from `at`; the next real review (passed or failed) completes it.
+ * is due from `at`; the next real review (passed or failed) completes it,
+ * since that review moves the memory's last review past `at`. Kept this small
+ * on purpose: everything else is derived from the attempts and FSRS memory.
  */
 export interface Refresh {
-  /** When the lesson failed. */
-  at: number;
   /** The failed lesson's skill. */
   lesson: string;
-  /** The memory's last real review when scheduled. */
-  basis: number;
+  /** When the lesson failed. */
+  at: number;
 }
 
 export interface Weakness {
@@ -209,6 +209,25 @@ export function planRefresh(
 }
 
 /**
+ * Consecutive failed attempts at a skill's lesson, from the attempt log:
+ * failures since its last pass. A failure older than the retained log counts
+ * as none, which only makes the next refresh stricter.
+ */
+export function lessonFailureStreak(
+  progress: Progress,
+  skillId: string,
+): number {
+  let failures = 0;
+  for (let index = progress.attempts.length - 1; index >= 0; index--) {
+    const attempt = progress.attempts[index];
+    if (attempt.skillId !== skillId) continue;
+    if (attempt.outcome === 'lesson-passed') break;
+    if (attempt.outcome === 'lesson-failed') failures++;
+  }
+  return failures;
+}
+
+/**
  * Bring a mastered skill's review forward to `at` for a failed lesson. Its
  * memory is kept, so the review is scheduled from the real elapsed time;
  * implicit credit no longer applies.
@@ -224,7 +243,7 @@ export function scheduleRefresh(
     ...rest,
     memory,
     dueAt: Math.min(state.dueAt ?? at, at),
-    refresh: { at, lesson, basis: memory.lastReviewAt },
+    refresh: { lesson, at },
   };
 }
 
@@ -234,22 +253,33 @@ export function refreshPending(state?: SkillProgress): boolean {
   return (
     !!refresh &&
     state!.dueAt !== null &&
-    state!.memory?.lastReviewAt === refresh.basis
+    !!state!.memory &&
+    state!.memory.lastReviewAt < refresh.at
   );
 }
 
-/** Skills still waiting on a refresh for `lesson`, scheduled at or after `since`. */
+/**
+ * Skills still waiting on a refresh for `lesson`, scheduled at or after
+ * `since`: lowest estimated recall at the failure first, as `nextTask` breaks
+ * its ties.
+ */
 export function pendingRefreshes(
   progress: Progress,
   lesson: string,
   since = -Infinity,
 ): string[] {
+  const recall = (state: SkillProgress) =>
+    recallProbability(state.memory!, state.refresh!.at);
   return Object.entries(progress.skills)
     .filter(
       ([, state]) =>
         state.refresh?.lesson === lesson &&
         state.refresh.at >= since &&
         refreshPending(state),
+    )
+    .sort(
+      ([a, left], [b, right]) =>
+        recall(left) - recall(right) || (a < b ? -1 : 1),
     )
     .map(([id]) => id);
 }

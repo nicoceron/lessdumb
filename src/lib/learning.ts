@@ -35,6 +35,7 @@ import {
 } from './retention';
 import { createActivity, recordActivity, type ActivityState } from './activity';
 import {
+  lessonFailureStreak,
   pendingRefreshes,
   planRefresh,
   REFRESH_HOLD_MS,
@@ -123,8 +124,6 @@ export interface SkillProgress {
   implicitCredit?: ImplicitCredit;
   /** Placed out of by a diagnostic: conditional until its first review. */
   placement?: Placement;
-  /** Failed lesson attempts in a row since the last pass. */
-  lessonFailures?: number;
   /** A review brought forward because a lesson that uses this skill failed. */
   refresh?: Refresh;
 }
@@ -188,8 +187,6 @@ export interface Attempt {
   quizId?: string;
   /** Prerequisites that this successful answer gave implicit review credit. */
   credited?: string[];
-  /** Prerequisites whose review this failed lesson brought forward. */
-  refreshed?: string[];
   /** What the learner typed, for a numeric or text question. */
   response?: string;
 }
@@ -1111,7 +1108,6 @@ export function applyAttempt(
       ) {
         state.lessonAttempt = undefined;
         state.lessonFailedAt = time;
-        state.lessonFailures = (old.lessonFailures ?? 0) + 1;
         outcome = 'lesson-failed';
       }
     }
@@ -1197,7 +1193,6 @@ export function applyAttempt(
         );
     state.lessonRewarded = true;
     state.lessonAttempt = undefined;
-    delete state.lessonFailures;
     outcome = 'lesson-passed';
   }
   if (state.lessonAttempt === undefined) delete state.lessonAttempt;
@@ -1244,14 +1239,15 @@ export function applyAttempt(
     outcome === 'lesson-passed' || outcome === 'review-passed'
       ? applyImplicitCredit(updated, item, time, catalog)
       : { progress: updated, credited: [] };
-  // A failed lesson brings its weakest prerequisites' reviews forward.
+  // A failed lesson brings its weakest prerequisites' reviews forward. This
+  // failure is not in the log yet, so it adds one to the streak there.
   const refreshed =
     outcome === 'lesson-failed'
       ? refreshPrerequisites(
           credit.progress,
           item,
           time,
-          state.lessonFailures!,
+          lessonFailureStreak(progress, item.id) + 1,
           catalog,
           old.lessonFailedAt,
         )
@@ -1260,13 +1256,9 @@ export function applyAttempt(
     ...refreshed.progress,
     attempts: [
       ...progress.attempts,
-      {
-        ...attempt,
-        ...(credit.credited.length ? { credited: credit.credited } : {}),
-        ...(refreshed.refreshed.length
-          ? { refreshed: refreshed.refreshed }
-          : {}),
-      },
+      credit.credited.length
+        ? { ...attempt, credited: credit.credited }
+        : attempt,
     ].slice(-MAX_RECENT_ATTEMPTS),
   };
 }

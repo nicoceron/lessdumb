@@ -36,6 +36,7 @@ import {
   getSkillState,
   isMastered,
   isUnlocked,
+  lessonRefreshes,
   lessonState,
   nextTask,
   selectQuestion,
@@ -426,7 +427,7 @@ function LessonPage({
   const failed = recorded?.outcome === 'lesson-failed';
   // The prerequisites this failure scheduled for a refresh, if any.
   const refreshed = failed
-    ? (recorded?.refreshed ?? [])
+    ? lessonRefreshes(state.progress, skillId)
         .map((id) => skillById[id])
         .filter((item) => !!item)
     : [];
