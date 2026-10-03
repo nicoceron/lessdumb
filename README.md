@@ -150,7 +150,7 @@ For a different listening address or port:
 HOST=0.0.0.0 PORT=8080 npm start
 ```
 
-This command assumes the production variables above are already configured. Serve the public origin over HTTPS and retain the persistent data directory. SQLite suits one Node server instance. A host with disposable storage cannot retain accounts; horizontal scaling needs a supported shared database and a migration of learner state. No public deployment is implied by running a local build.
+This command assumes the production variables above are already configured. Serve the public origin over HTTPS and retain the persistent data directory. SQLite suits one Node server instance. A host with disposable storage cannot retain accounts; horizontal scaling needs a supported shared database and a migration of learner state. The public app at https://lessdumb.nicocerond.workers.dev deploys automatically from `main` (see [Cloudflare deployment](docs/cloudflare.md)).
 
 ## Verification
 
@@ -232,4 +232,4 @@ The implemented catalog includes Python, quantitative foundations, Python for Da
 
 ## MVP boundaries
 
-FSRS adapts stability, difficulty, and spacing per learner and skill, using shared default weights that have not been fitted or validated on lessdumb learners. Each skill has four authored questions, with no placement test, unlimited generated question bank, or automatic transfer credit between subjects. Account email delivery/recovery and a backup-import interface are not implemented. The app provides exports, local persistence, and same-server account sync; it does not provision hosting or a managed cloud service.
+FSRS adapts stability, difficulty, and spacing per learner and skill, using shared default weights that have not been fitted or validated on lessdumb learners. Each skill teaches two to five knowledge points with a finite authored question bank; there is no unlimited generated question bank or automatic transfer credit between subjects. The placement test, implicit review weights, and quiz rules are documented heuristics, not models fitted on lessdumb learners. Account email delivery/recovery and a backup-import interface are not implemented. The app provides exports, local persistence, and account sync on the deployed server.

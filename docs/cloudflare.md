@@ -6,7 +6,9 @@ The Cloudflare build uses Astro's official Workers adapter, Workers Static Asset
 
 ## Deploy
 
-Use Node 24 or newer and the repository's locked dependencies. Authenticate Wrangler to the intended account, then check `account_id`, the D1 database ID, and the public `BETTER_AUTH_URL` in `wrangler.jsonc` before deploying to another account.
+**Every push to `main` deploys automatically.** After the `verify` and `cloudflare` CI jobs pass, the `deploy` job in `.github/workflows/ci.yml` applies pending production D1 migrations and runs `npm run deploy:cloudflare`. It authenticates with the `CLOUDFLARE_API_TOKEN` repository secret: a Cloudflare API token with Workers Scripts Edit and D1 Edit on this account. A newer push to `main` never cancels a deploy in progress.
+
+To deploy by hand, or to set up another account, use Node 24 or newer and the repository's locked dependencies. Authenticate Wrangler to the intended account, then check `account_id`, the D1 database ID, and the public `BETTER_AUTH_URL` in `wrangler.jsonc` before deploying to another account.
 
 ```sh
 npm ci
@@ -17,7 +19,7 @@ npx wrangler secret put BETTER_AUTH_SECRET
 npm run deploy:cloudflare
 ```
 
-Supply a randomly generated signing secret of at least 32 characters at the secret prompt. Keep it stable across releases. It belongs in Cloudflare's secret store, never Git, a public variable, or the browser. The deployment script builds first; Astro generates `dist/server/wrangler.json` and Wrangler discovers it through `.wrangler/deploy/config.json`. No GitHub deployment token is committed. Deployments are currently explicit CLI releases, not automatic pushes from GitHub.
+Supply a randomly generated signing secret of at least 32 characters at the secret prompt. Keep it stable across releases. It belongs in Cloudflare's secret store, never Git, a public variable, or the browser. The deployment script builds first; Astro generates `dist/server/wrangler.json` and Wrangler discovers it through `.wrangler/deploy/config.json`. No deployment token is committed; CI reads it from the repository secret.
 
 `migrations/0001_accounts_and_progress.sql` contains the Better Auth 1.7.7 account schema generated from an empty database with its documented migration API. `0002_compressed_progress.sql` adds an encoding marker. Apply migrations before deploying code that requires them. Do not rerun the schema generator to overwrite historical migrations when upgrading Better Auth; add and review a new migration instead.
 
