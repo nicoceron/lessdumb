@@ -2651,4 +2651,1914 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'ds-replication': [
+    {
+      title: 'Send writes through one leader',
+      explanation: [
+        'In single-leader replication, one node, the leader, accepts all writes, applies them in order, and sends that ordered stream of changes to the followers, which apply the same changes in the same order.',
+        'Reads can go to the leader or to followers, so followers add read capacity and redundancy. Writes still all pass through the leader, so adding followers does not add write capacity.',
+      ],
+      example: scenario(
+        'The leader receives w1 (stock = 5), then w2 (stock = 4). Followers F1 and F2 receive the change stream.',
+        'Both followers apply w1 and then w2, ending with stock = 4, the same as the leader.',
+        'Applying the same changes in the same order makes every copy reach the same state.',
+      ),
+      questions: [
+        choose(
+          'A client sends a write directly to a follower in a single-leader system. What should happen?',
+          [
+            'The follower applies it and tells the leader later',
+            'All followers vote on it',
+            'It is applied to the backup',
+            'It is rejected or forwarded to the leader',
+          ],
+          3,
+          'Only the leader orders writes; otherwise copies could diverge.',
+        ),
+        choose(
+          'Why must followers apply changes in the leader’s order?',
+          [
+            'Applying the same changes in a different order can give a different final state',
+            'Order makes replication faster',
+            'Order never matters',
+            'Followers sort changes alphabetically',
+          ],
+          0,
+          'Setting stock to 5 then 4 differs from setting it to 4 then 5.',
+        ),
+        choose(
+          'A service has 1 leader and 4 followers, each serving up to 2,000 reads per second, with reads spread over all 5 nodes. What is the total read capacity?',
+          ['2,000 reads/s', '8,000 reads/s', '10,000 reads/s', '4,000 reads/s'],
+          2,
+          'Every node can serve reads: 5 × 2,000.',
+        ),
+        choose(
+          'What does adding followers NOT increase in single-leader replication?',
+          [
+            'Read capacity',
+            'Write capacity',
+            'The number of copies of the data',
+            'Tolerance of losing a node',
+          ],
+          1,
+          'Every write still has to go through the single leader.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose synchronous or asynchronous acknowledgement',
+      explanation: [
+        'Synchronous replication confirms a write only after a required follower has it; asynchronous replication confirms as soon as the leader has it.',
+        'Synchronous: an acknowledged write survives losing the leader, but every write waits for the follower, and if that follower is down, writes stall. Asynchronous: fast and available, but the newest acknowledged writes can be lost if the leader fails.',
+      ],
+      example: scenario(
+        'Writing on the leader takes 5 ms, and a round trip to the follower takes 40 ms.',
+        'A synchronous write takes about 45 ms; an asynchronous one about 5 ms, but for a moment the write exists only on the leader.',
+        'Each mode trades response time and availability against the risk of losing acknowledged writes.',
+      ),
+      questions: [
+        choose(
+          'Writing on the leader takes 3 ms, and the follower round trip takes 20 ms. About how long does a synchronous write take?',
+          ['3 ms', '20 ms', '60 ms', '23 ms'],
+          3,
+          'The leader must also wait for the follower’s confirmation.',
+        ),
+        choose(
+          'The required synchronous follower goes offline. What happens to writes?',
+          [
+            'They stall or fail until it returns or is replaced',
+            'They become faster',
+            'They are acknowledged anyway',
+            'They are sent to the follower later',
+          ],
+          0,
+          'Acknowledgement depends on a node that cannot answer.',
+        ),
+        choose(
+          'Which setup can lose writes that were already acknowledged when the leader dies?',
+          [
+            'Synchronous replication to a surviving follower',
+            'Asynchronous replication',
+            'Both equally',
+            'Neither',
+          ],
+          1,
+          'With asynchronous replication the leader may confirm before any follower has the write.',
+        ),
+        choose(
+          'One follower is synchronous and the others asynchronous. What does this guarantee about an acknowledged write?',
+          [
+            'Every follower already has it',
+            'It can never be lost in any failure',
+            'It exists on at least two nodes',
+            'It was written without waiting',
+          ],
+          2,
+          'The leader and the synchronous follower both hold it before success is reported.',
+        ),
+      ],
+    },
+    {
+      title: 'Fail over to a new leader',
+      explanation: [
+        'When the leader dies, a follower is promoted (failover) and clients send their writes to it. With asynchronous replication, the promoted follower may lack the old leader’s last writes, and those writes are lost.',
+        'If the old leader comes back still believing it is the leader, two nodes may accept writes at once, a dangerous state called split brain. Declaring a leader dead too quickly can trigger needless failovers.',
+      ],
+      example: scenario(
+        'The leader acknowledged writes up to #1,050. The most up-to-date follower had applied up to #1,042 when the leader died, and it is promoted.',
+        'Writes #1,043 to #1,050, eight acknowledged writes, are lost.',
+        'Promoting the most current follower minimises the loss but cannot remove it under asynchronous replication.',
+      ),
+      questions: [
+        choose(
+          'The old leader acknowledged writes up to #500; the promoted follower had applied up to #488. How many acknowledged writes are lost?',
+          ['488', '12', '500', '0'],
+          1,
+          'Writes #489 to #500 never reached the new leader.',
+        ),
+        choose(
+          'After a failover, the old leader returns and keeps accepting writes. What is this danger called?',
+          [
+            'Write amplification',
+            'A lost update',
+            'Split brain',
+            'Replication lag',
+          ],
+          2,
+          'Two nodes acting as leader can accept conflicting writes.',
+        ),
+        choose(
+          'Why is triggering failover after a very short timeout risky?',
+          [
+            'Timeouts are always too long',
+            'Followers cannot be promoted quickly',
+            'It is never risky',
+            'A slow but alive leader may be replaced, causing needless failovers or two leaders',
+          ],
+          3,
+          'A brief slowdown looks the same as a crash from outside.',
+        ),
+        choose(
+          'Which follower is the best candidate to promote?',
+          [
+            'The one that has applied the most recent changes',
+            'The newest machine',
+            'Any follower at random',
+            'The one serving the fewest reads',
+          ],
+          0,
+          'It holds the most of the old leader’s writes, so the least is lost.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-replication-lag': [
+    {
+      title: 'Measure how far a follower is behind',
+      explanation: [
+        'Replication lag is how far a follower trails the leader, counted in changes or in time. If the leader has applied change #9,000 and a follower #8,940, the follower is 60 changes behind; at 30 changes per second, that is 2 seconds.',
+        'A read from that follower misses the last 2 seconds of writes. Lag is usually small, but it can grow to minutes under heavy load or network trouble.',
+      ],
+      example: {
+        code: 'leader_position = 9000\nfollower_position = 8940\nwrites_per_second = 30\nbehind = leader_position - follower_position\nprint(behind)\nprint(behind / writes_per_second)',
+        output: '60\n2.0',
+        explanation:
+          'The follower is 60 changes behind, which at 30 changes per second is 2 seconds of writes.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'leader_position = 12500\nfollower_position = 12350\nwrites_per_second = 50\nbehind = leader_position - follower_position\nprint(behind)\nprint(behind / writes_per_second)',
+          ['150\n7500.0', '3.0\n150', '12350\n3.0', '150\n3.0'],
+          3,
+          '150 changes behind at 50 changes per second is 3 seconds.',
+        ),
+        predictOutput(
+          'Each number is a follower’s applied position. What does this program print?',
+          'leader = 400\nfollowers = [400, 395, 371]\nfor position in followers:\n    print(leader - position)',
+          ['400\n395\n371', '0\n5\n29', '29\n5\n0', '0\n5\n24'],
+          1,
+          'Each follower’s lag is the leader’s position minus its own.',
+        ),
+        choose(
+          'A follower is 4 seconds behind the leader. A user wrote a new value 1 second ago, and a read now goes to that follower. What does the read return?',
+          [
+            'The value from before the write',
+            'The new value',
+            'An error',
+            'Part of the write',
+          ],
+          0,
+          'The follower has not yet applied anything from the last 4 seconds.',
+        ),
+        choose(
+          'Lag normally stays under 100 ms but reaches 3 minutes during a nightly bulk import. What should the design assume?',
+          [
+            'Lag is always under 100 ms',
+            'Imports reduce lag',
+            'Lag can occasionally be large, so follower reads may be minutes stale',
+            'Followers stop serving reads during imports',
+          ],
+          2,
+          'Designs must handle the worst lag that actually occurs, not the usual one.',
+        ),
+      ],
+    },
+    {
+      title: 'Let users read their own writes',
+      explanation: [
+        'Read-your-writes means that after a user’s write succeeds, that user’s later reads show it. Other users may still briefly see older data.',
+        'One approach serves a user’s recently changed data from the leader for a while, say one minute after their last write. Another remembers the leader position of the user’s last write and reads only from followers that have reached it.',
+      ],
+      example: {
+        code: 'last_write_position = 1205\nfollower_a = 1199\nfollower_b = 1210\nprint(follower_a >= last_write_position)\nprint(follower_b >= last_write_position)',
+        output: 'False\nTrue',
+        explanation:
+          'Only follower b has applied the user’s write at position 1205, so only it can serve that user’s read.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'last_write = 870\nfollower_a = 871\nfollower_b = 860\nprint(follower_a >= last_write, follower_b >= last_write)',
+          ['False True', 'True True', 'True False', 'False False'],
+          2,
+          'Follower a has passed position 870; follower b has not reached it.',
+        ),
+        choose(
+          'A user saves a new bio and immediately sees it, while other users see the old bio for a few seconds. Does that violate read-your-writes?',
+          [
+            'Yes, everyone must see it instantly',
+            'No, the guarantee only covers the writer’s own reads',
+            'Yes, followers must never lag',
+            'No, because read-your-writes means only the leader serves reads',
+          ],
+          1,
+          'Other users’ brief staleness is allowed; the writer must see the change.',
+        ),
+        choose(
+          'Which routing provides read-your-writes for profile pages?',
+          [
+            'Read from a random follower',
+            'Read from the most distant follower',
+            'Cache each profile for an hour',
+            'Serve a user’s own profile from the leader for one minute after they edit it',
+          ],
+          3,
+          'The leader always has the user’s latest write.',
+        ),
+        choose(
+          'A user writes on their phone and then reads on their laptop. Why can “remember the last write position in the client” fail here?',
+          [
+            'The laptop does not know the position of the phone’s last write',
+            'Laptops cannot read from followers',
+            'Positions expire after one millisecond',
+            'It cannot fail',
+          ],
+          0,
+          'The remembered position lives on the device that made the write.',
+        ),
+      ],
+    },
+    {
+      title: 'Never go backward in time',
+      explanation: [
+        'Monotonic reads means that once a user has seen a value, later reads never show an older one. Without it, two refreshes that hit different followers can show a new comment and then hide it again.',
+        'A simple fix sends each user’s reads to the same follower, chosen for example from the user ID. That prevents going backward, but it does not by itself show the user their own latest write.',
+      ],
+      example: {
+        code: 'seen = [5, 7, 6]\nwent_back = False\nprevious = 0\nfor version in seen:\n    if version < previous:\n        went_back = True\n    previous = version\nprint(went_back)',
+        output: 'True',
+        explanation:
+          'The user saw version 7 and then version 6, an older state, so monotonic reads were violated.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'seen = [3, 3, 4, 8]\nwent_back = False\nprevious = 0\nfor version in seen:\n    if version < previous:\n        went_back = True\n    previous = version\nprint(went_back)',
+          ['True', '8', 'False', '4'],
+          2,
+          'Repeating a version is not going backward, and the versions never decrease.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'seen = [10, 12, 11, 13]\nwent_back = False\nprevious = 0\nfor version in seen:\n    if version < previous:\n        went_back = True\n    previous = version\nprint(went_back)',
+          ['False', 'True', '11', '13'],
+          1,
+          'Version 11 after 12 is a step backward, even though 13 comes later.',
+        ),
+        choose(
+          'A user sees 5 comments, refreshes and sees 3, then refreshes and sees 5 again. Which guarantee is missing?',
+          [
+            'Synchronous replication',
+            'Read-your-writes',
+            'Failover',
+            'Monotonic reads',
+          ],
+          3,
+          'The user’s view moved backward to an older state.',
+        ),
+        choose(
+          'Which change gives monotonic reads but not necessarily read-your-writes?',
+          [
+            'Always route each user to the same follower',
+            'Read only from the leader',
+            'Replicate synchronously to every follower',
+            'Turn off replication',
+          ],
+          0,
+          'One follower never goes backward, but it may still lag behind the user’s own write.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-conflicts': [
+    {
+      title: 'Recognise concurrent writes',
+      explanation: [
+        'Two writes are concurrent when neither writer knew about the other’s write: both started from the same earlier version. This happens when copies accept writes independently, such as offline devices or leaders in different regions.',
+        'If one write was made after seeing the other, it is not concurrent; it follows the other. The order in which writes arrive at a replica does not tell you which, because network delays can reorder them.',
+      ],
+      example: scenario(
+        'Ana and Ben both open version 3 of a document while offline. Ana changes the title, Ben changes the date, and both sync later.',
+        'The edits are concurrent: both are based on version 3, and neither writer saw the other’s change.',
+        'The system now needs a rule for combining them.',
+      ),
+      questions: [
+        choose(
+          'Ben reads Ana’s change and then edits the same field. Are the two edits concurrent?',
+          [
+            'Yes, because they touch the same field',
+            'Yes, because two users made them',
+            'No, Ben’s edit follows Ana’s',
+            'Only if they sync in the same second',
+          ],
+          2,
+          'Ben knew about Ana’s edit, so his builds on it.',
+        ),
+        choose(
+          'Two phones edit version 8 of a note while offline. How are the edits related?',
+          [
+            'They are concurrent',
+            'The first phone’s edit follows the second’s',
+            'The second phone’s edit follows the first’s',
+            'They are identical',
+          ],
+          0,
+          'Both started from version 8 without seeing each other.',
+        ),
+        choose(
+          'Why can’t the arrival order at one replica decide which of two writes came later?',
+          [
+            'Replicas sort writes by size',
+            'Arrival order is always reversed',
+            'It always can',
+            'Network delays can reorder arrivals regardless of when writes were made or what writers saw',
+          ],
+          3,
+          'Arrival order reflects the network, not the writers’ knowledge.',
+        ),
+        choose(
+          'Which setup makes concurrent writes to the same record possible?',
+          [
+            'One leader accepting every write in order',
+            'Two regions each accepting writes for the same record',
+            'A read-only replica',
+            'A file edited by one person on one computer',
+          ],
+          1,
+          'Independent writers without coordination can both change the same record.',
+        ),
+      ],
+    },
+    {
+      title: 'Know what last-write-wins discards',
+      explanation: [
+        'Last-write-wins (LWW) keeps the write with the latest timestamp and silently drops the others. Every copy converges on the same value, but a valid concurrent change is lost.',
+        'Clocks on different machines disagree (clock skew), so the “latest” timestamp may not even belong to the write made last in real time.',
+      ],
+      example: scenario(
+        'Phone A, whose clock is 2 minutes fast, sets the title to Draft at real time 10:00 (stamped 10:02). Phone B sets it to Final at real time 10:01 (stamped 10:01).',
+        'LWW keeps Draft and discards Final, although Final was written later.',
+        'The skewed clock decided the winner, and a real edit vanished without warning.',
+      ),
+      questions: [
+        choose(
+          'Concurrent writes: x = 5 stamped 12:00:03 and x = 9 stamped 12:00:01. What does LWW keep?',
+          ['9', '14', '5', 'Both'],
+          2,
+          'The write with the later timestamp wins; the other is dropped.',
+        ),
+        choose(
+          'Server A’s clock runs 5 seconds fast. A writes at real time 08:00:00, and B writes at real time 08:00:03. Which write does LWW keep?',
+          [
+            'B’s write, stamped 08:00:03',
+            'Both writes',
+            'Neither write',
+            'A’s write, stamped 08:00:05',
+          ],
+          3,
+          'A’s skewed stamp is later, so its earlier write wins.',
+        ),
+        choose(
+          'Two users add different items to a shared shopping list at the same time, and LWW stores the whole list as one value. What happens?',
+          [
+            'One user’s item disappears',
+            'Both items are kept',
+            'The list is emptied',
+            'Both users see an error',
+          ],
+          0,
+          'LWW keeps one version of the whole list, dropping the other addition.',
+        ),
+        choose(
+          'When is last-write-wins an acceptable rule?',
+          [
+            'For bank balances',
+            'When losing a concurrent update is acceptable, such as a device’s last known location',
+            'For collaborative documents',
+            'Never',
+          ],
+          1,
+          'If an occasional lost overwrite does no harm, LWW’s simplicity is fine.',
+        ),
+      ],
+    },
+    {
+      title: 'Merge by what the data means',
+      explanation: [
+        'Better resolution follows the meaning of the data. For a set of tags, keep both additions (a union). For a counter, add both increments. For independent fields, merge field by field.',
+        'When no automatic merge is right, such as two different rewrites of the same paragraph, keep both versions and let a person choose.',
+      ],
+      example: scenario(
+        'Tags at version 3 are {sale}. A adds new, giving {sale, new}; B adds gift, giving {sale, gift}.',
+        'Merge with a union: {sale, new, gift}.',
+        'Both additions were intended, and a set union keeps them.',
+      ),
+      questions: [
+        choose(
+          'A counter is 10. Replica A applies +3 and replica B applies +2 concurrently. What should the merged value be?',
+          ['13', '12', '15', '10'],
+          2,
+          'Both increments happened, so both are added: 10 + 3 + 2.',
+        ),
+        choose(
+          'The base tags are {red}. A adds blue and B adds green. What does a union merge give?',
+          [
+            '{red, blue}',
+            '{red, green}',
+            '{blue, green}',
+            '{red, blue, green}',
+          ],
+          3,
+          'A union keeps every tag from both sides.',
+        ),
+        choose(
+          'A changes a contact’s phone number while B changes the same contact’s email. Which merge keeps both changes?',
+          [
+            'Merge field by field',
+            'Keep A’s whole record',
+            'Keep B’s whole record',
+            'Discard both changes',
+          ],
+          0,
+          'The edits touch different fields, so both can be applied.',
+        ),
+        choose(
+          'Two editors rewrite the same paragraph in different ways. What is the sound resolution?',
+          [
+            'Union the words of both versions',
+            'Keep both versions and ask a person to choose',
+            'Keep the shorter version',
+            'Delete the paragraph',
+          ],
+          1,
+          'No automatic rule knows which rewrite is right.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-quorums': [
+    {
+      title: 'Use R + W > N to force overlap',
+      explanation: [
+        'Suppose a record has N replicas. A write is confirmed once W replicas acknowledge it, and a read asks R replicas. If R + W > N, any read set and any write set must share at least R + W − N replicas.',
+        'So every read reaches at least one replica that holds the latest confirmed write. If R + W ≤ N, the two sets can be completely separate.',
+      ],
+      example: {
+        code: 'n = 5\nw = 3\nr = 3\nprint(r + w > n)\nprint(r + w - n)',
+        output: 'True\n1',
+        explanation:
+          'Three writers and three readers out of five replicas must share at least one replica.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'n = 3\nw = 2\nr = 2\nprint(r + w > n)\nprint(r + w - n)',
+          ['False\n1', 'True\n4', 'True\n1', 'False\n-1'],
+          2,
+          '2 + 2 = 4 is more than 3, so the sets share at least one replica.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'n = 5\nw = 2\nr = 3\nprint(r + w > n)\nprint(r + w - n)',
+          ['True\n0', 'False\n0', 'True\n1', 'False\n5'],
+          1,
+          '2 + 3 equals 5, so the read set can be exactly the replicas the write missed.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'n = 7\nw = 5\nr = 4\nprint(r + w - n)',
+          ['2', '9', '1', '16'],
+          0,
+          'At least 4 + 5 − 7 = 2 replicas are in both sets.',
+        ),
+        choose(
+          'N = 6 and writes wait for W = 4. What is the smallest R that guarantees overlap?',
+          ['2', '4', '6', '3'],
+          3,
+          'R must make R + 4 greater than 6, so R is at least 3.',
+        ),
+      ],
+    },
+    {
+      title: 'Trade read and write thresholds',
+      explanation: [
+        'Within R + W > N you can shift the cost. W = N with R = 1 makes reads cheap, but a write fails if any replica is down; W = 1 with R = N does the opposite.',
+        'An operation proceeds only if enough replicas are reachable: at least W for writes and R for reads. Smaller thresholds keep working through more failures, but they weaken or lose the overlap.',
+      ],
+      example: {
+        code: 'n = 5\nw = 3\nr = 3\ndown = 2\nup = n - down\nprint(up >= w, up >= r)',
+        output: 'True True',
+        explanation:
+          'With two of five replicas down, three remain, enough for both thresholds.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'n = 5\nw = 5\nr = 1\ndown = 1\nup = n - down\nprint(up >= w, up >= r)',
+          ['True True', 'False True', 'True False', 'False False'],
+          1,
+          'Writes need all 5 replicas, but only 4 are up; reads need just 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'n = 3\nw = 2\nr = 2\ndown = 1\nup = n - down\nprint(up >= w, up >= r)',
+          ['False False', 'True False', 'False True', 'True True'],
+          3,
+          'Two replicas remain, enough for both thresholds of 2.',
+        ),
+        choose(
+          'N = 5, W = 3 and R = 3. How many replicas can be down while reads and writes still succeed?',
+          ['1', '3', '2', '0'],
+          2,
+          'Three replicas must remain reachable, so two can be lost.',
+        ),
+        choose(
+          'A team sets W = 1 and R = 1 with N = 3 for availability. What do they give up?',
+          [
+            'The guarantee that a read reaches the latest confirmed write',
+            'All availability',
+            'The ability to write at all',
+            'Nothing',
+          ],
+          0,
+          '1 + 1 is not more than 3, so a read can miss every replica that has the write.',
+        ),
+      ],
+    },
+    {
+      title: 'Know what overlap does not prove',
+      explanation: [
+        'Overlap only says that some replica in the read set holds the write. The reader still needs version numbers to recognise the newest response. A write that failed after reaching some replicas, concurrent writes, and stand-in replicas used during outages (outside the usual N) can all produce surprising results.',
+        'In particular, quorums alone do not make the system linearizable: behaving as if there were a single copy in which each operation takes effect at one instant, so every read after a completed write sees it.',
+      ],
+      example: scenario(
+        'N = 3, W = 2, R = 2. A write of version 2 reaches replica A only, because B and C fail, so the write reports failure. Later a reader asks A and B and receives version 2 and version 1.',
+        'The overlap rule holds, yet the “failed” write is visible to some readers and not others. The protocol needs version numbers and a way to repair or roll back partial writes.',
+        'R + W > N is a statement about set sizes, not a complete consistency guarantee.',
+      ),
+      questions: [
+        choose(
+          'A read receives version 7 from one replica and version 6 from another. What does the reader need to choose correctly?',
+          [
+            'The response that arrived first',
+            'The response from the faster replica',
+            'Version numbers that identify the newest value',
+            'A vote among the values',
+          ],
+          2,
+          'Overlap guarantees a newest copy is present, not which one it is.',
+        ),
+        choose(
+          'A write reaches only 1 of the W = 2 replicas it needs and is reported as failed. What may later reads see?',
+          [
+            'Always the old value',
+            'Always the new value',
+            'An error',
+            'Either value, depending on which replicas they ask',
+          ],
+          3,
+          'The partial write sits on one replica and is not rolled back automatically.',
+        ),
+        choose(
+          'During an outage, writes go to stand-in replicas outside a record’s usual N. Why can R + W > N stop guaranteeing overlap?',
+          [
+            'Reads and writes may no longer be drawn from the same N replicas',
+            'The arithmetic changes during outages',
+            'Stand-in replicas are faster',
+            'It always still holds',
+          ],
+          0,
+          'The counting argument only works within one fixed replica set.',
+        ),
+        choose(
+          'Which claim follows from R + W > N alone?',
+          [
+            'Every read sees every completed write, as if there were one copy',
+            'Each read set shares a replica with each write set drawn from the same N',
+            'Concurrent writes cannot conflict',
+            'No replica can fail',
+          ],
+          1,
+          'It is a fact about overlapping sets; stronger guarantees need more protocol.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-partitioning': [
+    {
+      title: 'Split data versus copy data',
+      explanation: [
+        'Sharding, also called partitioning, splits a dataset so that each shard owns a different subset of the records. Replication copies the same subset to several nodes. Sharding addresses data or load too large for one node; replication addresses losing a node.',
+        'They combine: with 4 shards and 3 replicas each, every record lives on 3 nodes, and the cluster stores 3 copies of everything.',
+      ],
+      example: {
+        code: 'records = 1200000\nshards = 4\nreplicas = 3\nprint(records // shards)\nprint(records * replicas)',
+        output: '300000\n3600000',
+        explanation:
+          'Each shard owns a quarter of the records, and the cluster stores every record three times.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'records = 900\nshards = 3\nreplicas = 2\nprint(records // shards)\nprint(records * replicas)',
+          ['450\n1800', '300\n600', '900\n1800', '300\n1800'],
+          3,
+          'Each of 3 shards owns 300 records, and every record is stored twice.',
+        ),
+        choose(
+          'A cluster has 6 shards, each with 3 replicas. On how many nodes does a single record live?',
+          ['1', '3', '6', '18'],
+          1,
+          'A record belongs to one shard, which is copied to 3 nodes.',
+        ),
+        choose(
+          'Which statement is right?',
+          [
+            'Sharding copies all data to every node',
+            'Replication splits data into subsets',
+            'Sharding spreads different records; replication copies the same records',
+            'They are the same mechanism',
+          ],
+          2,
+          'One divides ownership; the other adds redundant copies.',
+        ),
+        choose(
+          'A dataset outgrows one machine’s disk. Which mechanism addresses that?',
+          ['Sharding', 'Replication', 'Adding indexes', 'Read-your-writes'],
+          0,
+          'Only splitting the data reduces what each node must store.',
+        ),
+      ],
+    },
+    {
+      title: 'Route requests by partition key',
+      explanation: [
+        'The partition key decides which shard owns each record, through a routing rule such as key % number_of_shards. A query that includes the key goes to exactly one shard.',
+        'A query without the key must ask every shard and combine their answers (scatter-gather), which costs more as the number of shards grows.',
+      ],
+      example: scenario(
+        'Workshops are sharded by organizer_id across 8 shards. Query 1 asks for organizer 42’s workshops; query 2 asks for every workshop in Lima.',
+        'Query 1 goes to one shard. Query 2 goes to all 8 shards, and their results are merged.',
+        'Queries that carry the partition key stay cheap; others pay for every shard.',
+      ),
+      questions: [
+        predictOutput(
+          'Records are routed with key % shards. What does this program print?',
+          'shards = 4\nfor key in [10, 11, 14]:\n    print(key % shards)',
+          ['10\n11\n14', '2\n3\n3', '2\n3\n2', '0\n1\n2'],
+          2,
+          '10 % 4 = 2, 11 % 4 = 3 and 14 % 4 = 2.',
+        ),
+        choose(
+          'Orders are sharded by customer_id across 10 shards. How many shards does “total revenue for product P across all customers” query?',
+          ['1', '2', '0', '10'],
+          3,
+          'The query does not include customer_id, so every shard must answer.',
+        ),
+        choose(
+          'Orders are sharded by customer_id. Which query is cheapest?',
+          [
+            'All orders placed on 3 May',
+            'All orders of customer 77',
+            'Orders above $500',
+            'Order counts per country',
+          ],
+          1,
+          'It names the partition key, so one shard answers.',
+        ),
+        choose(
+          'Why does a scatter-gather query get more expensive as shards grow from 4 to 40?',
+          [
+            'It must contact every shard and merge more partial results',
+            'Each shard becomes slower',
+            'Keys become longer',
+            'It does not',
+          ],
+          0,
+          'Its cost grows with the number of shards it must visit.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose the key from access patterns and sizes',
+      explanation: [
+        'Pick a partition key that (1) the frequent queries include, keeping related records on one shard, and (2) spreads data and traffic evenly.',
+        'A key that groups too much can overload a shard. Partitioning by tenant (a customer organisation whose data is kept together) is convenient, but one huge tenant then lands entirely on one shard.',
+      ],
+      example: {
+        code: 'tenant_rows = [5000, 7000, 6000, 482000]\ntotal = 0\nfor rows in tenant_rows:\n    total = total + rows\nprint(tenant_rows[3] * 100 // total)',
+        output: '96',
+        explanation:
+          'One tenant holds 96% of all rows, so partitioning by tenant would put almost everything on one shard.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'sizes = [100, 300, 600]\ntotal = 0\nfor rows in sizes:\n    total = total + rows\nprint(sizes[2] * 100 // total)',
+          ['600', '60', '33', '6'],
+          1,
+          'The largest group holds 600 of 1,000 rows: 60%.',
+        ),
+        choose(
+          'A chat app’s main query is “messages in conversation C, newest first”. Which partition key keeps that query on one shard?',
+          [
+            'message_id',
+            'The sender’s country',
+            'conversation_id',
+            'The timestamp',
+          ],
+          2,
+          'All of a conversation’s messages then share a shard.',
+        ),
+        choose(
+          'One tenant holds 70% of all data, and the data is partitioned by tenant_id. What is the risk?',
+          [
+            'Other tenants grow larger',
+            'Every query must visit all shards',
+            'Nothing',
+            'One shard holds most of the data and load',
+          ],
+          3,
+          'Grouping by tenant puts the giant tenant on a single shard.',
+        ),
+        choose(
+          'Why is country a weak partition key for a global app with 60% of its users in one country?',
+          [
+            'One shard would receive most records and traffic',
+            'Countries change every day',
+            'Country is not a string',
+            'It is a strong key',
+          ],
+          0,
+          'Skewed key values make skewed shards.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-hash-range': [
+    {
+      title: 'Assign ranges of keys to shards',
+      explanation: [
+        'Range sharding gives each shard a contiguous interval of keys, such as A–F, G–M, N–S and T–Z. Neighbouring keys stay together, so a range query, like all keys in one hour of timestamps, reads one shard.',
+        'Keys that arrive in increasing order, such as timestamps or auto-increment IDs, all land in the last range, which turns that shard into a write hot spot.',
+      ],
+      example: {
+        code: 'boundaries = [100, 200, 300]\nkey = 250\nshard = 0\nfor b in boundaries:\n    if key >= b:\n        shard = shard + 1\nprint(shard)',
+        output: '2',
+        explanation:
+          'Shard 0 owns keys below 100, shard 1 owns 100–199, shard 2 owns 200–299 and shard 3 owns 300 and above. 250 passes two boundaries.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'boundaries = [100, 200, 300]\nkey = 99\nshard = 0\nfor b in boundaries:\n    if key >= b:\n        shard = shard + 1\nprint(shard)',
+          ['1', '99', '0', '3'],
+          2,
+          '99 is below every boundary, so it stays in the first range.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'boundaries = [100, 200, 300]\nkey = 300\nshard = 0\nfor b in boundaries:\n    if key >= b:\n        shard = shard + 1\nprint(shard)',
+          ['2', '300', '1', '3'],
+          3,
+          'A key equal to a boundary belongs to the range that starts there.',
+        ),
+        choose(
+          'Sensor readings are range-sharded by timestamp. Where do all new writes go?',
+          [
+            'To the shard owning the newest range',
+            'Evenly across all shards',
+            'To the first shard',
+            'To a random shard',
+          ],
+          0,
+          'New timestamps always fall at the end of the key space.',
+        ),
+        choose(
+          'Events are range-sharded by date. Which query does that serve well?',
+          [
+            'Events with odd IDs',
+            'All events from 1 to 7 March',
+            'Events by user U across all dates',
+            'Events whose title contains jazz',
+          ],
+          1,
+          'Consecutive dates sit together on one shard or a few.',
+        ),
+      ],
+    },
+    {
+      title: 'Spread keys with a stable hash',
+      explanation: [
+        'A hash function turns a key into a number that looks unrelated to the key’s order, and the same key always gives the same number. Hash sharding sends key k to shard hash(k) % S. In the programs here the keys are already numbers and stand in for their hashes.',
+        'Sequential keys scatter across shards, spreading writes, but a range query must now visit every shard. Every router must compute the same hash: Python’s built-in hash() of a string changes between processes, so it is unsuitable for routing.',
+      ],
+      example: {
+        code: 'shards = 4\nfor key in [1000, 1001, 1002, 1003]:\n    print(key % shards)',
+        output: '0\n1\n2\n3',
+        explanation:
+          'Four consecutive keys land on four different shards, so a burst of new keys spreads out.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'shards = 3\nfor key in [7, 8, 9, 10]:\n    print(key % shards)',
+          ['7\n8\n9\n10', '1\n2\n3\n4', '1\n2\n0\n1', '2\n1\n0\n2'],
+          2,
+          'Each key’s remainder after dividing by 3 picks its shard.',
+        ),
+        choose(
+          'Orders are hash-sharded by order date. Why is “all orders from 1 to 7 March” expensive?',
+          [
+            'Hashing deletes the dates',
+            'Hashes are slow to compute',
+            'It is not expensive',
+            'Consecutive dates are scattered, so every shard must be asked',
+          ],
+          3,
+          'Hashing destroys the ordering a range query relies on.',
+        ),
+        choose(
+          'Two routers each run Python’s hash() on string keys in their own process. What can happen?',
+          [
+            'They send the same key to different shards',
+            'Nothing, because hash() is stable',
+            'The keys become encrypted',
+            'Every write is duplicated',
+          ],
+          0,
+          'String hashing is randomised per process, so the routers can disagree.',
+        ),
+        choose(
+          'Auto-increment order IDs create a hot spot under range sharding. What does hash sharding change?',
+          [
+            'New IDs all go to shard 0',
+            'New IDs spread across all shards',
+            'IDs stop increasing',
+            'Nothing',
+          ],
+          1,
+          'Consecutive IDs hash to different shards.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose by the queries',
+      explanation: [
+        'Range sharding keeps order, which suits ranges, time windows and sorted scans, but risks hot spots for sequential keys. Hash sharding spreads keys evenly but loses their order.',
+        'A common compound key hashes a leading part, such as user_id, to spread users, and keeps order within it, such as by timestamp, so “user U’s events this week” stays on one shard and in order.',
+      ],
+      example: scenario(
+        'Events are keyed by (user_id, ts). The main query reads one user’s events in a time window.',
+        'Hash on user_id to choose the shard, and sort by ts within the shard.',
+        'Users are spread across shards, and each user’s events stay together in time order.',
+      ),
+      questions: [
+        choose(
+          'The main query is “all log lines between 10:00 and 10:05”, with a moderate write rate. Which scheme suits it?',
+          [
+            'Hash by log ID',
+            'Hash by timestamp',
+            'Random placement',
+            'Range by timestamp',
+          ],
+          3,
+          'A time range then reads one or a few neighbouring shards.',
+        ),
+        choose(
+          'The main query is “get session by session_id”, and new sessions with increasing IDs arrive at a very high rate. Which scheme suits it?',
+          [
+            'Hash by session_id',
+            'Range by session_id',
+            'Range by creation time',
+            'A single shard',
+          ],
+          0,
+          'Point lookups need no order, and hashing spreads the sequential IDs.',
+        ),
+        choose(
+          'Data is keyed by (user_id, ts), hashed on user_id and ordered by ts. Which query stays on one shard?',
+          [
+            'All events from last week',
+            'Events at noon for every user',
+            'User 5’s events from last week',
+            'The number of distinct users',
+          ],
+          2,
+          'All of user 5’s events share a shard and are ordered by time.',
+        ),
+        choose(
+          'Does hashing keys guarantee each shard receives equal traffic?',
+          [
+            'Yes, always',
+            'No, one very popular key still goes to a single shard',
+            'Yes, if the keys are numbers',
+            'No, hashing puts every key on one shard',
+          ],
+          1,
+          'Hashing balances keys, not how often each key is requested.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-hotspots': [
+    {
+      title: 'Separate key balance from load balance',
+      explanation: [
+        'Even when every shard owns the same number of keys, load follows requests, not keys. A celebrity profile or a viral post can receive most requests, making its shard a hot spot while the others idle.',
+        'Measure requests, and bytes, per shard and per key to find where the work comes from.',
+      ],
+      example: {
+        code: 'requests = [120, 95, 4100, 110]\ntotal = 0\nfor r in requests:\n    total = total + r\nprint(total)\nprint(requests[2] * 100 // total)',
+        output: '4425\n92',
+        explanation:
+          'Shard 2 serves 92% of all requests, although each shard owns the same number of keys.',
+      },
+      questions: [
+        predictOutput(
+          'Each number is one shard’s requests per second. What does this program print?',
+          'requests = [50, 50, 300, 100]\ntotal = 0\nfor r in requests:\n    total = total + r\nprint(requests[2] * 100 // total)',
+          ['300', '25', '75', '60'],
+          3,
+          'Shard 2 handles 300 of 500 requests: 60%.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'keys_per_shard = [250, 250, 250, 250]\nrequests_per_shard = [10, 10, 970, 10]\nprint(keys_per_shard[2] == keys_per_shard[0])\nprint(requests_per_shard[2] // requests_per_shard[0])',
+          ['True\n97', 'False\n97', 'True\n1', 'False\n1'],
+          0,
+          'The shards own equal numbers of keys, yet shard 2 gets 97 times the traffic.',
+        ),
+        choose(
+          'Shards own equal numbers of keys, but shard 3 runs at 95% CPU while the others sit at 10%. What is the most likely cause?',
+          [
+            'Shard 3 owns more keys',
+            'The hash function stopped working',
+            'A few keys on shard 3 receive most of the requests',
+            'Shard 3 has less memory',
+          ],
+          2,
+          'Equal key counts rule out key imbalance, leaving request skew.',
+        ),
+        choose(
+          'Which measurement pinpoints a hot key?',
+          [
+            'Keys per shard',
+            'Requests per key',
+            'Average key length',
+            'Disk size per shard',
+          ],
+          1,
+          'Only per-key request counts show which keys attract the load.',
+        ),
+      ],
+    },
+    {
+      title: 'Relieve read hot spots with caches and replicas',
+      explanation: [
+        'A record read far more often than it changes can be served from a cache or from extra read replicas, spreading its reads across many nodes.',
+        'The cost is freshness: cached copies can be stale until they expire or are invalidated. Adding shards does not help a single hot key, because one key still lives on one shard.',
+      ],
+      example: scenario(
+        'A product page receives 20,000 reads per second; one node can serve 5,000.',
+        'At least 4 nodes must serve it, for example a cache layer or 4 read replicas, with a short staleness window accepted.',
+        'Copies of one record can share its reads; more shards cannot.',
+      ),
+      questions: [
+        predictOutput(
+          'This program computes how many nodes a hot record’s reads need, rounding up. What does it print?',
+          'reads = 18000\nper_node = 4000\nnodes = (reads + per_node - 1) // per_node\nprint(nodes)',
+          ['4', '4.5', '18000', '5'],
+          3,
+          'Four nodes serve 16,000 reads, so a fifth is needed; adding per_node − 1 before dividing rounds up.',
+        ),
+        choose(
+          'A post receives 100,000 reads per second and 2 edits per hour. Which remedy fits?',
+          [
+            'Cache it with a short expiry or invalidate the cache on each edit',
+            'Split it into 10 keys to spread writes',
+            'Move it to range sharding',
+            'Refuse some reads',
+          ],
+          0,
+          'The load is reads of a rarely changing record, which caching absorbs.',
+        ),
+        choose(
+          'What does caching a hot record trade?',
+          [
+            'More writes for fresher reads',
+            'Durability for speed',
+            'Fewer reads on its shard for possible staleness',
+            'Nothing',
+          ],
+          2,
+          'Readers may see the cached version until it is refreshed.',
+        ),
+        choose(
+          'Why doesn’t adding more shards fix a single hot key?',
+          [
+            'More shards slow down every read',
+            'The key still lives on one shard',
+            'Keys move randomly between shards',
+            'It does fix it',
+          ],
+          1,
+          'Sharding spreads keys, and this load comes from one key.',
+        ),
+      ],
+    },
+    {
+      title: 'Split a hot write key',
+      explanation: [
+        'Reads can be copied, but writes to one key cannot. To spread writes on a hot counter, split it into k sub-keys and send each write to one of them; the total is the sum of all sub-keys.',
+        'Writes then spread k ways, but every read must combine k values, and rules about the total, such as never dropping below zero, need extra coordination because no sub-key sees the others.',
+      ],
+      example: {
+        code: 'parts = [0, 0, 0, 0]\nwrites = 10\nfor i in range(writes):\n    parts[i % 4] = parts[i % 4] + 1\nprint(parts)\ntotal = 0\nfor p in parts:\n    total = total + p\nprint(total)',
+        output: '[3, 3, 2, 2]\n10',
+        explanation:
+          'Ten writes rotate across four sub-keys. Reading the total means adding all four parts.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'parts = [0, 0, 0]\nfor i in range(7):\n    parts[i % 3] = parts[i % 3] + 1\nprint(parts)',
+          ['[2, 2, 3]', '[3, 2, 2]', '[7, 0, 0]', '[2, 3, 2]'],
+          1,
+          'Writes 0, 3 and 6 go to the first part; the others get two each.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'parts = [12, 9, 15, 4]\ntotal = 0\nfor p in parts:\n    total = total + p\nprint(total)',
+          ['15', '4', '40', '10'],
+          2,
+          'The logical counter is the sum of its parts.',
+        ),
+        choose(
+          'A counter is split into 8 sub-keys. What does reading its total cost?',
+          [
+            'Reading 1 value',
+            'Nothing extra',
+            'Rewriting all 8 values',
+            'Reading and adding 8 values',
+          ],
+          3,
+          'The split moved work from writers to readers.',
+        ),
+        choose(
+          'Why is splitting fine for a like counter but harder for “remaining seats”, which must never go below 0?',
+          [
+            'Each sub-key cannot see the others, so a rule about the total needs coordination',
+            'Seats cannot be stored as numbers',
+            'Sub-keys always overflow',
+            'It is equally easy',
+          ],
+          0,
+          'Two sub-keys could each allow the last seat to be sold.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-rebalancing': [
+    {
+      title: 'Avoid moving everything with key % N',
+      explanation: [
+        'If records are placed with key % N, where N is the number of nodes, changing N changes the owner of most keys. Going from 4 to 5 nodes moves about 80% of the data.',
+        'Rebalancing should move only what balance requires: when a fifth equal node joins, about one fifth of the data.',
+      ],
+      example: {
+        code: 'moved = 0\nfor key in range(100):\n    if key % 4 != key % 5:\n        moved = moved + 1\nprint(moved)',
+        output: '80',
+        explanation:
+          'Only 20 of 100 keys keep the same owner when N changes from 4 to 5; the rest must move.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'moved = 0\nfor key in range(12):\n    if key % 2 != key % 3:\n        moved = moved + 1\nprint(moved)',
+          ['4', '6', '12', '8'],
+          3,
+          'Only keys whose remainders match for 2 and 3 stay put; 8 of 12 move.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'moved = 0\nfor key in range(30):\n    if key % 3 != key % 5:\n        moved = moved + 1\nprint(moved)',
+          ['6', '24', '10', '30'],
+          1,
+          'Just 6 of 30 keys keep their node when going from 3 to 5 nodes.',
+        ),
+        choose(
+          'Going from 9 to 10 nodes with key % N placement moves about what share of keys?',
+          ['About 10%', 'None', 'About 90%', 'Exactly 50%'],
+          2,
+          'Almost every key gets a different remainder.',
+        ),
+        choose(
+          'A fifth equally sized node joins four others. What is the minimum share of data that must move to balance them?',
+          ['About 80%', '100%', '0%', 'About 20%'],
+          3,
+          'The new node should end up with one fifth of the data.',
+        ),
+      ],
+    },
+    {
+      title: 'Move fixed logical shards between nodes',
+      explanation: [
+        'Create many more logical shards than nodes from the start, such as 1,000 shards on 10 nodes, and assign each key to a shard permanently, for example hash(key) % 1000.',
+        'Rebalancing then moves whole shards between nodes and updates a small routing table; no key ever changes shard. The limits: the shard count is fixed up front, and one shard cannot be spread over several nodes.',
+      ],
+      example: {
+        code: 'shards = 12\nper_node_before = shards // 3\nper_node_after = shards // 4\nmoved = per_node_after\nprint(per_node_before, per_node_after, moved)',
+        output: '4 3 3',
+        explanation:
+          'With 3 nodes each holds 4 shards. A fourth node takes 3 whole shards, one from each existing node, and everything else stays put.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'shards = 100\nprint(shards // 4)\nprint(shards // 5)',
+          ['20\n25', '25\n20', '25\n25', '4\n5'],
+          1,
+          'Each of 4 nodes holds 25 shards; with 5 nodes, 20 each, so the new node receives 20 whole shards.',
+        ),
+        choose(
+          'A cluster uses 1,000 fixed logical shards, and a new node joins. What changes?',
+          [
+            'Some whole shards move to it, and the routing table is updated',
+            'Every key is assigned a new shard number',
+            'The hash function changes',
+            'Nothing moves',
+          ],
+          0,
+          'Keys keep their shards; only shard placement changes.',
+        ),
+        choose(
+          'Why create far more logical shards than nodes at the start?',
+          [
+            'To use more disk space',
+            'To make keys larger',
+            'So shards can move between nodes without re-splitting keys',
+            'Because a node cannot hold more than one shard',
+          ],
+          2,
+          'Spare shards are the units that rebalancing moves.',
+        ),
+        choose(
+          'What is a limit of fixed logical shards?',
+          [
+            'Shards can never move',
+            'They require key % N placement',
+            'There is no limit',
+            'The count is fixed up front, and one shard cannot be spread over several nodes',
+          ],
+          3,
+          'A shard that grows too large for one node needs another remedy.',
+        ),
+      ],
+    },
+    {
+      title: 'Move a live shard safely',
+      explanation: [
+        'Moving a shard while it takes writes: (1) copy a snapshot to the new node; (2) stream and apply the changes made since the snapshot until the copy catches up; (3) briefly pause writes and switch routing so the new node becomes the owner; (4) verify the destination, for example with row counts or checksums, before retiring the old copy.',
+        'Skipping step 2 loses the writes made during the copy, and a careless switch can leave two nodes accepting writes for the same shard.',
+      ],
+      example: scenario(
+        'A snapshot of 1,000,000 rows is taken at 10:00. Copying takes 20 minutes, and 300 writes per minute arrive meanwhile.',
+        '6,000 writes arrived during the copy; they must be replayed on the new node before routing switches.',
+        'The snapshot alone is already out of date when the copy finishes.',
+      ),
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'copy_minutes = 15\nwrites_per_minute = 240\nprint(copy_minutes * writes_per_minute)',
+          ['255', '3600', '240', '15'],
+          1,
+          'Every minute of copying adds 240 writes that the snapshot does not contain.',
+        ),
+        choose(
+          'Routing switches to the new node as soon as the snapshot copy finishes, without replaying later changes. What happens?',
+          [
+            'Nothing',
+            'The old node is deleted',
+            'Writes made during the copy are missing on the new owner',
+            'Writes are applied twice',
+          ],
+          2,
+          'Those writes exist only on the old node.',
+        ),
+        choose(
+          'Before deleting the old copy of a moved shard, what should be checked?',
+          [
+            'That the new copy is complete and routing points to it',
+            'That the old node is slower',
+            'That every client restarted',
+            'Nothing',
+          ],
+          0,
+          'Retiring the source too early can lose data or strand requests.',
+        ),
+        choose(
+          'During the switch, what must the transition prevent?',
+          [
+            'Taking snapshots',
+            'Serving any reads',
+            'Updating the routing table',
+            'Two nodes both accepting writes for the shard',
+          ],
+          3,
+          'Two owners would accept conflicting writes.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-atomicity': [
+    {
+      title: 'Apply a group of changes all or nothing',
+      explanation: [
+        'A transaction groups several writes between BEGIN and COMMIT. Atomicity means either all of them take effect (commit) or none do (abort, also called rollback), even if the process crashes halfway.',
+        'Without it, a crash between “remove the old room assignment” and “add the new one” leaves a booking in no room at all.',
+      ],
+      example: {
+        code: 'balances = {"ana": 100, "ben": 50}\nnew_ana = balances["ana"] - 30\nnew_ben = balances["ben"] + 30\ncommitted = False\nif committed:\n    balances["ana"] = new_ana\n    balances["ben"] = new_ben\nprint(balances)',
+        output: "{'ana': 100, 'ben': 50}",
+        explanation:
+          'The transfer’s two changes are applied together only at commit. This transaction never committed, so neither balance changed.',
+      },
+      questions: [
+        choose(
+          'A transfer debits account A, and the server crashes before crediting account B. With atomicity, what is the state after recovery?',
+          [
+            'A is debited and B is not credited',
+            'Both changes are applied',
+            'Neither change is applied',
+            'B is credited twice',
+          ],
+          2,
+          'The unfinished transaction is rolled back as a whole.',
+        ),
+        choose(
+          'A transaction inserts 3 rows; the third breaks a rule, and the transaction aborts. How many of its rows remain?',
+          ['2', '3', '1', '0'],
+          3,
+          'Aborting undoes every change in the transaction.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'balances = {"ana": 100, "ben": 50}\nnew_ana = balances["ana"] - 30\nnew_ben = balances["ben"] + 30\ncommitted = True\nif committed:\n    balances["ana"] = new_ana\n    balances["ben"] = new_ben\nprint(balances)',
+          [
+            "{'ana': 70, 'ben': 80}",
+            "{'ana': 100, 'ben': 50}",
+            "{'ana': 70, 'ben': 50}",
+            "{'ana': 130, 'ben': 20}",
+          ],
+          0,
+          'At commit, both changes are applied together.',
+        ),
+        choose(
+          'Which pair of writes most needs to be in one transaction?',
+          [
+            'Logging a page view and logging a search',
+            'Decreasing stock and creating the order line',
+            'Two unrelated user sign-ups',
+            'Reading a profile twice',
+          ],
+          1,
+          'Doing only one of them would leave stock and orders inconsistent.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep committed results through crashes',
+      explanation: [
+        'Durability means that once COMMIT returns, the result survives the failures the system promises to handle, typically a crash or power loss, because the data reached disk (and perhaps replicas) before COMMIT returned.',
+        'It covers committed results only, and only for the stated failures; losing every disk and every backup is outside the promise.',
+      ],
+      example: scenario(
+        'COMMIT returned at 10:00:01. The power fails at 10:00:02 while another transaction is still in progress.',
+        'After restart, the committed transaction’s writes are present; the unfinished transaction leaves no trace.',
+        'Durability protects the first; atomicity governs the second.',
+      ),
+      questions: [
+        choose(
+          'Power fails one second after COMMIT returned. After restart, the transaction’s writes are…',
+          ['present', 'lost', 'half present', 'rolled back'],
+          0,
+          'A committed result must survive a crash.',
+        ),
+        choose(
+          'Power fails while a transaction is in progress, before COMMIT. After restart, its writes are…',
+          ['present', 'half present', 'duplicated', 'absent'],
+          3,
+          'Uncommitted work is undone.',
+        ),
+        choose(
+          'Which property says that a half-finished transaction leaves no trace?',
+          ['Durability', 'Replication', 'Atomicity', 'Sharding'],
+          2,
+          'All or nothing is atomicity; durability concerns committed results.',
+        ),
+        choose(
+          'To be faster, a database confirms COMMIT before writing anything to disk. What does it give up?',
+          [
+            'Atomicity',
+            'Durability, because a crash can lose committed writes',
+            'Nothing',
+            'Read speed',
+          ],
+          1,
+          'The confirmed result exists only in memory until it is saved.',
+        ),
+      ],
+    },
+    {
+      title: 'Know the transaction’s boundary',
+      explanation: [
+        'A database enforces only the rules it is told. Constraints are rules the database checks on every write, such as a unique email, stock ≥ 0, or a reference that must point to an existing row. Business rules that are not constraints, and not checked inside the transaction, are not protected.',
+        'Rollback undoes database changes only. An email sent or a payment API called during the transaction stays done, so trigger external effects after commit.',
+      ],
+      example: scenario(
+        'A transaction creates an order, sends a confirmation email, then decrements stock, which fails because stock would become −1, so the transaction aborts.',
+        'The order and the stock change roll back, but the email has already been sent. Send the email after commit instead.',
+        'The email is outside the database, so atomicity cannot undo it.',
+      ),
+      questions: [
+        choose(
+          'Which rule does the database enforce automatically?',
+          [
+            '“VIP customers get free shipping”, written in a wiki',
+            'A UNIQUE constraint declared on email',
+            'A rule checked only in a different service',
+            'A rule described in a code comment',
+          ],
+          1,
+          'Only declared constraints are checked by the database itself.',
+        ),
+        choose(
+          'A transaction calls a payment API and then aborts. What happens to the charge?',
+          [
+            'It is refunded automatically',
+            'It never happened',
+            'It is retried',
+            'It stays, because rollback cannot undo external calls',
+          ],
+          3,
+          'The payment provider is outside the transaction.',
+        ),
+        choose(
+          'When should a welcome email be triggered?',
+          [
+            'After the sign-up transaction commits',
+            'Before BEGIN',
+            'In the middle of the transaction',
+            'Never',
+          ],
+          0,
+          'Only then is it certain the account exists.',
+        ),
+        choose(
+          'An order is inserted in one transaction, and stock is decremented in a second transaction, which fails. What remains?',
+          [
+            'Neither change',
+            'Both changes',
+            'The order without the stock change',
+            'Only the stock change',
+          ],
+          2,
+          'Separate transactions commit separately; only grouping them makes both atomic.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-isolation': [
+    {
+      title: 'Never read uncommitted data',
+      explanation: [
+        'Transactions run concurrently. A dirty read sees another transaction’s writes before it commits; if that transaction then aborts, the reader acted on data that never existed.',
+        'Read committed, the most common baseline, prevents dirty reads: a transaction sees only values that other transactions have committed.',
+      ],
+      example: scenario(
+        'T1 sets a price to 0 by mistake and has not committed. T2 reads the price. T1 then aborts.',
+        'Under read committed, T2 reads the old, committed price, so nothing ever used the 0.',
+        'A dirty read would have let T2 act on a value that was rolled back.',
+      ),
+      questions: [
+        choose(
+          'T1 has written balance = 0 but not committed. Under read committed, what does T2 read?',
+          ['0', 'The last committed balance', 'An error', 'Half of each value'],
+          1,
+          'Uncommitted writes are invisible to other transactions.',
+        ),
+        choose(
+          'Why is a dirty read dangerous?',
+          [
+            'Dirty reads are slow',
+            'They delete data',
+            'The writer may abort, so the value read never existed',
+            'They lock the whole table',
+          ],
+          2,
+          'Decisions based on rolled-back data have no valid basis.',
+        ),
+        choose(
+          'T1 inserts an order and commits. T2, running read committed, then reads. What does T2 see?',
+          [
+            'Nothing until T2 restarts',
+            'The order without its total',
+            'An error',
+            'The new order',
+          ],
+          3,
+          'Committed data is visible to later reads.',
+        ),
+        choose(
+          'Which anomaly does read committed prevent?',
+          [
+            'Dirty reads',
+            'Two reads in one transaction seeing different committed values',
+            'Replication lag',
+            'Clock skew',
+          ],
+          0,
+          'It guarantees only that what you read was committed.',
+        ),
+      ],
+    },
+    {
+      title: 'Read a stable snapshot',
+      explanation: [
+        'Under read committed, each statement sees the latest committed data, so two reads in one transaction can see different states if another transaction commits between them.',
+        'Snapshot isolation gives each transaction a consistent snapshot of the data as of its start: all its reads see the same committed state and ignore later commits. That suits reports and backups that read many rows.',
+      ],
+      example: scenario(
+        'Accounts A = 500 and B = 500. A report reads A (500); then a transfer of 100 from A to B commits; then the report reads B.',
+        'Under read committed, B reads 600 and the report totals 1,100, which is wrong. Under snapshot isolation, B reads 500 and the total is 1,000.',
+        'The snapshot gives the report one consistent moment.',
+      ),
+      questions: [
+        choose(
+          'A report reads item X’s stock (20); another transaction commits X = 15; the report reads X again. Under read committed, what does the second read show?',
+          ['20', '35', '15', 'An error'],
+          2,
+          'Each statement sees the latest committed value.',
+        ),
+        choose(
+          'The same sequence runs under snapshot isolation. What does the second read show?',
+          ['15', '20', '35', 'An error'],
+          1,
+          'The transaction keeps reading its snapshot from when it started.',
+        ),
+        choose(
+          'Accounts C = 300 and D = 700. A report reads C, then a transfer of 200 from C to D commits, then the report reads D. What total does read committed give?',
+          ['1,000', '800', '1,100', '1,200'],
+          3,
+          'C is read before the transfer (300) and D after it (900).',
+        ),
+        choose(
+          'Why are long-running reports a good fit for snapshot isolation?',
+          [
+            'All their reads reflect one consistent moment',
+            'They run faster',
+            'They block all writers',
+            'They can write freely',
+          ],
+          0,
+          'Changes committed during the report cannot mix two states.',
+        ),
+      ],
+    },
+    {
+      title: 'Check what an isolation name promises',
+      explanation: [
+        'Isolation level names are not used consistently: “repeatable read” means snapshot isolation in some databases and a lock-based scheme in others.',
+        'Snapshot isolation also does not prevent every anomaly: two transactions can each act on their own snapshot and together break a rule. Read the database’s documentation, and test the anomaly you care about.',
+      ],
+      example: scenario(
+        'Database X’s “repeatable read” is snapshot isolation; database Y’s uses locks. Both use the same name.',
+        'Test the specific anomaly your application must avoid instead of trusting the label.',
+        'Behaviour, not the name, determines what your transactions are protected from.',
+      ),
+      questions: [
+        choose(
+          'Two databases both offer “repeatable read”. What should you assume?',
+          [
+            'They behave identically',
+            'Both are fully serial',
+            'Their guarantees may differ, so check each one',
+            'Neither prevents dirty reads',
+          ],
+          2,
+          'The same name can hide different implementations.',
+        ),
+        choose(
+          'Two doctors are on call, and at least one must remain. Each one’s transaction reads its snapshot, sees 2 on call, and takes that doctor off call. Under snapshot isolation, what can happen?',
+          [
+            'Only one doctor can leave',
+            'Both transactions are blocked',
+            'The check fails for both',
+            'Both leave, and no doctor remains on call',
+          ],
+          3,
+          'Each snapshot still shows the other doctor on call.',
+        ),
+        choose(
+          'What is the most reliable way to confirm that a database prevents an anomaly you care about?',
+          [
+            'Write a concurrent test that tries to produce it',
+            'Read the isolation level’s name',
+            'Check CPU usage',
+            'Ask whether the database supports SQL',
+          ],
+          0,
+          'An actual concurrent test shows the real behaviour.',
+        ),
+        choose(
+          'What does snapshot isolation guarantee?',
+          [
+            'Every rule spanning several rows holds under concurrency',
+            'Each transaction’s reads see one consistent committed state',
+            'No transaction ever aborts',
+            'Every replica is current',
+          ],
+          1,
+          'It guarantees a coherent view, not protection of every multi-row rule.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-lost-update': [
+    {
+      title: 'See how read-modify-write loses updates',
+      explanation: [
+        'Two clients read the same value, each computes a new value from it, and each writes it back. The second write overwrites the first, so one change disappears: a lost update.',
+        'Each individual write was atomic. The problem is the gap between reading and writing, during which the value changed.',
+      ],
+      example: {
+        code: 'counter = 10\na_read = counter\nb_read = counter\ncounter = a_read + 1\ncounter = b_read + 1\nprint(counter)',
+        output: '11',
+        explanation:
+          'Both clients read 10 and wrote 11, so one of the two increments was lost; the counter should be 12.',
+      },
+      questions: [
+        predictOutput(
+          'Two clients each read stock and then write a new value. What does this program print?',
+          'stock = 8\na_read = stock\nb_read = stock\nstock = a_read - 2\nstock = b_read - 3\nprint(stock)',
+          ['3', '5', '6', '8'],
+          1,
+          'The second write is based on the stale 8, erasing the first change; the correct result would be 3.',
+        ),
+        predictOutput(
+          'Three clients read likes before any of them writes. What does this program print?',
+          'likes = 40\nreads = [likes, likes, likes]\nfor r in reads:\n    likes = r + 1\nprint(likes)',
+          ['43', '42', '40', '41'],
+          3,
+          'Every write is computed from 40, so only one increment survives.',
+        ),
+        choose(
+          'Two editors read a document at revision 4, and both save full replacements. What is lost?',
+          [
+            'Nothing',
+            'Revision 4',
+            'The first saver’s changes',
+            'Both editors’ changes',
+          ],
+          2,
+          'The second replacement does not contain the first editor’s work.',
+        ),
+        choose(
+          'Each individual write in a lost update is atomic. Why is an update still lost?',
+          [
+            'Each write was computed from a value that had already changed',
+            'Atomic writes can be partial',
+            'A disk failed',
+            'Reads are never atomic',
+          ],
+          0,
+          'Atomic writes do not protect the read that came before them.',
+        ),
+      ],
+    },
+    {
+      title: 'Use atomic operations',
+      explanation: [
+        'Let the database compute the change from the current value in one operation: UPDATE counters SET n = n + 1 WHERE id = 7. The read and the write happen together, so concurrent increments all count.',
+        'This works when the change can be expressed as an operation on the current value, such as adding, subtracting or appending, but not for replacing a whole edited document.',
+      ],
+      example: {
+        code: 'counter = 10\ncounter = counter + 1\ncounter = counter + 1\nprint(counter)',
+        output: '12',
+        explanation:
+          'Each increment is applied to the current value at the moment it runs, so both count.',
+      },
+      questions: [
+        predictOutput(
+          'Each deposit is applied atomically to the current balance. What does this program print?',
+          'balance = 100\ndeposits = [20, 30, 50]\nfor d in deposits:\n    balance = balance + d\nprint(balance)',
+          ['150', '120', '200', '100'],
+          2,
+          'Each deposit builds on the result of the previous one.',
+        ),
+        choose(
+          'Which statement avoids losing concurrent increments?',
+          [
+            'Read likes, add 1 in the application, then UPDATE likes to that value',
+            'Cache likes and write it back every hour',
+            'Delete and re-insert the row',
+            'UPDATE posts SET likes = likes + 1 WHERE id = 9',
+          ],
+          3,
+          'The database applies each increment to the current value.',
+        ),
+        choose(
+          'Why can’t “set the title to the edited text” be fixed with an atomic increment-style operation?',
+          [
+            'The new title is a replacement, not an operation on the current value',
+            'Titles cannot be updated',
+            'Increments only work on text',
+            'It can',
+          ],
+          0,
+          'There is no “current title plus something” to compute.',
+        ),
+        choose(
+          'Stock is 5. Two atomic “stock = stock − 1” updates run concurrently. What is the result?',
+          ['4', '3', '5', '2'],
+          1,
+          'Both decrements apply to the current value.',
+        ),
+      ],
+    },
+    {
+      title: 'Detect conflicts with compare-and-swap',
+      explanation: [
+        'Compare-and-swap writes only if the value, or a version number, is still what the client read: UPDATE docs SET body = ?, version = 5 WHERE id = 1 AND version = 4. If someone else saved first, the version is already 5, so the write changes nothing.',
+        'A failed compare means the client’s input was stale: re-read, then merge, retry or report the conflict. Never resend the same stale write blindly.',
+      ],
+      example: {
+        code: 'stored_version = 4\nalice_read = 4\nbob_read = 4\nalice_ok = alice_read == stored_version\nif alice_ok:\n    stored_version = stored_version + 1\nbob_ok = bob_read == stored_version\nprint(alice_ok, bob_ok, stored_version)',
+        output: 'True False 5',
+        explanation:
+          'Alice saves first and bumps the version to 5. Bob still expects version 4, so his write is rejected instead of overwriting Alice’s.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'stored = 7\nx_read = 7\ny_read = 6\ny_ok = y_read == stored\nif y_ok:\n    stored = stored + 1\nx_ok = x_read == stored\nif x_ok:\n    stored = stored + 1\nprint(y_ok, x_ok, stored)',
+          ['True True 9', 'False False 7', 'True False 8', 'False True 8'],
+          3,
+          'y read an old version and is rejected; x read the current version and succeeds.',
+        ),
+        choose(
+          'A compare-and-swap write fails because the version changed. What is the right next step?',
+          [
+            'Resend the same write until it succeeds',
+            'Ignore the failure',
+            'Re-read the current value, then merge, retry or report a conflict',
+            'Delete the record',
+          ],
+          2,
+          'The client’s view was stale, so its change must be reconsidered.',
+        ),
+        choose(
+          'Why compare a version number rather than the value itself?',
+          [
+            'A version detects any change in between, even one that restored the same value',
+            'Versions are shorter to type',
+            'Values cannot be compared',
+            'SQL requires it',
+          ],
+          0,
+          'A value can change and change back; the version still records that it moved.',
+        ),
+        choose(
+          'Two editors both save changes based on revision 12, with revision checks enabled. What happens?',
+          [
+            'Both saves succeed',
+            'The first save succeeds; the second is rejected as stale',
+            'Both saves fail',
+            'The second save overwrites the first',
+          ],
+          1,
+          'After the first save, the record is no longer at revision 12.',
+        ),
+      ],
+    },
+  ],
+
+  'ds-serializable': [
+    {
+      title: 'Spot write skew',
+      explanation: [
+        'Write skew: two transactions read the same set of rows, each makes a decision from what it read, and each writes a different row. Separately each is fine; together they break a rule that spans several rows.',
+        'Snapshot isolation does not stop it, because no row is written twice, and so nothing looks like a conflict.',
+      ],
+      example: scenario(
+        'Rule: at least 1 doctor on call. Ana and Ben are on call. T1 (Ana) reads 2 on call and takes Ana off; T2 (Ben) reads 2 on call and takes Ben off. Both commit.',
+        'No doctor is on call, and the rule is broken, although no row was updated twice.',
+        'Each transaction’s check was true on its own snapshot, but not after the other committed.',
+      ),
+      questions: [
+        choose(
+          'A room holds one booking per hour. Two transactions each check that no booking exists at 3pm, then each inserts one. What is the result?',
+          [
+            'One booking, because the second waits',
+            'A lost update',
+            'A dirty read',
+            'Two bookings at 3pm: write skew',
+          ],
+          3,
+          'Both checks passed on the same earlier state, and different rows were inserted.',
+        ),
+        choose(
+          'How does write skew differ from a lost update?',
+          [
+            'The transactions write different rows',
+            'The transactions write the same row',
+            'One transaction reads uncommitted data',
+            'There is no difference',
+          ],
+          0,
+          'In a lost update, both write one row; in write skew, each writes its own.',
+        ),
+        choose(
+          'Rule: a user holds at most 3 seats. The user holds 2. Two transactions each read 2 and insert one more hold. How many holds exist after both commit?',
+          ['3', '2', '4', '5'],
+          2,
+          'Each saw room for one more, so both inserted.',
+        ),
+        choose(
+          'Which rule is vulnerable to write skew?',
+          [
+            'A single row’s counter increments by 1',
+            'At most 5 seats sold per row of the theatre, recorded as separate booking rows',
+            'An email column must contain @',
+            'A primary key must be unique',
+          ],
+          1,
+          'The rule depends on a count across rows that concurrent inserts change.',
+        ),
+      ],
+    },
+    {
+      title: 'Reason about serializable outcomes',
+      explanation: [
+        'Serializable isolation guarantees that the committed transactions have the same result as running them one at a time in some order. In the on-call example, any serial order lets the first doctor leave and stops the second, who would see only one doctor on call.',
+        'Databases achieve this with locks or by detecting conflicts and aborting a transaction, so applications must expect some aborts and lower throughput.',
+      ],
+      example: scenario(
+        'The two on-call transactions run under serializable isolation.',
+        'One commits; the other is aborted, or waits and then sees 1 on call and refuses to leave.',
+        'Either way, the result matches running them one after the other.',
+      ),
+      questions: [
+        choose(
+          'Under serializable isolation, two transactions each try to take the last seat. What outcomes are possible?',
+          [
+            'Both get the seat',
+            'One gets it; the other aborts or sees it taken',
+            'Neither can ever get it',
+            'Both always abort',
+          ],
+          1,
+          'Only results matching a one-at-a-time order are allowed.',
+        ),
+        choose(
+          'In the serial order T2 then T1, T2 reads stock 1 and buys it, and then T1 reads the stock. What does T1 see?',
+          ['Stock 1', 'Stock 2', 'Stock 0', 'An error'],
+          2,
+          'T1 runs after T2 has committed its purchase.',
+        ),
+        choose(
+          'Why might a database abort a serializable transaction that did nothing wrong on its own?',
+          [
+            'It ran too long',
+            'It read too few rows',
+            'Aborts happen at random',
+            'Committing it would produce a result no serial order could',
+          ],
+          3,
+          'The abort prevents a combination that breaks serializability.',
+        ),
+        choose(
+          'Which statement about serializable isolation is right?',
+          [
+            'It prevents write skew but can cause aborts and lower throughput',
+            'It costs nothing',
+            'It always runs one transaction at a time across the whole database',
+            'It only prevents dirty reads',
+          ],
+          0,
+          'Stronger guarantees are paid for with waiting or retries.',
+        ),
+      ],
+    },
+    {
+      title: 'Protect the rule and retry',
+      explanation: [
+        'Ways to protect a rule that spans rows: run the transactions as serializable and retry the ones that abort; lock the rows the decision depends on; or express the rule as a constraint the database checks.',
+        'A rule about rows that do not exist yet, such as “no booking at 3pm”, has nothing to lock, so lock something that does exist, such as the room’s row. Retry only whole transactions that are safe to repeat, a limited number of times, and keep external effects out of them.',
+      ],
+      example: scenario(
+        'Rule: no overlapping bookings for the same room. Bookings are separate rows.',
+        'Lock the room’s row before checking and inserting, or use a constraint that forbids overlaps; under serializable isolation, retry transactions that fail with a serialization error.',
+        'Every booking attempt for the room then passes through one shared row, so concurrent checks cannot both succeed.',
+      ),
+      questions: [
+        choose(
+          'Two transactions check that room 4 has no booking at 3pm, then insert one. Why doesn’t locking the existing booking rows help?',
+          [
+            'Locks are never used in practice',
+            'Bookings are deleted after checking',
+            'It does help',
+            'There are no 3pm booking rows to lock yet',
+          ],
+          3,
+          'The conflict is about a row that does not exist until it is inserted.',
+        ),
+        choose(
+          'What can be locked instead, so that concurrent bookings for room 4 conflict?',
+          [
+            'Room 4’s own row, which every booking for it must lock first',
+            'Nothing',
+            'Every table in the database',
+            'Only the user’s row',
+          ],
+          0,
+          'A shared existing row turns the hidden conflict into a visible one.',
+        ),
+        choose(
+          'A serializable transaction aborts with a serialization error. What should the application do?',
+          [
+            'Retry only its last statement',
+            'Report success to the user',
+            'Retry the whole transaction, a limited number of times',
+            'Switch permanently to read committed',
+          ],
+          2,
+          'A fresh attempt re-reads current data and re-makes its decision.',
+        ),
+        choose(
+          'Why must a retried transaction not send an email from inside it?',
+          [
+            'Emails are rolled back with the transaction',
+            'Each retry would send the email again',
+            'Retries skip emails',
+            'It may, without problems',
+          ],
+          1,
+          'The email escapes the rollback, so every attempt would send one.',
+        ),
+      ],
+    },
+  ],
 };
