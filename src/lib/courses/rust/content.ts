@@ -15,8 +15,10 @@ export interface RustDefinition {
   assertions: string;
   call: string;
   output: string;
+  /** How the example prints its result, when the default description does not fit. */
+  printNote?: string;
+  /** Topic members are listed together; their order gives the topic stages. */
   topic: string;
-  stage: number;
 }
 export interface RustTopic {
   slug: string;
@@ -81,8 +83,23 @@ export const rustTopics: RustTopic[] = [
     unit: 'models',
   },
   {
+    slug: 'conversions',
+    title: 'Convert between types',
+    unit: 'models',
+  },
+  {
+    slug: 'option-tools',
+    title: 'Option and Result helpers',
+    unit: 'models',
+  },
+  {
     slug: 'vectors',
     title: 'Growable sequences',
+    unit: 'collections',
+  },
+  {
+    slug: 'queues',
+    title: 'Stacks and queues',
     unit: 'collections',
   },
   {
@@ -191,59 +208,88 @@ export const rustDefinitions: RustDefinition[] = [
   {
     slug: 'main',
     title: 'Function entry point',
-    rule: 'A binary starts by calling its main function.',
+    rule: 'A binary starts by calling its main function, and other functions run only when called.',
     decision:
-      'Keep helper functions outside main so they can be called independently.',
+      'Put each step in its own function and call it from main in the order the output needs.',
     badRule: [
-      'Rust runs all function bodies in source order.',
-      'Every Rust file starts executing at its first let binding.',
+      'Rust runs every function body in source order.',
+      'Execution starts at the first function defined in the file.',
     ],
     badDecision: [
-      'Name every helper main.',
-      'Call a function by writing only its name without parentheses.',
+      'Name every helper main so each one runs automatically.',
+      'Mention a helper by name without parentheses to run it.',
     ],
-    signature: "fn greeting() -> &'static str",
-    body: '"hello, Rust"',
-    assertions: 'assert_eq!(greeting(), "hello, Rust");',
-    call: 'greeting()',
-    output: '"hello, Rust"',
+    signature: 'fn greet()',
+    body: 'println!("hello, Rust");',
+    assertions: 'greet();',
+    call: 'greet()',
+    output: 'hello, Rust',
+    printNote: 'main calls greet, and greet prints one line with println!.',
     topic: 'programs',
-    stage: 1,
-    solution: 'fn greeting() -> &\'static str {\n    "hello, Rust"\n}',
+    solution: 'fn greet() {\n    println!("hello, Rust");\n}',
     exampleCode:
-      'fn greeting() -> &\'static str {\n    "hello, Rust"\n}\n\nfn main() {\n    println!("{:?}", greeting());\n}',
-    testCode: 'fn main() {\n    assert_eq!(greeting(), "hello, Rust");\n}',
-    outputDistractors: ['hello, Rust', '""'],
+      'fn greet() {\n    println!("hello, Rust");\n}\n\nfn main() {\n    greet();\n}',
+    testCode: 'fn main() {\n    greet();\n}',
+    outputDistractors: ['"hello, Rust"', 'greet'],
   },
   {
     slug: 'format',
     title: 'Format values',
-    rule: 'Formatting placeholders consume values in their written order.',
+    rule: 'Each {} placeholder takes the next value after the format string, in written order.',
     decision:
-      'Use format! to create a String rather than printing inside the helper.',
+      'Use format! to build the text as a String when the caller needs the text rather than printed output.',
     badRule: [
-      'Placeholders reverse their arguments.',
-      'The format string becomes a numeric value.',
+      'Placeholders are filled from the last value to the first.',
+      'Every {} repeats the first value after the format string.',
     ],
     badDecision: [
-      'Use println! when a String return value is required.',
-      'Put runtime values inside the quoted literal without placeholders.',
+      'Call println! inside the helper and return nothing.',
+      'Write the numbers inside the quoted text instead of using placeholders.',
     ],
-    signature: 'fn label(name: &str, count: u32) -> String',
-    body: 'format!("{}: {}", name, count)',
+    signature: 'fn progress(done: i32, total: i32) -> String',
+    body: 'format!("{} of {} done", done, total)',
     assertions:
-      'assert_eq!(label("tasks", 3), "tasks: 3"); assert_eq!(label("done", 0), "done: 0");',
-    call: 'label("tasks", 3)',
-    output: '"tasks: 3"',
+      'assert_eq!(progress(3, 5), "3 of 5 done"); assert_eq!(progress(0, 2), "0 of 2 done");',
+    call: 'progress(3, 5)',
+    output: '3 of 5 done',
     topic: 'programs',
-    stage: 2,
     solution:
-      'fn label(name: &str, count: u32) -> String {\n    format!("{}: {}", name, count)\n}',
+      'fn progress(done: i32, total: i32) -> String {\n    format!("{} of {} done", done, total)\n}',
     exampleCode:
-      'fn label(name: &str, count: u32) -> String {\n    format!("{}: {}", name, count)\n}\n\nfn main() {\n    println!("{:?}", label("tasks", 3));\n}',
+      'fn progress(done: i32, total: i32) -> String {\n    format!("{} of {} done", done, total)\n}\n\nfn main() {\n    println!("{}", progress(3, 5));\n}',
     testCode:
-      'fn main() {\n    assert_eq!(label("tasks", 3), "tasks: 3");\n    assert_eq!(label("done", 0), "done: 0");\n}',
-    outputDistractors: ['tasks: 3', '""'],
+      'fn main() {\n    assert_eq!(progress(3, 5), "3 of 5 done");\n    assert_eq!(progress(0, 2), "0 of 2 done");\n}',
+    outputDistractors: ['5 of 3 done', '"3 of 5 done"'],
+  },
+  {
+    slug: 'debug-format',
+    title: 'Debug formatting',
+    rule: "The {:?} placeholder prints a value's Debug form, which keeps quotes around text and shows the structure of tuples and arrays.",
+    decision: 'Use {:?} for tuples and arrays, which {} cannot print.',
+    badRule: [
+      '{:?} prints exactly the same text as {} for every value.',
+      '{:?} prints the name of the type instead of the value.',
+    ],
+    badDecision: [
+      'Print a tuple with {} and expect Rust to list its fields.',
+      'Switch from {} to {:?} to remove the quotes around text.',
+    ],
+    signature: 'fn pair_views(a: i32, b: i32) -> String',
+    body: 'format!("{:?} {:?}", (a, b), [b, a])',
+    assertions:
+      'assert_eq!(pair_views(1, 2), "(1, 2) [2, 1]"); assert_eq!(pair_views(0, -4), "(0, -4) [-4, 0]");',
+    call: 'pair_views(1, 2)',
+    output: '(1, 2) [2, 1]',
+    printNote:
+      'format! builds the Debug text, and main prints that String with {}, so the parentheses and brackets come from {:?}.',
+    topic: 'programs',
+    solution:
+      'fn pair_views(a: i32, b: i32) -> String {\n    format!("{:?} {:?}", (a, b), [b, a])\n}',
+    exampleCode:
+      'fn pair_views(a: i32, b: i32) -> String {\n    format!("{:?} {:?}", (a, b), [b, a])\n}\n\nfn main() {\n    println!("{}", pair_views(1, 2));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(pair_views(1, 2), "(1, 2) [2, 1]");\n    assert_eq!(pair_views(0, -4), "(0, -4) [-4, 0]");\n}',
+    outputDistractors: ['1, 2 2, 1', '(1, 2) (2, 1)'],
   },
   {
     slug: 'bindings',
@@ -264,11 +310,10 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'bump(4)',
     output: '5',
     topic: 'programs',
-    stage: 3,
     solution:
       'fn bump(n: i32) -> i32 {\n    let mut value = n;\n    value += 1;\n    value\n}',
     exampleCode:
-      'fn bump(n: i32) -> i32 {\n    let mut value = n;\n    value += 1;\n    value\n}\n\nfn main() {\n    println!("{:?}", bump(4));\n}',
+      'fn bump(n: i32) -> i32 {\n    let mut value = n;\n    value += 1;\n    value\n}\n\nfn main() {\n    println!("{}", bump(4));\n}',
     testCode:
       'fn main() {\n    assert_eq!(bump(0), 1);\n    assert_eq!(bump(-4), -3);\n}',
     outputDistractors: ['6', '4'],
@@ -293,11 +338,10 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'scoped(3)',
     output: '10',
     topic: 'programs',
-    stage: 4,
     solution:
       'fn scoped(n: i32) -> i32 {\n    let inside = {\n        let n = n * 2;\n        n + 1\n    };\n    inside + n\n}',
     exampleCode:
-      'fn scoped(n: i32) -> i32 {\n    let inside = {\n        let n = n * 2;\n        n + 1\n    };\n    inside + n\n}\n\nfn main() {\n    println!("{:?}", scoped(3));\n}',
+      'fn scoped(n: i32) -> i32 {\n    let inside = {\n        let n = n * 2;\n        n + 1\n    };\n    inside + n\n}\n\nfn main() {\n    println!("{}", scoped(3));\n}',
     testCode:
       'fn main() {\n    assert_eq!(scoped(3), 10);\n    assert_eq!(scoped(-2), -5);\n}',
     outputDistractors: ['11', '9'],
@@ -323,7 +367,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'groups(17, 5)',
     output: '(3, 2)',
     topic: 'values',
-    stage: 1,
     solution:
       'fn groups(items: u32, size: u32) -> (u32, u32) {\n    (items / size, items % size)\n}',
     exampleCode:
@@ -353,7 +396,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'ratio(3, 2)',
     output: '1.5',
     topic: 'values',
-    stage: 2,
     solution: 'fn ratio(a: u32, b: u32) -> f64 {\n    a as f64 / b as f64\n}',
     exampleCode:
       'fn ratio(a: u32, b: u32) -> f64 {\n    a as f64 / b as f64\n}\n\nfn main() {\n    println!("{:?}", ratio(3, 2));\n}',
@@ -382,14 +424,41 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'in_range(3, 1, 3)',
     output: 'true',
     topic: 'values',
-    stage: 3,
     solution:
       'fn in_range(n: i32, low: i32, high: i32) -> bool {\n    n >= low && n <= high\n}',
     exampleCode:
-      'fn in_range(n: i32, low: i32, high: i32) -> bool {\n    n >= low && n <= high\n}\n\nfn main() {\n    println!("{:?}", in_range(3, 1, 3));\n}',
+      'fn in_range(n: i32, low: i32, high: i32) -> bool {\n    n >= low && n <= high\n}\n\nfn main() {\n    println!("{}", in_range(3, 1, 3));\n}',
     testCode:
       'fn main() {\n    assert!(in_range(3, 1, 3));\n    assert!(!in_range(0, 1, 3));\n    assert!(!in_range(4, 1, 3));\n}',
     outputDistractors: ['false', '1'],
+  },
+  {
+    slug: 'const',
+    title: 'Named constants',
+    rule: 'A const item names a fixed value with an explicit type, and every use reads that same value.',
+    decision:
+      'Name a fixed conversion factor with a const instead of repeating the bare number.',
+    badRule: [
+      'A const can be reassigned like a let mut binding.',
+      'A const may omit its type because Rust always infers it.',
+    ],
+    badDecision: [
+      'Declare the factor with let mut so later code can change it.',
+      'Repeat the literal 60 everywhere the factor is needed.',
+    ],
+    signature: 'fn to_minutes(hours: u32) -> u32',
+    body: 'hours * MINUTES_PER_HOUR',
+    assertions: 'assert_eq!(to_minutes(3), 180); assert_eq!(to_minutes(0), 0);',
+    call: 'to_minutes(3)',
+    output: '180',
+    topic: 'values',
+    solution:
+      'const MINUTES_PER_HOUR: u32 = 60;\n\nfn to_minutes(hours: u32) -> u32 {\n    hours * MINUTES_PER_HOUR\n}',
+    exampleCode:
+      'const MINUTES_PER_HOUR: u32 = 60;\n\nfn to_minutes(hours: u32) -> u32 {\n    hours * MINUTES_PER_HOUR\n}\n\nfn main() {\n    println!("{}", to_minutes(3));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(to_minutes(3), 180);\n    assert_eq!(to_minutes(0), 0);\n}',
+    outputDistractors: ['63', '20'],
   },
   {
     slug: 'tuples-arrays',
@@ -409,16 +478,15 @@ export const rustDefinitions: RustDefinition[] = [
     assertions:
       'assert_eq!(endpoints([2, 4, 8]), (2, 8)); assert_eq!(endpoints([-1, 0, 1]), (-1, 1));',
     call: 'endpoints([2, 4, 8])',
-    output: '(2, 8)',
+    output: '2 8',
     topic: 'values',
-    stage: 4,
     solution:
       'fn endpoints(values: [i32; 3]) -> (i32, i32) {\n    (values[0], values[2])\n}',
     exampleCode:
-      'fn endpoints(values: [i32; 3]) -> (i32, i32) {\n    (values[0], values[2])\n}\n\nfn main() {\n    println!("{:?}", endpoints([2, 4, 8]));\n}',
+      'fn endpoints(values: [i32; 3]) -> (i32, i32) {\n    (values[0], values[2])\n}\n\nfn main() {\n    let pair = endpoints([2, 4, 8]);\n    println!("{} {}", pair.0, pair.1);\n}',
     testCode:
       'fn main() {\n    assert_eq!(endpoints([2, 4, 8]), (2, 8));\n    assert_eq!(endpoints([-1, 0, 1]), (-1, 1));\n}',
-    outputDistractors: ['2, 8', '()'],
+    outputDistractors: ['(2, 8)', '2 4'],
   },
   {
     slug: 'if',
@@ -440,11 +508,10 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'absolute(-7)',
     output: '7',
     topic: 'control',
-    stage: 1,
     solution:
       'fn absolute(n: i32) -> i32 {\n    if n < 0 {\n        -n\n    } else {\n        n\n    }\n}',
     exampleCode:
-      'fn absolute(n: i32) -> i32 {\n    if n < 0 {\n        -n\n    } else {\n        n\n    }\n}\n\nfn main() {\n    println!("{:?}", absolute(-7));\n}',
+      'fn absolute(n: i32) -> i32 {\n    if n < 0 {\n        -n\n    } else {\n        n\n    }\n}\n\nfn main() {\n    println!("{}", absolute(-7));\n}',
     testCode:
       'fn main() {\n    assert_eq!(absolute(-7), 7);\n    assert_eq!(absolute(4), 4);\n    assert_eq!(absolute(0), 0);\n}',
     outputDistractors: ['8', '6'],
@@ -462,21 +529,20 @@ export const rustDefinitions: RustDefinition[] = [
       'Place _ first and expect later specific arms to be selected.',
       'Leave an i32 match without handling remaining integers.',
     ],
-    signature: "fn sign(n: i32) -> &'static str",
-    body: 'match n { 0 => "zero", n if n < 0 => "negative", _ => "positive" }',
+    signature: 'fn sign(n: i32) -> i32',
+    body: 'match n { 0 => 0, n if n < 0 => -1, _ => 1, }',
     assertions:
-      'assert_eq!(sign(0), "zero"); assert_eq!(sign(-3), "negative"); assert_eq!(sign(2), "positive");',
+      'assert_eq!(sign(0), 0); assert_eq!(sign(-3), -1); assert_eq!(sign(2), 1);',
     call: 'sign(-3)',
-    output: '"negative"',
+    output: '-1',
     topic: 'control',
-    stage: 2,
     solution:
-      'fn sign(n: i32) -> &\'static str {\n    match n {\n        0 => "zero",\n        n if n < 0 => "negative",\n        _ => "positive",\n    }\n}',
+      'fn sign(n: i32) -> i32 {\n    match n {\n        0 => 0,\n        n if n < 0 => -1,\n        _ => 1,\n    }\n}',
     exampleCode:
-      'fn sign(n: i32) -> &\'static str {\n    match n {\n        0 => "zero",\n        n if n < 0 => "negative",\n        _ => "positive",\n    }\n}\n\nfn main() {\n    println!("{:?}", sign(-3));\n}',
+      'fn sign(n: i32) -> i32 {\n    match n {\n        0 => 0,\n        n if n < 0 => -1,\n        _ => 1,\n    }\n}\n\nfn main() {\n    println!("{}", sign(-3));\n}',
     testCode:
-      'fn main() {\n    assert_eq!(sign(0), "zero");\n    assert_eq!(sign(-3), "negative");\n    assert_eq!(sign(2), "positive");\n}',
-    outputDistractors: ['negative', '""'],
+      'fn main() {\n    assert_eq!(sign(0), 0);\n    assert_eq!(sign(-3), -1);\n    assert_eq!(sign(2), 1);\n}',
+    outputDistractors: ['1', '-3'],
   },
   {
     slug: 'loop',
@@ -499,7 +565,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'next_even(3)',
     output: '4',
     topic: 'control',
-    stage: 3,
     solution:
       'fn next_even(n: i32) -> i32 {\n    let mut x = n;\n    loop {\n        if x % 2 == 0 {\n            break x;\n        }\n        x += 1;\n    }\n}',
     exampleCode:
@@ -507,6 +572,35 @@ export const rustDefinitions: RustDefinition[] = [
     testCode:
       'fn main() {\n    assert_eq!(next_even(3), 4);\n    assert_eq!(next_even(4), 4);\n    assert_eq!(next_even(-3), -2);\n}',
     outputDistractors: ['5', '3'],
+  },
+  {
+    slug: 'while',
+    title: 'While loops',
+    rule: 'A while loop checks its condition before every pass and stops as soon as the condition is false.',
+    decision:
+      'Change the tested value inside the body so the condition eventually becomes false.',
+    badRule: [
+      'A while body always runs once before the condition is first checked.',
+      'A while loop stops only when its body reaches break.',
+    ],
+    badDecision: [
+      'Leave the tested value unchanged inside the loop body.',
+      'Check the condition once before the loop and never again.',
+    ],
+    signature: 'fn digit_count(n: u32) -> u32',
+    body: 'let mut count = 1; let mut rest = n; while rest >= 10 { rest /= 10; count += 1; } count',
+    assertions:
+      'assert_eq!(digit_count(4096), 4); assert_eq!(digit_count(0), 1); assert_eq!(digit_count(9), 1); assert_eq!(digit_count(10), 2);',
+    call: 'digit_count(4096)',
+    output: '4',
+    topic: 'control',
+    solution:
+      'fn digit_count(n: u32) -> u32 {\n    let mut count = 1;\n    let mut rest = n;\n    while rest >= 10 {\n        rest /= 10;\n        count += 1;\n    }\n    count\n}',
+    exampleCode:
+      'fn digit_count(n: u32) -> u32 {\n    let mut count = 1;\n    let mut rest = n;\n    while rest >= 10 {\n        rest /= 10;\n        count += 1;\n    }\n    count\n}\n\nfn main() {\n    println!("{}", digit_count(4096));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(digit_count(4096), 4);\n    assert_eq!(digit_count(0), 1);\n    assert_eq!(digit_count(9), 1);\n    assert_eq!(digit_count(10), 2);\n}',
+    outputDistractors: ['3', '4096'],
   },
   {
     slug: 'ranges',
@@ -528,11 +622,10 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'sum_to(4)',
     output: '10',
     topic: 'control',
-    stage: 4,
     solution:
       'fn sum_to(n: u32) -> u32 {\n    let mut total = 0;\n    for x in 1..=n {\n        total += x;\n    }\n    total\n}',
     exampleCode:
-      'fn sum_to(n: u32) -> u32 {\n    let mut total = 0;\n    for x in 1..=n {\n        total += x;\n    }\n    total\n}\n\nfn main() {\n    println!("{:?}", sum_to(4));\n}',
+      'fn sum_to(n: u32) -> u32 {\n    let mut total = 0;\n    for x in 1..=n {\n        total += x;\n    }\n    total\n}\n\nfn main() {\n    println!("{}", sum_to(4));\n}',
     testCode:
       'fn main() {\n    assert_eq!(sum_to(4), 10);\n    assert_eq!(sum_to(0), 0);\n    assert_eq!(sum_to(1), 1);\n}',
     outputDistractors: ['11', '9'],
@@ -557,10 +650,9 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'difference(8, 3)',
     output: '5',
     topic: 'functions',
-    stage: 1,
     solution: 'fn difference(a: i32, b: i32) -> i32 {\n    a - b\n}',
     exampleCode:
-      'fn difference(a: i32, b: i32) -> i32 {\n    a - b\n}\n\nfn main() {\n    println!("{:?}", difference(8, 3));\n}',
+      'fn difference(a: i32, b: i32) -> i32 {\n    a - b\n}\n\nfn main() {\n    println!("{}", difference(8, 3));\n}',
     testCode:
       'fn main() {\n    assert_eq!(difference(8, 3), 5);\n    assert_eq!(difference(3, 8), -5);\n}',
     outputDistractors: ['6', '4'],
@@ -578,20 +670,46 @@ export const rustDefinitions: RustDefinition[] = [
       'End a numeric tail expression with a semicolon in an i32 function.',
       'Use return without a value in an i32 function.',
     ],
-    signature: 'fn square(n: i32) -> i32',
-    body: 'n * n',
-    assertions:
-      'assert_eq!(square(-3), 9); assert_eq!(square(0), 0); assert_eq!(square(4), 16);',
-    call: 'square(-3)',
-    output: '9',
+    signature: 'fn seconds_per_hour() -> i32',
+    body: '60 * 60',
+    assertions: 'assert_eq!(seconds_per_hour(), 3600);',
+    call: 'seconds_per_hour()',
+    output: '3600',
     topic: 'functions',
-    stage: 2,
-    solution: 'fn square(n: i32) -> i32 {\n    n * n\n}',
+    solution: 'fn seconds_per_hour() -> i32 {\n    60 * 60\n}',
     exampleCode:
-      'fn square(n: i32) -> i32 {\n    n * n\n}\n\nfn main() {\n    println!("{:?}", square(-3));\n}',
+      'fn seconds_per_hour() -> i32 {\n    60 * 60\n}\n\nfn main() {\n    println!("{}", seconds_per_hour());\n}',
+    testCode: 'fn main() {\n    assert_eq!(seconds_per_hour(), 3600);\n}',
+    outputDistractors: ['()', '120'],
+  },
+  {
+    slug: 'early-return',
+    title: 'Return early',
+    rule: 'A return expression ends the function immediately with its value, so the statements after it do not run.',
+    decision:
+      'Handle the special case first with return, then let the tail expression cover the normal case.',
+    badRule: [
+      'return leaves only the innermost block, and the function keeps running.',
+      'A function may use return only on its last line.',
+    ],
+    badDecision: [
+      'Check the special case after the tail expression.',
+      'Write return with no value in a function that returns i32.',
+    ],
+    signature: 'fn safe_half(n: i32) -> i32',
+    body: 'if n < 0 { return 0; } n / 2',
+    assertions:
+      'assert_eq!(safe_half(-8), 0); assert_eq!(safe_half(9), 4); assert_eq!(safe_half(0), 0);',
+    call: 'safe_half(-8)',
+    output: '0',
+    topic: 'functions',
+    solution:
+      'fn safe_half(n: i32) -> i32 {\n    if n < 0 {\n        return 0;\n    }\n    n / 2\n}',
+    exampleCode:
+      'fn safe_half(n: i32) -> i32 {\n    if n < 0 {\n        return 0;\n    }\n    n / 2\n}\n\nfn main() {\n    println!("{}", safe_half(-8));\n}',
     testCode:
-      'fn main() {\n    assert_eq!(square(-3), 9);\n    assert_eq!(square(0), 0);\n    assert_eq!(square(4), 16);\n}',
-    outputDistractors: ['10', '8'],
+      'fn main() {\n    assert_eq!(safe_half(-8), 0);\n    assert_eq!(safe_half(9), 4);\n    assert_eq!(safe_half(0), 0);\n}',
+    outputDistractors: ['-4', '4'],
   },
   {
     slug: 'unit',
@@ -614,7 +732,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'replacement_unit(9, 0)',
     output: '((), 0)',
     topic: 'functions',
-    stage: 3,
     solution:
       'fn replacement_unit(start: i32, replacement: i32) -> ((), i32) {\n    let mut value = start;\n    let result = {\n        value = replacement;\n    };\n    (result, value)\n}',
     exampleCode:
@@ -643,7 +760,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'factorial(5)',
     output: '120',
     topic: 'functions',
-    stage: 4,
     solution:
       'fn factorial(n: u32) -> u64 {\n    if n == 0 {\n        1\n    } else {\n        n as u64 * factorial(n - 1)\n    }\n}',
     exampleCode:
@@ -673,7 +789,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'transfer(String::from("rust"))',
     output: '"rust"',
     topic: 'ownership',
-    stage: 1,
     solution:
       'fn transfer(text: String) -> String {\n    let moved = text;\n    moved\n}',
     exampleCode:
@@ -701,7 +816,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'copy_total(4)',
     output: '8',
     topic: 'ownership',
-    stage: 2,
     solution:
       'fn copy_total(n: i32) -> i32 {\n    let other = n;\n    n + other\n}',
     exampleCode:
@@ -731,7 +845,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'copied_suffix(String::from("hi"))',
     output: '("hi", "hi!")',
     topic: 'ownership',
-    stage: 3,
     solution:
       'fn copied_suffix(original: String) -> (String, String) {\n    let mut copy = original.clone();\n    copy.push_str("!");\n    (original, copy)\n}',
     exampleCode:
@@ -762,7 +875,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'replace_released(String::from("old"), String::from("new"))',
     output: '"new"',
     topic: 'ownership',
-    stage: 4,
     solution:
       'fn replace_released(obsolete: String, replacement: String) -> String {\n    std::mem::drop(obsolete);\n    replacement\n}',
     exampleCode:
@@ -792,7 +904,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'observed_len(&String::from("rust"))',
     output: '4',
     topic: 'borrowing',
-    stage: 1,
     solution: 'fn observed_len(text: &String) -> usize {\n    text.len()\n}',
     exampleCode:
       'fn observed_len(text: &String) -> usize {\n    text.len()\n}\n\nfn main() {\n    println!("{:?}", observed_len(&String::from("rust")));\n}',
@@ -820,7 +931,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: '{ let mut n = 3; add_to(&mut n, 4); n }',
     output: '7',
     topic: 'borrowing',
-    stage: 2,
     solution:
       'fn add_to(value: &mut i32, amount: i32) {\n    *value += amount;\n}',
     exampleCode:
@@ -850,7 +960,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: '{ let mut s = String::from("hi"); read_then_append(&mut s) }',
     output: '2',
     topic: 'borrowing',
-    stage: 3,
     solution:
       "fn read_then_append(text: &mut String) -> usize {\n    let before = {\n        let view = &*text;\n        view.len()\n    };\n    text.push('!');\n    before\n}",
     exampleCode:
@@ -879,7 +988,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'prefix(&[1, 2, 3], 2)',
     output: '[1, 2]',
     topic: 'borrowing',
-    stage: 4,
     solution:
       'fn prefix(values: &[i32], n: usize) -> &[i32] {\n    &values[..n.min(values.len())]\n}',
     exampleCode:
@@ -909,7 +1017,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'text_units("é")',
     output: '(2, 1)',
     topic: 'strings',
-    stage: 1,
     solution:
       'fn text_units(text: &str) -> (usize, usize) {\n    (text.len(), text.chars().count())\n}',
     exampleCode:
@@ -938,7 +1045,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'first_scalar("éclair")',
     output: "Some('é')",
     topic: 'strings',
-    stage: 2,
     solution:
       'fn first_scalar(text: &str) -> Option<char> {\n    text.chars().next()\n}',
     exampleCode:
@@ -968,7 +1074,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'byte_prefix("éx", 2)',
     output: 'Some("é")',
     topic: 'strings',
-    stage: 3,
     solution:
       'fn byte_prefix(text: &str, end: usize) -> Option<&str> {\n    text.get(..end)\n}',
     exampleCode:
@@ -997,7 +1102,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'shout("go")',
     output: '"go!"',
     topic: 'strings',
-    stage: 4,
     solution:
       "fn shout(text: &str) -> String {\n    let mut owned = text.to_owned();\n    owned.push('!');\n    owned\n}",
     exampleCode:
@@ -1025,14 +1129,73 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'area(3, 4)',
     output: '12',
     topic: 'structs',
-    stage: 1,
     solution:
       'fn area(width: u32, height: u32) -> u32 {\n    struct Rect {\n        width: u32,\n        height: u32,\n    }\n    let rect = Rect { width, height };\n    rect.width * rect.height\n}',
     exampleCode:
-      'fn area(width: u32, height: u32) -> u32 {\n    struct Rect {\n        width: u32,\n        height: u32,\n    }\n    let rect = Rect { width, height };\n    rect.width * rect.height\n}\n\nfn main() {\n    println!("{:?}", area(3, 4));\n}',
+      'fn area(width: u32, height: u32) -> u32 {\n    struct Rect {\n        width: u32,\n        height: u32,\n    }\n    let rect = Rect { width, height };\n    rect.width * rect.height\n}\n\nfn main() {\n    println!("{}", area(3, 4));\n}',
     testCode:
       'fn main() {\n    assert_eq!(area(3, 4), 12);\n    assert_eq!(area(0, 8), 0);\n}',
     outputDistractors: ['13', '11'],
+  },
+  {
+    slug: 'tuple-structs',
+    title: 'Tuple structs',
+    rule: 'A tuple struct names a type whose fields are read by position as .0, .1, and so on.',
+    decision: 'Read a tuple struct field by its position, starting from .0.',
+    badRule: [
+      'A tuple struct is another name for a tuple, so the two types are interchangeable.',
+      'Tuple struct fields are read by name like ordinary struct fields.',
+    ],
+    badDecision: [
+      'Read the first field with .1.',
+      'Pass a plain (i32, i32) tuple where a Point is required.',
+    ],
+    signature: 'fn swapped(x: i32, y: i32) -> (i32, i32)',
+    body: 'struct Point(i32, i32); let point = Point(x, y); let flipped = Point(point.1, point.0); (flipped.0, flipped.1)',
+    assertions:
+      'assert_eq!(swapped(3, 4), (4, 3)); assert_eq!(swapped(-1, 0), (0, -1));',
+    call: 'swapped(3, 4)',
+    output: '(4, 3)',
+    topic: 'structs',
+    solution:
+      'fn swapped(x: i32, y: i32) -> (i32, i32) {\n    struct Point(i32, i32);\n    let point = Point(x, y);\n    let flipped = Point(point.1, point.0);\n    (flipped.0, flipped.1)\n}',
+    exampleCode:
+      'fn swapped(x: i32, y: i32) -> (i32, i32) {\n    struct Point(i32, i32);\n    let point = Point(x, y);\n    let flipped = Point(point.1, point.0);\n    (flipped.0, flipped.1)\n}\n\nfn main() {\n    println!("{:?}", swapped(3, 4));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(swapped(3, 4), (4, 3));\n    assert_eq!(swapped(-1, 0), (0, -1));\n}',
+    outputDistractors: ['(3, 4)', 'Point(4, 3)'],
+  },
+  {
+    slug: 'derive',
+    title: 'Derive common traits',
+    rule: '#[derive(Debug, Clone, PartialEq)] generates the code that lets a type print with {:?}, duplicate with clone, and compare with ==.',
+    decision:
+      'Derive Debug, Clone, and PartialEq on a struct before printing, cloning, or comparing its values.',
+    badRule: [
+      'Every struct can be printed with {:?} without any derive.',
+      'A derived PartialEq compares two values by their memory addresses.',
+    ],
+    badDecision: [
+      'Compare two struct values with == without deriving PartialEq.',
+      'Call clone on a struct whose definition derives only Debug.',
+    ],
+    signature: 'fn origin_report(x: i32, y: i32) -> (String, bool)',
+    body: '#[derive(Debug, Clone, PartialEq)] struct Point { x: i32, y: i32, } let point = Point { x, y }; let copy = point.clone(); (format!("{:?}", copy), point == Point { x: 0, y: 0 })',
+    assertions:
+      'assert_eq!(origin_report(0, 0), (String::from("Point { x: 0, y: 0 }"), true)); assert_eq!(origin_report(3, -1), (String::from("Point { x: 3, y: -1 }"), false));',
+    call: 'origin_report(3, -1)',
+    output: '("Point { x: 3, y: -1 }", false)',
+    topic: 'structs',
+    solution:
+      'fn origin_report(x: i32, y: i32) -> (String, bool) {\n    #[derive(Debug, Clone, PartialEq)]\n    struct Point {\n        x: i32,\n        y: i32,\n    }\n    let point = Point { x, y };\n    let copy = point.clone();\n    (format!("{:?}", copy), point == Point { x: 0, y: 0 })\n}',
+    exampleCode:
+      'fn origin_report(x: i32, y: i32) -> (String, bool) {\n    #[derive(Debug, Clone, PartialEq)]\n    struct Point {\n        x: i32,\n        y: i32,\n    }\n    let point = Point { x, y };\n    let copy = point.clone();\n    (format!("{:?}", copy), point == Point { x: 0, y: 0 })\n}\n\nfn main() {\n    println!("{:?}", origin_report(3, -1));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(origin_report(0, 0), (String::from("Point { x: 0, y: 0 }"), true));\n    assert_eq!(origin_report(3, -1), (String::from("Point { x: 3, y: -1 }"), false));\n}',
+    outputDistractors: [
+      '(Point { x: 3, y: -1 }, false)',
+      '("Point(3, -1)", false)',
+    ],
   },
   {
     slug: 'struct-update',
@@ -1054,7 +1217,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'revised_score(3, 9)',
     output: '(9, true)',
     topic: 'structs',
-    stage: 2,
     solution:
       'fn revised_score(old: u32, new: u32) -> (u32, bool) {\n    struct Entry {\n        score: u32,\n        active: bool,\n    }\n    let base = Entry {\n        score: old,\n        active: true,\n    };\n    let revised = Entry { score: new, ..base };\n    (revised.score, revised.active)\n}',
     exampleCode:
@@ -1084,7 +1246,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'doubled_score(6)',
     output: '12',
     topic: 'structs',
-    stage: 3,
     solution:
       'fn doubled_score(score: u32) -> u32 {\n    struct Score(u32);\n    impl Score {\n        fn doubled(&self) -> u32 {\n            self.0 * 2\n        }\n    }\n    Score(score).doubled()\n}',
     exampleCode:
@@ -1112,7 +1273,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'default_count()',
     output: '0',
     topic: 'structs',
-    stage: 4,
     solution:
       'fn default_count() -> u32 {\n    struct Counter {\n        value: u32,\n    }\n    impl Counter {\n        fn new() -> Self {\n            Self { value: 0 }\n        }\n    }\n    Counter::new().value\n}',
     exampleCode:
@@ -1139,11 +1299,10 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'is_ready(true)',
     output: 'true',
     topic: 'enums',
-    stage: 1,
     solution:
       'fn is_ready(ready: bool) -> bool {\n    enum State {\n        Waiting,\n        Ready,\n    }\n    let state = if ready { State::Ready } else { State::Waiting };\n    matches!(state, State::Ready)\n}',
     exampleCode:
-      'fn is_ready(ready: bool) -> bool {\n    enum State {\n        Waiting,\n        Ready,\n    }\n    let state = if ready { State::Ready } else { State::Waiting };\n    matches!(state, State::Ready)\n}\n\nfn main() {\n    println!("{:?}", is_ready(true));\n}',
+      'fn is_ready(ready: bool) -> bool {\n    enum State {\n        Waiting,\n        Ready,\n    }\n    let state = if ready { State::Ready } else { State::Waiting };\n    matches!(state, State::Ready)\n}\n\nfn main() {\n    println!("{}", is_ready(true));\n}',
     testCode:
       'fn main() {\n    assert!(is_ready(true));\n    assert!(!is_ready(false));\n}',
     outputDistractors: ['false', '1'],
@@ -1169,7 +1328,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'message_size(String::from("rust"))',
     output: '4',
     topic: 'enums',
-    stage: 2,
     solution:
       'fn message_size(text: String) -> usize {\n    enum Message {\n        Empty,\n        Text(String),\n    }\n    let message = if text.is_empty() {\n        Message::Empty\n    } else {\n        Message::Text(text)\n    };\n    match message {\n        Message::Empty => 0,\n        Message::Text(payload) => payload.len(),\n    }\n}',
     exampleCode:
@@ -1199,7 +1357,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'present_or_zero(Some(7))',
     output: '7',
     topic: 'enums',
-    stage: 3,
     solution:
       'fn present_or_zero(value: Option<i32>) -> i32 {\n    if let Some(n) = value {\n        n\n    } else {\n        0\n    }\n}',
     exampleCode:
@@ -1228,7 +1385,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'left_value(Some((2, 9)))',
     output: 'Some(2)',
     topic: 'enums',
-    stage: 4,
     solution:
       'fn left_value(pair: Option<(i32, i32)>) -> Option<i32> {\n    match pair {\n        Some((left, _)) => Some(left),\n        None => None,\n    }\n}',
     exampleCode:
@@ -1251,17 +1407,16 @@ export const rustDefinitions: RustDefinition[] = [
       'Return Some(0) when absence must remain distinct from zero.',
     ],
     signature: 'fn first_number(values: &[i32]) -> Option<i32>',
-    body: 'values.first().copied()',
+    body: 'if values.is_empty() { None } else { Some(values[0]) }',
     assertions:
       'assert_eq!(first_number(&[0, 3]), Some(0)); assert_eq!(first_number(&[]), None);',
     call: 'first_number(&[0, 3])',
     output: 'Some(0)',
     topic: 'option',
-    stage: 1,
     solution:
-      'fn first_number(values: &[i32]) -> Option<i32> {\n    values.first().copied()\n}',
+      'fn first_number(values: &[i32]) -> Option<i32> {\n    if values.is_empty() {\n        None\n    } else {\n        Some(values[0])\n    }\n}',
     exampleCode:
-      'fn first_number(values: &[i32]) -> Option<i32> {\n    values.first().copied()\n}\n\nfn main() {\n    println!("{:?}", first_number(&[0, 3]));\n}',
+      'fn first_number(values: &[i32]) -> Option<i32> {\n    if values.is_empty() {\n        None\n    } else {\n        Some(values[0])\n    }\n}\n\nfn main() {\n    println!("{:?}", first_number(&[0, 3]));\n}',
     testCode:
       'fn main() {\n    assert_eq!(first_number(&[0, 3]), Some(0));\n    assert_eq!(first_number(&[]), None);\n}',
     outputDistractors: ['None', '0'],
@@ -1287,7 +1442,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'doubled(Some(3))',
     output: 'Some(6)',
     topic: 'option',
-    stage: 2,
     solution:
       'fn doubled(value: Option<i32>) -> Option<i32> {\n    fn double_number(n: i32) -> i32 {\n        n * 2\n    }\n    value.map(double_number)\n}',
     exampleCode:
@@ -1318,7 +1472,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'optional_divide(Some(8), 2)',
     output: 'Some(4)',
     topic: 'option',
-    stage: 3,
     solution:
       'fn optional_divide(value: Option<i32>, divisor: i32) -> Option<i32> {\n    fn divide_pair(pair: (i32, i32)) -> Option<i32> {\n        pair.0.checked_div(pair.1)\n    }\n    let pair = match value {\n        Some(n) => Some((n, divisor)),\n        None => None,\n    };\n    pair.and_then(divide_pair)\n}',
     exampleCode:
@@ -1349,7 +1502,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'parse_optional(Some("12"))',
     output: 'Ok(Some(12))',
     topic: 'option',
-    stage: 4,
     solution:
       'fn parse_optional(text: Option<&str>) -> Result<Option<i32>, std::num::ParseIntError> {\n    text.map(str::parse::<i32>).transpose()\n}',
     exampleCode:
@@ -1379,7 +1531,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'nonnegative(-1)',
     output: 'Err("negative")',
     topic: 'errors',
-    stage: 1,
     solution:
       'fn nonnegative(n: i32) -> Result<u32, &\'static str> {\n    if n < 0 {\n        Err("negative")\n    } else {\n        Ok(n as u32)\n    }\n}',
     exampleCode:
@@ -1410,7 +1561,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'add_success(Ok(2))',
     output: 'Ok(3)',
     topic: 'errors',
-    stage: 2,
     solution:
       "fn add_success(value: Result<i32, &'static str>) -> Result<i32, &'static str> {\n    fn increment(n: i32) -> i32 {\n        n + 1\n    }\n    value.map(increment)\n}",
     exampleCode:
@@ -1440,7 +1590,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'contextual(Err("bad"))',
     output: 'Err("input: bad")',
     topic: 'errors',
-    stage: 3,
     solution:
       'fn contextual(value: Result<i32, &str>) -> Result<i32, String> {\n    fn context(error: &str) -> String {\n        format!("input: {}", error)\n    }\n    value.map_err(context)\n}',
     exampleCode:
@@ -1471,7 +1620,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'parse_sum("3", "4")',
     output: 'Ok(7)',
     topic: 'errors',
-    stage: 4,
     solution:
       'fn parse_sum(a: &str, b: &str) -> Result<i32, std::num::ParseIntError> {\n    let left = a.parse::<i32>()?;\n    let right = b.parse::<i32>()?;\n    Ok(left + right)\n}',
     exampleCode:
@@ -1479,6 +1627,210 @@ export const rustDefinitions: RustDefinition[] = [
     testCode:
       'fn main() {\n    assert_eq!(parse_sum("3", "4").unwrap(), 7);\n    assert!(parse_sum("bad", "4").is_err());\n    assert!(parse_sum("3", "bad").is_err());\n}',
     outputDistractors: ['Err("invalid")', '7'],
+  },
+  {
+    slug: 'turbofish',
+    title: 'Choose a type argument with turbofish',
+    rule: 'When the result type of a generic function such as parse cannot be inferred, writing ::<T> after its name chooses T.',
+    decision:
+      'Write parse::<u8>() so the text is checked against the u8 range.',
+    badRule: [
+      '::<T> converts an already computed value into T.',
+      'parse always produces an i32 unless the program says otherwise at run time.',
+    ],
+    badDecision: [
+      'Call parse() where nothing tells Rust which type to produce.',
+      'Parse as i32 and assume the result fits in a byte.',
+    ],
+    signature:
+      'fn parse_byte(text: &str) -> Result<u8, std::num::ParseIntError>',
+    body: 'text.parse::<u8>()',
+    assertions:
+      'assert_eq!(parse_byte("200"), Ok(200)); assert!(parse_byte("256").is_err()); assert!(parse_byte("-1").is_err());',
+    call: 'parse_byte("200")',
+    output: 'Ok(200)',
+    topic: 'conversions',
+    solution:
+      'fn parse_byte(text: &str) -> Result<u8, std::num::ParseIntError> {\n    text.parse::<u8>()\n}',
+    exampleCode:
+      'fn parse_byte(text: &str) -> Result<u8, std::num::ParseIntError> {\n    text.parse::<u8>()\n}\n\nfn main() {\n    println!("{:?}", parse_byte("200"));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(parse_byte("200"), Ok(200));\n    assert!(parse_byte("256").is_err());\n    assert!(parse_byte("-1").is_err());\n}',
+    outputDistractors: ['200', 'Ok("200")'],
+  },
+  {
+    slug: 'from-into',
+    title: 'Lossless conversions with From',
+    rule: 'From defines a conversion that cannot fail, and into performs the same conversion when the target type is known.',
+    decision:
+      'Widen each smaller integer to i64 with From or into before adding.',
+    badRule: [
+      'into chooses its target type at run time from the value.',
+      'A From conversion may silently cut off a value that does not fit.',
+    ],
+    badDecision: [
+      'Call into where nothing names the target type.',
+      'Add the narrow values first and widen only the sum.',
+    ],
+    signature: 'fn widen_sum(a: i32, b: u8) -> i64',
+    body: 'let left = i64::from(a); let right: i64 = b.into(); left + right',
+    assertions:
+      'assert_eq!(widen_sum(-3, 200), 197); assert_eq!(widen_sum(i32::MAX, 255), 2147483902); assert_eq!(widen_sum(0, 0), 0);',
+    call: 'widen_sum(-3, 200)',
+    output: '197',
+    topic: 'conversions',
+    solution:
+      'fn widen_sum(a: i32, b: u8) -> i64 {\n    let left = i64::from(a);\n    let right: i64 = b.into();\n    left + right\n}',
+    exampleCode:
+      'fn widen_sum(a: i32, b: u8) -> i64 {\n    let left = i64::from(a);\n    let right: i64 = b.into();\n    left + right\n}\n\nfn main() {\n    println!("{}", widen_sum(-3, 200));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(widen_sum(-3, 200), 197);\n    assert_eq!(widen_sum(i32::MAX, 255), 2147483902);\n    assert_eq!(widen_sum(0, 0), 0);\n}',
+    outputDistractors: ['203', '-197'],
+  },
+  {
+    slug: 'try-from',
+    title: 'Fallible conversions with TryFrom',
+    rule: 'TryFrom and try_into return a Result because the value might not fit the target type.',
+    decision:
+      'Match on the Result of u8::try_from and choose an explicit fallback for each out-of-range side.',
+    badRule: [
+      'try_from wraps an out-of-range value around until it fits.',
+      'try_into panics when the value does not fit.',
+    ],
+    badDecision: [
+      'Cast with as and accept whatever wrapped value results.',
+      'Use the same fallback for negative and for too-large inputs.',
+    ],
+    signature: 'fn clamp_to_byte(n: i32) -> u8',
+    body: 'match u8::try_from(n) { Ok(byte) => byte, Err(_) => { if n < 0 { 0 } else { 255 } } }',
+    assertions:
+      'assert_eq!(clamp_to_byte(7), 7); assert_eq!(clamp_to_byte(300), 255); assert_eq!(clamp_to_byte(-5), 0); assert_eq!(clamp_to_byte(255), 255);',
+    call: 'clamp_to_byte(300)',
+    output: '255',
+    topic: 'conversions',
+    solution:
+      'fn clamp_to_byte(n: i32) -> u8 {\n    match u8::try_from(n) {\n        Ok(byte) => byte,\n        Err(_) => {\n            if n < 0 {\n                0\n            } else {\n                255\n            }\n        }\n    }\n}',
+    exampleCode:
+      'fn clamp_to_byte(n: i32) -> u8 {\n    match u8::try_from(n) {\n        Ok(byte) => byte,\n        Err(_) => {\n            if n < 0 {\n                0\n            } else {\n                255\n            }\n        }\n    }\n}\n\nfn main() {\n    println!("{}", clamp_to_byte(300));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(clamp_to_byte(7), 7);\n    assert_eq!(clamp_to_byte(300), 255);\n    assert_eq!(clamp_to_byte(-5), 0);\n    assert_eq!(clamp_to_byte(255), 255);\n}',
+    outputDistractors: ['44', '300'],
+  },
+  {
+    slug: 'copied-cloned',
+    title: 'Copy out of an optional reference',
+    rule: 'copied turns an Option<&T> into an Option<T> by copying the value, and cloned does the same by cloning it.',
+    decision:
+      'Call copied on the Option<&i32> from first or last when the caller needs an owned i32.',
+    badRule: [
+      'copied moves the element out of the slice and leaves a gap.',
+      'copied turns None into Some of a default value.',
+    ],
+    badDecision: [
+      'Return the Option<&i32> where the signature promises Option<i32>.',
+      'Index the slice with [0] so that an empty slice produces None.',
+    ],
+    signature: 'fn ends(values: &[i32]) -> (Option<i32>, Option<i32>)',
+    body: '(values.first().copied(), values.last().copied())',
+    assertions:
+      'assert_eq!(ends(&[3, 8, 5]), (Some(3), Some(5))); assert_eq!(ends(&[]), (None, None)); assert_eq!(ends(&[7]), (Some(7), Some(7)));',
+    call: 'ends(&[3, 8, 5])',
+    output: '(Some(3), Some(5))',
+    topic: 'option-tools',
+    solution:
+      'fn ends(values: &[i32]) -> (Option<i32>, Option<i32>) {\n    (values.first().copied(), values.last().copied())\n}',
+    exampleCode:
+      'fn ends(values: &[i32]) -> (Option<i32>, Option<i32>) {\n    (values.first().copied(), values.last().copied())\n}\n\nfn main() {\n    println!("{:?}", ends(&[3, 8, 5]));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(ends(&[3, 8, 5]), (Some(3), Some(5)));\n    assert_eq!(ends(&[]), (None, None));\n    assert_eq!(ends(&[7]), (Some(7), Some(7)));\n}',
+    outputDistractors: ['(Some(&3), Some(&5))', '(3, 5)'],
+  },
+  {
+    slug: 'option-queries',
+    title: 'Query and default optional values',
+    rule: 'Methods such as is_some, unwrap_or, ok, and ok_or inspect or convert an Option or Result without a match.',
+    decision:
+      'Turn a failed parse into None with ok, then supply the fallback with unwrap_or.',
+    badRule: [
+      'unwrap_or returns the fallback even when a value is present.',
+      'ok turns an Err into Some holding the error.',
+    ],
+    badDecision: [
+      'Return the fallback for every input, including text that parses.',
+      'Treat the parsed number as the fallback and the fallback as the result.',
+    ],
+    signature: 'fn port_or_default(text: &str) -> u16',
+    body: 'text.parse::<u16>().ok().unwrap_or(8080)',
+    assertions:
+      'assert_eq!(port_or_default("443"), 443); assert_eq!(port_or_default("http"), 8080); assert_eq!(port_or_default("70000"), 8080); assert_eq!(port_or_default("0"), 0);',
+    call: 'port_or_default("443")',
+    output: '443',
+    topic: 'option-tools',
+    solution:
+      'fn port_or_default(text: &str) -> u16 {\n    text.parse::<u16>().ok().unwrap_or(8080)\n}',
+    exampleCode:
+      'fn port_or_default(text: &str) -> u16 {\n    text.parse::<u16>().ok().unwrap_or(8080)\n}\n\nfn main() {\n    println!("{}", port_or_default("443"));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(port_or_default("443"), 443);\n    assert_eq!(port_or_default("http"), 8080);\n    assert_eq!(port_or_default("70000"), 8080);\n    assert_eq!(port_or_default("0"), 0);\n}',
+    outputDistractors: ['8080', 'Some(443)'],
+  },
+  {
+    slug: 'unwrap',
+    title: 'Unwrap and expect',
+    rule: 'unwrap and expect return the value inside Some or Ok and panic on None or Err, and expect adds your message to the panic.',
+    decision:
+      'Use expect with a message that names the broken assumption, and only where failure would be a bug.',
+    badRule: [
+      'unwrap returns a default value when the Option is None.',
+      'expect skips the panic and returns its message as the value.',
+    ],
+    badDecision: [
+      'Call unwrap on user input that may legitimately be missing.',
+      'Give expect an empty message to keep the panic short.',
+    ],
+    signature: 'fn total_of(a: &str, b: &str) -> i32',
+    body: 'let left: i32 = a.parse().expect("left operand must be a number"); let right: i32 = b.parse().expect("right operand must be a number"); left + right',
+    assertions:
+      'assert_eq!(total_of("3", "4"), 7); assert_eq!(total_of("-10", "4"), -6);',
+    call: 'total_of("3", "4")',
+    output: '7',
+    topic: 'option-tools',
+    solution:
+      'fn total_of(a: &str, b: &str) -> i32 {\n    let left: i32 = a.parse().expect("left operand must be a number");\n    let right: i32 = b.parse().expect("right operand must be a number");\n    left + right\n}',
+    exampleCode:
+      'fn total_of(a: &str, b: &str) -> i32 {\n    let left: i32 = a.parse().expect("left operand must be a number");\n    let right: i32 = b.parse().expect("right operand must be a number");\n    left + right\n}\n\nfn main() {\n    println!("{}", total_of("3", "4"));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(total_of("3", "4"), 7);\n    assert_eq!(total_of("-10", "4"), -6);\n}',
+    outputDistractors: ['34', 'Ok(7)'],
+  },
+  {
+    slug: 'option-question-mark',
+    title: 'Question mark on Option',
+    rule: 'In a function returning Option, ? unwraps Some and returns None from the whole function as soon as a value is missing.',
+    decision:
+      'Apply ? to each lookup that might be missing and wrap the final result in Some.',
+    badRule: [
+      '? on None panics like unwrap.',
+      '? on None uses zero for the missing value and continues.',
+    ],
+    badDecision: [
+      'Use ? on an Option inside a function that returns i32.',
+      'Return the final sum without wrapping it in Some.',
+    ],
+    signature: 'fn first_plus_last(values: &[i32]) -> Option<i32>',
+    body: 'let first = values.first()?; let last = values.last()?; Some(first + last)',
+    assertions:
+      'assert_eq!(first_plus_last(&[2, 5, 9]), Some(11)); assert_eq!(first_plus_last(&[]), None); assert_eq!(first_plus_last(&[4]), Some(8));',
+    call: 'first_plus_last(&[2, 5, 9])',
+    output: 'Some(11)',
+    topic: 'option-tools',
+    solution:
+      'fn first_plus_last(values: &[i32]) -> Option<i32> {\n    let first = values.first()?;\n    let last = values.last()?;\n    Some(first + last)\n}',
+    exampleCode:
+      'fn first_plus_last(values: &[i32]) -> Option<i32> {\n    let first = values.first()?;\n    let last = values.last()?;\n    Some(first + last)\n}\n\nfn main() {\n    println!("{:?}", first_plus_last(&[2, 5, 9]));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(first_plus_last(&[2, 5, 9]), Some(11));\n    assert_eq!(first_plus_last(&[]), None);\n    assert_eq!(first_plus_last(&[4]), Some(8));\n}',
+    outputDistractors: ['11', 'Some(16)'],
   },
   {
     slug: 'vec-push',
@@ -1501,7 +1853,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'pushed_then_popped(vec![1, 2], 9)',
     output: '(Some(9), 2)',
     topic: 'vectors',
-    stage: 1,
     solution:
       'fn pushed_then_popped(mut values: Vec<i32>, extra: i32) -> (Option<i32>, usize) {\n    values.push(extra);\n    let removed = values.pop();\n    (removed, values.len())\n}',
     exampleCode:
@@ -1531,7 +1882,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'at(&[5, 8], 1)',
     output: 'Some(8)',
     topic: 'vectors',
-    stage: 2,
     solution:
       'fn at(values: &[i32], index: usize) -> Option<i32> {\n    values.get(index).copied()\n}',
     exampleCode:
@@ -1561,7 +1911,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'keep_nonnegative(vec![-1, 0, 3, -4])',
     output: '[0, 3]',
     topic: 'vectors',
-    stage: 3,
     solution:
       'fn keep_nonnegative(mut values: Vec<i32>) -> Vec<i32> {\n    fn is_nonnegative(n: &i32) -> bool {\n        *n >= 0\n    }\n    values.retain(is_nonnegative);\n    values\n}',
     exampleCode:
@@ -1591,7 +1940,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'joined(vec![1], &[2, 3])',
     output: '[1, 2, 3]',
     topic: 'vectors',
-    stage: 4,
     solution:
       'fn joined(mut left: Vec<i32>, right: &[i32]) -> Vec<i32> {\n    left.extend(right.iter().copied());\n    left\n}',
     exampleCode:
@@ -1599,6 +1947,64 @@ export const rustDefinitions: RustDefinition[] = [
     testCode:
       'fn main() {\n    assert_eq!(joined(vec![1], &[2, 3]), vec![1, 2, 3]);\n    assert_eq!(joined(vec![1], &[]), vec![1]);\n}',
     outputDistractors: ['[]', '[2, 2, 3]'],
+  },
+  {
+    slug: 'while-let',
+    title: 'Loop while a pattern matches',
+    rule: 'while let repeats its body as long as the value matches the pattern and stops at the first value that does not.',
+    decision:
+      'Pop from the vector in the while let condition so the loop ends when pop returns None.',
+    badRule: [
+      'while let stops after its first successful match.',
+      'while let skips values that do not match and keeps looping.',
+    ],
+    badDecision: [
+      'Pop once before the loop and reuse that value on every pass.',
+      'Read the vector with [0] until the program panics.',
+    ],
+    signature: 'fn reversed(mut stack: Vec<i32>) -> Vec<i32>',
+    body: 'let mut out = Vec::new(); while let Some(top) = stack.pop() { out.push(top); } out',
+    assertions:
+      'assert_eq!(reversed(vec![1, 2, 3]), vec![3, 2, 1]); assert!(reversed(vec![]).is_empty()); assert_eq!(reversed(vec![5]), vec![5]);',
+    call: 'reversed(vec![1, 2, 3])',
+    output: '[3, 2, 1]',
+    topic: 'queues',
+    solution:
+      'fn reversed(mut stack: Vec<i32>) -> Vec<i32> {\n    let mut out = Vec::new();\n    while let Some(top) = stack.pop() {\n        out.push(top);\n    }\n    out\n}',
+    exampleCode:
+      'fn reversed(mut stack: Vec<i32>) -> Vec<i32> {\n    let mut out = Vec::new();\n    while let Some(top) = stack.pop() {\n        out.push(top);\n    }\n    out\n}\n\nfn main() {\n    println!("{:?}", reversed(vec![1, 2, 3]));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(reversed(vec![1, 2, 3]), vec![3, 2, 1]);\n    assert!(reversed(vec![]).is_empty());\n    assert_eq!(reversed(vec![5]), vec![5]);\n}',
+    outputDistractors: ['[1, 2, 3]', '[3]'],
+  },
+  {
+    slug: 'vecdeque',
+    title: 'Queues with VecDeque',
+    rule: 'VecDeque adds and removes values cheaply at both ends, so push_back with pop_front serves values first in, first out.',
+    decision:
+      'Push new values at the back and drop the oldest from the front once the window is too long.',
+    badRule: [
+      'pop_front removes the most recently pushed value.',
+      'A VecDeque keeps its values sorted.',
+    ],
+    badDecision: [
+      'Remove the newest value when the window grows past k.',
+      'Pop from the back so the oldest values stay in the window.',
+    ],
+    signature: 'fn last_k(values: &[i32], k: usize) -> Vec<i32>',
+    body: 'let mut window = std::collections::VecDeque::new(); for &value in values { window.push_back(value); if window.len() > k { window.pop_front(); } } let mut out = Vec::new(); while let Some(value) = window.pop_front() { out.push(value); } out',
+    assertions:
+      'assert_eq!(last_k(&[1, 2, 3, 4], 2), vec![3, 4]); assert_eq!(last_k(&[5], 3), vec![5]); assert!(last_k(&[1, 2], 0).is_empty());',
+    call: 'last_k(&[1, 2, 3, 4], 2)',
+    output: '[3, 4]',
+    topic: 'queues',
+    solution:
+      'fn last_k(values: &[i32], k: usize) -> Vec<i32> {\n    let mut window = std::collections::VecDeque::new();\n    for &value in values {\n        window.push_back(value);\n        if window.len() > k {\n            window.pop_front();\n        }\n    }\n    let mut out = Vec::new();\n    while let Some(value) = window.pop_front() {\n        out.push(value);\n    }\n    out\n}',
+    exampleCode:
+      'fn last_k(values: &[i32], k: usize) -> Vec<i32> {\n    let mut window = std::collections::VecDeque::new();\n    for &value in values {\n        window.push_back(value);\n        if window.len() > k {\n            window.pop_front();\n        }\n    }\n    let mut out = Vec::new();\n    while let Some(value) = window.pop_front() {\n        out.push(value);\n    }\n    out\n}\n\nfn main() {\n    println!("{:?}", last_k(&[1, 2, 3, 4], 2));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(last_k(&[1, 2, 3, 4], 2), vec![3, 4]);\n    assert_eq!(last_k(&[5], 3), vec![5]);\n    assert!(last_k(&[1, 2], 0).is_empty());\n}',
+    outputDistractors: ['[1, 2]', '[4, 3]'],
   },
   {
     slug: 'map-entry',
@@ -1621,7 +2027,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'frequencies(&[2, 2, 3]).get(&2).copied()',
     output: 'Some(2)',
     topic: 'maps-sets',
-    stage: 1,
     solution:
       'fn frequencies(values: &[i32]) -> std::collections::HashMap<i32, usize> {\n    let mut counts = std::collections::HashMap::new();\n    for &n in values {\n        *counts.entry(n).or_insert(0) += 1;\n    }\n    counts\n}',
     exampleCode:
@@ -1644,20 +2049,19 @@ export const rustDefinitions: RustDefinition[] = [
       'Unwrap a lookup without handling the absent case.',
     ],
     signature:
-      'fn find_score(entries: &[(String, u32)], name: &str) -> Option<u32>',
-    body: 'let map: std::collections::HashMap<&str, u32> = entries.iter().map(|(k, v)| (k.as_str(), *v)).collect(); map.get(name).copied()',
+      'fn find_score(entries: &[(&str, u32)], name: &str) -> Option<u32>',
+    body: 'let mut scores = std::collections::HashMap::new(); for &(key, value) in entries { scores.insert(key, value); } scores.get(name).copied()',
     assertions:
-      'let entries = vec![("a".into(), 0), ("b".into(), 8)]; assert_eq!(find_score(&entries, "a"), Some(0)); assert_eq!(find_score(&entries, "x"), None);',
-    call: 'find_score(&[("b".into(), 8)], "b")',
+      'let entries = [("a", 0), ("b", 8)]; assert_eq!(find_score(&entries, "a"), Some(0)); assert_eq!(find_score(&entries, "x"), None);',
+    call: 'find_score(&[("a", 0), ("b", 8)], "b")',
     output: 'Some(8)',
     topic: 'maps-sets',
-    stage: 2,
     solution:
-      'fn find_score(entries: &[(String, u32)], name: &str) -> Option<u32> {\n    let map: std::collections::HashMap<&str, u32> =\n        entries.iter().map(|(k, v)| (k.as_str(), *v)).collect();\n    map.get(name).copied()\n}',
+      'fn find_score(entries: &[(&str, u32)], name: &str) -> Option<u32> {\n    let mut scores = std::collections::HashMap::new();\n    for &(key, value) in entries {\n        scores.insert(key, value);\n    }\n    scores.get(name).copied()\n}',
     exampleCode:
-      'fn find_score(entries: &[(String, u32)], name: &str) -> Option<u32> {\n    let map: std::collections::HashMap<&str, u32> =\n        entries.iter().map(|(k, v)| (k.as_str(), *v)).collect();\n    map.get(name).copied()\n}\n\nfn main() {\n    println!("{:?}", find_score(&[("b".into(), 8)], "b"));\n}',
+      'fn find_score(entries: &[(&str, u32)], name: &str) -> Option<u32> {\n    let mut scores = std::collections::HashMap::new();\n    for &(key, value) in entries {\n        scores.insert(key, value);\n    }\n    scores.get(name).copied()\n}\n\nfn main() {\n    println!("{:?}", find_score(&[("a", 0), ("b", 8)], "b"));\n}',
     testCode:
-      'fn main() {\n    let entries = vec![("a".into(), 0), ("b".into(), 8)];\n    assert_eq!(find_score(&entries, "a"), Some(0));\n    assert_eq!(find_score(&entries, "x"), None);\n}',
+      'fn main() {\n    let entries = [("a", 0), ("b", 8)];\n    assert_eq!(find_score(&entries, "a"), Some(0));\n    assert_eq!(find_score(&entries, "x"), None);\n}',
     outputDistractors: ['None', '8'],
   },
   {
@@ -1675,17 +2079,16 @@ export const rustDefinitions: RustDefinition[] = [
       'Count inserted items rather than distinct stored items.',
     ],
     signature: 'fn unique_count(values: &[i32]) -> usize',
-    body: 'values.iter().copied().collect::<std::collections::HashSet<_>>().len()',
+    body: 'let mut seen = std::collections::HashSet::new(); for &value in values { seen.insert(value); } seen.len()',
     assertions:
       'assert_eq!(unique_count(&[3, 3, 1, 3]), 2); assert_eq!(unique_count(&[]), 0);',
     call: 'unique_count(&[3, 3, 1, 3])',
     output: '2',
     topic: 'maps-sets',
-    stage: 3,
     solution:
-      'fn unique_count(values: &[i32]) -> usize {\n    values\n        .iter()\n        .copied()\n        .collect::<std::collections::HashSet<_>>()\n        .len()\n}',
+      'fn unique_count(values: &[i32]) -> usize {\n    let mut seen = std::collections::HashSet::new();\n    for &value in values {\n        seen.insert(value);\n    }\n    seen.len()\n}',
     exampleCode:
-      'fn unique_count(values: &[i32]) -> usize {\n    values\n        .iter()\n        .copied()\n        .collect::<std::collections::HashSet<_>>()\n        .len()\n}\n\nfn main() {\n    println!("{:?}", unique_count(&[3, 3, 1, 3]));\n}',
+      'fn unique_count(values: &[i32]) -> usize {\n    let mut seen = std::collections::HashSet::new();\n    for &value in values {\n        seen.insert(value);\n    }\n    seen.len()\n}\n\nfn main() {\n    println!("{:?}", unique_count(&[3, 3, 1, 3]));\n}',
     testCode:
       'fn main() {\n    assert_eq!(unique_count(&[3, 3, 1, 3]), 2);\n    assert_eq!(unique_count(&[]), 0);\n}',
     outputDistractors: ['3', '1'],
@@ -1706,19 +2109,18 @@ export const rustDefinitions: RustDefinition[] = [
     ],
     signature:
       'fn range_total(entries: &[(i32, i32)], low: i32, high: i32) -> i32',
-    body: 'let map: std::collections::BTreeMap<_, _> = entries.iter().copied().collect(); if low > high { return 0; } map.range(low..=high).map(|(_, v)| *v).sum()',
+    body: 'if low > high { return 0; } let mut map = std::collections::BTreeMap::new(); for &(key, value) in entries { map.insert(key, value); } let mut total = 0; for (_, value) in map.range(low..=high) { total += value; } total',
     assertions:
-      'assert_eq!(range_total(&[(1, 3), (2, 5), (4, 7)], 1, 2), 8); assert_eq!(range_total(&[(1, 3)], 4, 2), 0);',
+      'assert_eq!(range_total(&[(1, 3), (2, 5), (4, 7)], 1, 2), 8); assert_eq!(range_total(&[(1, 3), (2, 5), (4, 7)], 2, 4), 12); assert_eq!(range_total(&[(1, 3)], 4, 2), 0);',
     call: 'range_total(&[(1, 3), (2, 5), (4, 7)], 1, 2)',
     output: '8',
     topic: 'maps-sets',
-    stage: 4,
     solution:
-      'fn range_total(entries: &[(i32, i32)], low: i32, high: i32) -> i32 {\n    let map: std::collections::BTreeMap<_, _> = entries.iter().copied().collect();\n    if low > high {\n        return 0;\n    }\n    map.range(low..=high).map(|(_, v)| *v).sum()\n}',
+      'fn range_total(entries: &[(i32, i32)], low: i32, high: i32) -> i32 {\n    if low > high {\n        return 0;\n    }\n    let mut map = std::collections::BTreeMap::new();\n    for &(key, value) in entries {\n        map.insert(key, value);\n    }\n    let mut total = 0;\n    for (_, value) in map.range(low..=high) {\n        total += value;\n    }\n    total\n}',
     exampleCode:
-      'fn range_total(entries: &[(i32, i32)], low: i32, high: i32) -> i32 {\n    let map: std::collections::BTreeMap<_, _> = entries.iter().copied().collect();\n    if low > high {\n        return 0;\n    }\n    map.range(low..=high).map(|(_, v)| *v).sum()\n}\n\nfn main() {\n    println!("{:?}", range_total(&[(1, 3), (2, 5), (4, 7)], 1, 2));\n}',
+      'fn range_total(entries: &[(i32, i32)], low: i32, high: i32) -> i32 {\n    if low > high {\n        return 0;\n    }\n    let mut map = std::collections::BTreeMap::new();\n    for &(key, value) in entries {\n        map.insert(key, value);\n    }\n    let mut total = 0;\n    for (_, value) in map.range(low..=high) {\n        total += value;\n    }\n    total\n}\n\nfn main() {\n    println!("{:?}", range_total(&[(1, 3), (2, 5), (4, 7)], 1, 2));\n}',
     testCode:
-      'fn main() {\n    assert_eq!(range_total(&[(1, 3), (2, 5), (4, 7)], 1, 2), 8);\n    assert_eq!(range_total(&[(1, 3)], 4, 2), 0);\n}',
+      'fn main() {\n    assert_eq!(range_total(&[(1, 3), (2, 5), (4, 7)], 1, 2), 8);\n    assert_eq!(range_total(&[(1, 3), (2, 5), (4, 7)], 2, 4), 12);\n    assert_eq!(range_total(&[(1, 3)], 4, 2), 0);\n}',
     outputDistractors: ['9', '7'],
   },
   {
@@ -1742,7 +2144,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'identity(7)',
     output: '7',
     topic: 'generics',
-    stage: 1,
     solution: 'fn identity<T>(value: T) -> T {\n    value\n}',
     exampleCode:
       'fn identity<T>(value: T) -> T {\n    value\n}\n\nfn main() {\n    println!("{:?}", identity(7));\n}',
@@ -1771,7 +2172,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'unwrap_holder("hi")',
     output: '"hi"',
     topic: 'generics',
-    stage: 2,
     solution:
       'fn unwrap_holder<T>(value: T) -> T {\n    struct Holder<T> {\n        value: T,\n    }\n    let holder = Holder { value };\n    holder.value\n}',
     exampleCode:
@@ -1801,7 +2201,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'larger(3, 9)',
     output: '9',
     topic: 'generics',
-    stage: 3,
     solution:
       'fn larger<T: Ord>(a: T, b: T) -> T {\n    if a >= b {\n        a\n    } else {\n        b\n    }\n}',
     exampleCode:
@@ -1831,7 +2230,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'owned_copy(&String::from("hi"))',
     output: '"hi"',
     topic: 'generics',
-    stage: 4,
     solution:
       'fn owned_copy<T>(value: &T) -> T\nwhere\n    T: Clone,\n{\n    value.clone()\n}',
     exampleCode:
@@ -1860,7 +2258,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'measured(5)',
     output: '5',
     topic: 'traits',
-    stage: 1,
     solution:
       'fn measured(n: u32) -> u32 {\n    trait Measure {\n        fn size(&self) -> u32;\n    }\n    struct Count(u32);\n    impl Measure for Count {\n        fn size(&self) -> u32 {\n            self.0\n        }\n    }\n    Count(n).size()\n}',
     exampleCode:
@@ -1890,7 +2287,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'doubled_measure(5)',
     output: '10',
     topic: 'traits',
-    stage: 2,
     solution:
       'fn doubled_measure(n: u32) -> u32 {\n    trait Measure {\n        fn size(&self) -> u32;\n        fn doubled(&self) -> u32 {\n            self.size() * 2\n        }\n    }\n    struct Count(u32);\n    impl Measure for Count {\n        fn size(&self) -> u32 {\n            self.0\n        }\n    }\n    Count(n).doubled()\n}',
     exampleCode:
@@ -1920,7 +2316,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'associated_value(-2)',
     output: '-2',
     topic: 'traits',
-    stage: 3,
     solution:
       'fn associated_value(n: i32) -> i32 {\n    trait Source {\n        type Item;\n        fn get(&self) -> Self::Item;\n    }\n    struct Number(i32);\n    impl Source for Number {\n        type Item = i32;\n        fn get(&self) -> Self::Item {\n            self.0\n        }\n    }\n    Number(n).get()\n}',
     exampleCode:
@@ -1950,7 +2345,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'dynamic_size(8)',
     output: '8',
     topic: 'traits',
-    stage: 4,
     solution:
       'fn dynamic_size(n: u32) -> u32 {\n    trait Measure {\n        fn size(&self) -> u32;\n    }\n    struct Count(u32);\n    impl Measure for Count {\n        fn size(&self) -> u32 {\n            self.0\n        }\n    }\n    fn observe(value: &dyn Measure) -> u32 {\n        value.size()\n    }\n    observe(&Count(n))\n}',
     exampleCode:
@@ -1980,7 +2374,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'trimmed("  hi  ")',
     output: '"hi"',
     topic: 'lifetimes',
-    stage: 1,
     solution: 'fn trimmed(text: &str) -> &str {\n    text.trim()\n}',
     exampleCode:
       'fn trimmed(text: &str) -> &str {\n    text.trim()\n}\n\nfn main() {\n    println!("{:?}", trimmed("  hi  "));\n}',
@@ -2009,7 +2402,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'longer("a", "rust")',
     output: '"rust"',
     topic: 'lifetimes',
-    stage: 2,
     solution:
       "fn longer<'a>(a: &'a str, b: &'a str) -> &'a str {\n    if a.len() >= b.len() {\n        a\n    } else {\n        b\n    }\n}",
     exampleCode:
@@ -2039,7 +2431,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'view_length("rust")',
     output: '4',
     topic: 'lifetimes',
-    stage: 3,
     solution:
       "fn view_length(text: &str) -> usize {\n    struct View<'a> {\n        text: &'a str,\n    }\n    impl View<'_> {\n        fn len(&self) -> usize {\n            self.text.len()\n        }\n    }\n    View { text }.len()\n}",
     exampleCode:
@@ -2069,7 +2460,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'status_label(true)',
     output: '"ready"',
     topic: 'lifetimes',
-    stage: 4,
     solution:
       'fn status_label(ok: bool) -> &\'static str {\n    if ok {\n        "ready"\n    } else {\n        "waiting"\n    }\n}',
     exampleCode:
@@ -2098,7 +2488,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'offset_value(3, 4)',
     output: '7',
     topic: 'closures',
-    stage: 1,
     solution:
       'fn offset_value(n: i32, offset: i32) -> i32 {\n    let shifted = |value| value + offset;\n    shifted(n)\n}',
     exampleCode:
@@ -2128,7 +2517,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'twice(3, |n| n + 2)',
     output: '7',
     topic: 'closures',
-    stage: 2,
     solution:
       'fn twice<F: Fn(i32) -> i32>(value: i32, f: F) -> i32 {\n    f(f(value))\n}',
     exampleCode:
@@ -2158,7 +2546,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'running_sum(&[2, -1, 4])',
     output: '5',
     topic: 'closures',
-    stage: 3,
     solution:
       'fn running_sum(values: &[i32]) -> i32 {\n    let mut total = 0;\n    let mut add = |value| {\n        total += value;\n    };\n    for &value in values {\n        add(value);\n    }\n    total\n}',
     exampleCode:
@@ -2187,7 +2574,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'consume_text("owned".into())',
     output: '"owned"',
     topic: 'closures',
-    stage: 4,
     solution:
       'fn consume_text(text: String) -> String {\n    let take = move || text;\n    take()\n}',
     exampleCode:
@@ -2216,7 +2602,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'squares_total(&[2, 3])',
     output: '13',
     topic: 'iterators',
-    stage: 1,
     solution:
       'fn squares_total(values: &[i32]) -> i32 {\n    values.iter().map(|n| n * n).sum()\n}',
     exampleCode:
@@ -2246,7 +2631,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'positive_doubles(&[-1, 0, 2, 3])',
     output: '[4, 6]',
     topic: 'iterators',
-    stage: 2,
     solution:
       'fn positive_doubles(values: &[i32]) -> Vec<i32> {\n    values\n        .iter()\n        .copied()\n        .filter(|n| *n > 0)\n        .map(|n| n * 2)\n        .collect()\n}',
     exampleCode:
@@ -2276,7 +2660,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'product(&[2, 3, 4])',
     output: '24',
     topic: 'iterators',
-    stage: 3,
     solution:
       'fn product(values: &[i32]) -> i32 {\n    values.iter().fold(1, |acc, n| acc * n)\n}',
     exampleCode:
@@ -2307,7 +2690,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'parse_all(&["2", "3"])',
     output: 'Ok([2, 3])',
     topic: 'iterators',
-    stage: 4,
     solution:
       'fn parse_all(values: &[&str]) -> Result<Vec<i32>, std::num::ParseIntError> {\n    values.iter().map(|s| s.parse::<i32>()).collect()\n}',
     exampleCode:
@@ -2335,11 +2717,10 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'module_answer()',
     output: '42',
     topic: 'modules',
-    stage: 1,
     solution:
       'fn module_answer() -> u32 {\n    mod worker {\n        pub fn answer() -> u32 {\n            42\n        }\n    }\n    worker::answer()\n}',
     exampleCode:
-      'fn module_answer() -> u32 {\n    mod worker {\n        pub fn answer() -> u32 {\n            42\n        }\n    }\n    worker::answer()\n}\n\nfn main() {\n    println!("{:?}", module_answer());\n}',
+      'fn module_answer() -> u32 {\n    mod worker {\n        pub fn answer() -> u32 {\n            42\n        }\n    }\n    worker::answer()\n}\n\nfn main() {\n    println!("{}", module_answer());\n}',
     testCode: 'fn main() {\n    assert_eq!(module_answer(), 42);\n}',
     outputDistractors: ['43', '41'],
   },
@@ -2364,7 +2745,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'imported_length(&[1, 2])',
     output: '2',
     topic: 'modules',
-    stage: 2,
     solution:
       'fn imported_length(values: &[i32]) -> usize {\n    use std::collections::VecDeque as Queue;\n    let q: Queue<_> = values.iter().copied().collect();\n    q.len()\n}',
     exampleCode:
@@ -2393,7 +2773,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'facade_value()',
     output: '7',
     topic: 'modules',
-    stage: 3,
     solution:
       'fn facade_value() -> i32 {\n    mod api {\n        mod detail {\n            pub fn value() -> i32 {\n                7\n            }\n        }\n        pub use self::detail::value;\n    }\n    api::value()\n}',
     exampleCode:
@@ -2420,7 +2799,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'parent_value()',
     output: '7',
     topic: 'modules',
-    stage: 4,
     solution:
       'fn parent_value() -> i32 {\n    mod outer {\n        const BASE: i32 = 6;\n        pub mod inner {\n            pub fn value() -> i32 {\n                super::BASE + 1\n            }\n        }\n    }\n    outer::inner::value()\n}',
     exampleCode:
@@ -2431,32 +2809,31 @@ export const rustDefinitions: RustDefinition[] = [
   {
     slug: 'package-name',
     title: 'Package names and crates',
-    rule: 'Cargo package metadata identifies a package while its Rust crate path uses an identifier-compatible name.',
+    rule: 'The name field in Cargo.toml identifies the package, and Rust code refers to its library crate with each dash replaced by an underscore.',
     decision:
-      'Normalize a package dash to an underscore when deriving its default crate identifier.',
+      'Read the name from the manifest line and replace dashes with underscores before writing the use path.',
     badRule: [
-      'Cargo packages can never contain dashes.',
-      'A package name automatically becomes a runtime global variable.',
+      'Rust code must use the package name exactly as written, dashes included.',
+      'The crate name comes from the version field of Cargo.toml.',
     ],
     badDecision: [
-      'Treat a dashed package name as a Rust path with subtraction.',
-      'Assume package and module names are always byte-for-byte identical.',
+      'Write use my-tool; with the dash kept in the path.',
+      'Delete the dashes entirely instead of replacing them.',
     ],
-    signature: 'fn crate_identifier(package: &str) -> String',
-    body: 'package.replace(\'-\', "_")',
+    signature: 'fn import_line(manifest_line: &str) -> Option<String>',
+    body: 'let quoted = manifest_line.strip_prefix("name = ")?; let name = quoted.strip_prefix(\'"\')?.strip_suffix(\'"\')?; Some(format!("use {};", name.replace(\'-\', "_")))',
     assertions:
-      'assert_eq!(crate_identifier("my-tool"), "my_tool"); assert_eq!(crate_identifier("core"), "core");',
-    call: 'crate_identifier("my-tool")',
-    output: '"my_tool"',
+      'assert_eq!(import_line("name = \\"my-tool\\""), Some(String::from("use my_tool;"))); assert_eq!(import_line("name = \\"serde\\""), Some(String::from("use serde;"))); assert_eq!(import_line("version = \\"1.0.0\\""), None);',
+    call: 'import_line("name = \\"my-tool\\"")',
+    output: 'Some("use my_tool;")',
     topic: 'cargo',
-    stage: 1,
     solution:
-      'fn crate_identifier(package: &str) -> String {\n    package.replace(\'-\', "_")\n}',
+      'fn import_line(manifest_line: &str) -> Option<String> {\n    let quoted = manifest_line.strip_prefix("name = ")?;\n    let name = quoted.strip_prefix(\'"\')?.strip_suffix(\'"\')?;\n    Some(format!("use {};", name.replace(\'-\', "_")))\n}',
     exampleCode:
-      'fn crate_identifier(package: &str) -> String {\n    package.replace(\'-\', "_")\n}\n\nfn main() {\n    println!("{:?}", crate_identifier("my-tool"));\n}',
+      'fn import_line(manifest_line: &str) -> Option<String> {\n    let quoted = manifest_line.strip_prefix("name = ")?;\n    let name = quoted.strip_prefix(\'"\')?.strip_suffix(\'"\')?;\n    Some(format!("use {};", name.replace(\'-\', "_")))\n}\n\nfn main() {\n    println!("{:?}", import_line("name = \\"my-tool\\""));\n}',
     testCode:
-      'fn main() {\n    assert_eq!(crate_identifier("my-tool"), "my_tool");\n    assert_eq!(crate_identifier("core"), "core");\n}',
-    outputDistractors: ['my_tool', '""'],
+      'fn main() {\n    assert_eq!(import_line("name = \\"my-tool\\""), Some(String::from("use my_tool;")));\n    assert_eq!(import_line("name = \\"serde\\""), Some(String::from("use serde;")));\n    assert_eq!(import_line("version = \\"1.0.0\\""), None);\n}',
+    outputDistractors: ['Some("use my-tool;")', 'Some("use mytool;")'],
   },
   {
     slug: 'semver',
@@ -2479,7 +2856,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'version_parts("1.2.3")',
     output: 'Some((1, 2, 3))',
     topic: 'cargo',
-    stage: 2,
     solution:
       "fn version_parts(text: &str) -> Option<(u32, u32, u32)> {\n    let mut parts = text.split('.');\n    let major = parts.next()?.parse().ok()?;\n    let minor = parts.next()?.parse().ok()?;\n    let patch = parts.next()?.parse().ok()?;\n    if parts.next().is_some() {\n        return None;\n    }\n    Some((major, minor, patch))\n}",
     exampleCode:
@@ -2508,43 +2884,103 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'build_value()',
     output: '7',
     topic: 'cargo',
-    stage: 3,
     solution:
       'fn build_value() -> u32 {\n    #[cfg(all())]\n    fn selected() -> u32 {\n        7\n    }\n    #[cfg(any())]\n    fn selected() -> u32 {\n        99\n    }\n    selected()\n}',
     exampleCode:
-      'fn build_value() -> u32 {\n    #[cfg(all())]\n    fn selected() -> u32 {\n        7\n    }\n    #[cfg(any())]\n    fn selected() -> u32 {\n        99\n    }\n    selected()\n}\n\nfn main() {\n    println!("{:?}", build_value());\n}',
+      'fn build_value() -> u32 {\n    #[cfg(all())]\n    fn selected() -> u32 {\n        7\n    }\n    #[cfg(any())]\n    fn selected() -> u32 {\n        99\n    }\n    selected()\n}\n\nfn main() {\n    println!("{}", build_value());\n}',
     testCode: 'fn main() {\n    assert_eq!(build_value(), 7);\n}',
     outputDistractors: ['8', '6'],
   },
   {
     slug: 'test-contract',
     title: 'Testable library behavior',
-    rule: 'Cargo test discovers tests while a reusable function can be checked independently of an executable entry point.',
+    rule: 'A function that returns its result can be checked by a #[test] assertion, while text printed inside a function cannot be compared.',
     decision:
-      'Separate calculation from output so assertions can compare a returned value.',
+      'Return the formatted line and let main or a test decide what to do with it.',
     badRule: [
-      'A function must print its result to be testable.',
-      'Tests require modifying production arguments globally.',
+      'cargo test compares everything a function prints with the expected text.',
+      'Only functions that main calls can be tested.',
     ],
     badDecision: [
-      'Hide all logic inside main and return no inspectable value.',
-      'Treat a successful compilation as proof of every input result.',
+      'Print the summary inside the function and return nothing.',
+      'Check the program by reading what main printed by eye.',
     ],
-    signature: 'fn checked_total(values: &[u32]) -> Option<u32>',
-    body: 'values.iter().try_fold(0u32, |total, value| total.checked_add(*value))',
+    signature: 'fn summary(passed: u32, total: u32) -> String',
+    body: 'format!("{}/{} passed", passed, total)',
     assertions:
-      'assert_eq!(checked_total(&[2, 3]), Some(5)); assert_eq!(checked_total(&[]), Some(0)); assert_eq!(checked_total(&[u32::MAX, 1]), None);',
-    call: 'checked_total(&[2, 3])',
-    output: 'Some(5)',
+      'assert_eq!(summary(3, 4), "3/4 passed"); assert_eq!(summary(0, 0), "0/0 passed");',
+    call: 'summary(3, 4)',
+    output: '3/4 passed',
+    printNote:
+      'A normal build leaves out the #[cfg(test)] module, so the program prints only the line that summary returns.',
     topic: 'cargo',
-    stage: 4,
     solution:
-      'fn checked_total(values: &[u32]) -> Option<u32> {\n    values\n        .iter()\n        .try_fold(0u32, |total, value| total.checked_add(*value))\n}',
+      'fn summary(passed: u32, total: u32) -> String {\n    format!("{}/{} passed", passed, total)\n}',
     exampleCode:
-      'fn checked_total(values: &[u32]) -> Option<u32> {\n    values\n        .iter()\n        .try_fold(0u32, |total, value| total.checked_add(*value))\n}\n\nfn main() {\n    println!("{:?}", checked_total(&[2, 3]));\n}',
+      'fn summary(passed: u32, total: u32) -> String {\n    format!("{}/{} passed", passed, total)\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn counts_both_numbers() {\n        assert_eq!(summary(3, 4), "3/4 passed");\n    }\n}\n\nfn main() {\n    println!("{}", summary(3, 4));\n}',
     testCode:
-      'fn main() {\n    assert_eq!(checked_total(&[2, 3]), Some(5));\n    assert_eq!(checked_total(&[]), Some(0));\n    assert_eq!(checked_total(&[u32::MAX, 1]), None);\n}',
-    outputDistractors: ['None', '5'],
+      'fn main() {\n    assert_eq!(summary(3, 4), "3/4 passed");\n    assert_eq!(summary(0, 0), "0/0 passed");\n}',
+    outputDistractors: ['"3/4 passed"', 'test result: ok'],
+  },
+  {
+    slug: 'assertions',
+    title: 'Assertion macros',
+    rule: 'assert! panics when its condition is false, and assert_eq! panics when its two values differ, printing both with Debug.',
+    decision:
+      'State a precondition with assert! and a message before the code that depends on it.',
+    badRule: [
+      'assert_eq! returns false instead of stopping when the values differ.',
+      'assert! prints a warning and lets the program continue.',
+    ],
+    badDecision: [
+      'Write the assertion after the division that depends on it.',
+      'Assert the opposite condition, so valid input panics.',
+    ],
+    signature: 'fn average(values: &[u32]) -> u32',
+    body: 'assert!(!values.is_empty(), "average needs at least one value"); let mut total = 0; for &value in values { total += value; } total / values.len() as u32',
+    assertions:
+      'assert_eq!(average(&[2, 4, 9]), 5); assert_eq!(average(&[7]), 7); assert_eq!(average(&[1, 2]), 1);',
+    call: 'average(&[2, 4, 9])',
+    output: '5',
+    topic: 'testing',
+    solution:
+      'fn average(values: &[u32]) -> u32 {\n    assert!(!values.is_empty(), "average needs at least one value");\n    let mut total = 0;\n    for &value in values {\n        total += value;\n    }\n    total / values.len() as u32\n}',
+    exampleCode:
+      'fn average(values: &[u32]) -> u32 {\n    assert!(!values.is_empty(), "average needs at least one value");\n    let mut total = 0;\n    for &value in values {\n        total += value;\n    }\n    total / values.len() as u32\n}\n\nfn main() {\n    println!("{}", average(&[2, 4, 9]));\n}',
+    testCode:
+      'fn main() {\n    assert_eq!(average(&[2, 4, 9]), 5);\n    assert_eq!(average(&[7]), 7);\n    assert_eq!(average(&[1, 2]), 1);\n}',
+    outputDistractors: ['15', '5.0'],
+  },
+  {
+    slug: 'test-attribute',
+    title: 'Test functions',
+    rule: 'cargo test runs every #[test] function, and a test passes when it returns without panicking.',
+    decision:
+      'Put tests in a #[cfg(test)] module that brings the code under test into scope with use super::*.',
+    badRule: [
+      'cargo test runs main and counts any printed output as a pass.',
+      'A #[test] function passes when it returns true.',
+    ],
+    badDecision: [
+      'Call each test function from main so a normal run checks them.',
+      'Leave out #[cfg(test)] so the test module ships in every build.',
+    ],
+    signature: 'fn is_leap(year: u32) -> bool',
+    body: '(year % 4 == 0 && year % 100 != 0) || year % 400 == 0',
+    assertions:
+      'assert!(is_leap(2024)); assert!(!is_leap(2023)); assert!(!is_leap(1900)); assert!(is_leap(2000));',
+    call: 'is_leap(2024)',
+    output: 'true',
+    printNote:
+      'A normal build compiles main and is_leap but leaves out the #[cfg(test)] module, so only main prints.',
+    topic: 'testing',
+    solution:
+      'fn is_leap(year: u32) -> bool {\n    (year % 4 == 0 && year % 100 != 0) || year % 400 == 0\n}',
+    exampleCode:
+      'fn is_leap(year: u32) -> bool {\n    (year % 4 == 0 && year % 100 != 0) || year % 400 == 0\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn century_years_need_400() {\n        assert!(!is_leap(1900));\n        assert!(is_leap(2000));\n    }\n}\n\nfn main() {\n    println!("{}", is_leap(2024));\n}',
+    testCode:
+      'fn main() {\n    assert!(is_leap(2024));\n    assert!(!is_leap(2023));\n    assert!(!is_leap(1900));\n    assert!(is_leap(2000));\n}',
+    outputDistractors: ['false', 'test result: ok'],
   },
   {
     slug: 'boundary-tests',
@@ -2567,7 +3003,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'fits(3, 2, 5)',
     output: 'true',
     topic: 'testing',
-    stage: 1,
     solution:
       'fn fits(used: usize, extra: usize, capacity: usize) -> bool {\n    used.checked_add(extra)\n        .is_some_and(|total| total <= capacity)\n}',
     exampleCode:
@@ -2597,7 +3032,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'clamp_small(9)',
     output: '2',
     topic: 'testing',
-    stage: 2,
     solution: 'fn clamp_small(n: i32) -> i32 {\n    n.clamp(-2, 2)\n}',
     exampleCode:
       'fn clamp_small(n: i32) -> i32 {\n    n.clamp(-2, 2)\n}\n\nfn main() {\n    println!("{:?}", clamp_small(9));\n}',
@@ -2626,7 +3060,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'reverse_copy(&[1, 2, 3])',
     output: '[3, 2, 1]',
     topic: 'testing',
-    stage: 3,
     solution:
       'fn reverse_copy(values: &[i32]) -> Vec<i32> {\n    values.iter().rev().copied().collect()\n}',
     exampleCode:
@@ -2656,7 +3089,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'safe_quotient(8, 0)',
     output: 'None',
     topic: 'testing',
-    stage: 4,
     solution:
       'fn safe_quotient(a: i32, b: i32) -> Option<i32> {\n    a.checked_div(b)\n}',
     exampleCode:
@@ -2685,7 +3117,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'boxed_increment(4)',
     output: '5',
     topic: 'smart-pointers',
-    stage: 1,
     solution:
       'fn boxed_increment(n: i32) -> i32 {\n    let mut owned = Box::new(n);\n    *owned += 1;\n    *owned\n}',
     exampleCode:
@@ -2714,7 +3145,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'rc_owners()',
     output: '2',
     topic: 'smart-pointers',
-    stage: 2,
     solution:
       'fn rc_owners() -> usize {\n    let first = std::rc::Rc::new(String::from("data"));\n    let second = std::rc::Rc::clone(&first);\n    let count = std::rc::Rc::strong_count(&second);\n    count\n}',
     exampleCode:
@@ -2742,7 +3172,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'arc_owners()',
     output: '2',
     topic: 'smart-pointers',
-    stage: 3,
     solution:
       'fn arc_owners() -> usize {\n    let first = std::sync::Arc::new(7);\n    let second = std::sync::Arc::clone(&first);\n    std::sync::Arc::strong_count(&second)\n}',
     exampleCode:
@@ -2769,7 +3198,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'weak_expires()',
     output: 'true',
     topic: 'smart-pointers',
-    stage: 4,
     solution:
       'fn weak_expires() -> bool {\n    let strong = std::rc::Rc::new(7);\n    let weak = std::rc::Rc::downgrade(&strong);\n    assert!(weak.upgrade().is_some());\n    drop(strong);\n    weak.upgrade().is_none()\n}',
     exampleCode:
@@ -2797,7 +3225,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'cell_add(3)',
     output: '4',
     topic: 'interior-mutability',
-    stage: 1,
     solution:
       'fn cell_add(n: i32) -> i32 {\n    let value = std::cell::Cell::new(n);\n    let shared = &value;\n    shared.set(shared.get() + 1);\n    shared.get()\n}',
     exampleCode:
@@ -2826,7 +3253,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'refcell_append()',
     output: '[1, 2]',
     topic: 'interior-mutability',
-    stage: 2,
     solution:
       'fn refcell_append() -> Vec<i32> {\n    let cell = std::cell::RefCell::new(vec![1]);\n    {\n        cell.borrow_mut().push(2);\n    }\n    let result = cell.borrow().clone();\n    result\n}',
     exampleCode:
@@ -2854,7 +3280,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'borrow_conflict()',
     output: 'true',
     topic: 'interior-mutability',
-    stage: 3,
     solution:
       'fn borrow_conflict() -> bool {\n    let cell = std::cell::RefCell::new(1);\n    let guard = cell.borrow_mut();\n    let blocked = cell.try_borrow().is_err();\n    drop(guard);\n    blocked && cell.try_borrow().is_ok()\n}',
     exampleCode:
@@ -2875,21 +3300,20 @@ export const rustDefinitions: RustDefinition[] = [
       'Allocate unconditionally even on the unchanged fast path.',
       'Return a mutable str reference to immutable borrowed bytes.',
     ],
-    signature: "fn clean_spaces(text: &str) -> std::borrow::Cow<'_, str>",
-    body: "if text.contains(' ') { std::borrow::Cow::Owned(text.replace(' ', \"_\")) } else { std::borrow::Cow::Borrowed(text) }",
+    signature: "fn with_period(text: &str) -> std::borrow::Cow<'_, str>",
+    body: "let mut result = std::borrow::Cow::Borrowed(text); if !text.ends_with('.') { result.to_mut().push('.'); } result",
     assertions:
-      'assert!(matches!(clean_spaces("rust"), std::borrow::Cow::Borrowed(_))); assert_eq!(clean_spaces("a b"), "a_b");',
-    call: 'clean_spaces("a b")',
-    output: '"a_b"',
+      'assert!(matches!(with_period("done."), std::borrow::Cow::Borrowed(_))); assert!(matches!(with_period("done"), std::borrow::Cow::Owned(_))); assert_eq!(with_period("done"), "done."); assert_eq!(with_period(""), ".");',
+    call: 'with_period("done")',
+    output: '"done."',
     topic: 'interior-mutability',
-    stage: 4,
     solution:
-      "fn clean_spaces(text: &str) -> std::borrow::Cow<'_, str> {\n    if text.contains(' ') {\n        std::borrow::Cow::Owned(text.replace(' ', \"_\"))\n    } else {\n        std::borrow::Cow::Borrowed(text)\n    }\n}",
+      "fn with_period(text: &str) -> std::borrow::Cow<'_, str> {\n    let mut result = std::borrow::Cow::Borrowed(text);\n    if !text.ends_with('.') {\n        result.to_mut().push('.');\n    }\n    result\n}",
     exampleCode:
-      'fn clean_spaces(text: &str) -> std::borrow::Cow<\'_, str> {\n    if text.contains(\' \') {\n        std::borrow::Cow::Owned(text.replace(\' \', "_"))\n    } else {\n        std::borrow::Cow::Borrowed(text)\n    }\n}\n\nfn main() {\n    println!("{:?}", clean_spaces("a b"));\n}',
+      "fn with_period(text: &str) -> std::borrow::Cow<'_, str> {\n    let mut result = std::borrow::Cow::Borrowed(text);\n    if !text.ends_with('.') {\n        result.to_mut().push('.');\n    }\n    result\n}\n\nfn main() {\n    println!(\"{:?}\", with_period(\"done\"));\n}",
     testCode:
-      'fn main() {\n    assert!(matches!(\n        clean_spaces("rust"),\n        std::borrow::Cow::Borrowed(_)\n    ));\n    assert_eq!(clean_spaces("a b"), "a_b");\n}',
-    outputDistractors: ['a_b', '""'],
+      'fn main() {\n    assert!(matches!(with_period("done."), std::borrow::Cow::Borrowed(_)));\n    assert!(matches!(with_period("done"), std::borrow::Cow::Owned(_)));\n    assert_eq!(with_period("done"), "done.");\n    assert_eq!(with_period(""), ".");\n}',
+    outputDistractors: ['done.', '"done"'],
   },
   {
     slug: 'thread-move',
@@ -2911,7 +3335,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'thread_length("rust".into())',
     output: '4',
     topic: 'concurrency',
-    stage: 1,
     solution:
       'fn thread_length(text: String) -> usize {\n    std::thread::spawn(move || text.len()).join().unwrap()\n}',
     exampleCode:
@@ -2941,7 +3364,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'scoped_sum(&[2, 3])',
     output: '5',
     topic: 'concurrency',
-    stage: 2,
     solution:
       'fn scoped_sum(values: &[i32]) -> i32 {\n    std::thread::scope(|scope| scope.spawn(|| values.iter().sum()).join().unwrap())\n}',
     exampleCode:
@@ -2971,7 +3393,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'worker_increment(3)',
     output: '4',
     topic: 'concurrency',
-    stage: 3,
     solution:
       'fn worker_increment(n: i32) -> i32 {\n    let shared = std::sync::Arc::new(std::sync::Mutex::new(n));\n    let other = std::sync::Arc::clone(&shared);\n    std::thread::spawn(move || {\n        *other.lock().unwrap() += 1;\n    })\n    .join()\n    .unwrap();\n    let result = *shared.lock().unwrap();\n    result\n}',
     exampleCode:
@@ -3001,7 +3422,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'channel_value(7)',
     output: '7',
     topic: 'concurrency',
-    stage: 4,
     solution:
       'fn channel_value(n: i32) -> i32 {\n    let (sender, receiver) = std::sync::mpsc::channel();\n    let handle = std::thread::spawn(move || sender.send(n).unwrap());\n    let value = receiver.recv().unwrap();\n    handle.join().unwrap();\n    value\n}',
     exampleCode:
@@ -3031,7 +3451,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'atomic_replaced(7)',
     output: '7',
     topic: 'atomics',
-    stage: 1,
     solution:
       'fn atomic_replaced(n: u32) -> u32 {\n    use std::sync::atomic::{AtomicU32, Ordering};\n    let value = AtomicU32::new(0);\n    value.store(n, Ordering::Relaxed);\n    value.load(Ordering::Relaxed)\n}',
     exampleCode:
@@ -3060,7 +3479,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'atomic_increment(4)',
     output: '(4, 5)',
     topic: 'atomics',
-    stage: 2,
     solution:
       'fn atomic_increment(n: u32) -> (u32, u32) {\n    use std::sync::atomic::{AtomicU32, Ordering};\n    let value = AtomicU32::new(n);\n    let previous = value.fetch_add(1, Ordering::Relaxed);\n    (previous, value.load(Ordering::Relaxed))\n}',
     exampleCode:
@@ -3090,7 +3508,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'conditional_swap(3, 3, 8)',
     output: '(true, 8)',
     topic: 'atomics',
-    stage: 3,
     solution:
       'fn conditional_swap(current: u32, expected: u32, new: u32) -> (bool, u32) {\n    use std::sync::atomic::{AtomicU32, Ordering};\n    let value = AtomicU32::new(current);\n    let changed = value\n        .compare_exchange(expected, new, Ordering::SeqCst, Ordering::SeqCst)\n        .is_ok();\n    (changed, value.load(Ordering::SeqCst))\n}',
     exampleCode:
@@ -3119,7 +3536,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'readiness_round_trip()',
     output: 'true',
     topic: 'atomics',
-    stage: 4,
     solution:
       'fn readiness_round_trip() -> bool {\n    use std::sync::atomic::{AtomicBool, Ordering};\n    let ready = AtomicBool::new(false);\n    ready.store(true, Ordering::Release);\n    ready.load(Ordering::Acquire)\n}',
     exampleCode:
@@ -3148,7 +3564,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'send_identity(7)',
     output: '7',
     topic: 'send-sync',
-    stage: 1,
     solution:
       "fn send_identity<T: Send + 'static>(value: T) -> T {\n    std::thread::spawn(move || value).join().unwrap()\n}",
     exampleCode:
@@ -3178,7 +3593,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'synced_copy(&9)',
     output: '9',
     topic: 'send-sync',
-    stage: 2,
     solution:
       'fn synced_copy<T: Sync + Copy + Send>(value: &T) -> T {\n    std::thread::scope(|scope| scope.spawn(|| *value).join().unwrap())\n}',
     exampleCode:
@@ -3207,7 +3621,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'parallel_count(4)',
     output: '4',
     topic: 'send-sync',
-    stage: 3,
     solution:
       'fn parallel_count(workers: usize) -> usize {\n    let count = std::sync::Arc::new(std::sync::Mutex::new(0));\n    let mut handles = Vec::new();\n    for _ in 0..workers {\n        let count = std::sync::Arc::clone(&count);\n        handles.push(std::thread::spawn(move || {\n            *count.lock().unwrap() += 1;\n        }));\n    }\n    for handle in handles {\n        handle.join().unwrap();\n    }\n    let result = *count.lock().unwrap();\n    result\n}',
     exampleCode:
@@ -3237,7 +3650,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'two_updates(4)',
     output: '7',
     topic: 'send-sync',
-    stage: 4,
     solution:
       'fn two_updates(n: i32) -> i32 {\n    let value = std::sync::Mutex::new(n);\n    {\n        *value.lock().unwrap() += 1;\n    }\n    {\n        *value.lock().unwrap() += 2;\n    }\n    let result = *value.lock().unwrap();\n    result\n}',
     exampleCode:
@@ -3260,21 +3672,20 @@ export const rustDefinitions: RustDefinition[] = [
       'Extract a completed result from Pending.',
       'Use blocking sleep as the definition of asynchronous progress.',
     ],
-    signature: 'fn ready_value(n: i32) -> i32',
-    body: 'use std::future::Future; let mut future = std::pin::pin!(std::future::ready(n)); let mut context = std::task::Context::from_waker(std::task::Waker::noop()); match future.as_mut().poll(&mut context) { std::task::Poll::Ready(value) => value, std::task::Poll::Pending => unreachable!() }',
+    signature: 'fn ready_value(n: i32) -> Option<i32>',
+    body: 'use std::future::Future; let mut future = std::future::ready(n); let mut context = std::task::Context::from_waker(std::task::Waker::noop()); match std::pin::Pin::new(&mut future).poll(&mut context) { std::task::Poll::Ready(value) => Some(value), std::task::Poll::Pending => None, }',
     assertions:
-      'assert_eq!(ready_value(7), 7); assert_eq!(ready_value(-2), -2);',
+      'assert_eq!(ready_value(7), Some(7)); assert_eq!(ready_value(-2), Some(-2));',
     call: 'ready_value(7)',
-    output: '7',
+    output: 'Some(7)',
     topic: 'async',
-    stage: 1,
     solution:
-      'fn ready_value(n: i32) -> i32 {\n    use std::future::Future;\n    let mut future = std::pin::pin!(std::future::ready(n));\n    let mut context = std::task::Context::from_waker(std::task::Waker::noop());\n    match future.as_mut().poll(&mut context) {\n        std::task::Poll::Ready(value) => value,\n        std::task::Poll::Pending => unreachable!(),\n    }\n}',
+      'fn ready_value(n: i32) -> Option<i32> {\n    use std::future::Future;\n    let mut future = std::future::ready(n);\n    let mut context = std::task::Context::from_waker(std::task::Waker::noop());\n    match std::pin::Pin::new(&mut future).poll(&mut context) {\n        std::task::Poll::Ready(value) => Some(value),\n        std::task::Poll::Pending => None,\n    }\n}',
     exampleCode:
-      'fn ready_value(n: i32) -> i32 {\n    use std::future::Future;\n    let mut future = std::pin::pin!(std::future::ready(n));\n    let mut context = std::task::Context::from_waker(std::task::Waker::noop());\n    match future.as_mut().poll(&mut context) {\n        std::task::Poll::Ready(value) => value,\n        std::task::Poll::Pending => unreachable!(),\n    }\n}\n\nfn main() {\n    println!("{:?}", ready_value(7));\n}',
+      'fn ready_value(n: i32) -> Option<i32> {\n    use std::future::Future;\n    let mut future = std::future::ready(n);\n    let mut context = std::task::Context::from_waker(std::task::Waker::noop());\n    match std::pin::Pin::new(&mut future).poll(&mut context) {\n        std::task::Poll::Ready(value) => Some(value),\n        std::task::Poll::Pending => None,\n    }\n}\n\nfn main() {\n    println!("{:?}", ready_value(7));\n}',
     testCode:
-      'fn main() {\n    assert_eq!(ready_value(7), 7);\n    assert_eq!(ready_value(-2), -2);\n}',
-    outputDistractors: ['8', '6'],
+      'fn main() {\n    assert_eq!(ready_value(7), Some(7));\n    assert_eq!(ready_value(-2), Some(-2));\n}',
+    outputDistractors: ['Ready(7)', 'None'],
   },
   {
     slug: 'future-pending',
@@ -3297,7 +3708,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'two_poll_result(8)',
     output: '8',
     topic: 'async',
-    stage: 2,
     solution:
       "fn two_poll_result(n: i32) -> i32 {\n    use std::future::Future;\n    struct Later {\n        value: i32,\n        waiting: bool,\n    }\n    impl Future for Later {\n        type Output = i32;\n        fn poll(\n            mut self: std::pin::Pin<&mut Self>,\n            cx: &mut std::task::Context<'_>,\n        ) -> std::task::Poll<i32> {\n            if self.waiting {\n                self.waiting = false;\n                cx.waker().wake_by_ref();\n                std::task::Poll::Pending\n            } else {\n                std::task::Poll::Ready(self.value)\n            }\n        }\n    }\n    let mut future = std::pin::pin!(Later {\n        value: n,\n        waiting: true\n    });\n    let mut cx = std::task::Context::from_waker(std::task::Waker::noop());\n    assert!(future.as_mut().poll(&mut cx).is_pending());\n    match future.as_mut().poll(&mut cx) {\n        std::task::Poll::Ready(n) => n,\n        _ => unreachable!(),\n    }\n}",
     exampleCode:
@@ -3327,7 +3737,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'pinned_double(3)',
     output: '6',
     topic: 'async',
-    stage: 3,
     solution:
       'fn pinned_double(n: i32) -> i32 {\n    use std::future::Future;\n    let mut future = Box::pin(async move { n * 2 });\n    let mut cx = std::task::Context::from_waker(std::task::Waker::noop());\n    match future.as_mut().poll(&mut cx) {\n        std::task::Poll::Ready(n) => n,\n        _ => unreachable!(),\n    }\n}',
     exampleCode:
@@ -3357,7 +3766,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'await_sum(3, 4)',
     output: '7',
     topic: 'async',
-    stage: 4,
     solution:
       'fn await_sum(a: i32, b: i32) -> i32 {\n    use std::future::Future;\n    let mut future = Box::pin(async move {\n        let left = std::future::ready(a).await;\n        left + b\n    });\n    let mut cx = std::task::Context::from_waker(std::task::Waker::noop());\n    match future.as_mut().poll(&mut cx) {\n        std::task::Poll::Ready(n) => n,\n        _ => unreachable!(),\n    }\n}',
     exampleCode:
@@ -3387,7 +3795,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: '{ let a = 3; same_location(&a, &a) }',
     output: 'true',
     topic: 'unsafe',
-    stage: 1,
     solution:
       'fn same_location(a: &i32, b: &i32) -> bool {\n    std::ptr::eq(a, b)\n}',
     exampleCode:
@@ -3417,7 +3824,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'raw_first(&[7, 8])',
     output: 'Some(7)',
     topic: 'unsafe',
-    stage: 2,
     solution:
       'fn raw_first(values: &[i32]) -> Option<i32> {\n    if values.is_empty() {\n        return None;\n    }\n    let pointer = values.as_ptr();\n    Some(unsafe { *pointer })\n}',
     exampleCode:
@@ -3447,7 +3853,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'raw_prefix_total(&[2, 3, 7], 2)',
     output: '5',
     topic: 'unsafe',
-    stage: 3,
     solution:
       'fn raw_prefix_total(values: &[i32], count: usize) -> i32 {\n    let count = count.min(values.len());\n    let view = unsafe { std::slice::from_raw_parts(values.as_ptr(), count) };\n    view.iter().sum()\n}',
     exampleCode:
@@ -3477,7 +3882,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: '{ let mut v = [1, 1, 1]; increment_halves(&mut v, 1); v }',
     output: '[2, 3, 3]',
     topic: 'unsafe',
-    stage: 4,
     solution:
       'fn increment_halves(values: &mut [i32], mid: usize) {\n    let mid = mid.min(values.len());\n    let len = values.len();\n    let pointer = values.as_mut_ptr();\n    let (left, right) = unsafe {\n        (\n            std::slice::from_raw_parts_mut(pointer, mid),\n            std::slice::from_raw_parts_mut(pointer.add(mid), len - mid),\n        )\n    };\n    for n in left {\n        *n += 1;\n    }\n    for n in right {\n        *n += 2;\n    }\n}',
     exampleCode:
@@ -3506,7 +3910,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'point_size()',
     output: '8',
     topic: 'interop',
-    stage: 1,
     solution:
       'fn point_size() -> usize {\n    #[repr(C)]\n    struct Point {\n        x: i32,\n        y: i32,\n    }\n    std::mem::size_of::<Point>()\n}',
     exampleCode:
@@ -3535,11 +3938,10 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'c_boundary_add(3, 4)',
     output: '7',
     topic: 'interop',
-    stage: 2,
     solution:
       'fn c_boundary_add(a: i32, b: i32) -> i32 {\n    extern "C" fn add(a: i32, b: i32) -> i32 {\n        a + b\n    }\n    add(a, b)\n}',
     exampleCode:
-      'fn c_boundary_add(a: i32, b: i32) -> i32 {\n    extern "C" fn add(a: i32, b: i32) -> i32 {\n        a + b\n    }\n    add(a, b)\n}\n\nfn main() {\n    println!("{:?}", c_boundary_add(3, 4));\n}',
+      'fn c_boundary_add(a: i32, b: i32) -> i32 {\n    extern "C" fn add(a: i32, b: i32) -> i32 {\n        a + b\n    }\n    add(a, b)\n}\n\nfn main() {\n    println!("{}", c_boundary_add(3, 4));\n}',
     testCode:
       'fn main() {\n    assert_eq!(c_boundary_add(3, 4), 7);\n    assert_eq!(c_boundary_add(-2, 2), 0);\n}',
     outputDistractors: ['8', '6'],
@@ -3564,7 +3966,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'c_string_length(b"hi\u0000")',
     output: 'Some(2)',
     topic: 'interop',
-    stage: 3,
     solution:
       'fn c_string_length(bytes: &[u8]) -> Option<usize> {\n    std::ffi::CStr::from_bytes_with_nul(bytes)\n        .ok()\n        .map(|s| s.to_bytes().len())\n}',
     exampleCode:
@@ -3594,7 +3995,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'big_endian_u32(&[0, 0, 1, 0])',
     output: 'Some(256)',
     topic: 'interop',
-    stage: 4,
     solution:
       'fn big_endian_u32(bytes: &[u8]) -> Option<u32> {\n    let array: [u8; 4] = bytes.try_into().ok()?;\n    Some(u32::from_be_bytes(array))\n}',
     exampleCode:
@@ -3624,7 +4024,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'reserved_fill(5)',
     output: '(5, true)',
     topic: 'performance',
-    stage: 1,
     solution:
       'fn reserved_fill(n: usize) -> (usize, bool) {\n    let mut values = Vec::with_capacity(n);\n    for value in 0..n {\n        values.push(value);\n    }\n    (values.len(), values.capacity() >= n)\n}',
     exampleCode:
@@ -3652,7 +4051,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'padded_layout()',
     output: '(8, 4)',
     topic: 'performance',
-    stage: 2,
     solution:
       'fn padded_layout() -> (usize, usize) {\n    #[repr(C)]\n    struct Record {\n        tag: u8,\n        value: u32,\n    }\n    (\n        std::mem::size_of::<Record>(),\n        std::mem::align_of::<Record>(),\n    )\n}',
     exampleCode:
@@ -3681,7 +4079,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'byte_budget(4, 8)',
     output: 'Some(32)',
     topic: 'performance',
-    stage: 3,
     solution:
       'fn byte_budget(items: usize, width: usize) -> Option<usize> {\n    items.checked_mul(width)\n}',
     exampleCode:
@@ -3711,7 +4108,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'sorted_unique(vec![3, 1, 3, 2, 1])',
     output: '[1, 2, 3]',
     topic: 'performance',
-    stage: 4,
     solution:
       'fn sorted_unique(mut values: Vec<i32>) -> Vec<i32> {\n    values.sort_unstable();\n    values.dedup();\n    values\n}',
     exampleCode:
@@ -3741,7 +4137,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'lower_bound(&[1, 3, 3, 7], 3)',
     output: '1',
     topic: 'algorithms',
-    stage: 1,
     solution:
       'fn lower_bound(values: &[i32], target: i32) -> usize {\n    let (mut low, mut high) = (0, values.len());\n    while low < high {\n        let mid = low + (high - low) / 2;\n        if values[mid] < target {\n            low = mid + 1;\n        } else {\n            high = mid;\n        }\n    }\n    low\n}',
     exampleCode:
@@ -3771,7 +4166,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'has_pair(&[1, 3, 5], 8)',
     output: 'true',
     topic: 'algorithms',
-    stage: 2,
     solution:
       'fn has_pair(values: &[i32], target: i64) -> bool {\n    if values.len() < 2 {\n        return false;\n    }\n    let (mut left, mut right) = (0, values.len() - 1);\n    while left < right {\n        let sum = values[left] as i64 + values[right] as i64;\n        if sum == target {\n            return true;\n        }\n        if sum < target {\n            left += 1;\n        } else {\n            right -= 1;\n        }\n    }\n    false\n}',
     exampleCode:
@@ -3802,7 +4196,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'hop_distances(&[vec![1], vec![2], vec![]], 0)',
     output: '[Some(0), Some(1), Some(2)]',
     topic: 'algorithms',
-    stage: 3,
     solution:
       'fn hop_distances(graph: &[Vec<usize>], start: usize) -> Vec<Option<usize>> {\n    let mut dist = vec![None; graph.len()];\n    if start >= graph.len() {\n        return dist;\n    }\n    let mut queue = std::collections::VecDeque::new();\n    dist[start] = Some(0);\n    queue.push_back(start);\n    while let Some(node) = queue.pop_front() {\n        for &next in &graph[node] {\n            if next < graph.len() && dist[next].is_none() {\n                dist[next] = Some(dist[node].unwrap() + 1);\n                queue.push_back(next);\n            }\n        }\n    }\n    dist\n}',
     exampleCode:
@@ -3831,7 +4224,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'top_k(&[2, 8, 3, 7], 2)',
     output: '[8, 7]',
     topic: 'algorithms',
-    stage: 4,
     solution:
       'fn top_k(values: &[i32], k: usize) -> Vec<i32> {\n    let mut heap = std::collections::BinaryHeap::new();\n    for &n in values {\n        heap.push(std::cmp::Reverse(n));\n        if heap.len() > k {\n            heap.pop();\n        }\n    }\n    let mut result: Vec<_> = heap.into_iter().map(|n| n.0).collect();\n    result.sort_unstable_by(|a, b| b.cmp(a));\n    result\n}',
     exampleCode:
@@ -3861,7 +4253,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'declared_length(&[0, 3, 9])',
     output: 'Some(3)',
     topic: 'systems-project',
-    stage: 1,
     solution:
       'fn declared_length(bytes: &[u8]) -> Option<usize> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    Some(u16::from_be_bytes(header) as usize)\n}',
     exampleCode:
@@ -3890,7 +4281,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'frame_payload(&[0, 2, 7, 8])',
     output: 'Some([7, 8])',
     topic: 'systems-project',
-    stage: 2,
     solution:
       'fn frame_payload(bytes: &[u8]) -> Option<&[u8]> {\n    let header: [u8; 2] = bytes.get(..2)?.try_into().ok()?;\n    let length = u16::from_be_bytes(header) as usize;\n    bytes.get(2..2usize.checked_add(length)?)\n}',
     exampleCode:
@@ -3920,7 +4310,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'encode_frame(&[7, 8])',
     output: 'Some([0, 2, 7, 8])',
     topic: 'systems-project',
-    stage: 3,
     solution:
       'fn encode_frame(payload: &[u8]) -> Option<Vec<u8>> {\n    let length = u16::try_from(payload.len()).ok()?;\n    let mut output = Vec::with_capacity(2 + payload.len());\n    output.extend_from_slice(&length.to_be_bytes());\n    output.extend_from_slice(payload);\n    Some(output)\n}',
     exampleCode:
@@ -3950,7 +4339,6 @@ export const rustDefinitions: RustDefinition[] = [
     call: 'decode_frames(&[0, 1, 7, 0, 2, 8, 9])',
     output: 'Some([[7], [8, 9]])',
     topic: 'systems-project',
-    stage: 4,
     solution:
       'fn decode_frames(bytes: &[u8]) -> Option<Vec<Vec<u8>>> {\n    let mut offset = 0usize;\n    let mut frames = Vec::new();\n    while offset < bytes.len() {\n        let header: [u8; 2] = bytes.get(offset..offset.checked_add(2)?)?.try_into().ok()?;\n        let start = offset.checked_add(2)?;\n        let end = start.checked_add(u16::from_be_bytes(header) as usize)?;\n        frames.push(bytes.get(start..end)?.to_vec());\n        offset = end;\n    }\n    Some(frames)\n}',
     exampleCode:

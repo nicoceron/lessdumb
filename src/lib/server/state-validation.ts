@@ -1,5 +1,5 @@
 import { courses } from '../curriculum';
-import type { LearnerState } from '../state';
+import { migrateState, type LearnerState } from '../state';
 import { activityTotals, type ActivityState } from '../activity';
 
 /** The full current catalog plus every mastery/mistake card fits with headroom. */
@@ -145,6 +145,9 @@ const SKILL_FIELDS = [
   'totalXp',
   'dailyXp',
   'activity',
+  'lessonAttempt',
+  'lessonFailedAt',
+  'lessonRewarded',
 ];
 
 function validateSkill(value: unknown, path: string) {
@@ -189,6 +192,29 @@ function validateSkill(value: unknown, path: string) {
     number(m.lapses, `${path}.memory.lapses`, 0);
   }
   if (skill.totalXp !== undefined) number(skill.totalXp, `${path}.totalXp`);
+  if (skill.lessonRewarded !== undefined)
+    boolean(skill.lessonRewarded, `${path}.lessonRewarded`);
+  if (skill.lessonFailedAt !== undefined)
+    timestamp(skill.lessonFailedAt, `${path}.lessonFailedAt`);
+  if (skill.lessonAttempt !== undefined) {
+    const lesson = object(skill.lessonAttempt, `${path}.lessonAttempt`, [
+      'startedAt',
+      'steps',
+    ]);
+    timestamp(lesson.startedAt, `${path}.lessonAttempt.startedAt`);
+    const steps = object(lesson.steps, `${path}.lessonAttempt.steps`);
+    if (Object.keys(steps).length > 100)
+      fail(`${path}.lessonAttempt.steps`, 'at most 100 lesson steps');
+    for (const [id, value] of Object.entries(steps)) {
+      string(id, `${path}.lessonAttempt.steps ID`);
+      const step = object(value, `${path}.lessonAttempt.steps.${id}`, [
+        'correct',
+        'incorrect',
+      ]);
+      strings(step.correct, `${path}.lessonAttempt.steps.${id}.correct`, 100);
+      number(step.incorrect, `${path}.lessonAttempt.steps.${id}.incorrect`);
+    }
+  }
   if (skill.activity !== undefined) {
     const activity = object(skill.activity, `${path}.activity`, [
       'version',
@@ -288,7 +314,8 @@ function validateProgress(value: unknown) {
     'attempts',
     'timeZone',
   ]);
-  if (progress.version !== 1) fail(`${path}.version`, '1');
+  if (progress.version !== 1 && progress.version !== 2)
+    fail(`${path}.version`, '1 or 2');
   number(progress.totalXp, `${path}.totalXp`);
   number(progress.streak, `${path}.streak`);
   date(progress.lastActivityDate, `${path}.lastActivityDate`, true);
@@ -330,6 +357,7 @@ function validateAttempt(value: unknown, path: string): string {
     'at',
     'xp',
     'reviewDueAt',
+    'outcome',
   ]);
   const id = string(attempt.id, `${path}.id`);
   string(attempt.skillId, `${path}.skillId`);
@@ -342,6 +370,13 @@ function validateAttempt(value: unknown, path: string): string {
   number(attempt.xp, `${path}.xp`, 0, 10_000);
   if (attempt.reviewDueAt !== undefined)
     timestamp(attempt.reviewDueAt, `${path}.reviewDueAt`);
+  if (
+    attempt.outcome !== undefined &&
+    !['lesson-passed', 'lesson-failed', 'review-passed'].includes(
+      attempt.outcome as string,
+    )
+  )
+    fail(`${path}.outcome`, 'a task outcome');
   return id;
 }
 
@@ -366,7 +401,9 @@ export function parseStateUpdate(value: unknown): {
     'createdAt',
     'updatedAt',
   ]);
-  if (state.version !== 1) fail('state.version', '1');
+  // Version 1 accounts predate knowledge-point lessons; they migrate on read.
+  if (state.version !== 1 && state.version !== 2)
+    fail('state.version', '1 or 2');
   number(state.dailyGoal, 'state.dailyGoal', 1, 10_000);
   if (state.activeCourseId !== undefined)
     string(state.activeCourseId, 'state.activeCourseId', 128);
@@ -386,7 +423,7 @@ export function parseStateUpdate(value: unknown): {
   boolean(anki.connected, 'state.anki.connected');
   if (anki.profile !== null) string(anki.profile, 'state.anki.profile', 256);
   string(anki.deck, 'state.anki.deck', 256);
-  const parsed = body.state as LearnerState;
+  const parsed = migrateState(body.state as LearnerState);
   const normalized =
     parsed.activeCourseId &&
     !courses.some((c) => c.id === parsed.activeCourseId)

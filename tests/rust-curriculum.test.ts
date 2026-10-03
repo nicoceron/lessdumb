@@ -42,16 +42,16 @@ function learnAll(): Progress {
 }
 
 describe('atomic Rust course', () => {
-  it('provides 128 focused skills with valid prerequisite and four-stage graph contracts', () => {
+  it('provides 145 focused skills with valid prerequisite and topic-stage graph contracts', () => {
     expect(validateCurriculum(catalog.skills, catalog)).toEqual([]);
-    expect(catalog.skills).toHaveLength(128);
+    expect(catalog.skills).toHaveLength(145);
     expect(catalog.units).toHaveLength(10);
-    expect(Object.keys(rustTopicStages)).toHaveLength(32);
+    expect(Object.keys(rustTopicStages)).toHaveLength(35);
     expect(catalog.skills.flatMap((skill) => skill.questions)).toHaveLength(
-      512,
+      580,
     );
     expect(catalog.skills.flatMap((skill) => skill.flashcards)).toHaveLength(
-      256,
+      290,
     );
     expect(
       catalog.skills
@@ -59,12 +59,15 @@ describe('atomic Rust course', () => {
         .map((skill) => skill.id),
     ).toEqual(['rust-main']);
     for (const [topicId, sequence] of Object.entries(rustTopicStages)) {
-      expect(sequence).toHaveLength(4);
+      // A topic is named by its final step, so published topic IDs stay put
+      // when new steps join earlier in the topic.
+      expect(sequence.at(-1)).toBe(topicId);
+      expect(sequence.length).toBeGreaterThanOrEqual(2);
       for (const [index, id] of sequence.entries()) {
         const skill = catalog.skills.find((item) => item.id === id)!;
         expect(skill.topicId).toBe(topicId);
         expect(skill.stage).toBe(index + 1);
-        expect(skill.stageCount).toBe(4);
+        expect(skill.stageCount).toBe(sequence.length);
         expect(skill.topicTitle).toBeTruthy();
         expect(skill.questions.map((question) => question.type)).toEqual([
           'choice',
@@ -113,7 +116,7 @@ describe('atomic Rust course', () => {
         catalog,
       );
     expect(getSkillState(learner, first.id).mastery).toBeLessThan(1);
-    expect(isUnlocked(learner, 'rust-format', catalog)).toBe(false);
+    expect(isUnlocked(learner, 'rust-returns', catalog)).toBe(false);
     learner = applyAttempt(
       learner,
       {
@@ -125,7 +128,7 @@ describe('atomic Rust course', () => {
       NOW,
       catalog,
     );
-    expect(isUnlocked(learner, 'rust-format', catalog)).toBe(true);
+    expect(isUnlocked(learner, 'rust-returns', catalog)).toBe(true);
     const complete = learnAll();
     for (const skill of catalog.skills)
       expect(getSkillState(complete, skill.id).mastery).toBe(1);
@@ -261,7 +264,7 @@ describe('atomic Rust course', () => {
       catalog,
     );
     expect(getSkillState(completed, first.id).mastery).toBe(1);
-    expect(isUnlocked(completed, 'rust-format', catalog)).toBe(true);
+    expect(isUnlocked(completed, 'rust-returns', catalog)).toBe(true);
   });
 
   it('compiles all trusted solutions/examples in batches and rejects every starter and empty submission', () => {

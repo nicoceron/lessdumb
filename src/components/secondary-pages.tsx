@@ -105,9 +105,8 @@ export function Cards({
   return (
     <>
       <PageTitle
-        eyebrow="MAKE YOUR LEARNING LAST"
-        title="Your automatic memory bank."
-        description="Cards from your mastered skills and useful mistakes. No manual copying."
+        title="Flashcards"
+        description="Cards are created when you master a skill or answer a question incorrectly."
       />
       <div className="grid gap-4 sm:grid-cols-3">
         {metrics.map((metric) => (
@@ -245,17 +244,12 @@ export function Cards({
                 <Layers className="size-9 text-primary" />
                 <h2 className="text-lg font-semibold">
                   {state.cards.length
-                    ? 'All clear here.'
-                    : 'Your first breakthrough belongs here.'}
+                    ? 'No cards in this view'
+                    : 'No cards yet'}
                 </h2>
-                <p className="max-w-sm text-sm text-muted-foreground">
-                  Master a skill or learn from a mistake.
-                  <br />
-                  We’ll turn the important bits into cards for you.
-                </p>
                 <Button asChild>
-                  <a href="/learn">
-                    Learn something new <ArrowRight size={17} />
+                  <a href="/">
+                    Go to Learn <ArrowRight size={17} />
                   </a>
                 </Button>
               </CardContent>
@@ -277,6 +271,8 @@ export function Settings({
   message,
   accountOpen,
   retrySync,
+  sync,
+  signedIn,
 }: {
   state: LearnerState;
   update: (fn: (s: LearnerState) => LearnerState) => void;
@@ -287,6 +283,8 @@ export function Settings({
   message: string;
   accountOpen: () => void;
   retrySync: () => void;
+  sync: string;
+  signedIn: boolean;
 }) {
   const [apiKey, setApiKey] = useState('');
   const [deck, setDeck] = useState(state.anki.deck);
@@ -302,26 +300,27 @@ export function Settings({
   ];
   return (
     <>
-      <PageTitle
-        eyebrow="MAKE THIS SPACE YOURS"
-        title="A few good connections."
-        description="Your account, your daily rhythm, and your memory bank."
-      />
+      <PageTitle title="Settings" />
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <GraduationCap className="mb-2 size-6 text-primary" />
             <CardTitle>
-              <h2>Your lessdumb account</h2>
+              <h2>Account</h2>
             </CardTitle>
             <CardDescription>
-              Create a free account to keep your knowledge graph and progress
-              across devices.
+              {signedIn
+                ? 'Progress is saved to your account and this device.'
+                : 'Progress is saved on this device. Sign in to keep it across devices.'}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
+          <CardContent className="flex flex-wrap items-center gap-2">
+            <p className="w-full text-sm text-muted-foreground" role="status">
+              {sync}
+            </p>
             <Button onClick={accountOpen}>
-              Manage account <ArrowRight size={17} />
+              {signedIn ? 'Manage account' : 'Sign in or create account'}{' '}
+              <ArrowRight size={17} />
             </Button>
             <Button variant="outline" onClick={retrySync}>
               <RotateCcw size={14} />
@@ -333,11 +332,10 @@ export function Settings({
           <CardHeader>
             <Target className="mb-2 size-6 text-primary" />
             <CardTitle>
-              <h2>A sustainable daily goal</h2>
+              <h2>Daily XP goal</h2>
             </CardTitle>
             <CardDescription>
-              Show up consistently. You can adjust your goal as you find your
-              rhythm.
+              Sets today’s target and the estimated completion date on Learn.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -375,7 +373,7 @@ export function Settings({
             <Layers className="mb-2 size-6 text-primary" />
             <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle>
-                <h2>Connect your Anki account</h2>
+                <h2>Anki</h2>
               </CardTitle>
               <Pill>{live ? 'CONNECTED' : 'DESKTOP CONNECTION'}</Pill>
             </div>
@@ -529,7 +527,7 @@ export function Settings({
           <CardHeader>
             <ArrowDownToLine className="mb-2 size-6 text-primary" />
             <CardTitle>
-              <h2>Your progress, in your hands</h2>
+              <h2>Backup</h2>
             </CardTitle>
             <CardDescription>
               Export a portable copy of your graph progress and generated cards.
@@ -609,9 +607,8 @@ export function CodeLab({
   return (
     <>
       <PageTitle
-        eyebrow="CURIOSITY NEEDS A PLAYGROUND"
-        title="Try an idea."
-        description="Experiment with Python, Rust, or C++ without affecting your mastery."
+        title="Code lab"
+        description="Run Python, Rust, or C++. Runs here do not affect mastery."
       />
       <Card>
         <CardHeader className="flex flex-wrap items-center justify-between gap-2 sm:flex-row">

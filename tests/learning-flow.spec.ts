@@ -2,36 +2,57 @@ import { expect, test } from '@playwright/test';
 import { skillById } from '../src/lib/curriculum';
 import { applyAttempt, getSkillState } from '../src/lib/learning';
 import { createState } from '../src/lib/state';
+import { earnedXp, lessonXp } from '../src/lib/xp';
+import { answerShown, continueLesson, feedback } from './helpers/lesson';
+import { masterSkill } from './helpers/mastery';
 import { replaceCode } from './helpers/editor';
+import { openFromMenu } from './helpers/navigation';
 
-test('a learner masters a skill with real Python, earns cards, and keeps progress after reload', async ({
+test('a learner masters a skill point by point with real Python, earns cards, and keeps progress after reload', async ({
   page,
 }) => {
   test.setTimeout(60_000);
+  const skill = skillById['print-output'];
+  const code = skill.questions.find((question) => question.type === 'code')!;
   await page.goto('/learn');
-  await page.getByRole('button', { name: 'Let’s try it' }).click();
-  for (const answer of ['A Python', 'C print("Ready")', 'B 1\n2']) {
-    await page.getByRole('button', { name: answer, exact: true }).click();
-    await page
-      .getByRole('button', { name: 'Check answer', exact: true })
-      .click();
-    await expect(
-      page.getByText('That’s a small win.', { exact: true }),
-    ).toBeVisible();
-    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(
+    page.getByRole('region', { name: 'Introduction', exact: true }),
+  ).toContainText(skill.lesson.paragraphs[0]);
+  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
+  const markers = page.getByRole('list', { name: 'Lesson progress' });
+  await expect(markers.getByRole('listitem')).toHaveCount(
+    skill.knowledgePoints!.length + 1,
+  );
+  for (const point of skill.knowledgePoints!) {
+    await expect(markers.locator('[aria-current="step"]')).toContainText(
+      point.title,
+    );
+    await expect(page.locator('.lesson-point h2')).toHaveText(point.title);
+    for (let answer = 0; answer < 2; answer++) {
+      const question = await answerShown(page, point.questions);
+      await expect(feedback(page)).toContainText('Correct');
+      await expect(feedback(page)).toContainText(question.explanation);
+      await continueLesson(page);
+    }
   }
-  await replaceCode(
+  await expect(markers.locator('[aria-current="step"]')).toContainText(
+    'Write the code',
+  );
+  await answerShown(
     page,
+    [code],
+    true,
     'print("Hello, lessdumb!")\nprint("I can learn Python.")',
   );
-  await page.getByRole('button', { name: 'Run & check', exact: true }).click();
+  await expect(feedback(page)).toContainText('Lesson complete', {
+    timeout: 40_000,
+  });
   await expect(
-    page.getByText('Skill mastered. A new connection made.', { exact: true }),
-  ).toBeVisible({ timeout: 40_000 });
-  await expect(
-    page.getByText('45 XP this session', { exact: true }),
+    page.getByText(`${earnedXp(lessonXp(skill), 0, true)} XP this session`, {
+      exact: true,
+    }),
   ).toBeVisible();
-  await page.getByRole('link', { name: /^Flashcards/ }).click();
+  await openFromMenu(page, /^Flashcards/);
   await expect(page.getByRole('button', { name: /BREAKTHROUGH/ })).toHaveCount(
     2,
   );
@@ -39,9 +60,7 @@ test('a learner masters a skill with real Python, earns cards, and keeps progres
   await expect(page.getByRole('button', { name: /BREAKTHROUGH/ })).toHaveCount(
     2,
   );
-  await page
-    .getByRole('link', { name: 'Knowledge graph', exact: true })
-    .click();
+  await openFromMenu(page, 'Knowledge graph');
   await expect(
     page.getByRole('button', {
       name: 'Your first output: Mastered',
@@ -61,21 +80,16 @@ test('mobile navigation, graph selection, and editor stay inside the viewport', 
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await page
-    .getByRole('button', { name: 'Open navigation', exact: true })
-    .click();
-  const navigation = page.getByRole('navigation', {
-    name: 'Mobile navigation',
+  const tabs = page.getByRole('navigation', {
+    name: 'Main navigation',
     exact: true,
   });
-  await page
-    .getByRole('navigation', { name: 'Mobile navigation', exact: true })
-    .getByRole('link', { name: 'Knowledge graph', exact: true })
-    .click();
+  await expect(tabs.getByRole('link')).toHaveText(['Learn', 'Courses']);
+  await openFromMenu(page, 'Knowledge graph');
   await expect(
-    page.getByRole('heading', { name: 'Your knowledge graph.' }),
+    page.getByRole('heading', { level: 1, name: 'Knowledge graph' }),
   ).toBeVisible();
-  await expect(navigation).toHaveCount(0);
+  await expect(page.getByRole('menu')).toHaveCount(0);
   await page.getByRole('textbox', { name: 'Find a skill' }).fill('output');
   await page
     .getByRole('button', {
@@ -90,26 +104,31 @@ test('mobile navigation, graph selection, and editor stay inside the viewport', 
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await page
-    .getByRole('button', { name: 'Open navigation', exact: true })
-    .click();
-  await page
-    .getByRole('navigation', { name: 'Mobile navigation', exact: true })
-    .getByRole('link', { name: 'Code lab', exact: true })
-    .click();
-  await expect(navigation).toHaveCount(0);
+  await openFromMenu(page, 'Code lab');
+  await expect(page.getByRole('menu')).toHaveCount(0);
   await expect(page.locator('.cm-content')).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  for (const path of ['/', '/courses']) {
+    await page.goto(path);
+    await expect(page.getByText('Preparing your learning space…')).toHaveCount(
+      0,
+    );
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  }
 });
 
-test('mobile navigation traps keyboard focus and restores its trigger on Escape', async ({
+test('the account menu is keyboard operable and restores its trigger on Escape', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 900, height: 900 });
+  await page.setViewportSize({ width: 390, height: 844 });
   let hydrate: (() => void) | undefined;
   const hydrationGate = new Promise<void>((resolve) => {
     hydrate = resolve;
@@ -120,7 +139,7 @@ test('mobile navigation traps keyboard focus and restores its trigger on Escape'
   });
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   const trigger = page.getByRole('button', {
-    name: 'Open navigation',
+    name: 'Account menu',
     exact: true,
   });
   try {
@@ -130,24 +149,28 @@ test('mobile navigation traps keyboard focus and restores its trigger on Escape'
   }
   await expect(trigger).toBeEnabled();
   await trigger.press('Enter');
-  const sheet = page.getByRole('dialog', { name: 'lessdumb', exact: true });
-  await expect(sheet).toBeVisible();
-  const firstLink = sheet.getByRole('link', { name: 'Today', exact: true });
-  const close = sheet.getByRole('button', { name: 'Close', exact: true });
-  // Radix autofocus skips navigation anchors and selects the close button.
-  await expect(close).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(firstLink).toBeFocused();
-  await page.keyboard.press('Shift+Tab');
-  await expect(close).toBeFocused();
+  const menu = page.getByRole('menu');
+  await expect(menu).toBeVisible();
+  const first = menu.getByRole('menuitem', {
+    name: 'Knowledge graph',
+    exact: true,
+  });
+  await expect(first).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(
+    menu.getByRole('menuitem', { name: 'Flashcards', exact: true }),
+  ).toBeFocused();
   await page.keyboard.press('Escape');
-  await expect(sheet).toHaveCount(0);
+  await expect(menu).toHaveCount(0);
   await expect(trigger).toBeFocused();
   await page.setViewportSize({ width: 1280, height: 900 });
-  await expect(trigger).toBeHidden();
   await expect(
     page.getByRole('navigation', { name: 'Main navigation', exact: true }),
   ).toBeVisible();
+  await expect(page.getByText(/day streak/)).toHaveCount(0);
+  await expect(
+    page.getByRole('navigation', { name: 'breadcrumb' }),
+  ).toHaveCount(0);
 });
 
 test('the account dialog traps keyboard focus and returns focus to its opener', async ({
@@ -155,11 +178,14 @@ test('the account dialog traps keyboard focus and returns focus to its opener', 
 }) => {
   await page.goto('/');
   const opener = page.getByRole('button', {
-    name: 'Open account',
+    name: 'Account menu',
     exact: true,
   });
   await expect(opener).toBeEnabled();
   await opener.press('Enter');
+  await page
+    .getByRole('menuitem', { name: 'Sign in or create account', exact: true })
+    .press('Enter');
   const dialog = page.getByRole('dialog', {
     name: 'Make yourself at home.',
     exact: true,
@@ -190,23 +216,15 @@ test('a failed ancestor locks a previously mastered descendant in the graph and 
 }) => {
   const state = createState();
   const now = Date.now();
-  for (const id of ['print-output', 'variables', 'numbers']) {
-    const skill = skillById[id];
-    for (const question of skill.questions) {
-      state.progress = applyAttempt(
-        state.progress,
-        { skillId: id, questionId: question.id, correct: true, mode: 'learn' },
-        now,
-      );
-    }
-  }
+  for (const id of ['print-output', 'variables', 'numbers'])
+    state.progress = masterSkill(state.progress, id, now);
   const ancestor = skillById['print-output'];
   const descendant = skillById['numbers'];
   state.progress = applyAttempt(
     state.progress,
     {
       skillId: ancestor.id,
-      questionId: ancestor.questions[0].id,
+      questionId: ancestor.knowledgePoints![0].questions[0].id,
       correct: false,
       mode: 'learn',
     },
