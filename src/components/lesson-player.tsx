@@ -6,6 +6,7 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import type { Skill } from '../lib/curriculum';
+import { InlineText } from './inline-text';
 import { workedExampleSteps } from '../lib/lesson-content';
 import { codeLanguage, codeLanguageLabels } from '../lib/code-language';
 import { Button } from '@/components/ui/button';
@@ -82,7 +83,9 @@ export default function LessonPlayer({
             </Badge>
             <h1>{skill.title}</h1>
             <p className="lesson-teaching-text">
-              {skill.lesson.paragraphs[index] ?? skill.summary}
+              <InlineText
+                text={skill.lesson.paragraphs[index] ?? skill.summary}
+              />
             </p>
             <div className="lesson-takeaway">
               <Lightbulb size={20} />
@@ -98,7 +101,9 @@ export default function LessonPlayer({
               <span>{exampleIndex + 1}</span> Follow the example
             </div>
             <h1>{step.title}</h1>
-            <p className="lesson-teaching-text">{step.explanation}</p>
+            <p className="lesson-teaching-text">
+              <InlineText text={step.explanation} />
+            </p>
             {step.code !== undefined && (
               <CodeBlock
                 code={step.code}

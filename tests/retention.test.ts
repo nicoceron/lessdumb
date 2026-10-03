@@ -19,19 +19,24 @@ import {
 } from '../src/lib/retention';
 import { createState, mergeStates, type LearnerState } from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
+import { earnedXp, lessonXp, REVIEW_XP } from '../src/lib/xp';
+import { lessonAnswerIds, masterSkill } from './helpers/mastery';
 
 const NOW = Date.parse('2026-10-02T12:00:00Z');
 const ID = 'print-output';
+const [P1, P2] = skillById[ID].knowledgePoints!;
+const CODE = skillById[ID].questions.find((q) => q.type === 'code')!;
+// Review questions: 1 and 2 are fresh variants of each knowledge point, 4 is
+// the code exercise. A review cycle needs all three.
+const REVIEW: Record<number, string> = {
+  1: P1.questions[2].id,
+  2: P2.questions[2].id,
+  4: CODE.id,
+};
+const LESSON_XP = earnedXp(lessonXp(skillById[ID]), 0, true);
+const LESSON_ANSWERS = lessonAnswerIds(ID).length;
 function acquire() {
-  return skillById[ID].questions.reduce(
-    (p, q) =>
-      applyAttempt(
-        p,
-        { skillId: ID, questionId: q.id, correct: true, mode: 'learn' },
-        NOW,
-      ),
-    emptyProgress(NOW, 'UTC'),
-  );
+  return masterSkill(emptyProgress(NOW, 'UTC'), ID, NOW);
 }
 function answer(
   p: Progress,
@@ -44,13 +49,17 @@ function answer(
     p,
     {
       skillId: ID,
-      questionId: `${ID}-q${q}`,
+      questionId: REVIEW[q],
       correct,
       usedHint,
       mode: 'review',
     },
     at,
   );
+}
+/** A complete, independent review cycle. */
+function cycle(p: Progress, at: number) {
+  return answer(answer(answer(p, 1, at), 2, at), 4, at);
 }
 function state(progress: Progress): LearnerState {
   return {
@@ -94,8 +103,10 @@ describe('per-learner FSRS retention', () => {
     expect(assisted.skills[ID].reviewCount).toBe(0);
     assisted = answer(assisted, 1, due);
     expect(assisted.skills[ID].reviewCount).toBe(0);
+    assisted = answer(assisted, 2, due);
+    expect(assisted.skills[ID].reviewCount).toBe(0);
     assisted = answer(assisted, 4, due);
-    const independent = answer(answer(original, 1, due), 4, due);
+    const independent = cycle(original, due);
     expect(assisted.skills[ID].reviewCount).toBe(1);
     expect(assisted.skills[ID].intervalDays).toBeLessThan(
       independent.skills[ID].intervalDays,
@@ -106,7 +117,7 @@ describe('per-learner FSRS retention', () => {
   it('keeps two learners independent and persists/migrates valid memory without resetting due dates', () => {
     const base = acquire(),
       due = base.skills[ID].dueAt!;
-    const retained = answer(answer(base, 1, due), 4, due);
+    const retained = cycle(base, due);
     const failed = answer(base, 4, due, false, false);
     expect(retained.skills[ID].memory!.lapses).toBe(0);
     expect(failed.skills[ID].memory!.lapses).toBe(1);
@@ -128,7 +139,7 @@ describe('per-learner FSRS retention', () => {
       parseStateUpdate({ state: state(oldProgress), revision: 0 }).state
         .progress,
     ).toEqual(oldProgress);
-    const migrated = answer(answer(oldProgress, 1, old.dueAt!), 4, old.dueAt!);
+    const migrated = cycle(oldProgress, old.dueAt!);
     expect(migrated.skills[ID].memory!.algorithm).toBe('fsrs-6');
     expect(migrated.skills[ID].memory!.stability).toBeGreaterThan(14);
     const invalid = state(structuredClone(retained));
@@ -141,7 +152,7 @@ describe('per-learner FSRS retention', () => {
   it('combines offline review evidence once and keeps an observed hint when devices reconcile', () => {
     const base = acquire(),
       due = base.skills[ID].dueAt!;
-    const left = state(answer(base, 1, due));
+    const left = state(answer(answer(base, 1, due), 2, due));
     const right = state(answer(answer(base, 4, due, true), 4, due + 1));
     const combined = mergeStates(left, right);
     expect(combined.progress.skills[ID].reviewCount).toBe(1);
@@ -159,7 +170,7 @@ describe('per-learner FSRS retention', () => {
   it('does not let a newer lesson read overwrite a completed retrieval schedule', () => {
     const base = acquire(),
       due = base.skills[ID].dueAt!;
-    const reviewed = state(answer(answer(base, 1, due), 4, due));
+    const reviewed = state(cycle(base, due));
     const read = state(recordLesson(base, ID, due + 60_000));
     const merged = mergeStates(reviewed, read);
     expect(merged.progress.skills[ID].dueAt).toBe(
@@ -174,10 +185,8 @@ describe('per-learner FSRS retention', () => {
   it('resolves simultaneous Good and Hard retrievals conservatively in either merge order', () => {
     const base = acquire(),
       due = base.skills[ID].dueAt!;
-    const good = state(answer(answer(base, 1, due), 4, due));
-    const hard = state(
-      answer(answer(answer(base, 4, due, true), 1, due), 4, due),
-    );
+    const good = state(cycle(base, due));
+    const hard = state(cycle(answer(base, 4, due, true), due));
     expect(good.progress.skills[ID].memory!.lastReviewAt).toBe(
       hard.progress.skills[ID].memory!.lastReviewAt,
     );
@@ -202,10 +211,8 @@ describe('per-learner FSRS retention', () => {
   it('preserves newer retrieval precedence over a harder simultaneous tie candidate', () => {
     const base = acquire(),
       due = base.skills[ID].dueAt!;
-    const hard = state(
-      answer(answer(answer(base, 4, due, true), 1, due), 4, due),
-    );
-    const newer = state(answer(answer(base, 1, due + 1000), 4, due + 1000));
+    const hard = state(cycle(answer(base, 4, due, true), due));
+    const newer = state(cycle(base, due + 1000));
     for (const merged of [mergeStates(hard, newer), mergeStates(newer, hard)]) {
       expect(merged.progress.skills[ID].memory).toEqual(
         newer.progress.skills[ID].memory,
@@ -232,7 +239,7 @@ describe('per-learner FSRS retention', () => {
       expect(skill.memory).toEqual(base.skills[ID].memory);
       expect(skill.dueAt).toBe(due);
       expect(skill.reviewCount).toBe(0);
-      expect(skill.reviewQuestionIds).toEqual([ID + '-q1']);
+      expect(skill.reviewQuestionIds).toEqual([REVIEW[1]]);
       expect(skill.reviewHadHint).toBe(true);
     }
   });
@@ -245,7 +252,7 @@ describe('per-learner FSRS retention', () => {
         progress,
         {
           skillId: ID,
-          questionId: `${ID}-q1`,
+          questionId: P1.questions[0].id,
           mode: 'learn',
           correct: true,
           attemptId: `compact-${index}`,
@@ -261,24 +268,26 @@ describe('per-learner FSRS retention', () => {
     expect(isUnlocked(merged.progress, 'variables')).toBe(false);
     expect(merged.progress.skills[ID].dueAt).toBeNull();
     expect(getStats(merged.progress, NOW, 'python-foundations').totalXp).toBe(
-      45,
+      LESSON_XP,
     );
     expect(getStats(merged.progress, NOW, 'python-foundations').todayXp).toBe(
-      45,
+      LESSON_XP,
     );
     expect(getStats(merged.progress, NOW).accuracy).toBeLessThan(1);
-    expect(merged.progress.skills[ID].attempts).toBe(MAX_RECENT_ATTEMPTS + 15);
+    expect(merged.progress.skills[ID].attempts).toBe(
+      MAX_RECENT_ATTEMPTS + LESSON_ANSWERS + 11,
+    );
     expect(merged.progress.skills[ID].memory!.lapses).toBe(1);
     expect(parseStateUpdate({ state: merged, revision: 0 }).state).toEqual(
       merged,
     );
     const repaired = applyAttempt(
       merged.progress,
-      { skillId: ID, questionId: `${ID}-q4`, mode: 'learn', correct: true },
+      { skillId: ID, questionId: CODE.id, mode: 'learn', correct: true },
       NOW + 2 * DAY_MS,
     );
     expect(isUnlocked(repaired, 'variables')).toBe(true);
-    expect(repaired.totalXp).toBe(45);
+    expect(repaired.totalXp).toBe(LESSON_XP);
     expect(repaired.skills[ID].memory!.lapses).toBe(1);
   });
 
@@ -288,7 +297,7 @@ describe('per-learner FSRS retention', () => {
       base,
       {
         skillId: ID,
-        questionId: `${ID}-q4`,
+        questionId: CODE.id,
         correct: false,
         mode: 'review',
         writerId: 'left-device',
@@ -300,7 +309,7 @@ describe('per-learner FSRS retention', () => {
         left,
         {
           skillId: ID,
-          questionId: `${ID}-q1`,
+          questionId: P1.questions[0].id,
           correct: true,
           mode: 'learn',
           writerId: 'left-device',
@@ -311,7 +320,7 @@ describe('per-learner FSRS retention', () => {
       base,
       {
         skillId: ID,
-        questionId: `${ID}-q1`,
+        questionId: REVIEW[1],
         correct: true,
         mode: 'review',
         writerId: 'right-device',
@@ -319,36 +328,47 @@ describe('per-learner FSRS retention', () => {
       NOW + DAY_MS + 100,
     );
     const merged = mergeStates(state(left), state(right));
-    expect(merged.progress.skills[ID].attempts).toBe(MAX_RECENT_ATTEMPTS + 16);
-    expect(merged.progress.skills[ID].correct).toBe(MAX_RECENT_ATTEMPTS + 15);
-    expect(merged.progress.totalXp).toBe(50);
+    const total = MAX_RECENT_ATTEMPTS + LESSON_ANSWERS + 12;
+    expect(merged.progress.skills[ID].attempts).toBe(total);
+    expect(merged.progress.skills[ID].correct).toBe(total - 1);
+    // An unfinished review cycle pays nothing.
+    expect(merged.progress.totalXp).toBe(LESSON_XP);
     expect(isMastered(merged.progress, ID)).toBe(false);
     expect(mergeStates(merged, state(right)).progress.skills[ID].attempts).toBe(
-      MAX_RECENT_ATTEMPTS + 16,
+      total,
     );
     expect(parseStateUpdate({ state: merged, revision: 0 }).state).toEqual(
       merged,
     );
   });
 
-  it('does not pay twice for the same due-cycle question answered on two devices', () => {
+  it('does not pay twice for the same due cycle completed on two devices', () => {
     const base = acquire(),
       due = base.skills[ID].dueAt!;
-    const left = state(answer(base, 1, due));
-    const right = state(answer(base, 1, due + 1));
-    const merged = mergeStates(left, right);
-    expect(merged.progress.totalXp).toBe(50);
-    expect(getStats(merged.progress, due, 'python-foundations').totalXp).toBe(
-      50,
+    const reviewXp = earnedXp(REVIEW_XP, 0, true);
+    const partial = mergeStates(
+      state(answer(base, 1, due)),
+      state(answer(base, 1, due + 1)),
     );
-    expect(merged.progress.skills[ID].reviewQuestionIds).toEqual([`${ID}-q1`]);
-    expect(merged.progress.skills[ID].reviewCount).toBe(0);
+    expect(partial.progress.skills[ID].reviewQuestionIds).toEqual([REVIEW[1]]);
+    expect(partial.progress.skills[ID].reviewCount).toBe(0);
+    expect(partial.progress.totalXp).toBe(LESSON_XP);
+    const left = state(cycle(base, due));
+    const right = state(cycle(base, due + 1));
+    const merged = mergeStates(left, right);
+    expect(merged.progress.totalXp).toBe(LESSON_XP + reviewXp);
+    expect(getStats(merged.progress, due, 'python-foundations').totalXp).toBe(
+      LESSON_XP + reviewXp,
+    );
+    expect(merged.progress.skills[ID].reviewCount).toBe(1);
     expect(
       merged.progress.attempts
         .filter((event) => event.mode === 'review')
         .reduce((n, event) => n + event.xp, 0),
-    ).toBe(5);
-    expect(mergeStates(merged, right).progress.totalXp).toBe(50);
+    ).toBe(reviewXp);
+    expect(mergeStates(merged, right).progress.totalXp).toBe(
+      LESSON_XP + reviewXp,
+    );
     expect(parseStateUpdate({ state: merged, revision: 0 }).state).toEqual(
       merged,
     );

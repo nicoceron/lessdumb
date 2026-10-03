@@ -1,11 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { courses, skills, validateCurriculum } from '../src/lib/curriculum';
-import { DAY_MS, isUnlocked, selectQuestion } from '../src/lib/learning';
+import {
+  DAY_MS,
+  isMastered,
+  isUnlocked,
+  lessonState,
+  selectQuestion,
+} from '../src/lib/learning';
 import {
   createState,
   recordLearningAnswer,
   type LearnerState,
 } from '../src/lib/state';
+import { earnedXp, lessonXp } from '../src/lib/xp';
+import { lessonAnswerIds, masterSkillState } from './helpers/mastery';
 
 const NOW = Date.parse('2026-10-02T12:00:00Z');
 const roots = () =>
@@ -16,16 +24,10 @@ const roots = () =>
     )!;
   });
 function master(state: LearnerState, skill: ReturnType<typeof roots>[number]) {
-  let result = state;
-  for (const question of skill.questions)
-    result = recordLearningAnswer(result, {
-      skillId: skill.id,
-      questionId: question.id,
-      correct: true,
-      mode: 'learn',
-    });
-  return result;
+  return masterSkillState(state, skill.id);
 }
+const perfect = (skill: ReturnType<typeof roots>[number]) =>
+  earnedXp(lessonXp(skill), 0, true);
 afterEach(() => vi.useRealTimers());
 
 describe('Rust and C++ in the shared learner engine', () => {
@@ -35,7 +37,7 @@ describe('Rust and C++ in the shared learner engine', () => {
     const otherLearner = createState();
     let learner = master(master(createState(), rust), cpp);
     expect(learner.cards).toHaveLength(4);
-    expect(learner.progress.totalXp).toBe(90);
+    expect(learner.progress.totalXp).toBe(perfect(rust) + perfect(cpp));
     const cppMemory = learner.progress.skills[cpp.id].memory;
     const descendant = skills.find(
       (item) =>
@@ -47,7 +49,11 @@ describe('Rust and C++ in the shared learner engine', () => {
     const descendantBefore = learner.progress.skills[descendant.id];
 
     vi.setSystemTime(NOW + DAY_MS + 1_000);
-    for (let index = 0; index < 2; index++) {
+    for (
+      let index = 0;
+      learner.progress.skills[rust.id].reviewCount === 0 && index < 8;
+      index++
+    ) {
       const question = selectQuestion(learner.progress, rust, 'review');
       learner = recordLearningAnswer(learner, {
         skillId: rust.id,
@@ -95,22 +101,30 @@ describe('Rust and C++ in the shared learner engine', () => {
     vi.useFakeTimers().setSystemTime(NOW);
     for (const root of roots()) {
       let learner = createState();
-      for (const question of root.questions)
+      const code = root.questions.find((question) => question.type === 'code')!;
+      for (const questionId of lessonAnswerIds(root.id))
         learner = recordLearningAnswer(learner, {
           skillId: root.id,
-          questionId: question.id,
+          questionId,
           correct: true,
           mode: 'learn',
-          usedHint: question.type === 'code',
+          usedHint: questionId === code.id,
         });
-      expect(learner.progress.skills[root.id].mastery).toBe(0.75);
+      // Every point passed, but the lesson waits for independent code.
+      expect(isMastered(learner.progress, root.id)).toBe(false);
+      expect(lessonState(learner.progress, root).current?.id).toBe(code.id);
       expect(learner.progress.skills[root.id].memory).toBeUndefined();
       expect(learner.cards).toEqual([]);
       learner = master(learner, root);
-      expect(learner.progress.totalXp).toBe(45);
+      expect(learner.progress.totalXp).toBe(perfect(root));
       expect(learner.cards).toHaveLength(2);
-      learner = master(learner, root);
-      expect(learner.progress.totalXp).toBe(45);
+      learner = recordLearningAnswer(learner, {
+        skillId: root.id,
+        questionId: code.id,
+        correct: true,
+        mode: 'learn',
+      });
+      expect(learner.progress.totalXp).toBe(perfect(root));
       expect(learner.cards).toHaveLength(2);
     }
   });
