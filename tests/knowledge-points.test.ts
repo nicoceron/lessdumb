@@ -284,7 +284,9 @@ describe('C++ knowledge points compile and print as published', () => {
         const calls = [
           ...cpp.map(
             (program, index) =>
-              `std::cout << "\\n\\001${program.id}\\n"; program_${index}::run();`,
+              // Programs share one stream: reset its formatting so one program's
+              // std::boolalpha or std::fixed cannot change the next one's output.
+              `std::cout.flags(std::ios_base::dec | std::ios_base::skipws); std::cout.precision(6); std::cout.fill(' '); std::cout << "\\n\\001${program.id}\\n"; program_${index}::run();`,
           ),
           ...cppExercises.map((_, index) => `exercise_${index}::verify();`),
         ];
