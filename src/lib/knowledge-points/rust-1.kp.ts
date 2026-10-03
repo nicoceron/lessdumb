@@ -8313,7 +8313,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '"12a" is not a number, so its error is kept; missing text is a successful None.',
         ),
         choose(
-          'A setting may be absent, which is fine, or present but malformed, which is an error. Which return type keeps these cases apart?',
+          'A setting may be absent, which is fine, or present but malformed, which is an error. Which return type keeps these cases apart and carries the parse error?',
           [
             'Option<i32>',
             'Result<i32, ParseIntError>',
@@ -13215,7 +13215,7 @@ export const knowledgePoints: KnowledgePointModule = {
           "The future's result is the whole tuple, so Ready wraps it and Debug shows both sets of parentheses.",
         ),
         choose(
-          'This program does not compile. What is missing?',
+          'Built with the 2021 edition, this program does not compile. What is missing?',
           [
             'use std::task::Poll;, so Ready can be printed',
             'Wrapping 7 as Poll::Ready(7) before polling',

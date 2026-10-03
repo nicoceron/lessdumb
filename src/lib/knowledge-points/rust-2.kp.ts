@@ -6666,7 +6666,7 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Measure size and alignment',
       explanation: [
         'std::mem::size_of::<T>() is the number of bytes a value of T occupies, including any padding. std::mem::align_of::<T>() is the number its address must be a multiple of.',
-        'For the basic integers, size equals alignment: 1 for u8, 2 for u16, 4 for u32, 8 for u64. An array has its element’s alignment, and a struct has the largest alignment among its fields.',
+        'On common 64-bit targets, the basic integers have size equal to alignment: 1 for u8, 2 for u16, 4 for u32, 8 for u64. An array has its element’s alignment, and a struct has the largest alignment among its fields.',
       ],
       example: {
         language: 'rust',
@@ -6793,7 +6793,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '255 is the largest u8, so 250 + 6 overflows.',
         ),
         choose(
-          'What does let n: u8 = 200; let m = n * 2; do in a debug build?',
+          'fn double(n: u8) -> u8 { n * 2 } is called with 200 in a debug build. What happens?',
           [
             'Panics with an overflow error',
             'Gives 400, as a larger type',
