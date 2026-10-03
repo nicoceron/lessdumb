@@ -5220,4 +5220,1787 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'cp-binary-midpoint': [
+    {
+      title: 'Floor division picks an index inside [low, high)',
+      explanation: [
+        'A half-open candidate interval [low, high) holds the indices low through high − 1. When low < high, mid = (low + high) // 2 always lies inside it: // rounds down to a whole number, so mid is at least low and strictly below high.',
+      ],
+      example: {
+        code: 'def midpoint(low, high):\n    return (low + high) // 2\n\nprint(midpoint(2, 7))\nprint(midpoint(0, 4))\nprint(midpoint(5, 6))',
+        output: '4\n2\n5',
+        explanation:
+          '9 // 2 rounds 4.5 down to 4. Every result lies inside its interval, including the one-index interval [5, 6).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'print((3 + 8) // 2)',
+          ['5.5', '6', '5', '11'],
+          2,
+          '11 // 2 rounds 5.5 down to the index 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'low = 10\nhigh = 13\nmid = (low + high) // 2\nprint(mid)\nprint(low <= mid < high)',
+          ['11\nTrue', '11.5\nTrue', '12\nTrue', '11\nFalse'],
+          0,
+          '23 // 2 is 11, which is one of the candidates 10, 11 and 12.',
+        ),
+        choose(
+          'Why compute the midpoint with // instead of /?',
+          [
+            '// rounds up, so mid never equals low',
+            '/ is too slow when the integers are large',
+            '// lets mid equal high when needed',
+            '/ gives floats like 5.5, which are not indices',
+          ],
+          3,
+          'Floor division keeps the midpoint a whole number that can index a list.',
+        ),
+        choose(
+          'Which indices are candidates in the interval [6, 9)?',
+          ['6, 7, 8 and 9', '7 and 8', '6, 7 and 8', '7, 8 and 9'],
+          2,
+          'Half-open: low is included and high is excluded.',
+        ),
+      ],
+    },
+    {
+      title: 'One-index and empty intervals',
+      explanation: [
+        'For a one-index interval [low, low + 1), the midpoint is low itself, the only candidate. When low == high the interval is empty: there is nothing to examine, and (low + high) // 2 would equal high, which lies outside the interval. A search therefore checks low < high before it reads values[mid].',
+      ],
+      example: {
+        code: 'low = 4\nhigh = 5\nprint((low + high) // 2)\nlow = 5\nhigh = 5\nprint(low < high)',
+        output: '4\nFalse',
+        explanation:
+          'The one-index interval [4, 5) examines index 4. The interval [5, 5) is empty, so the search must stop.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'print((9 + 10) // 2)',
+          ['9', '10', '9.5', '19'],
+          0,
+          '19 // 2 rounds down to 9, the only index in [9, 10).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'low = 3\nhigh = 3\nmid = (low + high) // 2\nprint(low <= mid < high)',
+          ['True', '3', 'False', 'None'],
+          2,
+          'The interval [3, 3) is empty, so no midpoint can lie inside it.',
+        ),
+        choose(
+          'When should a search stop instead of examining a midpoint?',
+          [
+            'When low < high',
+            'When mid is 0',
+            'When values repeat',
+            'When low == high',
+          ],
+          3,
+          'An empty interval has no candidate left to examine.',
+        ),
+        choose(
+          'The interval [0, 2) has two candidates. Which one does the midpoint pick?',
+          ['Index 0', 'Index 2', 'Index 0.5', 'Index 1'],
+          3,
+          '(0 + 2) // 2 is 1, which is inside the interval.',
+        ),
+      ],
+    },
+  ],
+  'cp-binary-update': [
+    {
+      title: 'Skip a too-small midpoint, keep a qualifying one',
+      explanation: [
+        'A lower-bound search looks for the first index whose value is at least target in an ascending list. If values[mid] < target, mid and every index before it are too small, so set low = mid + 1. Otherwise mid qualifies and might be the first answer, so set high = mid, which keeps it in the undecided interval.',
+      ],
+      example: {
+        code: 'values = [1, 4, 4, 8, 9]\ntarget = 5\nlow = 0\nhigh = 5\nmid = (low + high) // 2\nif values[mid] < target:\n    low = mid + 1\nelse:\n    high = mid\nprint(low)\nprint(high)',
+        output: '3\n5',
+        explanation:
+          'The midpoint 2 holds 4, which is below 5, so indices 0 to 2 are ruled out and the interval becomes [3, 5).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [2, 5, 5, 9]\ntarget = 5\nlow = 0\nhigh = 4\nmid = (low + high) // 2\nif values[mid] < target:\n    low = mid + 1\nelse:\n    high = mid\nprint(low)\nprint(high)',
+          ['3\n4', '0\n1', '0\n2', '2\n4'],
+          2,
+          'values[2] = 5 qualifies, so high becomes 2 and index 2 stays a possible answer.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [1, 3, 6, 7, 10]\ntarget = 7\nlow = 0\nhigh = 5\nmid = (low + high) // 2\nif values[mid] < target:\n    low = mid + 1\nelse:\n    high = mid\nprint(low)\nprint(high)',
+          ['2\n5', '3\n5', '0\n2', '3\n4'],
+          1,
+          'values[2] = 6 is below 7, so low moves past the midpoint to 3.',
+        ),
+        choose(
+          'values[mid] is less than target. Which update is correct?',
+          ['low = mid', 'low = mid + 1', 'high = mid', 'high = mid - 1'],
+          1,
+          'mid itself is too small, so the new interval must exclude it.',
+        ),
+        choose(
+          'values[mid] is at least target. Why use high = mid rather than high = mid - 1?',
+          [
+            'mid is known to be too small',
+            'mid may itself be the first answer',
+            'high must always stay even',
+            'mid - 1 could be negative',
+          ],
+          1,
+          'Excluding mid could throw away the answer.',
+        ),
+      ],
+    },
+    {
+      title: 'Every correct update shrinks the interval',
+      explanation: [
+        'Both updates strictly shrink a nonempty interval: low = mid + 1 moves past mid, and high = mid drops at least the last index because mid < high. A wrong update such as low = mid can leave a one-index interval unchanged, because there mid equals low, and the search would repeat forever.',
+      ],
+      example: {
+        code: 'low = 4\nhigh = 5\nmid = (low + high) // 2\nprint(mid)\nprint(high - mid)\nprint(high - (mid + 1))',
+        output: '4\n1\n0',
+        explanation:
+          'In [4, 5) the midpoint is 4. Setting low = mid would keep one candidate forever; low = mid + 1 empties the interval.',
+      },
+      questions: [
+        predictOutput(
+          'This loop uses a wrong update. What does it print?',
+          'low = 0\nhigh = 1\nfor attempt in [1, 2, 3]:\n    mid = (low + high) // 2\n    low = mid\nprint(low)\nprint(high)',
+          ['0\n1', '1\n1', '3\n1', '0\n0'],
+          0,
+          'mid is always 0, so low = mid never changes anything: the interval is stuck.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'low = 3\nhigh = 8\nmid = (low + high) // 2\nhigh = mid\nprint(high - low)',
+          ['5', '3', '4', '2'],
+          3,
+          'mid is 5, so the interval shrinks from [3, 8) to [3, 5), which has two indices.',
+        ),
+        choose(
+          'Why does low = mid + 1 always make progress?',
+          [
+            'mid is always larger than the old high value',
+            'It halves the value of high on every step',
+            'It sets low equal to the target value itself',
+            'mid is at least low, so low rises above its old value',
+          ],
+          3,
+          'The new low is greater than the old one, so the interval loses at least one index.',
+        ),
+        choose(
+          'high - low is 1 and the midpoint qualifies. What is high - low after high = mid?',
+          ['0', '1', '2', '-1'],
+          0,
+          'With one index, mid equals low, so high = mid empties the interval.',
+        ),
+      ],
+    },
+  ],
+  'cp-binary-sentinel': [
+    {
+      title: 'A result of n means that no element qualifies',
+      explanation: [
+        'A lower-bound result is a boundary between 0 and n, not always an element index. If it equals n = len(values), no element is at least the target, and reading values[n] would raise IndexError. Check index < len(values) before reading the element.',
+      ],
+      example: {
+        code: 'values = [3, 6, 9]\nfor index in [1, 3]:\n    if index < len(values):\n        print(values[index])\n    else:\n        print("none")',
+        output: '6\nnone',
+        explanation:
+          'Index 1 is an element. Index 3 is the boundary after the list, which means "no qualifying value".',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [2, 4]\nindex = 2\nif index < len(values):\n    print(values[index])\nelse:\n    print("none")',
+          ['4', '2', 'IndexError', 'none'],
+          3,
+          'The boundary 2 equals the length, so it is checked before any read and reported as absence.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [5, 7, 7]\nindex = 1\nif index < len(values):\n    print(values[index])\nelse:\n    print("none")',
+          ['none', '5', '1', '7'],
+          3,
+          'Index 1 is inside the list, so its value is read.',
+        ),
+        choose(
+          'A lower bound for target 50 in [10, 20, 30] returns 3. What does that mean?',
+          [
+            'No value is at least 50',
+            'The value 30 qualifies',
+            'The answer is at index 2',
+            'The list must be re-sorted',
+          ],
+          0,
+          'The boundary after the list says every value is smaller than the target.',
+        ),
+        choose(
+          'What must happen before reading values[index] from a lower-bound result?',
+          [
+            'Subtract one from index',
+            'Sort the values in reverse',
+            'Check that index > 0',
+            'Check that index < len(values)',
+          ],
+          3,
+          'Only results below n refer to elements.',
+        ),
+      ],
+    },
+    {
+      title: 'Edge boundaries, and what a boundary counts',
+      explanation: [
+        'For an empty list the only boundary is 0, which already equals n. A target no larger than the first value gives boundary 0, which is a valid index. Because every value before the boundary is smaller than the target, the boundary also counts: index values are below the target, and len(values) − index are at least it.',
+      ],
+      example: {
+        code: 'values = [2, 5, 5, 9]\nindex = 1\nprint(index)\nprint(len(values) - index)\nempty = []\nprint(0 == len(empty))',
+        output: '1\n3\nTrue',
+        explanation:
+          'The lower bound of 5 is 1: one value is below 5 and three are at least 5. For an empty list, 0 is both the only boundary and n.',
+      },
+      questions: [
+        choose(
+          'What is the lower-bound result for any target in an empty list?',
+          ['-1', '1', '0', 'None'],
+          2,
+          'The interval [0, 0) is empty from the start, and 0 is its only boundary.',
+        ),
+        choose(
+          'values = [4, 6, 8]. What is the lower bound for target 1?',
+          ['1', '0', '3', '-1'],
+          1,
+          'Every value is at least 1, so the first qualifying index is 0.',
+        ),
+        predictOutput(
+          'The lower bound of 3 in this list is index 1. What does this program print?',
+          'values = [1, 3, 3, 3, 7]\nindex = 1\nprint(len(values) - index)',
+          ['3', '1', '5', '4'],
+          3,
+          'Every value from index 1 on is at least 3: the three 3s and the 7.',
+        ),
+        choose(
+          'A lower bound for target t returns 6 on a list of 10 values. How many values are smaller than t?',
+          ['4', '6', '5', '7'],
+          1,
+          'All indices before the boundary hold values smaller than the target.',
+        ),
+      ],
+    },
+  ],
+  'cp-binary-search': [
+    {
+      title: 'Loop until the interval is empty',
+      explanation: [
+        'The full lower-bound search repeats the midpoint step while low < high, starting from [0, n). When the loop ends, low == high is the first index whose value is at least target, or n if there is none. With duplicates it finds the first copy, not an arbitrary one.',
+      ],
+      example: {
+        code: 'def lower_bound(values, target):\n    low = 0\n    high = len(values)\n    while low < high:\n        mid = (low + high) // 2\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid\n    return low\n\nvalues = [3, 7, 7, 7, 12]\nprint(lower_bound(values, 7))\nprint(lower_bound(values, 8))\nprint(lower_bound(values, 13))',
+        output: '1\n4\n5',
+        explanation:
+          'The first 7 is at index 1. The first value at least 8 is 12, at index 4. Nothing is at least 13, so the result is n = 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def lower_bound(values, target):\n    low = 0\n    high = len(values)\n    while low < high:\n        mid = (low + high) // 2\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid\n    return low\n\nprint(lower_bound([1, 2, 2, 2, 5], 2))',
+          ['2', '3', '1', '0'],
+          2,
+          'Qualifying midpoints are kept, so the search settles on the first 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def lower_bound(values, target):\n    low = 0\n    high = len(values)\n    while low < high:\n        mid = (low + high) // 2\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid\n    return low\n\nprint(lower_bound([10, 20, 30], 25))',
+          ['1', '3', '2', '25'],
+          2,
+          'The first value at least 25 is 30, at index 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def lower_bound(values, target):\n    low = 0\n    high = len(values)\n    while low < high:\n        mid = (low + high) // 2\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid\n    return low\n\nprint(lower_bound([4, 8], 9))',
+          ['1', '2', '-1', '0'],
+          1,
+          'No value is at least 9, so the result is the boundary n = 2.',
+        ),
+        choose(
+          'Several values equal the target. Which index does this search return?',
+          [
+            'The last index holding the target',
+            'Any index that holds the target',
+            'The first index holding the target',
+            'The index just after the last copy',
+          ],
+          2,
+          'A qualifying midpoint becomes high, so the search keeps moving toward earlier copies.',
+        ),
+      ],
+    },
+    {
+      title: 'Trace the invariant',
+      explanation: [
+        'Throughout the loop, every index before low holds a value smaller than target, and every index at or after high holds a value at least target; only [low, high) is undecided. Each step moves one boundary and keeps both facts true. When the interval is empty, low sits exactly at the border between the two groups.',
+      ],
+      example: {
+        code: 'values = [2, 4, 4, 6, 9, 11]\ntarget = 5\nlow = 0\nhigh = len(values)\nwhile low < high:\n    mid = (low + high) // 2\n    if values[mid] < target:\n        low = mid + 1\n    else:\n        high = mid\n    print((low, high))',
+        output: '(0, 3)\n(2, 3)\n(3, 3)',
+        explanation:
+          '6 at index 3 qualifies, so high drops to 3. Then 4 at index 1 and 4 at index 2 are too small, so low rises to 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [1, 3, 5, 7]\ntarget = 6\nlow = 0\nhigh = len(values)\nwhile low < high:\n    mid = (low + high) // 2\n    if values[mid] < target:\n        low = mid + 1\n    else:\n        high = mid\n    print((low, high))',
+          [
+            '(3, 4)\n(3, 3)',
+            '(0, 2)\n(2, 2)',
+            '(2, 4)\n(3, 3)',
+            '(3, 4)\n(4, 4)',
+          ],
+          0,
+          '5 at index 2 is too small, so low becomes 3; 7 at index 3 qualifies, so high becomes 3.',
+        ),
+        choose(
+          'During the search, what is known about the indices before low?',
+          [
+            'Their values are all smaller than target',
+            'Their values are all at least target',
+            'They have not been examined yet',
+            'They hold copies of the target',
+          ],
+          0,
+          'low only moves past midpoints proven too small, and the list is sorted.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [1, 2, 3, 4, 5, 6, 7, 8]\ntarget = 100\nlow = 0\nhigh = len(values)\nsteps = 0\nwhile low < high:\n    mid = (low + high) // 2\n    steps += 1\n    if values[mid] < target:\n        low = mid + 1\n    else:\n        high = mid\nprint(steps)',
+          ['3', '8', '4', '7'],
+          0,
+          'The undecided interval shrinks from 8 to 3, then 1, then 0 indices: three steps.',
+        ),
+        choose(
+          'The loop has ended with low == high == 4. What does index 4 mark?',
+          [
+            'The last position whose value is below target',
+            'The midpoint of the whole list',
+            'The number of steps the loop took',
+            'The first position whose value is at least target',
+          ],
+          3,
+          'Everything before 4 is smaller and everything from 4 on qualifies.',
+        ),
+      ],
+    },
+    {
+      title: 'Cost and the sorted precondition',
+      explanation: [
+        'Each step removes about half of the undecided interval, so a list of n values needs O(log(n + 1)) steps and O(1) extra space; a million values take about 20 steps. The list must be sorted ascending: on unsorted data the discarded halves were never proven, and the result is meaningless. The returned n is a valid boundary but not a valid index.',
+      ],
+      example: {
+        code: 'def lower_bound(values, target):\n    low = 0\n    high = len(values)\n    while low < high:\n        mid = (low + high) // 2\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid\n    return low\n\nprint(lower_bound([9, 1, 7, 3], 3))\nprint(lower_bound([1, 3, 7, 9], 3))',
+        output: '2\n1',
+        explanation:
+          'On the unsorted list the search returns 2 even though 9 at index 0 is already at least 3. Sorted, it correctly returns 1.',
+      },
+      questions: [
+        choose(
+          'About how many steps does a lower-bound search take on 10⁶ sorted values?',
+          ['About 1,000', 'About 20', 'About 10⁶', 'About 500,000'],
+          1,
+          'Halving 10⁶ reaches 1 after about log₂(10⁶) ≈ 20 steps.',
+        ),
+        choose(
+          'Why can binary search not be used on an unsorted list?',
+          [
+            'It would visit every element twice',
+            'It needs the length to be a power of two',
+            'An unsorted list has no midpoint',
+            'One comparison says nothing about the discarded half',
+          ],
+          3,
+          'The update rules rely on all earlier values being smaller and all later values being larger.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def lower_bound(values, target):\n    low = 0\n    high = len(values)\n    while low < high:\n        mid = (low + high) // 2\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid\n    return low\n\nprint(lower_bound([5, 5, 5], 5))\nprint(lower_bound([5, 5, 5], 6))',
+          ['0\n3', '0\n2', '2\n3', '1\n3'],
+          0,
+          'Every value qualifies for 5, so the answer is 0; none qualifies for 6, so the answer is n.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def lower_bound(values, target):\n    low = 0\n    high = len(values)\n    while low < high:\n        mid = (low + high) // 2\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid\n    return low\n\nvalues = [1, 4, 4, 6, 8]\nprint(len(values) - lower_bound(values, 5))',
+          ['3', '2', '1', '5'],
+          1,
+          'The lower bound of 5 is 3, so the two values from index 3 on are at least 5.',
+        ),
+      ],
+    },
+  ],
+  'cp-capacity-groups': [
+    {
+      title: 'Greedily extend the current group',
+      explanation: [
+        'Loads must stay in order and be split into consecutive groups, each with a total of at most capacity. Test a capacity greedily: add the next load to the current group if it fits; otherwise close the group and start a new one with that load. With nonnegative loads, filling each group as far as possible never needs more groups than any other valid split.',
+      ],
+      example: {
+        code: 'weights = [4, 3, 5, 2, 6]\ncapacity = 8\ngroups = 1\ncurrent = 0\nfor weight in weights:\n    if current + weight > capacity:\n        groups += 1\n        current = weight\n    else:\n        current += weight\n    print(current)\nprint(groups)',
+        output: '4\n7\n5\n7\n6\n3',
+        explanation:
+          '4 and 3 share a group (7). 5 would make 12, so it opens a second group; 2 joins it (7). 6 would make 13, so it opens a third.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def groups_for(weights, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups\n\nprint(groups_for([2, 2, 2, 2], 4))',
+          ['4', '1', '3', '2'],
+          3,
+          'Each group holds two loads of 2 exactly at capacity.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def groups_for(weights, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups\n\nprint(groups_for([5, 1, 1, 5], 6))',
+          ['3', '4', '1', '2'],
+          3,
+          '5 + 1 reaches 6; the next 1 overflows and starts a group that the last 5 then fills to 6.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def groups_for(weights, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups\n\nprint(groups_for([3, 6, 3], 8))',
+          ['2', '1', '3', '4'],
+          2,
+          '3 + 6 and 6 + 3 both exceed 8, so every load sits in its own group.',
+        ),
+        choose(
+          'When does the greedy test open a new group?',
+          [
+            'When adding the next load would exceed capacity',
+            'After every load, to keep the groups small',
+            'Whenever two neighboring loads differ',
+            'Whenever the current group holds two loads',
+          ],
+          0,
+          'A group is closed only when the next load cannot join it.',
+        ),
+      ],
+    },
+    {
+      title: 'Oversized loads, empty input and nonnegative loads',
+      explanation: [
+        'A single load larger than capacity can never fit, because loads cannot be split, so that capacity is impossible and the test reports None. With no loads, zero groups are needed. The greedy rule also needs nonnegative loads: with a negative load, a later load could cancel an apparent overflow, so closing a group early could be a mistake.',
+      ],
+      example: {
+        code: 'def groups_for(weights, capacity):\n    if len(weights) == 0:\n        return 0\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return None\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups\n\nprint(groups_for([], 5))\nprint(groups_for([2, 9, 1], 5))\nprint(groups_for([0, 5, 0, 5], 5))',
+        output: '0\nNone\n2',
+        explanation:
+          'No loads need no groups. The 9 cannot fit in capacity 5. Zero loads ride along for free, so the last case needs two groups.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def groups_for(weights, capacity):\n    if len(weights) == 0:\n        return 0\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return None\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups\n\nprint(groups_for([4, 4, 4], 3))',
+          ['3', '4', 'None', '0'],
+          2,
+          'Every load exceeds the capacity 3, so the capacity is impossible.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def groups_for(weights, capacity):\n    if len(weights) == 0:\n        return 0\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return None\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups\n\nprint(groups_for([3], 3))',
+          ['None', '0', '2', '1'],
+          3,
+          'A load equal to the capacity fits exactly in one group.',
+        ),
+        choose(
+          'Why does a load larger than the capacity make that capacity impossible?',
+          [
+            'Larger loads must always come first',
+            'Loads cannot be split across groups',
+            'Groups must all have equal totals',
+            'The test allows only two groups',
+          ],
+          1,
+          'The oversized load needs a group of its own that still exceeds the capacity.',
+        ),
+        choose(
+          'Why does the greedy overflow rule require nonnegative loads?',
+          [
+            'Negative loads cannot be added to totals',
+            'A later negative load could cancel an apparent overflow',
+            'Negative loads make the list unsorted',
+            'Zero loads would be counted twice',
+          ],
+          1,
+          'With negatives, a total that is too large now could become acceptable later.',
+        ),
+      ],
+    },
+  ],
+  'cp-capacity-feasible': [
+    {
+      title: 'Turn the group count into True or False',
+      explanation: [
+        'With a budget of max_groups groups, a capacity is feasible when no load is oversized and the greedy test needs at most max_groups groups. That gives a yes-or-no predicate for each proposed capacity, which is exactly what a search over capacities needs.',
+      ],
+      example: {
+        code: 'def fits(weights, max_groups, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return False\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups <= max_groups\n\nprint(fits([3, 5, 2, 4], 2, 8))\nprint(fits([3, 5, 2, 4], 2, 7))',
+        output: 'True\nFalse',
+        explanation:
+          'Capacity 8 allows [3, 5] and [2, 4]. Capacity 7 needs three groups, which exceeds the budget of two.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def fits(weights, max_groups, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return False\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups <= max_groups\n\nprint(fits([4, 4, 4, 4], 2, 8))',
+          ['True', 'False', '2', 'None'],
+          0,
+          'Two groups of 4 + 4 fit exactly, which meets the budget.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def fits(weights, max_groups, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return False\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups <= max_groups\n\nprint(fits([4, 4, 4, 4], 2, 7))',
+          ['True', 'False', '4', 'None'],
+          1,
+          'With capacity 7 each load needs its own group: four groups exceed the budget of two.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def fits(weights, max_groups, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return False\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups <= max_groups\n\nprint(fits([1, 9, 1], 3, 8))',
+          ['True', 'None', 'False', '3'],
+          2,
+          'The load 9 exceeds the capacity, so no number of groups helps.',
+        ),
+        choose(
+          'The greedy test needs 3 groups and the budget is 3. Is the capacity feasible?',
+          [
+            'No, it must use fewer groups',
+            'Yes, 3 is within the budget',
+            'Only if every group is full',
+            'Only for sorted loads',
+          ],
+          1,
+          'Feasibility asks for at most max_groups groups.',
+        ),
+      ],
+    },
+    {
+      title: 'Feasibility is monotone in the capacity',
+      explanation: [
+        'If a grouping fits at capacity c, the very same grouping fits at any larger capacity, so feasibility can only change from False to True as capacity grows, never back. Listed over increasing capacities, the predicate is a run of False followed by a run of True; the smallest feasible capacity is the first True.',
+      ],
+      example: {
+        code: 'def fits(weights, max_groups, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return False\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups <= max_groups\n\nfor capacity in [5, 6, 7, 8, 9]:\n    print(fits([3, 5, 2, 4], 2, capacity))',
+        output: 'False\nFalse\nFalse\nTrue\nTrue',
+        explanation:
+          'Capacities 5 to 7 all need more than two groups. From 8 on, two groups are enough.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def fits(weights, max_groups, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return False\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups <= max_groups\n\nfor capacity in [3, 4, 5, 6]:\n    print(fits([2, 2, 2], 2, capacity))',
+          [
+            'False\nTrue\nTrue\nTrue',
+            'False\nTrue\nFalse\nTrue',
+            'True\nTrue\nTrue\nTrue',
+            'False\nFalse\nTrue\nTrue',
+          ],
+          0,
+          'Capacity 3 needs three groups; from 4 on, [2, 2] and [2] fit in two.',
+        ),
+        choose(
+          'For capacities in increasing order, which sequence of fits results is possible?',
+          [
+            'True, False, True, True',
+            'False, True, False, True',
+            'False, False, True, True',
+            'True, True, False, False',
+          ],
+          2,
+          'Once feasible, every larger capacity stays feasible.',
+        ),
+        choose(
+          'fits is True at capacity 12. What can you conclude about capacity 15?',
+          [
+            'It is infeasible',
+            'It needs more groups',
+            'Nothing can be concluded',
+            'It is also feasible',
+          ],
+          3,
+          'The grouping that worked at 12 still works at 15.',
+        ),
+        choose(
+          'Why does a grouping that fits at capacity c also fit at c + 1?',
+          [
+            'Larger capacities always use fewer loads',
+            'The greedy test re-sorts the loads',
+            'The budget of groups grows with capacity',
+            'Every group total is still within the larger limit',
+          ],
+          3,
+          'Raising the limit cannot make an accepted total too large.',
+        ),
+      ],
+    },
+  ],
+  'cp-capacity-bounds': [
+    {
+      title: 'The largest load and the total bracket the answer',
+      explanation: [
+        'For nonempty, nonnegative loads, every feasible capacity is at least max(weights), because the largest load must fit in some group. And sum(weights) is always feasible when at least one group is allowed: put every load in one group. So the smallest feasible capacity lies in [max(weights), sum(weights)].',
+      ],
+      example: {
+        code: 'weights = [7, 2, 5, 1]\nprint(max(weights))\nprint(sum(weights))',
+        output: '7\n15',
+        explanation:
+          'No capacity below 7 can hold the load 7, and 15 always works with a single group.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'weights = [4, 9, 3]\nprint(max(weights))\nprint(sum(weights))',
+          ['3\n16', '9\n9', '4\n16', '9\n16'],
+          3,
+          'The lower bound is the largest load and the upper bound is the total.',
+        ),
+        choose(
+          'Why can no capacity below the largest load be feasible?',
+          [
+            'The total would exceed the budget',
+            'Groups would need equal totals',
+            'That load could not fit in any group',
+            'The loads would have to be sorted',
+          ],
+          2,
+          'Loads are indivisible, so each one must fit within the capacity.',
+        ),
+        choose(
+          'Why is the total of all loads always feasible when max_groups >= 1?',
+          [
+            'One group can hold every load',
+            'It equals the largest load',
+            'Each group then holds one load',
+            'It doubles the smallest load',
+          ],
+          0,
+          'A single group of everything has exactly the total.',
+        ),
+        choose(
+          'Loads are [6, 6, 6]. Which interval must contain the smallest feasible capacity?',
+          ['[0, 18]', '[6, 6]', '[6, 18]', '[1, 6]'],
+          2,
+          'From the largest load to the total.',
+        ),
+      ],
+    },
+    {
+      title: 'Edge cases of the bounds',
+      explanation: [
+        'With no loads there is nothing to place, so the bounds are (0, 0). The group budget decides where in the range the answer falls: with one group the answer is the total, and with at least as many groups as loads every load can sit alone, so the answer is the largest load. Extra groups never push the answer below the largest load.',
+      ],
+      example: {
+        code: 'def bounds(weights):\n    if len(weights) == 0:\n        return (0, 0)\n    return (max(weights), sum(weights))\n\nprint(bounds([]))\nprint(bounds([5]))\nprint(bounds([2, 8, 3]))',
+        output: '(0, 0)\n(5, 5)\n(8, 13)',
+        explanation:
+          'Empty input uses (0, 0). A single load is both bounds. Otherwise the range runs from the largest load to the total.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def bounds(weights):\n    if len(weights) == 0:\n        return (0, 0)\n    return (max(weights), sum(weights))\n\nprint(bounds([0, 0]))',
+          ['(0, 1)', '(0, 0)', '(None, None)', '(1, 0)'],
+          1,
+          'Both the largest load and the total are 0.',
+        ),
+        choose(
+          'Loads are [3, 8, 2] and only 1 group is allowed. What is the smallest feasible capacity?',
+          ['13', '8', '3', '11'],
+          0,
+          'One group must hold everything, so the answer is the total.',
+        ),
+        choose(
+          'Loads are [3, 8, 2] and 3 groups are allowed. What is the smallest feasible capacity?',
+          ['13', '5', '3', '8'],
+          3,
+          'Each load can sit alone, so only the largest load matters.',
+        ),
+        choose(
+          'The budget grows from 9 to 10 groups for 5 loads. Can the answer fall below the largest load?',
+          [
+            'Yes, by about one tenth',
+            'Yes, down to the average load',
+            'No, the largest load must still fit',
+            'Only if the loads are sorted',
+          ],
+          2,
+          'The largest load is a lower bound for every budget.',
+        ),
+      ],
+    },
+  ],
+  'cp-search-answer': [
+    {
+      title: 'Binary search the capacity with the feasibility test',
+      explanation: [
+        'The smallest feasible capacity is the first True of a monotone predicate, so binary search can run over the answer itself. Search [max(weights), sum(weights)]: if fits(mid), mid might be the answer, so set high = mid; otherwise set low = mid + 1. When low meets high, that capacity is the smallest feasible one. Here fits is defined inside the function so that it can use weights and max_groups directly.',
+      ],
+      example: {
+        code: 'def smallest_capacity(weights, max_groups):\n    if len(weights) == 0:\n        return 0\n    def fits(capacity):\n        groups = 1\n        current = 0\n        for weight in weights:\n            if weight > capacity:\n                return False\n            if current + weight > capacity:\n                groups += 1\n                current = weight\n            else:\n                current += weight\n        return groups <= max_groups\n    low = max(weights)\n    high = sum(weights)\n    while low < high:\n        mid = (low + high) // 2\n        if fits(mid):\n            high = mid\n        else:\n            low = mid + 1\n    return low\n\nprint(smallest_capacity([7, 2, 5, 10, 8], 2))',
+        output: '18',
+        explanation:
+          'The best split is [7, 2, 5] and [10, 8]: capacity 18. Every smaller capacity needs a third group.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def smallest_capacity(weights, max_groups):\n    if len(weights) == 0:\n        return 0\n    def fits(capacity):\n        groups = 1\n        current = 0\n        for weight in weights:\n            if weight > capacity:\n                return False\n            if current + weight > capacity:\n                groups += 1\n                current = weight\n            else:\n                current += weight\n        return groups <= max_groups\n    low = max(weights)\n    high = sum(weights)\n    while low < high:\n        mid = (low + high) // 2\n        if fits(mid):\n            high = mid\n        else:\n            low = mid + 1\n    return low\n\nprint(smallest_capacity([1, 2, 3, 4, 5], 2))',
+          ['10', '15', '9', '5'],
+          2,
+          'The split [1, 2, 3, 4] and [5] needs 10, but [1, 2, 3] and [4, 5] needs only 9.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def smallest_capacity(weights, max_groups):\n    if len(weights) == 0:\n        return 0\n    def fits(capacity):\n        groups = 1\n        current = 0\n        for weight in weights:\n            if weight > capacity:\n                return False\n            if current + weight > capacity:\n                groups += 1\n                current = weight\n            else:\n                current += weight\n        return groups <= max_groups\n    low = max(weights)\n    high = sum(weights)\n    while low < high:\n        mid = (low + high) // 2\n        if fits(mid):\n            high = mid\n        else:\n            low = mid + 1\n    return low\n\nprint(smallest_capacity([4, 4, 4, 4], 4))',
+          ['16', '4', '8', '1'],
+          1,
+          'With one group per load, the answer is the largest load.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def smallest_capacity(weights, max_groups):\n    if len(weights) == 0:\n        return 0\n    def fits(capacity):\n        groups = 1\n        current = 0\n        for weight in weights:\n            if weight > capacity:\n                return False\n            if current + weight > capacity:\n                groups += 1\n                current = weight\n            else:\n                current += weight\n        return groups <= max_groups\n    low = max(weights)\n    high = sum(weights)\n    while low < high:\n        mid = (low + high) // 2\n        if fits(mid):\n            high = mid\n        else:\n            low = mid + 1\n    return low\n\nprint(smallest_capacity([4, 4, 4, 4], 1))',
+          ['4', '8', '12', '16'],
+          3,
+          'A single group must hold everything.',
+        ),
+        choose(
+          'fits(mid) is True. Which update keeps the answer inside [low, high]?',
+          ['low = mid + 1', 'high = mid - 1', 'high = mid', 'low = mid'],
+          2,
+          'mid is feasible and may be the smallest feasible capacity, so it must stay in range.',
+        ),
+      ],
+    },
+    {
+      title: 'Trace the bounds of the answer search',
+      explanation: [
+        'Invariant: high is always feasible (it starts at the total) and every capacity below low is infeasible (it starts at the largest load). Each step tests one midpoint and moves one bound, so the smallest feasible capacity stays inside [low, high] until the bounds meet.',
+      ],
+      example: {
+        code: 'def fits(weights, max_groups, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return False\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups <= max_groups\n\nweights = [3, 5, 2, 4]\nlow = max(weights)\nhigh = sum(weights)\nprint((low, high))\nwhile low < high:\n    mid = (low + high) // 2\n    if fits(weights, 2, mid):\n        high = mid\n    else:\n        low = mid + 1\n    print((low, high))',
+        output: '(5, 14)\n(5, 9)\n(8, 9)\n(8, 8)',
+        explanation:
+          'The search starts at (5, 14). 9 is feasible, 7 is not, 8 is: the bounds close in on 8.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def fits(weights, max_groups, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return False\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups <= max_groups\n\nweights = [6, 2, 3]\nlow = max(weights)\nhigh = sum(weights)\nprint((low, high))\nwhile low < high:\n    mid = (low + high) // 2\n    if fits(weights, 2, mid):\n        high = mid\n    else:\n        low = mid + 1\n    print((low, high))',
+          [
+            '(6, 11)\n(9, 11)\n(10, 11)\n(11, 11)',
+            '(6, 11)\n(6, 8)\n(7, 8)\n(8, 8)',
+            '(6, 11)\n(6, 8)\n(6, 7)\n(6, 6)',
+            '(6, 11)\n(6, 8)\n(6, 7)\n(7, 7)',
+          ],
+          2,
+          'Capacities 8, 7 and 6 are all feasible ([6] and [2, 3]), so high keeps falling until it meets low at 6.',
+        ),
+        choose(
+          'Throughout the search, which statement about high is true?',
+          [
+            'high is always infeasible',
+            'high always equals the total',
+            'high is always a feasible capacity',
+            'high is always the largest load',
+          ],
+          2,
+          'It starts at the total and only ever moves to midpoints that tested feasible.',
+        ),
+        choose(
+          'fits(mid) is False. Why is low = mid + 1 safe?',
+          [
+            'By monotonicity, every capacity up to mid is infeasible',
+            'mid + 1 is then always a feasible capacity',
+            'The answer must then be the total of the loads',
+            'Loads larger than mid are removed from the list',
+          ],
+          0,
+          'If mid fails, every smaller capacity fails too.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def fits(weights, max_groups, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return False\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups <= max_groups\n\nweights = [3, 5, 2, 4]\nlow = max(weights)\nhigh = sum(weights)\ntests = 0\nwhile low < high:\n    mid = (low + high) // 2\n    tests += 1\n    if fits(weights, 2, mid):\n        high = mid\n    else:\n        low = mid + 1\nprint(tests)',
+          ['10', '9', '3', '14'],
+          2,
+          'The search tests 9, 7 and 8, instead of trying every capacity from 5 to 14.',
+        ),
+      ],
+    },
+    {
+      title: 'Cost and preconditions of the answer search',
+      explanation: [
+        'Each feasibility test is one O(n) scan, and the search over [max, total] needs O(log(S + 1)) tests for total S, so the method costs O(n log(S + 1)) time and O(1) extra space. Trying every capacity upward from the largest load could take O(n · S). The method relies on nonnegative loads for the greedy test and on monotone feasibility; empty input returns 0.',
+      ],
+      example: {
+        code: 'def fits(weights, max_groups, capacity):\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return False\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups <= max_groups\n\nweights = [7, 2, 5, 10, 8]\ncapacity = max(weights)\nlinear_tests = 1\nwhile not fits(weights, 2, capacity):\n    capacity += 1\n    linear_tests += 1\nlow = max(weights)\nhigh = sum(weights)\nbinary_tests = 0\nwhile low < high:\n    mid = (low + high) // 2\n    binary_tests += 1\n    if fits(weights, 2, mid):\n        high = mid\n    else:\n        low = mid + 1\nprint(capacity)\nprint(linear_tests)\nprint(low)\nprint(binary_tests)',
+        output: '18\n9\n18\n4',
+        explanation:
+          'Both methods find 18, but trying capacities upward needs 9 tests while binary search needs 4. The gap grows quickly with the total.',
+      },
+      questions: [
+        choose(
+          'There are 10⁵ loads with total S ≈ 10⁹. About how many greedy scans does the binary search run?',
+          ['About 10⁵', 'About 30', 'About 10⁹', 'About 1,000'],
+          1,
+          'log₂(10⁹) is about 30.',
+        ),
+        choose(
+          'What is the overall time of the answer search for n loads with total S?',
+          ['O(n · (S + 1))', 'O(n log(S + 1))', 'O(log(S + 1))', 'O(n² log S)'],
+          1,
+          'O(log(S + 1)) tests, each an O(n) scan.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def smallest_capacity(weights, max_groups):\n    if len(weights) == 0:\n        return 0\n    def fits(capacity):\n        groups = 1\n        current = 0\n        for weight in weights:\n            if weight > capacity:\n                return False\n            if current + weight > capacity:\n                groups += 1\n                current = weight\n            else:\n                current += weight\n        return groups <= max_groups\n    low = max(weights)\n    high = sum(weights)\n    while low < high:\n        mid = (low + high) // 2\n        if fits(mid):\n            high = mid\n        else:\n            low = mid + 1\n    return low\n\nprint(smallest_capacity([], 3))\nprint(smallest_capacity([9], 3))',
+          ['0\n3', '0\n9', 'None\n9', '0\n27'],
+          1,
+          'Empty input needs no capacity, and a single load needs exactly its own size.',
+        ),
+        choose(
+          'Some loads are negative. Why is this method no longer trustworthy?',
+          [
+            'Binary search cannot handle negative midpoints',
+            'The total becomes smaller than every load',
+            'Negative loads make the list unsorted',
+            'The greedy test may close a group that a later load would shrink',
+          ],
+          3,
+          'The greedy proof needs totals that never decrease as loads are added.',
+        ),
+      ],
+    },
+  ],
+  'cp-compress-unique': [
+    {
+      title: 'sorted(set(values)) lists each coordinate once, in order',
+      explanation: [
+        'Coordinate compression starts from the distinct coordinates in ascending order. set(values) keeps one copy of each value, and sorted(...) returns those values as an ascending list. Negative and widely separated values are ordered like any others.',
+      ],
+      example: {
+        code: 'values = [40, -3, 40, 7, -3]\nprint(sorted(set(values)))',
+        output: '[-3, 7, 40]',
+        explanation:
+          'Five values contain three distinct coordinates, listed from smallest to largest.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'print(sorted(set([8, -1, 8, 4])))',
+          ['[-1, 4, 8]', '[-1, 4, 8, 8]', '[8, -1, 4]', '[0, 1, 2]'],
+          0,
+          'The duplicate 8 is stored once, and the rest are sorted.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print(len(sorted(set([5, 5, 5, 5]))))',
+          ['4', '5', '1', '0'],
+          2,
+          'Four copies of one coordinate leave a single distinct value.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [3, 1, 3]\nunique = sorted(set(values))\nprint(values)',
+          ['[1, 3]', '[3, 1, 3]', '[1, 3, 3]', '[3, 1]'],
+          1,
+          'set() and sorted() build new objects; the original list is unchanged.',
+        ),
+        choose(
+          'Why remove duplicates before assigning ranks?',
+          [
+            'Duplicates would make sorting fail',
+            'Equal coordinates must share one rank',
+            'Ranks must preserve the gaps between values',
+            'Each occurrence needs its own rank',
+          ],
+          1,
+          'Each distinct coordinate gets exactly one position in the vocabulary.',
+        ),
+      ],
+    },
+    {
+      title: 'Why both steps are needed',
+      explanation: [
+        'A set has no guaranteed order, so it must be sorted before positions mean anything; sorting alone keeps the duplicates. The unique list is a vocabulary: its length u is the number of ranks, at most n. It does not translate the original sequence yet; that is a later step.',
+      ],
+      example: {
+        code: 'values = [12, -5, 12, 0]\nprint(sorted(values))\nprint(sorted(set(values)))\nprint(len(sorted(set(values))))',
+        output: '[-5, 0, 12, 12]\n[-5, 0, 12]\n3',
+        explanation:
+          'Sorting alone keeps both 12s. Removing duplicates first leaves three coordinates, so there will be three ranks.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [6, 2, 6]\nprint(sorted(values))\nprint(sorted(set(values)))',
+          [
+            '[2, 6]\n[2, 6]',
+            '[2, 6, 6]\n[2, 6, 6]',
+            '[2, 6, 6]\n[2, 6]',
+            '[6, 2, 6]\n[2, 6]',
+          ],
+          2,
+          'Only the version built from a set drops the duplicate.',
+        ),
+        choose(
+          'Why is set(values) alone not enough to assign ranks?',
+          [
+            'A set has no guaranteed ascending order',
+            'A set keeps every duplicate',
+            'Sets cannot hold negative numbers',
+            'A set changes the original list',
+          ],
+          0,
+          'Ranks are positions in ascending order, which only sorting provides.',
+        ),
+        choose(
+          'Ten values contain 4 distinct coordinates. How many ranks will there be?',
+          ['10', '6', '4', '14'],
+          2,
+          'One rank per distinct coordinate.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'unique = sorted(set([100, -100, 0, 100]))\nprint(unique[0])\nprint(unique[-1])',
+          ['100\n100', '-100\n0', '-100\n100', '0\n100'],
+          2,
+          'The vocabulary runs from the smallest to the largest coordinate.',
+        ),
+      ],
+    },
+  ],
+  'cp-compress-ranks': [
+    {
+      title: 'A rank is a position in the unique list',
+      explanation: [
+        'Each coordinate’s rank is its zero-based index in the sorted unique list. Building a dictionary ranks[coordinate] = index once makes every later translation an expected O(1) lookup instead of a search through the list.',
+      ],
+      example: {
+        code: 'unique = [-3, 7, 40]\nranks = {}\nfor index in range(len(unique)):\n    ranks[unique[index]] = index\nprint(ranks)\nprint(ranks[40])',
+        output: '{-3: 0, 7: 1, 40: 2}\n2',
+        explanation:
+          'Each coordinate maps to its position in the vocabulary: 40 is third, so its rank is 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'unique = [2, 9, 15, 30]\nranks = {}\nfor index in range(len(unique)):\n    ranks[unique[index]] = index\nprint(ranks[15])',
+          ['3', '2', '15', '1'],
+          1,
+          '15 is at index 2 of the unique list.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'unique = [-8, 0, 5]\nranks = {}\nfor index in range(len(unique)):\n    ranks[unique[index]] = index\nprint(ranks)',
+          [
+            '{-8: 0, 0: 1, 5: 2}',
+            '{0: -8, 1: 0, 2: 5}',
+            '{-8: 1, 0: 2, 5: 3}',
+            '{-8: 0, 0: 0, 5: 5}',
+          ],
+          0,
+          'Keys are coordinates and values are their zero-based positions.',
+        ),
+        choose(
+          'What rank does the smallest distinct coordinate receive?',
+          ['1', '-1', '0', 'Its own value'],
+          2,
+          'It is first in the ascending list, at index 0.',
+        ),
+        choose(
+          'Why build a coordinate-to-rank dictionary instead of searching the unique list each time?',
+          [
+            'The list would otherwise lose its order',
+            'Dictionaries store the distances between values',
+            'Searching would change the ranks',
+            'Each lookup becomes expected O(1)',
+          ],
+          3,
+          'A list search is O(u) per lookup; a dictionary lookup is expected constant time.',
+        ),
+      ],
+    },
+    {
+      title: 'Ranks keep order, not distance',
+      explanation: [
+        'If x < y then ranks[x] < ranks[y], and equal values have equal ranks, so every comparison between coordinates gives the same answer on their ranks. Distances are not kept: 10 and 1,000 may receive neighboring ranks. The largest rank is u − 1 for u distinct coordinates.',
+      ],
+      example: {
+        code: 'unique = [10, 1000, 1001]\nranks = {}\nfor index in range(len(unique)):\n    ranks[unique[index]] = index\nprint(ranks[1000] - ranks[10])\nprint(1000 - 10)\nprint(ranks[1001] - ranks[1000])',
+        output: '1\n990\n1',
+        explanation:
+          'A gap of 990 and a gap of 1 both become a rank difference of 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'unique = [-50, 3, 4, 900]\nranks = {}\nfor index in range(len(unique)):\n    ranks[unique[index]] = index\nprint(ranks[900] - ranks[-50])',
+          ['950', '4', '897', '3'],
+          3,
+          'The ranks are 0 and 3; the real distance of 950 is not kept.',
+        ),
+        choose(
+          'ranks[x] < ranks[y]. What do you know about the coordinates?',
+          [
+            'y - x = 1',
+            'x and y are neighbors in the input',
+            'x < y',
+            'x is negative',
+          ],
+          2,
+          'Ranks preserve order, and nothing more.',
+        ),
+        choose(
+          'Coordinates 5 and 500 receive neighboring ranks. What does that tell you?',
+          [
+            'They differ by exactly one',
+            'No other distinct coordinate lies between them',
+            'They are next to each other in the input',
+            'The ranking contains a mistake',
+          ],
+          1,
+          'Neighboring ranks mean neighbors in sorted order of the distinct values.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [7, 7, 3, 9, 3, 1]\nunique = sorted(set(values))\nranks = {}\nfor index in range(len(unique)):\n    ranks[unique[index]] = index\nprint(ranks[9])',
+          ['5', '2', '3', '9'],
+          2,
+          'The vocabulary is [1, 3, 7, 9], so 9 is at index 3.',
+        ),
+      ],
+    },
+  ],
+  'cp-compress-translate': [
+    {
+      title: 'Translate every occurrence in its original position',
+      explanation: [
+        'After building the rank map, scan the original sequence and append ranks[value] for each occurrence. The output has the same length and order as the input and repeats a rank wherever the input repeats a value; only the representation changes.',
+      ],
+      example: {
+        code: 'values = [40, -3, 40, 7]\nranks = {-3: 0, 7: 1, 40: 2}\ntranslated = []\nfor value in values:\n    translated.append(ranks[value])\nprint(translated)',
+        output: '[2, 0, 2, 1]',
+        explanation:
+          'Each occurrence becomes its rank in place: both 40s become 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [9, 1, 9]\nranks = {1: 0, 9: 1}\ntranslated = []\nfor value in values:\n    translated.append(ranks[value])\nprint(translated)',
+          ['[0, 1]', '[1, 0, 1]', '[0, 1, 1]', '[9, 1, 9]'],
+          1,
+          'Order and repetition are kept; only the values are replaced.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = [5, 5, 5]\nranks = {5: 0}\ntranslated = []\nfor value in values:\n    translated.append(ranks[value])\nprint(translated)',
+          ['[0]', '[0, 1, 2]', '[5, 5, 5]', '[0, 0, 0]'],
+          3,
+          'Every occurrence of 5 maps to the same rank 0.',
+        ),
+        choose(
+          'What is the length of the translated sequence?',
+          [
+            'The number of distinct values',
+            'The largest rank plus one',
+            'The size of the rank map',
+            'The length of the original sequence',
+          ],
+          3,
+          'One rank is appended per original occurrence.',
+        ),
+        choose(
+          'A function returns sorted(set(values)) instead of the translated ranks. What does it lose?',
+          [
+            'The original order and repeated occurrences',
+            'The ascending order of the values',
+            'The smallest coordinate of the input',
+            'Nothing; both answers are equal',
+          ],
+          0,
+          'The vocabulary describes the distinct values, not the sequence.',
+        ),
+      ],
+    },
+    {
+      title: 'Ranks as compact list indices',
+      explanation: [
+        'Translated ranks run from 0 to u − 1, so they can index a list of length u even when the original coordinates are huge or negative. Counting occurrences per coordinate, for example, needs u counters instead of one for every possible coordinate.',
+      ],
+      example: {
+        code: 'values = [1000000, -7, 1000000, 42]\nranks = {-7: 0, 42: 1, 1000000: 2}\ncounts = [0, 0, 0]\nfor value in values:\n    counts[ranks[value]] += 1\nprint(counts)',
+        output: '[1, 1, 2]',
+        explanation:
+          'Three counters cover the coordinates -7, 42 and 1000000; the million appears twice.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [-5, 8, -5, -5]\nranks = {-5: 0, 8: 1}\ncounts = [0, 0]\nfor value in values:\n    counts[ranks[value]] += 1\nprint(counts)',
+          ['[1, 3]', '[2, 1]', '[3, 1]', '[3, 1, 0]'],
+          2,
+          'Counter 0 belongs to -5, which appears three times.',
+        ),
+        choose(
+          'Coordinates range from -10⁹ to 10⁹, with 5 distinct values. How long must a list indexed by rank be?',
+          ['2 × 10⁹ + 1', '10⁹', '10', '5'],
+          3,
+          'Ranks run from 0 to u − 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'unique = [-7, 42, 1000000]\ncompressed = [2, 0, 2, 1]\nrestored = []\nfor rank in compressed:\n    restored.append(unique[rank])\nprint(restored)',
+          [
+            '[1000000, -7, 1000000, 42]',
+            '[-7, 42, 1000000]',
+            '[2, 0, 2, 1]',
+            '[-7, 42, -7, 1000000]',
+          ],
+          0,
+          'Indexing the vocabulary with each rank recovers the original coordinates in order.',
+        ),
+        choose(
+          'Why can a translated rank be used directly as a list index?',
+          [
+            'Ranks equal the original coordinates',
+            'Ranks are always positive coordinates',
+            'Every rank lies between 0 and u − 1',
+            'Lists accept any integer as an index',
+          ],
+          2,
+          'They are exactly the positions of a length-u list.',
+        ),
+      ],
+    },
+  ],
+  'cp-compression': [
+    {
+      title: 'Unique, rank, translate',
+      explanation: [
+        'Coordinate compression chains three steps: sorted(set(values)) gives the ordered vocabulary, a dictionary maps each coordinate to its index, and a pass over the original values replaces each one with its rank. Equal values get equal ranks and smaller values get smaller ranks.',
+      ],
+      example: {
+        code: 'def compress(values):\n    unique = sorted(set(values))\n    ranks = {}\n    for index in range(len(unique)):\n        ranks[unique[index]] = index\n    result = []\n    for value in values:\n        result.append(ranks[value])\n    return result\n\nprint(compress([300, -2, 300, 15, -2]))',
+        output: '[2, 0, 2, 1, 0]',
+        explanation:
+          'The vocabulary is [-2, 15, 300], so 300 becomes 2, -2 becomes 0 and 15 becomes 1, each in its original position.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def compress(values):\n    unique = sorted(set(values))\n    ranks = {}\n    for index in range(len(unique)):\n        ranks[unique[index]] = index\n    result = []\n    for value in values:\n        result.append(ranks[value])\n    return result\n\nprint(compress([7, 3, 7, 11]))',
+          ['[0, 1, 2, 3]', '[1, 0, 2, 3]', '[1, 0, 1, 2]', '[7, 3, 7, 11]'],
+          2,
+          'The vocabulary [3, 7, 11] gives ranks 0, 1 and 2; both 7s get rank 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def compress(values):\n    unique = sorted(set(values))\n    ranks = {}\n    for index in range(len(unique)):\n        ranks[unique[index]] = index\n    result = []\n    for value in values:\n        result.append(ranks[value])\n    return result\n\nprint(compress([-1, -1, -1]))',
+          ['[0, 1, 2]', '[-1, -1, -1]', '[0]', '[0, 0, 0]'],
+          3,
+          'One distinct value means one rank, repeated for every occurrence.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def compress(values):\n    unique = sorted(set(values))\n    ranks = {}\n    for index in range(len(unique)):\n        ranks[unique[index]] = index\n    result = []\n    for value in values:\n        result.append(ranks[value])\n    return result\n\nprint(compress([50, 40, 30, 20]))',
+          ['[0, 1, 2, 3]', '[20, 30, 40, 50]', '[4, 3, 2, 1]', '[3, 2, 1, 0]'],
+          3,
+          'Ranks follow value order, while the output keeps the input order.',
+        ),
+        choose(
+          'Which step makes equal input values share one rank?',
+          [
+            'Sorting the original sequence',
+            'Appending in the original order',
+            'Looping over range(len(unique))',
+            'Building the set of distinct values',
+          ],
+          3,
+          'The set gives every distinct value exactly one entry in the vocabulary.',
+        ),
+      ],
+    },
+    {
+      title: 'What compression preserves',
+      explanation: [
+        'Compression preserves equality and order: x < y exactly when rank(x) < rank(y), and every item keeps its original position. It does not preserve distances, so neighboring ranks can be far apart in value. When gaps, lengths or areas matter, keep the sorted unique list and look the real coordinates up from the ranks.',
+      ],
+      example: {
+        code: 'def compress(values):\n    unique = sorted(set(values))\n    ranks = {}\n    for index in range(len(unique)):\n        ranks[unique[index]] = index\n    result = []\n    for value in values:\n        result.append(ranks[value])\n    return result\n\nvalues = [-1000, 50, -1000, 8]\nunique = sorted(set(values))\ncompressed = compress(values)\nprint(compressed)\nprint(unique[compressed[1]] - unique[compressed[3]])\nprint(compressed[1] - compressed[3])',
+        output: '[0, 2, 0, 1]\n42\n1',
+        explanation:
+          '50 and 8 are 42 apart, but their ranks differ by only 1. The real gap comes from looking the coordinates up in unique.',
+      },
+      questions: [
+        choose(
+          'Which property of the original values is lost by compression?',
+          [
+            'Which values are equal',
+            'Which value is smaller',
+            'The distances between values',
+            'The position of each item',
+          ],
+          2,
+          'Ranks keep equality, order and position, but not gaps.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def compress(values):\n    unique = sorted(set(values))\n    ranks = {}\n    for index in range(len(unique)):\n        ranks[unique[index]] = index\n    result = []\n    for value in values:\n        result.append(ranks[value])\n    return result\n\ncompressed = compress([5, 100, 6])\nprint(compressed[1] - compressed[0])',
+          ['95', '1', '2', '100'],
+          2,
+          'The ranks are [0, 2, 1]; the gap of 95 between 5 and 100 becomes 2.',
+        ),
+        choose(
+          'Two items have ranks 3 and 7 after compression. What is guaranteed about their original values?',
+          [
+            'They differ by exactly 4',
+            'They are 4 positions apart in the input',
+            'The first is smaller than the second',
+            'Both of them are positive',
+          ],
+          2,
+          'Ranks preserve order only.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'unique = [2, 10, 11]\nstart_rank = 0\nend_rank = 2\nprint(unique[end_rank] - unique[start_rank])\nprint(end_rank - start_rank)',
+          ['2\n2', '9\n9', '11\n2', '9\n2'],
+          3,
+          'A real length needs the coordinates 2 and 11, not their ranks.',
+        ),
+      ],
+    },
+    {
+      title: 'Cost and payoff of compression',
+      explanation: [
+        'For n values with u distinct ones, building the set takes expected O(n), sorting it O(u log u) (at most O(n log n)), building the rank map O(u), and translating expected O(n). Storage is O(n + u) including the result. The payoff: later lists can have length u instead of spanning the whole coordinate range.',
+      ],
+      example: {
+        code: 'def compress(values):\n    unique = sorted(set(values))\n    ranks = {}\n    for index in range(len(unique)):\n        ranks[unique[index]] = index\n    result = []\n    for value in values:\n        result.append(ranks[value])\n    return result\n\nvalues = [1000000000, -1000000000, 0, 1000000000]\ncompressed = compress(values)\nprint(compressed)\nprint(max(compressed) + 1)\nprint(1000000000 - (-1000000000) + 1)',
+        output: '[2, 0, 1, 2]\n3\n2000000001',
+        explanation:
+          'Three slots replace the two billion and one slots a list indexed by raw coordinate would need.',
+      },
+      questions: [
+        choose(
+          'Which step dominates the running time of compressing n values?',
+          [
+            'Building the set of values',
+            'Appending each translated rank',
+            'Sorting the distinct values',
+            'Creating the empty dictionary',
+          ],
+          2,
+          'Sorting costs O(u log u); every other step is linear.',
+        ),
+        choose(
+          'A counting list indexed by compressed rank needs how many entries for n values with u distinct ones?',
+          ['n', 'max(values) + 1', 'u', 'max(values) - min(values) + 1'],
+          2,
+          'One counter per distinct coordinate.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def compress(values):\n    unique = sorted(set(values))\n    ranks = {}\n    for index in range(len(unique)):\n        ranks[unique[index]] = index\n    result = []\n    for value in values:\n        result.append(ranks[value])\n    return result\n\nprint(len(compress([3, 3, 9, 1, 9])))',
+          ['3', '2', '5', '9'],
+          2,
+          'The result has one rank per input value, duplicates included.',
+        ),
+        choose(
+          'Why does compression save memory for coordinates like 10⁹ and −10⁹?',
+          [
+            'The coordinates are stored as smaller numbers',
+            'Sets compress the integers they store',
+            'Sorting removes the largest values',
+            'Lists need only u slots, not one per possible coordinate',
+          ],
+          3,
+          'Only distinct coordinates get a slot.',
+        ),
+      ],
+    },
+  ],
+  'cp-sweep-events': [
+    {
+      title: 'Each interval makes a start event and an end event',
+      explanation: [
+        'For the half-open interval [start, end), record (start, 1) where one more interval becomes active and (end, -1) where it stops being active. Unlike a difference table, the events are a short list of (coordinate, change) pairs, so huge coordinates need no huge list.',
+      ],
+      example: {
+        code: 'events = []\nfor start, end in [(2, 6), (5, 9)]:\n    events.append((start, 1))\n    events.append((end, -1))\nprint(events)',
+        output: '[(2, 1), (6, -1), (5, 1), (9, -1)]',
+        explanation:
+          'Two intervals give four events, in input order; sorting them is a separate step.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'events = []\nfor start, end in [(0, 3)]:\n    events.append((start, 1))\n    events.append((end, -1))\nprint(events)',
+          [
+            '[(0, 1), (2, -1)]',
+            '[(0, -1), (3, 1)]',
+            '[(0, 1), (3, 1)]',
+            '[(0, 1), (3, -1)]',
+          ],
+          3,
+          'The interval becomes active at 0 and stops at its excluded end 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'events = []\nfor start, end in [(10, 12), (1, 4)]:\n    events.append((start, 1))\n    events.append((end, -1))\nprint(events)',
+          [
+            '[(10, 1), (12, -1), (1, 1), (4, -1)]',
+            '[(1, 1), (4, -1), (10, 1), (12, -1)]',
+            '[(10, 1), (1, 1), (12, -1), (4, -1)]',
+            '[(10, 1), (12, 1), (1, 1), (4, 1)]',
+          ],
+          0,
+          'Events are appended in input order, a start and an end per interval; nothing is sorted yet.',
+        ),
+        choose(
+          'Intervals reach coordinates near 10¹². Why use events instead of a difference table?',
+          [
+            'A difference table cannot hold negative changes',
+            'Events never need to be sorted afterwards',
+            'Events give each coordinate its own slot',
+            'Events store only coordinates where something changes',
+          ],
+          3,
+          'A table would need a slot for every coordinate up to 10¹².',
+        ),
+        choose(
+          'What does the event (end, -1) mean?',
+          [
+            'One interval starts at end',
+            'The coordinate end is removed',
+            'Every interval ends at end',
+            'One interval stops being active at end',
+          ],
+          3,
+          'Each end event cancels exactly one start event.',
+        ),
+      ],
+    },
+    {
+      title: 'Skip empty intervals, keep repeated ones',
+      explanation: [
+        'An interval with start == end covers no coordinate, so it should create no events; testing start < end skips it. Identical intervals each represent another occupant, so each one adds its own pair. A list of m nonempty intervals always produces 2m events.',
+      ],
+      example: {
+        code: 'events = []\nfor start, end in [(3, 3), (1, 5), (1, 5)]:\n    if start < end:\n        events.append((start, 1))\n        events.append((end, -1))\nprint(events)\nprint(len(events))',
+        output: '[(1, 1), (5, -1), (1, 1), (5, -1)]\n4',
+        explanation:
+          'The empty interval adds nothing. The two identical intervals each add their own start and end.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'events = []\nfor start, end in [(4, 4), (0, 2)]:\n    if start < end:\n        events.append((start, 1))\n        events.append((end, -1))\nprint(events)',
+          [
+            '[(0, 1), (2, -1)]',
+            '[(4, 1), (4, -1), (0, 1), (2, -1)]',
+            '[(4, 1), (0, 1), (2, -1)]',
+            '[]',
+          ],
+          0,
+          '[4, 4) is empty and skipped; [0, 2) adds its two events.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'events = []\nfor start, end in [(1, 2), (1, 2), (5, 5), (0, 9)]:\n    if start < end:\n        events.append((start, 1))\n        events.append((end, -1))\nprint(len(events))',
+          ['8', '4', '3', '6'],
+          3,
+          'Three nonempty intervals, including the repeated one, give six events.',
+        ),
+        choose(
+          'Two identical intervals [2, 7) appear in the input. How many events should they produce?',
+          ['2', '4', '1', '0'],
+          1,
+          'Each interval is a separate occupant with its own start and end.',
+        ),
+        choose(
+          'Why must [5, 5) produce no events?',
+          [
+            'Its events would be out of order',
+            'It would count as two intervals',
+            'Its end comes before its start',
+            'It covers no coordinate',
+          ],
+          3,
+          'A half-open interval with equal endpoints is empty.',
+        ),
+      ],
+    },
+  ],
+  'cp-sweep-ties': [
+    {
+      title: 'Sort by coordinate, departures before arrivals',
+      explanation: [
+        'Sorting (coordinate, change) tuples orders events by coordinate, and at equal coordinates by change. Because -1 < 1, ordinary tuple sorting puts departures before arrivals at a shared coordinate, which is exactly the half-open convention.',
+      ],
+      example: {
+        code: 'events = [(4, 1), (9, -1), (1, 1), (4, -1)]\nprint(sorted(events))',
+        output: '[(1, 1), (4, -1), (4, 1), (9, -1)]',
+        explanation:
+          'At coordinate 4 the departure (-1) is placed before the arrival (1).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'print(sorted([(5, 1), (3, -1), (5, -1), (3, 1)]))',
+          [
+            '[(3, 1), (3, -1), (5, 1), (5, -1)]',
+            '[(3, -1), (3, 1), (5, -1), (5, 1)]',
+            '[(3, -1), (5, -1), (3, 1), (5, 1)]',
+            '[(5, 1), (3, -1), (5, -1), (3, 1)]',
+          ],
+          1,
+          'Coordinates decide first; within a coordinate, -1 sorts before 1.',
+        ),
+        choose(
+          'At one coordinate, which event does ordinary tuple sorting place first?',
+          [
+            'The arrival, +1',
+            'Whichever came first in the input',
+            'The departure, -1',
+            'The one from the longer interval',
+          ],
+          2,
+          'The second field breaks the tie, and -1 < 1.',
+        ),
+        predictOutput(
+          'This sort uses only the coordinate as its key. What does it print?',
+          'print(sorted([(4, 1), (4, -1)], key=lambda e: e[0]))',
+          ['[(4, -1), (4, 1)]', '[(4, 1), (4, -1)]', '[(4, 0)]', '[(4, -1)]'],
+          1,
+          'The key ignores the change, so the stable sort keeps the arrival first, which is wrong for half-open intervals.',
+        ),
+        choose(
+          'Which key sorts events by coordinate with departures first?',
+          [
+            'lambda e: (e[1], e[0])',
+            'lambda e: e[1]',
+            'lambda e: (e[0], -e[1])',
+            'lambda e: (e[0], e[1])',
+          ],
+          3,
+          'Coordinate first, then the change in its natural order.',
+        ),
+      ],
+    },
+    {
+      title: 'Why the tie rule matters, and when it flips',
+      explanation: [
+        '[1, 3) and [3, 5) touch but do not overlap, because the first excludes 3. Processing the departure at 3 before the arrival keeps the active count from briefly reaching 2. Closed intervals [1, 3] and [3, 5] do share 3; for them arrivals must come first, which the key (coordinate, -change) achieves.',
+      ],
+      example: {
+        code: 'events = [(1, 1), (3, -1), (3, 1), (5, -1)]\nprint(sorted(events))\nprint(sorted(events, key=lambda e: (e[0], -e[1])))',
+        output:
+          '[(1, 1), (3, -1), (3, 1), (5, -1)]\n[(1, 1), (3, 1), (3, -1), (5, -1)]',
+        explanation:
+          'The first order suits half-open intervals; the negated change puts arrivals first, as closed intervals need.',
+      },
+      questions: [
+        choose(
+          'Do the half-open intervals [2, 6) and [6, 8) overlap?',
+          [
+            'Yes, at coordinate 6',
+            'No, the first excludes 6',
+            'Yes, from 2 to 8',
+            'Only if they are sorted',
+          ],
+          1,
+          'The first interval stops just before 6, where the second begins.',
+        ),
+        choose(
+          'Do the closed intervals [2, 6] and [6, 8] overlap?',
+          [
+            'Yes, both contain 6',
+            'No, they only touch',
+            'Only at coordinate 7',
+            'Only after sorting',
+          ],
+          0,
+          'Closed intervals include their endpoints.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'print(sorted([(6, -1), (6, 1), (2, 1), (8, -1)], key=lambda e: (e[0], -e[1])))',
+          [
+            '[(2, 1), (6, -1), (6, 1), (8, -1)]',
+            '[(2, 1), (6, 1), (6, -1), (8, -1)]',
+            '[(8, -1), (6, 1), (6, -1), (2, 1)]',
+            '[(2, 1), (8, -1), (6, 1), (6, -1)]',
+          ],
+          1,
+          'Negating the change puts the arrival before the departure at coordinate 6.',
+        ),
+        choose(
+          'With the wrong tie order for half-open intervals, what goes wrong at a shared endpoint?',
+          [
+            'The ending interval is never removed',
+            'The count briefly includes both intervals',
+            'The starting interval is skipped',
+            'The events lose their coordinates',
+          ],
+          1,
+          'The arrival is counted before the departure that should precede it.',
+        ),
+      ],
+    },
+  ],
+  'cp-sweep-active': [
+    {
+      title: 'Running active count and its peak',
+      explanation: [
+        'Scan the sorted events with active = 0 and peak = 0. For each event, add its change to active, then set peak = max(peak, active). After each event, active is the number of intervals covering the positions just after that coordinate, and peak is the largest such number so far.',
+      ],
+      example: {
+        code: 'active = 0\npeak = 0\nfor coordinate, change in [(0, 1), (2, 1), (3, -1), (4, 1), (6, -1), (7, -1)]:\n    active += change\n    peak = max(peak, active)\n    print(active)\nprint(peak)',
+        output: '1\n2\n1\n2\n1\n0\n2',
+        explanation:
+          'The count rises to 2 twice and finishes at 0; the peak remembers 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'active = 0\npeak = 0\nfor coordinate, change in [(1, 1), (2, 1), (3, 1), (4, -1), (5, -1), (6, -1)]:\n    active += change\n    peak = max(peak, active)\nprint(peak)',
+          ['6', '1', '3', '0'],
+          2,
+          'Three arrivals come before any departure, so three intervals are active at once.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'active = 0\nfor coordinate, change in [(0, 1), (5, -1), (5, 1), (9, -1)]:\n    active += change\n    print(active)',
+          ['1\n1\n2\n1', '1\n0\n1\n0', '1\n0\n1\n1', '0\n1\n0\n1'],
+          1,
+          'The departure at 5 is processed before the arrival, so the count dips to 0 between them.',
+        ),
+        choose(
+          'Why update the peak right after each change?',
+          [
+            'So departures can raise the peak',
+            'So the events stay sorted',
+            'So the final count becomes zero',
+            'So the newly reached count is included',
+          ],
+          3,
+          'The peak must see every count the sweep reaches.',
+        ),
+        choose(
+          'What does active mean right after the events at coordinate x are applied?',
+          [
+            'The total number of intervals in the input',
+            'The number of events processed so far',
+            'The coordinate x itself',
+            'The number of intervals covering positions just after x',
+          ],
+          3,
+          'Arrivals at x have started and departures at x have ended.',
+        ),
+      ],
+    },
+    {
+      title: 'Order matters, and the stream ends at zero',
+      explanation: [
+        'The scan trusts its input order. If an arrival were processed before a departure at a shared coordinate, active would briefly count an interval that has already ended, and the peak could be too large. In a complete stream from valid intervals every +1 has a matching −1, so active finishes at 0.',
+      ],
+      example: {
+        code: 'good = [(1, 1), (3, -1), (3, 1), (5, -1)]\nbad = [(1, 1), (3, 1), (3, -1), (5, -1)]\nfor events in [good, bad]:\n    active = 0\n    peak = 0\n    for coordinate, change in events:\n        active += change\n        peak = max(peak, active)\n    print(peak)',
+        output: '1\n2',
+        explanation:
+          'Both streams describe [1, 3) and [3, 5). Only the correctly ordered one reports that they never overlap.',
+      },
+      questions: [
+        predictOutput(
+          'The events are in the wrong tie order. What does this program print?',
+          'active = 0\npeak = 0\nfor coordinate, change in [(2, 1), (4, 1), (4, -1), (8, -1)]:\n    active += change\n    peak = max(peak, active)\nprint(peak)',
+          ['2', '1', '3', '0'],
+          0,
+          'The arrival at 4 is counted before the departure at 4, inflating the peak for [2, 4) and [4, 8).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'active = 0\npeak = 0\nfor coordinate, change in [(0, 1), (1, 1), (2, -1), (3, -1)]:\n    active += change\n    peak = max(peak, active)\nprint(active)',
+          ['0', '2', '1', '-1'],
+          0,
+          'Two arrivals and two departures balance out.',
+        ),
+        choose(
+          'A sweep ends with active = 2 after its last event. What does that suggest?',
+          [
+            'Two intervals overlapped at the peak',
+            'Some end events are missing from the stream',
+            'The events were sorted correctly',
+            'The maximum overlap is 2',
+          ],
+          1,
+          'A complete stream of valid intervals always returns to 0.',
+        ),
+        choose(
+          'The intervals are [0, 4) and [4, 6). What peak does a correctly ordered sweep report?',
+          ['2', '1', '0', '6'],
+          1,
+          'They only touch at 4, where the departure is processed first.',
+        ),
+      ],
+    },
+  ],
+  'cp-sweep-line': [
+    {
+      title: 'Generate, sort, sweep',
+      explanation: [
+        'A sweep finds the maximum number of overlapping half-open intervals in three steps: turn each nonempty interval into (start, 1) and (end, -1), sort the events, then scan them while tracking the active count and its peak. Only coordinates where something changes are visited.',
+      ],
+      example: {
+        code: 'def most_overlap(intervals):\n    events = []\n    for start, end in intervals:\n        if start < end:\n            events.append((start, 1))\n            events.append((end, -1))\n    events.sort()\n    active = 0\n    best = 0\n    for coordinate, change in events:\n        active += change\n        best = max(best, active)\n    return best\n\nprint(most_overlap([(1, 5), (2, 6), (4, 8), (7, 9)]))',
+        output: '3',
+        explanation:
+          'At coordinate 4 the first three intervals are all active, before the first one ends at 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def most_overlap(intervals):\n    events = []\n    for start, end in intervals:\n        if start < end:\n            events.append((start, 1))\n            events.append((end, -1))\n    events.sort()\n    active = 0\n    best = 0\n    for coordinate, change in events:\n        active += change\n        best = max(best, active)\n    return best\n\nprint(most_overlap([(0, 10), (2, 3), (4, 5)]))',
+          ['3', '1', '2', '10'],
+          2,
+          'The long interval overlaps each short one, but the short ones never overlap each other.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def most_overlap(intervals):\n    events = []\n    for start, end in intervals:\n        if start < end:\n            events.append((start, 1))\n            events.append((end, -1))\n    events.sort()\n    active = 0\n    best = 0\n    for coordinate, change in events:\n        active += change\n        best = max(best, active)\n    return best\n\nprint(most_overlap([(1, 4), (2, 5), (3, 6)]))',
+          ['2', '3', '6', '1'],
+          1,
+          'All three are active from 3 until the first one ends at 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def most_overlap(intervals):\n    events = []\n    for start, end in intervals:\n        if start < end:\n            events.append((start, 1))\n            events.append((end, -1))\n    events.sort()\n    active = 0\n    best = 0\n    for coordinate, change in events:\n        active += change\n        best = max(best, active)\n    return best\n\nprint(most_overlap([]))\nprint(most_overlap([(5, 9)]))',
+          ['0\n1', '0\n2', 'None\n1', '1\n1'],
+          0,
+          'No intervals means no overlap; a single interval reaches a count of 1.',
+        ),
+        choose(
+          'Why sort the events before scanning them?',
+          [
+            'Sorting removes the empty intervals',
+            'Sorting merges overlapping intervals',
+            'The peak has to be found first',
+            'The active count is only right in coordinate order',
+          ],
+          3,
+          'The running count must follow positions from left to right.',
+        ),
+      ],
+    },
+    {
+      title: 'Ties and empty intervals',
+      explanation: [
+        'Half-open intervals that meet at x do not overlap there, so ends at x must be processed before starts at x; tuple sorting does this because -1 < 1. Empty intervals [x, x) occupy nothing and are skipped before they create events. State the endpoint convention first: closed intervals need the opposite tie order.',
+      ],
+      example: {
+        code: 'def most_overlap(intervals):\n    events = []\n    for start, end in intervals:\n        if start < end:\n            events.append((start, 1))\n            events.append((end, -1))\n    events.sort()\n    active = 0\n    best = 0\n    for coordinate, change in events:\n        active += change\n        best = max(best, active)\n    return best\n\nprint(most_overlap([(0, 3), (3, 6), (6, 9)]))\nprint(most_overlap([(2, 2), (2, 2), (1, 3)]))',
+        output: '1\n1',
+        explanation:
+          'Back-to-back intervals never overlap, and empty intervals add nothing to the count.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def most_overlap(intervals):\n    events = []\n    for start, end in intervals:\n        if start < end:\n            events.append((start, 1))\n            events.append((end, -1))\n    events.sort()\n    active = 0\n    best = 0\n    for coordinate, change in events:\n        active += change\n        best = max(best, active)\n    return best\n\nprint(most_overlap([(1, 3), (3, 5), (2, 4)]))',
+          ['3', '1', '4', '2'],
+          3,
+          'At 3 the first interval ends before the second starts, so the count never exceeds 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def most_overlap(intervals):\n    events = []\n    for start, end in intervals:\n        if start < end:\n            events.append((start, 1))\n            events.append((end, -1))\n    events.sort()\n    active = 0\n    best = 0\n    for coordinate, change in events:\n        active += change\n        best = max(best, active)\n    return best\n\nprint(most_overlap([(4, 4), (4, 4), (4, 4)]))',
+          ['3', '0', '1', '6'],
+          1,
+          'Every interval is empty, so no events are created.',
+        ),
+        choose(
+          'Meetings are half-open intervals [start, end). One ends at 10 and another starts at 10. Do they need two rooms at 10?',
+          [
+            'No, the first has ended at 10',
+            'Yes, both are active at 10',
+            'Only if they are equally long',
+            'Only if they started together',
+          ],
+          0,
+          'The end coordinate is excluded from the first meeting.',
+        ),
+        predictOutput(
+          'This sweep sorts arrivals first, as for closed intervals. What does it print?',
+          'events = []\nfor start, end in [(0, 3), (3, 6)]:\n    events.append((start, 1))\n    events.append((end, -1))\nevents.sort(key=lambda e: (e[0], -e[1]))\nactive = 0\nbest = 0\nfor coordinate, change in events:\n    active += change\n    best = max(best, active)\nprint(best)',
+          ['1', '2', '0', '3'],
+          1,
+          'With arrivals first, both intervals are counted at 3, which models closed intervals sharing that point.',
+        ),
+      ],
+    },
+    {
+      title: 'Cost, and what the peak ignores',
+      explanation: [
+        'For n intervals there are at most 2n events: sorting them costs O(n log n), the scan O(n), and the events need O(n) space, however large the coordinates are. The peak depends only on the order of events; measuring the total covered length would also need the gaps between consecutive event coordinates.',
+      ],
+      example: {
+        code: 'def most_overlap(intervals):\n    events = []\n    for start, end in intervals:\n        if start < end:\n            events.append((start, 1))\n            events.append((end, -1))\n    events.sort()\n    active = 0\n    best = 0\n    for coordinate, change in events:\n        active += change\n        best = max(best, active)\n    return best\n\nprint(most_overlap([(1, 4), (2, 6)]))\nprint(most_overlap([(1000000, 4000000), (2000000, 6000000)]))',
+        output: '2\n2',
+        explanation:
+          'Scaling every coordinate by a million changes neither the work nor the answer.',
+      },
+      questions: [
+        choose(
+          'What is the time to compute the maximum overlap of n intervals with a sweep?',
+          ['O(n)', 'O(n log n)', 'O(n²)', 'O(max coordinate)'],
+          1,
+          'Sorting the 2n events dominates the linear scan.',
+        ),
+        choose(
+          'Coordinates reach 10¹⁸ but there are only 10⁵ intervals. How much memory do the events use?',
+          [
+            'O(10¹⁸) slots',
+            'O(n), about 2 × 10⁵ events',
+            'O(n²) pairs of intervals',
+            'O(log 10¹⁸) entries',
+          ],
+          1,
+          'Two events per interval, independent of coordinate size.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def most_overlap(intervals):\n    events = []\n    for start, end in intervals:\n        if start < end:\n            events.append((start, 1))\n            events.append((end, -1))\n    events.sort()\n    active = 0\n    best = 0\n    for coordinate, change in events:\n        active += change\n        best = max(best, active)\n    return best\n\nprint(most_overlap([(5, 6), (5, 600)]))\nprint(most_overlap([(5, 6), (7, 600)]))',
+          ['2\n2', '2\n1', '1\n1', '595\n594'],
+          1,
+          'The peak counts simultaneous intervals, not lengths: the first pair shares [5, 6), the second pair never meets.',
+        ),
+        choose(
+          'A task asks for the total length covered by at least one interval. What must the sweep add?',
+          [
+            'A second sort by interval length',
+            'A larger tie-breaking key',
+            'Nothing; the peak already gives it',
+            'The gaps between consecutive event coordinates',
+          ],
+          3,
+          'Length needs distances between events, which the peak never uses.',
+        ),
+      ],
+    },
+  ],
 };
