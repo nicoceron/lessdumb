@@ -8341,4 +8341,153 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  decorators: [
+    {
+      title: 'Read @ as passing the function to a decorator',
+      explanation: [
+        'Functions are values: sorted(words, key=len) hands the function len to sorted without calling it. A decorator is a function that receives a function and returns something to use in its place.',
+        'Writing @label on the line above def double(x): is shorthand for double = label(double). Python creates double, calls label with it once, while the def statement runs, and binds the name double to whatever label returns. A decorator that returns its argument unchanged leaves the function working as before.',
+      ],
+      example: {
+        code: 'def label(func):\n    print("decorating")\n    return func\n\n@label\ndef double(x):\n    return 2 * x\n\nprint("ready")\nprint(double(5))',
+        output: 'decorating\nready\n10',
+        explanation:
+          'label runs once, when the def statement runs, so decorating appears before ready. It returns double unchanged, so the call still returns 10.',
+      },
+      questions: [
+        predictOutput(
+          'What is printed?',
+          'def announce(func):\n    print("wrapping")\n    return func\n\n@announce\ndef greet():\n    return "hi"\n\nprint(greet())\nprint(greet())',
+          [
+            'wrapping\nhi\nwrapping\nhi',
+            'wrapping\nhi\nhi',
+            'hi\nhi',
+            'hi\nwrapping\nhi',
+          ],
+          1,
+          'The decorator runs once, while def greet runs, so wrapping is printed before either call. Each call then just returns hi.',
+        ),
+        choose(
+          'Which line does the same as putting @log on the line above def save(data):?',
+          ['log = save(log)', 'save = log', 'save(log)', 'save = log(save)'],
+          3,
+          'The decorator receives the function, and whatever it returns is bound to the function’s name.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def replace(func):\n    return "gone"\n\n@replace\ndef hello():\n    return "hi"\n\nprint(hello)',
+          ['hi', 'gone', 'None', 'replace'],
+          1,
+          'hello = replace(hello) binds hello to the string the decorator returned, so hello is no longer a function.',
+        ),
+        predictOutput(
+          'What is the output?',
+          'registered = []\n\ndef register(func):\n    registered.append(func)\n    return func\n\n@register\ndef first():\n    return 1\n\n@register\ndef second():\n    return 2\n\nprint(len(registered), registered[1]())',
+          ['2 2', '0 2', '2 1', '1 2'],
+          0,
+          'Each def runs its decorator once, so both functions are in the list. registered[1] is second, and calling it returns 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Cache results with @cache',
+      explanation: [
+        'from functools import cache imports a ready-made decorator. A function decorated with @cache remembers each argument it was called with together with the result. The first call with an argument runs the body and stores the result; every later call with the same argument returns the stored result without running the body at all.',
+        'Different arguments are different entries, so square(4) and square(5) each run once. Because repeated calls skip the body, a print or append inside a cached function happens only on the first call for each argument.',
+      ],
+      example: {
+        code: 'from functools import cache\n\n@cache\ndef square(n):\n    print("computing", n)\n    return n * n\n\nprint(square(4))\nprint(square(4))\nprint(square(5))',
+        output: 'computing 4\n16\n16\ncomputing 5\n25',
+        explanation:
+          'The first square(4) runs the body and stores 16. The second finds 4 already stored and returns 16 without printing. 5 is new, so the body runs again.',
+      },
+      questions: [
+        predictOutput(
+          'What is printed?',
+          'from functools import cache\n\n@cache\ndef slow_add(a, b):\n    print("adding")\n    return a + b\n\nprint(slow_add(2, 3))\nprint(slow_add(2, 3))\nprint(slow_add(3, 2))',
+          [
+            'adding\n5\nadding\n5\nadding\n5',
+            'adding\n5\n5\n5',
+            'adding\n5\n5\nadding\n5',
+            '5\n5\n5',
+          ],
+          2,
+          'The arguments (2, 3) run the body once and are then reused. (3, 2) is a different pair of arguments, so the body runs again even though the sum is the same.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from functools import cache\n\ncalls = []\n\n@cache\ndef double(n):\n    calls.append(n)\n    return 2 * n\n\nfor n in [3, 4, 3, 3, 4]:\n    double(n)\nprint(calls)',
+          ['[3, 4, 3, 3, 4]', '[3, 4]', '[3]', '[]'],
+          1,
+          'Only the first call for each argument runs the body, so 3 and 4 are appended once each.',
+        ),
+        choose(
+          'Why is @cache a poor fit for a function that must print a receipt every time it is called?',
+          [
+            'A cached function cannot call print at all',
+            'The cache stores the printed text and prints it twice',
+            'Repeated calls with the same arguments skip the body, so the receipt prints only once',
+            '@cache works only for recursive functions',
+          ],
+          2,
+          'The cache returns the stored result without running the body, so side effects in the body happen only on the first call for each argument.',
+        ),
+        predictOutput(
+          'What is the output?',
+          'from functools import cache\n\n@cache\ndef echo(word):\n    print("work")\n    return word * 2\n\nprint(echo("hi"), echo("hi"), echo("yo"))',
+          [
+            'work\nhihi\nhihi\nwork\nyoyo',
+            'work\nwork\nwork\nhihi hihi yoyo',
+            'hihi hihi yoyo',
+            'work\nwork\nhihi hihi yoyo',
+          ],
+          3,
+          'All three calls run before print shows their results. The first echo("hi") and echo("yo") each run the body once; the second echo("hi") is answered from the cache.',
+        ),
+      ],
+    },
+    {
+      title: 'Make a recursive function fast with @cache',
+      explanation: [
+        'A recursive function can ask for the same smaller answer many times. fib(n) = fib(n - 1) + fib(n - 2) computes fib(3) twice inside fib(5), and the repeats grow so fast that a plain fib(30) runs its body more than two million times.',
+        'Decorating the function with @cache also caches its recursive calls, because the name fib inside the body now refers to the cached function. Each fib(k) is computed once, so fib(n) runs its body only n + 1 times. A cached helper can also be defined inside another function, as in your recursion lessons.',
+      ],
+      example: {
+        code: 'from functools import cache\n\ncalls = []\n\n@cache\ndef fib(n):\n    calls.append(n)\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nprint(fib(10))\nprint(len(calls))',
+        output: '55\n11',
+        explanation:
+          'fib(10) needs fib(0) through fib(10), and each of those 11 states runs the body once. Without @cache the same call would run the body 177 times.',
+      },
+      questions: [
+        predictOutput(
+          'This fib has no cache. How many times does its body run?',
+          'calls = []\n\ndef fib(n):\n    calls.append(n)\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nfib(4)\nprint(len(calls))',
+          ['5', '4', '9', '8'],
+          2,
+          'fib(4) calls fib(3) and fib(2), and fib(3) calls fib(2) again, so smaller states repeat: 9 calls in all.',
+        ),
+        predictOutput(
+          'With @cache, what is printed?',
+          'from functools import cache\n\ncalls = []\n\n@cache\ndef fib(n):\n    calls.append(n)\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nprint(fib(4), len(calls))',
+          ['3 5', '3 9', '5 5', '3 4'],
+          0,
+          'fib(4) is 3, and each of the states 0 through 4 runs the body exactly once.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from functools import cache\n\ncalls = []\n\n@cache\ndef fib(n):\n    calls.append(n)\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nfib(6)\nfib(8)\nprint(len(calls))',
+          ['16', '7', '2', '9'],
+          3,
+          'fib(6) stores the states 0 through 6. fib(8) then needs only the two new states 7 and 8; everything below them is already cached.',
+        ),
+        predictOutput(
+          'What is printed?',
+          'from functools import cache\n\ndef stairs(n):\n    @cache\n    def ways(k):\n        if k <= 1:\n            return 1\n        return ways(k - 1) + ways(k - 2)\n    return ways(n)\n\nprint(stairs(5), stairs(30))',
+          ['5 832040', '8 1346269', '8 832040', '13 1346269'],
+          1,
+          'ways(k) adds the ways that end with a 1-step and with a 2-step. ways(5) is 8, and the cache makes ways(30) instant: 1346269.',
+        ),
+      ],
+    },
+  ],
 };

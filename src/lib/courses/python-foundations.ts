@@ -1820,6 +1820,44 @@ const curriculum = [
   ),
 
   skill(
+    'decorators',
+    'library',
+    'Wrap a function with a decorator',
+    'Read @ syntax, and cache a function’s results with functools.cache.',
+    ['imports', 'recursion', 'key-functions'],
+    [
+      'Functions are values: sorted(words, key=len) hands len to sorted without calling it. A decorator is a function that receives a function and returns something to use in its place. Writing @label on the line above def double(x): means double = label(double). Python creates double, passes it to label once while the def runs, and binds the name double to whatever label returns.',
+      'from functools import cache gives you a ready-made decorator. @cache wraps a function so that it remembers the result for each argument it has seen: a repeated call returns the stored result without running the body again. That makes a recursive function such as fib fast, because each fib(n) is computed only once.',
+    ],
+    {
+      code: 'from functools import cache\n\n@cache\ndef square(n):\n    print("computing", n)\n    return n * n\n\nprint(square(4))\nprint(square(4))\nprint(square(5))',
+      output: 'computing 4\n16\n16\ncomputing 5\n25',
+      explanation:
+        'The first square(4) runs the body and stores 16. The second call finds 4 already stored and returns 16 without printing. 5 is a new argument, so the body runs again.',
+    },
+    [
+      exercise(
+        'count_paths(n) counts the ways to climb n stairs taking 1 or 2 steps at a time. Import cache from functools and decorate count_paths with @cache so that count_paths(60) finishes quickly.',
+        'def count_paths(n):\n    if n <= 1:\n        return 1\n    return count_paths(n - 1) + count_paths(n - 2)\n',
+        'from functools import cache\n\n@cache\ndef count_paths(n):\n    if n <= 1:\n        return 1\n    return count_paths(n - 1) + count_paths(n - 2)',
+        'assert hasattr(count_paths, "cache_info"), "Decorate count_paths with @cache."\nassert count_paths(1) == 1\nassert count_paths(4) == 5, "1+1+1+1, 1+1+2, 1+2+1, 2+1+1 and 2+2."\nassert count_paths(60) == 2504730781961, "Each smaller staircase should be computed once."',
+        'With @cache, each count_paths(k) is computed once and reused, so the recursion makes about 60 calls instead of trillions.',
+        'Write from functools import cache at the top and @cache on the line above def count_paths.',
+      ),
+    ],
+    [
+      [
+        'What does @name on the line above def f(): mean?',
+        'f = name(f): the decorator receives the function, and its return value replaces f.',
+      ],
+      [
+        'What does @cache from functools do?',
+        'It stores each result by its arguments, so a repeated call returns the stored result without running the body.',
+      ],
+    ],
+  ),
+
+  skill(
     'classes',
     'objects',
     'Define a class',

@@ -5,6 +5,7 @@ import { betterAuth } from 'better-auth';
 import { authOptions as createAuthOptions } from './auth-options';
 import { sqliteStateStore } from './sqlite-state-store';
 import type { Backend, BackendAuth } from './backend-contract';
+import type { Mailer } from './mail';
 export type { Backend } from './backend-contract';
 export { SESSION_READ_RATE_LIMIT } from './auth-options';
 import { getMigrations } from 'better-auth/db/migration';
@@ -16,6 +17,8 @@ export interface BackendOptions {
   baseURL: string;
   trustedOrigins?: string[];
   rateLimit?: boolean;
+  /** Omitted: email is off. The Node server never sends real email. */
+  mail?: Mailer;
 }
 
 export interface NodeBackend extends Backend {
@@ -31,7 +34,11 @@ export function createBackend(options: BackendOptions): NodeBackend {
   database.pragma('journal_mode = WAL');
   database.pragma('busy_timeout = 5000');
 
-  const authOptions = createAuthOptions(options, database);
+  const states = sqliteStateStore(database);
+  const authOptions = createAuthOptions(
+    { ...options, deleteUserData: (userId) => states.remove(userId) },
+    database,
+  );
 
   let auth: BackendAuth | undefined;
   let initialization: Promise<void> | undefined;
@@ -71,7 +78,7 @@ export function createBackend(options: BackendOptions): NodeBackend {
       return auth;
     },
     database,
-    states: sqliteStateStore(database),
+    states,
     ready,
     close: () => database.close(),
   };
@@ -94,6 +101,11 @@ function localSecret(dataDirectory: string): string {
       return readFileSync(secretPath, 'utf8').trim();
     }
   }
+}
+
+/** The Node server has no mail transport, so email features stay off. */
+export function emailEnabled(): boolean {
+  return false;
 }
 
 let backend: Backend | undefined;

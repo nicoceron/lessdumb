@@ -21,9 +21,33 @@ npm run deploy:cloudflare
 
 Supply a randomly generated signing secret of at least 32 characters at the secret prompt. Keep it stable across releases. It belongs in Cloudflare's secret store, never Git, a public variable, or the browser. The deployment script builds first; Astro generates `dist/server/wrangler.json` and Wrangler discovers it through `.wrangler/deploy/config.json`. No deployment token is committed; CI reads it from the repository secret.
 
-`migrations/0001_accounts_and_progress.sql` contains the Better Auth 1.7.7 account schema generated from an empty database with its documented migration API. `0002_compressed_progress.sql` adds an encoding marker. Apply migrations before deploying code that requires them. Do not rerun the schema generator to overwrite historical migrations when upgrading Better Auth; add and review a new migration instead.
+`migrations/0001_accounts_and_progress.sql` contains the Better Auth 1.7.7 account schema generated from an empty database with its documented migration API. `0002_compressed_progress.sql` adds an encoding marker. `0003_email_budget.sql` adds the daily email counters. Apply migrations before deploying code that requires them. Do not rerun the schema generator to overwrite historical migrations when upgrading Better Auth; add and review a new migration instead.
 
 The production database starts empty. Local accounts, cookies, signing secrets, and device-only progress are not copied into it. Guest progress on the localhost origin remains on that origin; an exported progress backup can be imported through Settings on the public application.
+
+## Turn on email
+
+Password reset and email verification are built in but off: the Worker has no `EMAIL` binding and no `EMAIL_FROM`, so the app hides both features and their endpoints answer `EMAIL_NOT_ENABLED` ([behavior](backend.md#email-password-reset-and-verification)). Email Sending (Cloudflare Email Service, public beta) is included in Workers Paid: 3,000 emails a month, then $0.35 per 1,000. The app caps itself at 90 a day.
+
+The owner turns it on:
+
+1. **Pick the sending domain**, a zone on this Cloudflare account (for example a subdomain such as `mail.hypers.dev`). Onboarding adds DNS records (SPF, DKIM, DMARC) to that zone.
+2. **Onboard it to Email Service.** Either `npx wrangler login` (the current login lacks the email scopes), then `npx wrangler email sending enable <domain>`; or in the dashboard, **Compute → Email Service**, onboard the domain for sending.
+3. **Edit `wrangler.jsonc`**: add the binding (the one-line change) and the sender:
+
+   ```jsonc
+   "send_email": [{ "name": "EMAIL" }],
+   "vars": {
+     "BETTER_AUTH_URL": "https://lessdumb.nicocerond.workers.dev",
+     "EMAIL_FROM": "lessdumb <noreply@<domain>>",
+   },
+   ```
+
+   The sender must be on the onboarded domain. Mail stays off if either the binding or a valid `EMAIL_FROM` is missing.
+
+4. **Merge to `main`.** CI applies migrations and deploys. Then confirm by hand once: request a password reset for a real account and check that the email arrives.
+
+The binding is left out of `wrangler.jsonc` until then. A config with it passes `wrangler deploy --dry-run`, and the local preview simulates it (messages are written under `.wrangler/tmp/email/`, nothing is sent), but whether a real deploy accepts a `send_email` binding before any domain is onboarded could not be verified without changing the account, so it waits for step 3. If the first deploy with the binding fails on a permission error, give the `CLOUDFLARE_API_TOKEN` token the Email Sending permission as well; this was not testable from here.
 
 ## Local Workers verification
 
@@ -56,8 +80,8 @@ Activity writer IDs are initialized inside a request or browser event rather tha
 
 ## Free services and boundaries
 
-This deployment requires no paid-only Cloudflare bindings, KV, R2, Images, or managed email. No paid subscription is activated by the deployment commands. Workers and D1 have free quotas; existing account billing and usage beyond allowances remain governed by the account's plan. The documented Workers Free allowance is 100,000 dynamic requests/day with 10 ms CPU/request; D1 Free has 5 million rows read/day, 100,000 rows written/day, and 5 GB total storage, with a 500 MB per-database cap. Exceeding free allowances can interrupt service. Static asset requests do not count as dynamic Worker invocations when served directly.
+This deployment requires no paid-only Cloudflare bindings, KV, R2, or Images. Managed email (Email Service, Workers Paid) is optional and off until configured. No paid subscription is activated by the deployment commands. Workers and D1 have free quotas; existing account billing and usage beyond allowances remain governed by the account's plan. The documented Workers Free allowance is 100,000 dynamic requests/day with 10 ms CPU/request; D1 Free has 5 million rows read/day, 100,000 rows written/day, and 5 GB total storage, with a 500 MB per-database cap. Exceeding free allowances can interrupt service. Static asset requests do not count as dynamic Worker invocations when served directly.
 
-Credential rate limits use D1. Compiler concurrency and request buckets are per Worker isolate, not a global distributed quota. Compiler Explorer is a shared external free service and can be unavailable. Email verification and password recovery delivery remain unconfigured. AnkiConnect runs on the learner's computer and needs their desktop Anki profile, plugin, and browser permission; deployment testing does not establish a connection to every learner's Anki installation.
+Credential rate limits use D1. Compiler concurrency and request buckets are per Worker isolate, not a global distributed quota. Compiler Explorer is a shared external free service and can be unavailable. Email verification and password recovery stay off until a sending domain is onboarded (see [Turn on email](#turn-on-email)). AnkiConnect runs on the learner's computer and needs their desktop Anki profile, plugin, and browser permission; deployment testing does not establish a connection to every learner's Anki installation.
 
-Documentation consulted: [Astro Cloudflare adapter](https://docs.astro.build/en/guides/integrations-guide/cloudflare/), [Better Auth databases and D1](https://better-auth.com/docs/concepts/database), [Better Auth security and password hooks](https://better-auth.com/docs/reference/security), [D1 batch transactions](https://developers.cloudflare.com/d1/worker-api/d1-database/), [D1 limits](https://developers.cloudflare.com/d1/platform/limits/), [Workers web standards](https://developers.cloudflare.com/workers/runtime-apis/web-standards/), [Workers Request](https://developers.cloudflare.com/workers/runtime-apis/request/), [Workers limits](https://developers.cloudflare.com/workers/platform/limits/), [static asset billing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/).
+Documentation consulted: [Email Service Workers API](https://developers.cloudflare.com/email-service/api/send-emails/workers-api/), [Email Service send bindings](https://developers.cloudflare.com/email-service/configuration/send-bindings/), [Email Service local development](https://developers.cloudflare.com/email-service/local-development/sending/), [Astro Cloudflare adapter](https://docs.astro.build/en/guides/integrations-guide/cloudflare/), [Better Auth databases and D1](https://better-auth.com/docs/concepts/database), [Better Auth security and password hooks](https://better-auth.com/docs/reference/security), [D1 batch transactions](https://developers.cloudflare.com/d1/worker-api/d1-database/), [D1 limits](https://developers.cloudflare.com/d1/platform/limits/), [Workers web standards](https://developers.cloudflare.com/workers/runtime-apis/web-standards/), [Workers Request](https://developers.cloudflare.com/workers/runtime-apis/request/), [Workers limits](https://developers.cloudflare.com/workers/platform/limits/), [static asset billing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/).

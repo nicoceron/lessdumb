@@ -10561,4 +10561,597 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'cpp-abs-value': [
+    {
+      title: 'std::abs gives the magnitude of a number',
+      explanation: [
+        'std::abs(x) returns x without its sign: std::abs(-7) and std::abs(7) are both 7, and std::abs(0) is 0. The int and long long versions come from <cstdlib>; for a double include <cmath>, and the result is a double: std::abs(-2.5) is 2.5.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <cmath>
+#include <cstdlib>
+#include <iostream>
+int main() {
+  std::cout << std::abs(-7) << " " << std::abs(7) << " " << std::abs(-2.5) << "\\n";
+}`,
+        output: '7 7 2.5',
+        explanation:
+          'Both 7 and -7 have magnitude 7. The double overload keeps the fraction, giving 2.5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <cstdlib>
+#include <iostream>
+int main() {
+  std::cout << std::abs(-12) + std::abs(5) << "\\n";
+}`,
+          ['-7', '17', '7', '-17'],
+          1,
+          'The magnitudes are 12 and 5, and their sum is 17.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <cmath>
+#include <iostream>
+int main() {
+  std::cout << std::abs(-0.75) * 4 << "\\n";
+}`,
+          ['-3', '0', '3.75', '3'],
+          3,
+          'std::abs(-0.75) is the double 0.75, and 0.75 * 4 is 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <cstdlib>
+#include <iostream>
+int main() {
+  int a = -3;
+  int b = -8;
+  std::cout << std::abs(a) - std::abs(b) << "\\n";
+}`,
+          ['-5', '5', '11', '-11'],
+          0,
+          'The magnitudes are 3 and 8, and 3 - 8 is -5: std::abs applies only to its own argument.',
+        ),
+        choose(
+          'Which expression is never negative for ints a and b whose difference fits in an int?',
+          ['a - b', 'std::abs(a) - std::abs(b)', 'std::abs(a - b)', '-(a - b)'],
+          2,
+          'Only the magnitude of the difference is guaranteed to be at least 0; the other expressions are negative for some inputs.',
+        ),
+      ],
+    },
+    {
+      title: 'Measure the distance between two values',
+      explanation: [
+        'The distance between a and b on the number line is std::abs(a - b), and it does not depend on the order: std::abs(3 - 10) and std::abs(10 - 3) are both 7. Two doubles count as close when std::abs(x - y) <= tolerance.',
+        'Subtract first, then take the magnitude. std::abs(a) - std::abs(b) compares sizes, not positions: for -4 and 4 it gives 0, although the values are 8 apart. One limit: the most negative int has no positive partner in int, so keep differences well inside the type’s range.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <cmath>
+#include <cstdlib>
+#include <iostream>
+int main() {
+  std::cout << std::abs(3 - 10) << " " << std::abs(10 - 3) << " " << std::abs(-4 - 4) << "\\n";
+  double x = 0.1 + 0.2;
+  std::cout << (std::abs(x - 0.3) <= 1e-9) << "\\n";
+}`,
+        output: '7 7 8\n1',
+        explanation:
+          'Both orders give the distance 7, and -4 and 4 are 8 apart. 0.1 + 0.2 is not exactly 0.3 as a double, but it is within the tolerance.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <cstdlib>
+#include <iostream>
+int main() {
+  int low = -6;
+  int high = 9;
+  std::cout << std::abs(low - high) << " " << std::abs(high - low) << "\\n";
+}`,
+          ['-15 15', '3 3', '15 15', '15 -15'],
+          2,
+          '-6 and 9 are 15 apart, and the distance is the same in either order.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <cstdlib>
+#include <iostream>
+int main() {
+  std::cout << std::abs(-4) - std::abs(4) << " " << std::abs(-4 - 4) << "\\n";
+}`,
+          ['8 8', '0 8', '0 0', '8 0'],
+          1,
+          'The magnitudes are equal, so their difference is 0, but the values themselves are 8 apart.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <cmath>
+#include <iostream>
+int main() {
+  double measured = 2.004;
+  double expected = 2.0;
+  std::cout << (std::abs(measured - expected) <= 0.01) << (std::abs(expected - measured) <= 0.001) << "\\n";
+}`,
+          ['01', '11', '00', '10'],
+          3,
+          'The values are 0.004 apart in either order: within 0.01, but not within 0.001.',
+        ),
+        choose(
+          'A test checks measured - expected <= tolerance without std::abs. Which result does it wrongly accept?',
+          [
+            'A measured value far below expected',
+            'A measured value exactly equal to expected',
+            'A measured value slightly above expected but within tolerance',
+            'A measured value far above expected',
+          ],
+          0,
+          'A large negative difference is still less than the tolerance, so values that are far too small pass.',
+        ),
+      ],
+    },
+  ],
+  'cpp-to-string': [
+    {
+      title: 'std::to_string writes a number’s digits',
+      explanation: [
+        'std::to_string(n), from <string>, returns a std::string holding the decimal digits of n, with a leading minus sign when n is negative: std::to_string(42) is "42" and std::to_string(-7) is "-7". The result is ordinary text, so size() counts its characters and += appends it to another string.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <string>
+int main() {
+  std::string digits = std::to_string(-305);
+  std::cout << digits << " " << digits.size() << "\\n";
+}`,
+        output: '-305 4',
+        explanation:
+          'The text holds the minus sign and three digits, so its size is 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+int main() {
+  std::string s = std::to_string(1000);
+  std::cout << s.size() << "\\n";
+}`,
+          ['1000', '1', '4', '3'],
+          2,
+          '"1000" has four characters.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+int main() {
+  std::string id = "order-";
+  id += std::to_string(17);
+  std::cout << id << "\\n";
+}`,
+          ['order-17', 'order-', 'order-1', '17'],
+          0,
+          'std::to_string(17) is the text "17", and += appends it after "order-".',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+int main() {
+  std::string s = std::to_string(-42);
+  std::cout << s[0] << s.size() << "\\n";
+}`,
+          ['42', '4', '-2', '-3'],
+          3,
+          'The first character is the minus sign, and "-42" has three characters.',
+        ),
+        choose(
+          'Which expression produces the text "250"?',
+          [
+            'std::string(250)',
+            'std::to_string(250)',
+            'std::to_string("250")',
+            'std::string("2") + 50',
+          ],
+          1,
+          'std::to_string takes a number and returns its digits as a std::string.',
+        ),
+      ],
+    },
+    {
+      title: 'Convert before appending a number to text',
+      explanation: [
+        'std::string has no += that writes a number’s digits. text += 65 compiles, but it converts 65 to a char and appends the single character whose code is 65, the letter A. Convert first: text += std::to_string(65) appends the two characters 6 and 5.',
+        'For a double, std::to_string always writes six digits after the decimal point: std::to_string(2.5) is "2.500000". It is most useful for integers, whose text is exact and compact.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <iostream>
+#include <string>
+int main() {
+  std::string wrong = "id=";
+  wrong += 65;
+  std::string right = "id=";
+  right += std::to_string(65);
+  std::cout << wrong << " " << right << "\\n";
+}`,
+        output: 'id=A id=65',
+        explanation:
+          'Appending the int 65 adds the character with code 65, A. Converting it first appends the digits 6 and 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+int main() {
+  std::string s = "v";
+  s += 66;
+  s += std::to_string(66);
+  std::cout << s << "\\n";
+}`,
+          ['v6666', 'vB66', 'v66B', 'vBB'],
+          1,
+          'The first += appends the character with code 66, B; the second appends the digits 66.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+int main() {
+  std::cout << std::to_string(2.5) << "\\n";
+}`,
+          ['2.5', '2.50000', '2.50', '2.500000'],
+          3,
+          'std::to_string writes a double with six digits after the decimal point.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <iostream>
+#include <string>
+int main() {
+  std::string line = std::to_string(10);
+  line += std::to_string(20);
+  line += std::to_string(-3);
+  std::cout << line << " " << line.size() << "\\n";
+}`,
+          ['1020-3 6', '27 2', '1020-3 5', '10 20 -3 8'],
+          0,
+          'The pieces are joined without spaces: "10", "20", and "-3" make six characters.',
+        ),
+        choose(
+          'A log line built with text += count shows a strange symbol instead of the count 7. Why?',
+          [
+            'count was negative, so its digits were hidden',
+            'std::string cannot store digit characters',
+            '+= converted 7 to the char with code 7 and appended that one character',
+            '+= appended the address of count',
+          ],
+          2,
+          'An int appended with += becomes one char. std::to_string(count) gives the digit text.',
+        ),
+      ],
+    },
+  ],
+  'cpp-reverse-range': [
+    {
+      title: 'std::reverse flips a range in place',
+      explanation: [
+        'std::reverse(first, last), from <algorithm>, reverses the elements between two iterators. It works in place: it swaps the first and last elements, then the next pair inward, and returns nothing. std::reverse(v.begin(), v.end()) reverses a whole vector.',
+        'The original order is overwritten, so copy the vector first when you still need it: std::vector<int> original = values; and then reverse values.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> values{1, 2, 3, 4};
+  std::vector<int> original = values;
+  std::reverse(values.begin(), values.end());
+  std::cout << values[0] << values[1] << values[2] << values[3] << " " << original[0] << "\\n";
+}`,
+        output: '4321 1',
+        explanation:
+          'values is reversed in place. The copy made before the call still starts with 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{7, 8, 9};
+  std::reverse(v.begin(), v.end());
+  std::cout << v[0] << v[1] << v[2] << "\\n";
+}`,
+          ['789', '897', '987', '978'],
+          2,
+          'The first and last elements swap, and the middle one stays put.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 2, 3};
+  std::vector<int> keep = v;
+  std::reverse(v.begin(), v.end());
+  std::cout << v[0] << " " << keep[0] << "\\n";
+}`,
+          ['3 3', '1 1', '1 3', '3 1'],
+          3,
+          'Only v is reversed; keep is an independent copy made before the call.',
+        ),
+        choose(
+          'What does std::reverse(v.begin(), v.end()) return?',
+          [
+            'Nothing; it rearranges the elements of v itself',
+            'A reversed copy of v',
+            'An iterator to the new first element',
+            'The number of swaps it made',
+          ],
+          0,
+          'std::reverse returns void and changes the range it is given.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{5, 6, 7, 8, 9};
+  std::reverse(v.begin(), v.end());
+  std::cout << v[2] << " " << v[4] << "\\n";
+}`,
+          ['7 5', '7 9', '8 5', '6 9'],
+          0,
+          'The reversed vector is 9 8 7 6 5: the middle element stays at index 2, and 5 moves to the end.',
+        ),
+      ],
+    },
+    {
+      title: 'Reverse only part of a range',
+      explanation: [
+        'The iterators choose what is reversed. std::reverse(v.begin(), v.begin() + 3) reverses only the first three elements, and std::reverse(v.begin() + 2, v.end()) reverses everything from index 2 on. The range is half-open, so the element at the second iterator is not moved.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 2, 3, 4, 5};
+  std::reverse(v.begin(), v.begin() + 3);
+  std::cout << v[0] << v[1] << v[2] << v[3] << v[4] << "\\n";
+}`,
+        output: '32145',
+        explanation:
+          'Only indexes 0 to 2 are reversed; 4 and 5 stay where they were.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{1, 2, 3, 4, 5};
+  std::reverse(v.begin() + 2, v.end());
+  std::cout << v[0] << v[1] << v[2] << v[3] << v[4] << "\\n";
+}`,
+          ['54321', '12543', '21345', '12345'],
+          1,
+          'Indexes 2 to 4 hold 3, 4, 5 and become 5, 4, 3; the first two elements are untouched.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{4, 5, 6};
+  std::reverse(v.begin(), v.begin() + 1);
+  std::cout << v[0] << v[1] << v[2] << "\\n";
+}`,
+          ['654', '546', '465', '456'],
+          3,
+          'A one-element range reads the same reversed, so nothing moves.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <vector>
+int main() {
+  std::vector<int> v{2, 4, 6, 8};
+  std::reverse(v.begin(), v.end());
+  std::reverse(v.begin(), v.begin() + 2);
+  std::cout << v[0] << v[1] << v[2] << v[3] << "\\n";
+}`,
+          ['8642', '2468', '6842', '4862'],
+          2,
+          'The first call gives 8 6 4 2; the second swaps the first two elements, giving 6 8 4 2.',
+        ),
+        choose(
+          'v may have any size of at least 2. Which call reverses exactly its last two elements?',
+          [
+            'std::reverse(v.end() - 2, v.end())',
+            'std::reverse(v.begin(), v.begin() + 2)',
+            'std::reverse(v.end(), v.end() - 2)',
+            'std::reverse(v.begin() + 2, v.end())',
+          ],
+          0,
+          'v.end() - 2 is the second-to-last element and v.end() is one past the last, so the range holds the last two.',
+        ),
+      ],
+    },
+  ],
+  'cpp-digit-palindrome': [
+    {
+      title: 'Reverse a number’s digits as text',
+      explanation: [
+        'std::to_string turns a number into its digit characters, and a std::string is a range of characters, so std::reverse(s.begin(), s.end()) reverses those digits in place. Reverse a copy when you also need the original text, and compare two strings with ==, which is true when they hold the same characters in the same order.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <iostream>
+#include <string>
+int main() {
+  std::string digits = std::to_string(1203);
+  std::string reversed = digits;
+  std::reverse(reversed.begin(), reversed.end());
+  std::cout << digits << " " << reversed << " " << (digits == reversed) << "\\n";
+}`,
+        output: '1203 3021 0',
+        explanation:
+          'The copy is reversed while digits keeps the original order, and the two texts differ.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <string>
+int main() {
+  std::string s = std::to_string(500);
+  std::reverse(s.begin(), s.end());
+  std::cout << s << "\\n";
+}`,
+          ['5', '005', '500', '050'],
+          1,
+          'Reversing text keeps every character, including the zeros, which now come first.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <string>
+int main() {
+  std::string s = std::to_string(-45);
+  std::reverse(s.begin(), s.end());
+  std::cout << s << "\\n";
+}`,
+          ['-54', '45-', '54', '54-'],
+          3,
+          'The minus sign is a character too, so it moves to the end.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <iostream>
+#include <string>
+int main() {
+  std::string a = std::to_string(1221);
+  std::string b = a;
+  std::reverse(b.begin(), b.end());
+  std::cout << (a == b) << "\\n";
+}`,
+          ['1', '0', '1221', '2'],
+          0,
+          '1221 reads the same backwards, so the reversed copy equals the original.',
+        ),
+      ],
+    },
+    {
+      title: 'Remove the sign, then compare',
+      explanation: [
+        'A sign is not a digit: reversing "-121" gives "121-", which never matches. Take std::abs first, so std::to_string(std::abs(-121)) is "121", whose reverse matches. Then compare the original text with its reversed copy using ==.',
+      ],
+      example: {
+        language: 'cpp',
+        code: `#include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+bool is_palindrome(int value) {
+  std::string digits = std::to_string(std::abs(value));
+  std::string reversed = digits;
+  std::reverse(reversed.begin(), reversed.end());
+  return digits == reversed;
+}
+int main() {
+  std::cout << is_palindrome(-121) << is_palindrome(123) << is_palindrome(7) << "\\n";
+}`,
+        output: '101',
+        explanation:
+          '-121 becomes "121", a palindrome. "123" reversed is "321". A single digit always matches itself.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+bool is_palindrome(int value) {
+  std::string digits = std::to_string(std::abs(value));
+  std::string reversed = digits;
+  std::reverse(reversed.begin(), reversed.end());
+  return digits == reversed;
+}
+int main() {
+  std::cout << is_palindrome(10) << is_palindrome(0) << "\\n";
+}`,
+          ['10', '11', '01', '00'],
+          2,
+          '"10" reversed is "01", which differs. "0" is a single digit and matches itself.',
+        ),
+        predictOutput(
+          'This version forgets std::abs. What does it print?',
+          `#include <algorithm>
+#include <iostream>
+#include <string>
+int main() {
+  std::string s = std::to_string(-11);
+  std::string r = s;
+  std::reverse(r.begin(), r.end());
+  std::cout << (s == r) << " " << r << "\\n";
+}`,
+          ['1 -11', '0 11-', '1 11', '0 -11'],
+          1,
+          'The minus sign moves to the end, so "-11" and "11-" differ even though the digits form a palindrome.',
+        ),
+        choose(
+          'Why does is_palindrome reverse a copy rather than digits itself?',
+          [
+            'std::reverse cannot change a std::string',
+            'std::abs only works on a copy',
+            'Comparing a string with itself does not compile',
+            'Reversing digits in place would leave no unreversed text to compare against',
+          ],
+          3,
+          'After an in-place reverse, both sides of the comparison would be the same reversed text.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `#include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+bool is_palindrome(int value) {
+  std::string digits = std::to_string(std::abs(value));
+  std::string reversed = digits;
+  std::reverse(reversed.begin(), reversed.end());
+  return digits == reversed;
+}
+int main() {
+  std::cout << is_palindrome(1001) << is_palindrome(-1010) << "\\n";
+}`,
+          ['10', '11', '01', '00'],
+          0,
+          '"1001" reads the same backwards. -1010 becomes "1010", whose reverse is "0101".',
+        ),
+      ],
+    },
+  ],
 };

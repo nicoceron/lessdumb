@@ -4,6 +4,7 @@ import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 import type { D1Database } from '@cloudflare/workers-types';
 import { hashPassword, verifyPassword } from 'better-auth/crypto';
 import { d1StateStore } from '../src/lib/server/d1-state-store';
+import { d1MailBudget } from '../src/lib/server/cloudflare-mail';
 import { nativePassword } from '../src/lib/server/native-password';
 import { createState } from '../src/lib/state';
 
@@ -24,9 +25,11 @@ async function database() {
   const db = (await runtime.getD1Database('DB')) as unknown as D1Database;
   const migration = (
     await Promise.all(
-      ['0001_accounts_and_progress.sql', '0002_compressed_progress.sql'].map(
-        (name) => readFile(`migrations/${name}`, 'utf8'),
-      ),
+      [
+        '0001_accounts_and_progress.sql',
+        '0002_compressed_progress.sql',
+        '0003_email_budget.sql',
+      ].map((name) => readFile(`migrations/${name}`, 'utf8')),
     )
   ).join('\n');
   await db.batch(
@@ -116,6 +119,50 @@ describe('Cloudflare D1 revision and account storage', () => {
       value: { state: newer, revision: 2 },
     });
     expect(await store.read('first')).toEqual({ state: newer, revision: 2 });
+  });
+});
+
+describe('Cloudflare D1 account deletion and email budget', () => {
+  it("removes only the deleted learner's progress", async () => {
+    const db = await database();
+    const store = d1StateStore(db);
+    await store.write('first', createState(), 0);
+    await store.write('second', createState(), 0);
+    await store.remove('first');
+    await store.remove('missing');
+    expect(await store.read('first')).toEqual({ state: null, revision: 0 });
+    expect((await store.read('second')).revision).toBe(1);
+  });
+
+  it('caps each recipient and the whole day, then resets the next day', async () => {
+    const db = await database();
+    let now = Date.parse('2026-10-03T10:00:00Z');
+    const budget = d1MailBudget(db, { daily: 4, recipient: 2 }, () => now);
+    expect(await budget.take('A@lessdumb.dev')).toBe(true);
+    expect(await budget.take('a@lessdumb.dev ')).toBe(true);
+    // A third message to one address is held without using the daily budget.
+    expect(await budget.take('a@lessdumb.dev')).toBe(false);
+    expect(await budget.take('b@lessdumb.dev')).toBe(true);
+    expect(await budget.take('c@lessdumb.dev')).toBe(true);
+    expect(await budget.take('d@lessdumb.dev')).toBe(false);
+    const keys = await db
+      .prepare('SELECT key FROM email_budget')
+      .all<{ key: string }>();
+    expect(keys.results.some((row) => row.key.includes('lessdumb.dev'))).toBe(
+      false,
+    );
+    now += 24 * 60 * 60 * 1000;
+    expect(await budget.take('d@lessdumb.dev')).toBe(true);
+  });
+
+  it('never exceeds the daily limit under concurrent sends', async () => {
+    const budget = d1MailBudget(await database(), { daily: 5, recipient: 5 });
+    const results = await Promise.all(
+      Array.from({ length: 12 }, (_, index) =>
+        budget.take(`learner-${index}@lessdumb.dev`),
+      ),
+    );
+    expect(results.filter(Boolean)).toHaveLength(5);
   });
 });
 
