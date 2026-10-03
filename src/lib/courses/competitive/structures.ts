@@ -1116,7 +1116,7 @@ print(distance)`,
     'The indirect route through 2 improves vertex 1 from cost 9 to 3, making the old heap entry stale.',
     [
       exercise(
-        'Implement shortest_costs(n, edges, source). n is positive; vertices are 0 through n-1, source is valid, and edges contains directed (u, v, weight) triples with valid endpoints and integer weights. Return minimum costs from source, using None for unreachable vertices. Parallel edges, self-loops, and zero-weight cycles are allowed. Raise ValueError if any weight is negative, even in an unreachable component. Preserve edges. A hidden graph with 50,000 vertices and 250,000 edges must finish within 3 seconds.',
+        'Implement shortest_costs(n, edges, source). n is positive; vertices are 0 through n-1, source is valid, and edges contains directed (u, v, weight) triples with valid endpoints and integer weights. Return minimum costs from source, using None for unreachable vertices. Parallel edges, self-loops, and zero-weight cycles are allowed. Raise ValueError if any weight is negative, even in an unreachable component. Preserve edges. A hidden graph with 100,000 vertices and 500,000 edges must finish within 3 seconds.',
         `import heapq
 
 def shortest_costs(n, edges, source):
@@ -1156,15 +1156,15 @@ except ValueError:
 else:
     assert False, "Reject every negative edge, including unreachable ones."
 assert edges == [(0, 1, 9), (0, 2, 2), (2, 1, 1), (1, 3, 4), (2, 3, 8)], "Preserve edges."`,
-          `_u = _numbers(150000, 0, 49999, 191)
-_v = _numbers(150000, 0, 49999, 192)
-_w = _numbers(150000, 0, 10**6, 193)
-_edges = [(_u[i], _v[i], _w[i]) for i in range(150000)]
-_edges += [(i + 1, i, 1) for i in range(49998, -1, -1)]
-_edges += [(i, i + 1, 3) for i in range(49998, -1, -1)]
-_result, _seconds = _timed(shortest_costs, 50000, _edges, 0)
-assert _checksum(_result) == 1645433355848269451, "The 50,000-vertex graph returned wrong costs."
-_check_time(_seconds, "The 50,000-vertex graph", "Settle vertices in heap order instead of relaxing every edge in rounds.")`,
+          `_u = _numbers(300000, 0, 99999, 191)
+_v = _numbers(300000, 0, 99999, 192)
+_w = _numbers(300000, 0, 10**6, 193)
+_edges = [(_u[i], _v[i], _w[i]) for i in range(300000)]
+_edges += [(i + 1, i, 1) for i in range(99998, -1, -1)]
+_edges += [(i, i + 1, 3) for i in range(99998, -1, -1)]
+_result, _seconds = _timed(shortest_costs, 100000, _edges, 0)
+assert _checksum(_result) == 2066851167642563454, "The 100,000-vertex graph returned wrong costs."
+_check_time(_seconds, "The 100,000-vertex graph", "Settle vertices in heap order instead of relaxing every edge in rounds.")`,
         ),
         'Validating all edges establishes the nonnegative precondition before exploration. Heap entries propose routes; the distance array decides which proposals are still current.',
         'Build outgoing weighted lists, reject negative weights, then relax from matching minimum heap entries.',

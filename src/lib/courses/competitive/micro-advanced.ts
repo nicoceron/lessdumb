@@ -439,7 +439,7 @@ stages('cp-segment-tree', 'cp-range', [
     ],
     signature: 'def query_minimum(tree, size, left, right)',
     contract:
-      'Implement query_minimum(tree, size, left, right) for a built padded minimum tree and valid public 0 <= left <= right <= size. Return the minimum on [left, right), or None if empty. Preserve tree. A hidden case runs 30,000 queries on a 131,072-leaf tree and must finish within 3 seconds.',
+      'Implement query_minimum(tree, size, left, right) for a built padded minimum tree and valid public 0 <= left <= right <= size. Return the minimum on [left, right), or None if empty. Preserve tree. A hidden case runs 90,000 queries on a 131,072-leaf tree and must finish within 3 seconds.',
     solution:
       'def query_minimum(tree, size, left, right):\n    if left == right:\n        return None\n    left += size\n    right += size\n    best = float("inf")\n    while left < right:\n        if left % 2:\n            best = min(best, tree[left])\n            left += 1\n        if right % 2:\n            right -= 1\n            best = min(best, tree[right])\n        left //= 2\n        right //= 2\n    return best',
     checks: withLargeCase(
@@ -448,13 +448,13 @@ stages('cp-segment-tree', 'cp-range', [
 _tree = [float("inf")] * _size + _numbers(_size, -10**9, 10**9, 441)
 for _node in range(_size - 1, 0, -1):
     _tree[_node] = min(_tree[2 * _node], _tree[2 * _node + 1])
-_xs = _numbers(30000, 0, _size, 442)
-_ys = _numbers(30000, 0, _size, 443)
+_xs = _numbers(90000, 0, _size, 442)
+_ys = _numbers(90000, 0, _size, 443)
 def _run():
-    return [query_minimum(_tree, _size, min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(30000)]
+    return [query_minimum(_tree, _size, min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(90000)]
 _result, _seconds = _timed(_run)
-assert _checksum(_result) == 141335678600146869, "30,000 queries on a 131,072-leaf tree returned wrong minima."
-_check_time(_seconds, "30,000 queries on a 131,072-leaf tree", "Consume boundary nodes while moving upward instead of scanning the leaves.")`,
+assert _checksum(_result) == 440794444201648162, "90,000 queries on a 131,072-leaf tree returned wrong minima."
+_check_time(_seconds, "90,000 queries on a 131,072-leaf tree", "Consume boundary nodes while moving upward instead of scanning the leaves.")`,
     ),
     demonstration:
       'print(query_minimum([float("inf"), 1, 3, 1, 8, 3, 6, 1], 4, 0, 3))',

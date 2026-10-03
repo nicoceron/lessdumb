@@ -364,7 +364,7 @@ print(len(calls))`,
             'No, dictionaries cannot store negative keys',
           ],
           2,
-          'Answers are stored only when complete; a state that depends on itself never completes, so recursion never reaches a base case.',
+          'Answers are stored only when complete; a state that depends on itself never completes, so the recursion never finishes.',
         ),
       ],
     },
@@ -5693,7 +5693,7 @@ print(has_modular_inverse(-3, 10), has_modular_inverse(0, 7))`,
           'A prime shares no factor with 1 through 12, but gcd(0, 13) = 13.',
         ),
         choose(
-          'A solution divides by b modulo m by computing pow(b, m - 2, m) for every m. When is that wrong?',
+          'A solution divides by b modulo m by computing pow(b, m - 2, m) for every m. When can that be wrong?',
           [
             'When m is not prime, or b is a multiple of m',
             'Only when b is negative or zero',
@@ -5886,7 +5886,7 @@ print(mod_power(0, 0, 7), mod_power(7, 3, 7), mod_power(8, 3, 7))`,
       title: 'Divide only by invertible values',
       explanation: [
         'Modular division multiplies by an inverse, which exists only when gcd(b, m) = 1. Python’s pow(b, -1, m) returns that inverse for coprime inputs.',
-        'The shortcut pow(b, p - 2, p) gives the inverse only for a prime p that does not divide b. For a composite modulus it returns a number that is not an inverse.',
+        'The shortcut pow(b, p - 2, p) gives the inverse only for a prime p that does not divide b. For a composite modulus it is not guaranteed to return an inverse.',
       ],
       example: {
         code: `from math import gcd

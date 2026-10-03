@@ -5,6 +5,35 @@ export type PythonResult = {
   infrastructure: boolean;
 };
 
+// Seconds this device took for the worker's calibration benchmark. The first
+// run with timed checks measures it; later runs (and pages, for this tab)
+// reuse it, so the benchmark costs one fraction of a second per session.
+const CALIBRATION_KEY = 'lessdumb:python-calibration';
+let calibration: number | undefined;
+
+const validCalibration = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0;
+
+function cachedCalibration(): number | undefined {
+  if (calibration !== undefined) return calibration;
+  try {
+    const stored = Number(sessionStorage.getItem(CALIBRATION_KEY));
+    if (validCalibration(stored)) calibration = stored;
+  } catch {
+    // Storage can be unavailable; the worker then measures again.
+  }
+  return calibration;
+}
+
+function rememberCalibration(value: number) {
+  calibration = value;
+  try {
+    sessionStorage.setItem(CALIBRATION_KEY, String(value));
+  } catch {
+    // Keep the in-memory value.
+  }
+}
+
 /** Each run uses an isolated, terminable worker. Learner code never runs on the server. */
 export function runPython(
   code: string,
@@ -58,6 +87,11 @@ export function runPython(
       );
       worker.onmessage = ({ data }) => {
         if (data?.id !== id) return;
+        if ('calibration' in data) {
+          if (validCalibration(data.calibration))
+            rememberCalibration(data.calibration);
+          return;
+        }
         if (data.ready === true) {
           clearTimeout(timeout);
           timeout = setTimeout(
@@ -91,7 +125,12 @@ export function runPython(
       };
       worker.onerror = unavailable;
       worker.onmessageerror = unavailable;
-      worker.postMessage({ id, code, tests });
+      worker.postMessage({
+        id,
+        code,
+        tests,
+        calibration: cachedCalibration(),
+      });
     } catch {
       unavailable();
     }

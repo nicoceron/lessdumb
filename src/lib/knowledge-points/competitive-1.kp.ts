@@ -263,7 +263,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'for i in range(n): count += 1',
           ],
           1,
-          'Multiplying by a fixed factor covers the distance to n in logarithmically many steps; adding 2 or looping over range(n) takes about n steps.',
+          'Multiplying by a fixed factor covers the distance to n in logarithmically many steps; adding 2 takes about n/2 steps and looping over range(n) takes n.',
         ),
         predictOutput(
           'Two targets that differ by one are checked. What is printed?',
@@ -971,7 +971,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The interval is inclusive, so a value equal to the ceiling is kept.',
         ),
         choose(
-          'Which expression keeps value inside [0, ceiling] for ceiling >= 0?',
+          'Which expression clamps value to [0, ceiling] for ceiling >= 0?',
           [
             'max(ceiling, min(0, value))',
             'min(ceiling, max(0, value))',
@@ -979,7 +979,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'max(0, min(value, 0))',
           ],
           1,
-          'max with 0 enforces the floor and min with the ceiling enforces the cap; the swapped versions push values outside the interval.',
+          'max with 0 enforces the floor and min with the ceiling enforces the cap; the swapped versions return the same bound for every value, losing values already inside.',
         ),
       ],
     },
@@ -5624,7 +5624,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'One comparison says nothing about the discarded half',
           ],
           3,
-          'The update rules rely on all earlier values being smaller and all later values being larger.',
+          'The update rules rely on all earlier values being no larger and all later values being no smaller.',
         ),
         predictOutput(
           'What does this program print?',
@@ -5891,7 +5891,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A single group of everything has exactly the total.',
         ),
         choose(
-          'Loads are [6, 6, 6]. Which interval must contain the smallest feasible capacity?',
+          'Loads are [6, 6, 6]. Which is the tightest interval that must contain the smallest feasible capacity?',
           ['[0, 18]', '[6, 6]', '[6, 18]', '[1, 6]'],
           2,
           'From the largest load to the total.',

@@ -472,7 +472,7 @@ print(mask, matches)`,
     'Setting items 0, 2, and 3 and then clearing item 3 leaves mask 5 (binary 101). Its submasks are 5, 4, 1, and 0, and only 5 (items 0 and 2) sums to 7.',
     [
       exercise(
-        'Implement selection_counts(values, changes, target). values holds at most 20 integers, which may be negative, zero, or repeated. The selection starts empty. Each change (index, present) sets item index in the selection mask when present is True and clears it when False; repeating a change has no effect. At most 10 items are selected at any time. After each change, count the submasks of the current selection whose selected values sum to target, including the empty submask, and return the counts in change order. Preserve both lists. Walk submasks with (sub - 1) & mask: a hidden case with 20 items and 200 changes must finish within 3 seconds.',
+        'Implement selection_counts(values, changes, target). values holds at most 20 integers, which may be negative, zero, or repeated. The selection starts empty. Each change (index, present) sets item index in the selection mask when present is True and clears it when False; repeating a change has no effect. At most 10 items are selected at any time. After each change, count the submasks of the current selection whose selected values sum to target, including the empty submask, and return the counts in change order. Preserve both lists. Walk submasks with (sub - 1) & mask: a hidden case with 20 items and 500 changes must finish within 3 seconds.',
         `def selection_counts(values, changes, target):
     # Keep one mask; after each change, walk its submasks.
     pass`,
@@ -513,18 +513,18 @@ assert values == [1] * 20 and changes == [(index, True) for index in range(10)],
           `_values = _numbers(20, -60, 60, 701)
 _selected = set()
 _changes = []
-for _pick in _numbers(1000, 0, 19, 702):
+for _pick in _numbers(3000, 0, 19, 702):
     if _pick in _selected:
         _selected.discard(_pick)
         _changes.append((_pick, False))
     elif len(_selected) < 10:
         _selected.add(_pick)
         _changes.append((_pick, True))
-    if len(_changes) == 200:
+    if len(_changes) == 500:
         break
 _result, _seconds = _timed(selection_counts, _values, _changes, 40)
-assert _checksum(_result) == 666043684648720918, "The 200-change case returned wrong counts."
-_check_time(_seconds, "The 200-change case", "Walk only the submasks of the current selection instead of every mask below 1 << 20.")`,
+assert _checksum(_result) == 1292453565480001866, "The 500-change case returned wrong counts."
+_check_time(_seconds, "The 500-change case", "Walk only the submasks of the current selection instead of every mask below 1 << 20.")`,
         ),
         'Set and clear keep one mask equal to the current selection, and the submask walk visits each subset of that selection exactly once, so every count neither omits nor repeats a choice.',
         'Update the mask with | or & ~. Then start at sub = mask, count matching totals, stop after zero, and step with (sub - 1) & mask.',
@@ -812,7 +812,7 @@ print(primes_up_to(1))`,
     'Zero and one are excluded, and composite multiples are removed. The upper bound is inclusive.',
     [
       exercise(
-        'Implement primes_up_to(limit) with a sieve. limit is an integer from 0 through 5000000. Return all prime integers <= limit in increasing order. Return [] below two, exclude zero and one, and begin each prime’s marking at its square. A hidden case with limit 5,000,000 must finish within 3 seconds.',
+        'Implement primes_up_to(limit) with a sieve. limit is an integer from 0 through 5000000. Return all prime integers <= limit in increasing order. Return [] below two, exclude zero and one, and begin each prime’s marking at its square. A hidden case with limit 5,000,000 must finish within 1.5 seconds.',
         'def primes_up_to(limit):\n    # Mark a bounded primality table.\n    pass\n',
         `def primes_up_to(limit):
     if limit < 2:
@@ -839,7 +839,7 @@ assert len(result) == 168 and result[-1] == 997
 assert result == sorted(set(result)), "Return each prime once in order."`,
           `_result, _seconds = _timed(primes_up_to, 5000000)
 assert _checksum(_result) == 1620756028218592251, "primes_up_to(5000000) returned the wrong primes."
-_check_time(_seconds, "primes_up_to(5000000)", "Mark multiples in one table instead of testing each number by trial division.")`,
+_check_time(_seconds, "primes_up_to(5000000)", "Mark multiples in one table instead of testing each number by trial division.", 1.5)`,
         ),
         'Each prime marks its composite multiples. Processing through its square bound suffices to eliminate every composite in the table.',
         'Handle limit < 2 first, allocate limit + 1 entries, and mark with range(p * p, limit + 1, p).',
@@ -990,7 +990,7 @@ print(range_sums([2, 1, 4, 3], [("sum", 1, 4), ("add", 2, 5), ("sum", 0, 3)]))`,
     'The first sum uses indices one through three. Adding five to index two changes the subsequent prefix total without rebuilding all prefixes.',
     [
       exercise(
-        'Implement range_sums(values, operations) using a Fenwick tree. values is an integer list. Each operation is ("add", index, delta), with 0 <= index < len(values), or ("sum", left, right), with 0 <= left <= right <= len(values). Return sum answers in operation order. Ranges are half-open [left, right); empty ranges sum to zero. Additions may be negative. Preserve values. A hidden case with 100,000 values and 100,000 operations must finish within 3 seconds.',
+        'Implement range_sums(values, operations) using a Fenwick tree. values is an integer list. Each operation is ("add", index, delta), with 0 <= index < len(values), or ("sum", left, right), with 0 <= left <= right <= len(values). Return sum answers in operation order. Ranges are half-open [left, right); empty ranges sum to zero. Additions may be negative. Preserve values. A hidden case with 200,000 values and 200,000 operations must finish within 3 seconds.',
         'def range_sums(values, operations):\n    # Convert public indices to a 1-based Fenwick representation.\n    pass\n',
         `def range_sums(values, operations):
     n = len(values)
@@ -1026,14 +1026,14 @@ operations = [("add", 0, 2), ("add", 4, -3), ("sum", 0, 5), ("sum", 1, 4), ("sum
 assert range_sums(values, operations) == [14, 8, 1]
 assert values == [3, 1, 5, 2, 4], "Preserve the source array."
 assert range_sums([7, 8], [("add", 1, 0)]) == []`,
-          `_values = _numbers(100000, -1000, 1000, 401)
-_kinds = _numbers(100000, 0, 1, 402)
-_xs = _numbers(100000, 0, 100000, 403)
-_ys = _numbers(100000, 0, 100000, 404)
-_operations = [("add", min(_xs[i], 99999), _ys[i] % 2001 - 1000) if _kinds[i] else ("sum", min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(100000)]
+          `_values = _numbers(200000, -1000, 1000, 401)
+_kinds = _numbers(200000, 0, 1, 402)
+_xs = _numbers(200000, 0, 200000, 403)
+_ys = _numbers(200000, 0, 200000, 404)
+_operations = [("add", min(_xs[i], 199999), _ys[i] % 2001 - 1000) if _kinds[i] else ("sum", min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(200000)]
 _result, _seconds = _timed(range_sums, _values, _operations)
-assert _checksum(_result) == 907746960654767997, "The 100,000-operation case returned wrong sums."
-_check_time(_seconds, "The 100,000-operation case", "Walk the Fenwick tree in O(log n) per operation instead of re-adding each range.")`,
+assert _checksum(_result) == 207961389645802781, "The 200,000-operation case returned wrong sums."
+_check_time(_seconds, "The 200,000-operation case", "Walk the Fenwick tree in O(log n) per operation instead of re-adding each range.")`,
         ),
         'Fenwick blocks preserve their sums under point additions. Prefix queries partition the requested prefix into disjoint stored blocks, and subtraction yields the range.',
         'Use index + 1 for updates, end for prefix queries, and i & -i to move between blocks.',
@@ -1102,7 +1102,7 @@ print(range_minima([8, 3, 6, 1, 9], [("min", 0, 3), ("set", 1, 7), ("min", 0, 3)
     'Setting index one to seven changes ancestors, and the minimum of [0, 3) rises from three to six. The last query covers only indices three and four.',
     [
       exercise(
-        'Implement range_minima(values, operations) with a segment tree. values is an integer list. Operations are ("set", index, value) for valid indices, or ("min", left, right) with 0 <= left <= right <= len(values). Return query answers in order, using half-open [left, right) ranges and None for empty ranges. Assignments replace rather than add. Preserve values. A hidden case with 200,000 values and 40,000 operations must finish within 3 seconds.',
+        'Implement range_minima(values, operations) with a segment tree. values is an integer list. Operations are ("set", index, value) for valid indices, or ("min", left, right) with 0 <= left <= right <= len(values). Return query answers in order, using half-open [left, right) ranges and None for empty ranges. Assignments replace rather than add. Preserve values. A hidden case with 200,000 values and 120,000 operations must finish within 3 seconds.',
         'def range_minima(values, operations):\n    # Build a minimum tree, then apply assignments and queries.\n    pass\n',
         `def range_minima(values, operations):
     size = 1
@@ -1150,14 +1150,14 @@ assert range_minima(values, [("set", 4, 1), ("min", 0, 4), ("min", 4, 5), ("min"
 assert values == [5, 5, 5, 5, 5]
 assert range_minima([1, 2], [("set", 0, 3)]) == []`,
           `_values = _numbers(200000, -10**9, 10**9, 411)
-_kinds = _numbers(40000, 0, 1, 412)
-_xs = _numbers(40000, 0, 200000, 413)
-_ys = _numbers(40000, 0, 200000, 414)
-_zs = _numbers(40000, -10**9, 10**9, 415)
-_operations = [("set", min(_xs[i], 199999), _zs[i]) if _kinds[i] else ("min", min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(40000)]
+_kinds = _numbers(120000, 0, 1, 412)
+_xs = _numbers(120000, 0, 200000, 413)
+_ys = _numbers(120000, 0, 200000, 414)
+_zs = _numbers(120000, -10**9, 10**9, 415)
+_operations = [("set", min(_xs[i], 199999), _zs[i]) if _kinds[i] else ("min", min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(120000)]
 _result, _seconds = _timed(range_minima, _values, _operations)
-assert _checksum(_result) == 208278054782203810, "The 40,000-operation case returned wrong minima."
-_check_time(_seconds, "The 40,000-operation case", "Combine O(log n) boundary nodes per query instead of scanning the whole range.")`,
+assert _checksum(_result) == 19758530507032262, "The 120,000-operation case returned wrong minima."
+_check_time(_seconds, "The 120,000-operation case", "Combine O(log n) boundary nodes per query instead of scanning the whole range.")`,
         ),
         'Each assignment restores the ancestor-minimum invariant. The query collects disjoint tree intervals covering exactly the requested half-open range.',
         'Use infinity for padding, rebuild parents after a set, and move query endpoints upward while consuming odd boundaries.',
@@ -1211,7 +1211,7 @@ print(kth_ancestors([-1, 0, 0, 1, 3], [(4, 0), (4, 2), (4, 3), (4, 4), (0, 1)]))
     'Vertex four follows the chain 4 → 3 → 1 → 0. A zero-step query stays at four, and moving above the root returns -1.',
     [
       exercise(
-        'Implement kth_ancestors(parents, queries). parents describes an acyclic forest: each parent is -1 for a root or a valid vertex index. Each query (vertex, k) uses a valid vertex and nonnegative integer k; k may be arbitrarily large. Return the kth ancestor for each query, -1 if absent, and the vertex itself for k = 0. Empty parents comes with no queries. Use a doubling table and preserve parents. A hidden case with 50,000 vertices and 50,000 queries must finish within 3 seconds.',
+        'Implement kth_ancestors(parents, queries). parents describes an acyclic forest: each parent is -1 for a root or a valid vertex index. Each query (vertex, k) uses a valid vertex and nonnegative integer k; k may be arbitrarily large. Return the kth ancestor for each query, -1 if absent, and the vertex itself for k = 0. Empty parents comes with no queries. Use a doubling table and preserve parents. A hidden case with 100,000 vertices and 100,000 queries must finish within 3 seconds.',
         'def kth_ancestors(parents, queries):\n    # Precompute 2**j jumps, preserving -1 roots.\n    pass\n',
         `def kth_ancestors(parents, queries):
     n = len(parents)
@@ -1241,12 +1241,12 @@ assert kth_ancestors([-1, 0, -1, 2], [(1, 1), (3, 1), (3, 2)]) == [0, 2, -1]
 parents = [-1] + list(range(19))
 assert kth_ancestors(parents, [(19, 16), (19, 19), (19, 20), (19, 10**100)]) == [3, 0, -1, -1]
 assert parents == [-1] + list(range(19)), "Preserve parent pointers."`,
-          `_back = _numbers(50000, 1, 3, 421)
-_parents = [-1] + [max(-1, vertex - _back[vertex]) for vertex in range(1, 50000)]
-_queries = list(zip(_numbers(50000, 0, 49999, 422), _numbers(50000, 0, 50000, 423)))
+          `_back = _numbers(100000, 1, 3, 421)
+_parents = [-1] + [max(-1, vertex - _back[vertex]) for vertex in range(1, 100000)]
+_queries = list(zip(_numbers(100000, 0, 99999, 422), _numbers(100000, 0, 100000, 423)))
 _result, _seconds = _timed(kth_ancestors, _parents, _queries)
-assert _checksum(_result) == 364325291241199138, "The 50,000-query case returned wrong ancestors."
-_check_time(_seconds, "The 50,000-query case", "Jump by powers of two from a doubling table instead of stepping one parent at a time.")`,
+assert _checksum(_result) == 1356393175373117166, "The 100,000-query case returned wrong ancestors."
+_check_time(_seconds, "The 100,000-query case", "Jump by powers of two from a doubling table instead of stepping one parent at a time.")`,
         ),
         'Each doubling row composes two existing jumps, guarding the -1 sentinel. Query bits select disjoint jump lengths; k >= n has no ancestor in an acyclic forest.',
         'Store the parent row first, compose each row through the previous row, then consume k bits while the current vertex exists.',
