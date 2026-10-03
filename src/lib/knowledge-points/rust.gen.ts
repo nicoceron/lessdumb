@@ -999,12 +999,13 @@ export const generators: GeneratorModule = {
   // rust-map-filter: map transforms, and the order of steps matters
   'rust-map-filter-kp2-q1': (r) => {
     const factor = r.int(2, 3);
-    const scores = r.ints(4, 1, 9);
-    const scaled = scores.map((s) => s * factor);
-    const threshold = until(
-      () => r.int(4, 20),
-      (t) => scaled.some((s) => s > t) && scaled.some((s) => s <= t),
+    const [scores, threshold] = until(
+      () => [r.ints(4, 1, 9), r.int(4, 20)] as const,
+      ([values, t]) =>
+        values.some((s) => s * factor > t) &&
+        values.some((s) => s * factor <= t),
     );
+    const scaled = scores.map((s) => s * factor);
     const kept = scaled.filter((s) => s > threshold);
     return typeOutput(
       PRINT,
