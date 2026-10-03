@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { skillById } from '../src/lib/curriculum';
+import { skillById, type ChoiceQuestion } from '../src/lib/curriculum';
 import { DAY_MS, getSkillState, isMastered } from '../src/lib/learning';
 import {
   activeDiagnostic,
@@ -64,9 +64,11 @@ test('a placement test adapts without feedback, reports the placement, and Learn
     await expect(
       page.getByRole('progressbar', { name: 'Placement progress' }),
     ).toBeVisible();
+    // Browser specs predate typed answers (CEN-111): they answer choices only.
+    const choice = question as ChoiceQuestion;
     const answer = known.has(skill.id)
-      ? question.answer
-      : (question.answer + 1) % question.choices.length;
+      ? choice.answer
+      : (choice.answer + 1) % choice.choices.length;
     await choiceButton(page, answer).click();
     await page.getByRole('button', { name: 'Submit', exact: true }).click();
     // No correctness feedback during the test.

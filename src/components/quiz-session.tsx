@@ -23,6 +23,9 @@ import {
 } from '../lib/quiz';
 import { type LearnerState } from '../lib/state';
 import { ChoiceText, InlineText } from './inline-text';
+import { TypedAnswerInput } from './typed-answer';
+import { acceptedAnswer, gradeTyped } from '../lib/typed-answer';
+import type { AnswerQuestion } from '../lib/curriculum';
 import { Btn, ContentLoading } from './shared';
 import { useCourseContent } from './use-content';
 import { Button } from '@/components/ui/button';
@@ -59,6 +62,8 @@ export default function QuizSession({
     requested && requested !== 'next' ? requested : null,
   );
   const [selected, setSelected] = useState<number | null>(null);
+  const [response, setResponse] = useState('');
+  const [invalid, setInvalid] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const quizzes = state.progress.quizzes ?? [];
   const running = activeQuiz(state.progress);
@@ -150,8 +155,30 @@ export default function QuizSession({
   const found = slot && quizQuestion(slot);
   if (!slot || !found) return <QuizResults quiz={quiz} />;
   const { skill, question } = found;
-  const order = choiceOrder(question, slot.presentation);
+  const order =
+    question.type === 'choice' ? choiceOrder(question, slot.presentation) : [];
   const remaining = quizDeadline(quiz) - now;
+  function submit() {
+    let answer: number | string;
+    if (question.type === 'choice') {
+      if (selected === null) return;
+      answer = selected;
+    } else {
+      const grade = gradeTyped(question, response);
+      if (grade.status === 'invalid') {
+        setInvalid(grade.message);
+        return;
+      }
+      answer = response;
+    }
+    setSelected(null);
+    setResponse('');
+    setInvalid(null);
+    update((s) => ({
+      ...s,
+      progress: answerQuiz(s.progress, quiz!.id, index, answer, Date.now()),
+    }));
+  }
   return (
     <div className="lesson-workspace lesson-page">
       <div className="session-top">
@@ -184,43 +211,45 @@ export default function QuizSession({
             className="my-5"
           />
         )}
-        <div className="answer-options" role="group" aria-label="Choices">
-          {order.map((choice, position) => (
-            <Button
-              variant="outline"
-              key={choice}
-              data-choice={choice}
-              onClick={() => setSelected(choice)}
-              aria-pressed={selected === choice}
-              className={`answer-option h-auto w-full justify-start whitespace-normal py-4 text-left ${selected === choice ? 'border-primary bg-primary/5' : ''}`}
-            >
-              <Badge variant="outline" className="shrink-0 font-mono">
-                {choiceLetter(position)}
-              </Badge>
-              <pre>
-                <ChoiceText question={question} index={choice} />
-              </pre>
-            </Button>
-          ))}
-        </div>
+        {question.type === 'choice' ? (
+          <div className="answer-options" role="group" aria-label="Choices">
+            {order.map((choice, position) => (
+              <Button
+                variant="outline"
+                key={choice}
+                data-choice={choice}
+                onClick={() => setSelected(choice)}
+                aria-pressed={selected === choice}
+                className={`answer-option h-auto w-full justify-start whitespace-normal py-4 text-left ${selected === choice ? 'border-primary bg-primary/5' : ''}`}
+              >
+                <Badge variant="outline" className="shrink-0 font-mono">
+                  {choiceLetter(position)}
+                </Badge>
+                <pre>
+                  <ChoiceText question={question} index={choice} />
+                </pre>
+              </Button>
+            ))}
+          </div>
+        ) : (
+          <TypedAnswerInput
+            key={`${quiz.id}-${index}`}
+            question={question}
+            value={response}
+            error={invalid}
+            onChange={(value) => {
+              setResponse(value);
+              setInvalid(null);
+            }}
+            onSubmit={submit}
+          />
+        )}
         <div className="question-actions">
           <Btn
-            disabled={selected === null}
-            onClick={() => {
-              if (selected === null) return;
-              const answer = selected;
-              setSelected(null);
-              update((s) => ({
-                ...s,
-                progress: answerQuiz(
-                  s.progress,
-                  quiz.id,
-                  index,
-                  answer,
-                  Date.now(),
-                ),
-              }));
-            }}
+            disabled={
+              question.type === 'choice' ? selected === null : !response.trim()
+            }
+            onClick={submit}
           >
             Submit
           </Btn>
@@ -301,13 +330,13 @@ function QuizResults({ quiz }: { quiz: Quiz }) {
                   {slot.answer === null || slot.answer === undefined ? (
                     'No answer (time ran out)'
                   ) : (
-                    <ChoiceText question={question} index={slot.answer} />
+                    <AnswerText question={question} answer={slot.answer} />
                   )}
                 </p>
                 {!slot.correct && (
                   <p>
                     <Check size={15} aria-hidden="true" /> Correct answer:{' '}
-                    <ChoiceText question={question} index={question.answer} />
+                    <AnswerText question={question} />
                   </p>
                 )}
                 <p className="lesson-teaching-text">
@@ -319,5 +348,30 @@ function QuizResults({ quiz }: { quiz: Quiz }) {
         })}
       </ol>
     </div>
+  );
+}
+
+/** A chosen or typed answer as text; without `answer`, the correct one. */
+function AnswerText({
+  question,
+  answer,
+}: {
+  question: AnswerQuestion;
+  answer?: number | string;
+}) {
+  if (question.type === 'choice')
+    return (
+      <ChoiceText
+        question={question}
+        index={typeof answer === 'number' ? answer : question.answer}
+      />
+    );
+  const text = typeof answer === 'string' ? answer : acceptedAnswer(question);
+  const unit = question.type === 'numeric' && question.unit;
+  return (
+    <code className="typed-answer-text">
+      {text}
+      {unit ? ` ${unit}` : ''}
+    </code>
   );
 }
