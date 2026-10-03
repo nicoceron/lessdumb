@@ -1999,4 +1999,1905 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'cpp-if-branches': [
+    {
+      title: 'Run a statement only when a condition holds',
+      explanation: [
+        'if (condition) statement; runs the statement only when the condition is true. Either way, execution then continues with the next statement after the if.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int temperature = 31;\n  if (temperature > 30) std::cout << "hot\\n";\n  std::cout << "done\\n";\n}',
+        output: 'hot\ndone',
+        explanation:
+          '31 > 30 is true, so hot is printed; done is printed in every case.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int stock = 0;\n  if (stock == 0) std::cout << "reorder\\n";\n  std::cout << "checked\\n";\n}',
+          ['checked', 'reorder\nchecked', 'reorder', 'checked\nreorder'],
+          1,
+          'The condition is true, so reorder prints first, followed by the unconditional checked.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int x = 4;\n  if (x > 10) std::cout << "big\\n";\n  std::cout << x << "\\n";\n}',
+          ['big\n4', 'big', '4', '10'],
+          2,
+          '4 > 10 is false, so only the statement after the if runs.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int points = 5;\n  if (points >= 5) points = points * 2;\n  std::cout << points << "\\n";\n}',
+          ['5', '25', '7', '10'],
+          3,
+          '5 >= 5 is true, so points is doubled before it is printed.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose between two branches with else',
+      explanation: [
+        'if (condition) A else B runs exactly one of A and B. To run several statements in a branch, group them in braces { }.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int balance = -20;\n  if (balance < 0) std::cout << "overdrawn\\n";\n  else std::cout << "ok\\n";\n}',
+        output: 'overdrawn',
+        explanation:
+          'The condition is true, so the first branch runs and the else branch is skipped.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int n = 7;\n  if (n == 7) std::cout << "lucky\\n";\n  else std::cout << "plain\\n";\n}',
+          ['plain', 'lucky\nplain', 'lucky', '7'],
+          2,
+          'n == 7 is true, so only the first branch runs.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 3;\n  int b = 3;\n  if (a > b) std::cout << a << "\\n";\n  else std::cout << b + 1 << "\\n";\n}',
+          ['4', '3', '6', '3\n4'],
+          0,
+          'a > b is false when they are equal, so the else branch prints b + 1.',
+        ),
+        choose(
+          'How many of the two branches of an if/else statement run each time it executes?',
+          [
+            'Both, when the condition is true',
+            'Neither, when the condition is false',
+            'Both, one after the other',
+            'Exactly one',
+          ],
+          3,
+          'The condition selects one branch; the other is skipped.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int total = 0;\n  int qty = 3;\n  if (qty > 2) {\n    total = qty * 10;\n    std::cout << "bulk ";\n  } else {\n    total = qty * 12;\n  }\n  std::cout << total << "\\n";\n}',
+          ['36', 'bulk 36', 'bulk 30', '30'],
+          2,
+          'qty > 2 is true, so both statements in the first block run: bulk is printed and total becomes 30.',
+        ),
+      ],
+    },
+    {
+      title: 'Test several cases with else if',
+      explanation: [
+        'A chain of if / else if / else tests its conditions from top to bottom and runs the branch of the first one that is true; the rest are skipped. So the order of the tests matters.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int value = -5;\n  if (value < 0) std::cout << -1 << "\\n";\n  else if (value > 0) std::cout << 1 << "\\n";\n  else std::cout << 0 << "\\n";\n}',
+        output: '-1',
+        explanation:
+          'The first test is already true, so -1 is printed and the other branches are skipped.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int score = 85;\n  if (score >= 90) std::cout << "A\\n";\n  else if (score >= 80) std::cout << "B\\n";\n  else std::cout << "C\\n";\n}',
+          ['A', 'B', 'C', 'B\nC'],
+          1,
+          '85 fails the first test and passes the second, so B is printed and the chain stops.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int score = 95;\n  if (score >= 80) std::cout << "B\\n";\n  else if (score >= 90) std::cout << "A\\n";\n  else std::cout << "C\\n";\n}',
+          ['A', 'A\nB', 'B', 'C'],
+          2,
+          'The first true test wins: 95 >= 80 is checked first, so B is printed even though 95 >= 90.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int t = 15;\n  if (t < 0) std::cout << "ice\\n";\n  else if (t < 20) std::cout << "cool\\n";\n  else if (t < 10) std::cout << "cold\\n";\n  else std::cout << "warm\\n";\n}',
+          ['cool', 'cold', 'warm', 'cool\ncold'],
+          0,
+          't < 20 is the first true test, so cool is printed and no later test runs.',
+        ),
+        choose(
+          'In this chain, which value of n prints middle?\nif (n < 10) low; else if (n < 20) middle; else high;',
+          ['5', '20', '25', '10'],
+          3,
+          '10 fails n < 10 and passes n < 20. 5 is low, and 20 and 25 are high.',
+        ),
+      ],
+    },
+  ],
+  'cpp-logical-operators': [
+    {
+      title: 'Require both conditions with &&',
+      explanation: [
+        'a && b is true only when a and b are both true. Use it to require several conditions at once, such as a lower and an upper limit.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int age = 25;\n  bool member = true;\n  std::cout << (age >= 18 && member) << "\\n";\n}',
+        output: '1',
+        explanation:
+          'Both age >= 18 and member are true, so the result is true and prints 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int hour = 20;\n  std::cout << (hour >= 9 && hour < 17) << "\\n";\n}',
+          ['1', '0', '20', 'false'],
+          1,
+          'hour >= 9 is true but hour < 17 is false, so && gives false, printed as 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 5;\n  int b = 5;\n  std::cout << (a == b && a > 0) << (a == b && b > 9) << "\\n";\n}',
+          ['11', '01', '10', '00'],
+          2,
+          'Both parts of the first test are true; the second test fails because b > 9 is false.',
+        ),
+        choose(
+          'When is a && b true?',
+          [
+            'When at least one of them is true',
+            'When exactly one of them is true',
+            'When a is true, whatever b is',
+            'Only when both of them are true',
+          ],
+          3,
+          '&& requires both operands to be true.',
+        ),
+      ],
+    },
+    {
+      title: 'Accept either condition with ||',
+      explanation: [
+        'a || b is true when at least one operand is true, including when both are. It is false only when both are false.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int day = 6;\n  std::cout << (day == 6 || day == 7) << "\\n";\n}',
+        output: '1',
+        explanation: 'day == 6 is true, which is enough for || to be true.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int code = 404;\n  std::cout << (code == 200 || code == 204) << "\\n";\n}',
+          ['0', '1', '404', '2'],
+          0,
+          'Neither comparison is true, so || is false.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  bool rain = true;\n  bool snow = true;\n  std::cout << (rain || snow) << "\\n";\n}',
+          ['0', '2', '1', 'true'],
+          2,
+          '|| is true when at least one operand is true, and that includes both being true.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int x = -3;\n  std::cout << (x < 0 || x > 100) << (x > 0 || x == -3) << "\\n";\n}',
+          ['10', '01', '00', '11'],
+          3,
+          'x < 0 makes the first test true, and x == -3 makes the second true.',
+        ),
+      ],
+    },
+    {
+      title: 'Invert with ! and group with parentheses',
+      explanation: [
+        '!a is true when a is false. When && and || are mixed, && is applied first, so a || b && c means a || (b && c). Add parentheses whenever a different grouping is meant, and to make the intended one obvious.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  bool open = false;\n  int guests = 3;\n  std::cout << !open << " " << (!open || guests > 5) << "\\n";\n}',
+        output: '1 1',
+        explanation:
+          'open is false, so !open is true; that alone makes the || expression true.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  bool a = true;\n  bool b = false;\n  bool c = false;\n  std::cout << (a || b && c) << " " << ((a || b) && c) << "\\n";\n}',
+          ['1 0', '0 0', '0 1', '1 1'],
+          0,
+          'The first groups as a || (b && c), which is true; the second requires c, which is false.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int n = 4;\n  std::cout << !(n > 2) << "\\n";\n}',
+          ['1', '-4', '0', '4'],
+          2,
+          'n > 2 is true, and ! inverts it to false, printed as 0.',
+        ),
+        choose(
+          'How does C++ group the expression a || b && c?',
+          [
+            '(a || b) && c',
+            'a || (b && c)',
+            'Strictly left to right',
+            'It needs parentheses to compile',
+          ],
+          1,
+          '&& binds more tightly than ||, so b && c is grouped first.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  bool done = false;\n  bool failed = true;\n  std::cout << (!done && !failed) << "\\n";\n}',
+          ['10', '1', '01', '0'],
+          3,
+          '!done is true but !failed is false, so && gives false.',
+        ),
+      ],
+    },
+  ],
+  'cpp-conditional-operator': [
+    {
+      title: 'Choose one of two values with ?:',
+      explanation: [
+        'condition ? a : b is an expression: its value is a when the condition is true and b otherwise. It fits wherever a value is needed, such as an initializer.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int a = 3;\n  int b = 9;\n  int larger = a > b ? a : b;\n  std::cout << larger << "\\n";\n}',
+        output: '9',
+        explanation:
+          'a > b is false, so the expression takes the value after the colon, b.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int stock = 0;\n  int shown = stock > 0 ? stock : -1;\n  std::cout << shown << "\\n";\n}',
+          ['0', '-1', '1', '-0'],
+          1,
+          'stock > 0 is false, so shown takes the second value, -1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int score = 75;\n  std::cout << (score >= 60 ? 1 : 0) << "\\n";\n}',
+          ['75', '0', '60', '1'],
+          3,
+          '75 >= 60 is true, so the expression is 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int x = -4;\n  int magnitude = x < 0 ? -x : x;\n  std::cout << magnitude << "\\n";\n}',
+          ['-4', '16', '4', '0'],
+          2,
+          'x is negative, so the expression takes -x, which is 4.',
+        ),
+      ],
+    },
+    {
+      title: 'Only the chosen operand is evaluated',
+      explanation: [
+        'The condition is evaluated first, and then only the selected operand is evaluated. Any effect in the other operand, such as an increment, does not happen.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int count = 0;\n  int value = 5;\n  int r = value > 0 ? 10 : ++count;\n  std::cout << r << " " << count << "\\n";\n}',
+        output: '10 0',
+        explanation:
+          'The condition is true, so ++count never runs and count stays 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int calls = 0;\n  int x = 2;\n  int y = x > 5 ? ++calls : calls + 100;\n  std::cout << y << " " << calls << "\\n";\n}',
+          ['100 1', '1 1', '100 0', '101 1'],
+          2,
+          'x > 5 is false, so only calls + 100 is evaluated; the increment never happens.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 0;\n  int b = 0;\n  int pick = 1;\n  int r = pick == 1 ? ++a : ++b;\n  std::cout << a << b << r << "\\n";\n}',
+          ['111', '101', '011', '100'],
+          1,
+          'Only ++a runs, so a and r are 1 while b stays 0.',
+        ),
+        choose(
+          'Which statement about c ? x : y is true?',
+          [
+            'x and y are both evaluated, then one is chosen',
+            'x is always evaluated, and y only when c is false',
+            'Only the operand selected by c is evaluated',
+            'y is evaluated before c',
+          ],
+          2,
+          'C++ evaluates the condition and then exactly one of the two operands.',
+        ),
+      ],
+    },
+    {
+      title: 'Parenthesize ?: inside larger expressions',
+      explanation: [
+        '?: has very low precedence, lower than + and <<. In base + vip ? 5 : 0 the condition is the whole base + vip. Wrap the conditional in parentheses when it is part of a bigger expression or printed with <<.',
+        'The two result operands must have compatible types, such as two ints; an int and a string literal do not compile.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int base = 10;\n  int bonus = 1;\n  std::cout << base + (bonus > 0 ? 5 : 0) << "\\n";\n}',
+        output: '15',
+        explanation:
+          'The parentheses make the conditional a single operand of +, so 10 + 5 is printed.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int base = 10;\n  bool vip = false;\n  int total = base + vip ? 5 : 0;\n  std::cout << total << "\\n";\n}',
+          ['10', '15', '5', '0'],
+          2,
+          'Without parentheses the condition is base + vip, which is 10 and therefore true, so total is 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int n = 3;\n  int m = 2 * (n > 2 ? n : 2);\n  std::cout << m << "\\n";\n}',
+          ['6', '4', '3', '2'],
+          0,
+          'n > 2 is true, so the parenthesized conditional is 3, and 2 * 3 is 6.',
+        ),
+        choose(
+          'What is wrong with int r = flag ? 42 : "none";?',
+          [
+            'It always yields 42',
+            'The two results have unrelated types, so it does not compile',
+            'It yields the text none converted to an int',
+            'Nothing; ?: accepts any two types',
+          ],
+          1,
+          'The operands must convert to a common type, and an int and a string literal do not.',
+        ),
+      ],
+    },
+  ],
+  'cpp-for-bounds': [
+    {
+      title: 'Count with a for loop',
+      explanation: [
+        'for (int i = 0; i < 3; ++i) body sets i to 0, checks i < 3 before each pass, runs the body, and then increments i. It stops as soon as the check is false.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  for (int i = 0; i < 3; ++i) std::cout << i;\n  std::cout << "\\n";\n}',
+        output: '012',
+        explanation:
+          'The body runs for i = 0, 1, and 2; when i reaches 3 the check fails.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  for (int i = 1; i <= 4; ++i) std::cout << i;\n  std::cout << "\\n";\n}',
+          ['123', '1234', '01234', '234'],
+          1,
+          'i starts at 1 and the body runs while i <= 4, so 1 through 4 are printed.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int total = 0;\n  for (int i = 0; i < 5; ++i) total += i;\n  std::cout << total << "\\n";\n}',
+          ['15', '5', '10', '4'],
+          2,
+          'The loop adds 0 + 1 + 2 + 3 + 4, which is 10; 5 itself is never added.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  for (int i = 10; i > 7; --i) std::cout << i << ",";\n  std::cout << "\\n";\n}',
+          ['10,9,8,', '10,9,8,7,', '9,8,7,', '10,9,'],
+          0,
+          'i counts down from 10 while i > 7, so 10, 9, and 8 are printed.',
+        ),
+      ],
+    },
+    {
+      title: 'Use half-open bounds',
+      explanation: [
+        'A loop from start while i < end runs end - start times and never touches end itself. That matches positions 0 through size - 1 of a sequence with size elements. Writing <= runs one extra time.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int half_open = 0;\n  for (int i = 0; i < 4; ++i) ++half_open;\n  int closed = 0;\n  for (int i = 0; i <= 4; ++i) ++closed;\n  std::cout << half_open << " " << closed << "\\n";\n}',
+        output: '4 5',
+        explanation:
+          'i < 4 visits 0 through 3, four values; i <= 4 also visits 4, five values.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int n = 0;\n  for (int i = 3; i < 8; ++i) ++n;\n  std::cout << n << "\\n";\n}',
+          ['5', '6', '8', '4'],
+          0,
+          'The loop visits 3, 4, 5, 6, and 7: end - start is 8 - 3 = 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int n = 0;\n  for (int i = 2; i <= 6; ++i) ++n;\n  std::cout << n << "\\n";\n}',
+          ['4', '6', '5', '7'],
+          2,
+          'With <= the end value is included: 2, 3, 4, 5, and 6 make five passes.',
+        ),
+        choose(
+          'A sequence has size elements at positions 0 through size - 1. Which loop visits exactly those positions?',
+          [
+            'for (int i = 0; i <= size; ++i)',
+            'for (int i = 1; i <= size; ++i)',
+            'for (int i = 1; i < size; ++i)',
+            'for (int i = 0; i < size; ++i)',
+          ],
+          3,
+          'Starting at 0 and stopping before size covers every valid position and never size itself.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int last = -1;\n  for (int i = 0; i < 6; ++i) last = i;\n  std::cout << last << "\\n";\n}',
+          ['6', '5', '0', '-1'],
+          1,
+          'The last pass has i = 5; i = 6 fails the check before the body runs.',
+        ),
+      ],
+    },
+    {
+      title: 'Predict loops that run zero times',
+      explanation: [
+        'The condition is checked before the first pass too. If it is already false, the body never runs. The update does not have to be ++i; i += 2 steps by two.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int runs = 0;\n  for (int i = 5; i < 5; ++i) ++runs;\n  std::cout << runs << "\\n";\n}',
+        output: '0',
+        explanation: '5 < 5 is false from the start, so the body never runs.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int total = 100;\n  for (int i = 0; i < 0; ++i) total = 0;\n  std::cout << total << "\\n";\n}',
+          ['0', '100', '1', '99'],
+          1,
+          '0 < 0 is false, so the assignment never runs and total keeps 100.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int n = 0;\n  for (int i = 10; i < 3; ++i) ++n;\n  std::cout << n << "\\n";\n}',
+          ['7', '-7', '0', '3'],
+          2,
+          'The loop would need i < 3, but i starts at 10, so it never runs.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int sum = 0;\n  for (int i = 1; i < 6; i += 2) sum += i;\n  std::cout << sum << "\\n";\n}',
+          ['15', '6', '4', '9'],
+          3,
+          'i takes the values 1, 3, and 5, and their sum is 9.',
+        ),
+      ],
+    },
+  ],
+  'cpp-while-progress': [
+    {
+      title: 'Repeat while a condition holds',
+      explanation: [
+        'while (condition) body checks the condition, runs the body if it is true, and repeats. It suits loops where the number of passes is not known in advance.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int n = 1;\n  while (n < 50) n = n * 3;\n  std::cout << n << "\\n";\n}',
+        output: '81',
+        explanation:
+          'n goes 1, 3, 9, 27, 81. At 81 the check n < 50 fails and the loop ends.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int n = 20;\n  int steps = 0;\n  while (n > 0) {\n    n -= 6;\n    ++steps;\n  }\n  std::cout << steps << " " << n << "\\n";\n}',
+          ['3 2', '4 -4', '4 2', '3 -4'],
+          1,
+          'n goes 20, 14, 8, 2, -4. Four passes run, and the loop stops once n is no longer positive.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int value = 1000;\n  int halvings = 0;\n  while (value >= 100) {\n    value /= 2;\n    ++halvings;\n  }\n  std::cout << halvings << "\\n";\n}',
+          ['3', '5', '10', '4'],
+          3,
+          'value goes 1000, 500, 250, 125, 62, so four halvings run.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int n = 45;\n  int sum = 0;\n  while (n > 0) {\n    sum += n % 10;\n    n /= 10;\n  }\n  std::cout << sum << "\\n";\n}',
+          ['45', '54', '9', '5'],
+          2,
+          'Each pass adds the last digit and removes it: 5 + 4 is 9.',
+        ),
+      ],
+    },
+    {
+      title: 'Expect zero passes when the condition starts false',
+      explanation: [
+        'Because the condition is checked before every pass, including the first, a while loop whose condition is already false runs its body zero times.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int count = 0;\n  int n = 1;\n  while (n > 1) {\n    n /= 2;\n    ++count;\n  }\n  std::cout << count << "\\n";\n}',
+        output: '0',
+        explanation:
+          '1 > 1 is false, so the body never runs and count stays 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int x = 2;\n  while (x < 2) x = x * 10;\n  std::cout << x << "\\n";\n}',
+          ['20', '2', '200', '0'],
+          1,
+          '2 < 2 is false at the start, so x is never multiplied.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int digits = 0;\n  int n = 0;\n  while (n != 0) {\n    n /= 10;\n    ++digits;\n  }\n  std::cout << digits << "\\n";\n}',
+          ['1', '10', '-1', '0'],
+          3,
+          'n is 0, so n != 0 is false immediately and the loop counts nothing.',
+        ),
+        choose(
+          'How many times can the body of a while loop run?',
+          [
+            'At least once',
+            'Exactly once per variable in the condition',
+            'Zero or more times',
+            'A count fixed before the loop starts',
+          ],
+          2,
+          'If the condition is false at the first check, the body does not run at all.',
+        ),
+      ],
+    },
+    {
+      title: 'Make progress on every pass',
+      explanation: [
+        'Each pass must change something the condition depends on, moving it toward false. If nothing changes, the condition stays true and the loop never ends.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int remaining = 17;\n  int trips = 0;\n  while (remaining > 0) {\n    remaining -= 5;\n    ++trips;\n  }\n  std::cout << trips << "\\n";\n}',
+        output: '4',
+        explanation:
+          'Every trip lowers remaining by 5: 17, 12, 7, 2, -3. After four trips the condition is false.',
+      },
+      questions: [
+        choose(
+          'What is wrong with this loop?',
+          [
+            'It never changes n, so it never stops',
+            'It runs zero times',
+            'It prints 10 once and stops',
+            'n > 0 is not a valid condition',
+          ],
+          0,
+          'n stays 10 forever, so n > 0 is always true and the loop never ends.',
+          '#include <iostream>\nint main() {\n  int n = 10;\n  while (n > 0) {\n    std::cout << n << "\\n";\n  }\n}',
+        ),
+        choose(
+          'Which statement in the body makes while (n != 0) { ...; } stop for every positive n?',
+          ['n += 1;', 'n *= 10;', 'n /= 10;', 'n = n;'],
+          2,
+          'Dividing by 10 removes a digit each pass and reaches 0; the others never reach 0.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int n = 1234;\n  int digits = 0;\n  while (n != 0) {\n    n /= 10;\n    ++digits;\n  }\n  std::cout << digits << "\\n";\n}',
+          ['3', '4', '1234', '10'],
+          1,
+          'Four divisions by 10 bring 1234 down to 0, one per digit.',
+        ),
+      ],
+    },
+  ],
+  'cpp-return-values': [
+    {
+      title: 'Define and call a function that returns a value',
+      explanation: [
+        'int twice(int x) { return x * 2; } defines a function that takes an int and gives back an int. A call such as twice(6) runs the body with x set to 6, and the call expression takes the returned value.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint twice(int x) {\n  return x * 2;\n}\nint main() {\n  std::cout << twice(6) << "\\n";\n}',
+        output: '12',
+        explanation:
+          'twice(6) runs the body with x = 6 and returns 12, which main prints.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint square(int n) {\n  return n * n;\n}\nint main() {\n  std::cout << square(5) + 1 << "\\n";\n}',
+          ['36', '26', '25', '11'],
+          1,
+          'square(5) is 25, and adding 1 gives 26.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint area(int width, int height) {\n  return width * height;\n}\nint main() {\n  std::cout << area(3, 4) << " " << area(4, 3) << "\\n";\n}',
+          ['7 7', '34 43', '12 12', '12 0'],
+          2,
+          'Arguments are matched to parameters in order, and both products are 12.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint next(int n) {\n  return n + 1;\n}\nint main() {\n  std::cout << next(next(next(0))) << "\\n";\n}',
+          ['1', '0', '2', '3'],
+          3,
+          'The innermost call runs first: 0 becomes 1, then 2, then 3.',
+        ),
+      ],
+    },
+    {
+      title: 'Parameters are copies',
+      explanation: [
+        "A parameter declared as int receives a copy of the caller's value. Assigning to the parameter changes only the copy; the caller sees a result only through the returned value.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint bump(int value) {\n  value = value + 10;\n  return value;\n}\nint main() {\n  int x = 5;\n  int y = bump(x);\n  std::cout << x << " " << y << "\\n";\n}',
+        output: '5 15',
+        explanation:
+          'bump changed its own copy to 15 and returned it; x in main is still 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint reset(int n) {\n  n = 0;\n  return n;\n}\nint main() {\n  int count = 7;\n  reset(count);\n  std::cout << count << "\\n";\n}',
+          ['0', '7', '70', '-7'],
+          1,
+          'reset changed only its copy, and its returned 0 was not stored, so count is still 7.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint triple(int n) {\n  n *= 3;\n  return n;\n}\nint main() {\n  int a = 2;\n  int b = triple(a);\n  std::cout << a + b << "\\n";\n}',
+          ['12', '6', '8', '4'],
+          2,
+          'a stays 2 and b receives 6, so the sum is 8.',
+        ),
+        choose(
+          "A function receives int count by value and assigns count = 0. What happens to the caller's variable?",
+          [
+            'It becomes 0 as well',
+            'It becomes indeterminate',
+            'It is unchanged',
+            'It changes only if count is returned',
+          ],
+          2,
+          "The parameter is a separate copy; the caller's variable is never touched.",
+        ),
+      ],
+    },
+    {
+      title: 'Use the returned value',
+      explanation: [
+        'A call is an expression whose value can be stored, printed, or combined with others. return ends the function immediately, and a result that the caller does not use is simply discarded.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint score(int hits, int misses) {\n  return hits * 3 - misses;\n}\nint main() {\n  int total = score(4, 2) + score(1, 0);\n  std::cout << total << "\\n";\n}',
+        output: '13',
+        explanation:
+          'score(4, 2) is 10 and score(1, 0) is 3, and the two results add to 13.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint span(int start, int end) {\n  return end - start;\n}\nint main() {\n  std::cout << span(3, 10) * 2 << "\\n";\n}',
+          ['14', '7', '26', '-14'],
+          0,
+          'span(3, 10) is 7, and the call can be used in the larger expression 7 * 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint first(int a, int b) {\n  return a;\n  return b;\n}\nint main() {\n  std::cout << first(1, 2) << "\\n";\n}',
+          ['2', '12', '1', '3'],
+          2,
+          'The first return ends the function, so the second never runs.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint doubled(int n) {\n  return n * 2;\n}\nint main() {\n  int x = 4;\n  doubled(x);\n  std::cout << x << "\\n";\n}',
+          ['8', '0', '16', '4'],
+          3,
+          'The returned 8 is discarded, and x was passed by value, so x is still 4.',
+        ),
+      ],
+    },
+  ],
+  'cpp-functions': [
+    {
+      title: 'Read a struct through a const reference',
+      explanation: [
+        "A parameter declared const Order& order refers to the caller's object instead of copying it, and const promises that the function only reads it. This is the usual way to pass a struct or other larger object that a function only inspects.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Order {\n  int price;\n  int quantity;\n};\nint cost(const Order& order) {\n  return order.price * order.quantity;\n}\nint main() {\n  Order order{12, 3};\n  std::cout << cost(order) << "\\n";\n}',
+        output: '36',
+        explanation:
+          'cost reads the members through the reference: 12 * 3 is 36.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Box {\n  int w;\n  int h;\n  int d;\n};\nint volume(const Box& box) {\n  return box.w * box.h * box.d;\n}\nint main() {\n  Box box{2, 3, 4};\n  std::cout << volume(box) << "\\n";\n}',
+          ['9', '24', '234', '20'],
+          1,
+          'The function multiplies the three members: 2 * 3 * 4 is 24.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Point {\n  int x;\n  int y;\n};\nint sum(const Point& p) {\n  return p.x + p.y;\n}\nint main() {\n  Point a{3, -1};\n  Point b{10, 5};\n  std::cout << sum(a) + sum(b) << "\\n";\n}',
+          ['15', '2', '17', '19'],
+          2,
+          'sum(a) is 2 and sum(b) is 15, so the total is 17.',
+        ),
+        choose(
+          'Why take a struct parameter as const Order& rather than Order?',
+          [
+            "So the function can change the caller's order",
+            'Because structs cannot be passed by value',
+            'To avoid a copy while promising not to change it',
+            'To give the function its own private copy',
+          ],
+          2,
+          'A reference avoids copying, and const keeps the function from modifying the object through it.',
+        ),
+      ],
+    },
+    {
+      title: 'Rely on const to block changes',
+      explanation: [
+        'Through a const reference the function cannot assign to the object; such code does not compile. The const applies only to that reference: the caller still owns the object and may change it, and the function then reads the new value.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Counter {\n  int value;\n};\nint peek(const Counter& c) {\n  return c.value;\n}\nint main() {\n  Counter c{1};\n  int before = peek(c);\n  c.value = 9;\n  std::cout << before << " " << peek(c) << "\\n";\n}',
+        output: '1 9',
+        explanation:
+          'peek only reads. main changes c between the calls, and the second call sees 9.',
+      },
+      questions: [
+        choose(
+          'What happens when this program is compiled?',
+          [
+            'It compiles and sets balance to 0',
+            'It compiles but changes only a copy',
+            'It compiles and returns the old balance',
+            'It does not compile: account refers to a const Account',
+          ],
+          3,
+          'Assigning to a member through a const reference is rejected by the compiler.',
+          '#include <iostream>\nstruct Account {\n  int balance;\n};\nint drain(const Account& account) {\n  account.balance = 0;\n  return account.balance;\n}\nint main() {\n  Account a{50};\n  std::cout << drain(a) << "\\n";\n}',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Tank {\n  int level;\n};\nint read(const Tank& tank) {\n  return tank.level;\n}\nint main() {\n  Tank tank{40};\n  tank.level += 5;\n  std::cout << read(tank) << "\\n";\n}',
+          ['40', '5', '0', '45'],
+          3,
+          'main may change its own tank; read then sees the current level, 45.',
+        ),
+        choose(
+          'What does a const reference parameter guarantee?',
+          [
+            'No code anywhere can change the object during the call',
+            'The function cannot change the object through that reference',
+            'The object is copied before the call',
+            'The object can never change again',
+          ],
+          1,
+          'const restricts what can be done through that name only; the object itself is not frozen.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose const& for reading and & for changing',
+      explanation: [
+        "Pick the parameter form from what the function does: const T& when it only reads, T& when changing the caller's object is the point, and plain T when it needs its own copy to modify freely.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Score {\n  int points;\n};\nvoid add(Score& score, int extra) {\n  score.points += extra;\n}\nint total(const Score& score) {\n  return score.points;\n}\nint main() {\n  Score score{10};\n  add(score, 5);\n  std::cout << total(score) << "\\n";\n}',
+        output: '15',
+        explanation:
+          "add takes Score& and changes the caller's score; total only reads it through const Score&.",
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Wallet {\n  int cash;\n};\nvoid spend(Wallet& wallet, int amount) {\n  wallet.cash -= amount;\n}\nint left(const Wallet& wallet) {\n  return wallet.cash;\n}\nint main() {\n  Wallet wallet{50};\n  spend(wallet, 20);\n  spend(wallet, 5);\n  std::cout << left(wallet) << "\\n";\n}',
+          ['50', '30', '25', '45'],
+          2,
+          'Both calls change the same wallet: 50 - 20 - 5 is 25.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Pair {\n  int a;\n  int b;\n};\nint copy_sum(Pair p) {\n  p.a = 100;\n  return p.a + p.b;\n}\nint main() {\n  Pair p{1, 2};\n  int s = copy_sum(p);\n  std::cout << s << " " << p.a << "\\n";\n}',
+          ['102 1', '102 100', '3 1', '3 100'],
+          0,
+          'The by-value parameter is a copy: the function sees 100 + 2, while the caller keeps a = 1.',
+        ),
+        choose(
+          'A function only reads a Settings struct. Which parameter declaration fits best?',
+          [
+            'Settings& settings',
+            'Settings settings',
+            'const Settings settings',
+            'const Settings& settings',
+          ],
+          3,
+          'const Settings& avoids the copy and documents that the function will not modify it.',
+        ),
+      ],
+    },
+  ],
+  'cpp-control': [
+    {
+      title: 'Return as soon as the answer is known',
+      explanation: [
+        'A return statement inside a loop ends the whole function at once: the remaining iterations and any statements after the loop are skipped. A search can therefore stop at the first match.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint first_negative(const std::vector<int>& values) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] < 0) return i;\n  return -1;\n}\nint main() {\n  std::cout << first_negative({4, -2, 7, -9}) << "\\n";\n}',
+        output: '1',
+        explanation:
+          'The loop reaches -2 at position 1 and returns immediately, never looking at -9.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint first_negative(const std::vector<int>& values) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] < 0) return i;\n  return -1;\n}\nint main() {\n  std::cout << first_negative({5, 3, -1}) << "\\n";\n}',
+          ['2', '3', '-1', '0'],
+          0,
+          'The first negative value is at position 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint count_until_zero(const std::vector<int>& values) {\n  int count = 0;\n  for (int i = 0; i < static_cast<int>(values.size()); ++i) {\n    if (values[i] == 0) return count;\n    ++count;\n  }\n  return count;\n}\nint main() {\n  std::cout << count_until_zero({3, 8, 0, 4}) << "\\n";\n}',
+          ['3', '2', '4', '1'],
+          1,
+          'Two values are counted before the 0 returns from the function; the 4 is never reached.',
+        ),
+        choose(
+          'What happens to the rest of a loop when return runs inside it?',
+          [
+            'The loop finishes its remaining iterations first',
+            'Only the current iteration ends',
+            'The function ends immediately, skipping the rest',
+            'The loop restarts from its first iteration',
+          ],
+          2,
+          'return leaves the function, so nothing after it in the function runs.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose a sentinel that cannot be a real answer',
+      explanation: [
+        'When a search can fail, it needs a result that no successful search can produce. Positions start at 0, so 0 is a real answer; -1 is a common "not found" value because no position is negative.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint find(const std::vector<int>& values, int target) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) return i;\n  return -1;\n}\nint main() {\n  std::cout << find({7, 8}, 7) << " " << find({7, 8}, 9) << "\\n";\n}',
+        output: '0 -1',
+        explanation:
+          '7 is found at position 0, a real answer; 9 is missing, so the loop ends and -1 is returned.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint find(const std::vector<int>& values, int target) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) return i;\n  return -1;\n}\nint main() {\n  std::cout << find({4, 4, 4}, 4) << "\\n";\n}',
+          ['-1', '2', '0', '3'],
+          2,
+          'The search returns at the first match, position 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint find(const std::vector<int>& values, int target) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) return i;\n  return -1;\n}\nint main() {\n  std::cout << find({}, 1) << "\\n";\n}',
+          ['0', '-1', '1', '-2'],
+          1,
+          'An empty vector gives the loop nothing to check, so the sentinel -1 is returned.',
+        ),
+        choose(
+          'Why does find return -1 rather than 0 when the target is missing?',
+          [
+            '-1 makes the loop finish faster',
+            'Functions returning int cannot return 0',
+            'The compiler requires -1 for failure',
+            '0 is a valid position, so it would be ambiguous',
+          ],
+          3,
+          'A caller could not tell "found at 0" from "not found" if both returned 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Check the sentinel before using the result',
+      explanation: [
+        'The caller compares the result with the sentinel before treating it as a position. Only a result other than -1 may be used as an index.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint find(const std::vector<int>& values, int target) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) return i;\n  return -1;\n}\nint main() {\n  int pos = find({3, 6, 9}, 9);\n  if (pos != -1) std::cout << "at " << pos << "\\n";\n  else std::cout << "missing\\n";\n}',
+        output: 'at 2',
+        explanation:
+          '9 is at position 2, which is not the sentinel, so the program reports it.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint find(const std::vector<int>& values, int target) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) return i;\n  return -1;\n}\nint main() {\n  int pos = find({3, 6, 9}, 5);\n  if (pos != -1) std::cout << "at " << pos << "\\n";\n  else std::cout << "missing\\n";\n}',
+          ['at -1', 'at 0', 'missing', 'at 3'],
+          2,
+          '5 is not present, so find returns -1 and the else branch runs.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint find(const std::vector<int>& values, int target) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) return i;\n  return -1;\n}\nint main() {\n  std::vector<int> v{10, 20, 30, 20};\n  int pos = find(v, 20);\n  if (pos != -1) std::cout << pos << " " << v[pos] << "\\n";\n}',
+          ['3 20', '2 30', '1 10', '1 20'],
+          3,
+          'The first 20 is at position 1, and v[1] is 20.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint find_last(const std::vector<int>& values, int target) {\n  int last = -1;\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) last = i;\n  return last;\n}\nint main() {\n  std::cout << find_last({2, 5, 2, 7}, 2) << "\\n";\n}',
+          ['0', '2', '-1', '1'],
+          1,
+          'Without an early return the loop keeps going, and last ends as the final match, position 2.',
+        ),
+      ],
+    },
+  ],
+  'cpp-short-circuit': [
+    {
+      title: '&& skips its right side after a false left side',
+      explanation: [
+        'a && b evaluates a first. If a is false, the result must be false, so b is not evaluated at all. Any effect in b, such as an increment, then does not happen.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int checks = 0;\n  bool ok = 2 > 5 && ++checks > 0;\n  std::cout << ok << " " << checks << "\\n";\n}',
+        output: '0 0',
+        explanation:
+          '2 > 5 is false, so ++checks never runs and checks stays 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int checks = 0;\n  bool ok = 7 > 1 && ++checks > 0;\n  std::cout << ok << " " << checks << "\\n";\n}',
+          ['1 0', '0 1', '0 0', '1 1'],
+          3,
+          'The left side is true, so the right side runs: checks becomes 1 and the result is true.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int n = 0;\n  bool r = n != 0 && ++n > 0;\n  std::cout << r << n << "\\n";\n}',
+          ['00', '11', '01', '10'],
+          0,
+          'n != 0 is false, so the increment is skipped and both values print as 0.',
+        ),
+        choose(
+          'In a && b, when is b evaluated?',
+          [
+            'Always, before a',
+            'Only when a is false',
+            'Always, after a',
+            'Only when a is true',
+          ],
+          3,
+          'Only a true a leaves the answer open, so only then is b evaluated.',
+        ),
+      ],
+    },
+    {
+      title: '|| skips its right side after a true left side',
+      explanation: [
+        'a || b also evaluates a first. If a is true, the result is already true, so b is skipped. b runs only when a is false.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int calls = 0;\n  bool any = 3 > 1 || ++calls > 0;\n  std::cout << any << " " << calls << "\\n";\n}',
+        output: '1 0',
+        explanation: '3 > 1 is true, so ++calls is skipped and calls stays 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int n = 0;\n  bool r = 2 > 5 || ++n == 1;\n  std::cout << r << n << "\\n";\n}',
+          ['01', '10', '11', '00'],
+          2,
+          'The left side is false, so ++n runs; n becomes 1 and the comparison is true.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int n = 0;\n  bool r = n == 0 || ++n == 1;\n  std::cout << r << n << "\\n";\n}',
+          ['11', '10', '01', '00'],
+          1,
+          'n == 0 is already true, so ++n is skipped and n stays 0.',
+        ),
+        choose(
+          'In a || b, when is b skipped?',
+          [
+            'When a is false',
+            'Never',
+            'When a is true',
+            'When b has no side effects',
+          ],
+          2,
+          'A true a already decides the result, so b is not evaluated.',
+        ),
+      ],
+    },
+    {
+      title: 'Put the guard on the left',
+      explanation: [
+        'Short-circuiting lets a safety check protect a risky operand: in count != 0 && total / count >= 10, the division runs only when count is nonzero. The guard must come first; written the other way round, the division runs before the check.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int count = 0;\n  int total = 50;\n  bool high_average = count != 0 && total / count >= 10;\n  std::cout << high_average << "\\n";\n}',
+        output: '0',
+        explanation:
+          'count != 0 is false, so the division by zero is never evaluated and the result is false.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int count = 5;\n  int total = 50;\n  std::cout << (count != 0 && total / count >= 10) << "\\n";\n}',
+          ['0', '10', '1', '5'],
+          2,
+          'The guard passes, and 50 / 5 is 10, which is at least 10.',
+        ),
+        choose(
+          'd may be 0. Which condition never divides by zero?',
+          [
+            'n / d > 3 && d != 0',
+            'd != 0 && n / d > 3',
+            'n / d > 3 || d == 0',
+            'n / d > 3',
+          ],
+          1,
+          'Only with the check on the left is the division skipped when d is 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int d = 0;\n  int n = 9;\n  bool skip = d == 0 || n / d > 1;\n  std::cout << skip << "\\n";\n}',
+          ['0', '9', '2', '1'],
+          3,
+          'd == 0 is true, so || stops there and the division never runs.',
+        ),
+        choose(
+          'Why is total / count > 2 && count != 0 dangerous?',
+          [
+            'count != 0 is evaluated twice',
+            '&& evaluates its operands from right to left',
+            'It is always false',
+            'The division runs before the check and can divide by zero',
+          ],
+          3,
+          'The left operand is always evaluated first, so the division happens even when count is 0.',
+        ),
+      ],
+    },
+  ],
+  'cpp-logic': [
+    {
+      title: 'Test both bounds with &&',
+      explanation: [
+        'A value is in the inclusive range from low to high when low <= value && value <= high. Each bound is its own comparison. Use < instead of <= for a bound that should be excluded.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int value = 7;\n  std::cout << (1 <= value && value <= 10) << "\\n";\n}',
+        output: '1',
+        explanation: 'Both 1 <= 7 and 7 <= 10 are true.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int v = 10;\n  std::cout << (1 <= v && v <= 10) << (1 <= v && v < 10) << "\\n";\n}',
+          ['11', '01', '10', '00'],
+          2,
+          '10 is inside the inclusive range, but v < 10 excludes it from the second.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int age = 0;\n  std::cout << (1 <= age && age <= 120) << "\\n";\n}',
+          ['1', '120', '-1', '0'],
+          3,
+          '0 fails the lower bound, so the range test is false.',
+        ),
+        choose(
+          'Which expression is true exactly when x is from 5 to 9, both included?',
+          [
+            '5 < x && x < 9',
+            '5 <= x || x <= 9',
+            '5 <= x && x <= 9',
+            'x >= 5 && x < 9',
+          ],
+          2,
+          'Both bounds use <= and are joined with &&. With ||, every value would pass.',
+        ),
+      ],
+    },
+    {
+      title: 'Avoid chained comparisons',
+      explanation: [
+        'low <= value <= high does not test a range in C++. The comparisons group left to right as (low <= value) <= high: the first one yields false or true, which become 0 or 1, and that number is compared with high, so the result is almost always true. Recent compilers reject the chained form; others accept it silently.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int value = 50;\n  std::cout << ((1 <= value) <= 10) << " " << (1 <= value && value <= 10) << "\\n";\n}',
+        output: '1 0',
+        explanation:
+          'Written with the grouping C++ uses, the first test compares true, which is 1, with 10 and says 1. The correct test says 0.',
+      },
+      questions: [
+        predictOutput(
+          'This program spells out how C++ groups 0 <= v <= 3. What does it print?',
+          '#include <iostream>\nint main() {\n  int v = -5;\n  std::cout << ((0 <= v) <= 3) << "\\n";\n}',
+          ['0', '1', '-5', '3'],
+          1,
+          '0 <= -5 is false, which is 0, and 0 <= 3 is true, so the grouped test prints 1 even though -5 is out of range.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int v = 2;\n  std::cout << ((5 <= v) <= 9) << " " << (5 <= v && v <= 9) << "\\n";\n}',
+          ['1 0', '0 0', '1 1', '0 1'],
+          0,
+          'The grouped form compares 0 with 9 and prints 1; the real range test fails the lower bound.',
+        ),
+        choose(
+          'Why is 1 <= v <= 10 wrong in C++?',
+          [
+            'It checks only the upper bound, 10',
+            'It evaluates v twice',
+            'It compares the bool result of 1 <= v with 10',
+            'It means the same as 1 <= v && v <= 10',
+          ],
+          2,
+          'The comparisons group left to right, so the second one sees 0 or 1 instead of v.',
+        ),
+      ],
+    },
+    {
+      title: 'Test for outside a range with ||',
+      explanation: [
+        'A value is outside the inclusive range when it is below low or above high: value < low || value > high. This is exactly the negation of the inside test, !(low <= value && value <= high).',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int reading = 120;\n  std::cout << (reading < 0 || reading > 100) << "\\n";\n}',
+        output: '1',
+        explanation: '120 is above 100, so one side of || is true.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int v = 100;\n  std::cout << (v < 0 || v > 100) << "\\n";\n}',
+          ['1', '100', '0', '-1'],
+          2,
+          '100 is the inclusive upper bound, so neither side is true.',
+        ),
+        choose(
+          'Which expression is true exactly when x is outside the inclusive range 1 to 10?',
+          [
+            'x < 1 && x > 10',
+            'x <= 1 || x >= 10',
+            '!(x < 1) || x > 10',
+            'x < 1 || x > 10',
+          ],
+          3,
+          'No value is both below 1 and above 10, so && never works; <= and >= would wrongly exclude 1 and 10.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int x = 15;\n  std::cout << !(1 <= x && x <= 10) << (x < 1 || x > 10) << "\\n";\n}',
+          ['10', '01', '11', '00'],
+          2,
+          '15 is outside the range, and both forms of the outside test agree.',
+        ),
+      ],
+    },
+  ],
+  'cpp-std-array': [
+    {
+      title: 'Declare and index a std::array',
+      explanation: [
+        'std::array<int, 3> from <array> holds exactly three ints. Elements are numbered from 0, so the last one is at size() - 1, and size() always returns 3. The size is part of the type, so a std::array never grows or shrinks.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> prices{4, 9, 2};\n  std::cout << prices[0] + prices[2] << " " << prices.size() << "\\n";\n}',
+        output: '6 3',
+        explanation:
+          'prices[0] is 4 and prices[2] is 2; the array always holds 3 elements.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{5, 6, 7, 8};\n  std::cout << a[1] << a[3] << "\\n";\n}',
+          ['57', '68', '14', '56'],
+          1,
+          'Index 1 is the second element, 6, and index 3 is the fourth, 8.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 5> a{1, 2, 3, 4, 5};\n  std::cout << a[a.size() - 1] << "\\n";\n}',
+          ['4', '6', '1', '5'],
+          3,
+          'size() is 5, so the last element is at index 4 and holds 5.',
+        ),
+        choose(
+          'Which element is the last valid one of std::array<int, 6> a?',
+          ['a[6]', 'a[7]', 'a[5]', 'a[1]'],
+          2,
+          'Six elements occupy indices 0 through 5.',
+        ),
+        choose(
+          'What happens with values.push_back(4) when values is a std::array?',
+          [
+            'It appends 4 and the size grows by one',
+            'It replaces the last element with 4',
+            'It does not compile: a std::array has a fixed size',
+            'It inserts 4 at the front',
+          ],
+          2,
+          'std::array has no push_back, because its size is fixed by its type.',
+        ),
+      ],
+    },
+    {
+      title: 'Start missing elements at zero',
+      explanation: [
+        'Elements without an initializer are set to zero: std::array<int, 4> a{7}; holds 7, 0, 0, 0, and a{} holds four zeros. Copying a std::array copies every element into an independent array.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{7};\n  std::cout << a[0] << a[1] << a[3] << "\\n";\n}',
+        output: '700',
+        explanation:
+          'Only the first element was given; the remaining three start at 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> counts{};\n  counts[1] += 2;\n  std::cout << counts[0] << counts[1] << counts[2] << "\\n";\n}',
+          ['020', '222', '2', '002'],
+          0,
+          'All three counts start at 0, and only counts[1] becomes 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\n#include <cstddef>\nint main() {\n  std::array<int, 5> a{1, 2};\n  int sum = 0;\n  for (std::size_t i = 0; i < a.size(); ++i) sum += a[i];\n  std::cout << sum << "\\n";\n}',
+          ['15', '5', '3', '2'],
+          2,
+          'The array holds 1, 2, 0, 0, 0, so the sum is 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 2> a{4, 9};\n  std::array<int, 2> b = a;\n  b[0] = 0;\n  std::cout << a[0] << b[0] << "\\n";\n}',
+          ['00', '44', '40', '04'],
+          2,
+          'b is an independent copy, so changing b[0] leaves a[0] at 4.',
+        ),
+      ],
+    },
+    {
+      title: 'Loop over indices below size()',
+      explanation: [
+        'size() returns a std::size_t, the unsigned type used for sizes and indices, so the index variable is usually a std::size_t from <cstddef>. A loop with i < a.size() visits every element exactly once; i <= a.size() would read one past the end.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\n#include <cstddef>\nint main() {\n  std::array<int, 4> scores{3, 8, 6, 1};\n  int total = 0;\n  for (std::size_t i = 0; i < scores.size(); ++i) total += scores[i];\n  std::cout << total << "\\n";\n}',
+        output: '18',
+        explanation: 'i takes 0, 1, 2, and 3, so all four scores are added.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\n#include <cstddef>\nint main() {\n  std::array<int, 4> a{2, 4, 6, 8};\n  for (std::size_t i = 0; i < a.size(); i += 2) std::cout << a[i];\n  std::cout << "\\n";\n}',
+          ['48', '2468', '26', '246'],
+          2,
+          'Stepping by 2 visits indices 0 and 2, which hold 2 and 6.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\n#include <cstddef>\nint main() {\n  std::array<int, 3> a{1, 2, 3};\n  for (std::size_t i = 0; i < a.size(); ++i) a[i] = a[i] * 10;\n  std::cout << a[0] + a[2] << "\\n";\n}',
+          ['40', '4', '30', '60'],
+          0,
+          'Every element is multiplied by 10, so a[0] + a[2] is 10 + 30.',
+        ),
+        choose(
+          'A loop over std::array<int, 4> a uses i <= a.size(). What goes wrong?',
+          [
+            'It skips a[0]',
+            'It visits a[3] twice',
+            'Nothing, because <= and < agree here',
+            'It reads a[4], one past the last element',
+          ],
+          3,
+          'With <= the final pass uses i = 4, which is not a valid index.',
+        ),
+      ],
+    },
+  ],
+  'cpp-range-for': [
+    {
+      title: 'Visit every element in order',
+      explanation: [
+        'for (int x : a) runs its body once for each element of a, from first to last, with x holding that element. No index variable or bounds check is needed.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{3, 1, 4, 1};\n  for (int x : a) std::cout << x;\n  std::cout << "\\n";\n}',
+        output: '3141',
+        explanation:
+          'The loop visits the four elements in order and prints each one.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{2, 5, 7};\n  int sum = 0;\n  for (int x : a) sum += x;\n  std::cout << sum << "\\n";\n}',
+          ['14', '7', '3', '257'],
+          0,
+          'Each element is added once: 2 + 5 + 7 is 14.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{1, 2, 3, 4};\n  int product = 1;\n  for (int x : a) product *= x;\n  std::cout << product << "\\n";\n}',
+          ['10', '1', '24', '4'],
+          2,
+          'Multiplying all four elements gives 24.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{};\n  int visits = 0;\n  for (int x : a) visits += 1 + x;\n  std::cout << visits << "\\n";\n}',
+          ['0', '1', '4', '3'],
+          3,
+          'The elements are all 0, but the body still runs once per element: three times.',
+        ),
+        choose(
+          'How many times does the body of for (int x : a) run when a is a std::array<int, 6>?',
+          ['5', '7', 'It depends on the values', '6'],
+          3,
+          'A range-based for loop runs once per element, and the array always has 6.',
+        ),
+      ],
+    },
+    {
+      title: 'Remember the loop variable is a copy',
+      explanation: [
+        'In for (int x : a), x is a new int initialized from the current element. Changing x changes only that copy; the array keeps its values.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{1, 2, 3};\n  for (int x : a) x = x * 10;\n  std::cout << a[0] << a[1] << a[2] << "\\n";\n}',
+        output: '123',
+        explanation:
+          'Each x was multiplied, but x is a copy, so the array still holds 1, 2, 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 2> a{5, 6};\n  for (int x : a) x += 100;\n  std::cout << a[0] + a[1] << "\\n";\n}',
+          ['211', '11', '111', '200'],
+          1,
+          'The additions changed only the copies, so the elements still add to 11.',
+        ),
+        choose(
+          'In for (int x : values), what does x = 0; inside the body change?',
+          [
+            'The current element of values',
+            'Every element of values',
+            'Only the copy x for this pass',
+            'Nothing, because it does not compile',
+          ],
+          2,
+          'x is an independent int; assigning to it never reaches the array.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{4, 4, 4};\n  int changed = 0;\n  for (int x : a) {\n    x = 9;\n    changed += x;\n  }\n  std::cout << changed << " " << a[0] << "\\n";\n}',
+          ['27 9', '12 4', '27 4', '12 9'],
+          2,
+          'Each copy becomes 9 and is added, giving 27, while a[0] stays 4.',
+        ),
+      ],
+    },
+  ],
+  'cpp-loop-exits': [
+    {
+      title: 'Skip an element with continue',
+      explanation: [
+        'continue ends the current pass of the innermost loop and moves straight on to the next element (or, in a counting loop, to the update and the next check). Statements after it in the body are skipped for that pass only.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 5> a{4, -1, 3, -2, 5};\n  int sum = 0;\n  for (int x : a) {\n    if (x < 0) continue;\n    sum += x;\n  }\n  std::cout << sum << "\\n";\n}',
+        output: '12',
+        explanation: 'The negative values skip the addition; 4 + 3 + 5 is 12.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{1, 2, 3, 4};\n  for (int x : a) {\n    if (x == 2) continue;\n    std::cout << x;\n  }\n  std::cout << "\\n";\n}',
+          ['1', '134', '1234', '34'],
+          1,
+          'Only the pass for 2 is skipped; the loop carries on with 3 and 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 5> a{0, 7, 0, 7, 0};\n  int count = 0;\n  for (int x : a) {\n    if (x == 0) continue;\n    ++count;\n  }\n  std::cout << count << "\\n";\n}',
+          ['3', '0', '5', '2'],
+          3,
+          'The three zeros are skipped, so only the two 7s are counted.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  for (int i = 1; i <= 5; ++i) {\n    if (i == 3) continue;\n    std::cout << i;\n  }\n  std::cout << "\\n";\n}',
+          ['1245', '12', '12345', '45'],
+          0,
+          'In a counting loop, continue still runs ++i, so only 3 is skipped.',
+        ),
+      ],
+    },
+    {
+      title: 'Leave the loop with break',
+      explanation: [
+        'break ends the innermost loop immediately. No later elements are visited, and execution continues after the loop.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 5> a{6, 2, 0, 9, 4};\n  int sum = 0;\n  for (int x : a) {\n    if (x == 0) break;\n    sum += x;\n  }\n  std::cout << sum << "\\n";\n}',
+        output: '8',
+        explanation:
+          'The loop adds 6 and 2 and stops at the 0, so 9 and 4 are never visited.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  for (int i = 1; i <= 10; ++i) {\n    if (i * i > 20) break;\n    std::cout << i;\n  }\n  std::cout << "\\n";\n}',
+          ['12345', '4', '1234', '5'],
+          2,
+          '5 * 5 is the first square above 20, so the loop stops before printing 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{3, 3, 9, 3};\n  int seen = 0;\n  for (int x : a) {\n    ++seen;\n    if (x == 9) break;\n  }\n  std::cout << seen << "\\n";\n}',
+          ['2', '4', '1', '3'],
+          3,
+          'The 9 is counted before break runs, so three elements are seen.',
+        ),
+        choose(
+          'What does break do inside a for loop?',
+          [
+            'Skips the rest of this pass only',
+            'Ends the loop immediately',
+            'Restarts the loop from the beginning',
+            'Ends the whole program',
+          ],
+          1,
+          'break leaves the innermost loop; the code after the loop runs next.',
+        ),
+      ],
+    },
+    {
+      title: 'Combine continue and break',
+      explanation: [
+        'One loop can use both: continue to ignore elements that do not matter and break to stop once the rest no longer matter. The order of the tests decides which rule wins when both could apply.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 6> readings{2, -3, 6, -1, 0, 9};\n  int total = 0;\n  for (int x : readings) {\n    if (x < 0) continue;\n    if (x == 0) break;\n    total += x;\n  }\n  std::cout << total << "\\n";\n}',
+        output: '8',
+        explanation:
+          'Negative readings are skipped, the 0 ends the loop, and the 9 after it is never reached: 2 + 6 is 8.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 6> readings{-2, -2, 5, 0, 5, 5};\n  int total = 0;\n  for (int x : readings) {\n    if (x < 0) continue;\n    if (x == 0) break;\n    total += x;\n  }\n  std::cout << total << "\\n";\n}',
+          ['15', '5', '1', '11'],
+          1,
+          'Only the first 5 is added before the 0 stops the loop.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{3, -4, 0, 2};\n  int total = 0;\n  for (int x : a) {\n    if (x == 0) break;\n    if (x < 0) continue;\n    total += x;\n  }\n  std::cout << total << "\\n";\n}',
+          ['5', '-1', '1', '3'],
+          3,
+          '3 is added, -4 is skipped, and 0 stops the loop before 2.',
+        ),
+        choose(
+          'A loop should ignore negative readings and stop at the first 0. Which body is right?',
+          [
+            'if (x < 0) break; if (x == 0) continue; total += x;',
+            'if (x == 0) continue; total += x;',
+            'if (x < 0) continue; total += x; if (x == 0) continue;',
+            'if (x < 0) continue; if (x == 0) break; total += x;',
+          ],
+          3,
+          'continue skips one negative reading, and break ends the loop at the first 0.',
+        ),
+      ],
+    },
+  ],
+  'cpp-arrays': [
+    {
+      title: 'Modify elements through int&',
+      explanation: [
+        'Declaring the loop variable as a reference, for (int& x : a), makes x another name for each element in turn, so assigning to x changes the array.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{1, 2, 3};\n  for (int& x : a) x *= 10;\n  std::cout << a[0] << " " << a[2] << "\\n";\n}',
+        output: '10 30',
+        explanation:
+          'x refers to each element, so every element is multiplied by 10.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{1, 1, 1, 1};\n  for (int& x : a) x += 2;\n  int sum = 0;\n  for (int x : a) sum += x;\n  std::cout << sum << "\\n";\n}',
+          ['4', '8', '6', '12'],
+          3,
+          'Each element becomes 3, so the four elements add to 12.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{5, 6, 7};\n  for (int x : a) x = 0;\n  for (int& y : a) y -= 1;\n  std::cout << a[0] << a[1] << a[2] << "\\n";\n}',
+          ['-1-1-1', '456', '000', '567'],
+          1,
+          'The first loop changes only copies; the second subtracts 1 from each real element.',
+        ),
+        choose(
+          'Which loop doubles every element of std::array<int, 4> a?',
+          [
+            'for (int x : a) x *= 2;',
+            'for (int& x : a) x * 2;',
+            'for (int x : a) a = x * 2;',
+            'for (int& x : a) x *= 2;',
+          ],
+          3,
+          'Only a reference loop variable with an assignment changes the elements.',
+        ),
+      ],
+    },
+    {
+      title: 'Use auto& to change and auto to copy',
+      explanation: [
+        'auto works in a range-based for too: for (auto& x : a) refers to each element, and for (auto x : a) copies each one. The & decides whether the loop can change the array.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{2, 4, 6};\n  for (auto& x : a) x = x - 1;\n  for (auto x : a) std::cout << x;\n  std::cout << "\\n";\n}',
+        output: '135',
+        explanation:
+          'The auto& loop changes each element; the auto loop then reads the new values.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{1, 2, 3};\n  for (auto x : a) x *= 5;\n  std::cout << a[1] << "\\n";\n}',
+          ['10', '5', '2', '15'],
+          2,
+          'Plain auto copies each element, so the array is unchanged and a[1] is 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{4, 3, 2, 1};\n  int i = 0;\n  for (auto& x : a) {\n    x = i;\n    ++i;\n  }\n  std::cout << a[0] << a[3] << "\\n";\n}',
+          ['41', '14', '03', '30'],
+          2,
+          'Each element is overwritten with its position, so a[0] is 0 and a[3] is 3.',
+        ),
+        choose(
+          'How do for (auto x : a) and for (auto& x : a) differ?',
+          [
+            'They are identical',
+            'The first copies each element; the second refers to each element',
+            'The second copies each element; the first refers to each element',
+            'auto& works only with arrays of int',
+          ],
+          1,
+          'Without & the loop variable is a copy; with & it is another name for the element.',
+        ),
+      ],
+    },
+    {
+      title: 'Build results in place',
+      explanation: [
+        'A reference loop can combine reading and writing each element, for example replacing every value with a running total. Only the reference form keeps the results in the array.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{1, 2, 3, 4};\n  int running = 0;\n  for (int& x : a) {\n    running += x;\n    x = running;\n  }\n  std::cout << a[0] << " " << a[1] << " " << a[2] << " " << a[3] << "\\n";\n}',
+        output: '1 3 6 10',
+        explanation:
+          'Each element is replaced by the total so far: 1, 1 + 2, 1 + 2 + 3, and 1 + 2 + 3 + 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{5, 5, 5};\n  int running = 0;\n  for (int& x : a) {\n    running += x;\n    x = running;\n  }\n  std::cout << a[2] << "\\n";\n}',
+          ['5', '10', '15', '25'],
+          2,
+          'The last element becomes the full running total, 15.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{5, 5, 5};\n  int running = 0;\n  for (int x : a) {\n    running += x;\n    x = running;\n  }\n  std::cout << a[2] << "\\n";\n}',
+          ['5', '15', '10', '0'],
+          0,
+          'The loop variable is a copy, so the totals are written only to copies and a[2] stays 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{3, 1, 2};\n  for (auto& x : a) x = x * x;\n  int sum = 0;\n  for (auto x : a) sum += x;\n  std::cout << sum << "\\n";\n}',
+          ['6', '36', '12', '14'],
+          3,
+          'The elements become 9, 1, and 4, which add to 14.',
+        ),
+      ],
+    },
+  ],
+  'cpp-function-overloads': [
+    {
+      title: 'Give overloads different parameter types',
+      explanation: [
+        'Several functions may share a name if their parameter lists differ. The compiler picks the overload whose parameters match the argument types: an int argument selects the int version, and a double argument selects the double version.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint describe(int x) {\n  return x * 2;\n}\ndouble describe(double x) {\n  return x / 2;\n}\nint main() {\n  std::cout << describe(6) << " " << describe(6.0) << "\\n";\n}',
+        output: '12 3',
+        explanation:
+          '6 is an int, so the first overload doubles it; 6.0 is a double, so the second halves it.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint scale(int x) {\n  return x * 10;\n}\ndouble scale(double x) {\n  return x * 100;\n}\nint main() {\n  std::cout << scale(2) << " " << scale(0.5) << "\\n";\n}',
+          ['200 5', '20 50', '20 5', '200 50'],
+          1,
+          'scale(2) uses the int version (20) and scale(0.5) the double version (50).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint kind(int) {\n  return 1;\n}\nint kind(double) {\n  return 2;\n}\nint main() {\n  std::cout << kind(3) << kind(3.0) << kind(7 / 2) << "\\n";\n}',
+          ['122', '111', '212', '121'],
+          3,
+          '7 / 2 is integer division, so its type is int and it selects the first overload.',
+        ),
+        choose(
+          'Which pair of declarations is a valid overload set?',
+          [
+            'int f(int); double f(int);',
+            'int f(int x); int f(int y);',
+            'int f(int); int f(double);',
+            'double f(int); double f(int);',
+          ],
+          2,
+          'Only the third pair differs in parameter types; parameter names and return types do not count.',
+        ),
+      ],
+    },
+    {
+      title: 'Select an overload with a cast',
+      explanation: [
+        'Because the argument type picks the overload, converting the argument first changes which function runs: half(n) with an int n calls the int version, while half(static_cast<double>(n)) calls the double one. The return type alone can never distinguish two overloads.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint half(int x) {\n  return x / 2;\n}\ndouble half(double x) {\n  return x / 2;\n}\nint main() {\n  int n = 7;\n  std::cout << half(n) << " " << half(static_cast<double>(n)) << "\\n";\n}',
+        output: '3 3.5',
+        explanation:
+          'The int version uses integer division; the cast selects the double version, which keeps the .5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint half(int x) {\n  return x / 2;\n}\ndouble half(double x) {\n  return x / 2;\n}\nint main() {\n  std::cout << half(9) << " " << half(9.0) << "\\n";\n}',
+          ['4.5 4.5', '4 4', '4 4.5', '4.5 4'],
+          2,
+          '9 selects the int overload (4) and 9.0 the double overload (4.5).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\ndouble area(double radius) {\n  return 3 * radius * radius;\n}\nint area(int side) {\n  return side * side;\n}\nint main() {\n  std::cout << area(2) + area(1.0) << "\\n";\n}',
+          ['15', '7.0', '7', '6'],
+          2,
+          'area(2) is the int version, 4; area(1.0) is the double version, 3.0; the sum prints as 7.',
+        ),
+        choose(
+          'Why do int f(int) and double f(int) fail to compile together?',
+          [
+            'Two functions cannot both return numbers',
+            'Only the return types differ, and that cannot pick an overload',
+            'double f(int) needs a cast in its body',
+            'Only one function may ever be named f',
+          ],
+          1,
+          'A call f(3) would match both equally, so the language rejects overloads that differ only in return type.',
+        ),
+      ],
+    },
+    {
+      title: 'Overload on the number of parameters',
+      explanation: [
+        'Overloads may also differ in how many parameters they take. The compiler counts the arguments in the call and picks the matching version.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint total(int a, int b) {\n  return a + b;\n}\nint total(int a, int b, int c) {\n  return a + b + c;\n}\nint main() {\n  std::cout << total(1, 2) << " " << total(1, 2, 3) << "\\n";\n}',
+        output: '3 6',
+        explanation:
+          'Two arguments select the two-parameter version, and three select the other.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint count(int) {\n  return 1;\n}\nint count(int, int) {\n  return 2;\n}\nint main() {\n  std::cout << count(5) + count(5, 6) << "\\n";\n}',
+          ['2', '4', '11', '3'],
+          3,
+          'One argument calls the version returning 1, two arguments the version returning 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\ndouble average(int a, int b) {\n  return (a + b) / 2.0;\n}\nint average(int a) {\n  return a;\n}\nint main() {\n  std::cout << average(3, 4) << " " << average(3) << "\\n";\n}',
+          ['3 3', '3.5 3', '3.5 3.5', '7 3'],
+          1,
+          'The two-argument version divides by 2.0 and returns 3.5; the one-argument version returns 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint g(int) {\n  return 1;\n}\nint g(double) {\n  return 2;\n}\nint main() {\n  std::cout << g(2) * g(2.5) << "\\n";\n}',
+          ['4', '1', '2', '5'],
+          2,
+          'g(2) picks the int version (1) and g(2.5) the double version (2), and 1 * 2 is 2.',
+        ),
+      ],
+    },
+  ],
+  'cpp-default-arguments': [
+    {
+      title: 'Omit a trailing argument to use its default',
+      explanation: [
+        'int price(int base, int fee = 3) gives fee a default. A call that leaves out the fee argument uses 3; a call that supplies it uses the supplied value.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint price(int base, int fee = 3) {\n  return base + fee;\n}\nint main() {\n  std::cout << price(10) << " " << price(10, 0) << "\\n";\n}',
+        output: '13 10',
+        explanation:
+          'price(10) uses the default fee of 3; price(10, 0) supplies 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint seats(int people, int extra = 1) {\n  return people + extra;\n}\nint main() {\n  std::cout << seats(4) << "\\n";\n}',
+          ['4', '5', '1', '41'],
+          1,
+          'extra is omitted, so its default 1 is added to 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint grow(int n, int step = 2) {\n  return n * step;\n}\nint main() {\n  std::cout << grow(5, 3) + grow(5) << "\\n";\n}',
+          ['30', '20', '25', '15'],
+          2,
+          'grow(5, 3) is 15 and grow(5) uses step 2 for 10, so the sum is 25.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint f(int a, int b = 10) {\n  return a - b;\n}\nint main() {\n  std::cout << f(4, 0) << " " << f(4) << "\\n";\n}',
+          ['-6 4', '4 4', '-6 -6', '4 -6'],
+          3,
+          'f(4, 0) is 4 - 0; f(4) uses b = 10, giving -6.',
+        ),
+      ],
+    },
+    {
+      title: 'Put defaults after the required parameters',
+      explanation: [
+        'Arguments fill parameters from left to right, so only trailing parameters can have defaults. Once a parameter has a default, every parameter after it needs one too. A call cannot skip a middle argument.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint box(int w, int h = 2, int d = 3) {\n  return w * h * d;\n}\nint main() {\n  std::cout << box(1) << " " << box(1, 5) << " " << box(1, 5, 1) << "\\n";\n}',
+        output: '6 15 5',
+        explanation:
+          'box(1) uses both defaults; box(1, 5) supplies h; box(1, 5, 1) supplies everything.',
+      },
+      questions: [
+        choose(
+          'Which declaration compiles?',
+          [
+            'int f(int a = 1, int b);',
+            'int f(int a, int b = 1, int c);',
+            'int f(int a = 1, int b, int c = 2);',
+            'int f(int a, int b = 1);',
+          ],
+          3,
+          'Only the last one gives defaults to trailing parameters alone.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint box(int w, int h = 2, int d = 3) {\n  return w * h * d;\n}\nint main() {\n  std::cout << box(2, 1) << "\\n";\n}',
+          ['2', '6', '12', '4'],
+          1,
+          'w = 2 and h = 1 are supplied, and d keeps its default 3: 2 * 1 * 3 is 6.',
+        ),
+        choose(
+          'With int box(int w, int h = 2, int d = 3), how can a call pass d = 9 and keep h at its default?',
+          [
+            'box(1, , 9), leaving h empty',
+            'box(1, d = 9), naming the parameter',
+            'box(1, 9), letting the compiler match d',
+            'box(1, 2, 9), passing h explicitly',
+          ],
+          3,
+          'Arguments fill parameters in order, so box(1, 9) would set h; h must be passed to reach d.',
+        ),
+      ],
+    },
+    {
+      title: 'Let supplied arguments override defaults',
+      explanation: [
+        'A default is used only when its argument is missing from the call. A default value is fixed in the declaration; it does not come from a variable of the same name in the caller.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint timeout_ms(int seconds = 30) {\n  return seconds * 1000;\n}\nint main() {\n  std::cout << timeout_ms() << " " << timeout_ms(5) << "\\n";\n}',
+        output: '30000 5000',
+        explanation:
+          'The empty call uses 30; the second call supplies 5, which replaces the default.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint level(int n = 1) {\n  return n * n;\n}\nint main() {\n  std::cout << level() + level(3) << "\\n";\n}',
+          ['2', '10', '18', '4'],
+          1,
+          'level() uses 1 and returns 1; level(3) returns 9.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint add(int a, int b = 5) {\n  return a + b;\n}\nint main() {\n  int b = 100;\n  std::cout << add(1) << "\\n";\n}',
+          ['101', '1', '6', '105'],
+          2,
+          "The default is the 5 in the declaration; the caller's variable named b plays no part.",
+        ),
+        choose(
+          'A caller passes every argument to a function that has defaults. Which values are used?',
+          [
+            'The defaults, for the parameters that have them',
+            'The defaults, unless they are zero',
+            'The larger of each default and argument',
+            "The caller's arguments for every parameter",
+          ],
+          3,
+          'Defaults fill in only missing arguments; supplied ones always win.',
+        ),
+      ],
+    },
+  ],
 };
