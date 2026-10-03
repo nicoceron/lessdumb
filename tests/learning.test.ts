@@ -164,9 +164,9 @@ function subjectCatalog(): CurriculumCatalog {
 describe('curriculum integrity', () => {
   it('provides a complete original Python graph with executable exercises', () => {
     expect(validateCurriculum()).toEqual([]);
-    expect(skills).toHaveLength(24);
-    expect(skills.flatMap((skill) => skill.questions)).toHaveLength(96);
-    expect(allFlashcards).toHaveLength(48);
+    expect(skills).toHaveLength(48);
+    expect(skills.flatMap((skill) => skill.questions)).toHaveLength(192);
+    expect(allFlashcards).toHaveLength(96);
     expect(
       skills.every(
         (skill) =>
@@ -223,7 +223,7 @@ sys.exit(1 if failures else 0)
       'Native Python is required to verify curriculum solutions.',
     ).toBeUndefined();
     expect(result.status, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toEqual({ exercises: 24, failures: [] });
+    expect(JSON.parse(result.stdout)).toEqual({ exercises: 48, failures: [] });
   });
 
   it('verifies every displayed example produces its documented output', () => {
@@ -283,7 +283,7 @@ sys.exit(1 if failures else 0)
       timeout: 10_000,
     });
     expect(result.status, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toEqual({ checked: 26, failures: [] });
+    expect(JSON.parse(result.stdout)).toEqual({ checked: 66, failures: [] });
   });
 });
 
@@ -546,14 +546,14 @@ describe('mastery and the prerequisite frontier', () => {
 
   it('can reach every skill from the graph without manually unlocking nodes', () => {
     let progress = fresh();
-    for (let i = 0; i < 96; i++) {
+    for (let i = 0; i < 192; i++) {
       const task = nextTask(progress, NOW, 'python-foundations');
       expect(task, `The graph stalled after ${i} answers.`).not.toBeNull();
       progress = applyAttempt(progress, { ...task!, correct: true }, NOW);
     }
-    expect(getStats(progress, NOW).mastered).toBe(24);
+    expect(getStats(progress, NOW).mastered).toBe(48);
     expect(nextTask(progress, NOW, 'python-foundations')).toBeNull();
-    expect(earnedFlashcards(progress)).toHaveLength(48);
+    expect(earnedFlashcards(progress)).toHaveLength(96);
   });
 });
 
@@ -798,7 +798,7 @@ describe('subject-specific catalogs and assessment policies', () => {
     expect(nextTask(fresh(), NOW, undefined, catalog)?.skillId).toBe(
       'fixture-addition',
     );
-    expect(skills).toHaveLength(24);
+    expect(skills).toHaveLength(48);
     const cyclic = {
       ...catalog,
       skills: [

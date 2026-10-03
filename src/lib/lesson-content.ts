@@ -401,6 +401,426 @@ const walkthroughs: Record<string, AuthoredStep[]> = {
       lines: [4, 7],
     },
   ],
+  'conditional-expressions': [
+    {
+      title: 'Evaluate the condition first',
+      explanation:
+        'temperature is 31, so temperature > 30 is True. The expression therefore produces "stay inside", which is assigned to advice and printed.',
+      lines: [1, 3],
+    },
+    {
+      title: 'Use the expression inside a call',
+      explanation:
+        'files == 1 is True, so print receives the first value, "1 file". The else side, which would format "1 files", is never evaluated.',
+      lines: [4, 5],
+    },
+  ],
+  truthiness: [
+    {
+      title: 'Test a list for emptiness',
+      explanation:
+        'tasks is an empty list, which counts as false. not tasks is therefore True, so the body prints Nothing to do.',
+      lines: [1, 3],
+    },
+    {
+      title: 'Check for None explicitly',
+      explanation:
+        'best is 0. Zero is falsy, but it is a real score: best is None is False, so the else branch prints Best: 0. The test if not best: would have wrongly reported no score.',
+      lines: [4, 8],
+    },
+  ],
+  'number-builtins': [
+    {
+      title: 'Divide the total by the count',
+      explanation:
+        'sum(scores) adds 72, 95 and 88 to get 255, and len(scores) is 3. Dividing with / gives the mean 85.0 as a float.',
+      lines: [1, 2],
+    },
+    {
+      title: 'Find the extremes',
+      explanation:
+        'min scans for the smallest item, 72, and max for the largest, 95. Neither changes the list.',
+      lines: [3, 3],
+    },
+    {
+      title: 'Measure a gap and round',
+      explanation:
+        '70 - 95 is -25, and abs turns it into the distance 25. round(2.678, 1) keeps one decimal place: 2.7.',
+      lines: [4, 4],
+    },
+  ],
+  'string-methods': [
+    {
+      title: 'Trim, then change case',
+      explanation:
+        'strip returns "Ada Lovelace" without the outer spaces; line itself is unchanged. upper returns a new all-capital copy for printing.',
+      lines: [1, 3],
+    },
+    {
+      title: 'Split into words',
+      explanation:
+        'split() with no argument separates at whitespace, giving the list ["Ada", "Lovelace"].',
+      lines: [4, 5],
+    },
+    {
+      title: 'Join with a separator',
+      explanation:
+        '"_".join(words) builds "Ada_Lovelace", and lower() turns that new string into ada_lovelace.',
+      lines: [6, 6],
+    },
+  ],
+  tuples: [
+    {
+      title: 'Read a tuple by index',
+      explanation:
+        'point holds 3 and then 4. point[0] + point[1] adds them to get 7, and len(point) counts two items.',
+      lines: [1, 3],
+    },
+    {
+      title: 'Compare from the left',
+      explanation:
+        'In (2, 9) < (3, 0) the first items differ and 2 < 3, so the result is True without looking at 9. In (2, 9) < (2, 5) the first items tie, so 9 < 5 decides: False.',
+      lines: [4, 5],
+    },
+  ],
+  unpacking: [
+    {
+      title: 'Unpack inside the loop',
+      explanation:
+        'Each item of pairs is a two-item tuple. The for statement assigns its first item to name and its second to score, so the body prints Ada 3, then Lin 5.',
+      lines: [1, 3],
+    },
+    {
+      title: 'Swap with one assignment',
+      explanation:
+        'low is 8 and high is 2. The right side high, low is evaluated first as (2, 8) and then unpacked, so low becomes 2 and high becomes 8.',
+      lines: [4, 6],
+    },
+  ],
+  'zip-enumerate': [
+    {
+      title: 'Number the items',
+      explanation:
+        'enumerate(names) produces (0, "Ada") and then (1, "Lin"). Each pair is unpacked into i and name and printed.',
+      lines: [1, 4],
+    },
+    {
+      title: 'Pair two lists by position',
+      explanation:
+        'zip(names, scores) produces ("Ada", 90) and ("Lin", 75). Unpacking gives name and score, which the f-string formats.',
+      lines: [5, 6],
+    },
+  ],
+  'break-continue': [
+    {
+      title: 'Skip an even number',
+      explanation:
+        '4 is not negative, but 4 % 2 == 0, so continue skips print and moves on to 7. 7 passes both tests and is printed.',
+      lines: [1, 6],
+    },
+    {
+      title: 'Leave the loop early',
+      explanation:
+        '-1 < 0 is True, so break ends the loop immediately and 9 is never visited. Execution continues after the loop and prints done.',
+      lines: [2, 7],
+    },
+  ],
+  'list-repetition': [
+    {
+      title: 'Create one slot per value',
+      explanation:
+        'Rolls are between 1 and 6, so [0] * 7 makes slots for indexes 0 through 6, all starting at 0.',
+      lines: [1, 2],
+    },
+    {
+      title: 'Count into the slots',
+      explanation:
+        'For each roll, counts[roll] += 1 adds one to the slot whose index is the rolled value. The three 3s raise counts[3] to 3.',
+      lines: [3, 6],
+    },
+  ],
+  'nested-lists': [
+    {
+      title: 'Index a row, then a cell',
+      explanation:
+        'grid[1] is the second row, [3, 4]. Indexing that row with [0] gives 3.',
+      lines: [1, 2],
+    },
+    {
+      title: 'Change one cell',
+      explanation:
+        'grid[0] is the first row; assigning to its index 1 replaces 2 with 9. The grid is now [[1, 9], [3, 4]].',
+      lines: [3, 3],
+    },
+    {
+      title: 'Visit every cell',
+      explanation:
+        'The outer loop takes each row, and the inner loop appends every value in that row before moving on, so cells lists 1, 9, 3, 4.',
+      lines: [4, 8],
+    },
+  ],
+  sets: [
+    {
+      title: 'Remove duplicates',
+      explanation:
+        'set(visits) keeps home once, so the set has three members. in confirms that blog is present.',
+      lines: [1, 4],
+    },
+    {
+      title: 'Add and combine',
+      explanation:
+        'Adding home again leaves the size at 3. {1, 2, 3} & {2, 3, 4} keeps the members found in both, {2, 3}, so the comparison is True.',
+      lines: [5, 7],
+    },
+  ],
+  'multiple-returns': [
+    {
+      title: 'Build the returned tuple',
+      explanation:
+        'For 135, total // 60 is 2 and total % 60 is 15. The comma in return packs them into the tuple (2, 15).',
+      lines: [1, 2],
+    },
+    {
+      title: 'Unpack at the call',
+      explanation:
+        'hours, minutes = split_minutes(135) unpacks that tuple, so hours is 2 and minutes is 15.',
+      lines: [4, 5],
+    },
+    {
+      title: 'Keep the tuple whole',
+      explanation:
+        'Printing split_minutes(59) without unpacking shows the returned tuple itself, (0, 59).',
+      lines: [6, 6],
+    },
+  ],
+  recursion: [
+    {
+      title: 'Find the base case',
+      explanation:
+        'When n is 1 or less, factorial returns 1 immediately without calling itself. Every chain of calls ends here.',
+      lines: [1, 3],
+    },
+    {
+      title: 'Shrink the problem',
+      explanation:
+        'Otherwise it returns n times factorial(n - 1). factorial(4) needs factorial(3), which needs factorial(2), which needs factorial(1).',
+      lines: [4, 4],
+    },
+    {
+      title: 'Combine on the way back',
+      explanation:
+        'factorial(1) returns 1, then factorial(2) returns 2, factorial(3) returns 6, and factorial(4) returns 24 to print.',
+      lines: [6, 6],
+    },
+  ],
+  'build-nested-lists': [
+    {
+      title: 'Create a new row each time',
+      explanation:
+        'The comprehension evaluates [0] * 3 twice, producing two different row lists. Changing safe[0][0] affects only the first row.',
+      lines: [1, 3],
+    },
+    {
+      title: 'See the shared-row trap',
+      explanation:
+        '[[0] * 3] * 2 repeats a reference to one row, so both positions hold the same list. Setting shared[0][0] to 7 shows up in both rows.',
+      lines: [4, 6],
+    },
+  ],
+  'generator-expressions': [
+    {
+      title: 'Sum produced values',
+      explanation:
+        'For each score, s - 70 produces 2, 25 and 18. sum adds them as they are produced, giving 45, without building a list.',
+      lines: [1, 2],
+    },
+    {
+      title: 'Ask whether any or all pass',
+      explanation:
+        '95 > 90, so any returns True as soon as it reaches 95. all needs every score to be at least 75; 72 fails, so it returns False.',
+      lines: [3, 4],
+    },
+  ],
+  sorting: [
+    {
+      title: 'Sort into a new list',
+      explanation:
+        'sorted(values) builds a new ascending list, [2, 2, 5, 9]. Printing values afterwards shows the original order is untouched.',
+      lines: [1, 3],
+    },
+    {
+      title: 'Sort in place, descending',
+      explanation:
+        'values.sort(reverse=True) reorders values itself from largest to smallest, so values becomes [9, 5, 2, 2].',
+      lines: [4, 5],
+    },
+    {
+      title: 'Reverse without sorting',
+      explanation:
+        'reversed walks [1, 2, 3] from the end, and list() collects the items as [3, 2, 1].',
+      lines: [6, 6],
+    },
+  ],
+  'key-functions': [
+    {
+      title: 'Compare by one field',
+      explanation:
+        'The key lambda p: p[1] maps each pair to its age. Sorting by 36, 29 and 36 puts Lin first; Ada and Bo tie and keep their original order.',
+      lines: [1, 2],
+    },
+    {
+      title: 'Pick the top item',
+      explanation:
+        'max uses the same key and returns the first pair with the largest age: the whole tuple ("Ada", 36).',
+      lines: [3, 3],
+    },
+    {
+      title: 'Combine fields in a tuple key',
+      explanation:
+        'The key (-age, name) sorts larger ages first and, among equal ages, names alphabetically: Ada, Bo, then Lin.',
+      lines: [4, 4],
+    },
+  ],
+  bitwise: [
+    {
+      title: 'Read the bits',
+      explanation:
+        'bin shows 12 as 0b1100 and 10 as 0b1010. Line the digits up by position to apply each operator.',
+      lines: [1, 3],
+    },
+    {
+      title: 'Combine bit by bit',
+      explanation:
+        'Only the 8 bit is set in both, so & gives 8. | keeps every set bit, 1110 = 14, and ^ keeps the bits set in exactly one, 0110 = 6.',
+      lines: [4, 4],
+    },
+    {
+      title: 'Shift',
+      explanation:
+        '1 << 3 moves the single bit to the 8 position. 12 >> 2 drops the two lowest bits of 1100, leaving 11, which is 3.',
+      lines: [5, 5],
+    },
+  ],
+  imports: [
+    {
+      title: 'Load a module and one name',
+      explanation:
+        'import math makes the math module available under its own name. from math import gcd brings just gcd into the program.',
+      lines: [1, 2],
+    },
+    {
+      title: 'Use module functions',
+      explanation:
+        'math.sqrt(49) returns the float 7.0. 7 / 2 is 3.5; math.ceil rounds it up to 4 and math.floor rounds it down to 3.',
+      lines: [3, 4],
+    },
+    {
+      title: 'Call the imported name directly',
+      explanation:
+        'gcd(12, 18) needs no prefix because it was imported by name; the largest number dividing both is 6.',
+      lines: [5, 5],
+    },
+  ],
+  'collections-module': [
+    {
+      title: 'Start a queue',
+      explanation:
+        'deque(["Ada", "Lin"]) starts a queue with Ada at the front. append adds Bo at the back.',
+      lines: [1, 3],
+    },
+    {
+      title: 'Serve from the front',
+      explanation:
+        'popleft removes and returns the front item, Ada, leaving Lin and Bo, so len(queue) is 2.',
+      lines: [4, 5],
+    },
+    {
+      title: 'Count items',
+      explanation:
+        'Counter tallies tea twice and coffee once. Asking for juice, which never appeared, returns 0 instead of raising KeyError.',
+      lines: [6, 7],
+    },
+  ],
+  'heapq-module': [
+    {
+      title: 'Push prioritized tuples',
+      explanation:
+        'Each push adds a (priority, task) tuple and rearranges the list so that the smallest tuple is at index 0.',
+      lines: [1, 5],
+    },
+    {
+      title: 'Look at the front',
+      explanation:
+        'tasks[0] is the smallest tuple, (1, "plan"). Reading it does not remove it.',
+      lines: [6, 6],
+    },
+    {
+      title: 'Pop by priority',
+      explanation:
+        'The first heappop removes (1, "plan"). The next smallest is (2, "test"), so the second pop returns it.',
+      lines: [7, 8],
+    },
+  ],
+  'bisect-module': [
+    {
+      title: 'Find the left insertion point',
+      explanation:
+        'In [10, 20, 20, 30], only 10 is smaller than 20, so bisect_left returns 1, the position of the first 20.',
+      lines: [1, 3],
+    },
+    {
+      title: 'Find the right insertion point',
+      explanation:
+        'bisect_right skips past both 20s and returns 3. The difference 3 - 1 counts the two copies.',
+      lines: [4, 4],
+    },
+    {
+      title: 'Place a missing value',
+      explanation:
+        '25 is not in the list. Three items are smaller, so it would be inserted at index 3, before 30.',
+      lines: [5, 5],
+    },
+  ],
+  classes: [
+    {
+      title: 'Define how objects start',
+      explanation:
+        '__init__ receives the new object as self and stores x and y on it. y defaults to 0 when the caller leaves it out.',
+      lines: [1, 4],
+    },
+    {
+      title: 'Create separate objects',
+      explanation:
+        'Point(3, 4) and Point(5) create two objects. b starts with y = 0, then its own y is set to 2; a is unaffected.',
+      lines: [6, 8],
+    },
+    {
+      title: 'Read attributes',
+      explanation:
+        'a.x + a.y adds 3 and 4. b.x and b.y read the values stored on b: 5 and 2.',
+      lines: [9, 10],
+    },
+  ],
+  methods: [
+    {
+      title: 'Store settings in the constructor',
+      explanation:
+        'MeanModel(offset=1) runs __init__, which stores the setting offset on the new object. Nothing has been learned yet.',
+      lines: [1, 3],
+    },
+    {
+      title: 'Learn in fit and return self',
+      explanation:
+        'fit computes the mean of [2, 4, 6], stores 4.0 as mean_, and returns self, so the chained call hands back the same object, now fitted.',
+      lines: [5, 7],
+    },
+    {
+      title: 'Use what was learned',
+      explanation:
+        'predict reads mean_ and offset from self and returns 5.0. print(model.mean_) shows the learned attribute directly.',
+      lines: [9, 14],
+    },
+  ],
   'rust-main': [
     {
       title: 'Find the entry point',
