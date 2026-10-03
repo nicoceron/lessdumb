@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useRef,
   useState,
@@ -64,6 +65,7 @@ import {
   editorLanguage,
 } from '../lib/code-language';
 import { recordLearningAnswer, type LearnerState } from '../lib/state';
+import { refreshPending } from '../lib/remediation';
 import { Btn, ContentLoading } from './shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -123,6 +125,8 @@ interface Entry {
   code: string;
   output: PythonResult | null;
   feedback: { correct: boolean; attemptId: string } | null;
+  /** A review a failed lesson brought forward: that lesson's skill. */
+  refreshFor?: string;
 }
 
 /** Answers already recorded on each step of the attempt when the page opened. */
@@ -181,6 +185,11 @@ function buildEntry(
     question.type === 'code' &&
     previous?.questionId === question.id &&
     previous.code.trim() !== '';
+  const state = progress.skills[skill.id];
+  const refreshFor =
+    mode === 'review' && refreshPending(state)
+      ? state.refresh!.lesson
+      : undefined;
   return {
     key: crypto.randomUUID(),
     skillId: skill.id,
@@ -200,7 +209,20 @@ function buildEntry(
         : '',
     output: null,
     feedback: null,
+    ...(refreshFor ? { refreshFor } : {}),
   };
+}
+
+/** "A", "A and B", "A, B and C". */
+function listTitles(titles: string[]) {
+  return titles.length < 2
+    ? (titles[0] ?? '')
+    : `${titles.slice(0, -1).join(', ')} and ${titles.at(-1)}`;
+}
+
+/** The plain-words reason for a refresh review. */
+function refreshMessage(lesson: string, refreshed: string[]) {
+  return `Before trying ${lesson} again, let’s refresh ${listTitles(refreshed)}.`;
 }
 
 function resumedAnswers(progress: Progress, skill: Skill | undefined): Resumed {
@@ -416,6 +438,12 @@ function LessonPage({
     ? attemptById(state.progress, current.feedback.attemptId)
     : undefined;
   const failed = recorded?.outcome === 'lesson-failed';
+  // The prerequisites this failure scheduled for a refresh, if any.
+  const refreshed = failed
+    ? (recorded?.refreshed ?? [])
+        .map((id) => skillById[id])
+        .filter((item) => !!item)
+    : [];
   const finished = recorded?.outcome === 'lesson-passed';
   const ended = failed || finished || complete;
 
@@ -891,18 +919,37 @@ function LessonPage({
           const owner = loadedSkill(entry.skillId);
           const point = owner ? stepFor(owner, entry.stepId)?.point : undefined;
           const label = `Question ${index + 1}${multiSkill && owner ? ` · ${owner.title}` : ''}`;
-          return questionCard(
-            entry,
-            label,
-            entry.feedback && point && owner ? (
-              <RereadPoint
-                entryKey={entry.key}
-                point={point}
-                language={codeLanguage(
-                  point.example.language ?? courseLanguageOf(owner),
-                )}
-              />
-            ) : undefined,
+          // A refresh says why it is here, above its skill's first question.
+          const lesson = entry.refreshFor && skillById[entry.refreshFor];
+          const firstOfRefresh =
+            !!lesson &&
+            !!owner &&
+            pageEntries.findIndex(
+              (other) =>
+                other.skillId === entry.skillId &&
+                other.refreshFor === entry.refreshFor,
+            ) === index;
+          return (
+            <Fragment key={entry.key}>
+              {firstOfRefresh && (
+                <p className="lesson-plan-note lesson-refresh-note">
+                  {refreshMessage(lesson.title, [owner.title])}
+                </p>
+              )}
+              {questionCard(
+                entry,
+                label,
+                entry.feedback && point && owner ? (
+                  <RereadPoint
+                    entryKey={entry.key}
+                    point={point}
+                    language={codeLanguage(
+                      point.example.language ?? courseLanguageOf(owner),
+                    )}
+                  />
+                ) : undefined,
+              )}
+            </Fragment>
           );
         })}
       </section>
@@ -1003,11 +1050,38 @@ function LessonPage({
             still above. When {skill.title} returns, it starts from the first
             point.
           </p>
-          <Button asChild className="self-start">
-            <a href="/">
-              Back to Today <ArrowRight size={16} />
-            </a>
-          </Button>
+          {refreshed.length > 0 && (
+            <p className="lesson-refresh-note">
+              {refreshMessage(
+                skill.title,
+                refreshed.map((item) => item.title),
+              )}{' '}
+              {skill.title} builds on {refreshed.length === 1 ? 'it' : 'them'},
+              so a short review comes first.
+            </p>
+          )}
+          <div className="lesson-result-actions">
+            {refreshed.length > 0 && (
+              <Button asChild className="self-start">
+                <a
+                  href={`/learn?skill=${refreshed[0].id}&mode=review&course=${goal}`}
+                >
+                  Refresh {refreshed[0].title} <ArrowRight size={16} />
+                </a>
+              </Button>
+            )}
+            <Button
+              asChild
+              variant={refreshed.length ? 'link' : 'default'}
+              className={
+                refreshed.length ? 'h-auto justify-start p-0' : 'self-start'
+              }
+            >
+              <a href="/">
+                Back to Today <ArrowRight size={16} />
+              </a>
+            </Button>
+          </div>
         </Card>
       )}
       {(finished || (complete && (history.length > 0 || current))) && (
