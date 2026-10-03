@@ -690,7 +690,7 @@ print(mask, matches)`,
         'Only selected bits can vary.',
       ),
       exercise(
-        'Implement selection_counts(values, changes, target). values holds at most 20 integers, which may be negative, zero, or repeated. The selection starts empty. Each change (index, present) sets item index in the selection mask when present is True and clears it when False; repeating a change has no effect. At most 10 items are selected at any time. After each change, count the submasks of the current selection whose selected values sum to target, including the empty submask, and return the counts in change order. Preserve both lists. Walk submasks with (sub - 1) & mask: a hidden case with 20 items and 200 changes must finish within 3 seconds.',
+        'Implement selection_counts(values, changes, target). values holds at most 20 integers, which may be negative, zero, or repeated. The selection starts empty. Each change (index, present) sets item index in the selection mask when present is True and clears it when False; repeating a change has no effect. At most 10 items are selected at any time. After each change, count the submasks of the current selection whose selected values sum to target, including the empty submask, and return the counts in change order. Preserve both lists. Walk submasks with (sub - 1) & mask: a hidden case with 20 items and 500 changes must finish within 3 seconds.',
         `def selection_counts(values, changes, target):
     # Keep one mask; after each change, walk its submasks.
     pass`,
@@ -731,18 +731,18 @@ assert values == [1] * 20 and changes == [(index, True) for index in range(10)],
           `_values = _numbers(20, -60, 60, 701)
 _selected = set()
 _changes = []
-for _pick in _numbers(1000, 0, 19, 702):
+for _pick in _numbers(3000, 0, 19, 702):
     if _pick in _selected:
         _selected.discard(_pick)
         _changes.append((_pick, False))
     elif len(_selected) < 10:
         _selected.add(_pick)
         _changes.append((_pick, True))
-    if len(_changes) == 200:
+    if len(_changes) == 500:
         break
 _result, _seconds = _timed(selection_counts, _values, _changes, 40)
-assert _checksum(_result) == 666043684648720918, "The 200-change case returned wrong counts."
-_check_time(_seconds, "The 200-change case", "Walk only the submasks of the current selection instead of every mask below 1 << 20.")`,
+assert _checksum(_result) == 1292453565480001866, "The 500-change case returned wrong counts."
+_check_time(_seconds, "The 500-change case","Walk only the submasks of the current selection instead of every mask below 1 << 20.")`,
         ),
         'Set and clear keep one mask equal to the current selection, and the submask walk visits each subset of that selection exactly once, so every count neither omits nor repeats a choice.',
         'Update the mask with | or & ~. Then start at sub = mask, count matching totals, stop after zero, and step with (sub - 1) & mask.',
@@ -1697,7 +1697,7 @@ print(kth_ancestors([-1, 0, 0, 1, 3], [(4, 0), (4, 2), (4, 3), (4, 4), (0, 1)]))
         'A parent chain cannot revisit a vertex in a forest.',
       ),
       exercise(
-        'Implement kth_ancestors(parents, queries). parents describes an acyclic forest: each parent is -1 for a root or a valid vertex index. Each query (vertex, k) uses a valid vertex and nonnegative integer k; k may be arbitrarily large. Return the kth ancestor for each query, -1 if absent, and the vertex itself for k = 0. Empty parents comes with no queries. Use a doubling table and preserve parents. A hidden case with 50,000 vertices and 50,000 queries must finish within 3 seconds.',
+        'Implement kth_ancestors(parents, queries). parents describes an acyclic forest: each parent is -1 for a root or a valid vertex index. Each query (vertex, k) uses a valid vertex and nonnegative integer k; k may be arbitrarily large. Return the kth ancestor for each query, -1 if absent, and the vertex itself for k = 0. Empty parents comes with no queries. Use a doubling table and preserve parents. A hidden case with 100,000 vertices and 100,000 queries must finish within 3 seconds.',
         'def kth_ancestors(parents, queries):\n    # Precompute 2**j jumps, preserving -1 roots.\n    pass\n',
         `def kth_ancestors(parents, queries):
     n = len(parents)
@@ -1727,12 +1727,12 @@ assert kth_ancestors([-1, 0, -1, 2], [(1, 1), (3, 1), (3, 2)]) == [0, 2, -1]
 parents = [-1] + list(range(19))
 assert kth_ancestors(parents, [(19, 16), (19, 19), (19, 20), (19, 10**100)]) == [3, 0, -1, -1]
 assert parents == [-1] + list(range(19)), "Preserve parent pointers."`,
-          `_back = _numbers(50000, 1, 3, 421)
-_parents = [-1] + [max(-1, vertex - _back[vertex]) for vertex in range(1, 50000)]
-_queries = list(zip(_numbers(50000, 0, 49999, 422), _numbers(50000, 0, 50000, 423)))
+          `_back = _numbers(100000, 1, 3, 421)
+_parents = [-1] + [max(-1, vertex - _back[vertex]) for vertex in range(1, 100000)]
+_queries = list(zip(_numbers(100000, 0, 99999, 422), _numbers(100000, 0, 100000, 423)))
 _result, _seconds = _timed(kth_ancestors, _parents, _queries)
-assert _checksum(_result) == 364325291241199138, "The 50,000-query case returned wrong ancestors."
-_check_time(_seconds, "The 50,000-query case", "Jump by powers of two from a doubling table instead of stepping one parent at a time.")`,
+assert _checksum(_result) == 1356393175373117166, "The 100,000-query case returned wrong ancestors."
+_check_time(_seconds, "The 100,000-query case","Jump by powers of two from a doubling table instead of stepping one parent at a time.")`,
         ),
         'Each doubling row composes two existing jumps, guarding the -1 sentinel. Query bits select disjoint jump lengths; k >= n has no ancestor in an acyclic forest.',
         'Store the parent row first, compose each row through the previous row, then consume k bits while the current vertex exists.',

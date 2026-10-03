@@ -86,7 +86,7 @@ See [the engine audit](docs/engine-audit.md), [per-user isolation evidence](docs
 
 ## Real Python in the browser
 
-Exercises and the lab use **Pyodide**, a WebAssembly Python runtime, through a dedicated Web Worker. Exercise assertions run against the learner's actual variables, functions, and captured output. Each run gets a separate namespace and worker; execution is terminated after 30 seconds so an infinite loop does not block the application. Learner code is not executed on the account server.
+Exercises and the lab use **Pyodide**, a WebAssembly Python runtime, through a dedicated Web Worker. Exercise assertions run against the learner's actual variables, functions, and captured output. Each run gets a separate namespace and worker; execution is terminated after 30 seconds so an infinite loop does not block the application. Timed Competitive Programming checks scale their limit to the device: the first timed run in a tab times a fixed benchmark in the worker, and a slower device gets a proportionally longer limit. Learner code is not executed on the account server.
 
 The editor uses CodeMirror with matching language syntax support. The bundled runtime is a substantial download on first use. General-purpose third-party package installation is outside this MVP.
 
