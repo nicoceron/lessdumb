@@ -17,10 +17,14 @@ import {
   getStats,
   isMastered,
   isUnlocked,
+  lessonState,
   nextTask,
   recordLesson,
+  selectQuestion,
   type Progress,
 } from '../src/lib/learning';
+import { earnedXp, lessonXp, REVIEW_XP } from '../src/lib/xp';
+import { lessonAnswerIds, masterSkill } from './helpers/mastery';
 
 const skills = allSkills.filter((s) => s.courseId === 'python-foundations');
 const allFlashcards = skills.flatMap((s) => s.flashcards);
@@ -29,14 +33,7 @@ function fresh() {
   return emptyProgress(NOW, 'America/Bogota');
 }
 function master(progress: Progress, skillId: string, now = NOW): Progress {
-  let result = progress;
-  for (const question of skillById[skillId].questions)
-    result = applyAttempt(
-      result,
-      { skillId, questionId: question.id, correct: true, mode: 'learn' },
-      now,
-    );
-  return result;
+  return masterSkill(progress, skillId, now);
 }
 
 function subjectCatalog(): CurriculumCatalog {
@@ -287,6 +284,50 @@ sys.exit(1 if failures else 0)
   });
 });
 
+const PRINT = skillById['print-output'];
+const [P1, P2] = PRINT.knowledgePoints!;
+const PRINT_CODE = PRINT.questions.find(
+  (question) => question.type === 'code',
+)!;
+const PRINT_LESSON_XP = earnedXp(lessonXp(PRINT), 0, true);
+
+function answer(
+  progress: Progress,
+  questionId: string,
+  correct = true,
+  at = NOW,
+  mode: 'learn' | 'review' = 'learn',
+  skillId = 'print-output',
+  usedHint = false,
+) {
+  return applyAttempt(
+    progress,
+    { skillId, questionId, correct, mode, usedHint },
+    at,
+  );
+}
+
+/** Answer a due review cycle correctly with the engine's own selections. */
+function review(progress: Progress, skillId: string, at: number) {
+  const skill = skillById[skillId];
+  const cycle = getSkillState(progress, skillId).reviewCount;
+  let result = progress;
+  for (
+    let index = 0;
+    getSkillState(result, skillId).reviewCount === cycle && index < 8;
+    index++
+  )
+    result = answer(
+      result,
+      selectQuestion(result, skill, 'review').id,
+      true,
+      at,
+      'review',
+      skillId,
+    );
+  return result;
+}
+
 describe('mastery and the prerequisite frontier', () => {
   it('starts at the first prerequisite-ready skill and refuses locked submissions', () => {
     const progress = fresh();
@@ -300,7 +341,7 @@ describe('mastery and the prerequisite frontier', () => {
         progress,
         {
           skillId: 'variables',
-          questionId: 'variables-q1',
+          questionId: 'variables-kp1-q1',
           correct: true,
           mode: 'learn',
         },
@@ -309,58 +350,31 @@ describe('mastery and the prerequisite frontier', () => {
     ).toThrow('prerequisites');
   });
 
-  it('requires distinct choice evidence and a correct unassisted code exercise', () => {
+  it('requires distinct point evidence and a correct unassisted code exercise', () => {
     let progress = fresh();
     for (let i = 0; i < 10; i++)
-      progress = applyAttempt(
-        progress,
-        {
-          skillId: 'print-output',
-          questionId: 'print-output-q1',
-          correct: true,
-          mode: 'learn',
-        },
-        NOW,
-      );
-    expect(isMastered(progress, 'print-output')).toBe(false);
-    expect(progress.totalXp).toBe(10);
-    for (const id of ['print-output-q2', 'print-output-q3'])
-      progress = applyAttempt(
-        progress,
-        {
-          skillId: 'print-output',
-          questionId: id,
-          correct: true,
-          mode: 'learn',
-        },
-        NOW,
-      );
-    progress = applyAttempt(
+      progress = answer(progress, P1.questions[0].id);
+    // Repeating one correct choice cannot pass a point.
+    expect(lessonState(progress, PRINT).current?.id).toBe(P1.id);
+    progress = answer(progress, P1.questions[1].id);
+    progress = answer(progress, P2.questions[0].id);
+    progress = answer(progress, P2.questions[1].id);
+    expect(lessonState(progress, PRINT).current?.id).toBe(PRINT_CODE.id);
+    progress = answer(
       progress,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q4',
-        correct: true,
-        mode: 'learn',
-        usedHint: true,
-      },
+      PRINT_CODE.id,
+      true,
       NOW,
+      'learn',
+      'print-output',
+      true,
     );
     expect(isMastered(progress, 'print-output')).toBe(false);
-    expect(progress.totalXp).toBe(30);
-    progress = applyAttempt(
-      progress,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q4',
-        correct: true,
-        mode: 'learn',
-      },
-      NOW,
-    );
+    expect(progress.totalXp).toBe(0);
+    progress = answer(progress, PRINT_CODE.id);
     expect(isMastered(progress, 'print-output')).toBe(true);
     expect(isUnlocked(progress, 'variables')).toBe(true);
-    expect(progress.totalXp).toBe(45);
+    expect(progress.totalXp).toBe(PRINT_LESSON_XP);
     expect(earnedFlashcards(progress)).toHaveLength(2);
   });
 
@@ -373,23 +387,26 @@ describe('mastery and the prerequisite frontier', () => {
     expect(isUnlocked(progress, 'variables')).toBe(false);
   });
 
-  it('serves unattempted questions before returning to a failed question', () => {
+  it('serves unseen variants before returning to a missed question', () => {
     let progress = fresh();
     const first = nextTask(progress, NOW)!;
+    expect(first.questionId).toBe(P1.questions[0].id);
     progress = applyAttempt(progress, { ...first, correct: false }, NOW);
-    expect(nextTask(progress, NOW)?.questionId).toBe('print-output-q2');
-    for (const id of ['print-output-q2', 'print-output-q3', 'print-output-q4'])
-      progress = applyAttempt(
-        progress,
-        {
-          skillId: 'print-output',
-          questionId: id,
-          correct: true,
-          mode: 'learn',
-        },
-        NOW,
-      );
-    expect(nextTask(progress, NOW)?.questionId).toBe('print-output-q1');
+    expect(nextTask(progress, NOW)?.questionId).toBe(P1.questions[1].id);
+    progress = answer(progress, P1.questions[1].id);
+    progress = answer(progress, P1.questions[2].id);
+    expect(nextTask(progress, NOW)?.questionId).toBe(P2.questions[0].id);
+    for (const question of P2.questions.slice(0, 3))
+      progress = answer(progress, question.id, false);
+    // The failed lesson restarts at its first point: the unseen variant
+    // first, then the least-practiced one that was missed.
+    expect(nextTask(progress, NOW, 'python-foundations')?.questionId).toBe(
+      P1.questions[3].id,
+    );
+    progress = answer(progress, P1.questions[3].id);
+    expect(nextTask(progress, NOW, 'python-foundations')?.questionId).toBe(
+      P1.questions[0].id,
+    );
   });
 
   it('remediates the actual failed skill without deleting ancestor evidence', () => {
@@ -398,7 +415,8 @@ describe('mastery and the prerequisite frontier', () => {
       progress,
       {
         skillId: 'variables',
-        questionId: 'variables-q1',
+        questionId: selectQuestion(progress, skillById['variables'], 'review')
+          .id,
         correct: false,
         mode: 'review',
       },
@@ -408,30 +426,15 @@ describe('mastery and the prerequisite frontier', () => {
     expect(isMastered(progress, 'variables')).toBe(false);
     expect(isUnlocked(progress, 'numbers')).toBe(false);
     // The due prerequisite review comes first; finish it to reveal the remediation task.
-    for (const id of ['print-output-q4', 'print-output-q2'])
-      progress = applyAttempt(
-        progress,
-        {
-          skillId: 'print-output',
-          questionId: id,
-          correct: true,
-          mode: 'review',
-        },
-        NOW + DAY_MS,
-      );
+    expect(nextTask(progress, NOW + DAY_MS)).toMatchObject({
+      skillId: 'print-output',
+      mode: 'review',
+    });
+    progress = review(progress, 'print-output', NOW + DAY_MS);
     expect(nextTask(progress, NOW + DAY_MS)?.skillId).toBe('variables');
     expect(nextTask(progress, NOW + DAY_MS)?.mode).toBe('learn');
     const xpBefore = progress.totalXp;
-    progress = applyAttempt(
-      progress,
-      {
-        skillId: 'variables',
-        questionId: 'variables-q1',
-        correct: true,
-        mode: 'learn',
-      },
-      NOW + DAY_MS,
-    );
+    progress = masterSkill(progress, 'variables', NOW + DAY_MS);
     expect(progress.totalXp).toBe(xpBefore);
     expect(isMastered(progress, 'variables')).toBe(true);
   });
@@ -442,38 +445,19 @@ describe('mastery and the prerequisite frontier', () => {
       'numbers',
     );
     const original = JSON.stringify(shared);
-    const lapse = applyAttempt(
-      shared,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q1',
-        correct: false,
-        mode: 'review',
-      },
-      NOW + DAY_MS,
-    );
-    let retained = shared;
-    for (const id of ['print-output-q4', 'print-output-q1'])
-      retained = applyAttempt(
-        retained,
-        {
-          skillId: 'print-output',
-          questionId: id,
-          correct: true,
-          mode: 'review',
-        },
-        NOW + DAY_MS,
-      );
+    const missed = P1.questions[2].id;
+    const lapse = answer(shared, missed, false, NOW + DAY_MS, 'review');
+    const retained = review(shared, 'print-output', NOW + DAY_MS);
 
     expect(isMastered(lapse, 'variables')).toBe(true);
     expect(isMastered(lapse, 'numbers')).toBe(true);
     expect(isUnlocked(lapse, 'numbers')).toBe(false);
     expect(isUnlocked(retained, 'numbers')).toBe(true);
-    expect(nextTask(lapse, NOW + DAY_MS, 'python-foundations')).toMatchObject({
-      skillId: 'print-output',
-      questionId: 'print-output-q1',
-      mode: 'learn',
-    });
+    const repair = nextTask(lapse, NOW + DAY_MS, 'python-foundations')!;
+    expect(repair).toMatchObject({ skillId: 'print-output', mode: 'learn' });
+    expect(P1.questions.map((question) => question.id)).toContain(
+      repair.questionId,
+    );
     expect(
       nextTask(retained, NOW + DAY_MS, 'python-foundations'),
     ).toMatchObject({
@@ -488,7 +472,7 @@ describe('mastery and the prerequisite frontier', () => {
         lapse,
         {
           skillId: 'numbers',
-          questionId: 'numbers-q1',
+          questionId: 'numbers-kp1-q1',
           correct: true,
           mode: 'learn',
         },
@@ -496,14 +480,17 @@ describe('mastery and the prerequisite frontier', () => {
       ),
     ).toThrow('prerequisites');
 
-    const repaired = applyAttempt(
+    // Repair passes the missed point again; the other point and code keep their evidence.
+    let repaired = applyAttempt(
       lapse,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q1',
-        correct: true,
-        mode: 'learn',
-      },
+      { ...repair, correct: true },
+      NOW + DAY_MS,
+    );
+    expect(isUnlocked(repaired, 'numbers')).toBe(false);
+    repaired = answer(
+      repaired,
+      selectQuestion(repaired, PRINT, 'learn').id,
+      true,
       NOW + DAY_MS,
     );
     expect(isUnlocked(repaired, 'numbers')).toBe(true);
@@ -514,17 +501,17 @@ describe('mastery and the prerequisite frontier', () => {
   it('distinguishes independent evidence from hints despite identical answer accuracy', () => {
     let independent = fresh();
     let assisted = fresh();
-    for (const question of skillById['print-output'].questions) {
+    for (const questionId of lessonAnswerIds('print-output')) {
       const input = {
         skillId: 'print-output',
-        questionId: question.id,
+        questionId,
         correct: true,
         mode: 'learn' as const,
       };
       independent = applyAttempt(independent, input, NOW);
       assisted = applyAttempt(
         assisted,
-        { ...input, usedHint: question.type === 'code' },
+        { ...input, usedHint: questionId === PRINT_CODE.id },
         NOW,
       );
     }
@@ -537,7 +524,7 @@ describe('mastery and the prerequisite frontier', () => {
     });
     expect(nextTask(assisted, NOW, 'python-foundations')).toMatchObject({
       skillId: 'print-output',
-      questionId: 'print-output-q4',
+      questionId: PRINT_CODE.id,
       mode: 'learn',
     });
     expect(getSkillState(independent, 'print-output').dueAt).toBe(NOW + DAY_MS);
@@ -546,13 +533,17 @@ describe('mastery and the prerequisite frontier', () => {
 
   it('can reach every skill from the graph without manually unlocking nodes', () => {
     let progress = fresh();
-    for (let i = 0; i < 192; i++) {
+    let answers = 0;
+    for (; answers < 1000; answers++) {
       const task = nextTask(progress, NOW, 'python-foundations');
-      expect(task, `The graph stalled after ${i} answers.`).not.toBeNull();
-      progress = applyAttempt(progress, { ...task!, correct: true }, NOW);
+      if (!task) break;
+      progress = applyAttempt(progress, { ...task, correct: true }, NOW);
     }
     expect(getStats(progress, NOW).mastered).toBe(48);
     expect(nextTask(progress, NOW, 'python-foundations')).toBeNull();
+    expect(answers).toBe(
+      skills.reduce((sum, skill) => sum + lessonAnswerIds(skill.id).length, 0),
+    );
     expect(earnedFlashcards(progress)).toHaveLength(96);
   });
 });
@@ -561,41 +552,40 @@ describe('spaced retrieval, XP and dates', () => {
   it('requires due, distinct retrieval and executable evidence before advancing a review', () => {
     let progress = master(fresh(), 'print-output');
     const initialDue = getSkillState(progress, 'print-output').dueAt;
-    progress = applyAttempt(
-      progress,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q4',
-        correct: true,
-        mode: 'review',
-      },
-      NOW + 1000,
-    );
-    expect(progress.totalXp).toBe(45);
+    progress = answer(progress, PRINT_CODE.id, true, NOW + 1000, 'review');
+    expect(progress.totalXp).toBe(PRINT_LESSON_XP);
     expect(getSkillState(progress, 'print-output').dueAt).toBe(initialDue);
     expect(getStats(progress, NOW + DAY_MS).dueCount).toBe(1);
     const task = nextTask(progress, NOW + DAY_MS)!;
     expect(task.mode).toBe('review');
-    expect(task.questionId).toBe('print-output-q4');
-    progress = applyAttempt(progress, { ...task, correct: true }, NOW + DAY_MS);
-    const reviewXp = progress.totalXp;
-    progress = applyAttempt(progress, { ...task, correct: true }, NOW + DAY_MS);
-    expect(progress.totalXp).toBe(reviewXp);
-    expect(getSkillState(progress, 'print-output').reviewCount).toBe(0);
-    progress = applyAttempt(
-      progress,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q1',
-        correct: true,
-        mode: 'review',
-      },
-      NOW + DAY_MS,
+    expect(P1.questions.map((question) => question.id)).toContain(
+      task.questionId,
     );
+    progress = applyAttempt(progress, { ...task, correct: true }, NOW + DAY_MS);
+    // Repeating an answer adds nothing to the cycle.
+    progress = applyAttempt(progress, { ...task, correct: true }, NOW + DAY_MS);
+    expect(getSkillState(progress, 'print-output').reviewQuestionIds).toEqual([
+      task.questionId,
+    ]);
+    expect(progress.totalXp).toBe(PRINT_LESSON_XP);
+    progress = answer(
+      progress,
+      selectQuestion(progress, PRINT, 'review').id,
+      true,
+      NOW + DAY_MS,
+      'review',
+    );
+    // Two points covered, but the code exercise is still required.
+    expect(getSkillState(progress, 'print-output').reviewCount).toBe(0);
+    expect(selectQuestion(progress, PRINT, 'review').id).toBe(PRINT_CODE.id);
+    progress = answer(progress, PRINT_CODE.id, true, NOW + DAY_MS, 'review');
     expect(getSkillState(progress, 'print-output').reviewCount).toBe(1);
     expect(getSkillState(progress, 'print-output').intervalDays).toBe(7);
     expect(getSkillState(progress, 'print-output').dueAt).toBe(
       NOW + 8 * DAY_MS,
+    );
+    expect(progress.totalXp).toBe(
+      PRINT_LESSON_XP + earnedXp(REVIEW_XP, 0, true),
     );
     expect(getStats(progress, NOW + DAY_MS).dueCount).toBe(0);
   });
@@ -605,88 +595,67 @@ describe('spaced retrieval, XP and dates', () => {
     let task = nextTask(progress, NOW + DAY_MS)!;
     progress = applyAttempt(progress, { ...task, correct: true }, NOW + DAY_MS);
     expect(nextTask(progress, NOW + DAY_MS)?.skillId).not.toBe(task.skillId);
-    progress = applyAttempt(
+    progress = answer(
       progress,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q1',
-        correct: false,
-        mode: 'review',
-      },
+      P2.questions[3].id,
+      false,
       NOW + DAY_MS,
+      'review',
     );
     task = nextTask(progress, NOW + DAY_MS)!;
     expect(task.skillId).toBe('print-output');
     expect(task.mode).toBe('learn');
   });
 
-  it('rotates through unseen review questions after a hinted answer', () => {
+  it('keeps reading old hinted review answers without counting them', () => {
     let progress = master(fresh(), 'print-output');
     const first = nextTask(progress, NOW + DAY_MS)!;
-    expect(first.questionId).toBe('print-output-q4');
     progress = applyAttempt(
       progress,
       { ...first, correct: true, usedHint: true },
       NOW + DAY_MS,
     );
-    expect(nextTask(progress, NOW + DAY_MS)?.questionId).toBe(
-      'print-output-q1',
-    );
     expect(getSkillState(progress, 'print-output').reviewQuestionIds).toEqual(
       [],
+    );
+    expect(getSkillState(progress, 'print-output').reviewHadHint).toBe(true);
+    // The next question is another unseen variant of the same point.
+    const next = nextTask(progress, NOW + DAY_MS)!;
+    expect(next.questionId).not.toBe(first.questionId);
+    expect(P1.questions.map((question) => question.id)).toContain(
+      next.questionId,
+    );
+    progress = review(progress, 'print-output', NOW + DAY_MS);
+    // A cycle that needed help is graded Hard, not Good.
+    expect(getSkillState(progress, 'print-output').intervalDays).toBeLessThan(
+      7,
     );
   });
 
   it('restarts spacing after a lapse instead of using lifetime reviews as current strength', () => {
-    function review(progress: Progress, time: number): Progress {
-      let result = progress;
-      for (const id of ['print-output-q4', 'print-output-q1'])
-        result = applyAttempt(
-          result,
-          {
-            skillId: 'print-output',
-            questionId: id,
-            correct: true,
-            mode: 'review',
-          },
-          time,
-        );
-      return result;
-    }
     let established = master(fresh(), 'print-output');
     for (let i = 0; i < 4; i++)
       established = review(
         established,
+        'print-output',
         getSkillState(established, 'print-output').dueAt!,
       );
     expect(
       getSkillState(established, 'print-output').intervalDays,
     ).toBeGreaterThan(30);
     const lapseTime = getSkillState(established, 'print-output').dueAt!;
-    const retained = review(established, lapseTime);
-    let recovered = applyAttempt(
+    const retained = review(established, 'print-output', lapseTime);
+    let recovered = answer(
       established,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q4',
-        correct: false,
-        mode: 'review',
-      },
+      PRINT_CODE.id,
+      false,
       lapseTime,
+      'review',
     );
-    recovered = applyAttempt(
-      recovered,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q4',
-        correct: true,
-        mode: 'learn',
-      },
-      lapseTime,
-    );
+    recovered = answer(recovered, PRINT_CODE.id, true, lapseTime);
     expect(getSkillState(recovered, 'print-output').intervalDays).toBe(1);
     expect(getSkillState(recovered, 'print-output').reviewCount).toBe(4);
-    recovered = review(recovered, lapseTime + DAY_MS);
+    recovered = review(recovered, 'print-output', lapseTime + DAY_MS);
 
     expect(getSkillState(retained, 'print-output').reviewCount).toBe(5);
     expect(getSkillState(recovered, 'print-output').reviewCount).toBe(5);
@@ -707,81 +676,28 @@ describe('spaced retrieval, XP and dates', () => {
   it('keeps updates immutable and rejects unknown questions', () => {
     const original = fresh();
     const serialized = JSON.stringify(original);
-    const updated = applyAttempt(
-      original,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q1',
-        correct: true,
-        mode: 'learn',
-      },
-      NOW,
-    );
+    const updated = answer(original, P1.questions[0].id);
     expect(JSON.stringify(original)).toBe(serialized);
     expect(updated).not.toBe(original);
-    expect(() =>
-      applyAttempt(
-        updated,
-        {
-          skillId: 'print-output',
-          questionId: 'variables-q1',
-          correct: true,
-          mode: 'learn',
-        },
-        NOW,
-      ),
-    ).toThrow('does not belong');
+    expect(() => answer(updated, 'variables-q1')).toThrow('does not belong');
   });
 
   it('counts streaks by the learner calendar and breaks after a missed day', () => {
     expect(dateKey('2026-10-02T02:00:00Z', 'America/Bogota')).toBe(
       '2026-10-01',
     );
-    let progress = applyAttempt(
-      fresh(),
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q1',
-        correct: true,
-        mode: 'learn',
-      },
-      NOW,
-    );
-    progress = applyAttempt(
-      progress,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q2',
-        correct: true,
-        mode: 'learn',
-      },
-      NOW + 1000,
-    );
+    let progress = answer(fresh(), P1.questions[0].id, true, NOW);
+    progress = answer(progress, P1.questions[1].id, true, NOW + 1000);
     expect(progress.streak).toBe(1);
-    progress = applyAttempt(
-      progress,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q3',
-        correct: true,
-        mode: 'learn',
-      },
-      NOW + DAY_MS,
-    );
+    progress = answer(progress, P2.questions[0].id, true, NOW + DAY_MS);
     expect(progress.streak).toBe(2);
     expect(getStats(progress, NOW + 3 * DAY_MS).streak).toBe(0);
-    progress = applyAttempt(
-      progress,
-      {
-        skillId: 'print-output',
-        questionId: 'print-output-q4',
-        correct: true,
-        mode: 'learn',
-      },
-      NOW + 3 * DAY_MS,
-    );
+    progress = answer(progress, P2.questions[1].id, true, NOW + 3 * DAY_MS);
+    progress = answer(progress, PRINT_CODE.id, true, NOW + 3 * DAY_MS);
     expect(progress.streak).toBe(1);
-    expect(getStats(progress, NOW + 3 * DAY_MS).todayXp).toBe(15);
+    // The lesson's XP belongs to the day it was completed.
+    expect(getStats(progress, NOW + 3 * DAY_MS).todayXp).toBe(PRINT_LESSON_XP);
+    expect(getStats(progress, NOW + DAY_MS).todayXp).toBe(0);
     expect(
       getStats(progress, NOW + 3 * DAY_MS, 'unknown-course').totalSkills,
     ).toBe(0);
