@@ -88,9 +88,11 @@ See [the engine audit](docs/engine-audit.md), [per-user isolation evidence](docs
 
 ## Real Python in the browser
 
-Exercises and the lab use **Pyodide**, a WebAssembly Python runtime, through a dedicated Web Worker. Exercise assertions run against the learner's actual variables, functions, and captured output. Each run gets a separate namespace and worker; execution is terminated after 30 seconds so an infinite loop does not block the application. Timed Competitive Programming checks scale their limit to the device: the first timed run in a tab times a fixed benchmark in the worker, and a slower device gets a proportionally longer limit. Learner code is not executed on the account server.
+Exercises and the lab use **Pyodide**, a WebAssembly Python runtime, through a dedicated Web Worker. Exercise assertions run against the learner's actual variables, functions, and captured output. Each run gets a separate namespace and a worker that has never run other code, and that worker is terminated when the run ends; execution is stopped after 30 seconds so an infinite loop does not block the application.
 
-The editor uses CodeMirror with matching language syntax support. The bundled runtime is a substantial download on first use. General-purpose third-party package installation is outside this MVP.
+Starting Python, not running the learner's code, is most of a check's time. So a page with a Python exercise (a lesson, a review, or the code lab with Python selected) keeps one spare worker per tab that has already started Python and imported the packages the exercise's authored code imports. A run takes the spare, and the next spare starts as soon as the run ends. On an M4 Max, from click to result, a check takes about 20 ms instead of 0.9 s (2.4 s with pandas). A click before the spare is ready waits only for the rest of its start. Pages without Python start no worker, and the spare is stopped a few seconds after the last Python page closes. Timed Competitive Programming checks scale their limit to the device: the first timed run in a tab times a fixed benchmark in the worker, and a slower device gets a proportionally longer limit. Learner code is not executed on the account server.
+
+The editor uses CodeMirror with matching language syntax support. The bundled runtime is a substantial download on first use. It is served from `/pyodide/<version>-<package hash>/`, which browsers cache as immutable, so later visits load it without asking the server ([caching](docs/cloudflare.md#python-runtime-caching)). General-purpose third-party package installation is outside this MVP.
 
 ## Real Rust and C++ execution
 
@@ -216,7 +218,8 @@ src/lib/dashboard.ts            Task queue, XP summaries, completion estimate, h
 src/lib/xp.ts                   XP scale for lessons and reviews
 src/lib/retention.ts            Per-learner FSRS memory and recall estimates
 src/lib/activity.ts             Durable offline answer counters
-src/lib/python.ts              Terminable Python worker client
+src/lib/python.ts              Python worker client: warm spare, one worker per run
+src/components/use-python-spare.ts  Keeps a spare on pages with a Python exercise
 src/lib/code-runner.ts         Language-aware execution and cancellation
 src/lib/server/compiled-code.ts  Canonical assessment and free sandbox adapter
 public/python-worker.mjs       Real Pyodide execution and exercise assertions
@@ -227,7 +230,7 @@ src/lib/state.ts                Versioned learner state and conflict merging
 src/lib/server/                SQLite auth, state storage, API validation
 src/pages/api/                 Auth, learner-state, and compiled-code endpoints
 src/styles/global.css          Application styling and responsive layout
-scripts/copy-python.mjs         Prepares pinned runtime and hash-verified scientific wheels
+scripts/copy-python.mjs         Prepares the pinned runtime and hash-verified wheels in a versioned directory
 scripts/serve.mjs               Starts the built server with configurable host/port
 tests/                         Unit, integration, and browser tests
 docs/                          Learning, backend, and Anki implementation notes

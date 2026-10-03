@@ -196,6 +196,18 @@ test('leaving a lesson cancels its real Python worker and locks the submitted co
       }
     };
   });
+  // The page starts loading Python for its exercise as soon as it opens:
+  // hold the runtime so the run is still loading when the learner leaves.
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let held = false;
+  await page.route('**/pyodide/*/pyodide.asm.wasm', async (route) => {
+    held = true;
+    await gate;
+    await route.continue();
+  });
   await page.goto('/learn');
   const skill = skillById['print-output'];
   for (const point of skill.knowledgePoints!)
@@ -207,16 +219,6 @@ test('leaving a lesson cancels its real Python worker and locks the submitted co
     (q): q is CodeQuestion => q.type === 'code',
   )!;
   await replaceCode(page, exercise.solution);
-  let release!: () => void;
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  let held = false;
-  await page.route('**/pyodide/pyodide.asm.wasm', async (route) => {
-    held = true;
-    await gate;
-    await route.continue();
-  });
   await page.getByRole('button', { name: 'Run & check' }).click();
   await expect.poll(() => held).toBe(true);
   await expect(

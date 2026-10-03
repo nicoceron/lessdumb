@@ -78,6 +78,17 @@ Workers password hashing uses Better Auth's documented password hook with native
 
 Activity writer IDs are initialized inside a request or browser event rather than at module evaluation, as Workers prohibits global-scope random generation. Compiler requests use `redirect: 'manual'`; redirects are rejected as non-success responses and learner source is never forwarded to a redirected host.
 
+## Python runtime caching
+
+Workers static assets are sent with `Cache-Control: public, max-age=0, must-revalidate` by default, so the browser asks the server about every file before using its copy. For Python that meant `pyodide.asm.wasm` (9.6 MB, 3.5 MB compressed), `python_stdlib.zip` (2.5 MB) and the package wheels (scipy alone is 14 MB), once per page load.
+
+`scripts/copy-python.mjs` therefore puts the runtime in `public/pyodide/<version>-<hash>/`: the Pyodide version and the first ten hex digits of the SHA-256 of the lockfile it serves, which pins every wheel. The name changes whenever any file in the directory could, including a change to the package list without a Pyodide upgrade. Older directories are removed, so only the current runtime is deployed. `public/_headers` gives `/pyodide/:version/*` `Cache-Control: public, max-age=31536000, immutable`; a placeholder never matches `/`, so the rule covers only files inside a versioned directory. The worker (`/python-worker.mjs`) and `/pyodide/current.mjs`, the small generated module that names the current directory, keep the default revalidation. A local `npm run build:cloudflare` preview served the versioned files with the immutable header and `current.mjs`, the worker and the existing `_headers` entries as before.
+
+Open tabs during a deploy:
+
+- **Tabs from before the versioned layout** keep working without a reload. Their code starts `/python-worker.mjs` for each run, and the new worker, which still accepts their messages, loads the new directory. Only a run that was loading Python at the moment of the deploy can miss a file at the old flat path. It then reports that Python could not load: an infrastructure error, which is never scored, and the next attempt works.
+- **Later deploys that change the runtime or packages** leave the old directory behind. A tab's spare worker has already loaded Python and its exercise's packages, so its run usually works. If that run needs a file it had not loaded yet, it fails the same way, without scoring, and the next spare loads the new directory. Deploys that do not change the runtime keep the directory name, so open tabs are unaffected.
+
 ## Free services and boundaries
 
 This deployment requires no paid-only Cloudflare bindings, KV, R2, or Images. Managed email (Email Service, Workers Paid) is optional and off until configured. No paid subscription is activated by the deployment commands. Workers and D1 have free quotas; existing account billing and usage beyond allowances remain governed by the account's plan. The documented Workers Free allowance is 100,000 dynamic requests/day with 10 ms CPU/request; D1 Free has 5 million rows read/day, 100,000 rows written/day, and 5 GB total storage, with a 500 MB per-database cap. Exceeding free allowances can interrupt service. Static asset requests do not count as dynamic Worker invocations when served directly.

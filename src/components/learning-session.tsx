@@ -65,6 +65,7 @@ import { codeLanguage, codeLanguageLabels } from '../lib/code-language';
 import { recordLearningAnswer, type LearnerState } from '../lib/state';
 import { refreshPending } from '../lib/remediation';
 import { Btn, ContentLoading } from './shared';
+import { pythonExerciseSource, usePythonSpare } from './use-python-spare';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -429,6 +430,8 @@ function LessonPage({
     question?.type === 'code'
       ? codeLanguage(question.language)
       : courseLanguage;
+  // A page whose skill has a Python exercise loads Python before the click.
+  usePythonSpare(pythonExerciseSource(currentSkill ?? skill));
   const pointLesson = !!skill && hasKnowledgePoints(skill);
   const lesson = skill ? lessonState(state.progress, skill) : null;
   const recorded = current?.feedback
