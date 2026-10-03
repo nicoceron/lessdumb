@@ -1,4 +1,4 @@
-import { choose, predictOutput, type KnowledgePointModule } from '.';
+import { choose, predictOutput, type KnowledgePointModule } from './authoring';
 
 // Competitive Programming, part 3: dynamic programming, strategy, number
 // theory, and range queries. Programs are complete Python scripts.
