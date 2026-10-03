@@ -1764,10 +1764,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why start a running minimum at float("inf") instead of 0?',
           [
-            'min() only accepts floats',
-            'Every real value is smaller than inf, so the first one replaces it',
-            'inf rounds down to the first value',
-            'inf makes min() return the largest value',
+            'min() compares only float values',
+            'The first real value always replaces it',
+            'It rounds down to the first value',
+            'It makes min() keep the largest value',
           ],
           1,
           'inf can never win a min against real data, so it is replaced right away; 0 would win against every positive value.',
@@ -5208,7 +5208,7 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         predictOutput(
           'What is the output?',
-          'def ends(items):\n    return items[0], items[-1]\n\nfor group in [[1, 2, 3], [7, 8]]:\n    first, last = ends(group)\n    print(first + last)',
+          'def ends(items):\n    return items[0], items[-1]\n\nfor group in [(1, 2, 3), (7, 8)]:\n    first, last = ends(group)\n    print(first + last)',
           ['6\n15', '1\n7', '(1, 3)\n(7, 8)', '4\n15'],
           3,
           'Each call returns the first and last items; 1 + 3 is 4 and 7 + 8 is 15.',
