@@ -20,13 +20,17 @@ const grammars: Record<CodeLanguage, () => Promise<Extension>> = {
 };
 
 const requests = new Map<CodeLanguage, Promise<Extension>>();
+const loaded = new Map<CodeLanguage, Extension>();
 
 function grammar(language: CodeLanguage): Promise<Extension> {
   let request = requests.get(language);
   if (!request) {
     request = grammars[language]();
-    // A failed download (offline, a deploy in between) can be retried.
-    request.catch(() => requests.delete(language));
+    request.then(
+      (extension) => loaded.set(language, extension),
+      // A failed download (offline, a deploy in between) can be retried.
+      () => requests.delete(language),
+    );
     requests.set(language, request);
   }
   return request;
@@ -46,7 +50,8 @@ export default function CodeEditor({
   wrap = false,
   ...props
 }: CodeEditorProps) {
-  const syntax = use(grammar(language));
+  // A grammar already loaded renders at once, without a Suspense fallback.
+  const syntax = loaded.get(language) ?? use(grammar(language));
   const extensions = useMemo(
     () => (wrap ? [syntax, EditorView.lineWrapping] : [syntax]),
     [syntax, wrap],
