@@ -1,6 +1,6 @@
 # Accounts and saved progress
 
-lessdumb runs an Astro Node server with Better Auth's official SQLite adapter. Accounts use email and password, scrypt password hashes, HttpOnly SameSite=Lax session cookies, and Better Auth's origin/CSRF protections. Sign-up signs the learner in; signing out revokes the server session. No custom password or session implementation is used.
+lessdumb runs locally on Astro Node with Better Auth's SQLite adapter and publicly on Cloudflare Workers with Better Auth's D1 adapter. See [Cloudflare deployment](cloudflare.md) for setup and runtime details. Accounts use email and password, scrypt password hashes, HttpOnly SameSite=Lax session cookies, and Better Auth's origin/CSRF protections. Sign-up signs the learner in; signing out revokes the server session. Better Auth owns credentials and sessions. Workers uses its documented native scrypt password hook with the same format and parameters as the default hash.
 
 The MVP has no paid provider dependency. It does not send verification or password-reset emails. An email address serves as a login identifier and is not marked as verified. Production email delivery and recovery can be added using Better Auth's documented callbacks when an email provider is configured.
 

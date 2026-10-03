@@ -10,3 +10,7 @@ test-results/
 playwright-report/
 tmp/
 .DS_Store
+.wrangler/
+.dev.vars
+.dev.vars.*
+worker-configuration.d.ts

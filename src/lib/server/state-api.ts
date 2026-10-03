@@ -1,4 +1,4 @@
-import type { Backend } from './backend';
+import type { Backend } from './backend-contract';
 import { readState, writeState } from './state-store';
 import {
   MAX_STATE_BODY_BYTES,
@@ -96,11 +96,11 @@ export async function handleStateRequest(
     );
   }
   if (request.method === 'GET')
-    return json(readState(backend, session.user.id));
+    return json(await readState(backend, session.user.id));
 
   try {
     const { state, revision } = parseStateUpdate(await readJSON(request));
-    const result = writeState(backend, session.user.id, state, revision);
+    const result = await writeState(backend, session.user.id, state, revision);
     return json(result.value, result.saved ? 200 : 409);
   } catch (error) {
     if (error instanceof StateValidationError)

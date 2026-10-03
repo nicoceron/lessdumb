@@ -18,7 +18,11 @@ export interface ActivityState {
 
 // A reload or separate tab gets a fresh writer; concurrent runtimes never share
 // a persisted writer ID. Explicit IDs are useful when simulating devices.
-export const defaultActivityWriterId = crypto.randomUUID();
+let runtimeWriterId: string | undefined;
+export function defaultActivityWriterId(): string {
+  runtimeWriterId ??= crypto.randomUUID();
+  return runtimeWriterId;
+}
 
 function validCount(count: ActivityCount): void {
   if (
@@ -69,7 +73,7 @@ export function activityTotals(state: ActivityState): ActivityCount {
 export function recordActivity(
   state: ActivityState,
   correct: boolean,
-  writerId: string = defaultActivityWriterId,
+  writerId: string = defaultActivityWriterId(),
 ): ActivityState {
   validWriter(writerId);
   const previous = Object.hasOwn(state.writers, writerId)

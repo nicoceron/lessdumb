@@ -202,7 +202,7 @@ describe('canonical Rust and C++ sandbox requests', () => {
         expect(body.options.userArguments).toContain('-pthread');
       expect(JSON.stringify(body)).not.toContain('learner-one');
       expect(JSON.stringify(body)).not.toContain('account-cookie');
-      expect(init.redirect).toBe('error');
+      expect(init.redirect).toBe('manual');
     },
   );
 
