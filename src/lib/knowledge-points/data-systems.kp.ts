@@ -932,7 +932,7 @@ export const knowledgePoints: KnowledgePointModule = {
       questions: [
         choose(
           '300 documents embed the same supplier address, and the supplier moves. How many writes keep the documents consistent?',
-          ['1', '301', '0', '300'],
+          ['1', '2', '0', '300'],
           3,
           'Each embedded copy is a separate thing to update.',
         ),
@@ -1271,7 +1271,7 @@ export const knowledgePoints: KnowledgePointModule = {
       questions: [
         choose(
           'Edges: A→B, B→C, C→D, B→E. Starting at A and following edges forward, which nodes are reachable?',
-          ['B only', 'A, B, C, D and E', 'C, D and E', 'B, C, D and E'],
+          ['B only', 'B, C and E', 'C, D and E', 'B, C, D and E'],
           3,
           'A reaches B, B reaches C and E, and C reaches D.',
         ),
@@ -1279,7 +1279,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'X→Y means X is a prerequisite of Y. How do you find everything Y depends on?',
           [
             'Follow Y’s outgoing edges, then theirs, repeatedly',
-            'Walk incoming edges backwards from Y',
+            'Walk incoming edges backwards from Y, repeatedly',
             'Read Y’s properties only',
             'Follow every edge in the graph',
           ],
@@ -1844,7 +1844,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which query benefits from a secondary index on email?',
           [
             'Find user 42 by primary key',
-            'Count all users who have an email',
+            'Count all users',
             'Read every user',
             'Find the user with email x@y.com',
           ],
