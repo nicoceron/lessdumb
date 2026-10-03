@@ -2,10 +2,15 @@ import type {
   ChoiceQuestion,
   CodeQuestion,
   LessonExample,
+  NumericQuestion,
+  TextQuestion,
 } from '../curriculum';
 
 export type QuestionDraft =
-  Omit<ChoiceQuestion, 'id'> | Omit<CodeQuestion, 'id'>;
+  | Omit<ChoiceQuestion, 'id'>
+  | Omit<NumericQuestion, 'id'>
+  | Omit<TextQuestion, 'id'>
+  | Omit<CodeQuestion, 'id'>;
 
 export interface KnowledgePointDraft {
   title: string;
@@ -53,5 +58,60 @@ export function choose(
     explanation,
     hint: explanation,
     ...(code ? { code } : {}),
+  };
+}
+
+/**
+ * Authoring helper for a typed output question: the learner types what the
+ * program prints. `output` must be exactly that output; catalog tests run it.
+ */
+export function typeOutput(
+  prompt: string,
+  code: string,
+  output: string,
+  explanation: string,
+): Omit<TextQuestion, 'id'> {
+  return {
+    type: 'text',
+    prompt,
+    code,
+    answers: [output],
+    explanation,
+    hint: explanation,
+    checksOutput: true,
+  };
+}
+
+/** Authoring helper for a typed number, graded within `tolerance`. */
+export function typeNumber(
+  prompt: string,
+  answer: number,
+  explanation: string,
+  options: Pick<NumericQuestion, 'tolerance' | 'unit' | 'code'> = {},
+): Omit<NumericQuestion, 'id'> {
+  return {
+    type: 'numeric',
+    prompt,
+    answer,
+    explanation,
+    hint: explanation,
+    ...options,
+  };
+}
+
+/** Authoring helper for a short typed answer such as a name or keyword. */
+export function typeText(
+  prompt: string,
+  answers: string[],
+  explanation: string,
+  options: Pick<TextQuestion, 'ignoreCase' | 'code'> = {},
+): Omit<TextQuestion, 'id'> {
+  return {
+    type: 'text',
+    prompt,
+    answers,
+    explanation,
+    hint: explanation,
+    ...options,
   };
 }

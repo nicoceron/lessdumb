@@ -1,4 +1,9 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 /** Strips the indentation shared by every line of an indented code block. */
 function cpp(block: string): string {
@@ -40,7 +45,7 @@ const threads: KnowledgePointModule = {
           'The worker writes 36 into area through its reference capture. main reads area only after join() returns, when the write is finished and visible.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -53,11 +58,10 @@ const threads: KnowledgePointModule = {
               std::cout << total << "\\n";
             }
           `),
-          ['25', '30', '20', '15'],
-          1,
+          '30',
           'join() returns only after the worker has added 5, so main doubles 15 and prints 30.',
         ),
-        predictOutput(
+        typeOutput(
           'Each worker is joined before the next one is created. What is printed?',
           cpp(`
             #include <iostream>
@@ -71,8 +75,7 @@ const threads: KnowledgePointModule = {
               std::cout << value << "\\n";
             }
           `),
-          ['15', '4', '7', '3'],
-          2,
+          '7',
           'first has finished (value is 3) before second even starts, so second adds 4 to 3.',
         ),
         choose(
@@ -132,7 +135,7 @@ const threads: KnowledgePointModule = {
           'Each call starts a worker and joins it before the local thread object is destroyed at the end of the lambda body. Both workers finish, so total is 8.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -149,8 +152,7 @@ const threads: KnowledgePointModule = {
               std::cout << runs << "\\n";
             }
           `),
-          ['2', '6', '0', '3'],
-          1,
+          '6',
           'Each of the three calls starts a worker that adds 2 and joins it, so runs reaches 6.',
         ),
         choose(
@@ -228,7 +230,7 @@ const threads: KnowledgePointModule = {
           'The closure copied limit as 5 before the thread started. main’s later assignment changes only its own variable, so the worker reports 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -242,11 +244,10 @@ const threads: KnowledgePointModule = {
               std::cout << quoted << "\\n";
             }
           `),
-          ['201', '101', '100', '200'],
-          1,
+          '101',
           'The worker uses its own copy of price, taken as 100 when the lambda was created.',
         ),
-        predictOutput(
+        typeOutput(
           'size changes before and after the worker is created. What is printed?',
           cpp(`
             #include <iostream>
@@ -261,8 +262,7 @@ const threads: KnowledgePointModule = {
               std::cout << report << "\\n";
             }
           `),
-          ['30', '90', '40', '0'],
-          2,
+          '40',
           'The copy is taken when the lambda is created: after size became 4 and before it became 9.',
         ),
         choose(
@@ -316,7 +316,7 @@ const threads: KnowledgePointModule = {
           'The constructor copied base as 7 before main changed it, so the worker doubles 7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -330,11 +330,10 @@ const threads: KnowledgePointModule = {
               std::cout << result << "\\n";
             }
           `),
-          ['100', '32', '23', '93'],
-          2,
+          '23',
           'Both arguments are evaluated and copied when the thread is constructed: a is 2 and b is 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <functional>
@@ -347,8 +346,7 @@ const threads: KnowledgePointModule = {
               std::cout << hits << "\\n";
             }
           `),
-          ['6', '1', '5', '11'],
-          0,
+          '6',
           'std::ref passes a reference to hits itself, so the worker’s += 5 changes main’s variable.',
         ),
         choose(
@@ -365,7 +363,7 @@ const threads: KnowledgePointModule = {
             std::thread worker([](int& count) { ++count; }, total);
           `),
         ),
-        predictOutput(
+        typeOutput(
           'One argument is passed as a copy and one through std::ref. What is printed?',
           cpp(`
             #include <functional>
@@ -379,8 +377,7 @@ const threads: KnowledgePointModule = {
               std::cout << a << " " << b << "\\n";
             }
           `),
-          ['11 11', '1 11', '11 1', '1 1'],
-          1,
+          '1 11',
           'x is the thread’s own copy of a, so a stays 1; y refers to b, which becomes 11.',
         ),
       ],
@@ -413,7 +410,7 @@ const threads: KnowledgePointModule = {
           'a writes only left and b writes only right, so they never race. After both joins main adds 6 and 15.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The workers are joined in reverse order. What is printed?',
           cpp(`
             #include <iostream>
@@ -431,11 +428,10 @@ const threads: KnowledgePointModule = {
               std::cout << x << " " << y << " " << z << "\\n";
             }
           `),
-          ['20 15 10', '10 15 20', '45', '10 10 10'],
-          1,
+          '10 15 20',
           'Each worker writes only its own variable; the join order does not change which value lands where.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -451,8 +447,7 @@ const threads: KnowledgePointModule = {
               std::cout << up * down << "\\n";
             }
           `),
-          ['64', '72', '56', '63'],
-          3,
+          '63',
           'up is 9 and down is 7, each written by its own worker, so the product is 63.',
         ),
         choose(
@@ -534,7 +529,7 @@ const threads: KnowledgePointModule = {
             // line 3
           `),
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -553,8 +548,7 @@ const threads: KnowledgePointModule = {
               std::cout << sell_cost - buy_cost - fee << "\\n";
             }
           `),
-          ['8', '12', '4', '0'],
-          2,
+          '4',
           'The workers produce 100, 108 and 4 from the shared read-only qty; 108 - 100 - 4 is 4.',
         ),
         choose(
@@ -596,7 +590,7 @@ const threads: KnowledgePointModule = {
           'The closing brace destroys worker, and its destructor joins. By the time main prints, result is 81.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -611,11 +605,10 @@ const threads: KnowledgePointModule = {
               std::cout << a + b << "\\n";
             }
           `),
-          ['0', '12', '42', '30'],
-          2,
+          '42',
           'Both jthreads are joined when the inner scope ends, so both writes are finished before the print.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -630,8 +623,7 @@ const threads: KnowledgePointModule = {
               std::cout << total << "\\n";
             }
           `),
-          ['7', '0', '21', '14'],
-          3,
+          '14',
           'Each call’s jthread joins at the end of the lambda body, so the two workers run one after another and add 14.',
         ),
         choose(
@@ -686,7 +678,7 @@ const threads: KnowledgePointModule = {
           'worker was declared last, so it is destroyed first and joins. Only then is report destroyed, printing the finished value 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Each Tally prints its count when it is destroyed. What is printed?',
           cpp(`
             #include <iostream>
@@ -702,8 +694,7 @@ const threads: KnowledgePointModule = {
               std::jthread wb([&b] { b.count = 4; });
             }
           `),
-          ['3\n4', '4\n3', '0\n0', '0\n4'],
-          1,
+          '4\n3',
           'Destruction runs in reverse: wb and wa join first, then b prints 4 and a prints 3.',
         ),
         choose(
@@ -722,7 +713,7 @@ const threads: KnowledgePointModule = {
             worker = std::jthread([&result] { result = 5; });
           `),
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -739,8 +730,7 @@ const threads: KnowledgePointModule = {
               std::cout << "after " << log.lines << "\\n";
             }
           `),
-          ['log 2\nafter 2', 'after 0\nlog 2', 'after 2\nlog 2', 'after 2'],
-          2,
+          'after 2\nlog 2',
           'The inner jthread joins at its closing brace, so main sees 2; log is destroyed last, at the end of main.',
         ),
         choose(
@@ -791,7 +781,7 @@ const threads: KnowledgePointModule = {
           'Whichever worker locks m first finishes its update before the other can enter, so both additions land and total is 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Three workers multiply under the same mutex, in an unknown order. What is printed?',
           cpp(`
             #include <iostream>
@@ -809,8 +799,7 @@ const threads: KnowledgePointModule = {
               std::cout << product << "\\n";
             }
           `),
-          ['10', '30', '5', '6'],
-          1,
+          '30',
           'Each multiplication runs alone under m, and multiplication order does not matter, so the result is 2 * 3 * 5.',
         ),
         choose(
@@ -841,7 +830,7 @@ const threads: KnowledgePointModule = {
             });
           `),
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -866,8 +855,7 @@ const threads: KnowledgePointModule = {
               std::cout << orders << " " << fills << "\\n";
             }
           `),
-          ['3 1', '2 2', '6 2', '5 3'],
-          3,
+          '5 3',
           'Both locked updates complete in some order, giving orders 3 + 2 and fills 1 + 2.',
         ),
       ],
@@ -1011,7 +999,7 @@ const threads: KnowledgePointModule = {
           'Every ++total runs while holding m, so none of the 2000 increments can be lost.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -1033,11 +1021,10 @@ const threads: KnowledgePointModule = {
               std::cout << total << "\\n";
             }
           `),
-          ['6', '20', '12', '8'],
-          2,
+          '12',
           'Each worker adds 0 + 1 + 2 + 3 = 6 under the lock, and two workers give 12.',
         ),
-        predictOutput(
+        typeOutput(
           'Three workers share one counter. What is printed?',
           cpp(`
             #include <iostream>
@@ -1061,8 +1048,7 @@ const threads: KnowledgePointModule = {
               std::cout << total << "\\n";
             }
           `),
-          ['500', '750', '1000', '1500'],
-          3,
+          '1500',
           'Each worker adds 2 a total of 250 times (500), and none of the locked updates is lost: 3 * 500.',
         ),
         choose(
@@ -1133,7 +1119,7 @@ const threads: KnowledgePointModule = {
           'Each worker sums its half of 0..99 privately and locks once to merge, so the total is 4950 after only 2 lock acquisitions.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -1155,11 +1141,10 @@ const threads: KnowledgePointModule = {
               std::cout << total << "\\n";
             }
           `),
-          ['210', '190', '45', '145'],
-          1,
+          '190',
           'The half-open ranges cover 0 through 19 exactly once: 45 + 145 = 190.',
         ),
-        predictOutput(
+        typeOutput(
           'One worker locks per item and the other merges once. What is printed?',
           cpp(`
             #include <iostream>
@@ -1190,8 +1175,7 @@ const threads: KnowledgePointModule = {
               std::cout << total << " " << locks << "\\n";
             }
           `),
-          ['10 10', '10 2', '10 6', '6 10'],
-          2,
+          '10 6',
           'Both workers contribute 5 to total, but per_item locks 5 times and batched locks once: 6 locks.',
         ),
         choose(
@@ -1284,7 +1268,7 @@ const threads: KnowledgePointModule = {
             });
           `),
         ),
-        predictOutput(
+        typeOutput(
           'Two transfers run in opposite directions. What is printed?',
           cpp(`
             #include <iostream>
@@ -1302,8 +1286,7 @@ const threads: KnowledgePointModule = {
               std::cout << a << " " << b << "\\n";
             }
           `),
-          ['40 40', '45 35', '55 25', '50 30'],
-          1,
+          '45 35',
           'Both transfers complete under both locks: a is 50 - 10 + 5 and b is 30 + 10 - 5.',
         ),
         choose(
@@ -1426,7 +1409,7 @@ const threads: KnowledgePointModule = {
           1,
           'Exclusion only applies between threads that lock the same mutexes, and unlocked reads of written data are data races.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -1452,8 +1435,7 @@ const threads: KnowledgePointModule = {
               std::cout << seen << "\\n";
             }
           `),
-          ['7', '17', '5', '12'],
-          3,
+          '12',
           'Both threads hold both mutexes, so the check sees 12 + 0 or 7 + 5: always 12.',
         ),
       ],
@@ -1486,7 +1468,7 @@ const threads: KnowledgePointModule = {
           'The constructor locks m, unlock() releases it and lock() takes it again; owns_lock() tracks each step.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -1499,8 +1481,7 @@ const threads: KnowledgePointModule = {
               std::cout << lock.owns_lock() << "\\n";
             }
           `),
-          ['1 1', '0 1', '1 0', '0 0'],
-          1,
+          '0 1',
           'std::defer_lock leaves m unlocked at construction; the explicit lock() then takes it.',
         ),
         choose(
@@ -1530,7 +1511,7 @@ const threads: KnowledgePointModule = {
           0,
           'The destructor checks ownership and unlocks only when owns_lock() is true.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -1551,8 +1532,7 @@ const threads: KnowledgePointModule = {
               std::cout << total << " " << check.owns_lock() << "\\n";
             }
           `),
-          ['11 0', '1 1', '10 0', '11 1'],
-          3,
+          '11 1',
           'The worker’s lock unlocks when its lambda ends, so main can lock m; total received both additions.',
         ),
       ],
@@ -1609,7 +1589,7 @@ const threads: KnowledgePointModule = {
             total = next;
           `),
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -1632,8 +1612,7 @@ const threads: KnowledgePointModule = {
               std::cout << total << "\\n";
             }
           `),
-          ['112', '124', '114', '110'],
-          1,
+          '124',
           'Each worker adds twice its points under the lock: 100 + 10 + 14.',
         ),
         choose(
@@ -1710,7 +1689,7 @@ const signals: KnowledgePointModule = {
           'If the producer runs first, ready is already true and main never waits; otherwise main waits until the producer sets ready. Either way main reads payload 21 under the lock.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'No other thread exists. What does this program print?',
           cpp(`
             #include <condition_variable>
@@ -1725,11 +1704,10 @@ const signals: KnowledgePointModule = {
               std::cout << items << "\\n";
             }
           `),
-          ['0', '3', 'Nothing: it waits forever', '1'],
-          1,
+          '3',
           'The condition is already satisfied, so the loop body never runs and the program prints 3 without waiting.',
         ),
-        predictOutput(
+        typeOutput(
           'The producer may notify before main starts waiting. What is printed?',
           cpp(`
             #include <condition_variable>
@@ -1753,8 +1731,7 @@ const signals: KnowledgePointModule = {
               std::cout << seen << "\\n";
             }
           `),
-          ['0', 'Either 0 or 5', '5', 'Nothing: it waits forever'],
-          2,
+          '5',
           'An early notification is lost, but the loop checks count first; it is already 5, so main does not wait.',
         ),
         choose(
@@ -1831,7 +1808,7 @@ const signals: KnowledgePointModule = {
             cv.wait(lock);
           `),
         ),
-        predictOutput(
+        typeOutput(
           'The producer finishes before main checks. What is printed?',
           cpp(`
             #include <condition_variable>
@@ -1860,8 +1837,7 @@ const signals: KnowledgePointModule = {
               std::cout << jobs << "\\n";
             }
           `),
-          ['0', '1', 'Nothing: it waits forever', '2'],
-          3,
+          '2',
           'Both notifications were lost, but the count recorded both jobs, and main reads it without waiting.',
         ),
         choose(
@@ -1929,7 +1905,7 @@ const signals: KnowledgePointModule = {
           'The producer sets payload and ready while holding m and notifies after releasing it; main proceeds only once ready is true and reads 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Two consumers wait for the same flag. What is printed?',
           cpp(`
             #include <condition_variable>
@@ -1964,8 +1940,7 @@ const signals: KnowledgePointModule = {
               std::cout << seen_a << " " << seen_b << "\\n";
             }
           `),
-          ['0 1', '70 71', '70 1', '0 71'],
-          1,
+          '70 71',
           'notify_all wakes both consumers, and each sees ready true together with price 70.',
         ),
         choose(
@@ -2068,7 +2043,7 @@ const signals: KnowledgePointModule = {
             });
           `),
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <condition_variable>
@@ -2098,8 +2073,7 @@ const signals: KnowledgePointModule = {
               std::cout << notional << "\\n";
             }
           `),
-          ['0', '25', '100', '4'],
-          2,
+          '100',
           'quantity, price and ready are published in one locked block, so the consumer computes 4 * 25.',
         ),
         choose(
@@ -2113,7 +2087,7 @@ const signals: KnowledgePointModule = {
           0,
           'Only the first publishes the payload with the flag under m and notifies after the change.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <condition_variable>
@@ -2143,8 +2117,7 @@ const signals: KnowledgePointModule = {
               std::cout << range << "\\n";
             }
           `),
-          ['0', '9', '-3', '6'],
-          3,
+          '6',
           'version changes in the same locked block as low and high, so the consumer sees 9 - 3.',
         ),
       ],
@@ -2188,7 +2161,7 @@ const signals: KnowledgePointModule = {
           'main locks m before the worker starts, so the worker can only get m once main’s wait releases it; the worker then sets done and main wakes holding m again.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'main holds m when the helper starts. What is printed?',
           cpp(`
             #include <condition_variable>
@@ -2213,8 +2186,7 @@ const signals: KnowledgePointModule = {
               std::cout << seen << "\\n";
             }
           `),
-          ['0', 'Nothing: it deadlocks', '20', '2'],
-          2,
+          '20',
           'wait releases m, so the helper can set stage to 2; main wakes, relocks and multiplies by 10.',
         ),
         choose(
@@ -2309,7 +2281,7 @@ const signals: KnowledgePointModule = {
             cv.notify_one();
           `),
         ),
-        predictOutput(
+        typeOutput(
           'Three threads arrive with different weights. What is printed?',
           cpp(`
             #include <condition_variable>
@@ -2338,8 +2310,7 @@ const signals: KnowledgePointModule = {
               std::cout << seen << "\\n";
             }
           `),
-          ['1', '4', '3', '7'],
-          3,
+          '7',
           'main keeps waiting until all three weights have been added under m.',
         ),
         choose(
@@ -2353,7 +2324,7 @@ const signals: KnowledgePointModule = {
           2,
           'wait releases only m; log_m stays locked, so the producer can never reach the state change.',
         ),
-        predictOutput(
+        typeOutput(
           'Two threads hand off turns using one mutex. What is printed?',
           cpp(`
             #include <condition_variable>
@@ -2384,8 +2355,7 @@ const signals: KnowledgePointModule = {
               std::cout << log << "\\n";
             }
           `),
-          ['132', '123', '12', '213'],
-          1,
+          '123',
           'Each wait releases m so the other side can run: the worker records 1, main records 2, then the worker records 3.',
         ),
       ],
@@ -2432,7 +2402,7 @@ const signals: KnowledgePointModule = {
           'The producer closes without pushing anything. The consumer’s wait ends because closed is true, finds the queue empty and keeps taken at -1 instead of sleeping forever.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The producer pushes two items and closes in one locked block. What is printed?',
           cpp(`
             #include <condition_variable>
@@ -2463,8 +2433,7 @@ const signals: KnowledgePointModule = {
               std::cout << size << " " << sum << "\\n";
             }
           `),
-          ['2 13', '0 0', '1 4', '2 9'],
-          0,
+          '2 13',
           'The consumer can only see the state before the block (and keeps waiting) or after it, with both items queued.',
         ),
         choose(
@@ -2489,7 +2458,7 @@ const signals: KnowledgePointModule = {
           1,
           'Items queued before the close are still data; only an empty, closed queue means stop.',
         ),
-        predictOutput(
+        typeOutput(
           'The queue is already closed but still holds an item. What is printed?',
           cpp(`
             #include <condition_variable>
@@ -2509,8 +2478,7 @@ const signals: KnowledgePointModule = {
               std::cout << taken << "\\n";
             }
           `),
-          ['-1', '8', '0', 'Nothing: it waits forever'],
-          1,
+          '8',
           'The wait loop ends at once, and the item queued before the close is still delivered.',
         ),
       ],
@@ -2573,7 +2541,7 @@ const signals: KnowledgePointModule = {
           2,
           'notify_one unblocks at most one waiter; the rest never re-check the condition.',
         ),
-        predictOutput(
+        typeOutput(
           'Two consumers each take at most one item. What is printed?',
           cpp(`
             #include <condition_variable>
@@ -2610,8 +2578,7 @@ const signals: KnowledgePointModule = {
               std::cout << got_a + got_b << "\\n";
             }
           `),
-          ['3', '4', '0', '7'],
-          3,
+          '7',
           'Each consumer takes one of the two queued items before noticing the close, so together they get 3 + 4.',
         ),
         choose(
@@ -2625,7 +2592,7 @@ const signals: KnowledgePointModule = {
           0,
           'The flag must change under m before the notification, and every waiter must be woken.',
         ),
-        predictOutput(
+        typeOutput(
           'The queue is closed with two items left. One consumer takes at most one item. What is printed?',
           cpp(`
             #include <condition_variable>
@@ -2650,8 +2617,7 @@ const signals: KnowledgePointModule = {
               std::cout << taken << " " << left << "\\n";
             }
           `),
-          ['-1 2', '1 1', '2 1', '1 0'],
-          1,
+          '1 1',
           'Closing does not discard queued items: the consumer takes the front item 1, and 2 remains for the next consumer.',
         ),
       ],
@@ -2685,7 +2651,7 @@ const atomics: KnowledgePointModule = {
           'The worker stores 42 into the atomic; after the join, main’s load reads it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Two workers store into the same atomic at the same time. What is printed?',
           cpp(`
             #include <atomic>
@@ -2700,11 +2666,10 @@ const atomics: KnowledgePointModule = {
               std::cout << status.load() << "\\n";
             }
           `),
-          ['14', '7', '0', 'Undefined: the stores race'],
-          1,
+          '7',
           'Concurrent stores to an atomic are not a data race; both store 7, so 7 is the final value.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -2717,8 +2682,7 @@ const atomics: KnowledgePointModule = {
               std::cout << copy << " " << level.load() << "\\n";
             }
           `),
-          ['3 9', '8 8', '8 9', '9 9'],
-          2,
+          '8 9',
           'Assignment stores 8, reading into copy loads 8, and the explicit store writes 9.',
         ),
         choose(
@@ -2802,7 +2766,7 @@ const atomics: KnowledgePointModule = {
           1,
           'The atomic store is race-free; the plain read-modify-write of hits is not protected by it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -2819,8 +2783,7 @@ const atomics: KnowledgePointModule = {
               std::cout << a_out + b_out << " " << finished.load() << "\\n";
             }
           `),
-          ['7 2', '7 1', '0 1', '3 1'],
-          1,
+          '7 1',
           'Each worker has its own output, read after the joins; both store 1 into finished, which stays 1.',
         ),
         choose(
@@ -2860,7 +2823,7 @@ const atomics: KnowledgePointModule = {
         explanation: 'fetch_add returns the 10 it found and leaves 15 behind.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -2872,11 +2835,10 @@ const atomics: KnowledgePointModule = {
               std::cout << first << " " << second << " " << tickets.load() << "\\n";
             }
           `),
-          ['4 5 5', '3 4 5', '3 3 5', '4 5 6'],
-          1,
+          '3 4 5',
           'Each fetch_add returns the value before its own addition: 3, then 4, leaving 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -2888,11 +2850,10 @@ const atomics: KnowledgePointModule = {
               std::cout << old << " " << now << "\\n";
             }
           `),
-          ['14 10', '20 14', '20 10', '14 14'],
-          2,
+          '20 10',
           'fetch_sub returns the old 20; -= returns the new value, 14 - 4 = 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -2904,8 +2865,7 @@ const atomics: KnowledgePointModule = {
               std::cout << a << " " << b << "\\n";
             }
           `),
-          ['7 8', '8 9', '8 8', '7 9'],
-          3,
+          '7 9',
           'n++ yields the old 7 (n becomes 8); ++n yields the new 9.',
         ),
         choose(
@@ -2959,7 +2919,7 @@ const atomics: KnowledgePointModule = {
             std::thread b([&x] { x.store(x.load() + 1); });
           `),
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -2974,8 +2934,7 @@ const atomics: KnowledgePointModule = {
               std::cout << balance.load() << "\\n";
             }
           `),
-          ['70', '145', '115', '100'],
-          2,
+          '115',
           'Both read-modify-writes apply in some order: 100 - 30 + 45 = 115.',
         ),
         choose(
@@ -2989,7 +2948,7 @@ const atomics: KnowledgePointModule = {
           2,
           'Only fetch_add reads and writes in one indivisible step.',
         ),
-        predictOutput(
+        typeOutput(
           'Each worker records the value fetch_add returned. What is printed?',
           cpp(`
             #include <atomic>
@@ -3006,8 +2965,7 @@ const atomics: KnowledgePointModule = {
               std::cout << got_a + got_b << " " << next.load() << "\\n";
             }
           `),
-          ['0 2', '1 2', '2 2', '3 2'],
-          1,
+          '1 2',
           'One worker gets 0 and the other 1, in either order, so the sum is always 1 and next ends at 2.',
         ),
       ],
@@ -3038,7 +2996,7 @@ const atomics: KnowledgePointModule = {
           'seat held the expected 0, so 7 is stored, the call returns true, and expected is left unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -3050,11 +3008,10 @@ const atomics: KnowledgePointModule = {
               std::cout << won << " " << owner.load() << " " << expected << "\\n";
             }
           `),
-          ['0 3 0', '1 9 0', '0 3 3', '0 9 3'],
-          2,
+          '0 3 3',
           'owner holds 3, not 0, so nothing is stored and expected is refreshed to 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -3068,8 +3025,7 @@ const atomics: KnowledgePointModule = {
               std::cout << first << second << " " << v.load() << " " << e2 << "\\n";
             }
           `),
-          ['11 7 5', '10 6 5', '01 7 6', '10 6 6'],
-          3,
+          '10 6 6',
           'The first call succeeds (v becomes 6); the second expects 5, finds 6, fails, and refreshes e2 to 6.',
         ),
         predictOutput(
@@ -3136,7 +3092,7 @@ const atomics: KnowledgePointModule = {
           'The first call compares 10 with 7, fails and refreshes expected to 10. The second call computes desired as 20 from the refreshed value and succeeds.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'A second claimant tries the same slot. What is printed?',
           cpp(`
             #include <atomic>
@@ -3150,11 +3106,10 @@ const atomics: KnowledgePointModule = {
               std::cout << won << " " << second_try << "\\n";
             }
           `),
-          ['1 8', '0 0', '0 8', '0 4'],
-          3,
+          '0 4',
           'The second claim fails, and second_try reports the current owner, 4.',
         ),
-        predictOutput(
+        typeOutput(
           'desired was computed once, from a stale guess. What is printed?',
           cpp(`
             #include <atomic>
@@ -3168,8 +3123,7 @@ const atomics: KnowledgePointModule = {
               std::cout << first << " " << second << " " << v.load() << "\\n";
             }
           `),
-          ['0 1 7', '0 1 6', '0 0 6', '1 1 6'],
-          1,
+          '0 1 6',
           'The retry succeeds but stores the stale desired 6, so the intended increment of the current value never happens.',
         ),
         choose(
@@ -3183,7 +3137,7 @@ const atomics: KnowledgePointModule = {
           1,
           'expected now holds the current value; desired must be that value plus 3.',
         ),
-        predictOutput(
+        typeOutput(
           'expected is reset to the old guess before the second attempt. What is printed?',
           cpp(`
             #include <atomic>
@@ -3197,8 +3151,7 @@ const atomics: KnowledgePointModule = {
               std::cout << again << " " << state.load() << " " << expected << "\\n";
             }
           `),
-          ['1 3 1', '0 2 1', '0 2 2', '1 3 2'],
-          2,
+          '0 2 2',
           'state is already 2, so expecting 1 fails; expected is refreshed to 2 and state stays 2.',
         ),
       ],
@@ -3234,7 +3187,7 @@ const atomics: KnowledgePointModule = {
           'Relaxed fetch_add is still one indivisible read-modify-write, so all three additions count.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -3251,11 +3204,10 @@ const atomics: KnowledgePointModule = {
               std::cout << total.load(std::memory_order_relaxed) << "\\n";
             }
           `),
-          ['6', 'Any value up to 12', '12', '2'],
-          2,
+          '12',
           'Relaxed ordering does not weaken atomicity; no addition is lost, so the total is 2 + 4 + 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -3266,8 +3218,7 @@ const atomics: KnowledgePointModule = {
               std::cout << old << " " << c.load(std::memory_order_relaxed) << "\\n";
             }
           `),
-          ['10 10', '8 8', '10 12', '8 10'],
-          3,
+          '8 10',
           'A relaxed fetch_add still returns the previous value, 8, and leaves 10.',
         ),
         choose(
@@ -3344,7 +3295,7 @@ const atomics: KnowledgePointModule = {
           1,
           'A counter needs atomicity but no ordering of other data; the others all publish other data.',
         ),
-        predictOutput(
+        typeOutput(
           'One worker stores twice with relaxed ordering. What is printed?',
           cpp(`
             #include <atomic>
@@ -3360,8 +3311,7 @@ const atomics: KnowledgePointModule = {
               std::cout << phase.load(std::memory_order_relaxed) << "\\n";
             }
           `),
-          ['1', '1 or 2', '0', '2'],
-          3,
+          '2',
           'Stores to one atomic keep their order in its modification order, and after the join the last one, 2, is seen.',
         ),
         choose(
@@ -3410,7 +3360,7 @@ const atomics: KnowledgePointModule = {
           'Each of the 3000 fetch_add calls is indivisible, so the joined total is exact.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -3428,11 +3378,10 @@ const atomics: KnowledgePointModule = {
               std::cout << total.load() << "\\n";
             }
           `),
-          ['10', '30', '20', '8'],
-          2,
+          '20',
           'Each worker adds 0 + 1 + 2 + 3 + 4 = 10, and both workers’ additions land.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -3452,8 +3401,7 @@ const atomics: KnowledgePointModule = {
               std::cout << orders.load() - cancels.load() << "\\n";
             }
           `),
-          ['4', '8', '16', '12'],
-          1,
+          '8',
           'Two workers record 12 orders and 4 cancels, so the difference is 8.',
         ),
         choose(
@@ -3511,7 +3459,7 @@ const atomics: KnowledgePointModule = {
           'The slices cover 1 through 10 exactly once; each worker publishes its partial sum (15 and 40) with a single fetch_add.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'A second atomic counts the publishing calls. What is printed?',
           cpp(`
             #include <atomic>
@@ -3533,11 +3481,10 @@ const atomics: KnowledgePointModule = {
               std::cout << items.load() << " " << calls.load() << "\\n";
             }
           `),
-          ['10 2', '10 10', '7 2', '3 2'],
-          0,
+          '10 2',
           'The slices hold 3 and 7 indices, and each worker touches calls once.',
         ),
-        predictOutput(
+        typeOutput(
           'The two slices overlap. What is printed?',
           cpp(`
             #include <atomic>
@@ -3557,8 +3504,7 @@ const atomics: KnowledgePointModule = {
               std::cout << total.load() << "\\n";
             }
           `),
-          ['36', '40', '45', '30'],
-          1,
+          '40',
           'Index 4 is in both slices, so it is counted twice: 10 + 30 = 40 instead of 36.',
         ),
         choose(
@@ -3620,7 +3566,7 @@ const ordering: KnowledgePointModule = {
           'main’s acquire load eventually reads the 1 written by the release store, so the earlier write of 17 is visible when main reads payload.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The writer fills two plain fields before releasing the flag. What is printed?',
           cpp(`
             #include <atomic>
@@ -3641,8 +3587,7 @@ const ordering: KnowledgePointModule = {
               std::cout << notional << "\\n";
             }
           `),
-          ['0', 'Any of 0, 101 or 505', '101', '505'],
-          3,
+          '505',
           'Both field writes come before the release store, so the acquiring reader sees both.',
         ),
         choose(
@@ -3672,7 +3617,7 @@ const ordering: KnowledgePointModule = {
             payload = 9;
           `),
         ),
-        predictOutput(
+        typeOutput(
           'The reader waits for version 2. What is printed?',
           cpp(`
             #include <atomic>
@@ -3691,8 +3636,7 @@ const ordering: KnowledgePointModule = {
               std::cout << seen << " " << version.load() << "\\n";
             }
           `),
-          ['0 2', '42 0', '42 2', '6 2'],
-          2,
+          '42 2',
           'Seeing 2 means the release store was read, so data’s value 42 is visible.',
         ),
       ],
@@ -3752,7 +3696,7 @@ const ordering: KnowledgePointModule = {
           3,
           'Stage 1 was released after first was written but before second was.',
         ),
-        predictOutput(
+        typeOutput(
           'The reader keeps loading until it sees a nonzero value. What is printed?',
           cpp(`
             #include <atomic>
@@ -3772,8 +3716,7 @@ const ordering: KnowledgePointModule = {
               std::cout << result << "\\n";
             }
           `),
-          ['303', '300', '3', '0'],
-          0,
+          '303',
           'The loop ends only after reading the released 3, which makes table’s 300 visible.',
         ),
         choose(
@@ -3876,7 +3819,7 @@ const ordering: KnowledgePointModule = {
           1,
           'seq_cst adds a single total order on top of acquire/release semantics.',
         ),
-        predictOutput(
+        typeOutput(
           'The flag uses default operations. What is printed?',
           cpp(`
             #include <atomic>
@@ -3895,8 +3838,7 @@ const ordering: KnowledgePointModule = {
               std::cout << seen << "\\n";
             }
           `),
-          ['0', '0 or 8', '8', 'Undefined'],
-          2,
+          '8',
           'Default stores and loads are seq_cst, which includes release and acquire, so payload is published.',
         ),
       ],
@@ -3957,7 +3899,7 @@ const ordering: KnowledgePointModule = {
           1,
           'Incrementing a counter does not exclude other threads from the string the way a lock does.',
         ),
-        predictOutput(
+        typeOutput(
           'Each worker records the value fetch_add returned. What is printed?',
           cpp(`
             #include <atomic>
@@ -3977,8 +3919,7 @@ const ordering: KnowledgePointModule = {
               std::cout << a + b + c << " " << next.load() << "\\n";
             }
           `),
-          ['0 3', '6 3', '3 2', '3 3'],
-          3,
+          '3 3',
           'The three workers receive 0, 1 and 2 in some order, so the sum is 3 and next ends at 3.',
         ),
         choose(
@@ -4020,7 +3961,7 @@ const ordering: KnowledgePointModule = {
           'Any spurious failure just repeats the attempt; the successful exchange replaces 4 with 4 + 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <atomic>
@@ -4033,11 +3974,10 @@ const ordering: KnowledgePointModule = {
               std::cout << v.load() << " " << expected << "\\n";
             }
           `),
-          ['12 12', '6 6', '6 12', '12 6'],
-          3,
+          '12 6',
           'The successful exchange stores 12 and leaves expected at the value it matched, 6.',
         ),
-        predictOutput(
+        typeOutput(
           'The loop starts from a stale guess. What is printed?',
           cpp(`
             #include <atomic>
@@ -4050,8 +3990,7 @@ const ordering: KnowledgePointModule = {
               std::cout << v.load() << "\\n";
             }
           `),
-          ['1', '11', '10', '0'],
-          1,
+          '11',
           'The first attempt fails and refreshes expected to 10; the retry stores 10 + 1.',
         ),
         choose(
@@ -4138,7 +4077,7 @@ const ordering: KnowledgePointModule = {
             }
           `),
         ),
-        predictOutput(
+        typeOutput(
           'desired is computed before the loop from a stale guess. What is printed?',
           cpp(`
             #include <atomic>
@@ -4152,11 +4091,10 @@ const ordering: KnowledgePointModule = {
               std::cout << v.load() << "\\n";
             }
           `),
-          ['15', '5', '3', '13'],
-          3,
+          '13',
           'The retry matches the refreshed 5 but stores the stale 13 instead of the intended 5 + 10.',
         ),
-        predictOutput(
+        typeOutput(
           'raise_to keeps the highest value seen. What is printed?',
           cpp(`
             #include <atomic>
@@ -4174,11 +4112,10 @@ const ordering: KnowledgePointModule = {
               std::cout << after_low << " " << high.load() << "\\n";
             }
           `),
-          ['30 55', '40 55', '40 40', '30 30'],
-          1,
+          '40 55',
           '30 is not above 40, so the loop stops without exchanging; 55 is higher and replaces 40.',
         ),
-        predictOutput(
+        typeOutput(
           'Three threads each add 1 ten times through a retry loop. What is printed?',
           cpp(`
             #include <atomic>
@@ -4204,8 +4141,7 @@ const ordering: KnowledgePointModule = {
               std::cout << total.load() << "\\n";
             }
           `),
-          ['10', 'Less than 30', '30', '20'],
-          2,
+          '30',
           'Each successful exchange adds 1 to the current value, so all 30 additions land.',
         ),
       ],
@@ -4237,7 +4173,7 @@ const futures: KnowledgePointModule = {
           'The task multiplies 6 by 7 on another thread; get() waits for it and returns 42.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <functional>
@@ -4249,8 +4185,7 @@ const futures: KnowledgePointModule = {
               std::cout << sum.get() << " " << diff.get() << "\\n";
             }
           `),
-          ['38 42', '42 38', '42 -38', '80 0'],
-          1,
+          '42 38',
           'Each future holds its own task’s result: 40 + 2 and 40 - 2.',
         ),
         choose(
@@ -4268,7 +4203,7 @@ const futures: KnowledgePointModule = {
             int result = task.get();
           `),
         ),
-        predictOutput(
+        typeOutput(
           'The task returns nothing but writes through a reference. What is printed?',
           cpp(`
             #include <future>
@@ -4280,8 +4215,7 @@ const futures: KnowledgePointModule = {
               std::cout << written << "\\n";
             }
           `),
-          ['0', '0 or 15', 'Undefined', '15'],
-          3,
+          '15',
           'get() returns only after the task has finished, and its writes are visible afterwards.',
         ),
         choose(
@@ -4321,7 +4255,7 @@ const futures: KnowledgePointModule = {
           'A deferred task does not start at the std::async call; it runs inside get(), on main’s own thread.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The deferred future is destroyed without being waited on. What is printed?',
           cpp(`
             #include <future>
@@ -4334,11 +4268,10 @@ const futures: KnowledgePointModule = {
               std::cout << runs << "\\n";
             }
           `),
-          ['5', '0', '0 or 5', '10'],
-          1,
+          '0',
           'Nobody called get() or wait(), so the deferred task never ran.',
         ),
-        predictOutput(
+        typeOutput(
           'Only one of two deferred tasks is waited on. What is printed?',
           cpp(`
             #include <future>
@@ -4352,8 +4285,7 @@ const futures: KnowledgePointModule = {
               std::cout << a << " " << b << "\\n";
             }
           `),
-          ['3 4', '3 0', '0 0', '0 4'],
-          3,
+          '0 4',
           'Deferred tasks run only when their own future is waited on, so only second has run.',
         ),
         choose(
@@ -4408,7 +4340,7 @@ const futures: KnowledgePointModule = {
           'main blocks in get() until the worker calls set_value(42) on the promise.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The worker writes a plain detail before fulfilling the promise. What is printed?',
           cpp(`
             #include <future>
@@ -4428,11 +4360,10 @@ const futures: KnowledgePointModule = {
               std::cout << code << " " << seen << "\\n";
             }
           `),
-          ['1 0', '0 250', '1 250', '0 0'],
-          2,
+          '1 250',
           'set_value synchronizes with the get() that returns its value, so the earlier write of detail is visible.',
         ),
-        predictOutput(
+        typeOutput(
           'The quoter fulfills ask before bid. What is printed?',
           cpp(`
             #include <future>
@@ -4452,8 +4383,7 @@ const futures: KnowledgePointModule = {
               std::cout << spread << "\\n";
             }
           `),
-          ['3', '-3', '103', '203'],
-          0,
+          '3',
           'Each future receives its own promise’s value, whatever order they were set in: 103 - 100.',
         ),
         choose(
@@ -4549,7 +4479,7 @@ const futures: KnowledgePointModule = {
             int b = f.get();
           `),
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <future>
@@ -4568,8 +4498,7 @@ const futures: KnowledgePointModule = {
               std::cout << cells << "\\n";
             }
           `),
-          ['12', '35', '7', '5'],
-          1,
+          '35',
           'Each future receives its own promise’s single value: 7 * 5.',
         ),
       ],
@@ -4605,7 +4534,7 @@ const futures: KnowledgePointModule = {
           'The task’s exception is stored in the future; get() rethrows it in main, where the handler catches it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'input is negative. What is printed?',
           cpp(`
             #include <future>
@@ -4626,11 +4555,10 @@ const futures: KnowledgePointModule = {
               }
             }
           `),
-          ['-8', '0', 'rejected negative', 'negative'],
-          2,
+          'rejected negative',
           'The task throws before assigning result; get() rethrows, and the handler prints its message.',
         ),
-        predictOutput(
+        typeOutput(
           'input is positive. What is printed?',
           cpp(`
             #include <future>
@@ -4651,8 +4579,7 @@ const futures: KnowledgePointModule = {
               }
             }
           `),
-          ['10', 'rejected negative', '0', '5'],
-          0,
+          '10',
           'No exception is thrown; get() returns after the task has stored 10.',
         ),
         choose(
@@ -4711,7 +4638,7 @@ const futures: KnowledgePointModule = {
           'steps += 1 runs, get() rethrows, steps += 10 is skipped and the handler adds 100.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This time the task does not throw. What is printed?',
           cpp(`
             #include <future>
@@ -4733,11 +4660,10 @@ const futures: KnowledgePointModule = {
               std::cout << steps << "\\n";
             }
           `),
-          ['111', '101', '11', '1'],
-          2,
+          '11',
           'get() returns normally, so the whole try block runs and the handler does not.',
         ),
-        predictOutput(
+        typeOutput(
           'The first task fails and the second succeeds. What is printed?',
           cpp(`
             #include <future>
@@ -4757,8 +4683,7 @@ const futures: KnowledgePointModule = {
               std::cout << total << "\\n";
             }
           `),
-          ['105', '1105', '5', '1005'],
-          3,
+          '1005',
           'second adds 5; first.get() rethrows, so += 100 is skipped and the handler adds 1000.',
         ),
         choose(
@@ -4811,7 +4736,7 @@ const futures: KnowledgePointModule = {
           'Both copies see the same value 4, and get() may be repeated: 4 + 4 + 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Each consumer thread copies the shared_future. What is printed?',
           cpp(`
             #include <future>
@@ -4830,8 +4755,7 @@ const futures: KnowledgePointModule = {
               std::cout << a_out << " " << b_out << "\\n";
             }
           `),
-          ['50 100', '51 51', '0 0', '51 100'],
-          3,
+          '51 100',
           'Both consumers wait for the same value 50 and compute 51 and 100.',
         ),
         choose(
@@ -4862,7 +4786,7 @@ const futures: KnowledgePointModule = {
             int x = f.get();
           `),
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <future>
@@ -4875,8 +4799,7 @@ const futures: KnowledgePointModule = {
               std::cout << s.get() * t.get() << " " << s.get() << "\\n";
             }
           `),
-          ['14 7', '7 7', '49 0', '49 7'],
-          3,
+          '49 7',
           'Every read of every copy returns 7, so the product is 49 and a third read still gives 7.',
         ),
       ],
@@ -4914,7 +4837,7 @@ const futures: KnowledgePointModule = {
           'All three workers wait on copies of one shared_future; the single set_value(10) releases all of them.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'One promise broadcasts a limit to two workers. What is printed?',
           cpp(`
             #include <future>
@@ -4933,8 +4856,7 @@ const futures: KnowledgePointModule = {
               std::cout << buy_cap << " " << sell_cap << "\\n";
             }
           `),
-          ['100 100', '80 90', '90 80', '0 0'],
-          2,
+          '90 80',
           'Both workers receive 100 from the same shared state.',
         ),
         choose(
@@ -4959,7 +4881,7 @@ const futures: KnowledgePointModule = {
           1,
           'All copies share one state, which becomes ready once for everyone.',
         ),
-        predictOutput(
+        typeOutput(
           'A shared_future is made from a std::async result. What is printed?',
           cpp(`
             #include <functional>
@@ -4978,8 +4900,7 @@ const futures: KnowledgePointModule = {
               std::cout << up + down << "\\n";
             }
           `),
-          ['12', '24', '26', '13'],
-          1,
+          '24',
           'Both threads read the same 12, giving 13 and 11.',
         ),
       ],
@@ -5011,7 +4932,7 @@ const memoryModels: KnowledgePointModule = {
           'Three whole pages cover 768 bytes, so address 1000 is in page 3 at offset 1000 - 768 = 232.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -5022,11 +4943,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << address / page_size << " " << address % page_size << "\\n";
             }
           `),
-          ['8 2', '2 8', '2 4104', '3 8'],
-          1,
+          '2 8',
           'Two pages cover 8192 bytes, so the address is in page 2 at offset 8.',
         ),
-        predictOutput(
+        typeOutput(
           'The address sits exactly on a page boundary. What is printed?',
           cpp(`
             #include <cstddef>
@@ -5037,11 +4957,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << address / page_size << " " << address % page_size << "\\n";
             }
           `),
-          ['1 256', '2 1', '1 0', '2 0'],
-          3,
+          '2 0',
           'An offset is always below the page size: 512 is the first byte of page 2, offset 0.',
         ),
-        predictOutput(
+        typeOutput(
           'The same address is split under two page sizes. What is printed?',
           cpp(`
             #include <cstddef>
@@ -5053,8 +4972,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << address % large_page << " " << address % small_page << "\\n";
             }
           `),
-          ['952 3000', '0 952', '3000 952', '3000 0'],
-          2,
+          '3000 952',
           '3000 fits inside the first 4096-byte page; with 1024-byte pages it is 952 bytes into page 2.',
         ),
         choose(
@@ -5096,7 +5014,7 @@ const memoryModels: KnowledgePointModule = {
           'The check runs before any division, so a zero page size is reported instead of evaluating 70 % 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -5109,8 +5027,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << page << " " << offset << " " << page * page_size + offset << "\\n";
             }
           `),
-          ['12 34 1200', '12 34 1234', '34 12 1234', '12 3 1234'],
-          1,
+          '12 34 1234',
           'Page 12 at offset 34; recombining 12 * 100 + 34 gives back 1234.',
         ),
         choose(
@@ -5124,7 +5041,7 @@ const memoryModels: KnowledgePointModule = {
           3,
           'Integer division and remainder by zero are undefined, so the divisor must be checked first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -5139,11 +5056,10 @@ const memoryModels: KnowledgePointModule = {
               }
             }
           `),
-          ['invalid page size', '130', '2', '64'],
-          2,
+          '2',
           'The page size is valid, and 130 is 2 bytes past the start of page 2 (128).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -5155,8 +5071,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << address - offset << " " << offset << "\\n";
             }
           `),
-          ['512 9', '768 9', '3 9', '768 265'],
-          1,
+          '768 9',
           '777 is 9 bytes into the page that starts at 3 * 256 = 768.',
         ),
       ],
@@ -5190,7 +5105,7 @@ const memoryModels: KnowledgePointModule = {
           'Address 300 is page 1, offset 44. Page 1 maps to frame 9, so the physical address is 9 * 256 + 44.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -5205,11 +5120,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << static_cast<std::size_t>(frames[page]) * page_size + offset << "\\n";
             }
           `),
-          ['600', '2048', '1368', '1280'],
-          2,
+          '1368',
           '600 is page 2, offset 88; page 2 maps to frame 5, giving 5 * 256 + 88.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -5224,8 +5138,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << static_cast<std::size_t>(frames[page]) * page_size + offset << "\\n";
             }
           `),
-          ['16', '610', '10', '600'],
-          1,
+          '610',
           'Page 0 maps to frame 6, and the offset 10 is kept: 600 + 10.',
         ),
         choose(
@@ -5239,7 +5152,7 @@ const memoryModels: KnowledgePointModule = {
           2,
           'Translation replaces the page number with a frame number and keeps the position within the page.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -5254,8 +5167,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << static_cast<std::size_t>(frames[page]) * page_size + offset << "\\n";
             }
           `),
-          ['2050', '3072', '1026', '3074'],
-          3,
+          '3074',
           '2050 is page 2, offset 2; page 2 maps to frame 3: 3072 + 2.',
         ),
       ],
@@ -5291,7 +5203,7 @@ const memoryModels: KnowledgePointModule = {
           'Page 1 exists in the table, but its frame is -1, so the translation reports a fault.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'With the same table, address 250 is translated. What is printed?',
           cpp(`
             #include <cstddef>
@@ -5311,11 +5223,10 @@ const memoryModels: KnowledgePointModule = {
               }
             }
           `),
-          ['fault: no entry', 'fault: unmapped', '550', '50'],
-          0,
+          'fault: no entry',
           'Page 2 is past the end of a two-entry table, so the first check reports it before frames[2] is read.',
         ),
-        predictOutput(
+        typeOutput(
           'Address 40 is translated with the same table. What is printed?',
           cpp(`
             #include <cstddef>
@@ -5335,11 +5246,10 @@ const memoryModels: KnowledgePointModule = {
               }
             }
           `),
-          ['fault: unmapped', '540', '40', '500'],
-          1,
+          '540',
           'Page 0 maps to frame 5, so the address becomes 500 + 40.',
         ),
-        predictOutput(
+        typeOutput(
           'Address 199 is translated with the same table. What is printed?',
           cpp(`
             #include <cstddef>
@@ -5359,8 +5269,7 @@ const memoryModels: KnowledgePointModule = {
               }
             }
           `),
-          ['-1', 'fault: no entry', '99', 'fault: unmapped'],
-          3,
+          'fault: unmapped',
           '199 is the last byte of page 1, which has an entry marked unmapped.',
         ),
         choose(
@@ -5403,7 +5312,7 @@ const memoryModels: KnowledgePointModule = {
           '13 leaves remainder 5, so 8 - 5 = 3 bytes of padding make it 16.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The size is already a multiple. What is printed?',
           cpp(`
             #include <cstddef>
@@ -5417,11 +5326,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << rounded << "\\n";
             }
           `),
-          ['24', '16', '8', '0'],
-          1,
+          '16',
           'The remainder is 0, so no padding is added.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -5435,11 +5343,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << rounded << "\\n";
             }
           `),
-          ['32', '49', '48', '33'],
-          2,
+          '48',
           '33 leaves remainder 1, so 15 bytes are added to reach 48.',
         ),
-        predictOutput(
+        typeOutput(
           'A zero-byte request is rounded. What is printed?',
           cpp(`
             #include <cstddef>
@@ -5453,8 +5360,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << rounded << "\\n";
             }
           `),
-          ['4', '1', '3', '0'],
-          3,
+          '0',
           '0 is a multiple of every positive alignment, so it stays 0.',
         ),
         choose(
@@ -5501,7 +5407,7 @@ const memoryModels: KnowledgePointModule = {
           'max - 2 needs 3 bytes of padding, but only 2 values remain before the maximum, so the request is rejected instead of wrapping.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This version adds without checking. What is printed?',
           cpp(`
             #include <cstddef>
@@ -5515,11 +5421,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << wrapped << "\\n";
             }
           `),
-          ['1', '0', '2', '18446744073709551616'],
-          1,
+          '0',
           'The maximum is odd, so extra is 1, and max + 1 wraps around to 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -5535,8 +5440,7 @@ const memoryModels: KnowledgePointModule = {
               }
             }
           `),
-          ['invalid alignment', '0', '100', 'Undefined: division by zero'],
-          0,
+          'invalid alignment',
           'The zero alignment is rejected before the remainder is computed, so no division by zero happens.',
         ),
         choose(
@@ -5550,7 +5454,7 @@ const memoryModels: KnowledgePointModule = {
           2,
           'After wrapping, the sum carries no sign of the overflow; the subtraction form never wraps because extra <= max.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -5570,8 +5474,7 @@ const memoryModels: KnowledgePointModule = {
               }
             }
           `),
-          ['64', '100', 'too large', '128'],
-          3,
+          '128',
           '100 needs 28 bytes of padding, which fits easily, so the result is 128.',
         ),
       ],
@@ -5607,7 +5510,7 @@ const memoryModels: KnowledgePointModule = {
           'fresh is recreated as 0 on every call and always reaches 1; kept is initialized once and keeps counting.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -5622,11 +5525,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << "\\n";
             }
           `),
-          ['101 101', '100 101', '101 102', '102 102'],
-          2,
+          '101 102',
           'id starts at 100 once and keeps each increment between calls.',
         ),
-        predictOutput(
+        typeOutput(
           'start changes between the two calls. What is printed?',
           cpp(`
             #include <iostream>
@@ -5642,8 +5544,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << "\\n";
             }
           `),
-          ['5 9', '5 5', '9 9', '0 5'],
-          1,
+          '5 5',
           'The static initializer runs only on the first call, when start was 5.',
         ),
         choose(
@@ -5652,7 +5553,7 @@ const memoryModels: KnowledgePointModule = {
           2,
           'The first two calls left calls at 2, and the initializer does not run again.',
         ),
-        predictOutput(
+        typeOutput(
           'Two lambdas each declare their own static. What is printed?',
           cpp(`
             #include <iostream>
@@ -5674,8 +5575,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << "\\n";
             }
           `),
-          ['1 10 11 21', '1 10 2 20', '1 11 12 22', '1 10 1 10'],
-          1,
+          '1 10 2 20',
           'Each lambda has its own static n, and each keeps its value between that lambda’s calls.',
         ),
       ],
@@ -5709,7 +5609,7 @@ const memoryModels: KnowledgePointModule = {
           'The static scratch keeps 5 from the first call, so the identical second call reports 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'scratch is now an ordinary local. What is printed?',
           cpp(`
             #include <iostream>
@@ -5727,11 +5627,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << first << " " << second << "\\n";
             }
           `),
-          ['5 10', '10 10', '5 5', '0 5'],
-          2,
+          '5 5',
           'An ordinary local starts at 0 on every call, so identical calls give identical results.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -5750,8 +5649,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << a << " " << b << " " << c << "\\n";
             }
           `),
-          ['100 100 100', '0 100 200', '300 300 300', '100 200 300'],
-          3,
+          '100 200 300',
           'Each call sees the count left by the previous calls, so the labels grow.',
         ),
         choose(
@@ -5805,7 +5703,7 @@ const memoryModels: KnowledgePointModule = {
           'p + i walks the contiguous elements in order; p[2] is the same as *(p + 2), the third element.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -5815,11 +5713,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << &v[3] - &v[0] << "\\n";
             }
           `),
-          ['12', '3', '4', 'It depends on the addresses'],
-          1,
+          '3',
           'Pointer subtraction counts elements: element 3 is three elements after element 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -5837,8 +5734,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << count << " " << total << "\\n";
             }
           `),
-          ['3 13', '5 16', '4 16', '4 9'],
-          2,
+          '4 16',
           'The loop stops at the one-past-the-end pointer after visiting all four elements.',
         ),
         choose(
@@ -5916,7 +5812,7 @@ const memoryModels: KnowledgePointModule = {
           2,
           'Contiguity holds within one vector; separate allocations are unrelated for pointer arithmetic.',
         ),
-        predictOutput(
+        typeOutput(
           'A pointer into the middle serves as the stop marker. What is printed?',
           cpp(`
             #include <iostream>
@@ -5929,11 +5825,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << count << " " << *(stop - 1) << "\\n";
             }
           `),
-          ['4 6', '3 7', '3 6', '4 7'],
-          1,
+          '3 7',
           'The half-open range [data, data + 3) covers 9, 8 and 7; stop - 1 points at 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -5945,8 +5840,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << total << "\\n";
             }
           `),
-          ['24', '18', '14', '6'],
-          2,
+          '14',
           'The pointers cover elements 1 and 2: 6 + 8.',
         ),
       ],
@@ -5977,7 +5871,7 @@ const memoryModels: KnowledgePointModule = {
           'Two full lines hold 128 bytes; the 129th byte needs a third line.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -5990,11 +5884,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << lines << "\\n";
             }
           `),
-          ['3', '2', '1', '64'],
-          1,
+          '2',
           '128 bytes fill exactly two lines, with no partial line left over.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -6007,11 +5900,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << lines << "\\n";
             }
           `),
-          ['0', '64', '1', '2'],
-          2,
+          '1',
           'Even a single byte occupies a whole line.',
         ),
-        predictOutput(
+        typeOutput(
           'The rounding is written as one expression. What is printed?',
           cpp(`
             #include <cstddef>
@@ -6022,8 +5914,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << (bytes + line - 1) / line << "\\n";
             }
           `),
-          ['3', '5', '200', '4'],
-          3,
+          '4',
           '(200 + 63) / 64 is 263 / 64, which truncates to 4: three full lines plus a partial one.',
         ),
         choose(
@@ -6063,7 +5954,7 @@ const memoryModels: KnowledgePointModule = {
         explanation: 'Bytes 32 to 95 begin in line 0 and end in line 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The object starts on a line boundary. What is printed?',
           cpp(`
             #include <cstddef>
@@ -6077,11 +5968,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << last - first + 1 << "\\n";
             }
           `),
-          ['2', '1', '0', '64'],
-          1,
+          '1',
           'Bytes 0 to 63 all lie in line 0.',
         ),
-        predictOutput(
+        typeOutput(
           'An 8-byte value starts at offset 60. What is printed?',
           cpp(`
             #include <cstddef>
@@ -6095,11 +5985,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << last - first + 1 << "\\n";
             }
           `),
-          ['1', '8', '2', '0'],
-          2,
+          '2',
           'Bytes 60 to 67 straddle the boundary at 64, so two lines are touched.',
         ),
-        predictOutput(
+        typeOutput(
           'The aligned count and the actual span are compared. What is printed?',
           cpp(`
             #include <cstddef>
@@ -6113,8 +6002,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << aligned << " " << spanned << "\\n";
             }
           `),
-          ['2 2', '3 3', '3 2', '2 3'],
-          3,
+          '2 3',
           '120 bytes would fit 2 aligned lines, but bytes 10 to 129 reach into line 2.',
         ),
         choose(
@@ -6157,7 +6045,7 @@ const memoryModels: KnowledgePointModule = {
           'Row 1 starts at index 3; column 1 of it is index 4, which holds 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'A 3 x 4 matrix holds 0 to 11. What is printed?',
           cpp(`
             #include <cstddef>
@@ -6171,11 +6059,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << cells[r * cols + c] << "\\n";
             }
           `),
-          ['7', '9', '6', '10'],
-          1,
+          '9',
           'With 4 columns per row, row 2 starts at 8; column 1 is index 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -6187,8 +6074,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << here << " " << below - here << "\\n";
             }
           `),
-          ['13 1', '17 4', '13 5', '13 18'],
-          2,
+          '13 5',
           'Cell (2, 3) is at 13, and the cell below it is one full row, 5 elements, further on.',
         ),
         choose(
@@ -6197,7 +6083,7 @@ const memoryModels: KnowledgePointModule = {
           2,
           'Moving down one row skips a whole row of cols = 6 elements.',
         ),
-        predictOutput(
+        typeOutput(
           'A 2 x 3 matrix is read with the correct formula and with a mixed-up one. What is printed?',
           cpp(`
             #include <cstddef>
@@ -6212,8 +6098,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << cells[r * cols + c] << " " << cells[c * rows + r] << "\\n";
             }
           `),
-          ['3 5', '3 3', '5 3', '5 5'],
-          0,
+          '3 5',
           'The correct index for (0, 2) is 2; the column-major formula gives 4, a different cell.',
         ),
       ],
@@ -6255,7 +6140,7 @@ const memoryModels: KnowledgePointModule = {
           1,
           '1 * 3 + 3 is 6, one past the last valid index 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -6278,11 +6163,10 @@ const memoryModels: KnowledgePointModule = {
               }
             }
           `),
-          ['5', 'bad shape', '6', 'out of range'],
-          1,
+          'bad shape',
           'Five cells cannot form a 2 x 3 matrix, so the shape check fails first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -6305,8 +6189,7 @@ const memoryModels: KnowledgePointModule = {
               }
             }
           `),
-          ['out of range', '5', 'bad shape', '6'],
-          3,
+          '6',
           'All checks pass, and (1, 2) is index 5, the last cell.',
         ),
         choose(
@@ -6353,7 +6236,7 @@ const memoryModels: KnowledgePointModule = {
           'Record i is the pair prices[i], sizes[i]; the notional is 20 + 60 + 30.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The loop reads prices to decide and sizes to add. What is printed?',
           cpp(`
             #include <cstddef>
@@ -6368,11 +6251,10 @@ const memoryModels: KnowledgePointModule = {
               std::cout << total << "\\n";
             }
           `),
-          ['6', '4', '3', '5'],
-          1,
+          '4',
           'Records 1 and 2 have prices above 15; their sizes are 3 and 1.',
         ),
-        predictOutput(
+        typeOutput(
           'A model compares bytes covered when scanning one 8-byte field of 500 records. What is printed?',
           cpp(`
             #include <iostream>
@@ -6383,8 +6265,7 @@ const memoryModels: KnowledgePointModule = {
               std::cout << records * field_bytes << " " << records * record_bytes << "\\n";
             }
           `),
-          ['16000 4000', '4000 4000', '4000 16000', '500 500'],
-          2,
+          '4000 16000',
           'SoA covers 500 * 8 bytes of prices; AoS steps through whole 32-byte records.',
         ),
         choose(
@@ -6440,7 +6321,7 @@ const memoryModels: KnowledgePointModule = {
           'The lengths differ, so the program reports it instead of reading a third size that does not exist.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -6458,8 +6339,7 @@ const memoryModels: KnowledgePointModule = {
               }
             }
           `),
-          ['mismatched', '38', '11', '20'],
-          1,
+          '38',
           'The lengths match, so the notional is 5 * 4 + 6 * 3.',
         ),
         choose(
@@ -6473,7 +6353,7 @@ const memoryModels: KnowledgePointModule = {
           2,
           'The field vectors now disagree on how many records exist.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -6491,8 +6371,7 @@ const memoryModels: KnowledgePointModule = {
               }
             }
           `),
-          ['17', '10', '6', 'mismatched'],
-          0,
+          '17',
           'The products are 2, 0, 3 and 12, which add up to 17.',
         ),
         choose(
@@ -6536,7 +6415,7 @@ const layout: KnowledgePointModule = {
           'alignof reports the requested 64; the member still holds the 7 it was initialized with.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -6548,11 +6427,10 @@ const layout: KnowledgePointModule = {
               std::cout << alignof(Packet) << "\\n";
             }
           `),
-          ['8', '32', '64', '4'],
-          1,
+          '32',
           'The struct asks for 32-byte alignment, which is stricter than its int members need.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -6566,8 +6444,7 @@ const layout: KnowledgePointModule = {
               std::cout << alignof(Small) << " " << alignof(Large) << "\\n";
             }
           `),
-          ['16 128', '128 16', '16 16', '64 64'],
-          0,
+          '16 128',
           'Each type reports the alignment its own alignas requested.',
         ),
         choose(
@@ -6640,7 +6517,7 @@ const layout: KnowledgePointModule = {
           0,
           'Alignment is about addresses, never about stored values.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -6652,8 +6529,7 @@ const layout: KnowledgePointModule = {
               std::cout << alignof(Big) << " " << x.v << "\\n";
             }
           `),
-          ['64 5', '5 128', '128 5', '128 0'],
-          2,
+          '128 5',
           'Big asks for 128-byte alignment, and its member keeps the value 5.',
         ),
         choose(
@@ -6701,7 +6577,7 @@ const layout: KnowledgePointModule = {
           'Each worker writes only its own slot, and the slots sit on separate 64-byte boundaries; the sum is 30 + 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Three workers store into three padded slots. What is printed?',
           cpp(`
             #include <atomic>
@@ -6723,8 +6599,7 @@ const layout: KnowledgePointModule = {
               std::cout << a.value.load() + b.value.load() + c.value.load() << " " << alignof(Slot) << "\\n";
             }
           `),
-          ['18 3', '18 64', '64 18', '7 64'],
-          1,
+          '18 64',
           'Each slot keeps its own value, and every Slot has the requested 64-byte alignment.',
         ),
         choose(
@@ -6813,7 +6688,7 @@ const layout: KnowledgePointModule = {
           1,
           'Single-writer data read after join() is already correctly ordered.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -6831,8 +6706,7 @@ const layout: KnowledgePointModule = {
               std::cout << a_part.sum + b_part.sum << "\\n";
             }
           `),
-          ['25', '20', '45', '0'],
-          2,
+          '45',
           'Each worker fills its own partial, and main adds them after the joins.',
         ),
         choose(
@@ -6890,7 +6764,7 @@ const layout: KnowledgePointModule = {
           2,
           '72 bytes need two 64-byte units, so the padded size is 128.',
         ),
-        predictOutput(
+        typeOutput(
           'An array holds 3 elements of a 128-byte type. What is printed?',
           cpp(`
             #include <iostream>
@@ -6900,8 +6774,7 @@ const layout: KnowledgePointModule = {
               std::cout << 2 * size << " " << count * size << "\\n";
             }
           `),
-          ['256 384', '128 384', '256 256', '384 256'],
-          0,
+          '256 384',
           'Element 2 starts two strides in, at 256, and the array spans 3 * 128 bytes.',
         ),
         choose(
@@ -6915,7 +6788,7 @@ const layout: KnowledgePointModule = {
           1,
           'Elements follow each other at sizeof(T) intervals, so the stride must preserve alignment.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -6927,8 +6800,7 @@ const layout: KnowledgePointModule = {
               std::cout << sizeof(Pair) % alignof(Pair) << "\\n";
             }
           `),
-          ['8', '0', '24', '32'],
-          1,
+          '0',
           'Whatever the exact size, it is a multiple of the alignment, so the remainder is 0.',
         ),
       ],
@@ -6955,7 +6827,7 @@ const layout: KnowledgePointModule = {
           'Padding multiplies the memory used by the counters by 16 in this model.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -6966,8 +6838,7 @@ const layout: KnowledgePointModule = {
               std::cout << counters * plain_bytes << " " << counters * padded_bytes << "\\n";
             }
           `),
-          ['32768 2048', '2048 2048', '2048 32768', '256 128'],
-          2,
+          '2048 32768',
           '256 plain 8-byte counters take 2048 bytes; padded to 128 bytes each they take 32768.',
         ),
         choose(
@@ -7030,7 +6901,7 @@ const layout: KnowledgePointModule = {
           'Both offsets are below 64, so both are in line 0 and the comparison prints 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -7042,11 +6913,10 @@ const layout: KnowledgePointModule = {
               std::cout << a / line << " " << b / line << " " << (a / line == b / line) << "\\n";
             }
           `),
-          ['0 0 1', '0 1 0', '1 1 1', '0 1 1'],
-          1,
+          '0 1 0',
           'Only 8 bytes apart, but a boundary at 64 separates them: lines 0 and 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -7058,11 +6928,10 @@ const layout: KnowledgePointModule = {
               std::cout << a / line << " " << b / line << " " << (a / line == b / line) << "\\n";
             }
           `),
-          ['2 2 1', '2 3 0', '1 1 1', '2 2 0'],
-          0,
+          '2 2 1',
           '128 to 191 is exactly line 2, so both offsets share it.',
         ),
-        predictOutput(
+        typeOutput(
           'The same two offsets are checked under two line sizes. What is printed?',
           cpp(`
             #include <cstddef>
@@ -7073,8 +6942,7 @@ const layout: KnowledgePointModule = {
               std::cout << (a / 64 == b / 64) << " " << (a / 128 == b / 128) << "\\n";
             }
           `),
-          ['1 0', '0 0', '1 1', '0 1'],
-          3,
+          '0 1',
           'With 64-byte lines they are in different lines; with 128-byte lines both are in line 0.',
         ),
         choose(
@@ -7118,7 +6986,7 @@ const layout: KnowledgePointModule = {
           'Three per-thread counters form three pairs; only the counters at 0 and 4 share a line.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Counters sit at offsets 0, 16 and 32. What is printed?',
           cpp(`
             #include <cstddef>
@@ -7135,8 +7003,7 @@ const layout: KnowledgePointModule = {
               std::cout << shared_pairs << "\\n";
             }
           `),
-          ['1', '0', '3', '2'],
-          2,
+          '3',
           'All three offsets are in line 0, so every pair shares it.',
         ),
         choose(
@@ -7161,7 +7028,7 @@ const layout: KnowledgePointModule = {
           1,
           'A layout model identifies candidates for false sharing, not its cost.',
         ),
-        predictOutput(
+        typeOutput(
           'The counters are padded to a 64-byte stride. What is printed?',
           cpp(`
             #include <cstddef>
@@ -7178,8 +7045,7 @@ const layout: KnowledgePointModule = {
               std::cout << shared_pairs << "\\n";
             }
           `),
-          ['3', '1', '2', '0'],
-          3,
+          '0',
           'Each counter starts its own line, so no pair shares one.',
         ),
       ],
@@ -7212,7 +7078,7 @@ const measurement: KnowledgePointModule = {
           'end is 45 microseconds after start, so their difference is a duration of 45 microseconds.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <chrono>
@@ -7225,16 +7091,10 @@ const measurement: KnowledgePointModule = {
                         << std::chrono::duration_cast<std::chrono::seconds>(elapsed).count() << " s\\n";
             }
           `),
-          [
-            '7500 ms = 7.5 s',
-            '7500 ms = 7 s',
-            '11500 ms = 11 s',
-            '7 ms = 7500 s',
-          ],
-          1,
+          '7500 ms = 7 s',
           'The difference is 7500 ms, and duration_cast to whole seconds drops the remainder, leaving 7 s.',
         ),
-        predictOutput(
+        typeOutput(
           'Three time points mark two phases. What is printed?',
           cpp(`
             #include <chrono>
@@ -7248,8 +7108,7 @@ const measurement: KnowledgePointModule = {
                         << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t0).count() << "\\n";
             }
           `),
-          ['35 90 125', '25 80 55', '10 35 90', '25 55 80'],
-          3,
+          '25 55 80',
           'Each phase is the difference of its own end and start, and the total is t2 - t0.',
         ),
         choose(
@@ -7263,7 +7122,7 @@ const measurement: KnowledgePointModule = {
           0,
           'The number looks like a timestamp, about 53 years after 1970 in nanoseconds, not an interval.',
         ),
-        predictOutput(
+        typeOutput(
           'start was recorded in milliseconds and end in microseconds. What is printed?',
           cpp(`
             #include <chrono>
@@ -7274,8 +7133,7 @@ const measurement: KnowledgePointModule = {
               std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us\\n";
             }
           `),
-          ['2498 us', '0 us', '500 us', '2500 us'],
-          2,
+          '500 us',
           'Both time points store the clock’s own unit, so 2 ms and 2500 µs are compared correctly: 500 µs apart. Raw integers 2500 - 2 would have mixed units.',
         ),
       ],
@@ -7317,7 +7175,7 @@ const measurement: KnowledgePointModule = {
           2,
           'steady_clock is monotonic, so adjustments to the system time cannot distort an interval.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <chrono>
@@ -7332,8 +7190,7 @@ const measurement: KnowledgePointModule = {
               }
             }
           `),
-          ['invalid interval', '0', '1', '700'],
-          1,
+          '0',
           'Equal time points are a valid interval of length 0.',
         ),
         choose(
@@ -7347,7 +7204,7 @@ const measurement: KnowledgePointModule = {
           3,
           'system_clock follows the wall clock, adjustments included.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <chrono>
@@ -7358,8 +7215,7 @@ const measurement: KnowledgePointModule = {
               std::cout << (second - first >= std::chrono::nanoseconds(0)) << " " << (second < first) << "\\n";
             }
           `),
-          ['0 1', '1 0', '1 1', '0 0'],
-          1,
+          '1 0',
           'A later steady_clock reading is never earlier than an earlier one, so the difference is not negative.',
         ),
       ],
@@ -7390,7 +7246,7 @@ const measurement: KnowledgePointModule = {
           'Sorted, the samples are 2, 4, 9, so the median is 4; the original vector still starts with 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'There is an even number of samples. What is printed?',
           cpp(`
             #include <algorithm>
@@ -7405,11 +7261,10 @@ const measurement: KnowledgePointModule = {
               std::cout << median << "\\n";
             }
           `),
-          ['3.75', '3', '2', '4'],
-          1,
+          '3',
           'Sorted, the middle two are 2 and 4, whose mean is 3; 3.75 would be the mean of all four.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <algorithm>
@@ -7424,11 +7279,10 @@ const measurement: KnowledgePointModule = {
               std::cout << median << "\\n";
             }
           `),
-          ['3', '4', '3.5', '2'],
-          2,
+          '3.5',
           'The middle values are 2 and 5; converting before dividing keeps the .5.',
         ),
-        predictOutput(
+        typeOutput(
           'One latency sample is an outlier. What is printed?',
           cpp(`
             #include <algorithm>
@@ -7440,8 +7294,7 @@ const measurement: KnowledgePointModule = {
               std::cout << samples[samples.size() / 2] << "\\n";
             }
           `),
-          ['950', '199', '13', '12'],
-          3,
+          '12',
           'Sorted, the samples are 10, 11, 12, 13, 950; the middle one is 12.',
         ),
         choose(
@@ -7491,7 +7344,7 @@ const measurement: KnowledgePointModule = {
           'The empty check runs first, so nothing is sorted or indexed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The same program runs on one sample. What is printed?',
           cpp(`
             #include <algorithm>
@@ -7514,8 +7367,7 @@ const measurement: KnowledgePointModule = {
               }
             }
           `),
-          ['no samples', '6', '3', '0'],
-          1,
+          '6',
           'One sample is an odd count, and middle is index 0.',
         ),
         choose(
@@ -7529,7 +7381,7 @@ const measurement: KnowledgePointModule = {
           2,
           'The index is 0 but there is no element 0, and operator[] does not check.',
         ),
-        predictOutput(
+        typeOutput(
           'Two samples go through the same program. What is printed?',
           cpp(`
             #include <algorithm>
@@ -7552,11 +7404,10 @@ const measurement: KnowledgePointModule = {
               }
             }
           `),
-          ['20', '10', '15', '30'],
-          2,
+          '15',
           'An even count averages the two middle values, 10 and 20.',
         ),
-        predictOutput(
+        typeOutput(
           'Three samples go through the same program. What is printed?',
           cpp(`
             #include <algorithm>
@@ -7579,8 +7430,7 @@ const measurement: KnowledgePointModule = {
               }
             }
           `),
-          ['3', '9', '6.33333', '7'],
-          3,
+          '7',
           'Sorted, the samples are 3, 7, 9; the odd branch prints the middle value.',
         ),
       ],
@@ -7613,7 +7463,7 @@ const measurement: KnowledgePointModule = {
           'Sorted, the samples are 1, 2, 4, 9. Rank ceil(50 * 4 / 100) = 2 selects 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The same samples are asked for p99. What is printed?',
           cpp(`
             #include <algorithm>
@@ -7628,8 +7478,7 @@ const measurement: KnowledgePointModule = {
               std::cout << rank << " " << samples[rank - 1] << "\\n";
             }
           `),
-          ['3 4', '4 9', '4 4', '1 9'],
-          1,
+          '4 9',
           'ceil(99 * 4 / 100) = ceil(3.96) = 4, the largest of four samples.',
         ),
         predictOutput(
@@ -7651,7 +7500,7 @@ const measurement: KnowledgePointModule = {
           2,
           'Rank ceil(90 * 10 / 100) = 9, and the ninth smallest of 1 to 10 is 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <algorithm>
@@ -7666,8 +7515,7 @@ const measurement: KnowledgePointModule = {
               std::cout << samples[rank - 1] << "\\n";
             }
           `),
-          ['2', '1', '4', '9'],
-          1,
+          '1',
           'Rank ceil(25 * 4 / 100) = 1 selects the smallest sample.',
         ),
         choose(
@@ -7717,7 +7565,7 @@ const measurement: KnowledgePointModule = {
           'p = 0 is rejected before rank - 1 could wrap around to an enormous index.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'p is 76 with four samples. What is printed?',
           cpp(`
             #include <algorithm>
@@ -7740,11 +7588,10 @@ const measurement: KnowledgePointModule = {
               }
             }
           `),
-          ['4', '2', '9', 'invalid percentile'],
-          2,
+          '9',
           'ceil(76 * 4 / 100) = ceil(3.04) = 4: any p above 75 picks the maximum of four samples.',
         ),
-        predictOutput(
+        typeOutput(
           'There are no samples. What is printed?',
           cpp(`
             #include <algorithm>
@@ -7767,8 +7614,7 @@ const measurement: KnowledgePointModule = {
               }
             }
           `),
-          ['invalid percentile', 'no samples', '0', 'Undefined'],
-          1,
+          'no samples',
           'The empty check comes first, so nothing is indexed.',
         ),
         choose(
@@ -7782,7 +7628,7 @@ const measurement: KnowledgePointModule = {
           0,
           'Unsigned arithmetic cannot go negative; it wraps to the maximum value.',
         ),
-        predictOutput(
+        typeOutput(
           'p is 101. What is printed?',
           cpp(`
             #include <algorithm>
@@ -7805,8 +7651,7 @@ const measurement: KnowledgePointModule = {
               }
             }
           `),
-          ['invalid percentile', '9', 'no samples', '4'],
-          0,
+          'invalid percentile',
           'p above 100 is outside the domain; unchecked, it would ask for a fifth sample.',
         ),
       ],
@@ -7836,7 +7681,7 @@ const measurement: KnowledgePointModule = {
         explanation: 'The inner loop runs 4 times for each of 3 rows.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The inner loop starts at the current row. What is printed?',
           cpp(`
             #include <iostream>
@@ -7848,11 +7693,10 @@ const measurement: KnowledgePointModule = {
               std::cout << visits << "\\n";
             }
           `),
-          ['16', '10', '6', '4'],
-          1,
+          '10',
           'The rows contribute 4, 3, 2 and 1 visits: 4 * 5 / 2.',
         ),
-        predictOutput(
+        typeOutput(
           'A grid pass is followed by a pass over the rows. What is printed?',
           cpp(`
             #include <iostream>
@@ -7866,8 +7710,7 @@ const measurement: KnowledgePointModule = {
               std::cout << visits << "\\n";
             }
           `),
-          ['15', '12', '7', '3'],
-          0,
+          '15',
           'The grid costs 12 visits and the extra pass 3 more.',
         ),
         choose(
@@ -7881,7 +7724,7 @@ const measurement: KnowledgePointModule = {
           2,
           'A count describes work; converting it to time needs a measurement.',
         ),
-        predictOutput(
+        typeOutput(
           'The same loop runs for 3 rows and then 6 rows. What is printed?',
           cpp(`
             #include <iostream>
@@ -7896,8 +7739,7 @@ const measurement: KnowledgePointModule = {
               std::cout << small << " " << large << "\\n";
             }
           `),
-          ['12 48', '12 24', '24 12', '12 12'],
-          1,
+          '12 24',
           'The work is rows * cols, so doubling the rows doubles the visits.',
         ),
       ],
@@ -7940,7 +7782,7 @@ const measurement: KnowledgePointModule = {
           1,
           'Keep the count as work and report time only from a real measurement.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -7951,8 +7793,7 @@ const measurement: KnowledgePointModule = {
               std::cout << "work: " << visits << " visits\\n";
             }
           `),
-          ['work: 20 visits', 'work: 20 ns', 'work: 9 visits', 'time: 20 ns'],
-          0,
+          'work: 20 visits',
           'The program counts 4 * 5 visits and labels them as work, not time.',
         ),
         choose(
@@ -7966,7 +7807,7 @@ const measurement: KnowledgePointModule = {
           2,
           'Equal work can still differ in cache behavior.',
         ),
-        predictOutput(
+        typeOutput(
           'A full grid and its triangle are compared for n = 10. What is printed?',
           cpp(`
             #include <iostream>
@@ -7981,8 +7822,7 @@ const measurement: KnowledgePointModule = {
               std::cout << full << " " << triangle << "\\n";
             }
           `),
-          ['100 50', '55 100', '100 45', '100 55'],
-          3,
+          '100 55',
           'The full grid is 10 * 10; the triangle includes the diagonal: 10 * 11 / 2.',
         ),
       ],
@@ -8016,7 +7856,7 @@ const orderBook: KnowledgePointModule = {
           'Both orders at 100 add into one level (3 + 4), and the book has two levels, 100 and 101.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Orders arrive as parallel price and size vectors. What is printed?',
           cpp(`
             #include <cstddef>
@@ -8031,11 +7871,10 @@ const orderBook: KnowledgePointModule = {
               std::cout << levels[50] << " " << levels[51] << " " << levels.size() << "\\n";
             }
           `),
-          ['6 4 3', '8 9 3', '8 9 5', '2 5 3'],
-          1,
+          '8 9 3',
           'Sizes at the same price add up: 2 + 6 at 50 and 5 + 4 at 51, across three distinct prices.',
         ),
-        predictOutput(
+        typeOutput(
           'A missing level is looked up with find. What is printed?',
           cpp(`
             #include <iostream>
@@ -8049,8 +7888,7 @@ const orderBook: KnowledgePointModule = {
               std::cout << shown << " " << levels.size() << "\\n";
             }
           `),
-          ['0 2', '3 1', '0 1', '99 1'],
-          2,
+          '0 1',
           'find reports that 99 is absent without inserting it, so the book still has one level.',
         ),
         choose(
@@ -8064,7 +7902,7 @@ const orderBook: KnowledgePointModule = {
           0,
           'operator[] value-initializes a missing mapped int to 0 before the addition.',
         ),
-        predictOutput(
+        typeOutput(
           'A missing level is read with operator[]. What is printed?',
           cpp(`
             #include <iostream>
@@ -8076,8 +7914,7 @@ const orderBook: KnowledgePointModule = {
               std::cout << peek << " " << levels.size() << "\\n";
             }
           `),
-          ['0 1', '0 2', '3 2', 'Undefined'],
-          1,
+          '0 2',
           'operator[] inserted an empty level at 99 just to read it, so the book now has two levels.',
         ),
       ],
@@ -8131,7 +7968,7 @@ const orderBook: KnowledgePointModule = {
           0,
           'Nothing stops the negative size, so the level shows impossible negative liquidity.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -8153,8 +7990,7 @@ const orderBook: KnowledgePointModule = {
               std::cout << levels.size() << " " << rejected << "\\n";
             }
           `),
-          ['4 0', '2 2', '3 1', '2 1'],
-          1,
+          '2 2',
           'Only the orders at 7 (size 5) and 9 (size 2) are accepted; the 0 and -1 orders are rejected and create no level.',
         ),
         choose(
@@ -8206,7 +8042,7 @@ const orderBook: KnowledgePointModule = {
           'The cancel is smaller than the level, so 4 is removed from 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The cancel is larger than the level. What is printed?',
           cpp(`
             #include <iostream>
@@ -8218,11 +8054,10 @@ const orderBook: KnowledgePointModule = {
               std::cout << remaining << "\\n";
             }
           `),
-          ['-6', '0', '3', '9'],
-          1,
+          '0',
           'The over-cancel is clamped: the level becomes 0 rather than -6.',
         ),
-        predictOutput(
+        typeOutput(
           'The cancel equals the level. What is printed?',
           cpp(`
             #include <iostream>
@@ -8234,11 +8069,10 @@ const orderBook: KnowledgePointModule = {
               std::cout << remaining << "\\n";
             }
           `),
-          ['5', '10', '0', '-1'],
-          2,
+          '0',
           'Cancelling everything that rests leaves an empty level.',
         ),
-        predictOutput(
+        typeOutput(
           'Three cancels hit one level in turn. What is printed?',
           cpp(`
             #include <iostream>
@@ -8255,8 +8089,7 @@ const orderBook: KnowledgePointModule = {
               std::cout << level << "\\n";
             }
           `),
-          ['7 3 -3', '7 2 0', '7 3 0', '12 7 3'],
-          2,
+          '7 3 0',
           '12 - 5 = 7 and 7 - 4 = 3; the last cancel asks for 6 of 3, so the level clamps to 0.',
         ),
         choose(
@@ -8301,7 +8134,7 @@ const orderBook: KnowledgePointModule = {
           'A negative cancel is caught by the validation before the over-cancel rule or any subtraction runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This handler rejects over-cancels. What does it print for a cancel of 9?',
           cpp(`
             #include <iostream>
@@ -8319,11 +8152,10 @@ const orderBook: KnowledgePointModule = {
               }
             }
           `),
-          ['-1', '0', 'rejected', 'invalid'],
-          2,
+          'rejected',
           'Both inputs are valid, but the cancel exceeds the level, and this contract rejects it rather than clamping.',
         ),
-        predictOutput(
+        typeOutput(
           'The same handler receives a cancel of exactly 8. What is printed?',
           cpp(`
             #include <iostream>
@@ -8341,8 +8173,7 @@ const orderBook: KnowledgePointModule = {
               }
             }
           `),
-          ['rejected', '0', 'invalid', '8'],
-          1,
+          '0',
           'Cancelling exactly what rests is allowed and leaves 0.',
         ),
         choose(
@@ -8392,7 +8223,7 @@ const orderBook: KnowledgePointModule = {
           'The map orders the prices 101, 103, 105; the last one, 105, has size 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -8402,11 +8233,10 @@ const orderBook: KnowledgePointModule = {
               std::cout << bids.rbegin()->first << " " << bids.rbegin()->second << "\\n";
             }
           `),
-          ['97 1', '99 4', '98 6', '99 1'],
-          1,
+          '99 4',
           'The highest bid price is 99, resting with size 4, whatever order the levels were listed in.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -8416,11 +8246,10 @@ const orderBook: KnowledgePointModule = {
               std::cout << asks.begin()->first << "\\n";
             }
           `),
-          ['109', '106', '104', '7'],
-          2,
+          '104',
           'The best ask is the lowest price, the first key of the ascending map.',
         ),
-        predictOutput(
+        typeOutput(
           'Two new bid levels are added. What is printed?',
           cpp(`
             #include <iostream>
@@ -8432,8 +8261,7 @@ const orderBook: KnowledgePointModule = {
               std::cout << bids.rbegin()->first << " " << bids.begin()->first << "\\n";
             }
           `),
-          ['103 99', '99 103', '101 100', '103 100'],
-          0,
+          '103 99',
           'The map re-sorts on insertion: 103 is now the highest bid and 99 the lowest.',
         ),
         choose(
@@ -8485,7 +8313,7 @@ const orderBook: KnowledgePointModule = {
           2,
           'An empty map has no last element, and iterators do not check.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -8499,11 +8327,10 @@ const orderBook: KnowledgePointModule = {
               }
             }
           `),
-          ['no bid', '100', '1', '0'],
-          1,
+          '100',
           'A single level is both the lowest and the highest bid.',
         ),
-        predictOutput(
+        typeOutput(
           'This version reports a missing bid as -1. What is printed?',
           cpp(`
             #include <iostream>
@@ -8515,8 +8342,7 @@ const orderBook: KnowledgePointModule = {
               std::cout << best << "\\n";
             }
           `),
-          ['0', 'Undefined', '-1', 'no bid'],
-          2,
+          '-1',
           'The book is empty, so the documented sentinel is kept.',
         ),
         choose(
@@ -8555,7 +8381,7 @@ const orderBook: KnowledgePointModule = {
         explanation: 'The best ask is 105 and the best bid is 102.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -8566,11 +8392,10 @@ const orderBook: KnowledgePointModule = {
               std::cout << asks.begin()->first - bids.rbegin()->first << "\\n";
             }
           `),
-          ['5', '2', '3', '-2'],
-          1,
+          '2',
           'The best ask is 103 and the best bid 101.',
         ),
-        predictOutput(
+        typeOutput(
           'The second number uses the wrong end of each side. What is printed?',
           cpp(`
             #include <iostream>
@@ -8582,11 +8407,10 @@ const orderBook: KnowledgePointModule = {
                         << asks.rbegin()->first - bids.begin()->first << "\\n";
             }
           `),
-          ['7 1', '1 1', '1 7', '5 2'],
-          2,
+          '1 7',
           'The quoted spread is 101 - 100; the second expression measures the widest prices instead, 105 - 98.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -8599,8 +8423,7 @@ const orderBook: KnowledgePointModule = {
               std::cout << ask - bid << " " << (bid + ask) / 2 << "\\n";
             }
           `),
-          ['4 102', '4 204', '102 4', '-4 102'],
-          0,
+          '4 102',
           'The spread is 4 ticks and the mid price is halfway between 100 and 104.',
         ),
         choose(
@@ -8646,7 +8469,7 @@ const orderBook: KnowledgePointModule = {
           'Someone is offering to sell at 99 while someone bids 100, so the book is crossed; -1 would be no real spread.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The bid side is empty. What is printed?',
           cpp(`
             #include <iostream>
@@ -8665,11 +8488,10 @@ const orderBook: KnowledgePointModule = {
               }
             }
           `),
-          ['105', 'no spread', 'crossed', '0'],
-          1,
+          'no spread',
           'Without a bid there is nothing to measure the ask against.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -8688,8 +8510,7 @@ const orderBook: KnowledgePointModule = {
               }
             }
           `),
-          ['crossed', 'no spread', '3', '-3'],
-          2,
+          '3',
           'Both sides exist and the ask is above the bid, so the spread is 3.',
         ),
         choose(
@@ -8703,7 +8524,7 @@ const orderBook: KnowledgePointModule = {
           0,
           'The invented 0 turns "no data" into a plausible-looking but false number.',
         ),
-        predictOutput(
+        typeOutput(
           'Both sides sit at the same price. What is printed?',
           cpp(`
             #include <iostream>
@@ -8722,8 +8543,7 @@ const orderBook: KnowledgePointModule = {
               }
             }
           `),
-          ['0', 'no spread', '100', 'crossed'],
-          3,
+          'crossed',
           'An ask equal to the bid is a locked book, which this check reports with the crossed case.',
         ),
       ],
@@ -8759,7 +8579,7 @@ const ringBuffers: KnowledgePointModule = {
           'From 1 the index moves to 2, wraps from 2 to 0, then continues to 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -8769,11 +8589,10 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << (i + 1) % capacity << "\\n";
             }
           `),
-          ['4', '0', '3', '1'],
-          1,
+          '0',
           'Slot 3 is the last of four, so the next index wraps to 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -8786,11 +8605,10 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << i << "\\n";
             }
           `),
-          ['5 6', '4 0', '0 1', '1 2'],
-          2,
+          '0 1',
           'From the last slot 4 the index wraps to 0 and then advances to 1.',
         ),
-        predictOutput(
+        typeOutput(
           'The index jumps 7 steps at once. What is printed?',
           cpp(`
             #include <iostream>
@@ -8801,8 +8619,7 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << (i + k) % capacity << "\\n";
             }
           `),
-          ['9', '3', '2', '1'],
-          3,
+          '1',
           '2 + 7 = 9, and 9 % 4 is 1: two full laps plus one more slot.',
         ),
         choose(
@@ -8847,7 +8664,7 @@ const ringBuffers: KnowledgePointModule = {
           'The capacity check runs first, so % 0 is never evaluated.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The index equals the capacity. What is printed?',
           cpp(`
             #include <iostream>
@@ -8865,11 +8682,10 @@ const ringBuffers: KnowledgePointModule = {
               }
             }
           `),
-          ['1', 'invalid index', '0', 'invalid capacity'],
-          1,
+          'invalid index',
           'Slots run from 0 to 2, so 3 is not a slot of this ring.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -8887,8 +8703,7 @@ const ringBuffers: KnowledgePointModule = {
               }
             }
           `),
-          ['3', 'invalid index', '0', '2'],
-          2,
+          '0',
           'The inputs are valid, and the last slot wraps to 0.',
         ),
         choose(
@@ -8947,7 +8762,7 @@ const ringBuffers: KnowledgePointModule = {
           '7 goes to slot 0 and 8 to slot 1; write now points at slot 2 and two slots are occupied.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The write index starts at slot 3 of 4. What is printed?',
           cpp(`
             #include <cstddef>
@@ -8966,11 +8781,10 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << write << " " << storage[0] << "\\n";
             }
           `),
-          ['5 6', '1 6', '1 5', '0 6'],
-          1,
+          '1 6',
           '5 fills slot 3, the index wraps, 6 fills slot 0, and write ends at 1.',
         ),
-        predictOutput(
+        typeOutput(
           'Three items are pushed into an empty ring of capacity 3. What is printed?',
           cpp(`
             #include <cstddef>
@@ -8989,8 +8803,7 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << write << " " << count << "\\n";
             }
           `),
-          ['0 3', '3 3', '0 0', '3 0'],
-          0,
+          '0 3',
           'write wraps back to 0, exactly where it was when the ring was empty; only count shows it is full.',
         ),
         choose(
@@ -9004,7 +8817,7 @@ const ringBuffers: KnowledgePointModule = {
           2,
           'Position alone is ambiguous after a full lap.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -9023,8 +8836,7 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << storage[0] << " " << storage[1] << " " << storage[2] << "\\n";
             }
           `),
-          ['0 1 2', '1 2 3', '2 1 0', '1 2 0'],
-          3,
+          '1 2 0',
           'Two pushes fill slots 0 and 1; slot 2 keeps its initial 0.',
         ),
       ],
@@ -9064,7 +8876,7 @@ const ringBuffers: KnowledgePointModule = {
           'The first three items fill the ring; 4 and 5 are rejected, so the oldest item 1 is still in slot 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Three items go into a ring of capacity 4. What is printed?',
           cpp(`
             #include <cstddef>
@@ -9088,11 +8900,10 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << count << " " << rejected << " " << storage[0] << "\\n";
             }
           `),
-          ['4 0 1', '3 1 1', '3 0 1', '3 0 0'],
-          2,
+          '3 0 1',
           'The ring never fills, so all three pushes are accepted.',
         ),
-        predictOutput(
+        typeOutput(
           'This ring writes without checking whether it is full. What is printed?',
           cpp(`
             #include <cstddef>
@@ -9109,8 +8920,7 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << storage[0] << " " << storage[1] << " " << storage[2] << "\\n";
             }
           `),
-          ['1 2 3', '4 5 3', '3 4 5', '5 4 3'],
-          1,
+          '4 5 3',
           '4 and 5 wrap around and overwrite the unread 1 and 2.',
         ),
         choose(
@@ -9175,7 +8985,7 @@ const ringBuffers: KnowledgePointModule = {
           'read follows write around the ring, so the pops return 1, 2, 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Three items are pushed and one is popped. What is printed?',
           cpp(`
             #include <cstddef>
@@ -9198,11 +9008,10 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << popped << " " << read << " " << count << "\\n";
             }
           `),
-          ['7 1 2', '5 1 2', '5 0 3', '5 1 3'],
-          1,
+          '5 1 2',
           'The oldest item, 5, comes out first; read moves to slot 1 and two items remain.',
         ),
-        predictOutput(
+        typeOutput(
           'Pushes and pops interleave in a ring of capacity 3. What is printed?',
           cpp(`
             #include <cstddef>
@@ -9236,8 +9045,7 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << "\\n";
             }
           `),
-          ['1 4 2 3', '4 3 2 1', '1 2 3 4', '1 2 4 3'],
-          2,
+          '1 2 3 4',
           '4 wraps into slot 0, but read also wraps, so the items still come out in push order.',
         ),
         choose(
@@ -9251,7 +9059,7 @@ const ringBuffers: KnowledgePointModule = {
           1,
           'read and write move the same way around the ring, which gives FIFO order.',
         ),
-        predictOutput(
+        typeOutput(
           'Two items are pushed and both are popped. What is printed?',
           cpp(`
             #include <cstddef>
@@ -9277,8 +9085,7 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << total << " " << count << "\\n";
             }
           `),
-          ['17 2', '9 1', '8 0', '17 0'],
-          3,
+          '17 0',
           'Both items are popped, so their sum is 17 and the ring is empty again.',
         ),
       ],
@@ -9318,7 +9125,7 @@ const ringBuffers: KnowledgePointModule = {
           'After the only item is popped, count is 0, so the second pop reports empty instead of reading a slot.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The second pop does not check count. What is printed?',
           cpp(`
             #include <cstddef>
@@ -9338,11 +9145,10 @@ const ringBuffers: KnowledgePointModule = {
               count -= 1;
             }
           `),
-          ['5 0', '5 5', '5', '0 5'],
-          1,
+          '5 5',
           'The slot still holds 5, so the unchecked pop hands out the same item twice.',
         ),
-        predictOutput(
+        typeOutput(
           'This time the second pop checks count. What is printed?',
           cpp(`
             #include <cstddef>
@@ -9364,8 +9170,7 @@ const ringBuffers: KnowledgePointModule = {
               }
             }
           `),
-          ['5 empty', '5 5', 'empty 5', '5 0'],
-          0,
+          '5 empty',
           'One item was pushed and popped; the check stops a second pop.',
         ),
         choose(
@@ -9434,7 +9239,7 @@ const ringBuffers: KnowledgePointModule = {
           'The ring has room for all five items, so only publication matters here: each acquire that sees a larger write makes the slot’s value visible, and the consumer adds 10 + 20 + 30 + 40 + 50.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The consumer records the order it receives items in. What is printed?',
           cpp(`
             #include <atomic>
@@ -9463,8 +9268,7 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << encoded << "\\n";
             }
           `),
-          ['321', '123', '6', '0'],
-          1,
+          '123',
           'The consumer reads positions 0, 1, 2 in order, and each holds its published value.',
         ),
         choose(
@@ -9544,7 +9348,7 @@ const ringBuffers: KnowledgePointModule = {
           'Item 5 must reuse slot 0; the producer waits until the consumer has released position 0, so no unread item is overwritten.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Six items pass through a ring with only 2 slots. What is printed?',
           cpp(`
             #include <atomic>
@@ -9575,11 +9379,10 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << total << "\\n";
             }
           `),
-          ['3', '21', '15', 'Less than 21'],
-          1,
+          '21',
           'Every slot is reused several times, but never before it is read, so all six items arrive: 1 + 2 + ... + 6.',
         ),
-        predictOutput(
+        typeOutput(
           'The consumer records the order of four items through 2 slots. What is printed?',
           cpp(`
             #include <atomic>
@@ -9610,8 +9413,7 @@ const ringBuffers: KnowledgePointModule = {
               std::cout << encoded << "\\n";
             }
           `),
-          ['4321', '1212', '1234', '34'],
-          2,
+          '1234',
           'Slot reuse does not change FIFO order: positions are read 0, 1, 2, 3.',
         ),
         choose(
@@ -9663,7 +9465,7 @@ const protocols: KnowledgePointModule = {
         explanation: 'The high byte 1 is worth 256, plus the low byte 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The bytes 18 and 52 arrive in that order. What is printed?',
           cpp(`
             #include <iostream>
@@ -9673,11 +9475,10 @@ const protocols: KnowledgePointModule = {
               std::cout << first * 256 + second << "\\n";
             }
           `),
-          ['13330', '4660', '70', '1852'],
-          1,
+          '4660',
           '18 * 256 + 52 = 4660; 13330 is what the reversed byte order would give.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -9687,11 +9488,10 @@ const protocols: KnowledgePointModule = {
               std::cout << high * 256 + low << "\\n";
             }
           `),
-          ['65280', '0', '255', '511'],
-          2,
+          '255',
           'A zero high byte contributes nothing, leaving 255.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -9701,8 +9501,7 @@ const protocols: KnowledgePointModule = {
               std::cout << high * 256 + low << "\\n";
             }
           `),
-          ['65535', '510', '65280', '255'],
-          0,
+          '65535',
           '255 * 256 + 255 = 65535, the largest 16-bit value.',
         ),
         choose(
@@ -9742,7 +9541,7 @@ const protocols: KnowledgePointModule = {
           'The same bytes decode to 258 when the first is high and to 513 when the second is high.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Four bytes arrive in big-endian order: 0, 0, 1, 0. What is printed?',
           cpp(`
             #include <iostream>
@@ -9755,11 +9554,10 @@ const protocols: KnowledgePointModule = {
               std::cout << value << "\\n";
             }
           `),
-          ['65536', '256', '1', '16777216'],
-          1,
+          '256',
           'Only the third byte is set, and it is worth 256 in a four-byte big-endian number.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstdint>
@@ -9769,8 +9567,7 @@ const protocols: KnowledgePointModule = {
               std::cout << b << " " << static_cast<unsigned>(b) << "\\n";
             }
           `),
-          ['65 65', 'A 65', 'A A', '65 A'],
-          1,
+          'A 65',
           'std::uint8_t is a character type, so streaming it prints the character with code 65; the cast prints the number.',
         ),
         choose(
@@ -9784,7 +9581,7 @@ const protocols: KnowledgePointModule = {
           2,
           'The wire format is fixed; the host layout is not.',
         ),
-        predictOutput(
+        typeOutput(
           'The bytes 52 and 18 are a little-endian field. What is printed?',
           cpp(`
             #include <iostream>
@@ -9794,8 +9591,7 @@ const protocols: KnowledgePointModule = {
               std::cout << second * 256 + first << "\\n";
             }
           `),
-          ['13330', '70', '52', '4660'],
-          3,
+          '4660',
           'Little-endian puts the low byte first, so the value is 18 * 256 + 52.',
         ),
       ],
@@ -9830,7 +9626,7 @@ const protocols: KnowledgePointModule = {
         explanation: 'The header bytes 0 and 3 announce a 3-byte payload.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Only one byte has arrived. What is printed?',
           cpp(`
             #include <cstdint>
@@ -9848,11 +9644,10 @@ const protocols: KnowledgePointModule = {
               }
             }
           `),
-          ['length 0', 'incomplete header', 'length 1', '0'],
-          1,
+          'incomplete header',
           'Half a header is not enough to know the length.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstdint>
@@ -9870,8 +9665,7 @@ const protocols: KnowledgePointModule = {
               }
             }
           `),
-          ['length 5', 'length 1040', 'length 260', 'incomplete header'],
-          2,
+          'length 260',
           'The header is complete: 1 * 256 + 4 = 260, even though no payload has arrived yet.',
         ),
         choose(
@@ -9885,7 +9679,7 @@ const protocols: KnowledgePointModule = {
           3,
           'span’s operator[] does not check, so the program must.',
         ),
-        predictOutput(
+        typeOutput(
           'The program compares the advertised length with what follows the header. What is printed?',
           cpp(`
             #include <cstdint>
@@ -9903,8 +9697,7 @@ const protocols: KnowledgePointModule = {
               }
             }
           `),
-          ['2 3', '3 2', '2 5', '515 3'],
-          0,
+          '2 3',
           'The header asks for 2 payload bytes, and 3 bytes follow it.',
         ),
       ],
@@ -9941,7 +9734,7 @@ const protocols: KnowledgePointModule = {
           'The header promises 5 payload bytes, but only 3 arrived, so nothing past the buffer is read.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -9962,8 +9755,7 @@ const protocols: KnowledgePointModule = {
               }
             }
           `),
-          ['incomplete payload', 'complete 15', 'complete 7', 'complete 2'],
-          1,
+          'complete 15',
           'Exactly 2 payload bytes follow the header, so the frame is complete: 7 + 8.',
         ),
         choose(
@@ -9983,7 +9775,7 @@ const protocols: KnowledgePointModule = {
           2,
           'An advertised length must be checked against what is actually there.',
         ),
-        predictOutput(
+        typeOutput(
           'One byte of the next frame has already arrived. What is printed?',
           cpp(`
             #include <cstddef>
@@ -10002,8 +9794,7 @@ const protocols: KnowledgePointModule = {
               }
             }
           `),
-          ['7 0', '7 1', '99 1', 'incomplete payload'],
-          1,
+          '7 1',
           'The frame is complete with payload 7; the trailing 99 is the first byte of the next frame.',
         ),
       ],
@@ -10035,7 +9826,7 @@ const protocols: KnowledgePointModule = {
           'Message 10 was expected but 12 arrived, so at least one message is missing.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -10049,11 +9840,10 @@ const protocols: KnowledgePointModule = {
               }
             }
           `),
-          ['gap', 'in order', '7', 'Nothing'],
-          1,
+          'in order',
           'The message carries exactly the expected number.',
         ),
-        predictOutput(
+        typeOutput(
           'Three messages arrive in turn. What is printed?',
           cpp(`
             #include <iostream>
@@ -10069,8 +9859,7 @@ const protocols: KnowledgePointModule = {
               if (received == expected) std::cout << "ok\\n"; else std::cout << "gap\\n";
             }
           `),
-          ['ok ok ok', 'ok gap gap', 'ok ok gap', 'gap ok gap'],
-          2,
+          'ok ok gap',
           'After 1 and 2 the consumer expects 3, so 4 reveals that message 3 is missing.',
         ),
         choose(
@@ -10119,7 +9908,7 @@ const protocols: KnowledgePointModule = {
           'Messages 10, 11 and 12 never arrived; the consumer now expects 14.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'An old message arrives. What is printed?',
           cpp(`
             #include <iostream>
@@ -10135,8 +9924,7 @@ const protocols: KnowledgePointModule = {
               }
             }
           `),
-          ['missing 2, next 9', 'duplicate', 'in order', 'missing 8, next 9'],
-          1,
+          'duplicate',
           '8 is below the expected 10, so it is a message the consumer has already moved past.',
         ),
         choose(
@@ -10150,7 +9938,7 @@ const protocols: KnowledgePointModule = {
           2,
           'Unsigned subtraction is modular, which is why the comparison must come first.',
         ),
-        predictOutput(
+        typeOutput(
           'Three messages arrive; the program totals the missing ones. What is printed?',
           cpp(`
             #include <iostream>
@@ -10169,8 +9957,7 @@ const protocols: KnowledgePointModule = {
               std::cout << missing << " " << expected << "\\n";
             }
           `),
-          ['3 10', '2 9', '2 10', '1 10'],
-          2,
+          '2 10',
           'Messages 6 and 7 are missing; after 9 the consumer expects 10.',
         ),
         choose(
@@ -10219,7 +10006,7 @@ const protocols: KnowledgePointModule = {
         explanation: 'The runs are aaa, bb and c, with lengths 3, 2 and 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The same encoder runs on "zzzz". What is printed?',
           cpp(`
             #include <cstddef>
@@ -10240,11 +10027,10 @@ const protocols: KnowledgePointModule = {
               std::cout << output << "\\n";
             }
           `),
-          ['zzzz', 'z4', '4z', 'z1z1z1z1'],
-          1,
+          'z4',
           'The whole input is one run of length 4.',
         ),
-        predictOutput(
+        typeOutput(
           'The same encoder runs on "abc". What is printed?',
           cpp(`
             #include <cstddef>
@@ -10265,11 +10051,10 @@ const protocols: KnowledgePointModule = {
               std::cout << output << "\\n";
             }
           `),
-          ['abc', 'a3', 'a1b1c1', '1a1b1c'],
-          2,
+          'a1b1c1',
           'Every character is its own run of length 1, so RLE makes this input longer.',
         ),
-        predictOutput(
+        typeOutput(
           'The same encoder runs on "xxyyyx". What is printed?',
           cpp(`
             #include <cstddef>
@@ -10290,8 +10075,7 @@ const protocols: KnowledgePointModule = {
               std::cout << output << "\\n";
             }
           `),
-          ['x3y3', 'x2y3', 'x1x1y3x1', 'x2y3x1'],
-          3,
+          'x2y3x1',
           'The runs are xx, yyy and a final x.',
         ),
         choose(
@@ -10338,7 +10122,7 @@ const protocols: KnowledgePointModule = {
         explanation: 'The b splits the two a characters into separate runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The encoder runs on "aabaa". What is printed?',
           cpp(`
             #include <cstddef>
@@ -10359,11 +10143,10 @@ const protocols: KnowledgePointModule = {
               std::cout << output << "\\n";
             }
           `),
-          ['a4b1', 'a2b1a2', 'a2a2b1', 'a5'],
-          1,
+          'a2b1a2',
           'The two runs of a are separated by b, so they are encoded separately.',
         ),
-        predictOutput(
+        typeOutput(
           'This decoder expands character and count pairs. What is printed?',
           cpp(`
             #include <cstddef>
@@ -10380,8 +10163,7 @@ const protocols: KnowledgePointModule = {
               std::cout << decoded << "\\n";
             }
           `),
-          ['cccd', 'c3d1', 'cd', 'dccc'],
-          0,
+          'cccd',
           'c is repeated 3 times and then d once, in order.',
         ),
         choose(
@@ -10395,7 +10177,7 @@ const protocols: KnowledgePointModule = {
           2,
           'Run-length encoding must preserve order to be reversible.',
         ),
-        predictOutput(
+        typeOutput(
           'This program counts the runs in "aabbbaa". What is printed?',
           cpp(`
             #include <cstddef>
@@ -10409,8 +10191,7 @@ const protocols: KnowledgePointModule = {
               std::cout << runs << "\\n";
             }
           `),
-          ['2', '7', '3', '4'],
-          2,
+          '3',
           'A new run starts at the first character and wherever the character changes: aa, bbb, aa.',
         ),
       ],
@@ -10442,7 +10223,7 @@ const riskChecks: KnowledgePointModule = {
           'The difference 2 divided by the total 4 gives 0.5: the book leans toward the bid.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -10453,11 +10234,10 @@ const riskChecks: KnowledgePointModule = {
               std::cout << imbalance << "\\n";
             }
           `),
-          ['0.5', '-0.5', '-2', '0'],
-          1,
+          '-0.5',
           'The ask side is larger, so the imbalance is negative: -2 / 4.',
         ),
-        predictOutput(
+        typeOutput(
           'The first value uses int division, the second double. What is printed?',
           cpp(`
             #include <iostream>
@@ -10469,11 +10249,10 @@ const riskChecks: KnowledgePointModule = {
               std::cout << truncated << " " << exact << "\\n";
             }
           `),
-          ['0.5 0.5', '0 0', '0 0.5', '1 0.5'],
-          2,
+          '0 0.5',
           'Integer division truncates 2 / 4 to 0; converting first keeps 0.5.',
         ),
-        predictOutput(
+        typeOutput(
           'Only the bid side has size. What is printed?',
           cpp(`
             #include <iostream>
@@ -10484,8 +10263,7 @@ const riskChecks: KnowledgePointModule = {
               std::cout << imbalance << "\\n";
             }
           `),
-          ['8', '0', 'inf', '1'],
-          3,
+          '1',
           'All the size is on the bid side, the +1 end of the scale.',
         ),
         choose(
@@ -10530,7 +10308,7 @@ const riskChecks: KnowledgePointModule = {
           'The empty book is handled before the division, using the contract’s value 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'A negative bid size arrives. What is printed?',
           cpp(`
             #include <iostream>
@@ -10548,8 +10326,7 @@ const riskChecks: KnowledgePointModule = {
               }
             }
           `),
-          ['-2.33333', 'invalid', '0', '1'],
-          1,
+          'invalid',
           'The negative size is rejected before it can produce a value outside -1 to 1.',
         ),
         choose(
@@ -10563,7 +10340,7 @@ const riskChecks: KnowledgePointModule = {
           2,
           'Both the numerator and the denominator are 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -10581,11 +10358,10 @@ const riskChecks: KnowledgePointModule = {
               }
             }
           `),
-          ['1', '0', 'invalid', '0.5'],
-          1,
+          '0',
           'Equal sizes give a difference of 0, a balanced book.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -10603,8 +10379,7 @@ const riskChecks: KnowledgePointModule = {
               }
             }
           `),
-          ['0.5', '-4', 'invalid', '-0.5'],
-          3,
+          '-0.5',
           'The difference -4 over the total 8 is -0.5.',
         ),
       ],
@@ -10633,7 +10408,7 @@ const riskChecks: KnowledgePointModule = {
           'The cast makes the multiplication a long long one, so 4 billion fits.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -10644,8 +10419,7 @@ const riskChecks: KnowledgePointModule = {
               std::cout << notional << "\\n";
             }
           `),
-          ['129', '500', '125', '4'],
-          1,
+          '500',
           'Notional is price times quantity: 125 * 4.',
         ),
         choose(
@@ -10723,7 +10497,7 @@ const riskChecks: KnowledgePointModule = {
           'The notional is exactly 300, which does not exceed the limit.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The quantity rises to 4. What is printed?',
           cpp(`
             #include <iostream>
@@ -10745,11 +10519,10 @@ const riskChecks: KnowledgePointModule = {
               }
             }
           `),
-          ['accept', 'reject', 'invalid', '400'],
-          1,
+          'reject',
           '400 exceeds the 300 limit.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -10771,11 +10544,10 @@ const riskChecks: KnowledgePointModule = {
               }
             }
           `),
-          ['reject', 'invalid', 'accept', 'overflow'],
-          2,
+          'accept',
           'Computed in long long, the notional is exactly 4 billion, which equals the limit.',
         ),
-        predictOutput(
+        typeOutput(
           'A negative quantity arrives. What is printed?',
           cpp(`
             #include <iostream>
@@ -10797,8 +10569,7 @@ const riskChecks: KnowledgePointModule = {
               }
             }
           `),
-          ['invalid', 'accept', 'reject', '-100'],
-          0,
+          'invalid',
           'Without validation, -100 would pass the limit check; the quantity check rejects it first.',
         ),
         choose(
@@ -10846,7 +10617,7 @@ const riskChecks: KnowledgePointModule = {
           'The trade would leave a position of 7, inside the range -10 to 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -10865,11 +10636,10 @@ const riskChecks: KnowledgePointModule = {
               }
             }
           `),
-          ['11 allowed', '11 blocked', '8 allowed', '3 allowed'],
-          1,
+          '11 blocked',
           'The current position 8 is fine, but the trade would take it to 11.',
         ),
-        predictOutput(
+        typeOutput(
           'A sell deepens a short position. What is printed?',
           cpp(`
             #include <iostream>
@@ -10888,11 +10658,10 @@ const riskChecks: KnowledgePointModule = {
               }
             }
           `),
-          ['-11 allowed', '-5 allowed', '-11 blocked', '11 blocked'],
-          2,
+          '-11 blocked',
           'A short position of -11 breaks the lower bound -10.',
         ),
-        predictOutput(
+        typeOutput(
           'A large sell flips a long position to short. What is printed?',
           cpp(`
             #include <iostream>
@@ -10911,8 +10680,7 @@ const riskChecks: KnowledgePointModule = {
               }
             }
           `),
-          ['-6 blocked', '24 blocked', '9 allowed', '-6 allowed'],
-          3,
+          '-6 allowed',
           'The sell is large, but the resulting position -6 is within the limit.',
         ),
         choose(
@@ -10971,7 +10739,7 @@ const riskChecks: KnowledgePointModule = {
           1,
           'Widened before adding, the sum is a true 2147483648, which is far above the limit.',
         ),
-        predictOutput(
+        typeOutput(
           'The position sits exactly on the lower bound. What is printed?',
           cpp(`
             #include <iostream>
@@ -10985,8 +10753,7 @@ const riskChecks: KnowledgePointModule = {
               std::cout << upper_only << " " << both << "\\n";
             }
           `),
-          ['1 0', '0 1', '1 1', '0 0'],
-          2,
+          '1 1',
           'Both bounds are inclusive, so -10 is allowed.',
         ),
         choose(
@@ -11036,7 +10803,7 @@ const riskChecks: KnowledgePointModule = {
         explanation: 'At exactly the deadline, now >= deadline is true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -11047,11 +10814,10 @@ const riskChecks: KnowledgePointModule = {
               std::cout << expired << "\\n";
             }
           `),
-          ['1', '0', '99', '-1'],
-          1,
+          '0',
           'One unit before the deadline the event is still live.',
         ),
-        predictOutput(
+        typeOutput(
           'Three times around the deadline are checked. What is printed?',
           cpp(`
             #include <iostream>
@@ -11060,11 +10826,10 @@ const riskChecks: KnowledgePointModule = {
               std::cout << (99 >= deadline) << " " << (100 >= deadline) << " " << (101 >= deadline) << "\\n";
             }
           `),
-          ['0 0 1', '1 1 1', '0 1 1', '0 1 0'],
-          2,
+          '0 1 1',
           'Only the time before the deadline is live; the deadline itself counts as expired.',
         ),
-        predictOutput(
+        typeOutput(
           'Two possible contracts are compared at the boundary. What is printed?',
           cpp(`
             #include <iostream>
@@ -11074,8 +10839,7 @@ const riskChecks: KnowledgePointModule = {
               std::cout << (now >= deadline) << " " << (now > deadline) << "\\n";
             }
           `),
-          ['1 0', '1 1', '0 0', '0 1'],
-          0,
+          '1 0',
           'The two definitions disagree exactly at the deadline.',
         ),
         choose(
@@ -11113,7 +10877,7 @@ const riskChecks: KnowledgePointModule = {
           'The event times come from the data, so the result is the same on every run: 49 is live and 50 is expired.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'A message sent at 1000 lives for 250 units. What is printed?',
           cpp(`
             #include <iostream>
@@ -11125,8 +10889,7 @@ const riskChecks: KnowledgePointModule = {
               std::cout << deadline << " " << (now >= deadline) << "\\n";
             }
           `),
-          ['1250 1', '1250 0', '1249 0', '250 1'],
-          1,
+          '1250 0',
           'The deadline is 1250, and 1249 is one unit before it.',
         ),
         choose(
@@ -11140,7 +10903,7 @@ const riskChecks: KnowledgePointModule = {
           2,
           'Real time is not exact enough to test an exact boundary.',
         ),
-        predictOutput(
+        typeOutput(
           'Three logged events are checked against one deadline. What is printed?',
           cpp(`
             #include <iostream>
@@ -11153,8 +10916,7 @@ const riskChecks: KnowledgePointModule = {
               std::cout << expired << "\\n";
             }
           `),
-          ['1', '2', '3', '0'],
-          1,
+          '2',
           'Each true comparison counts as 1: the events at 60 and 75 are expired.',
         ),
         choose(
@@ -11210,7 +10972,7 @@ const pipelines: KnowledgePointModule = {
           '5 and 6 fill the queue; 7 is refused, so 6 is the last item queued.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Four items arrive at a queue of capacity 3. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11234,11 +10996,10 @@ const pipelines: KnowledgePointModule = {
               std::cout << accepted << " " << refused << " " << queue.back() << "\\n";
             }
           `),
-          ['4 0 4', '3 1 3', '3 1 4', '1 3 1'],
-          1,
+          '3 1 3',
           'Three items fit; the fourth is refused, so 3 stays the last item.',
         ),
-        predictOutput(
+        typeOutput(
           'The queue has capacity 0. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11262,8 +11023,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << accepted << " " << refused << "\\n";
             }
           `),
-          ['3 0', '1 2', '0 3', '0 0'],
-          2,
+          '0 3',
           'Nothing fits in a zero-capacity queue, so every item is refused.',
         ),
         choose(
@@ -11277,7 +11037,7 @@ const pipelines: KnowledgePointModule = {
           0,
           'Backpressure is a signal that travels back to the producer.',
         ),
-        predictOutput(
+        typeOutput(
           'A queue of capacity 3 already holds 3 items. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11289,8 +11049,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << (queue.size() < capacity) << "\\n";
             }
           `),
-          ['1', '0', '3', '-1'],
-          1,
+          '0',
           'The queue is full, so the check that allows a push is false.',
         ),
       ],
@@ -11347,7 +11106,7 @@ const pipelines: KnowledgePointModule = {
             }
           `),
         ),
-        predictOutput(
+        typeOutput(
           'Three items are offered to a queue of capacity 2. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11373,8 +11132,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << queue.size() << " " << lost << "\\n";
             }
           `),
-          ['3 0', '1 2', '2 1', '2 0'],
-          2,
+          '2 1',
           'Two items fit; the third is refused and counted as lost.',
         ),
         choose(
@@ -11388,7 +11146,7 @@ const pipelines: KnowledgePointModule = {
           1,
           'Any of those keeps the loss visible and the capacity respected.',
         ),
-        predictOutput(
+        typeOutput(
           'This version compares with <= instead of <. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11410,8 +11168,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << queue.size() << "\\n";
             }
           `),
-          ['2', '3', '1', '0'],
-          1,
+          '3',
           'With <= a queue holding 2 items still accepts one more, exceeding the capacity.',
         ),
       ],
@@ -11445,7 +11202,7 @@ const pipelines: KnowledgePointModule = {
           'The second deliveries of 4 and 8 are recognized and skipped.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Each message adds its amount to a balance. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11462,11 +11219,10 @@ const pipelines: KnowledgePointModule = {
               std::cout << balance << "\\n";
             }
           `),
-          ['17', '12', '5', '7'],
-          1,
+          '12',
           'Message 1 arrives twice but is applied once: 5 + 7.',
         ),
-        predictOutput(
+        typeOutput(
           'The same id is inserted twice. What is printed?',
           cpp(`
             #include <iostream>
@@ -11478,8 +11234,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << first << second << "\\n";
             }
           `),
-          ['11', '01', '10', '00'],
-          2,
+          '10',
           'The first insert adds 3; the second finds it already present.',
         ),
         choose(
@@ -11493,7 +11248,7 @@ const pipelines: KnowledgePointModule = {
           3,
           'insert returns an iterator and a bool that reports whether insertion happened.',
         ),
-        predictOutput(
+        typeOutput(
           'One handler deduplicates and one does not. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11512,8 +11267,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << naive << " " << deduplicated << "\\n";
             }
           `),
-          ['50 30', '30 50', '50 50', '30 30'],
-          0,
+          '50 30',
           'The naive handler applies all five deliveries; the deduplicating one applies three distinct messages.',
         ),
       ],
@@ -11545,7 +11299,7 @@ const pipelines: KnowledgePointModule = {
           'All three deliveries reuse id 100, so the payment is applied once.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The sender gives each retry a fresh id. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11561,8 +11315,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << balance << "\\n";
             }
           `),
-          ['25', '75', '0', '50'],
-          1,
+          '75',
           'Every retry looks like a new message, so the same payment is applied three times.',
         ),
         choose(
@@ -11587,7 +11340,7 @@ const pipelines: KnowledgePointModule = {
           0,
           'Once an id is forgotten, its next delivery looks new.',
         ),
-        predictOutput(
+        typeOutput(
           'A map remembers the amount first applied for each id. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11602,8 +11355,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << processed[7] << " " << processed.size() << "\\n";
             }
           `),
-          ['99 1', '30 2', '30 1', '129 1'],
-          2,
+          '30 1',
           'emplace does nothing for an existing key, so the first amount for id 7 is kept.',
         ),
       ],
@@ -11636,7 +11388,7 @@ const pipelines: KnowledgePointModule = {
         explanation: 'The state is set to 5, then raised by 2 and by 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <iostream>
@@ -11652,11 +11404,10 @@ const pipelines: KnowledgePointModule = {
               std::cout << state << "\\n";
             }
           `),
-          ['12', '3', '1', '13'],
-          1,
+          '3',
           'The set to 1 discards the earlier 10, and then 2 is added.',
         ),
-        predictOutput(
+        typeOutput(
           'The log also has subtraction events. What is printed?',
           cpp(`
             #include <iostream>
@@ -11673,8 +11424,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << state << "\\n";
             }
           `),
-          ['15', '5', '7', '11'],
-          2,
+          '7',
           '10 - 4 + 1 = 7.',
         ),
         choose(
@@ -11688,7 +11438,7 @@ const pipelines: KnowledgePointModule = {
           3,
           'Same inputs, same steps, same order: the result is determined.',
         ),
-        predictOutput(
+        typeOutput(
           'Two replicas start from different states and replay the same log. What is printed?',
           cpp(`
             #include <iostream>
@@ -11706,8 +11456,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << replica_a << " " << replica_b << "\\n";
             }
           `),
-          ['10 107', '7 7', '7 107', '5 5'],
-          1,
+          '7 7',
           'The leading set overrides the different starting values, so both replicas end at 7.',
         ),
       ],
@@ -11741,7 +11490,7 @@ const pipelines: KnowledgePointModule = {
           'The same two events in opposite orders give different states.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Two additions are applied in opposite orders. What is printed?',
           cpp(`
             #include <iostream>
@@ -11759,8 +11508,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << a << " " << b << "\\n";
             }
           `),
-          ['7 5', '5 7', '7 7', '2 5'],
-          2,
+          '7 7',
           'Additions commute, so their order does not change the sum.',
         ),
         choose(
@@ -11774,7 +11522,7 @@ const pipelines: KnowledgePointModule = {
           0,
           'Moving a set before or after an add changes what the add applies to.',
         ),
-        predictOutput(
+        typeOutput(
           'The log is replayed in recorded order and in order of value. What is printed?',
           cpp(`
             #include <iostream>
@@ -11796,8 +11544,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << recorded << " " << sorted << "\\n";
             }
           `),
-          ['10 11', '11 10', '18 18', '11 11'],
-          1,
+          '11 10',
           'In recorded order the last set is followed by +1; sorted, the set to 10 comes last.',
         ),
         choose(
@@ -11841,7 +11588,7 @@ const pipelines: KnowledgePointModule = {
           'The snapshot 7 already contains 3 + 4, so only the last delta 5 is replayed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This recovery replays the whole log onto the snapshot. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11855,11 +11602,10 @@ const pipelines: KnowledgePointModule = {
               std::cout << state << "\\n";
             }
           `),
-          ['12', '19', '7', '24'],
-          1,
+          '19',
           'The deltas 3 and 4 are counted twice: once in the snapshot and once in the replay.',
         ),
-        predictOutput(
+        typeOutput(
           'The snapshot already includes every event. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11874,11 +11620,10 @@ const pipelines: KnowledgePointModule = {
               std::cout << state << "\\n";
             }
           `),
-          ['6', '0', '3', '5'],
-          2,
+          '3',
           'Nothing is left to replay, so the state is the snapshot.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -11893,8 +11638,7 @@ const pipelines: KnowledgePointModule = {
               std::cout << state << "\\n";
             }
           `),
-          ['22', '2', '16', '12'],
-          3,
+          '12',
           'The snapshot holds the first delta; replaying -4 and 6 gives 12.',
         ),
         choose(
@@ -11939,7 +11683,7 @@ const pipelines: KnowledgePointModule = {
         explanation: 'The snapshot claims 5 events, but the log only has 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The snapshot includes exactly all three events. What is printed?',
           cpp(`
             #include <cstddef>
@@ -11958,11 +11702,10 @@ const pipelines: KnowledgePointModule = {
               }
             }
           `),
-          ['inconsistent snapshot', '6', '12', '0'],
-          1,
+          '6',
           'included equal to the log length is valid: nothing remains to replay.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -11981,8 +11724,7 @@ const pipelines: KnowledgePointModule = {
               }
             }
           `),
-          ['10', '6', 'inconsistent snapshot', '0'],
-          2,
+          'inconsistent snapshot',
           'Four included events cannot come from a three-event log.',
         ),
         choose(
@@ -12040,7 +11782,7 @@ const determinism: KnowledgePointModule = {
           'Both orders at 100 come before 101, and between them the lower id 3 wins.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <algorithm>
@@ -12053,11 +11795,10 @@ const determinism: KnowledgePointModule = {
               std::cout << orders.front().second << "\\n";
             }
           `),
-          ['2', '7', '99', '100'],
-          1,
+          '7',
           'The lower price comes first, whatever the ids are.',
         ),
-        predictOutput(
+        typeOutput(
           'Three orders share one price. What is printed?',
           cpp(`
             #include <algorithm>
@@ -12072,8 +11813,7 @@ const determinism: KnowledgePointModule = {
               std::cout << "\\n";
             }
           `),
-          ['9 2 5', '9 5 2', '2 5 9', '5 2 9'],
-          2,
+          '2 5 9',
           'With equal prices, the ids decide the order.',
         ),
         choose(
@@ -12133,7 +11873,7 @@ const determinism: KnowledgePointModule = {
           'The highest bid 102 (id 5) comes first; at 100 the earlier id 3 precedes 8.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'These bids are sorted without negating the price. What is printed?',
           cpp(`
             #include <algorithm>
@@ -12148,11 +11888,10 @@ const determinism: KnowledgePointModule = {
               std::cout << "\\n";
             }
           `),
-          ['5 3 8', '3 8 5', '8 3 5', '5 8 3'],
-          1,
+          '3 8 5',
           'Ascending order puts the lowest bid first, the opposite of bid priority.',
         ),
-        predictOutput(
+        typeOutput(
           'Asks are prioritized by lowest price, then lowest id. What is printed?',
           cpp(`
             #include <algorithm>
@@ -12167,11 +11906,10 @@ const determinism: KnowledgePointModule = {
               std::cout << "\\n";
             }
           `),
-          ['2 9 4', '9 2 4', '4 9 2', '2 4 9'],
-          0,
+          '2 9 4',
           'For asks both fields ascend, so the plain pair order is already the priority order.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <algorithm>
@@ -12188,8 +11926,7 @@ const determinism: KnowledgePointModule = {
               std::cout << "\\n";
             }
           `),
-          ['7 4 1', '1 4 7', '4 7 1', '4 1 7'],
-          2,
+          '4 7 1',
           'Both 101 bids lead, the earlier id 4 first; the 99 bid comes last.',
         ),
         choose(
@@ -12228,7 +11965,7 @@ const determinism: KnowledgePointModule = {
           'The integer cents add exactly; the doubles do not quite reach the stored 0.3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'A fill of 4 lots at 125 ticks pays a 3-tick fee. What is printed?',
           cpp(`
             #include <iostream>
@@ -12240,11 +11977,10 @@ const determinism: KnowledgePointModule = {
               std::cout << total << "\\n";
             }
           `),
-          ['500', '503', '128', '1503'],
-          1,
+          '503',
           'The notional 500 plus the fee 3, all in ticks, is exact.',
         ),
-        predictOutput(
+        typeOutput(
           'The same amounts are added as cents and as doubles. What is printed?',
           cpp(`
             #include <iostream>
@@ -12254,8 +11990,7 @@ const determinism: KnowledgePointModule = {
               std::cout << (cents == 60) << " " << (dollars == 0.6) << "\\n";
             }
           `),
-          ['1 1', '1 0', '0 0', '0 1'],
-          1,
+          '1 0',
           'The integer sum is exact; the double sum lands slightly above the stored 0.6.',
         ),
         choose(
@@ -12269,7 +12004,7 @@ const determinism: KnowledgePointModule = {
           2,
           'None of the three decimals is exactly representable in binary.',
         ),
-        predictOutput(
+        typeOutput(
           'A balance in cents is printed as dollars and cents. What is printed?',
           cpp(`
             #include <iostream>
@@ -12279,8 +12014,7 @@ const determinism: KnowledgePointModule = {
               std::cout << balance_cents / 100 << "." << balance_cents % 100 << "\\n";
             }
           `),
-          ['12.133', '13.3', '1333', '13.33'],
-          3,
+          '13.33',
           '1234 + 99 = 1333 cents, which is 13 dollars and 33 cents.',
         ),
       ],
@@ -12307,7 +12041,7 @@ const determinism: KnowledgePointModule = {
           '2.50 is 25000 units of 1/10000, and the 0.0075 fee is 75 more.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The first total mixes units, the second converts first. What is printed?',
           cpp(`
             #include <iostream>
@@ -12317,11 +12051,10 @@ const determinism: KnowledgePointModule = {
               std::cout << price_cents + fee_units << " " << price_cents * 100 + fee_units << "\\n";
             }
           `),
-          ['25075 325', '325 25075', '325 325', '25075 25075'],
-          1,
+          '325 25075',
           'Adding without conversion gives 325, which matches neither unit.',
         ),
-        predictOutput(
+        typeOutput(
           'A total in units of 1/10000 is split back into cents and leftover units. What is printed?',
           cpp(`
             #include <iostream>
@@ -12330,8 +12063,7 @@ const determinism: KnowledgePointModule = {
               std::cout << total_units / 100 << " " << total_units % 100 << "\\n";
             }
           `),
-          ['2 5075', '25 75', '250 75', '250 0'],
-          2,
+          '250 75',
           '100 units make a cent: 250 whole cents and 75 units left over.',
         ),
         choose(
@@ -12406,7 +12138,7 @@ const determinism: KnowledgePointModule = {
           1,
           'Different seeds start different sequences, and the specified algorithm makes the result the same on every run.',
         ),
-        predictOutput(
+        typeOutput(
           'Both engines are default-constructed. What is printed?',
           cpp(`
             #include <iostream>
@@ -12420,8 +12152,7 @@ const determinism: KnowledgePointModule = {
               std::cout << same << "\\n";
             }
           `),
-          ['0', '1', '3', 'It changes from run to run'],
-          2,
+          '3',
           'A default-constructed engine always uses the same default seed.',
         ),
         choose(
@@ -12494,7 +12225,7 @@ const determinism: KnowledgePointModule = {
           1,
           'The two engines are now one step apart, so each comparison pairs different positions in the sequence.',
         ),
-        predictOutput(
+        typeOutput(
           'Two engines seeded 99 roll dice from raw output. How many of ten rolls match?',
           cpp(`
             #include <iostream>
@@ -12508,8 +12239,7 @@ const determinism: KnowledgePointModule = {
               std::cout << same << "\\n";
             }
           `),
-          ['0', '6', '10', 'It depends on the library'],
-          2,
+          '10',
           'The raw engine outputs are identical, and so is the arithmetic on them.',
         ),
         choose(
@@ -12571,7 +12301,7 @@ const determinism: KnowledgePointModule = {
           'Event 1 moves the position to 3, its duplicate is skipped, event 2 would reach 12 and is rejected, and event 3 brings it to 1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -12593,11 +12323,10 @@ const determinism: KnowledgePointModule = {
               std::cout << position << "\\n";
             }
           `),
-          ['2', '-2', '8', '4'],
-          1,
+          '-2',
           'The second event would reach 8 and is rejected, so the last event starts from 4.',
         ),
-        predictOutput(
+        typeOutput(
           'The handler counts each outcome. What is printed?',
           cpp(`
             #include <cstddef>
@@ -12629,8 +12358,7 @@ const determinism: KnowledgePointModule = {
               std::cout << accepted << " " << duplicates << " " << rejected << " " << position << "\\n";
             }
           `),
-          ['3 0 1 5', '1 1 2 2', '2 1 1 3', '2 1 1 -4'],
-          2,
+          '2 1 1 3',
           '7 is accepted (2), its copy is a duplicate, 8 would reach -7 and is rejected, and 9 reaches exactly 3.',
         ),
         choose(
@@ -12696,7 +12424,7 @@ const determinism: KnowledgePointModule = {
           'Event 5 is rejected but its id is recorded, so its redelivery is skipped even though -4 + 9 = 5 would now fit.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'This variant records an id only when its event is accepted. What is printed?',
           cpp(`
             #include <cstddef>
@@ -12721,8 +12449,7 @@ const determinism: KnowledgePointModule = {
               std::cout << position << "\\n";
             }
           `),
-          ['-4', '5', '9', '1'],
-          1,
+          '5',
           'The rejected event 5 was not recorded, so its redelivery is evaluated again and now fits.',
         ),
         choose(
@@ -12736,7 +12463,7 @@ const determinism: KnowledgePointModule = {
           0,
           'Recording first makes the first decision final for that id.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           cpp(`
             #include <cstddef>
@@ -12758,8 +12485,7 @@ const determinism: KnowledgePointModule = {
               std::cout << position << "\\n";
             }
           `),
-          ['4', '8', '2', '10'],
-          2,
+          '2',
           'Event 1 is accepted, event 2 would reach 8 and is rejected, and the redelivered event 1 is a duplicate.',
         ),
         choose(

@@ -1,5 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
-import { skillById, type Question } from '../src/lib/curriculum';
+import {
+  skillById,
+  type ChoiceQuestion,
+  type Question,
+} from '../src/lib/curriculum';
 import {
   applyAttempt,
   DAY_MS,
@@ -106,10 +110,10 @@ test('a quiz is earned, timed, hides feedback until the end, scores XP, and turn
     await expectProse(prompt(page), question.prompt);
     // No lesson material during a quiz.
     await expect(page.locator('.lesson-point')).toHaveCount(0);
+    // Browser specs predate typed answers (CEN-111): they answer choices only.
+    const choice = question as ChoiceQuestion;
     const answer =
-      index === 0
-        ? (question.answer + 1) % question.choices.length
-        : question.answer;
+      index === 0 ? (choice.answer + 1) % choice.choices.length : choice.answer;
     await choiceButton(page, answer).click();
     await page.getByRole('button', { name: 'Submit', exact: true }).click();
     // No correct/incorrect feedback or explanation until the end.

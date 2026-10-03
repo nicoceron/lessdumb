@@ -17,6 +17,8 @@ import {
 } from '../lib/placement';
 import { type LearnerState } from '../lib/state';
 import { ChoiceText, InlineText } from './inline-text';
+import { TypedAnswerInput } from './typed-answer';
+import { gradeTyped } from '../lib/typed-answer';
 import { Btn, ContentLoading } from './shared';
 import { useCourseContent } from './use-content';
 import { Button } from '@/components/ui/button';
@@ -47,6 +49,8 @@ export default function PlacementSession({
     courses[0];
   const [diagnosticId, setDiagnosticId] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  const [response, setResponse] = useState('');
+  const [invalid, setInvalid] = useState<string | null>(null);
   const shownAt = useRef(Date.now());
   const running = activeDiagnostic(state.progress);
   const diagnostic: Diagnostic | undefined = diagnosticId
@@ -73,6 +77,8 @@ export default function PlacementSession({
   useEffect(() => {
     shownAt.current = Date.now();
     setSelected(null);
+    setResponse('');
+    setInvalid(null);
   }, [questionKey]);
 
   if (!diagnostic)
@@ -126,7 +132,38 @@ export default function PlacementSession({
   const found = diagnostic.current && diagnosticQuestion(diagnostic.current);
   if (!found) return <PlacementResult state={state} diagnostic={diagnostic} />;
   const { skill, question } = found;
-  const order = choiceOrder(question, diagnostic.current!.presentation);
+  const order =
+    question.type === 'choice'
+      ? choiceOrder(question, diagnostic.current!.presentation)
+      : [];
+  function submit() {
+    let answer: number | string;
+    if (question.type === 'choice') {
+      if (selected === null) return;
+      answer = selected;
+    } else {
+      // Not a number is not a wrong answer: ask again.
+      const grade = gradeTyped(question, response);
+      if (grade.status === 'invalid') {
+        setInvalid(grade.message);
+        return;
+      }
+      answer = response;
+    }
+    const elapsed = Date.now() - shownAt.current;
+    setSelected(null);
+    setResponse('');
+    update((s) => ({
+      ...s,
+      progress: answerDiagnostic(
+        s.progress,
+        diagnostic!.id,
+        answer,
+        Date.now(),
+        elapsed,
+      ),
+    }));
+  }
   const settled = Math.round(
     diagnosticProgress(state.progress, diagnostic) * 100,
   );
@@ -158,44 +195,45 @@ export default function PlacementSession({
             className="my-5"
           />
         )}
-        <div className="answer-options" role="group" aria-label="Choices">
-          {order.map((choice, position) => (
-            <Button
-              variant="outline"
-              key={choice}
-              data-choice={choice}
-              onClick={() => setSelected(choice)}
-              aria-pressed={selected === choice}
-              className={`answer-option h-auto w-full justify-start whitespace-normal py-4 text-left ${selected === choice ? 'border-primary bg-primary/5' : ''}`}
-            >
-              <Badge variant="outline" className="shrink-0 font-mono">
-                {choiceLetter(position)}
-              </Badge>
-              <pre>
-                <ChoiceText question={question} index={choice} />
-              </pre>
-            </Button>
-          ))}
-        </div>
+        {question.type === 'choice' ? (
+          <div className="answer-options" role="group" aria-label="Choices">
+            {order.map((choice, position) => (
+              <Button
+                variant="outline"
+                key={choice}
+                data-choice={choice}
+                onClick={() => setSelected(choice)}
+                aria-pressed={selected === choice}
+                className={`answer-option h-auto w-full justify-start whitespace-normal py-4 text-left ${selected === choice ? 'border-primary bg-primary/5' : ''}`}
+              >
+                <Badge variant="outline" className="shrink-0 font-mono">
+                  {choiceLetter(position)}
+                </Badge>
+                <pre>
+                  <ChoiceText question={question} index={choice} />
+                </pre>
+              </Button>
+            ))}
+          </div>
+        ) : (
+          <TypedAnswerInput
+            key={questionKey}
+            question={question}
+            value={response}
+            error={invalid}
+            onChange={(value) => {
+              setResponse(value);
+              setInvalid(null);
+            }}
+            onSubmit={submit}
+          />
+        )}
         <div className="question-actions">
           <Btn
-            disabled={selected === null}
-            onClick={() => {
-              if (selected === null) return;
-              const answer = selected;
-              const elapsed = Date.now() - shownAt.current;
-              setSelected(null);
-              update((s) => ({
-                ...s,
-                progress: answerDiagnostic(
-                  s.progress,
-                  diagnostic.id,
-                  answer,
-                  Date.now(),
-                  elapsed,
-                ),
-              }));
-            }}
+            disabled={
+              question.type === 'choice' ? selected === null : !response.trim()
+            }
+            onClick={submit}
           >
             Submit
           </Btn>

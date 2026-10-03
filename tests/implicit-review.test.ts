@@ -34,6 +34,7 @@ import {
   startQuiz,
 } from '../src/lib/quiz';
 import { masterSkill } from './helpers/mastery';
+import { rightAnswer } from './helpers/answers';
 
 // print-output <- variables <- numbers: each skill's only prerequisite.
 const NOW = Date.parse('2026-10-01T16:00:00Z');
@@ -325,7 +326,7 @@ describe('implicit review credit', () => {
       progress,
       quiz.id,
       index,
-      question.answer,
+      rightAnswer(question),
       LATER,
     );
     const attempt = answered.attempts.at(-1)!;

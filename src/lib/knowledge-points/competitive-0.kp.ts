@@ -1,4 +1,10 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeNumber,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 // Competitive Programming: the grid (flood fill) and bitmask topics.
 export const knowledgePoints: KnowledgePointModule = {
@@ -40,11 +46,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Right keeps the row and adds one to the column; up and down change the row.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'row, col = 3, 3\nmoves = [(-1, 0), (1, 0), (0, -1), (0, 1)]\nprint([(row + dr, col + dc) for dr, dc in moves][2])',
-          ['(3, 2)', '(2, 3)', '(3, 4)', '(4, 3)'],
-          0,
+          '(3, 2)',
           'Index 2 is the third move, (0, -1), which is left: the column drops from 3 to 2.',
         ),
       ],
@@ -62,16 +67,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Row -1 fails 0 <= r and column 4 fails c < cols, so the top-right corner keeps only down and left.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'rows, cols = 2, 2\nrow, col = 1, 0\nresult = []\nfor r, c in [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]:\n    if 0 <= r < rows and 0 <= c < cols:\n        result.append((r, c))\nprint(result)',
-          [
-            '[(0, 0), (2, 0), (1, 1)]',
-            '[(0, 0), (1, 1)]',
-            '[(0, 0), (1, -1), (1, 1)]',
-            '[(1, 1), (0, 0)]',
-          ],
-          1,
+          '[(0, 0), (1, 1)]',
           'Row 2 is past the last row and column -1 is before the first, so only up and right remain, in that order.',
         ),
         choose(
@@ -80,17 +79,15 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Columns run from 0 to cols - 1. Using <= admits cols, < at the left rejects 0, and c < cols alone admits negatives.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'rows, cols = 1, 5\nrow, col = 0, 2\ncount = 0\nfor r, c in [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]:\n    if 0 <= r < rows and 0 <= c < cols:\n        count += 1\nprint(count)',
-          ['4', '3', '1', '2'],
-          3,
+          '2',
           'With a single row, both up and down leave the grid; left and right stay inside.',
         ),
-        choose(
+        typeNumber(
           'How many in-bounds four-direction neighbors does the corner cell (0, 0) of a 5-by-5 grid have?',
-          ['2', '3', '4', '0'],
-          0,
+          2,
           'Up and left leave the grid; down and right stay inside.',
         ),
       ],
@@ -108,18 +105,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Row -1 silently wraps to "cd". In the guarded condition, 0 <= r is false, so the comparison with "c" is never evaluated.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = ["xyz", "uvw", "rst"]\nrow, col = 0, 1\nprint(grid[row - 1][col])',
-          ['y', 'IndexError', 's', 'v'],
-          2,
+          's',
           'row - 1 is -1, which wraps to the last row "rst"; its column 1 is s.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [[1, 0], [0, 1]]\nr, c = 2, 1\nprint(0 <= r < len(grid) and grid[r][c] == 1)',
-          ['True', 'False', 'IndexError', 'None'],
-          1,
+          'False',
           'r < len(grid) is false, so and stops before grid[2] would raise IndexError.',
         ),
         choose(
@@ -161,11 +156,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '(-1, 1) fails the bounds; (0, 1) is in bounds but water; (1, 1) is in bounds and land.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [[0, 1], [1, 1]]\nrows, cols = len(grid), len(grid[0])\nr, c = 0, 0\nprint(0 <= r < rows and 0 <= c < cols and grid[r][c] == 1)',
-          ['True', 'IndexError', 'False', '0'],
-          2,
+          'False',
           '(0, 0) is inside the grid but holds 0, so the final test is false.',
         ),
         choose(
@@ -179,16 +173,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Both conditions are required: the cell must exist and must be land.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [[1, 1, 1]]\nrows, cols = len(grid), len(grid[0])\nchecks = [0 <= r < rows and 0 <= c < cols and grid[r][c] == 1 for r, c in [(0, 3), (0, 2), (1, 0)]]\nprint(checks)',
-          [
-            '[True, True, False]',
-            '[False, True, True]',
-            '[False, False, False]',
-            '[False, True, False]',
-          ],
-          3,
+          '[False, True, False]',
           'Column 3 and row 1 are out of bounds; only (0, 2) is an existing land cell.',
         ),
         choose(
@@ -217,23 +205,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Up (0, 1) and right (1, 2) are land; down leaves the grid and left (1, 0) is water.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def land_neighbors(grid, row, col):\n    rows, cols = len(grid), len(grid[0])\n    result = []\n    for r, c in [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]:\n        if 0 <= r < rows and 0 <= c < cols and grid[r][c] == 1:\n            result.append((r, c))\n    return result\n\nprint(land_neighbors([[0, 1, 0], [1, 1, 1], [0, 1, 0]], 1, 1))',
-          [
-            '[(0, 1), (2, 1), (1, 0), (1, 2)]',
-            '[(0, 1), (1, 0), (1, 2), (2, 1)]',
-            '[(1, 0), (1, 2)]',
-            '[(0, 0), (0, 2), (2, 0), (2, 2)]',
-          ],
-          0,
+          '[(0, 1), (2, 1), (1, 0), (1, 2)]',
           'All four direct neighbors are land and appear in up, down, left, right order; the corners are water and are never candidates.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def land_neighbors(grid, row, col):\n    rows, cols = len(grid), len(grid[0])\n    result = []\n    for r, c in [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]:\n        if 0 <= r < rows and 0 <= c < cols and grid[r][c] == 1:\n            result.append((r, c))\n    return result\n\nprint(land_neighbors([[1, 0], [0, 1]], 0, 0))',
-          ['[(1, 1)]', '[(0, 1), (1, 0)]', '[]', '[(0, 0)]'],
-          2,
+          '[]',
           'The two direct neighbors hold 0, and the diagonal (1, 1) is not a candidate, so nothing is kept.',
         ),
         choose(
@@ -247,11 +228,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The function tests each neighbor; whether the starting cell is land is a separate decision for the caller.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def land_neighbors(grid, row, col):\n    rows, cols = len(grid), len(grid[0])\n    result = []\n    for r, c in [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]:\n        if 0 <= r < rows and 0 <= c < cols and grid[r][c] == 1:\n            result.append((r, c))\n    return result\n\ngrid = [[1, 1, 1]]\nprint(len(land_neighbors(grid, 0, 2)), grid)',
-          ['2 [[1, 1, 1]]', '1 [[1, 1, 0]]', '3 [[1, 1, 1]]', '1 [[1, 1, 1]]'],
-          3,
+          '1 [[1, 1, 1]]',
           'Only the left neighbor (0, 1) exists and is land, and the grid is unchanged.',
         ),
       ],
@@ -280,11 +260,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Each cell offers the other as a land neighbor, so the work never runs out.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def land_neighbors(grid, row, col):\n    rows, cols = len(grid), len(grid[0])\n    result = []\n    for r, c in [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]:\n        if 0 <= r < rows and 0 <= c < cols and grid[r][c] == 1:\n            result.append((r, c))\n    return result\n\ngrid = [[1, 1], [1, 1]]\ntotal = 0\nfor r in range(2):\n    for c in range(2):\n        total += len(land_neighbors(grid, r, c))\nprint(total)',
-          ['4', '8', '16', '2'],
-          1,
+          '8',
           'Each of the four cells has two land neighbors, so every one of the four connections is counted from both ends.',
         ),
         choose(
@@ -326,11 +305,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Marking at push time means the second route to the cell finds it already seen.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [[1, 1, 1]]\nseen = {(0, 1)}\npending = [(0, 1)]\npushes = 1\nwhile pending:\n    r, c = pending.pop()\n    for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:\n        if 0 <= nr < 1 and 0 <= nc < 3 and grid[nr][nc] == 1 and (nr, nc) not in seen:\n            seen.add((nr, nc))\n            pending.append((nr, nc))\n            pushes += 1\nprint(pushes)',
-          ['5', '2', '6', '3'],
-          3,
+          '3',
           'Starting in the middle, the two end cells are each pushed once: three pushes in total.',
         ),
         choose(
@@ -359,18 +337,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '(0, 0), (0, 1), and (1, 1) are joined by moves; (2, 0) and (2, 2) touch the island only diagonally.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def component_size(grid, row, col):\n    if grid[row][col] == 0:\n        return 0\n    rows, cols = len(grid), len(grid[0])\n    seen = {(row, col)}\n    pending = [(row, col)]\n    while pending:\n        r, c = pending.pop()\n        for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:\n            if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1 and (nr, nc) not in seen:\n                seen.add((nr, nc))\n                pending.append((nr, nc))\n    return len(seen)\n\nprint(component_size([[1, 0, 1], [1, 0, 1], [1, 1, 1]], 0, 2))',
-          ['3', '7', '4', '0'],
-          1,
+          '7',
           'The right column connects to the left column through the bottom row, so all seven land cells form one island.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'def component_size(grid, row, col):\n    if grid[row][col] == 0:\n        return 0\n    rows, cols = len(grid), len(grid[0])\n    seen = {(row, col)}\n    pending = [(row, col)]\n    while pending:\n        r, c = pending.pop()\n        for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:\n            if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1 and (nr, nc) not in seen:\n                seen.add((nr, nc))\n                pending.append((nr, nc))\n    return len(seen)\n\nprint(component_size([[0, 1], [1, 0]], 0, 0), component_size([[0, 1], [1, 0]], 0, 1))',
-          ['0 2', '1 1', '0 1', '2 2'],
-          2,
+          '0 1',
           'The first start is water. The second start is land, but its only other land cell touches it at a corner.',
         ),
         choose(
@@ -421,11 +397,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Each step deeper is another active call; about 1,000 nested calls is Python’s default limit.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [[1] * 1500, [0] * 1500]\nseen = {(0, 1499)}\npending = [(0, 1499)]\nlargest = 0\nwhile pending:\n    largest = max(largest, len(pending))\n    r, c = pending.pop()\n    for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:\n        if 0 <= nr < 2 and 0 <= nc < 1500 and grid[nr][nc] == 1 and (nr, nc) not in seen:\n            seen.add((nr, nc))\n            pending.append((nr, nc))\nprint(len(seen), largest)',
-          ['1500 1500', '3000 1', '1500 2', '1500 1'],
-          3,
+          '1500 1',
           'The fill walks left one cell at a time, so the stack never holds more than one pending cell while it discovers all 1,500 land cells.',
         ),
         choose(
@@ -456,11 +431,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Fills start at (0, 0), (0, 2), and (2, 2). The scan later reaches (1, 0), but the first fill already claimed it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [[1, 1, 0, 1], [0, 1, 0, 1], [1, 0, 0, 0]]\nseen = set()\nislands = 0\nfor row in range(3):\n    for col in range(4):\n        if grid[row][col] == 1 and (row, col) not in seen:\n            islands += 1\n            seen.add((row, col))\n            pending = [(row, col)]\n            while pending:\n                r, c = pending.pop()\n                for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:\n                    if 0 <= nr < 3 and 0 <= nc < 4 and grid[nr][nc] == 1 and (nr, nc) not in seen:\n                        seen.add((nr, nc))\n                        pending.append((nr, nc))\nprint(islands)',
-          ['3', '6', '2', '4'],
-          0,
+          '3',
           'The islands are {(0,0), (0,1), (1,1)}, {(0,3), (1,3)}, and {(2,0)}; (2, 0) touches (1, 1) only at a corner.',
         ),
         choose(
@@ -474,17 +448,15 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A fresh set per fill would forget earlier islands, and every land cell would start a fill.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [[1, 1], [1, 1]]\nstarts = []\nseen = set()\nfor row in range(2):\n    for col in range(2):\n        if grid[row][col] == 1 and (row, col) not in seen:\n            starts.append((row, col))\n            seen.add((row, col))\n            pending = [(row, col)]\n            while pending:\n                r, c = pending.pop()\n                for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:\n                    if 0 <= nr < 2 and 0 <= nc < 2 and grid[nr][nc] == 1 and (nr, nc) not in seen:\n                        seen.add((nr, nc))\n                        pending.append((nr, nc))\nprint(starts)',
-          ['[(0, 0), (0, 1), (1, 0), (1, 1)]', '[(1, 1)]', '[]', '[(0, 0)]'],
-          3,
+          '[(0, 0)]',
           'The first fill claims the whole 2-by-2 island, so the scan never starts another.',
         ),
-        choose(
+        typeNumber(
           'A grid contains only water. What island count does the scan report?',
-          ['1', 'The number of cells', '0', '-1'],
-          2,
+          0,
           'No cell is land, so no fill ever starts.',
         ),
       ],
@@ -502,11 +474,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Fills start at (0, 0), (1, 2), and (2, 0), finding islands of two, two, and one cells.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [[1, 0, 1, 1], [1, 0, 0, 1], [1, 1, 0, 1]]\nseen = set()\nsizes = []\nfor row in range(3):\n    for col in range(4):\n        if grid[row][col] == 1 and (row, col) not in seen:\n            seen.add((row, col))\n            pending = [(row, col)]\n            size = 0\n            while pending:\n                r, c = pending.pop()\n                size += 1\n                for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:\n                    if 0 <= nr < 3 and 0 <= nc < 4 and grid[nr][nc] == 1 and (nr, nc) not in seen:\n                        seen.add((nr, nc))\n                        pending.append((nr, nc))\n            sizes.append(size)\nprint(sizes)',
-          ['[4, 4]', '[3, 1, 4]', '[4, 3, 1]', '[8]'],
-          0,
+          '[4, 4]',
           'The left island is (0,0), (1,0), (2,0), (2,1); the right island is (0,2), (0,3), (1,3), (2,3).',
         ),
         choose(
@@ -520,11 +491,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The count is complete only once the pending stack is empty.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [[1, 0, 1], [0, 1, 0], [1, 0, 1]]\nseen = set()\nlargest = 0\nfor row in range(3):\n    for col in range(3):\n        if grid[row][col] == 1 and (row, col) not in seen:\n            seen.add((row, col))\n            pending = [(row, col)]\n            size = 0\n            while pending:\n                r, c = pending.pop()\n                size += 1\n                for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:\n                    if 0 <= nr < 3 and 0 <= nc < 3 and grid[nr][nc] == 1 and (nr, nc) not in seen:\n                        seen.add((nr, nc))\n                        pending.append((nr, nc))\n            largest = max(largest, size)\nprint(largest, len(seen))',
-          ['5 5', '1 1', '1 5', '5 1'],
-          2,
+          '1 5',
           'All five land cells touch only at corners, so there are five islands of size one, and all five cells end up in seen.',
         ),
       ],
@@ -548,11 +518,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Every cell is scanned once and pushed at most once, with at most four neighbor checks per pop.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'grid = [[1, 1, 1], [1, 1, 1]]\npops = 0\nfor row in range(2):\n    for col in range(3):\n        seen = {(row, col)}\n        pending = [(row, col)]\n        while pending:\n            r, c = pending.pop()\n            pops += 1\n            for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:\n                if 0 <= nr < 2 and 0 <= nc < 3 and grid[nr][nc] == 1 and (nr, nc) not in seen:\n                    seen.add((nr, nc))\n                    pending.append((nr, nc))\nprint(pops)',
-          ['6', '36', '12', '21'],
-          1,
+          '36',
           'This version creates a new seen set for every cell, so each of the six starts refills the whole six-cell island.',
         ),
         choose(
@@ -583,24 +552,21 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each shift doubles the value, selecting the next position.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print(1 << 6)',
-          ['7', '6', '32', '64'],
-          3,
+          '64',
           'Shifting 1 left by six places gives 2⁶ = 64.',
         ),
-        choose(
+        typeNumber(
           'Which integer has position 4 as its only set position?',
-          ['4', '16', '8', '5'],
-          1,
+          16,
           'Position 4 is worth 2⁴ = 16.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'print((1 << 3) + (1 << 0))',
-          ['9', '8', '4', '3'],
-          0,
+          '9',
           '1 << 3 is 8 and 1 << 0 is 1, and their sum 9 is binary 1001.',
         ),
         choose(
@@ -624,18 +590,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '13 is binary 1101: position 2 is present (giving 4), position 1 is absent (giving 0), and position 3 is present.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 10\nprint(mask & (1 << 3))',
-          ['1', '8', 'True', '0'],
-          1,
+          '8',
           '10 is binary 1010, so position 3 is present and the AND keeps its value, 8.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 12\nprint(mask & (1 << 2) == 1)',
-          ['True', '4', 'False', '1'],
-          2,
+          'False',
           'Position 2 is present, but the AND gives 4, which is not equal to 1. The comparison is the bug.',
         ),
         choose(
@@ -649,16 +613,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The AND isolates position k, and it is nonzero exactly when that position is set. (In Python & binds tighter than !=.)',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 5\nprint([bool(mask & (1 << k)) for k in range(4)])',
-          [
-            '[True, True, False, False]',
-            '[False, True, False, True]',
-            '[True, False, True, True]',
-            '[True, False, True, False]',
-          ],
-          3,
+          '[True, False, True, False]',
           '5 is binary 0101: positions 0 and 2 are present, 1 and 3 are not.',
         ),
       ],
@@ -675,31 +633,27 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: '13 = 1 + 4 + 8, so positions 0, 2, and 3 are present.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 22\nprint([k for k in range(5) if mask & (1 << k)])',
-          ['[1, 2, 4]', '[0, 1, 3]', '[2, 4]', '[1, 2, 3]'],
-          0,
+          '[1, 2, 4]',
           '22 = 2 + 4 + 16, which are positions 1, 2, and 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [7, 7, 9]\nmask = 3\nprint([values[k] for k in range(3) if mask & (1 << k)])',
-          ['[7]', '[7, 9]', '[7, 7]', '[9]'],
-          2,
+          '[7, 7]',
           'Mask 3 selects positions 0 and 1; both hold 7, and both are kept as separate members.',
         ),
-        choose(
+        typeNumber(
           'Which mask stands for the empty set of positions?',
-          ['1', '0', '-1', 'None'],
-          1,
+          0,
           'No position is set in 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 9\nprint(len([k for k in range(8) if mask & (1 << k)]))',
-          ['9', '3', '1', '2'],
-          3,
+          '2',
           '9 is binary 1001, so exactly two positions are present.',
         ),
       ],
@@ -719,18 +673,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Adding position 1 to 101 gives 111 = 7. Position 2 is already present, so 5 stays 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 8\nmask = mask | (1 << 0)\nprint(mask)',
-          ['8', '1', '9', '16'],
-          2,
+          '9',
           'Position 0 (worth 1) joins position 3 (worth 8): 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 6\nfor k in [1, 1, 2]:\n    mask = mask | (1 << k)\nprint(mask)',
-          ['6', '12', '10', '14'],
-          0,
+          '6',
           'Positions 1 and 2 are already in 6, so every OR leaves it unchanged.',
         ),
         choose(
@@ -744,11 +696,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'For example 4 + 4 = 8 moves the member from position 2 to position 3; 4 | 4 stays 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 0\nfor k in [4, 0, 4]:\n    mask |= 1 << k\nprint(mask)',
-          ['33', '16', '1', '17'],
-          3,
+          '17',
           'Positions 4 and 0 are set once each: 16 + 1 = 17.',
         ),
       ],
@@ -766,18 +717,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Removing position 2 from 1101 gives 1001 = 9. Position 1 was already absent, so 13 is unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 15\nprint(mask & ~(1 << 3))',
-          ['8', '7', '15', '-9'],
-          1,
+          '7',
           'Clearing position 3 from 1111 leaves 0111 = 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 10\nprint(mask ^ (1 << 0), mask & ~(1 << 0))',
-          ['11 10', '10 10', '11 11', '10 11'],
-          0,
+          '11 10',
           'XOR flips the absent position 0 on, giving 11; clearing it leaves 10 unchanged.',
         ),
         choose(
@@ -791,11 +740,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Subtraction and XOR misbehave when k is absent; AND with the complement always forces position k to 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 6\nfor k in [2, 2, 0]:\n    mask &= ~(1 << k)\nprint(mask)',
-          ['4', '0', '6', '2'],
-          3,
+          '2',
           'The first clear removes position 2 (6 becomes 2); clearing it again and clearing the absent position 0 change nothing.',
         ),
       ],
@@ -813,18 +761,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Positions 1 and 3 are set, then position 1 is cleared; setting position 3 again changes nothing, leaving 8.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 0\nfor k, present in [(0, True), (2, True), (0, True), (2, False)]:\n    mask = mask | (1 << k) if present else mask & ~(1 << k)\nprint(mask)',
-          ['1', '5', '0', '4'],
-          0,
+          '1',
           'Position 0 stays set (setting it twice is harmless) and position 2 ends cleared.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 0\nfor k in [2, 2, 1]:\n    mask ^= 1 << k\nprint(mask)',
-          ['6', '4', '2', '0'],
-          2,
+          '2',
           'Toggling position 2 twice cancels out, leaving only position 1: 2.',
         ),
         choose(
@@ -855,18 +801,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '13 is 1101. 12 - 1 = 11 is 1011, and the AND with 1101 removes position 1, giving 1001 = 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 10\nprint((mask - 1) & mask)',
-          ['9', '8', '2', '0'],
-          1,
+          '8',
           '9 is 1001; ANDing with 1010 keeps only position 3, giving 8.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 6\nsub = 6\nresult = []\nfor _ in range(3):\n    sub = (sub - 1) & mask\n    result.append(sub)\nprint(result)',
-          ['[5, 4, 3]', '[4, 3, 2]', '[4, 2, 0]', '[2, 4, 0]'],
-          2,
+          '[4, 2, 0]',
           'The submasks of 110 below 6 are 100, 010, and 000, in decreasing order.',
         ),
         choose(
@@ -901,18 +845,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Stepping from zero returns to 5, so the break after recording 0 is what ends the walk.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 12\nprint((0 - 1) & mask)',
-          ['-1', '0', '11', '12'],
-          3,
+          '12',
           '-1 has every position set, so ANDing with 12 gives 12: the walk would restart.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 0\nsub = mask\nresult = []\nwhile True:\n    result.append(sub)\n    if sub == 0:\n        break\n    sub = (sub - 1) & mask\nprint(result)',
-          ['[]', '[0]', '[0, 0]', '[-1, 0]'],
-          1,
+          '[0]',
           'The empty mask records its only submask, 0, and stops immediately.',
         ),
         choose(
@@ -941,17 +883,15 @@ export const knowledgePoints: KnowledgePointModule = {
           '1 and 32 each have one set position (2 submasks), 6 has two (4), and 7 has three (8).',
       },
       questions: [
-        choose(
+        typeNumber(
           'How many submasks does mask = 11 (binary 1011) have?',
-          ['8', '11', '16', '3'],
-          0,
+          8,
           'Three positions are set, giving 2³ = 8 submasks.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 40\ncount = 0\nsub = mask\nwhile True:\n    count += 1\n    if sub == 0:\n        break\n    sub = (sub - 1) & mask\nprint(count)',
-          ['40', '2', '41', '4'],
-          3,
+          '4',
           '40 is binary 101000, with two set positions, so it has 2² = 4 submasks.',
         ),
         choose(
@@ -982,18 +922,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Items 0, 2, and 3 join, then item 0 leaves: positions 2 and 3 remain, holding 5 and 8.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 0\nfor index, present in [(1, True), (4, True), (1, True), (4, False), (0, True)]:\n    mask = mask | (1 << index) if present else mask & ~(1 << index)\nprint(mask)',
-          ['3', '19', '18', '2'],
-          0,
+          '3',
           'Position 1 is set (twice), position 4 is set then cleared, and position 0 is set: 2 + 1 = 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [3, 3, 7]\nmask = 0\nfor index, present in [(0, True), (1, True), (2, False)]:\n    mask = mask | (1 << index) if present else mask & ~(1 << index)\nprint([values[k] for k in range(3) if mask & (1 << k)])',
-          ['[3]', '[3, 3, 7]', '[3, 3]', '[7]'],
-          2,
+          '[3, 3]',
           'Items 0 and 1 are both selected even though they hold equal values; item 2 was never present.',
         ),
         choose(
@@ -1007,11 +945,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Clearing with & ~ is idempotent, so removing an absent item changes nothing.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 0\ncounts = []\nfor index, present in [(2, True), (5, True), (2, False)]:\n    mask = mask | (1 << index) if present else mask & ~(1 << index)\n    counts.append(len([k for k in range(6) if mask & (1 << k)]))\nprint(counts)',
-          ['[1, 2, 3]', '[1, 1, 1]', '[2, 2, 1]', '[1, 2, 1]'],
-          3,
+          '[1, 2, 1]',
           'The selection grows to two members, then shrinks back to one.',
         ),
       ],
@@ -1029,18 +966,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Mask 7 selects items 0, 1, and 2. Only submask 4 (the 3) and submask 3 (4 and -1) total 3; item 3 is never used.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [2, 2, 5]\nmask = 3\ncount = 0\nsub = mask\nwhile True:\n    total = 0\n    for k in range(3):\n        if sub & (1 << k):\n            total += values[k]\n    if total == 2:\n        count += 1\n    if sub == 0:\n        break\n    sub = (sub - 1) & mask\nprint(count)',
-          ['1', '3', '0', '2'],
-          3,
+          '2',
           'Submasks 1 and 2 each select one of the two equal 2s; they are different subsets.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [1, 6, 1]\nmask = 5\ncount = 0\nsub = mask\nwhile True:\n    total = 0\n    for k in range(3):\n        if sub & (1 << k):\n            total += values[k]\n    if total == 0:\n        count += 1\n    if sub == 0:\n        break\n    sub = (sub - 1) & mask\nprint(count)',
-          ['0', '1', '2', '4'],
-          1,
+          '1',
           'Only the empty submask totals 0; the selected values are both 1.',
         ),
         choose(
@@ -1054,11 +989,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The AND in the step removes every position outside the mask, so unselected items never appear.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'values = [-3, 3, 4]\nmask = 7\nbest = None\nsub = mask\nwhile True:\n    total = 0\n    for k in range(3):\n        if sub & (1 << k):\n            total += values[k]\n    if best is None or total > best:\n        best = total\n    if sub == 0:\n        break\n    sub = (sub - 1) & mask\nprint(best)',
-          ['4', '7', '10', '3'],
-          1,
+          '7',
           'The best subset takes 3 and 4 and skips the negative value: 7.',
         ),
       ],
@@ -1087,11 +1021,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The walk visits only the selection’s submasks; the full loop tests every mask below 1 << 18.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'mask = 10\nfound = []\nfor sub in range(1 << 4):\n    if sub & ~mask == 0:\n        found.append(sub)\nprint(found)',
-          ['[0, 2, 8, 10]', '[2, 8]', '[10, 8, 2, 0]', '[0, 10]'],
-          0,
+          '[0, 2, 8, 10]',
           'The full loop finds the same four submasks as the walk, but in increasing order.',
         ),
         choose(

@@ -37,6 +37,7 @@ import {
   parseStateUpdate,
 } from '../src/lib/server/state-validation';
 import { earnedQuizXp, quizXp } from '../src/lib/xp';
+import { rightAnswer, wrongAnswer } from './helpers/answers';
 
 const NOW = Date.parse('2026-10-01T16:00:00Z');
 const COURSE = 'python-foundations';
@@ -64,8 +65,8 @@ function answerAll(
   quiz.questions.forEach((slot, index) => {
     const { question } = quizQuestion(slot)!;
     const answer = correct(index)
-      ? question.answer
-      : (question.answer + 1) % question.choices.length;
+      ? rightAnswer(question)
+      : wrongAnswer(question);
     result = answerQuiz(result, quiz.id, index, answer, at);
   });
   return result;
@@ -94,7 +95,8 @@ describe('quiz availability and content', () => {
       expect(isMastered(ready, slot.skillId)).toBe(true);
       expect(skillById[slot.skillId].courseId).toBe(COURSE);
       const found = quizQuestion(slot);
-      expect(found?.question.type).toBe('choice');
+      // Chosen or typed, never a code exercise.
+      expect(found?.question.type).not.toBe('code');
       // Lessons used each point's first variants; quizzes draw unseen ones.
       expect(answered.has(slot.questionId)).toBe(false);
     }
@@ -194,7 +196,7 @@ describe('taking a quiz', () => {
     };
     const slot = lateQuiz.questions[0];
     const { question } = quizQuestion(slot)!;
-    const after = answerQuiz(late, quiz.id, 0, question.answer, due + 1);
+    const after = answerQuiz(late, quiz.id, 0, rightAnswer(question), due + 1);
     const state = getSkillState(after, slot.skillId);
     expect(state.reviewQuestionIds).toEqual([question.id]);
     expect(state.reviewCount).toBe(
@@ -205,7 +207,13 @@ describe('taking a quiz', () => {
 
   it('finishes at the time limit, counting unanswered questions as missed', () => {
     const first = quizQuestion(quiz.questions[0])!.question;
-    let progress = answerQuiz(started, quiz.id, 0, first.answer, NOW + 1000);
+    let progress = answerQuiz(
+      started,
+      quiz.id,
+      0,
+      rightAnswer(first),
+      NOW + 1000,
+    );
     const deadline = quizDeadline(quiz);
     // An answer after the deadline is not recorded; the quiz ends instead.
     progress = answerQuiz(progress, quiz.id, 1, 0, deadline + 5000);

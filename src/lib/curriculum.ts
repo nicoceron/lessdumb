@@ -14,11 +14,14 @@ import cpp from './content/cpp';
 import { registerSkills } from './content';
 import {
   assessmentPolicy,
+  assessmentType,
   encompassedBy as encompassedIn,
 } from './catalog-outline';
 import { mathSpans, mathTextErrors, mathTextFields } from './math-text';
+import { typedQuestionErrors } from './typed-answer';
 export {
   assessmentPolicy,
+  assessmentType,
   DEFAULT_ENCOMPASS_WEIGHT,
   encompassings,
 } from './catalog-outline';
@@ -59,6 +62,40 @@ export interface ChoiceQuestion extends QuestionBase {
   checksOutput?: boolean;
 }
 
+/**
+ * A typed number. The response is graded by `src/lib/typed-answer.ts`: it may
+ * be an integer, a decimal, a simple fraction like `3/4`, or scientific
+ * notation like `1e-3`, and is correct within the absolute `tolerance`.
+ */
+export interface NumericQuestion extends QuestionBase {
+  type: 'numeric';
+  /** Shown with the question; never executed. */
+  code?: string;
+  answer: number;
+  /** Absolute: correct when |response − answer| ≤ tolerance. Omitted is exact. */
+  tolerance?: number;
+  /** Unit or format hint shown next to the input, e.g. `ms` or `to 2 decimals`. */
+  unit?: string;
+}
+
+/**
+ * A short typed answer: a predicted program output, a name, or a keyword.
+ * Responses are compared line by line after trimming each line and
+ * collapsing runs of spaces; case matters unless `ignoreCase` is set.
+ */
+export interface TextQuestion extends QuestionBase {
+  type: 'text';
+  code?: string;
+  /** Accepted answers; the first is the one shown after answering. */
+  answers: string[];
+  ignoreCase?: boolean;
+  /** The single accepted answer is exactly what `code` prints; catalog tests run it. */
+  checksOutput?: boolean;
+}
+
+/** A question the learner answers by typing rather than choosing. */
+export type TypedQuestion = NumericQuestion | TextQuestion;
+
 export interface CodeQuestion extends QuestionBase {
   type: 'code';
   /** Omitted in existing accounts/catalogs means Python. */
@@ -71,7 +108,16 @@ export interface CodeQuestion extends QuestionBase {
   tests: string;
 }
 
-export type Question = ChoiceQuestion | CodeQuestion;
+export type Question = ChoiceQuestion | TypedQuestion | CodeQuestion;
+
+/** A question answered without running code: chosen or typed. */
+export type AnswerQuestion = ChoiceQuestion | TypedQuestion;
+
+/**
+ * What an assessment policy can require: `code` is an executed exercise, and
+ * `choice` is any question answered without running code (chosen or typed).
+ */
+export type AssessmentType = 'choice' | 'code';
 
 /** A question's identity and kind: what scheduling and evidence need. */
 export type QuestionRef = Pick<Question, 'id' | 'type'>;
@@ -139,8 +185,11 @@ export interface SkillOutline {
    */
   questions: QuestionRef[];
   flashcards: Pick<Flashcard, 'id'>[];
-  /** Subject-specific evidence needed within a spaced review cycle. */
-  assessment?: { requiredTypes: Question['type'][]; reviewAnswers: number };
+  /**
+   * Subject-specific evidence needed within a spaced review cycle. Typed
+   * questions meet a `choice` requirement, as choice questions do.
+   */
+  assessment?: { requiredTypes: AssessmentType[]; reviewAnswers: number };
   /**
    * How much practicing this skill also exercises each direct prerequisite,
    * 0 < weight <= 1. Omitted means every direct prerequisite at
@@ -327,10 +376,10 @@ export function validateCurriculum(
     if (!item.questions.length && !points.length)
       errors.push(`${item.id}: missing assessment questions.`);
     // A lesson taught through knowledge points serves their questions, never
-    // a separate list of choice questions.
-    if (points.length && item.questions.some((q) => q.type === 'choice'))
+    // a separate list of choice or typed questions.
+    if (points.length && item.questions.some((q) => q.type !== 'code'))
       errors.push(
-        `${item.id}: choice questions belong in knowledge points, not in questions.`,
+        `${item.id}: choice and typed questions belong in knowledge points, not in questions.`,
       );
     // The launched Python course keeps its four-question assessment standard
     // for any skill not yet taught through knowledge points.
@@ -339,8 +388,9 @@ export function validateCurriculum(
         errors.push(`${item.id}: missing executable exercise.`);
       if (
         !points.length &&
-        item.questions.filter((question) => question.type === 'choice').length <
-          3
+        item.questions.filter(
+          (question) => assessmentType(question.type) === 'choice',
+        ).length < 3
       )
         errors.push(`${item.id}: needs three choice questions.`);
     }
@@ -370,7 +420,7 @@ export function validateCurriculum(
           type === 'code'
             ? item.questions
             : [...item.questions, ...points.flatMap((point) => point.questions)]
-        ).some((question) => question.type === type)
+        ).some((question) => assessmentType(question.type) === type)
       )
         errors.push(`${item.id}: missing required assessment type ${type}.`);
     if (
@@ -403,11 +453,14 @@ export function validateCurriculum(
       ...points.flatMap((point) => point.questions),
     ]) {
       if (
-        question.type === 'choice' &&
+        (question.type === 'choice' || question.type === 'text') &&
         question.checksOutput &&
         !question.code?.trim()
       )
         errors.push(`${question.id}: output questions need code to run.`);
+      if (!['choice', 'numeric', 'text', 'code'].includes(question.type))
+        errors.push(`${question.id}: unknown question type.`);
+      errors.push(...typedQuestionErrors(question));
       if (questions.has(question.id))
         errors.push(`Duplicate question ID ${question.id}.`);
       questions.add(question.id);
