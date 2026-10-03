@@ -23,7 +23,9 @@ export function useCourseContent(courseIds: (string | undefined)[]) {
       },
       () => {
         if (current)
-          setError('This lesson could not be downloaded. Check your connection and retry.');
+          setError(
+            'This lesson could not be downloaded. Check your connection and retry.',
+          );
       },
     );
     return () => {

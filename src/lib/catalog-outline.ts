@@ -113,7 +113,11 @@ export interface CatalogIndex {
 export function buildIndex(
   catalog: CurriculumCatalog<SkillOutline>,
 ): CatalogIndex {
-  return indexOf(catalog.courses, catalog.units, catalog.skills.map(outlineSkill));
+  return indexOf(
+    catalog.courses,
+    catalog.units,
+    catalog.skills.map(outlineSkill),
+  );
 }
 
 function indexOf(
@@ -174,7 +178,9 @@ export function encodeIndex(index: CatalogIndex): EncodedIndex {
             (question, q) => question.id !== pointQuestionId(skill.id, p, q),
           )
         )
-          throw new Error(`${point.id}: knowledge point IDs must be generated.`);
+          throw new Error(
+            `${point.id}: knowledge point IDs must be generated.`,
+          );
       });
       flashcards.forEach((card, c) => {
         if (card.id !== cardId(skill.id, c))

@@ -1,28 +1,11 @@
+import { withExerciseId } from './exercise';
 import type {
-  ChoiceQuestion,
   CodeQuestion,
   Course,
   CurriculumCatalog,
   Skill,
   Unit,
 } from '../curriculum';
-
-const choice = (
-  prompt: string,
-  choices: string[],
-  answer: number,
-  explanation: string,
-  hint: string,
-  code?: string,
-): Omit<ChoiceQuestion, 'id'> => ({
-  type: 'choice',
-  prompt,
-  choices,
-  answer,
-  explanation,
-  hint,
-  ...(code ? { code } : {}),
-});
 const exercise = (
   prompt: string,
   starterCode: string,
@@ -48,7 +31,8 @@ function skill(
   prerequisites: string[],
   paragraphs: string[],
   example: Skill['lesson']['example'],
-  questions: (Omit<ChoiceQuestion, 'id'> | Omit<CodeQuestion, 'id'>)[],
+  /** The code exercise; choice practice lives in knowledge points. */
+  exercises: Omit<CodeQuestion, 'id'>[],
   cards: [string, string][],
 ): Omit<Skill, 'order'> {
   return {
@@ -62,10 +46,7 @@ function skill(
     estimatedMinutes: 8,
     assessment: { requiredTypes: ['code', 'choice'], reviewAnswers: 2 },
     lesson: { paragraphs, example },
-    questions: questions.map((question, index) => ({
-      ...question,
-      id: `${id}-q${index + 1}`,
-    })),
+    questions: withExerciseId(id, exercises),
     flashcards: cards.map(([front, back], index) => ({
       id: `${id}-card${index + 1}`,
       skillId: id,
@@ -152,29 +133,6 @@ const curriculum = [
         'The first statement finishes before the second one begins. Both quoted strings become visible output.',
     },
     [
-      choice(
-        'What does this program print?',
-        ['Python', '"Python"', 'print("Python")', 'Nothing'],
-        0,
-        'print() displays the contents of the string, without its quote marks.',
-        'The quotes mark a string; they are not part of its content.',
-        'print("Python")',
-      ),
-      choice(
-        'Which statement prints the text Ready?',
-        ['print(Ready)', 'Print("Ready")', 'print("Ready")', '"print Ready"'],
-        2,
-        'Python names are case-sensitive, and literal text needs quotes.',
-        'Use the lowercase function name and quoted text.',
-      ),
-      choice(
-        'What is the output, in order?',
-        ['2\n1', '1\n2', '12', '3'],
-        1,
-        'Statements run top to bottom, and separate print calls make separate lines.',
-        'Read one line of code at a time.',
-        'print(1)\nprint(2)',
-      ),
       exercise(
         'Print Hello, lessdumb! on one line, then I can learn Python. on the next line.',
         '# Write two print statements below.\n',
@@ -210,29 +168,6 @@ const curriculum = [
         'The old score, 3, is used to calculate 3 + 2. Only then does score become 5.',
     },
     [
-      choice(
-        'What is printed?',
-        ['4', '6', '10', 'An error'],
-        1,
-        'points is assigned 4, then reassigned the result of 4 + 2.',
-        'Evaluate the right side using the previous value.',
-        'points = 4\npoints = points + 2\nprint(points)',
-      ),
-      choice(
-        'Which is a valid Python variable name?',
-        ['2_score', 'daily score', 'daily_score', 'daily-score'],
-        2,
-        'Underscores can connect words in a variable name. Spaces and hyphens cannot.',
-        'A name may contain underscores but cannot start with a digit.',
-      ),
-      choice(
-        'What is printed?',
-        ['8', '3', '11', '5'],
-        0,
-        'saved keeps the earlier value 8. Changing count does not change saved.',
-        'An integer assignment copies the value associated with the name at that moment.',
-        'count = 8\nsaved = count\ncount = 3\nprint(saved)',
-      ),
       exercise(
         'Create a variable named points with value 10. Then add 5 to points using its existing value.',
         '# Create points, then update it.\n',
@@ -271,28 +206,6 @@ const curriculum = [
         'There are two complete groups of 60 minutes, with 17 minutes remaining.',
     },
     [
-      choice(
-        'What value does 3 + 2 * 4 produce?',
-        ['20', '11', '14', '24'],
-        1,
-        'Multiplication happens first: 2 * 4 is 8, then 3 + 8 is 11.',
-        'Perform multiplication before addition.',
-      ),
-      choice(
-        'What is printed?',
-        ['2 1', '2.5 1', '2 0', '3 1'],
-        0,
-        '7 // 3 counts two complete groups. 7 % 3 is the remaining 1.',
-        'Floor division and remainder answer different questions.',
-        'print(7 // 3, 7 % 3)',
-      ),
-      choice(
-        'Which expression squares the number 5?',
-        ['5 ^ 2', '5 * 2', '5 ** 2', '5 / 2'],
-        2,
-        'The ** operator means exponentiation. ^ has a different meaning in Python.',
-        'Python uses two asterisks for powers.',
-      ),
       exercise(
         'A box holds 6 apples. You have 29 apples. Set full_boxes to the number of complete boxes and leftover to the remaining apples.',
         'apples = 29\nbox_size = 6\n# Set full_boxes and leftover.\n',
@@ -331,28 +244,6 @@ const curriculum = [
         'The names inside braces are replaced by their current values.',
     },
     [
-      choice(
-        'What is the value of len("red fox")?',
-        ['6', '7', '8', '2'],
-        1,
-        'There are three letters, a space, and three more letters: seven characters.',
-        'The space counts as a character.',
-      ),
-      choice(
-        'What is printed?',
-        ['Hi, Ana', 'Hi, name', 'Hi, {name}', 'An error'],
-        0,
-        'An f-string evaluates name inside the braces.',
-        'The f prefix enables expression substitution.',
-        'name = "Ana"\nprint(f"Hi, {name}")',
-      ),
-      choice(
-        'Which expression produces the string ababab?',
-        ['"ab" + 3', '"ab" * 3', '"ab" ** 3', '3 + "ab"'],
-        1,
-        'Multiplying a string by an integer repeats its content.',
-        'String repetition uses the multiplication operator.',
-      ),
       exercise(
         'Create label with exactly the text Lina has 4 badges using the variables below.',
         'name = "Lina"\nbadges = 4\n# Set label.\n',
@@ -388,28 +279,6 @@ const curriculum = [
         'The first expression uses numerical addition. The second converts the number to text before concatenating.',
     },
     [
-      choice(
-        'What is the type of "42"?',
-        ['int', 'float', 'str', 'bool'],
-        2,
-        'Quotes create a string even when its characters are digits.',
-        'Look at whether the value is quoted.',
-      ),
-      choice(
-        'What is printed?',
-        ['82', '10', '8 + 2', 'An error'],
-        1,
-        'int("8") is the integer 8, so adding 2 produces 10.',
-        'Convert the text before doing arithmetic.',
-        'print(int("8") + 2)',
-      ),
-      choice(
-        'Which conversion fails?',
-        ['str(5)', 'float("2.5")', 'int("hello")', 'int("7")'],
-        2,
-        'The word hello is not a valid integer representation.',
-        'int() needs a string containing a valid whole number.',
-      ),
       exercise(
         'Convert price_text to a float and quantity_text to an integer. Set total to their product.',
         'price_text = "2.5"\nquantity_text = "4"\n# Set total.\n',
@@ -448,29 +317,6 @@ const curriculum = [
         'The inclusive comparison and equality are true at 18; the strict comparison is false.',
     },
     [
-      choice(
-        'What is printed?',
-        ['True', 'False', '8', 'An error'],
-        0,
-        'The != operator tests inequality. 8 is not equal to 5.',
-        'Read != as “is not equal to.”',
-        'print(8 != 5)',
-      ),
-      choice(
-        'Which comparison includes a score of exactly 70?',
-        ['score > 70', 'score < 70', 'score >= 70', 'score = 70'],
-        2,
-        '>= means greater than or equal to, so it includes the boundary.',
-        'The condition needs both “greater” and “equal.”',
-      ),
-      choice(
-        'What is printed?',
-        ['True', 'False', '4', 'None'],
-        1,
-        'The integer 4 and the string "4" are different values of different types.',
-        'A string of digits is still text.',
-        'print(4 == "4")',
-      ),
       exercise(
         'Set passed to a boolean that is True when score is at least 60. Use a comparison rather than a quoted string.',
         'score = 60\n# Set passed.\n',
@@ -505,28 +351,6 @@ const curriculum = [
       explanation: 'The age condition and the ticket condition both hold.',
     },
     [
-      choice(
-        'What does True and False evaluate to?',
-        ['True', 'False', 'None', 'An error'],
-        1,
-        'and requires both sides to be true.',
-        'One false condition is enough to make and false.',
-      ),
-      choice(
-        'What does False or True evaluate to?',
-        ['False', 'None', 'True', 'An error'],
-        2,
-        'or needs at least one true condition.',
-        'Only one condition must be true for or.',
-      ),
-      choice(
-        'What is printed?',
-        ['True', 'False', '12', 'An error'],
-        0,
-        '12 is at least 10 and at most 20, so both conditions hold.',
-        'Check the lower and upper boundaries separately.',
-        'n = 12\nprint(n >= 10 and n <= 20)',
-      ),
       exercise(
         'Set eligible to True only when age is at least 16 and consent is True.',
         'age = 16\nconsent = True\n# Set eligible.\n',
@@ -562,38 +386,6 @@ const curriculum = [
         'The score fails the 90 test, passes the 70 test, and skips the else branch.',
     },
     [
-      choice(
-        'What is printed?',
-        ['cold', 'warm', 'cold\nwarm', 'Nothing'],
-        1,
-        'The condition 25 < 20 is false, so the else branch runs.',
-        'Evaluate the condition before choosing a branch.',
-        'temperature = 25\nif temperature < 20:\n    print("cold")\nelse:\n    print("warm")',
-      ),
-      choice(
-        'What shows that a statement belongs inside an if body?',
-        [
-          'An ending semicolon',
-          'Quotation marks',
-          'Indentation',
-          'Capital letters',
-        ],
-        2,
-        'Python uses indentation to define blocks.',
-        'Look for the leading spaces on body statements.',
-      ),
-      choice(
-        'How many branches can execute in one if/elif/else chain?',
-        [
-          'All true branches',
-          'Exactly two',
-          'At most one',
-          'None are ever skipped',
-        ],
-        2,
-        'The chain stops after the first matching branch.',
-        'The elif conditions are checked only if earlier conditions failed.',
-      ),
       exercise(
         'Set label to "even" when number is even and "odd" otherwise.',
         'number = 7\n# Choose label with if/else.\n',
@@ -632,34 +424,6 @@ const curriculum = [
         '31 > 30 is True, so advice receives the first value. files == 1 is True, so print receives "1 file" and the other side is never evaluated.',
     },
     [
-      choice(
-        'What is printed?',
-        ['negative', 'non-negative', 'True', 'n < 0'],
-        0,
-        'n < 0 is True for -4, so the expression produces the value written before if.',
-        'Evaluate the condition, then pick the matching side.',
-        'n = -4\nsign = "negative" if n < 0 else "non-negative"\nprint(sign)',
-      ),
-      choice(
-        'Which line sets fee to 0 when member is True and to 5 otherwise?',
-        [
-          'fee = if member 0 else 5',
-          'fee = 0 else 5 if member',
-          'fee = 0 if member else 5',
-          'fee = member if 0 else 5',
-        ],
-        2,
-        'The value for a true condition comes first, then if and the condition, then else and the other value.',
-        'The pattern is A if condition else B.',
-      ),
-      choice(
-        'What is printed?',
-        ['14', '5', '7', '12'],
-        1,
-        '7 > 10 is False, so only the else side, 7 - 2, is evaluated.',
-        'Only one side is evaluated.',
-        'x = 7\nprint(x * 2 if x > 10 else x - 2)',
-      ),
       exercise(
         'In one assignment, set parity to "even" when number is divisible by 2 and to "odd" otherwise. Use a conditional expression.',
         'number = 14\n# Set parity in one line.\n',
@@ -697,28 +461,6 @@ const curriculum = [
       explanation: 'The list holds three strings, and green is one of them.',
     },
     [
-      choice(
-        'What is len([4, 8, 12])?',
-        ['24', '12', '3', '2'],
-        2,
-        'len() counts items; there are three.',
-        'Count the comma-separated items.',
-      ),
-      choice(
-        'Which expression creates an empty list?',
-        ['{}', '[]', '()', '""'],
-        1,
-        'Square brackets construct a list; no values means it is empty.',
-        'Lists use square brackets.',
-      ),
-      choice(
-        'What is printed?',
-        ['True', 'False', '2', 'An error'],
-        0,
-        '2 is present in the list, so membership is true.',
-        'The in operator tests whether an item is present.',
-        'print(2 in [1, 2, 3])',
-      ),
       exercise(
         'Create a list named temperatures containing 18, 21, and 19 in that order. Set count to its length.',
         '# Set temperatures and count.\n',
@@ -754,28 +496,6 @@ const curriculum = [
         'An empty list is falsy, so not tasks is True. best is 0, not None, so the else branch reports the real score.',
     },
     [
-      choice(
-        'Which value counts as false in a condition?',
-        ['[0]', '"False"', '0', '" "'],
-        2,
-        'Zero is falsy. The others are a one-item list and nonempty strings, which are truthy.',
-        'Zero and empty values are false; anything with contents is true.',
-      ),
-      choice(
-        'What is printed?',
-        ['Hi', 'Who?', 'Hi\nWho?', 'Nothing'],
-        1,
-        'The empty string is falsy, so the else branch runs.',
-        'An empty string counts as false.',
-        'name = ""\nif name:\n    print("Hi")\nelse:\n    print("Who?")',
-      ),
-      choice(
-        'best holds either a score, possibly 0, or None. Which condition is True only when there is no score yet?',
-        ['if not best:', 'if best == 0:', 'if best:', 'if best is None:'],
-        3,
-        'is None is True only for None; not best would also be True for a real score of 0.',
-        'Do not let a falsy score look missing.',
-      ),
       exercise(
         'Set inbox_status to "empty" if inbox has no items and to "new" otherwise, using the list itself as the condition. Set score_status to "missing" only if score is None, and to "recorded" otherwise.',
         'inbox = []\nscore = 0\n# Set inbox_status and score_status.\n',
@@ -814,34 +534,6 @@ const curriculum = [
         'The total 255 divided by 3 is 85.0. The extremes are 72 and 95. The gap between 70 and 95 is 25, and 2.678 rounds to 2.7.',
     },
     [
-      choice(
-        'What is printed?',
-        ['11 4', '4 11', '7 4', '22 4'],
-        0,
-        'max finds 11 in the list, and min compares its three separate arguments to find 4.',
-        'min and max work on a list or on several arguments.',
-        'print(max([4, 11, 7]), min(4, 11, 7))',
-      ),
-      choice(
-        'Which expression computes the mean of a nonempty list values?',
-        [
-          'max(values) - min(values)',
-          'sum(values) // 2',
-          'sum(values) / len(values)',
-          'len(values) / sum(values)',
-        ],
-        2,
-        'The mean is the total divided by the number of values.',
-        'Divide the total by the count.',
-      ),
-      choice(
-        'What is printed?',
-        ['-7 3.14', '7 3.14', '7 3.1', '13 3.14'],
-        1,
-        'abs turns -7 into 7, and round keeps two decimal places of 3.14159.',
-        'abs removes the sign; the second argument of round counts decimal places.',
-        'print(abs(3 - 10), round(3.14159, 2))',
-      ),
       exercise(
         'Set spread to the largest reading minus the smallest reading, and average to the mean of the readings rounded to one decimal place.',
         'readings = [12.5, 9.0, 14.25, 10.0]\n# Set spread and average.\n',
@@ -880,39 +572,6 @@ const curriculum = [
         'strip removes the outer spaces, split makes a two-word list, and join followed by lower builds a lowercase identifier.',
     },
     [
-      choice(
-        'What is printed?',
-        [
-          "['a', 'b', 'c']",
-          "['a', 'b', '', 'c']",
-          "['a,b,,c']",
-          "['a', 'b', ',', 'c']",
-        ],
-        1,
-        'Splitting at each comma leaves an empty string between the two neighboring commas.',
-        'With an explicit separator, empty pieces are kept.',
-        'print("a,b,,c".split(","))',
-      ),
-      choice(
-        'What is printed?',
-        ['HELLO', 'Hello', 'hello', 'None'],
-        2,
-        'upper returns a new string, but the result is never assigned, so word is unchanged.',
-        'String methods do not change the original string.',
-        'word = "hello"\nword.upper()\nprint(word)',
-      ),
-      choice(
-        'parts is ["2024", "06", "01"]. Which expression produces "2024-06-01"?',
-        [
-          'parts.join("-")',
-          '"-".join(parts)',
-          '"-".split(parts)',
-          'parts + "-"',
-        ],
-        1,
-        'join is called on the separator and receives the list of strings.',
-        'The separator comes before .join.',
-      ),
       exercise(
         'Set key to entry with the surrounding spaces removed, all letters lowercase, and each remaining space replaced by an underscore. Set word_count to the number of words in entry.',
         'entry = "  Data Science 101 "\n# Set key and word_count.\n',
@@ -948,28 +607,6 @@ const curriculum = [
         'Index 0 is the first item, -1 is the last, and character index 1 is the second character.',
     },
     [
-      choice(
-        'What is ["a", "b", "c"][1]?',
-        ['a', 'b', 'c', 'An error'],
-        1,
-        'The first item is index 0, making index 1 the second item.',
-        'Python positions start at zero.',
-      ),
-      choice(
-        'What is printed?',
-        ['10', '20', '30', 'An error'],
-        2,
-        'Index -1 retrieves the final item.',
-        'Negative indices count from the end.',
-        'values = [10, 20, 30]\nprint(values[-1])',
-      ),
-      choice(
-        'Which index is outside a list of three items?',
-        ['0', '1', '2', '3'],
-        3,
-        'The valid nonnegative indices are 0, 1, and 2.',
-        'The highest positive index is one less than the length.',
-      ),
       exercise(
         'Set first to the first item in names and last to the last item, using indexing.',
         'names = ["Ivo", "Uma", "Zoe"]\n# Set first and last.\n',
@@ -1005,38 +642,6 @@ const curriculum = [
         'Indexing reads 3 and 4. The first comparison is settled by 2 < 3; the second ties on 2 and then compares 9 < 5.',
     },
     [
-      choice(
-        'What is printed?',
-        ['Ada', '36', '("Ada", 36)', 'An error'],
-        1,
-        'Index 1 is the second item, 36.',
-        'Tuple indexes start at 0, like list indexes.',
-        'record = ("Ada", 36)\nprint(record[1])',
-      ),
-      choice(
-        'point is (1, 2). What happens when point[0] = 5 runs?',
-        [
-          'point becomes (5, 2)',
-          'point becomes (1, 5)',
-          'A TypeError is raised',
-          'A new tuple (5,) is created',
-        ],
-        2,
-        'Tuples are immutable, so assigning to an item raises TypeError.',
-        'A tuple cannot be changed after it is created.',
-      ),
-      choice(
-        'Which comparison is True?',
-        [
-          '(2, 1) < (1, 9)',
-          '(3, 4) < (3, 2)',
-          '(5, 5) < (5, 5)',
-          '(1, 8) < (2, 0)',
-        ],
-        3,
-        'The first items 1 and 2 differ, so 1 < 2 decides the comparison.',
-        'Compare first items; look further only on a tie.',
-      ),
       exercise(
         'Each tuple is (hour, minute). Set start_hour to the hour of a using indexing, and is_earlier to whether a comes before b, using a single tuple comparison.',
         'a = (9, 30)\nb = (10, 15)\n# Set start_hour and is_earlier.\n',
@@ -1076,29 +681,6 @@ const curriculum = [
         'color first refers to blue and then to gold. The body runs for each value.',
     },
     [
-      choice(
-        'How many times does this loop print?',
-        ['1', '2', '3', '4'],
-        2,
-        'The list contains three items, so the body executes three times.',
-        'One iteration happens per item.',
-        'for number in [2, 4, 6]:\n    print(number)',
-      ),
-      choice(
-        'What is printed?',
-        ['4\n5', '8\n10', '9', 'Nothing'],
-        1,
-        'The body doubles each item independently.',
-        'Substitute each list item into x.',
-        'for x in [4, 5]:\n    print(x * 2)',
-      ),
-      choice(
-        'How many times does the body of for x in [] run?',
-        ['Zero', 'Once', 'Forever', 'It always raises an error'],
-        0,
-        'An empty collection has no items to assign to the loop variable.',
-        'There is nothing to iterate over.',
-      ),
       exercise(
         'Build doubled by looping over numbers and appending twice each number. The list must preserve the original order.',
         'numbers = [3, 1, 5]\ndoubled = []\n# Your for loop goes here.\n',
@@ -1134,34 +716,6 @@ const curriculum = [
         'Each pair is split into name and score. The swap builds (2, 8) from the old values first and then assigns it.',
     },
     [
-      choice(
-        'What is printed?',
-        ['4 9', '9 4', '9 9', '4 4'],
-        1,
-        'The right side (9, 4) is built from the old values first and then unpacked into a and b.',
-        'Evaluate the whole right side before assigning.',
-        'a, b = 4, 9\na, b = b, a\nprint(a, b)',
-      ),
-      choice(
-        'What does x, y = (1, 2, 3) do?',
-        [
-          'Makes x 1 and y (2, 3)',
-          'Makes x 1 and y 2',
-          'Raises ValueError',
-          'Makes x (1, 2) and y 3',
-        ],
-        2,
-        'Two names cannot receive three items, so unpacking fails.',
-        'Count the names and the items.',
-      ),
-      choice(
-        'What is printed?',
-        ['2\n5', '6\n5', '11', '(2, 3)\n(5, 1)'],
-        1,
-        'Each pair is unpacked into price and qty and multiplied: 2 * 3, then 5 * 1.',
-        'Unpack each pair, then use both parts.',
-        'for price, qty in [(2, 3), (5, 1)]:\n    print(price * qty)',
-      ),
       exercise(
         'For each (name, minutes) pair in sessions, append the string "NAME: MINUTES" to labels, for example "Ada: 25". Unpack the pair in the for statement.',
         'sessions = [("Ada", 25), ("Lin", 40)]\nlabels = []\n# Loop and append.\n',
@@ -1196,28 +750,6 @@ const curriculum = [
       explanation: 'Start at 2, add 2 each time, and stop before 7.',
     },
     [
-      choice(
-        'What is list(range(4))?',
-        ['[1, 2, 3, 4]', '[0, 1, 2, 3]', '[0, 1, 2, 3, 4]', '[4]'],
-        1,
-        'range(4) starts at 0 and excludes its stop value, 4.',
-        'The stop value is never included.',
-      ),
-      choice(
-        'What is list(range(3, 6))?',
-        ['[3, 4, 5]', '[3, 4, 5, 6]', '[0, 1, 2]', '[6, 5, 4]'],
-        0,
-        'The start is included, and the stop is excluded.',
-        'Begin at 3 and stop before 6.',
-      ),
-      choice(
-        'What is printed?',
-        ['3\n2\n1', '3\n2\n1\n0', '0\n1\n2', 'Nothing'],
-        0,
-        'The negative step counts downward, still excluding the stop value 0.',
-        'Subtract 1 each time.',
-        'for n in range(3, 0, -1):\n    print(n)',
-      ),
       exercise(
         'Set even_numbers to a list of even integers from 2 through 10, inclusive, using range().',
         '# Set even_numbers.\n',
@@ -1253,44 +785,6 @@ const curriculum = [
         'enumerate supplies the positions 0 and 1; zip pairs each name with the score at the same position.',
     },
     [
-      choice(
-        'What is printed?',
-        [
-          "[(1, 'a'), (2, 'b')]",
-          "[(0, 'a'), (1, 'b')]",
-          '[0, 1]',
-          "[('a', 0), ('b', 1)]",
-        ],
-        1,
-        'enumerate starts at 0 and puts the position first in each pair.',
-        'Positions come first and start at zero.',
-        'print(list(enumerate(["a", "b"])))',
-      ),
-      choice(
-        'What is printed?',
-        [
-          "[(1, 'x'), (2, 'y')]",
-          "[(1, 'x'), (2, 'y'), (3, None)]",
-          "[1, 'x', 2, 'y']",
-          "[(1, 2, 3), ('x', 'y')]",
-        ],
-        0,
-        'zip stops when the shorter list runs out, so 3 has no partner and is dropped.',
-        'zip pairs by position and stops at the shorter input.',
-        'print(list(zip([1, 2, 3], ["x", "y"])))',
-      ),
-      choice(
-        'Which loop gives the position and the value of each task?',
-        [
-          'for task in range(tasks):',
-          'for i, task in zip(tasks):',
-          'for i in tasks:',
-          'for i, task in enumerate(tasks):',
-        ],
-        3,
-        'enumerate yields (position, item) pairs that unpack into i and task.',
-        'One of these functions adds positions.',
-      ),
       exercise(
         'Use zip to fill totals with price * quantity for each matching pair. Use enumerate to fill labels with strings like "1. pen", numbered from 1.',
         'items = ["pen", "cup"]\nprices = [2, 5]\nquantities = [3, 1]\ntotals = []\nlabels = []\n# Fill totals and labels.\n',
@@ -1326,34 +820,6 @@ const curriculum = [
       explanation: 'total moves from 0 to 2, then 7, then 10.',
     },
     [
-      choice(
-        'Where should a running total be initialized?',
-        [
-          'Before the loop',
-          'Inside every iteration',
-          'Only after the loop',
-          'It never needs initialization',
-        ],
-        0,
-        'The initial value must exist before the first update and must not reset between updates.',
-        'You want one total shared across iterations.',
-      ),
-      choice(
-        'What is printed?',
-        ['1', '2', '3', '6'],
-        1,
-        'Only 4 and 7 are greater than 3, so count is incremented twice.',
-        'Count matching items, not the sum of their values.',
-        'count = 0\nfor n in [1, 4, 7]:\n    if n > 3:\n        count += 1\nprint(count)',
-      ),
-      choice(
-        'What does this code print?',
-        ['None', 'An error', '0', '1'],
-        2,
-        'The empty loop performs no updates, leaving the initial value 0.',
-        'Consider whether any iteration runs.',
-        'total = 0\nfor n in []:\n    total += n\nprint(total)',
-      ),
       exercise(
         'Set total_positive to the sum of only the positive values in numbers. Zero and negative values must not contribute.',
         'numbers = [-2, 5, 0, 3, -1]\ntotal_positive = 0\n# Accumulate the positive numbers.\n',
@@ -1390,39 +856,6 @@ const curriculum = [
         'Each iteration decreases count. When count becomes zero, the condition is false.',
     },
     [
-      choice(
-        'When is a while condition checked?',
-        [
-          'Only after the first iteration',
-          'Before every iteration',
-          'Only once',
-          'After the program ends',
-        ],
-        1,
-        'Python checks the condition before entering or repeating the body.',
-        'The body may run zero times.',
-      ),
-      choice(
-        'What is printed?',
-        ['0', '1', '3', '4'],
-        2,
-        'n progresses through 0, 1, 2, and 3. The condition fails at 3.',
-        'Stop when n < 3 is false.',
-        'n = 0\nwhile n < 3:\n    n += 1\nprint(n)',
-      ),
-      choice(
-        'Which change prevents this loop from running forever?',
-        [
-          'Print x twice',
-          'Add x -= 1 inside the loop',
-          'Remove the condition',
-          'Change the print text',
-        ],
-        1,
-        'Decreasing a positive x eventually makes x > 0 false.',
-        'The condition needs a value that changes toward termination.',
-        'x = 2\nwhile x > 0:\n    print(x)',
-      ),
       exercise(
         'Starting with savings = 0, add 7 each iteration until savings is at least 20. Count the number of iterations in weeks.',
         'savings = 0\nweeks = 0\n# Use a while loop.\n',
@@ -1461,34 +894,6 @@ const curriculum = [
         '4 is skipped by continue, 7 is printed, and -1 triggers break, so 9 is never visited.',
     },
     [
-      choice(
-        'What is printed?',
-        ['1\n2', '1\n2\n3', '1\n2\n4', '3\n4'],
-        0,
-        'When x is 3 the loop ends, before 3 is printed.',
-        'break leaves the loop at once.',
-        'for x in [1, 2, 3, 4]:\n    if x == 3:\n        break\n    print(x)',
-      ),
-      choice(
-        'What is printed?',
-        ['1\n2', '3', '1\n2\n4', '1\n2\n3\n4'],
-        2,
-        'continue skips only the iteration for 3; the loop goes on to 4.',
-        'continue moves on to the next item.',
-        'for x in [1, 2, 3, 4]:\n    if x == 3:\n        continue\n    print(x)',
-      ),
-      choice(
-        'A break runs inside an inner loop that is nested in an outer loop. What ends?',
-        [
-          'Both loops',
-          'Only the inner loop',
-          'Only the outer loop',
-          'The whole program',
-        ],
-        1,
-        'break affects only the loop that directly contains it; the outer loop continues with its next item.',
-        'Which loop directly encloses the break?',
-      ),
       exercise(
         'Use while True and break to find the first positive whole number n whose square is greater than limit. Set first to that n.',
         'limit = 50\nn = 1\n# Loop with while True and break.\n',
@@ -1527,33 +932,6 @@ const curriculum = [
         'append adds review, indexed assignment changes read, and pop removes review.',
     },
     [
-      choice(
-        'What does values.append(9) do?',
-        [
-          'Replaces the first item',
-          'Adds 9 at the end',
-          'Sorts the list',
-          'Returns a new list',
-        ],
-        1,
-        'append mutates the existing list by adding one final item.',
-        'Append means add to the end.',
-      ),
-      choice(
-        'What is printed?',
-        ['[1]', '[1, 2]', '[2]', 'An error'],
-        1,
-        'a and b refer to the same list, so appending through b changes the list a sees.',
-        'Assigning a list to another name does not copy its contents.',
-        'a = [1]\nb = a\nb.append(2)\nprint(a)',
-      ),
-      choice(
-        'What value does [4, 5, 6].pop() return?',
-        ['4', '5', '6', 'None'],
-        2,
-        'Without an index, pop removes and returns the last item.',
-        'Which item is at the end?',
-      ),
       exercise(
         'Copy original into a separate list named updated. Replace its first item with 9, then append 4. Leave original unchanged.',
         'original = [1, 2, 3]\n# Create and change updated.\n',
@@ -1592,28 +970,6 @@ const curriculum = [
         'Seven slots cover indexes 0 to 6. Each roll adds one to the slot whose index is the rolled value.',
     },
     [
-      choice(
-        'What is [False] * 3?',
-        ['[False]', '[0, 0, 0]', '[False, False, False]', 'False'],
-        2,
-        'Repeating a one-item list gives a list with three copies of its item.',
-        'The list is repeated end to end.',
-      ),
-      choice(
-        'What is printed?',
-        ['[0, 0, 5, 0]', '[5, 5, 5, 5]', '[0, 5, 0, 0]', '[0, 0, 0, 0, 5]'],
-        0,
-        'Only index 2 changes; the other slots stay 0.',
-        'Indexing updates exactly one slot.',
-        'slots = [0] * 4\nslots[2] += 5\nprint(slots)',
-      ),
-      choice(
-        'Digits run from 0 through 9. Which list has exactly one counter for each digit?',
-        ['[0] * 9', '[0] * 10', '[10] * 0', '[0, 9]'],
-        1,
-        'Indexes 0 through 9 need ten slots.',
-        'Count the indexes you must store.',
-      ),
       exercise(
         'Grades are whole numbers from 0 to 5. Set tally to a list of six zeros, then add 1 to tally[grade] for each grade in grades.',
         'grades = [5, 3, 5, 0, 2, 5]\n# Build tally.\n',
@@ -1646,29 +1002,6 @@ const curriculum = [
         'grid[1][0] is the first item of the second row. After the update, the nested loop collects the cells row by row.',
     },
     [
-      choice(
-        'What is printed?',
-        ['8', '10', '9', '6'],
-        1,
-        'table[2] is [9, 10], and index 1 of that row is 10.',
-        'Apply the indexes from left to right.',
-        'table = [[5, 6], [7, 8], [9, 10]]\nprint(table[2][1])',
-      ),
-      choice(
-        'For grid = [[1, 2, 3], [4, 5, 6]], what are len(grid) and len(grid[0])?',
-        ['3 and 2', '2 and 3', '6 and 3', '2 and 2'],
-        1,
-        'There are two rows, and the first row has three items.',
-        'len(grid) counts rows, not cells.',
-      ),
-      choice(
-        'What is printed?',
-        ['[11, 21, 12, 22]', '[11, 12, 21, 22]', '[11, 22]', '[33]'],
-        0,
-        'For a = 1 the inner loop adds 10 and then 20 before a becomes 2.',
-        'The inner loop finishes for each outer value.',
-        'sums = []\nfor a in [1, 2]:\n    for b in [10, 20]:\n        sums.append(a + b)\nprint(sums)',
-      ),
       exercise(
         'Set center to the middle cell of board, then change its bottom-right cell to "X". Finally, fill flat with every cell, row by row, using nested loops.',
         'board = [["a", "b", "c"], ["d", "e", "f"], ["g", "h", "i"]]\nflat = []\n# Set center, update board, and fill flat.\n',
@@ -1707,27 +1040,6 @@ const curriculum = [
         'Indices 1, 2, and 3 produce yth. A step of -1 traverses backward.',
     },
     [
-      choice(
-        'What is [10, 20, 30, 40][1:3]?',
-        ['[10, 20, 30]', '[20, 30]', '[20, 30, 40]', '[10, 40]'],
-        1,
-        'The slice includes positions 1 and 2, but excludes position 3.',
-        'The stop index is excluded.',
-      ),
-      choice(
-        'What is "planet"[:3]?',
-        ['pla', 'plan', 'net', 'lan'],
-        0,
-        'With no start given, Python starts at 0 and stops before 3.',
-        'Select indices 0, 1, and 2.',
-      ),
-      choice(
-        'Which slice reverses a list?',
-        ['items[1:]', 'items[:1]', 'items[::2]', 'items[::-1]'],
-        3,
-        'A step of -1 walks from the end toward the beginning.',
-        'Use a negative step.',
-      ),
       exercise(
         'Set middle to the three middle values [20, 30, 40] using a slice of values. Set reversed_values to all values in reverse order.',
         'values = [10, 20, 30, 40, 50]\n# Set middle and reversed_values.\n',
@@ -1766,33 +1078,6 @@ const curriculum = [
         'Ada already has a key, so assignment replaces its value. Missing Sam receives the default 0.',
     },
     [
-      choice(
-        'What is printed?',
-        ['Ada', '10', 'name', 'An error'],
-        0,
-        'The key name maps to the string Ada.',
-        'Use the key to look up the associated value.',
-        'person = {"name": "Ada", "age": 10}\nprint(person["name"])',
-      ),
-      choice(
-        'What does {"a": 1}.get("b", 0) return?',
-        ['1', '"b"', '0', 'It raises KeyError'],
-        2,
-        'The missing key b uses the supplied default 0.',
-        'get() can provide a fallback.',
-      ),
-      choice(
-        'What does "red" in {"color": "red"} test?',
-        [
-          'Whether red is a value',
-          'Whether red is a key',
-          'Whether the dictionary is nonempty',
-          'Whether red is a string',
-        ],
-        1,
-        'Membership on a dictionary checks its keys.',
-        'The only key in this dictionary is color.',
-      ),
       exercise(
         'Create inventory with apples = 3 and pears = 2. Increase apples by 4. Set oranges to the count of the missing oranges key, defaulting to 0.',
         '# Create and update inventory, then set oranges.\n',
@@ -1831,28 +1116,6 @@ const curriculum = [
         'Each pair is unpacked so the loop has access to both the key and its associated value.',
     },
     [
-      choice(
-        'What does for key in data iterate over?',
-        ['Keys', 'Values', 'Indices', 'Only the first entry'],
-        0,
-        'A direct dictionary loop visits each key.',
-        'The loop variable receives the keys by default.',
-      ),
-      choice(
-        'Which view gives both keys and values?',
-        ['data.keys()', 'data.values()', 'data.items()', 'data.pairs()'],
-        2,
-        'items() provides each entry as a key-value pair.',
-        'The method is called items().',
-      ),
-      choice(
-        'What is printed?',
-        ['2', '5', '8', 'ab'],
-        1,
-        'values() yields 2 and 3; the accumulator sums them to 5.',
-        'Add the values rather than the keys.',
-        'total = 0\nfor value in {"a": 2, "b": 3}.values():\n    total += value\nprint(total)',
-      ),
       exercise(
         'Build a list named passed_names containing the names whose score is at least 60. Preserve dictionary insertion order.',
         'scores = {"Ada": 80, "Bo": 55, "Cy": 60}\npassed_names = []\n# Loop over names and scores.\n',
@@ -1891,28 +1154,6 @@ const curriculum = [
         'The duplicate home is stored once, adding it again changes nothing, and & keeps only the shared members.',
     },
     [
-      choice(
-        'What is printed?',
-        ['4', '3', '2', '1'],
-        2,
-        'The distinct values are 4 and 2.',
-        'Duplicates are stored once.',
-        'print(len(set([4, 4, 2, 4])))',
-      ),
-      choice(
-        'Which expression creates an empty set?',
-        ['{}', '[]', '{None}', 'set()'],
-        3,
-        '{} creates an empty dictionary, so an empty set needs set().',
-        'Braces alone mean a dictionary.',
-      ),
-      choice(
-        'a = {1, 2, 3} and b = {3, 4}. Which expression equals {1, 2}?',
-        ['a & b', 'a | b', 'a - b', 'b - a'],
-        2,
-        'a - b keeps the members of a that are not in b.',
-        'Difference removes the second set from the first.',
-      ),
       exercise(
         'Set unique_count to the number of different tags, and shared to the set of tags that appear in both tags and featured.',
         'tags = ["ai", "web", "ai", "data"]\nfeatured = ["data", "cloud", "web"]\n# Set unique_count and shared.\n',
@@ -1948,33 +1189,6 @@ const curriculum = [
         'The same function body runs twice with a different value assigned to the parameter name.',
     },
     [
-      choice(
-        'What happens when Python executes a def statement?',
-        [
-          'The body always runs immediately',
-          'The function is defined for later calls',
-          'Python ends the program',
-          'Every variable becomes global',
-        ],
-        1,
-        'def creates the function; its body runs when the function is called.',
-        'Definition and invocation are separate steps.',
-      ),
-      choice(
-        'In def greet(name), what is name?',
-        ['An argument', 'A parameter', 'A keyword', 'A module'],
-        1,
-        'A name in the definition is a parameter; a passed value in a call is an argument.',
-        'The definition names the input slot.',
-      ),
-      choice(
-        'What is printed?',
-        ['Hi\nHi', 'Nothing', 'Hi', 'An error'],
-        2,
-        'The body runs once because there is one call.',
-        'Count calls, not definitions.',
-        'def hello():\n    print("Hi")\n\nhello()',
-      ),
       exercise(
         'Define a function named greet with one parameter name. It should print Hello, NAME! using the supplied name.',
         'def greet(name):\n    # Write the function body.\n    pass\n',
@@ -2013,33 +1227,6 @@ const curriculum = [
         'The function returns 12. The caller stores it in result and adds 1.',
     },
     [
-      choice(
-        'What does return do?',
-        [
-          'Only writes text to the screen',
-          'Sends a value to the caller and exits the function',
-          'Repeats the function forever',
-          'Changes every global variable',
-        ],
-        1,
-        'Returning hands a result back and stops the current call.',
-        'The caller receives the returned value.',
-      ),
-      choice(
-        'What is printed?',
-        ['4', '5', '9', 'None'],
-        1,
-        'The first return exits the function, so the second return is not reached.',
-        'The first unconditional return ends the call.',
-        'def value():\n    return 5\n    return 4\n\nprint(value())',
-      ),
-      choice(
-        'What is returned by a function with no explicit return?',
-        ['0', 'False', 'None', 'An empty string'],
-        2,
-        'Python returns None when execution reaches the function end without a return value.',
-        'No explicit result means None.',
-      ),
       exercise(
         'Define absolute_value(number). Return number when it is nonnegative and -number when it is negative.',
         'def absolute_value(number):\n    # Return the magnitude of number.\n    pass\n',
@@ -2078,34 +1265,6 @@ const curriculum = [
         'The function returns the tuple (2, 15), which the caller unpacks. Printing a returned tuple directly shows its parentheses.',
     },
     [
-      choice(
-        'What is printed?',
-        ['3 4', '(3, 4)', '3', '[3, 4]'],
-        1,
-        'return 3, 4 returns the tuple (3, 4), which print shows with parentheses.',
-        'A comma in return builds a tuple.',
-        'def pair():\n    return 3, 4\n\nprint(pair())',
-      ),
-      choice(
-        'What is printed?',
-        ['7', '(7, 10)', '10', '2'],
-        2,
-        'stats returns (7, 10); p receives the second item.',
-        'Unpack in order.',
-        'def stats(a, b):\n    return a + b, a * b\n\ns, p = stats(2, 5)\nprint(p)',
-      ),
-      choice(
-        'person() returns name, age. Which statement stores the two parts in separate names?',
-        [
-          'name = age = person()',
-          'name, age = person()',
-          'person(name, age)',
-          'name + age = person()',
-        ],
-        1,
-        'Unpacking the returned tuple assigns each part to its own name.',
-        'Unpack the returned tuple.',
-      ),
       exercise(
         'Define divide(a, b) so that it returns two values: the floor quotient a // b and the remainder a % b, in that order.',
         'def divide(a, b):\n    # Return the quotient and the remainder.\n    pass\n',
@@ -2144,34 +1303,6 @@ const curriculum = [
         'factorial(4) waits for factorial(3), which waits for factorial(2) and factorial(1). The returned values multiply back up: 1, 2, 6, 24.',
     },
     [
-      choice(
-        'What must a recursive function have so that it can stop?',
-        [
-          'A while loop around the call',
-          'A base case that returns without calling itself',
-          'At least two parameters',
-          'A print statement',
-        ],
-        1,
-        'The base case answers directly, which ends the chain of calls.',
-        'Something must return without recursing.',
-      ),
-      choice(
-        'What is printed?',
-        ['4', '0', '10', '24'],
-        2,
-        'total(4) is 4 + 3 + 2 + 1 + 0, which is 10.',
-        'Unfold each call until n is 0.',
-        'def total(n):\n    if n == 0:\n        return 0\n    return n + total(n - 1)\n\nprint(total(4))',
-      ),
-      choice(
-        'What is printed?',
-        ['3\n2\n1', '1\n2\n3', '3', '0\n1\n2\n3'],
-        1,
-        'Each call prints only after the smaller call returns, so 1 is printed first.',
-        'The print comes after the recursive call.',
-        'def show(n):\n    if n == 0:\n        return\n    show(n - 1)\n    print(n)\n\nshow(3)',
-      ),
       exercise(
         'Define digit_sum(n) recursively for a nonnegative integer n: 0 has digit sum 0, and otherwise the digit sum is the last digit, n % 10, plus the digit sum of n // 10.',
         'def digit_sum(n):\n    # Add a base case and a recursive case.\n    pass\n',
@@ -2210,33 +1341,6 @@ const curriculum = [
         'The first call uses the default quantity. Keyword arguments make the second call explicit.',
     },
     [
-      choice(
-        'What is printed?',
-        ['2', '4', '6', 'An error'],
-        1,
-        'With no second argument, multiplier uses the default value 2.',
-        'A missing optional argument uses its default.',
-        'def scale(value, multiplier=2):\n    return value * multiplier\n\nprint(scale(2))',
-      ),
-      choice(
-        'Which call uses keyword arguments?',
-        ['area(3, 4)', 'area(width=3, height=4)', 'area[3, 4]', 'area = 3, 4'],
-        1,
-        'Keyword arguments use parameter names followed by = and a value.',
-        'Look for parameter_name=value inside a call.',
-      ),
-      choice(
-        'Why is a list usually a poor default parameter value?',
-        [
-          'Lists cannot contain numbers',
-          'It is shared across calls and may retain changes',
-          'Lists cannot be passed to functions',
-          'It makes Python stop',
-        ],
-        1,
-        'Default objects are created once at definition time, so a mutated list can persist between calls.',
-        'Think about when the default object is created.',
-      ),
       exercise(
         'Define total_cost(price, quantity=1, discount=0). Return price * quantity - discount. Support omitted defaults and keyword calls.',
         'def total_cost(price, quantity=1, discount=0):\n    pass\n',
@@ -2275,33 +1379,6 @@ const curriculum = [
         'Only 1 and 3 pass the condition. Their squares become the new list.',
     },
     [
-      choice(
-        'What is [n + 1 for n in [2, 4]]?',
-        ['[2, 4]', '[3, 5]', '[1, 1]', '[6]'],
-        1,
-        'The expression n + 1 is evaluated for each item.',
-        'Apply the expression once to 2 and once to 4.',
-      ),
-      choice(
-        'Which comprehension keeps only even values?',
-        [
-          '[n for n in values if n % 2 == 0]',
-          '[n % 2 for n in values]',
-          '[n for n in values if n > 2]',
-          '[values for n in 2]',
-        ],
-        0,
-        'The filter keeps values whose remainder after division by 2 is zero.',
-        'Put the condition after the for clause.',
-      ),
-      choice(
-        'What is printed?',
-        ['[2, 6]', '[-4, 2, 6]', '[1, 3]', '[True, True]'],
-        0,
-        'The filter excludes -2; the expression doubles the remaining 1 and 3.',
-        'Filter the original values, then transform the ones kept.',
-        'print([n * 2 for n in [-2, 1, 3] if n > 0])',
-      ),
       exercise(
         'Set long_lengths to the lengths of words with at least four characters, preserving order. Use a list comprehension.',
         'words = ["sun", "moon", "planet", "a"]\n# Set long_lengths.\n',
@@ -2340,34 +1417,6 @@ const curriculum = [
         'The comprehension builds two separate rows. Repeating the outer list makes both rows the same list, so one change shows up twice.',
     },
     [
-      choice(
-        'Which expression builds four independent empty lists?',
-        ['[[]] * 4', '[] * 4', '[[] for _ in range(4)]', '[[], 4]'],
-        2,
-        'The comprehension evaluates [] once per iteration, creating a new list each time.',
-        'Each row needs its own list.',
-      ),
-      choice(
-        'What is printed?',
-        [
-          '[[0, 0], [5, 0], [0, 0]]',
-          '[[5, 0], [5, 0], [5, 0]]',
-          '[[5, 5], [0, 0], [0, 0]]',
-          '[[0, 0], [0, 0], [5, 0]]',
-        ],
-        1,
-        'All three rows are the same list, so the change appears in each of them.',
-        'Repeating a list of lists repeats one inner list.',
-        'g = [[0] * 2] * 3\ng[1][0] = 5\nprint(g)',
-      ),
-      choice(
-        'What is printed?',
-        ['[0, 1, 2]', '[10, 11, 12]', '[1, 11, 21]', '[20, 21, 22]'],
-        1,
-        'Row 1 is built with r = 1, giving 10, 11 and 12.',
-        'The outer comprehension builds rows; the inner one builds the cells of a row.',
-        'grid = [[r * 10 + c for c in range(3)] for r in range(2)]\nprint(grid[1])',
-      ),
       exercise(
         'Set seats to a grid of 3 rows and 4 columns filled with "." strings, with independent rows. Then mark the seat in row 1, column 2 with "X".',
         '# Build seats, then mark one seat.\n',
@@ -2406,29 +1455,6 @@ const curriculum = [
         'The differences 2, 25 and 18 sum to 45. One score is above 90, but 72 fails the test for all.',
     },
     [
-      choice(
-        'What is printed?',
-        ['[2, 4, 6]', '6', '12', '9'],
-        2,
-        'The doubled values 2, 4 and 6 are added: 12.',
-        'sum consumes each produced value.',
-        'print(sum(n * 2 for n in [1, 2, 3]))',
-      ),
-      choice(
-        'What does all(x > 0 for x in []) return?',
-        ['False', 'True', 'None', 'It raises ValueError'],
-        1,
-        'With no items, nothing fails the test, so all returns True.',
-        'all looks for a counterexample.',
-      ),
-      choice(
-        'What is printed?',
-        ['False False', 'True True', 'True False', 'False True'],
-        2,
-        'tree is longer than 3 letters, so any is True; a has length 1, so all is False.',
-        'Compare at least one with every one.',
-        'words = ["sky", "tree", "a"]\nprint(any(len(w) > 3 for w in words), all(len(w) > 1 for w in words))',
-      ),
       exercise(
         'Using generator expressions, set total_sq to the sum of the squares of values, and has_negative to whether any value is negative.',
         'values = [3, -1, 2]\n# Set total_sq and has_negative.\n',
@@ -2467,37 +1493,6 @@ const curriculum = [
         'The successful conversion returns 12. The invalid text raises ValueError, which the except branch handles.',
     },
     [
-      choice(
-        'What exception does int("apple") raise?',
-        ['NameError', 'IndexError', 'ValueError', 'KeyError'],
-        2,
-        'The conversion is given an invalid string representation for an integer.',
-        'The value is unsuitable for conversion.',
-      ),
-      choice(
-        'Where should the operation that may fail be placed?',
-        [
-          'In the try block',
-          'Only after except',
-          'Before def',
-          'Inside a quoted string',
-        ],
-        0,
-        'try executes the operation, and except handles the specified exception if one occurs.',
-        'The try block is the guarded operation.',
-      ),
-      choice(
-        'Why catch ValueError instead of every exception?',
-        [
-          'It makes invalid input valid',
-          'It prevents unrelated programming errors from being hidden',
-          'It disables all tracebacks globally',
-          'It repeats the code automatically',
-        ],
-        1,
-        'A specific handler addresses the expected failure while letting unexpected bugs surface.',
-        'Handle the failure you understand.',
-      ),
       exercise(
         'Define parse_integer(text). Return int(text) when possible; return None if converting the text raises ValueError.',
         'def parse_integer(text):\n    # Handle invalid integer text.\n    pass\n',
@@ -2536,32 +1531,6 @@ const curriculum = [
         'The first occurrence starts from zero. Later occurrences increase the stored count.',
     },
     [
-      choice(
-        'Which structure best stores a count for each distinct word?',
-        ['One integer', 'A dictionary', 'One boolean', 'A fixed output string'],
-        1,
-        'A dictionary associates each word key with its integer count.',
-        'You need to map a word to a count.',
-      ),
-      choice(
-        'Why use counts.get(word, 0)?',
-        [
-          'To delete the word',
-          'To convert the word to a number',
-          'To start unseen words with a count of zero',
-          'To sort all words',
-        ],
-        2,
-        'The default 0 handles a word that has not appeared yet.',
-        'The first occurrence has no stored count.',
-      ),
-      choice(
-        'What should count_words([]) return?',
-        ['None', '{}', '{"": 1}', 'It must raise an error'],
-        1,
-        'An empty input has no words, so the appropriate result is an empty mapping.',
-        'The loop has no iterations.',
-      ),
       exercise(
         'Define count_words(words), returning a dictionary of word frequencies. Treat uppercase and lowercase as different words. Do not modify the input list.',
         'def count_words(words):\n    # Build and return the frequency dictionary.\n    pass\n',
@@ -2600,39 +1569,6 @@ const curriculum = [
         'sorted returns a copy and leaves values alone. sort(reverse=True) then reorders values itself. reversed only reverses the existing order.',
     },
     [
-      choice(
-        'What is printed?',
-        ['[1, 2, 3]', '[3, 1, 2]', 'None', 'An error'],
-        2,
-        'list.sort() sorts the list in place and returns None.',
-        'Check what sort() returns, not what it does.',
-        'nums = [3, 1, 2]\nresult = nums.sort()\nprint(result)',
-      ),
-      choice(
-        'What is printed?',
-        [
-          "['fig', 'pear', 'Apple']",
-          "['Apple', 'fig', 'pear']",
-          "['Apple', 'pear', 'fig']",
-          "['apple', 'fig', 'pear']",
-        ],
-        1,
-        'Uppercase letters come before lowercase ones, so Apple is first; then fig comes before pear.',
-        'Compare first characters; capitals sort first.',
-        'print(sorted(["pear", "Apple", "fig"]))',
-      ),
-      choice(
-        'Which expression returns a new list of scores from highest to lowest without changing scores?',
-        [
-          'scores.sort(reverse=True)',
-          'reversed(scores)',
-          'sorted(scores)[0]',
-          'sorted(scores, reverse=True)',
-        ],
-        3,
-        'sorted makes a new list, and reverse=True orders it from highest to lowest.',
-        'One option sorts in place; another does not sort at all.',
-      ),
       exercise(
         'Set ranked to a new list of points from highest to lowest, leaving points unchanged. Then sort names in place.',
         'points = [40, 85, 62, 85]\nnames = ["Zoe", "ada", "Lin"]\n# Set ranked, then sort names.\n',
@@ -2672,39 +1608,6 @@ const curriculum = [
         'Ages decide the first order, and Ada stays ahead of Bo on the tie. max returns the first pair with the top age. The tuple key sorts ages downward and names upward.',
     },
     [
-      choice(
-        'What is printed?',
-        [
-          "['banana', 'fig', 'kiwi']",
-          '[3, 4, 6]',
-          "['fig', 'kiwi', 'banana']",
-          "['banana', 'kiwi', 'fig']",
-        ],
-        2,
-        'The words are ordered by their lengths 3, 4 and 6, but the words themselves are returned.',
-        'The key decides the order; the items are returned.',
-        'print(sorted(["kiwi", "fig", "banana"], key=len))',
-      ),
-      choice(
-        'Which key sorts (name, age) pairs from oldest to youngest?',
-        [
-          'key=lambda p: p[1]',
-          'key=lambda p: -p[1]',
-          'key=lambda p: p[0]',
-          'key=lambda p: -p[0]',
-        ],
-        1,
-        'Negating the age makes larger ages sort first in ascending order.',
-        'Negate the numeric field to reverse it.',
-      ),
-      choice(
-        'What is printed?',
-        ["(1, 'z')", "'a'", "(2, 'a')", "(3, 'c')"],
-        2,
-        'The key compares the letters, and a is the smallest, so its whole tuple is returned.',
-        'min returns the item, not the key.',
-        'print(min([(3, "c"), (1, "z"), (2, "a")], key=lambda t: t[1]))',
-      ),
       exercise(
         'Set by_price to products sorted by price, the second field, keeping tied products in their original order. Set priciest to the product with the highest price.',
         'products = [("pen", 3), ("book", 12), ("cup", 3)]\n# Set by_price and priciest.\n',
@@ -2743,28 +1646,6 @@ const curriculum = [
         '1100 & 1010 is 1000 (8), | gives 1110 (14), and ^ gives 0110 (6). 1 << 3 is 8, and 12 >> 2 drops two bits to leave 3.',
     },
     [
-      choice(
-        'What is printed?',
-        ['4', '7', '1', '3'],
-        2,
-        '5 is 101 and 3 is 011; only the lowest bit is set in both.',
-        'Line up the binary digits.',
-        'print(5 & 3)',
-      ),
-      choice(
-        'What is 1 << 4?',
-        ['5', '4', '8', '16'],
-        3,
-        'Shifting 1 left by four places gives 2 ** 4.',
-        'Each left shift doubles the value.',
-      ),
-      choice(
-        'Which expression is nonzero exactly when bit 2 of x is set?',
-        ['x | (1 << 2)', 'x & (1 << 2)', 'x ^ 2', 'x >> 2'],
-        1,
-        '1 << 2 has only bit 2 set, and & keeps that bit only if x has it.',
-        'Mask a single bit with &.',
-      ),
       exercise(
         'Set flags to 5 with bit 1 turned on (use |), low to the lowest two bits of 13 (use & with 3), and half to 13 shifted right by one place.',
         '# Set flags, low, and half.\n',
@@ -2803,33 +1684,6 @@ const curriculum = [
         'sqrt returns a float. 3.5 rounds up to 4 and down to 3. gcd was imported by name, so it needs no prefix.',
     },
     [
-      choice(
-        'After import math, how do you call its sqrt function?',
-        ['sqrt(9)', 'math(sqrt, 9)', 'math.sqrt(9)', 'import sqrt(9)'],
-        2,
-        'A plain import keeps the module name, so you write math. before the function.',
-        'Reach into the module with a dot.',
-      ),
-      choice(
-        'What is printed?',
-        ['6', '5', '5.9', '5.0'],
-        1,
-        'floor rounds down to the whole number 5.',
-        'floor never rounds up.',
-        'from math import floor\nprint(floor(5.9))',
-      ),
-      choice(
-        'Which line lets you call statistics.mean as st.mean?',
-        [
-          'from statistics import st',
-          'import st from statistics',
-          'statistics = import st',
-          'import statistics as st',
-        ],
-        3,
-        'as gives the imported module a shorter name.',
-        'Look for the alias keyword.',
-      ),
       exercise(
         'Import math. Set hypotenuse to the length of the long side of a right triangle with legs 6 and 8, using math.sqrt, and boxes to the number of boxes of 12 needed for 50 items, using math.ceil.',
         '# Import math, then set hypotenuse and boxes.\n',
@@ -2868,34 +1722,6 @@ const curriculum = [
         'Bo joins at the right and Ada leaves from the left. Counter stores 2 for tea and answers 0 for juice, which never appeared.',
     },
     [
-      choice(
-        'What is printed?',
-        ['1 3', '4 3', '1 4', '3 4'],
-        0,
-        'popleft removes 1 from the left end, and three items remain.',
-        'append adds at the right; popleft removes from the left.',
-        'from collections import deque\nq = deque([1, 2, 3])\nq.append(4)\nprint(q.popleft(), len(q))',
-      ),
-      choice(
-        'What is printed?',
-        ['2 None', '1 0', '2 0', '2 1'],
-        2,
-        'x appears twice, and a missing key in a Counter reads as 0.',
-        'Counter answers 0 for unseen items.',
-        'from collections import Counter\nc = Counter(["x", "y", "x"])\nprint(c["x"], c["w"])',
-      ),
-      choice(
-        'Why use deque.popleft() rather than list.pop(0) for a long queue?',
-        [
-          'popleft removes the newest item instead',
-          'pop(0) shifts every other item, so it slows down as the list grows',
-          'A list cannot remove its first item',
-          'A deque keeps its items sorted',
-        ],
-        1,
-        'Removing from the front of a list moves all later items; a deque removes from either end quickly.',
-        'Think about what happens to the remaining items.',
-      ),
       exercise(
         'Set tally to a Counter of votes, then set yes_votes to the count for "yes" and maybe_votes to the count for "maybe". Then make line a deque of waiting, append "Zed", and set served to the person removed from the front.',
         'from collections import Counter, deque\nvotes = ["yes", "no", "yes", "yes"]\nwaiting = ["Ana", "Ben"]\n# Count the votes, then serve the queue.\n',
@@ -2934,38 +1760,6 @@ const curriculum = [
         'The smallest tuple sits at index 0. Each heappop removes the current smallest, so the tasks come out by priority.',
     },
     [
-      choice(
-        'What is printed?',
-        ['1 3', '5 1', '1 5', '8 5'],
-        0,
-        'heapify puts 1 at the front; after it is popped, 3 is the next smallest.',
-        'Each pop removes the current smallest.',
-        'import heapq\nh = [5, 1, 8, 3]\nheapq.heapify(h)\nprint(heapq.heappop(h), heapq.heappop(h))',
-      ),
-      choice(
-        'After heapq.heapify(items), what is guaranteed?',
-        [
-          'The whole list is sorted',
-          'items[-1] is the largest item',
-          'items[0] is the smallest item',
-          'The order of items is unchanged',
-        ],
-        2,
-        'A heap guarantees only that the smallest item is at index 0.',
-        'A heap is only partly ordered.',
-      ),
-      choice(
-        'How do you get the largest values first from heapq?',
-        [
-          'Call heapq.heappop(heap, reverse=True)',
-          'Push negated values and negate each popped value',
-          'Read heap[-1] instead of heap[0]',
-          'Sort the heap after each push',
-        ],
-        1,
-        'heapq pops the smallest, and the smallest negated value belongs to the largest original value.',
-        'heapq only knows how to find the smallest item.',
-      ),
       exercise(
         'Turn times into a heap with heapify, then set first_two to a list of the two smallest times, removed in order with heappop.',
         'import heapq\ntimes = [42, 17, 30, 8]\n# Heapify, then pop twice.\n',
@@ -3004,34 +1798,6 @@ const curriculum = [
         'The 20s occupy indexes 1 and 2, so the left insertion point is 1 and the right one is 3. 25 belongs before 30, at index 3.',
     },
     [
-      choice(
-        'What is printed?',
-        ['1', '3', '2', '4'],
-        2,
-        '2 and 4 are smaller than 5, so 5 would be inserted at index 2.',
-        'Count the items smaller than x.',
-        'from bisect import bisect_left\nprint(bisect_left([2, 4, 6, 8], 5))',
-      ),
-      choice(
-        'What is printed?',
-        ['1 4', '1 3', '0 3', '2 4'],
-        0,
-        'The three 7s start at index 1, so the left point is 1 and the right point is 4.',
-        'bisect_right lands after the equal items.',
-        'from bisect import bisect_left, bisect_right\nvalues = [3, 7, 7, 7, 9]\nprint(bisect_left(values, 7), bisect_right(values, 7))',
-      ),
-      choice(
-        'What must be true of values before calling bisect_left(values, x)?',
-        [
-          'values must contain x',
-          'values must be sorted in ascending order',
-          'values must have no duplicates',
-          'values must have an even length',
-        ],
-        1,
-        'Binary search relies on ascending order; x does not need to be present.',
-        'Binary search halves a sorted range.',
-      ),
       exercise(
         'prices is sorted. Set cheaper to the number of prices below 50, and fifties to the number of prices equal to exactly 50, using bisect_left and bisect_right.',
         'from bisect import bisect_left, bisect_right\nprices = [10, 25, 50, 50, 80]\n# Set cheaper and fifties.\n',
@@ -3070,34 +1836,6 @@ const curriculum = [
         'Each call to Point creates a separate object. b starts with the default y of 0 until its own attribute is set to 2.',
     },
     [
-      choice(
-        'What is printed?',
-        ['2', '5', '10', '7'],
-        3,
-        'a.size is 2 and b.size is 5; each object stores its own value.',
-        'Each object has its own attributes.',
-        'class Box:\n    def __init__(self, size):\n        self.size = size\n\na = Box(2)\nb = Box(5)\nprint(a.size + b.size)',
-      ),
-      choice(
-        'Inside __init__, what does self refer to?',
-        [
-          'The class definition',
-          'The new object being created',
-          'The first argument the caller passes',
-          'A global variable',
-        ],
-        1,
-        'Python passes the new object as self, so self.attribute stores data on it.',
-        'The caller never passes self.',
-      ),
-      choice(
-        'What is printed?',
-        ['4\n4', '4\n9', '9\n9', '9\n4'],
-        1,
-        'Changing b.count changes only b; a keeps 4.',
-        'Separate objects keep separate attributes.',
-        'class Tally:\n    def __init__(self, count):\n        self.count = count\n\na = Tally(4)\nb = Tally(4)\nb.count = 9\nprint(a.count)\nprint(b.count)',
-      ),
       exercise(
         'Define a class Book whose __init__ takes title and pages, with pages defaulting to 100, and stores both as attributes. Then set novel to Book("Dune", 412).',
         '# Define Book, then create novel.\n',
@@ -3136,33 +1874,6 @@ const curriculum = [
         'fit stores the learned mean 4.0 and returns the same object, so model is the fitted model. predict adds the offset setting.',
     },
     [
-      choice(
-        'What is printed?',
-        ['2', '5', '7', '0'],
-        2,
-        'Each add returns the same object, so both additions update one total.',
-        'Returning self lets calls chain on one object.',
-        'class Tally:\n    def __init__(self):\n        self.total = 0\n\n    def add(self, n):\n        self.total += n\n        return self\n\nt = Tally().add(2).add(5)\nprint(t.total)',
-      ),
-      choice(
-        'In model.fit(data), which value does the method receive as self?',
-        ['data', 'The class MeanModel', 'model', 'Nothing; self is optional'],
-        2,
-        'Calling a method through an object passes that object as self.',
-        'Look at what comes before the dot.',
-      ),
-      choice(
-        'Why does a scikit-learn model have attributes such as coef_ only after fit?',
-        [
-          'fit learns them from the data and stores them on the model',
-          'The constructor deletes them',
-          'They are settings passed to the constructor',
-          'predict creates them',
-        ],
-        0,
-        'Names ending in an underscore hold values learned by fit.',
-        'Settings come before fit; learned values come from fit.',
-      ),
       exercise(
         'Complete the class RangeScaler. fit(values) stores the smallest value in min_ and the largest in max_, then returns self. transform(x) returns (x - min_) / (max_ - min_).',
         'class RangeScaler:\n    def fit(self, values):\n        pass\n\n    def transform(self, x):\n        pass\n',

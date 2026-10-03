@@ -90,9 +90,7 @@ export function quizDeadline(quiz: Quiz): number {
 function choiceQuestions(skill: SkillOutline) {
   return (skill.knowledgePoints ?? []).map((point) => ({
     point,
-    questions: point.questions.filter(
-      (question) => question.type === 'choice',
-    ),
+    questions: point.questions.filter((question) => question.type === 'choice'),
   }));
 }
 

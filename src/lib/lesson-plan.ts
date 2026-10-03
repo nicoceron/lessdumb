@@ -148,11 +148,13 @@ export function stepFor<S extends SkillOutline>(
   evidenceId: string,
 ): StepOf<S> | undefined {
   return plan(skill).steps.find((step) => step.id === evidenceId) as
-    | StepOf<S>
-    | undefined;
+    StepOf<S> | undefined;
 }
 
-export function masteryFraction(skill: SkillOutline, evidence: string[]): number {
+export function masteryFraction(
+  skill: SkillOutline,
+  evidence: string[],
+): number {
   const ids = plan(skill).stepIds;
   if (!ids.length) return 0;
   return ids.filter((id) => evidence.includes(id)).length / ids.length;

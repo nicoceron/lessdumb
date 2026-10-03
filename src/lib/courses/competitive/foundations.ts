@@ -1,11 +1,5 @@
 import type { Skill } from '../../curriculum';
-import {
-  skill,
-  choice,
-  exercise,
-  withLargeCase,
-  withoutShortcuts,
-} from './shared';
+import { skill, exercise, withLargeCase, withoutShortcuts } from './shared';
 
 export const competitiveFoundations: Skill[] = [
   skill(
@@ -23,28 +17,6 @@ export const competitiveFoundations: Skill[] = [
     '36\n3',
     'The pair scan checks 6 × 6 combinations. The probe visits 1, 2, 4, and 8, requiring three doublings.',
     [
-      choice(
-        'What does this program print?',
-        ['4', '8', '16', '32'],
-        2,
-        'Each of four outer iterations performs four inner iterations: 16 checks.',
-        'Multiply the two iteration counts.',
-        'n = 4\nchecks = 0\nfor i in range(n):\n    for j in range(n):\n        checks += 1\nprint(checks)',
-      ),
-      choice(
-        'A routine scans n values, then scans them again. What is its time complexity?',
-        ['O(n)', 'O(n²)', 'O(log n)', 'O(1)'],
-        0,
-        'Two consecutive scans cost n + n operations, so the growth is linear.',
-        'Consecutive loops add; nested loops multiply.',
-      ),
-      choice(
-        'A pair scan keeps only counters and reads an existing array. What is its additional space?',
-        ['O(n²)', 'O(1)', 'O(n)', 'O(log n)'],
-        1,
-        'The counters occupy constant additional space regardless of how many pairs are visited.',
-        'Count new storage, not loop iterations.',
-      ),
       exercise(
         'Implement work_counts(n) for a nonnegative integer n. Return a tuple: the number of checks in a length-n scan, the number in a full n-by-n ordered pair scan, and the number of doublings from 1 needed to reach at least n. Compute counts without performing the pair scan. A hidden case with n = 10¹² must finish within 3 seconds.',
         'def work_counts(n):\n    # Return the two check counts and the doubling count.\n    pass',
@@ -85,38 +57,6 @@ _check_time(_seconds, "work_counts(10**12)", "Compute the pair count with a form
     '3\n[5, -2, 8]\n11',
     'The leading 3 describes three readings; it is not included in their total.',
     [
-      choice(
-        'What does text.split() return for "4\\n7\\t9"?',
-        [
-          '[4, 7, 9]',
-          '["4", "7", "9"]',
-          '["4\\n7\\t9"]',
-          '["4", "\\n", "7", "\\t", "9"]',
-        ],
-        1,
-        'With no separator argument, split uses runs of whitespace and returns string tokens.',
-        'Tokenization does not convert numbers.',
-      ),
-      choice(
-        'What does this program print?',
-        ['9', '45', 'An empty string', 'A TypeError'],
-        1,
-        'Both tokens are strings, so + concatenates them into "45".',
-        'Check the types before applying +.',
-        'tokens = "4 5".split()\nprint(tokens[0] + tokens[1])',
-      ),
-      choice(
-        'A format starts with a value count. Which invariant helps parse it correctly?',
-        [
-          'Every token is an output line',
-          'All whitespace must be a single space',
-          'The count token is also the first value',
-          'Consumed tokens have been assigned their declared roles',
-        ],
-        3,
-        'Knowing whether a token is a count or a value prevents shifting the interpretation.',
-        'Keep the size marker separate from the payload.',
-      ),
       exercise(
         'Implement parse_readings(text). A nonblank case contains a nonnegative count n followed by exactly n integer tokens; return those integers as a list. Whitespace may include spaces, tabs, or newlines. For blank text, return []. Assume nonblank cases follow the declared format.',
         'def parse_readings(text):\n    # Split the text and return the declared readings as integers.\n    pass',
@@ -157,33 +97,6 @@ _check_time(_seconds, "work_counts(10**12)", "Compute the pair count with a form
     '2\n3',
     'The second upward command hits the ceiling; reset clears the current level while preserving the peak.',
     [
-      choice(
-        'Why should the peak be updated after applying a command?',
-        [
-          'To include the newly reached state',
-          'To erase previous states',
-          'To make resets increase the peak',
-          'To skip ceiling checks',
-        ],
-        0,
-        'The state after the transition may be a new maximum and must be included.',
-        'The event may change the value you want to measure.',
-      ),
-      choice(
-        'What does this program print?',
-        ['0', '2', '3', '4'],
-        2,
-        'The meter moves 0 → 0 → 2 → 3, with the last increase capped.',
-        'Apply each transition in order.',
-        'level = 0\nfor command in ["down", "up", "up"]:\n    if command == "up":\n        level = min(3, level + 2)\n    else:\n        level = max(0, level - 1)\nprint(level)',
-      ),
-      choice(
-        'There are m commands and each transition does constant work. What is the running time?',
-        ['O(1)', 'O(log m)', 'O(m²)', 'O(m)'],
-        3,
-        'Processing every command once gives linear time.',
-        'Count the number of transitions.',
-      ),
       exercise(
         'Implement simulate_meter(commands, ceiling). Start level and peak at 0. "up" adds 2 capped at ceiling; "down" subtracts 1 floored at 0; "reset" sets the current level to 0. Return (final_level, peak). Assume ceiling >= 0 and all commands are one of these three strings.',
         'def simulate_meter(commands, ceiling):\n    # Process commands and return the final level and historical peak.\n    pass',
@@ -219,33 +132,6 @@ _check_time(_seconds, "work_counts(10**12)", "Compute the pair count with a form
     '2',
     'The gap between 9 and 11 is the smallest of the six distinct-index pairs.',
     [
-      choice(
-        'How many unordered distinct-index pairs are there in a list of five values?',
-        ['5', '10', '20', '25'],
-        1,
-        'The count is 5 × 4 / 2 = 10.',
-        'Choose two different indices; ignore their order.',
-      ),
-      choice(
-        'Why enumerate only j > i for an unordered pair problem?',
-        [
-          'It skips all duplicate values',
-          'It guarantees the list is sorted',
-          'It uses every index exactly once',
-          'It avoids self-pairs and mirrored duplicates',
-        ],
-        3,
-        'Each unordered pair appears exactly once as its smaller index followed by its larger index.',
-        'Compare (i, j) with (j, i).',
-      ),
-      choice(
-        'What does this program print?',
-        ['0', '3', '6', 'None'],
-        0,
-        'The equal values at different indices form a valid pair with gap zero.',
-        'Equal values are allowed when their indices differ.',
-        'values = [8, 8, 14]\nbest = None\nfor i in range(len(values)):\n    for j in range(i + 1, len(values)):\n        gap = abs(values[i] - values[j])\n        if best is None or gap < best:\n            best = gap\nprint(best)',
-      ),
       exercise(
         'Implement smallest_pair_gap(values) for a list of integers. Return the minimum absolute difference between values at two distinct indices, or None if fewer than two values exist. Do not change the input list. Build the exhaustive pair-enumeration baseline.',
         'def smallest_pair_gap(values):\n    # Check all unordered distinct-index pairs and track the best gap.\n    pass',
@@ -281,38 +167,6 @@ _check_time(_seconds, "work_counts(10**12)", "Compute the pair count with a form
     "[(2, 3, 'fern'), (4, 5, 'pine'), (4, 2, 'oak')]\n(4, 2, 'oak')",
     'Deadline 2 comes first. At deadline 4, effort 5 precedes effort 2. The original list is unchanged.',
     [
-      choice(
-        'What does this program print?',
-        ['[1, 3, 5]', 'None', '[5, 1, 3]', 'True'],
-        1,
-        'list.sort modifies values in place and returns None.',
-        'Separate the changed list from the method result.',
-        'values = [5, 1, 3]\nresult = values.sort()\nprint(result)',
-      ),
-      choice(
-        'Which key sorts (deadline, effort, label) by deadline ascending, then effort descending?',
-        [
-          '(job[1], job[0])',
-          '(-job[0], job[1])',
-          '(job[0], -job[1])',
-          'job[2]',
-        ],
-        2,
-        'The first key field selects ascending deadline; negating effort reverses its numeric order within ties.',
-        'Tuple comparisons examine the first field before the second.',
-      ),
-      choice(
-        'Two records have equal sort keys. What does a stable sort preserve?',
-        [
-          'Their original relative order',
-          'Their labels in alphabetic order',
-          'Their numeric values in descending order',
-          'Only the last record',
-        ],
-        0,
-        'Stability retains the original order among records with identical keys.',
-        'An equal key does not authorize a new tie-breaker.',
-      ),
       exercise(
         'Implement order_jobs(jobs). Each record is a tuple (deadline, effort, label), with integer deadline and effort. Return a new list ordered by deadline ascending, then effort descending. Preserve the input and retain arrival order for equal keys.',
         'def order_jobs(jobs):\n    # Return a sorted copy using the requested two-part key.\n    pass',
@@ -348,38 +202,6 @@ _check_time(_seconds, "work_counts(10**12)", "Compute the pair count with a form
     "{'north': 3, 'west': 1}\n0",
     'The map keeps multiplicity for each encountered label and reports zero for a missing label.',
     [
-      choice(
-        'What information is lost if a frequency dictionary is replaced by a set?',
-        [
-          'Whether a label ever appeared',
-          'The number of times each label appeared',
-          'Whether membership can be checked',
-          'Whether strings can be stored',
-        ],
-        1,
-        'A set stores unique keys but does not store their counts.',
-        'Presence and multiplicity are different questions.',
-      ),
-      choice(
-        'What does this program print?',
-        ['0', '1', '2', 'A KeyError'],
-        2,
-        'The two occurrences of "a" each add one, starting from the default zero.',
-        'Trace the count after each token.',
-        'counts = {}\nfor token in ["a", "b", "a"]:\n    counts[token] = counts.get(token, 0) + 1\nprint(counts["a"])',
-      ),
-      choice(
-        'Which statement correctly describes ordinary hash-table lookup?',
-        [
-          'Expected O(1), with possible worse cases',
-          'Always O(log n)',
-          'Always O(n²)',
-          'Always O(1), without exceptions',
-        ],
-        0,
-        'Hash tables normally provide expected constant-time operations, but collisions can make the worst case slower.',
-        'Keep expected behavior separate from worst-case guarantees.',
-      ),
       exercise(
         'Implement repeat_report(labels) for a list of hashable labels. Return a dictionary containing only labels that occur at least twice, mapped to their full occurrence counts. Return {} for no repetitions and leave the input unchanged. A hidden case with 200,000 labels must finish within 3 seconds.',
         'def repeat_report(labels):\n    # Count labels, then keep those with at least two occurrences.\n    pass',
@@ -421,38 +243,6 @@ _check_time(_seconds, "The 200,000-label case", "Count every label in one pass w
     '[4, 9]',
     'The start reference is followed before end even though end was inserted into the dictionary first.',
     [
-      choice(
-        'What determines the traversal order of a linked list?',
-        [
-          'Dictionary insertion order',
-          'Alphabetic node IDs',
-          'The head and next references',
-          'The smallest stored value',
-        ],
-        2,
-        'The links encode the sequence; storage order is unrelated.',
-        'Follow the next field from the head.',
-      ),
-      choice(
-        'Why test current is not None instead of while current?',
-        [
-          'It sorts the nodes',
-          'It still visits the valid ID 0',
-          'It detects all cycles',
-          'It prevents every missing-key error',
-        ],
-        1,
-        'Zero is false in a truthiness test but may be a legitimate node identifier.',
-        'The terminal sentinel is None, not every false value.',
-      ),
-      choice(
-        'What does this program print?',
-        ['[8, 5, 3]', '[8, 3, 5]', '[3, 5, 8]', '[5, 3]'],
-        0,
-        'Starting at a follows c and then b, so the values are 8, 5, and 3.',
-        'Use the stored next IDs rather than the dictionary’s key order.',
-        'nodes = {"a": (8, "c"), "b": (3, None), "c": (5, "b")}\ncurrent = "a"\nvalues = []\nwhile current is not None:\n    value, current = nodes[current]\n    values.append(value)\nprint(values)',
-      ),
       exercise(
         'Implement chain_values(nodes, head). nodes maps node IDs to (value, next_id) tuples, and None ends the chain. Return the reachable values in link order. A None head returns []. Assume the reachable chain is finite, acyclic, and has no missing IDs. Do not modify nodes.',
         'def chain_values(nodes, head):\n    # Follow next references until the None sentinel.\n    pass',
@@ -488,33 +278,6 @@ _check_time(_seconds, "The 200,000-label case", "Count every label in one pass w
     "{'c': 2, 'a': 1, 'b': 1}\nCab? C!",
     'The map merges C with c, ignores punctuation and spaces, and leaves the input string unchanged.',
     [
-      choice(
-        'What does this program print?',
-        ['cat', 'CAT', 'Cat', 'None'],
-        1,
-        'lower returns a new string; the original value remains "CAT" when the result is not assigned.',
-        'String methods do not mutate the existing string.',
-        'text = "CAT"\ntext.lower()\nprint(text)',
-      ),
-      choice(
-        'For a count map restricted to the 26 ASCII letters, what is the storage bound in terms of text length L?',
-        ['O(L²)', 'O(L)', 'O(1)', 'O(log L)'],
-        2,
-        'The number of possible keys is bounded by 26, independently of L.',
-        'The accepted alphabet is fixed.',
-      ),
-      choice(
-        'A task distinguishes "A" from "a". Should you lowercase before counting?',
-        [
-          'Yes, normalization is always harmless',
-          'Only when the input is long',
-          'Yes, because dictionaries ignore case',
-          'No, that would merge distinct task values',
-        ],
-        3,
-        'Normalization must preserve the distinctions required by the specification.',
-        'An equivalence must be authorized by the task.',
-      ),
       exercise(
         'Implement letter_inventory(text). Return a dictionary counting ASCII letters a–z, ignoring case for ASCII A–Z. Ignore digits, punctuation, whitespace, and non-ASCII characters. Store only letters that appear. Do not alter the input text.',
         'def letter_inventory(text):\n    # Normalize accepted ASCII letters and count them.\n    pass',
@@ -550,33 +313,6 @@ _check_time(_seconds, "The 200,000-label case", "Count every label in one pass w
     '[0, 6, 4, 9, 10]\n3',
     'The range [1, 3) contains -2 and 5. Subtracting the total before index 1 from the total before index 3 gives 3.',
     [
-      choice(
-        'Why does a prefix table begin with an extra zero?',
-        [
-          'To remove negative input values',
-          'To make every query include index zero',
-          'To represent the boundary before any values',
-          'To double the number of queries',
-        ],
-        2,
-        'The zero is the total of the empty prefix and represents boundary 0.',
-        'Prefixes describe boundaries, not just elements.',
-      ),
-      choice(
-        'What does this program print?',
-        ['1', '5', '7', '8'],
-        1,
-        'prefix[3] - prefix[1] is 8 - 3 = 5, covering indices 1 and 2.',
-        'The right boundary is excluded.',
-        'values = [3, -2, 7]\nprefix = [0]\nfor value in values:\n    prefix.append(prefix[-1] + value)\nprint(prefix[3] - prefix[1])',
-      ),
-      choice(
-        'After O(n) preprocessing, how long do q valid range-sum queries take?',
-        ['O(nq)', 'O(q²)', 'O(n log q)', 'O(q)'],
-        3,
-        'Each query performs two table reads and a subtraction, independent of range length.',
-        'Count work after the table already exists.',
-      ),
       exercise(
         'Implement range_totals(values, queries). values is a list of integers; queries is a list of (left, right) half-open ranges with 0 <= left <= right <= len(values). Return their sums in query order using one prefix table. Empty ranges have total 0. Do not change either input. A hidden case with 200,000 values and 200,000 queries must finish within 3 seconds.',
         'def range_totals(values, queries):\n    # Build one prefix table, then answer every half-open query.\n    pass',
@@ -620,38 +356,6 @@ _check_time(_seconds, "The 200,000-query case", "Answer each query from the pref
     '[2, 5, 3, 3, 0]',
     'The two additions overlap at index 1, producing 5. The cancellation at boundary 4 prevents the first addition from reaching index 4.',
     [
-      choice(
-        'For a half-open addition [left, right), where is the negative cancellation mark placed?',
-        [
-          'At right',
-          'At right - 1',
-          'At left - 1',
-          'At every position in the range',
-        ],
-        0,
-        'The mark at right cancels the addition before the first excluded position.',
-        'Ask where the update must stop affecting values.',
-      ),
-      choice(
-        'What does this program print?',
-        ['[4, 4, 4]', '[0, 4, 4]', '[4, 4, 0]', '[4, 0, 0]'],
-        2,
-        'The +4 starts at boundary 0 and the -4 ends it at boundary 2, so only indices 0 and 1 change.',
-        'Carry a running total of the boundary marks.',
-        'difference = [4, 0, -4, 0]\nvalues = []\nrunning = 0\nfor index in range(3):\n    running += difference[index]\n    values.append(running)\nprint(values)',
-      ),
-      choice(
-        'Why allocate n + 1 difference entries for n output values?',
-        [
-          'To output an extra zero',
-          'To store every possible pair',
-          'To make updates quadratic',
-          'To allow cancellation at boundary n',
-        ],
-        3,
-        'A range may end just past the last output position, at boundary n.',
-        'The last boundary is not an output element.',
-      ),
       exercise(
         'Implement apply_additions(size, updates). Begin with size zeros. Each (left, right, delta) adds delta to the half-open range [left, right). Return the final integer list using a difference array. Assume size >= 0 and all boundaries satisfy 0 <= left <= right <= size. Leave updates unchanged. A hidden case with 200,000 positions and 200,000 updates must finish within 3 seconds.',
         'def apply_additions(size, updates):\n    # Mark start/end changes, then reconstruct the size output values.\n    pass',
@@ -701,38 +405,6 @@ _check_time(_seconds, "The 200,000-update case", "Mark each update at its two bo
     '4',
     'The first value pairs with all three later values; the pair 4 + 6 supplies the fourth valid pair.',
     [
-      choice(
-        'Why can a fitting outer pair contribute right - left pairs at once?',
-        [
-          'The list contains no duplicates',
-          'Every middle value is no larger than the right value',
-          'Every pair has the same sum',
-          'The pointers are adjacent',
-        ],
-        1,
-        'Sorted order guarantees that replacing the right value with an earlier one cannot increase this pair sum.',
-        'Hold the left value fixed and compare the possible partners.',
-      ),
-      choice(
-        'Which precondition makes these two-pointer eliminations valid?',
-        [
-          'All values are positive',
-          'All values are distinct',
-          'The number of values is even',
-          'The values are sorted ascending',
-        ],
-        3,
-        'The comparisons depend on smallest and largest remaining values being at the interval boundaries.',
-        'The proof uses order, including when values are negative.',
-      ),
-      choice(
-        'What does this program print?',
-        ['2', '3', '1', '0'],
-        0,
-        'The valid pairs are 1 + 2 and 1 + 5. The pair 2 + 5 exceeds 6.',
-        'Count pairs by indices, with each unordered pair visited once.',
-        'values = [1, 2, 5]\nleft = 0\nright = len(values) - 1\ncount = 0\nwhile left < right:\n    if values[left] + values[right] <= 6:\n        count += right - left\n        left += 1\n    else:\n        right -= 1\nprint(count)',
-      ),
       exercise(
         'Implement count_light_pairs(sorted_values, limit). sorted_values is an ascending list of integers. Return the number of unordered pairs of distinct indices whose values sum to at most limit. Count duplicate values at different indices separately. Use two pointers and do not change the input. A hidden case with 200,000 values must finish within 3 seconds.',
         'def count_light_pairs(sorted_values, limit):\n    # Count proven-fitting partners or discard the largest remaining value.\n    pass',
@@ -774,38 +446,6 @@ _check_time(_seconds, "The 200,000-value case", "Count a whole block of partners
     '3',
     'The valid segment "aba" contains two distinct labels and has length three. No longer segment meets the limit.',
     [
-      choice(
-        'Why delete a frequency entry when its count reaches zero?',
-        [
-          'To sort the window',
-          'To increase the number of distinct labels',
-          'To make map size equal the number of labels still present',
-          'To remove all copies of the label from the input',
-        ],
-        2,
-        'A zero-count key would falsely contribute to len(counts) even though its label has left the window.',
-        'The map represents the current window only.',
-      ),
-      choice(
-        'Why can a shrinking loop inside a right-endpoint loop still run in linear time?',
-        [
-          'Each boundary advances at most n times in total',
-          'The inner loop is never executed',
-          'Dictionary entries are automatically sorted',
-          'The input has no repeated labels',
-        ],
-        0,
-        'The left boundary never restarts or moves backward, so all its advances total at most n.',
-        'Count pointer advances across the whole run, not per outer iteration.',
-      ),
-      choice(
-        'What does this program print?',
-        ['0', '2', '3', '1'],
-        3,
-        'Removing the only red occurrence deletes its key, leaving only blue present.',
-        'Zero-count keys must not represent present labels.',
-        'counts = {"red": 1, "blue": 2}\ncounts["red"] -= 1\nif counts["red"] == 0:\n    del counts["red"]\nprint(len(counts))',
-      ),
       exercise(
         'Implement longest_variety(labels, max_types). labels is a list of hashable labels and max_types is a nonnegative integer. Return the maximum length of a contiguous segment with at most max_types distinct labels. Empty input or max_types == 0 returns 0. Use a frequency map and moving boundaries; leave labels unchanged. A hidden case with 200,000 labels must finish within 3 seconds.',
         'def longest_variety(labels, max_types):\n    # Expand right, shrink until valid, and retain the best valid length.\n    pass',
@@ -848,33 +488,6 @@ _check_time(_seconds, "The 200,000-label case", "Move both window boundaries for
     '1',
     'Both indices 1 and 2 hold 5; retaining qualifying midpoints finds the first one.',
     [
-      choice(
-        'A qualifying midpoint might be the first answer. Which update preserves it?',
-        ['low = mid + 1', 'high = mid - 1', 'high = mid', 'low = high + 1'],
-        2,
-        'Setting the excluded high boundary to mid records that mid qualifies while searching for any earlier qualifying index.',
-        'Do not discard the possible boundary by moving below it.',
-      ),
-      choice(
-        'What does this program print?',
-        ['1', '2', '3', '7'],
-        1,
-        'The first value at least 7 is 10 at index 2.',
-        'Search for a boundary, not necessarily an exact match.',
-        'values = [3, 6, 10]\nlow = 0\nhigh = len(values)\nwhile low < high:\n    mid = (low + high) // 2\n    if values[mid] < 7:\n        low = mid + 1\n    else:\n        high = mid\nprint(low)',
-      ),
-      choice(
-        'A lower-bound function returns len(values). What does this mean?',
-        [
-          'The last item matches the target',
-          'The input must be empty',
-          'The list should be indexed at that position',
-          'No item is at least the target',
-        ],
-        3,
-        'The boundary after all elements means every value is smaller than the target.',
-        'A boundary can sit just beyond the valid element indices.',
-      ),
       exercise(
         'Implement first_at_least(values, target). values is an ascending list of integers. Return the first index i with values[i] >= target, or len(values) if none exists. Return 0 for an empty list. Use binary search, handle duplicates, and preserve the input. The checks disable the bisect module, and a hidden case of 100,000 searches in 200,000 values must finish within 3 seconds.',
         'def first_at_least(values, target):\n    # Find the first qualifying boundary in [0, len(values)].\n    pass',
@@ -932,42 +545,6 @@ _check_time(_seconds, "The 100,000-search case", "Halve the candidate interval o
     '8',
     'Capacity 8 permits groups [3, 5] and [2, 4]. Capacity 7 requires three groups. The nested fits function checks one capacity using the enclosing weights and group limit.',
     [
-      choice(
-        'Why is capacity feasibility monotone for this partition task?',
-        [
-          'A grouping that fits still fits at every larger capacity',
-          'Larger capacities always force more groups',
-          'Every capacity below the largest load fits',
-          'Input order changes with the capacity',
-        ],
-        0,
-        'Increasing a permitted maximum cannot invalidate the same grouping.',
-        'Keep the grouping fixed while increasing its allowance.',
-      ),
-      choice(
-        'For nonempty nonnegative loads and at least one permitted group, which capacity is always feasible?',
-        [
-          'Zero',
-          'The average rounded down',
-          'The total of all loads',
-          'The smallest load',
-        ],
-        2,
-        'One group containing every load has a total equal to the overall sum.',
-        'An upper bound needs a concrete feasible arrangement.',
-      ),
-      choice(
-        'Why does the greedy test open a group only when the next load would exceed capacity?',
-        [
-          'It sorts the loads automatically',
-          'With nonnegative loads, extending a fitting prefix cannot increase the minimum groups needed',
-          'Every valid solution has equal-sized groups',
-          'It allows oversized individual loads',
-        ],
-        1,
-        'Taking the longest fitting prefix covers at least as many loads as an earlier cut without consuming an extra group.',
-        'Compare a greedy first cut with an earlier valid cut.',
-      ),
       exercise(
         'Implement minimum_capacity(weights, max_groups). weights is an ordered list of nonnegative integer loads and max_groups >= 1. Split all loads into at most max_groups nonempty consecutive groups and return the smallest possible maximum group sum. Empty weights returns 0. Use a monotone feasibility test with binary search; preserve the input order and list. A hidden case with 50,000 loads up to 10⁶ must finish within 3 seconds.',
         'def minimum_capacity(weights, max_groups):\n    # Greedily test capacities and search for the smallest feasible one.\n    pass',
@@ -1009,37 +586,6 @@ _check_time(_seconds, "The 50,000-load case", "Binary-search the capacity with t
     '[-1000, 8, 50]\n[0, 2, 0, 1]',
     'The repeated -1000 shares rank 0; 8 and 50 receive ranks 1 and 2 even though their original gaps are unequal.',
     [
-      choice(
-        'What is the rank-compressed sequence for [12, -2, 12, 5]?',
-        ['[0, 1, 0, 2]', '[2, 0, 2, 1]', '[12, 0, 12, 5]', '[0, 1, 2, 3]'],
-        1,
-        'Sorted distinct values are [-2, 5, 12], so their ranks are 0, 1, and 2.',
-        'Rank distinct values numerically, then translate in original order.',
-      ),
-      choice(
-        'Which property is not preserved by ordinary coordinate compression?',
-        [
-          'Equality of values',
-          'Ordering of values',
-          'The number of distinct values',
-          'Numeric distances between values',
-        ],
-        3,
-        'Ranks record order; a rank difference of one can correspond to any original gap.',
-        'Compare coordinates 10 and 1000 with ranks 0 and 1.',
-      ),
-      choice(
-        'Why build a value-to-rank dictionary after sorting distinct values?',
-        [
-          'To translate original values with expected constant-time lookups',
-          'To recover every distance automatically',
-          'To reverse the original sequence',
-          'To create a separate rank for every repeated occurrence',
-        ],
-        0,
-        'The map avoids scanning the sorted unique list again for each original item.',
-        'Precompute the association you repeatedly need.',
-      ),
       exercise(
         'Implement compress_values(values) for a list of integers. Give the smallest distinct value rank 0, the next rank 1, and so on. Return the ranks in the original sequence order. Equal values must have equal ranks. Preserve the input list. A hidden case with 250,000 values must finish within 3 seconds.',
         'def compress_values(values):\n    # Sort distinct values, map them to ranks, and translate the original list.\n    pass',
@@ -1081,37 +627,6 @@ _check_time(_seconds, "The 250,000-value case", "Map each distinct value to its 
     '2',
     'At coordinate 4, the first interval ends before the third begins. The peak remains two, rather than counting a false three-way overlap at that boundary.',
     [
-      choice(
-        'At a shared endpoint x for half-open intervals, which event order avoids false overlap?',
-        [
-          'Starts before ends',
-          'All events are ignored',
-          'Ends before starts',
-          'The largest interval first',
-        ],
-        2,
-        'Intervals ending at x exclude x; process their departures before new intervals at x arrive.',
-        'Compare [0, 3) with [3, 5).',
-      ),
-      choice(
-        'Why should an interval [x, x) be ignored when measuring overlap?',
-        [
-          'It contains no positions',
-          'It covers every coordinate',
-          'Its length cannot be represented',
-          'It should count twice',
-        ],
-        0,
-        'A half-open interval with equal boundaries is empty and contributes no active occupancy.',
-        'The left endpoint is included only when it lies before the excluded right endpoint.',
-      ),
-      choice(
-        'What is the overall time bound for sorting and scanning 2n interval events?',
-        ['O(1)', 'O(n)', 'O(n²)', 'O(n log n)'],
-        3,
-        'The linear scan follows the O(n log n) event sort, which determines the overall bound.',
-        'Include preprocessing when reporting the whole algorithm.',
-      ),
       exercise(
         'Implement maximum_overlap(intervals). Each integer pair (start, end) describes the half-open interval [start, end), with start <= end. Return the greatest number of intervals active at any coordinate. Empty intervals contribute nothing; intervals meeting only at an endpoint do not overlap. Use sorted boundary events and preserve intervals. A hidden case with 100,000 intervals must finish within 3 seconds.',
         'def maximum_overlap(intervals):\n    # Sort boundary events with ends before starts, then track peak occupancy.\n    pass',

@@ -12,7 +12,10 @@ import competitiveProgramming from './content/competitive-programming';
 import rust from './content/rust';
 import cpp from './content/cpp';
 import { registerSkills } from './content';
-import { assessmentPolicy, encompassedBy as encompassedIn } from './catalog-outline';
+import {
+  assessmentPolicy,
+  encompassedBy as encompassedIn,
+} from './catalog-outline';
 export {
   assessmentPolicy,
   DEFAULT_ENCOMPASS_WEIGHT,
