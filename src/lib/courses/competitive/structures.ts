@@ -1777,7 +1777,7 @@ _check_time(_seconds, "The 200,000-edge case", "Use union by size and path compr
     'cp-paths',
     'Connect every vertex at minimum cost',
     'Use Kruskal’s edge order and disjoint sets to build a spanning tree.',
-    ['cp-edge-weight-order', 'cp-spanning-completion', 'cp-dsu'],
+    ['cp-edge-weight-order', 'cp-spanning-completion'],
     [
       'A spanning tree connects all n vertices of an undirected graph without a cycle, using n-1 edges when n > 0. A minimum spanning tree minimizes the sum of its chosen edge weights. It is different from minimizing routes from one source: an MST is a network-wide connection objective.',
       'Kruskal’s algorithm sorts edges from cheapest to most expensive. Accept an edge only when its endpoints belong to different DSU components. This merges the components without creating a cycle. The cheapest available edge across a component boundary is safe by the cut property: some minimum spanning tree can include it.',

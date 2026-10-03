@@ -324,7 +324,7 @@ _check_time(_seconds, "The 100-item case", "Fill one capacity table per item ins
     'cp-dynamic',
     'Track increasing subsequence tails',
     'Find a strictly increasing subsequence length without storing every path.',
-    ['cp-lis-tail-update'],
+    ['cp-lis-tail-update', 'ranges'],
     [
       'A subsequence preserves original order but may skip elements; a substring or subarray is contiguous. For a strictly increasing subsequence, every next value must be greater, so equal values cannot extend it. A direct DP stores the best length ending at each position and tries earlier smaller values, using O(n²) time.',
       'The faster method stores tails[length - 1], the smallest ending value found for any increasing subsequence of that length in the processed prefix. A smaller tail leaves at least as much room for future extension. The tails list stays sorted. For each value, bisect_left finds the first tail greater than or equal to it: replace that tail, or append if no such tail exists.',
