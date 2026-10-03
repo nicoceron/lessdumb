@@ -1,5 +1,5 @@
 import type {
-  ChoiceQuestion,
+  AnswerQuestion,
   GraphCatalog,
   Skill,
   SkillOutline,
@@ -21,6 +21,7 @@ import {
 } from './learning';
 import { createActivity, recordActivity } from './activity';
 import { earnedQuizXp, quizXp } from './xp';
+import { gradeAnswer } from './typed-answer';
 
 // Quizzes are timed, mixed retrieval checks in the Math Academy pattern. One
 // becomes available after QUIZ_XP_INTERVAL XP of other work. It draws fresh
@@ -44,8 +45,11 @@ export interface QuizQuestion {
   questionId: string;
   /** Seeds the shuffled choice order, so a reload shows the same order. */
   presentation: number;
-  /** Authored index answered, or null when time ran out first. */
-  answer?: number | null;
+  /**
+   * The authored choice index answered, the text typed for a typed question,
+   * or null when time ran out first.
+   */
+  answer?: number | string | null;
   correct?: boolean;
   answeredAt?: number;
 }
@@ -87,10 +91,11 @@ export function quizDeadline(quiz: Quiz): number {
   return quiz.createdAt + quiz.timeLimitMs;
 }
 
+/** Each point's chosen and typed questions; a quiz has no code editor. */
 function choiceQuestions(skill: SkillOutline) {
   return (skill.knowledgePoints ?? []).map((point) => ({
     point,
-    questions: point.questions.filter((question) => question.type === 'choice'),
+    questions: point.questions.filter((question) => question.type !== 'code'),
   }));
 }
 
@@ -98,13 +103,15 @@ function choiceQuestions(skill: SkillOutline) {
 function quizChoice(
   slot: Pick<QuizQuestion, 'skillId' | 'questionId'>,
   catalog: GraphCatalog,
-): { skill: Skill; question: ChoiceQuestion } | undefined {
+): { skill: Skill; question: AnswerQuestion } | undefined {
   const outline = catalog.skills.find((item) => item.id === slot.skillId);
   const skill = outline && contentOf(outline);
   const question = skill?.knowledgePoints
     ?.flatMap((point) => point.questions)
     .find((item) => item.id === slot.questionId);
-  return skill && question?.type === 'choice' ? { skill, question } : undefined;
+  return skill && question && question.type !== 'code'
+    ? { skill, question }
+    : undefined;
 }
 
 /**
@@ -252,7 +259,7 @@ export function startQuiz(
 export function quizQuestion(
   slot: Pick<QuizQuestion, 'skillId' | 'questionId'>,
   catalog: GraphCatalog = defaultCatalog,
-): { skill: Skill; question: ChoiceQuestion } | undefined {
+): { skill: Skill; question: AnswerQuestion } | undefined {
   return quizChoice(slot, catalog);
 }
 
@@ -274,17 +281,19 @@ function replaceQuiz(progress: Progress, quiz: Quiz): Quiz[] {
 }
 
 /**
- * Record one answer. A correct answer on a skill whose review is due counts
+ * Record one answer: the authored index of a choice, or the text typed for a
+ * typed question. A correct answer on a skill whose review is due counts
  * toward that review cycle, but only a review answer can complete the cycle;
  * on any other skill it changes no schedule, as with early practice. A wrong
  * answer makes the skill's review due now. Answering the last question, or
- * answering after the time limit, finishes the quiz.
+ * answering after the time limit, finishes the quiz. A typed response that
+ * cannot be graded (blank, or not a number) is rejected, not counted wrong.
  */
 export function answerQuiz(
   progress: Progress,
   quizId: string,
   index: number,
-  answer: number,
+  answer: number | string,
   now: Now = Date.now(),
   catalog: GraphCatalog = defaultCatalog,
   writerId?: string,
@@ -298,13 +307,7 @@ export function answerQuiz(
   const found = quizChoice(slot, catalog);
   if (!found) throw new Error('This quiz question is not in the catalog.');
   const { skill, question } = found;
-  if (
-    !Number.isInteger(answer) ||
-    answer < 0 ||
-    answer >= question.choices.length
-  )
-    throw new Error('Unknown choice.');
-  const correct = answer === question.answer;
+  const correct = gradeAnswer(question, answer);
   const old = getSkillState(progress, skill.id);
   let state: SkillProgress = {
     ...old,

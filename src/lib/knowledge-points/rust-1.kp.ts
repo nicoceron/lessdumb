@@ -1,4 +1,9 @@
-import { choose, predictOutput, type KnowledgePointModule } from './authoring';
+import {
+  choose,
+  predictOutput,
+  typeOutput,
+  type KnowledgePointModule,
+} from './authoring';
 
 export const knowledgePoints: KnowledgePointModule = {
   'rust-main': [
@@ -15,18 +20,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'unused is defined first, but nothing calls it. Only main runs, so only start is printed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn helper() {\n    println!("helper");\n}\n\nfn main() {\n    println!("main");\n}',
-          ['helper\nmain', 'main', 'helper', 'main\nhelper'],
-          1,
+          'main',
           'helper is never called, so only main’s line is printed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    greet();\n    println!("done");\n}\n\nfn greet() {\n    println!("hi");\n}',
-          ['done\nhi', 'hi\ndone', 'done', 'hi'],
-          1,
+          'hi\ndone',
           'main calls greet first, then prints done. Defining greet after main is fine.',
         ),
         choose(
@@ -55,25 +58,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Definition order does not matter. main calls second before first, so second prints first.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn ping() {\n    println!("ping");\n}\n\nfn main() {\n    ping();\n    ping();\n}',
-          ['ping', 'ping\nping', 'pingping', 'Nothing'],
-          1,
+          'ping\nping',
           'Each call runs the whole body, so two calls print two lines.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn a() {\n    println!("a");\n}\n\nfn b() {\n    println!("b");\n    a();\n}\n\nfn main() {\n    b();\n    println!("c");\n}',
-          ['a\nb\nc', 'b\na\nc', 'b\nc\na', 'c\nb\na'],
-          1,
+          'b\na\nc',
           'main calls b, which prints b and then calls a; main prints c afterwards.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    println!("one");\n    two();\n}\n\nfn two() {\n    println!("two");\n}',
-          ['two\none', 'one\ntwo', 'one', 'two'],
-          1,
+          'one\ntwo',
           'main prints one, then calls two. Defining two after main is allowed.',
         ),
         choose(
@@ -103,25 +103,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first line fills {} with the result of 4 + 5. The second has no placeholder, so its text prints unchanged. The third prints its text and fills {} with 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{}", 6 * 7);\n}',
-          ['42', '6 * 7', '{}', '67'],
-          0,
+          '42',
           'The placeholder is replaced by the value of 6 * 7, which is 42.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed when this runs?',
           'fn main() {\n    println!("10 - 4");\n    println!("{}", 10 - 4);\n}',
-          ['6\n6', '10 - 4\n10 - 4', '10 - 4\n6', '6\n10 - 4'],
-          2,
+          '10 - 4\n6',
           'Text inside the quotes prints as written; only the value after the comma is calculated.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn show() {\n    println!("{}", 2 * 5);\n}\n\nfn main() {\n    println!("{}", 1 + 1);\n    show();\n}',
-          ['10\n2', '2\n10', '1 + 1\n2 * 5', '2'],
-          1,
+          '2\n10',
           'main prints 2 first, then calls show, which prints 10.',
         ),
         choose(
@@ -153,18 +150,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '24 * 60 is the tail expression, so minutes_per_day returns 1440 and main prints it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn total() -> i32 {\n    8 + 7\n}\n\nfn main() {\n    println!("{}", total());\n}',
-          ['8 + 7', '15', '87', 'total'],
-          1,
+          '15',
           'The tail 8 + 7 is evaluated, and the call total() stands for the returned 15.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn change() -> i32 {\n    5 - 9\n}\n\nfn main() {\n    println!("{}", change());\n}',
-          ['4', '14', '-4', '5 - 9'],
-          2,
+          '-4',
           '5 - 9 is -4, and an i32 can hold negative numbers.',
         ),
         choose(
@@ -223,11 +218,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Only 10 without a semicolon is a tail expression of type i32.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn seven() -> i32 {\n    println!("computing");\n    3 + 4\n}\n\nfn main() {\n    println!("{}", seven());\n}',
-          ['7', '7\ncomputing', 'computing\n7', 'computing'],
-          2,
+          'computing\n7',
           'The call runs seven’s body: it prints computing, then returns 7, which main prints.',
         ),
         choose(
@@ -270,25 +264,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'doubled calls base and returns 10 * 2 = 20. main adds 1 to that value and prints 21.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn width() -> i32 {\n    3\n}\n\nfn height() -> i32 {\n    5\n}\n\nfn area() -> i32 {\n    width() * height()\n}\n\nfn main() {\n    println!("{}", area());\n}',
-          ['8', '35', '15', '53'],
-          2,
+          '15',
           'area multiplies the values returned by width and height: 3 * 5 = 15.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn total() -> i32 {\n    3 * 2\n}\n\nfn left() -> i32 {\n    total() - 4\n}\n\nfn main() {\n    println!("{}", left());\n}',
-          ['2', '10', '-2', '6'],
-          0,
+          '2',
           'total returns 6, and left returns 6 - 4 = 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn one() -> i32 {\n    println!("one");\n    1\n}\n\nfn two() -> i32 {\n    println!("two");\n    one() + 1\n}\n\nfn main() {\n    println!("{}", two());\n}',
-          ['one\ntwo\n2', '2', 'two\n2\none', 'two\none\n2'],
-          3,
+          'two\none\n2',
           'two prints first, then its tail calls one, which prints one and returns 1. two returns 2, and main prints it last.',
         ),
         choose(
@@ -320,18 +311,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first call runs the body with n = 4, the second with n = -3. The same tail n * 2 gives 8 and then -6.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn add_five(x: i32) -> i32 {\n    x + 5\n}\n\nfn main() {\n    println!("{}", add_five(10));\n}',
-          ['5', '10', '15', '105'],
-          2,
+          '15',
           'x is 10 for this call, so the tail x + 5 is 15.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn square(n: i32) -> i32 {\n    n * n\n}\n\nfn main() {\n    println!("{}", square(3));\n    println!("{}", square(-4));\n}',
-          ['9\n-16', '9\n16', '6\n-8', '3\n-4'],
-          1,
+          '9\n16',
           'Each call squares its own argument, and -4 * -4 is 16: two negatives multiply to a positive.',
         ),
         choose(
@@ -373,25 +362,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'In the first call start is 9 and removed is 2. In the second the values swap places, so the result is 2 - 9 = -7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn gap(low: i32, high: i32) -> i32 {\n    high - low\n}\n\nfn main() {\n    println!("{}", gap(10, 2));\n}',
-          ['8', '12', '-8', '-12'],
-          2,
+          '-8',
           'The first argument 10 goes to low and 2 goes to high, so the tail is 2 - 10 = -8.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn pick_second(a: i32, b: i32, c: i32) -> i32 {\n    b\n}\n\nfn main() {\n    println!("{}", pick_second(7, 8, 9));\n}',
-          ['7', '8', '9', '24'],
-          1,
+          '8',
           'b is the second parameter, so it receives the second argument, 8.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn sub(a: i32, b: i32) -> i32 {\n    a - b\n}\n\nfn flipped(a: i32, b: i32) -> i32 {\n    sub(b, a)\n}\n\nfn main() {\n    println!("{}", flipped(10, 3));\n}',
-          ['7', '13', '3', '-7'],
-          3,
+          '-7',
           'flipped passes its b (3) first, so sub computes 3 - 10. Each function has its own a and b.',
         ),
         choose(
@@ -432,25 +418,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'add(2, 3) runs first and returns 5. That 5 becomes the argument of triple, which returns 15.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn sub(a: i32, b: i32) -> i32 {\n    a - b\n}\n\nfn double(n: i32) -> i32 {\n    n * 2\n}\n\nfn main() {\n    println!("{}", sub(double(5), 4));\n}',
-          ['2', '-6', '6', '14'],
-          2,
+          '6',
           'double(5) is 10, which becomes a; 4 is b. So sub returns 10 - 4 = 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn sub(a: i32, b: i32) -> i32 {\n    a - b\n}\n\nfn main() {\n    println!("{}", sub(2 * 6, 1 + 4));\n}',
-          ['7', '-7', '17', '11'],
-          0,
+          '7',
           'The arguments are evaluated first: a is 12 and b is 5, so the result is 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn show(n: i32) -> i32 {\n    println!("{}", n);\n    n\n}\n\nfn add(a: i32, b: i32) -> i32 {\n    a + b\n}\n\nfn main() {\n    println!("{}", add(show(1), show(2)));\n}',
-          ['3', '2\n1\n3', '3\n1\n2', '1\n2\n3'],
-          3,
+          '1\n2\n3',
           'Arguments are evaluated left to right, so show(1) prints before show(2). add runs after both, and its result prints last.',
         ),
         choose(
@@ -482,30 +465,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The three placeholders take 2, 3 and the value of 2 + 3, in that order. The + and = between them are ordinary text.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{}-{}", 7, 4);\n}',
-          ['3', '4-7', '7-4', '7 4'],
-          2,
+          '7-4',
           'The first {} takes 7 and the second takes 4; the - between them is just text.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    println!("{} {} {}", 3 * 3, 1, 5 - 2);\n}',
-          ['9 1 3', '3 1 9', '9 1 5', '3 * 3 1 5 - 2'],
-          0,
+          '9 1 3',
           'Each value is evaluated, then the results fill the placeholders in order: 9, 1, 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    println!("{} is less than {}", 9, 4);\n}',
-          [
-            '4 is less than 9',
-            '9 is less than 4',
-            '{} is less than {}',
-            '9 is less than',
-          ],
-          1,
+          '9 is less than 4',
           'Placeholders follow the order of the values, not the meaning of the sentence, so 9 comes first.',
         ),
         choose(
@@ -536,25 +511,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'label builds the text item #7 and returns it. main prints the returned String with {}.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn tag(n: i32) -> String {\n    format!("[{}]", n)\n}\n\nfn main() {\n    println!("{}", tag(5));\n}',
-          ['5', '"[5]"', '[{}]', '[5]'],
-          3,
+          '[5]',
           'format! fills the placeholder with 5, and printing a String with {} shows no quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn note(n: i32) -> String {\n    format!("note {}", n)\n}\n\nfn main() {\n    note(1);\n    println!("{}", note(2));\n}',
-          ['note 1\nnote 2', 'note 2', 'note 1', 'note 2\nnote 1'],
-          1,
+          'note 2',
           'format! only builds text. The String from note(1) is never printed, so only note 2 appears.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn ratio(a: i32, b: i32) -> String {\n    format!("{}:{}", b, a)\n}\n\nfn main() {\n    println!("{}", ratio(16, 9));\n}',
-          ['9:16', '16:9', 'b:a', '"9:16"'],
-          0,
+          '9:16',
           'a is 16 and b is 9, and the format! call lists b first, so the text is 9:16.',
         ),
         choose(
@@ -584,25 +556,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each call to unit returns a String. The first fills the first {} and the second fills the second.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn wrap(n: i32) -> String {\n    format!("<{}>", n)\n}\n\nfn twice(n: i32) -> String {\n    format!("{}{}", wrap(n), wrap(n))\n}\n\nfn main() {\n    println!("{}", twice(3));\n}',
-          ['<3>', '<<3>>', '<3><3>', '<3> <3>'],
-          2,
+          '<3><3>',
           'twice places two copies of wrap’s text side by side; its format string has no space between the placeholders.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    println!("{} = {}", "total", 4 + 4);\n}',
-          ['total = 8', '"total" = 8', 'total = 4 + 4', '8 = total'],
-          0,
+          'total = 8',
           'The quoted text fills the first {} without its quotes, and the value of 4 + 4 fills the second.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn pair(a: i32, b: i32) -> String {\n    format!("{}/{}", a, b)\n}\n\nfn main() {\n    println!("{} then {}", pair(1, 2), pair(2, 1));\n}',
-          ['1/2 then 1/2', '2/1 then 1/2', '{}/{} then {}/{}', '1/2 then 2/1'],
-          3,
+          '1/2 then 2/1',
           'pair(1, 2) builds 1/2 and pair(2, 1) builds 2/1; they fill the outer placeholders in order.',
         ),
         choose(
@@ -634,32 +603,28 @@ export const knowledgePoints: KnowledgePointModule = {
           'The number prints the same with both placeholders. The text prints bare with {} and inside quotes with {:?}.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{:?}", "go");\n}',
-          ['go', '"go"', "'go'", '{:?}'],
-          1,
+          '"go"',
           'The Debug form of text wraps it in double quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn label(n: i32) -> String {\n    format!("{} kg", n)\n}\n\nfn main() {\n    println!("{:?} / {}", label(3), label(3));\n}',
-          ['3 kg / 3 kg', '"3 kg" / "3 kg"', '3 kg / "3 kg"', '"3 kg" / 3 kg'],
-          3,
+          '"3 kg" / 3 kg',
           'The first placeholder is {:?}, so that copy keeps its quotes; the second uses {} and prints the bare text.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    println!("[{:?}]", 5 - 8);\n}',
-          ['[-3]', '["-3"]', '[5 - 8]', '[3]'],
-          0,
+          '[-3]',
           'Numbers have no quotes in their Debug form, so -3 prints just as it would with {}.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{:?}", "say \\"hi\\"");\n}',
-          ['say "hi"', '"say "hi""', '"say \\"hi\\""', '"say hi"'],
-          2,
+          '"say \\"hi\\""',
           'Debug output adds outer quotes and escapes the inner ones as \\", so the boundaries of the text stay clear.',
         ),
       ],
@@ -678,18 +643,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The tuple prints with parentheses and the array with square brackets, each showing every element in order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let pair = (7, true);\n    println!("{:?}", pair);\n}',
-          ['7 true', '[7, true]', '(7, true)', '(7,true)'],
-          2,
+          '(7, true)',
           'A tuple’s Debug form lists its fields in parentheses, separated by a comma and a space.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let words = ["red", "blue"];\n    println!("{:?}", words);\n}',
-          ['["red", "blue"]', '[red, blue]', '("red", "blue")', 'red blue'],
-          0,
+          '["red", "blue"]',
           'An array prints in square brackets, and each text element keeps its quotes in Debug form.',
         ),
         choose(
@@ -704,16 +667,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'A tuple has no {} form; printing it needs {:?}.',
           'fn main() {\n    let t = (1, 2);\n    println!("{}", t);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let entry = (4, "four", false);\n    println!("{:?}", entry);\n}',
-          [
-            '(4, four, false)',
-            '(4, "four", false)',
-            '[4, "four", false]',
-            '4 "four" false',
-          ],
-          1,
+          '(4, "four", false)',
           'Inside the tuple’s Debug form, the text field keeps its quotes.',
         ),
       ],
@@ -732,30 +689,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each field is a number, so {} can print it. The whole tuple needs {:?}.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let p = (2, 5);\n    println!("{} {:?}", p.1, p);\n}',
-          ['5 (2, 5)', '2 (2, 5)', '(5) (2, 5)', '5 2 5'],
-          0,
+          '5 (2, 5)',
           'p.1 is the number 5, printed with {}; the whole tuple prints with {:?}.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn describe(a: [i32; 2]) -> String {\n    format!("{:?} has {} items", a, a.len())\n}\n\nfn main() {\n    println!("{}", describe([4, 6]));\n}',
-          [
-            '4, 6 has 2 items',
-            '[4, 6] has 3 items',
-            '[4, 6] has 2 items',
-            '"[4, 6]" has 2 items',
-          ],
-          2,
+          '[4, 6] has 2 items',
           'format! writes the array’s Debug form and its length into the String, and printing a String with {} adds no quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    println!("[{}] {:?}", "ok ", "ok ");\n}',
-          ['[ok] "ok"', '[ok ] ok ', '["ok "] ok ', '[ok ] "ok "'],
-          3,
+          '[ok ] "ok "',
           'Both forms keep the trailing space, but only {:?} adds the quotes that make it visible.',
         ),
         choose(
@@ -787,25 +736,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'area is bound to the value of width * height, which is 12.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a = 10;\n    let b = a - 3;\n    println!("{}", b);\n}',
-          ['10', '7', '13', 'a - 3'],
-          1,
+          '7',
           'b is bound to the value of a - 3, which is 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn cube(n: i32) -> i32 {\n    n * n * n\n}\n\nfn main() {\n    let c = cube(2);\n    println!("{}", c + 1);\n}',
-          ['27', '7', '9', '8'],
-          2,
+          '9',
           'c holds the 8 returned by cube(2), and 8 + 1 is 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let first = 2 + 2;\n    let second = first * first;\n    println!("{}", second);\n}',
-          ['16', '8', '4', '12'],
-          0,
+          '16',
           'first holds the value 4, so second is 4 * 4 = 16.',
         ),
         choose(
@@ -847,25 +793,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Assigning to a binding requires let mut; a plain let binding cannot change.',
           'fn main() {\n    let lives = 3;\n    lives = lives - 1;\n    println!("{}", lives);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut n = 5;\n    n = n * 2;\n    n = n - 3;\n    println!("{}", n);\n}',
-          ['7', '4', '10', '2'],
-          0,
+          '7',
           'n becomes 10, and then 10 - 3 = 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut x = 2;\n    println!("{}", x);\n    x = 10;\n    println!("{}", x + x);\n}',
-          ['10\n20', '2\n4', '20\n20', '2\n20'],
-          3,
+          '2\n20',
           'The first line prints x before the assignment; the second uses the new value, 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let mut a = 4;\n    let b = a;\n    a = a + 1;\n    println!("{}", b);\n}',
-          ['5', '4', '9', '1'],
-          1,
+          '4',
           'b received the value 4 when it was bound; changing a afterwards does not change b.',
         ),
       ],
@@ -884,25 +827,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'total starts at 5, doubles to 10, drops to 9, and the tail returns 9.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut c = 10;\n    c -= 4;\n    c += 1;\n    println!("{}", c);\n}',
-          ['5', '15', '7', '6'],
-          2,
+          '7',
           '10 - 4 is 6, and adding 1 gives 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn grow(n: i32) -> i32 {\n    let mut v = n;\n    v += 2;\n    v *= 3;\n    v\n}\n\nfn main() {\n    println!("{}", grow(1));\n}',
-          ['5', '9', '3', '7'],
-          1,
+          '9',
           'The updates run in order: 1 + 2 = 3, then 3 * 3 = 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let mut p = 3;\n    p *= p;\n    p -= 1;\n    println!("{}", p);\n}',
-          ['5', '6', '9', '8'],
-          3,
+          '8',
           'p *= p multiplies 3 by its current value, giving 9; then 9 - 1 = 8.',
         ),
         choose(
@@ -934,18 +874,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The block binds price and count, and its tail price * count gives 12, which becomes total.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let v = {\n        let a = 5;\n        a - 7\n    };\n    println!("{}", v);\n}',
-          ['-2', '5', '2', '7'],
-          0,
+          '-2',
           'The block’s tail a - 7 is -2, and that value is bound to v.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let n = {\n        println!("inside");\n        10\n    };\n    println!("{}", n + 1);\n}',
-          ['11\ninside', 'inside\n10', 'inside\n11', '11'],
-          2,
+          'inside\n11',
           'The block runs first, printing inside, and gives 10; then main prints 10 + 1.',
         ),
         choose(
@@ -960,11 +898,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The semicolon turns 3 + 4 into a statement, so the block produces no number and x cannot be printed with {}.',
           'fn main() {\n    let x = {\n        3 + 4;\n    };\n    println!("{}", x);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let base = 6;\n    let doubled = {\n        let two = 2;\n        base * two\n    };\n    println!("{}", doubled + base);\n}',
-          ['12', '18', '6', '14'],
-          1,
+          '18',
           'The block can read base from outside, so doubled is 12, and 12 + 6 = 18.',
         ),
       ],
@@ -995,18 +932,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'part was bound inside the block, so it no longer exists after the closing brace.',
           'fn main() {\n    let sum = {\n        let part = 4;\n        part + 1\n    };\n    println!("{}", part);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut count = 1;\n    {\n        count += 10;\n    }\n    println!("{}", count);\n}',
-          ['1', '11', '10', '21'],
-          1,
+          '11',
           'count is the outer binding; the block updates it, and the change remains after the block.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn helper(n: i32) -> i32 {\n    let n2 = n * n;\n    n2 + 1\n}\n\nfn main() {\n    let n2 = 100;\n    println!("{}", helper(3) + n2);\n}',
-          ['10', '19', '110', '109'],
-          2,
+          '110',
           'Each function body is its own scope. helper’s n2 is 9, so it returns 10; main’s n2 is still 100.',
         ),
         choose(
@@ -1036,18 +971,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each let creates a new steps from the previous one: 3, then 30, then 31.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let x = 2;\n    let x = x + 5;\n    let x = x * x;\n    println!("{}", x);\n}',
-          ['7', '49', '14', '4'],
-          1,
+          '49',
           'x becomes 7 and then 7 * 7 = 49; each line reads the previous binding.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn adjust(n: i32) -> i32 {\n    let n = n - 1;\n    n * 3\n}\n\nfn main() {\n    println!("{}", adjust(5));\n}',
-          ['14', '15', '4', '12'],
-          3,
+          '12',
           'The new n is 5 - 1 = 4, and the tail uses that shadowing n: 4 * 3 = 12.',
         ),
         choose(
@@ -1061,11 +994,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Shadowing with a new let needs no mut; assignment would.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let v = 8;\n    println!("{}", v);\n    let v = v - 8;\n    println!("{}", v);\n}',
-          ['0\n0', '8\n8', '8\n0', '0\n8'],
-          2,
+          '8\n0',
           'The first print happens before the shadowing let, so it sees 8; the second sees the new v, 0.',
         ),
       ],
@@ -1084,25 +1016,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Inside the block, n is shadowed by 40, so the block gives 42. After the block, n means the outer 4 again.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let x = 1;\n    {\n        let x = 50;\n        println!("{}", x);\n    }\n    println!("{}", x);\n}',
-          ['50\n50', '50\n1', '1\n1', '1\n50'],
-          1,
+          '50\n1',
           'The inner x is 50 until the closing brace; afterwards the outer x, 1, is visible again.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn scoped(n: i32) -> i32 {\n    let doubled = {\n        let n = n + n;\n        n - 1\n    };\n    doubled + n\n}\n\nfn main() {\n    println!("{}", scoped(5));\n}',
-          ['15', '19', '14', '9'],
-          2,
+          '14',
           'The block’s n is 10, so doubled is 9. After the block, n is 5 again, giving 9 + 5 = 14.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let mut a = 1;\n    let b = 1;\n    {\n        a = 5;\n        let b = 5;\n    }\n    println!("{}", a + b);\n}',
-          ['6', '2', '10', '5'],
-          0,
+          '6',
           'Assigning to a changes the outer binding, so a is 5. The inner let b is a separate binding that ends at the brace, so b is still 1.',
         ),
         choose(
@@ -1134,18 +1063,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'item.0 is the first field, 12, and item.1 is the second, true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let t = (4, 9, 2);\n    println!("{}", t.1);\n}',
-          ['4', '9', '2', '1'],
-          1,
+          '9',
           'Positions count from 0, so t.1 is the second field, 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn split(n: i32) -> (i32, i32) {\n    (n * 2, n - 1)\n}\n\nfn main() {\n    let r = split(6);\n    println!("{}", r.0 + r.1);\n}',
-          ['12', '5', '17', '7'],
-          2,
+          '17',
           'split(6) returns (12, 5), and adding its two fields gives 17.',
         ),
         choose(
@@ -1182,18 +1109,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'low gets the first field, 2, and high gets the second, 9. Their difference is 7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let (first, second) = (5, 20);\n    println!("{}", second - first);\n}',
-          ['-15', '15', '25', '5'],
-          1,
+          '15',
           'first is 5 and second is 20, so second - first is 15.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let pair = (1, 8);\n    let (b, a) = pair;\n    println!("{}", a);\n}',
-          ['8', '1', '9', '0'],
-          0,
+          '8',
           'Names are matched by position, not by letter: b gets 1 and a gets 8.',
         ),
         choose(
@@ -1207,11 +1132,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The pattern must have one name for each field of the tuple.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn order(a: i32, b: i32) -> (i32, i32) {\n    (b, a)\n}\n\nfn main() {\n    let (first, second) = order(4, 7);\n    println!("{}", first);\n    println!("{}", second);\n}',
-          ['4\n7', '7\n7', '7\n4', '4\n4'],
-          2,
+          '7\n4',
           'order returns (7, 4), so first is 7 and second is 4.',
         ),
       ],
@@ -1230,18 +1154,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'temps[1] is the second element, 17. The array holds four values, so len() is 4 and the last index is 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a = [6, 2, 9];\n    println!("{}", a[2]);\n}',
-          ['2', '6', '9', '3'],
-          2,
+          '9',
           'Index 2 is the third element, 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let nums = [5, 10, 15, 20];\n    println!("{}", nums[nums.len() - 1]);\n}',
-          ['15', '20', '4', '3'],
-          1,
+          '20',
           'nums.len() is 4, so the index is 3, the position of the last element, 20.',
         ),
         choose(
@@ -1261,11 +1183,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'An array has a single element type; a tuple is the tool for mixing types.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let w = [3, 1, 4];\n    println!("{}", w[0] + w[2]);\n}',
-          ['4', '5', '31', '7'],
-          3,
+          '7',
           'w[0] is 3 and w[2] is 4, so their sum is 7.',
         ),
       ],
@@ -1284,25 +1205,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The function reads three elements by index and returns their sum and the middle element as a tuple. main prints each field with {}.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn spread(v: [i32; 3]) -> (i32, i32) {\n    (v[2] - v[0], v[1])\n}\n\nfn main() {\n    let (gap, mid) = spread([4, 6, 11]);\n    println!("{}", gap);\n    println!("{}", mid);\n}',
-          ['-7\n6', '7\n6', '7\n4', '2\n6'],
-          1,
+          '7\n6',
           'v[2] - v[0] is 11 - 4 = 7, and v[1] is 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut slots = [0, 0, 0];\n    slots[1] = 5;\n    slots[2] += 2;\n    println!("{}", slots[1] + slots[2]);\n}',
-          ['5', '2', '7', '0'],
-          2,
+          '7',
           'Index 1 is set to 5 and index 2 grows from 0 to 2, so the sum is 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let pair = ([1, 2, 3], 10);\n    println!("{}", pair.0[2] + pair.1);\n}',
-          ['12', '11', '3', '13'],
-          3,
+          '13',
           'pair.0 is the array, whose element at index 2 is 3; adding pair.1 gives 13.',
         ),
         choose(
@@ -1329,25 +1247,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '3.5 becomes 3, 0.4 becomes 0, and -3.5 becomes -3: each result drops its fraction toward zero.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{}", 19 / 4);\n}',
-          ['4.75', '5', '4', '3'],
-          2,
+          '4',
           '19 / 4 is 4.75, and integer division keeps only the 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    println!("{}", -9 / 4);\n}',
-          ['-2', '-3', '-2.25', '2'],
-          0,
+          '-2',
           '-2.25 is truncated toward zero, giving -2.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn average(a: i32, b: i32) -> i32 {\n    (a + b) / 2\n}\n\nfn main() {\n    println!("{}", average(3, 6));\n}',
-          ['4.5', '4', '5', '9'],
-          1,
+          '4',
           '9 / 2 would be 4.5, but the integer result keeps only 4.',
         ),
         choose(
@@ -1372,25 +1287,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '1234 % 10 is the last digit, 4. 27 % 24 is 3: five hours after 22:00 is 3:00 on a 24-hour clock.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{}", 29 % 10);\n}',
-          ['2', '9', '2.9', '19'],
-          1,
+          '9',
           '29 holds two whole 10s with 9 left over.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    println!("{}", 3 % 8);\n}',
-          ['0', '8', '3', '5'],
-          2,
+          '3',
           '8 does not fit into 3 at all, so the whole 3 is left over.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    println!("{}", -7 % 3);\n}',
-          ['2', '1', '-2', '-1'],
-          3,
+          '-1',
           '-7 / 3 is -2 with -1 left over; the remainder keeps the sign of the left side.',
         ),
         choose(
@@ -1450,11 +1362,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'i32::MAX + 1 does not fit in an i32, and a debug build stops with an overflow panic instead of printing a wrong number.',
           'fn add_one(n: i32) -> i32 {\n    n + 1\n}\n\nfn main() {\n    println!("{}", add_one(i32::MAX));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{}", u8::MAX / 2);\n}',
-          ['127', '128', '127.5', '255'],
-          0,
+          '127',
           'u8::MAX is 255, and integer division by 2 drops the .5.',
         ),
         predictOutput(
@@ -1480,30 +1391,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '135 minutes contain two full hours (120 minutes), and 15 minutes remain.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn teams(players: u32, size: u32) -> (u32, u32) {\n    (players / size, players % size)\n}\n\nfn main() {\n    println!("{:?}", teams(23, 4));\n}',
-          ['(6, 1)', '(5, 3)', '(5.75, 3)', '(3, 5)'],
-          1,
+          '(5, 3)',
           'Five teams of 4 use 20 players, leaving 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn split_digits(n: u32) -> (u32, u32) {\n    (n / 10, n % 10)\n}\n\nfn main() {\n    println!("{:?}", split_digits(47));\n}',
-          ['(7, 4)', '(4.7, 7)', '(4, 7)', '(47, 0)'],
-          2,
+          '(4, 7)',
           'Dividing by 10 drops the last digit, and % 10 keeps only the last digit.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let cookies = 50;\n    let per_bag = 12;\n    let full = cookies / per_bag;\n    let spare = cookies % per_bag;\n    println!("{} bags, {} spare", full, spare);\n}',
-          [
-            '4 bags, 2 spare',
-            '5 bags, 0 spare',
-            '4 bags, 0 spare',
-            '4 bags, 12 spare',
-          ],
-          0,
+          '4 bags, 2 spare',
           'Four bags of 12 hold 48 cookies, leaving 2.',
         ),
         choose(
@@ -1541,18 +1444,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first division uses f64 values and keeps the .5. The second uses integers, so the fraction is dropped.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{}", 9.0 / 4.0);\n}',
-          ['2', '2.25', '2.3', '2.0'],
-          1,
+          '2.25',
           'Both values are f64, so the exact quotient 2.25 is kept.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn half(x: f64) -> f64 {\n    x / 2.0\n}\n\nfn main() {\n    println!("{}", half(5.0));\n}',
-          ['2', '3', '2.5', '5'],
-          2,
+          '2.5',
           'half divides an f64 by 2.0, so 5.0 becomes 2.5.',
         ),
         choose(
@@ -1589,25 +1490,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'whole is 3.0, which {} prints as 3 and {:?} as 3.0. part is 2.5, which prints the same both ways.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{:?}", 8.0 / 4.0);\n}',
-          ['2', '"2.0"', '2.0', '2.00'],
-          2,
+          '2.0',
           'The result is the whole f64 2.0, and {:?} keeps its .0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    println!("{}", 4.0 * 2.5);\n}',
-          ['10', '10.0', '8', '8.0'],
-          0,
+          '10',
           '4.0 * 2.5 is exactly 10.0, and {} prints a whole f64 without the .0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let point = (1.0, 0.5);\n    println!("{:?}", point);\n}',
-          ['(1, 0.5)', '(1.0, 0.50)', '1.0 0.5', '(1.0, 0.5)'],
-          3,
+          '(1.0, 0.5)',
           'Inside the tuple’s Debug form, the whole f64 keeps its .0.',
         ),
         choose(
@@ -1632,25 +1530,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first line converts both integers, so 3.0 / 4.0 is 0.75. The second divides the integers first, getting 0, and only then converts it to 0.0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn share(part: i32, whole: i32) -> f64 {\n    part as f64 / whole as f64\n}\n\nfn main() {\n    println!("{}", share(1, 8));\n}',
-          ['0', '0.125', '0.12', '0.1'],
-          1,
+          '0.125',
           'Both integers become f64 before dividing, so 1.0 / 8.0 keeps its full fraction.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let a = 7;\n    let b = 2;\n    println!("{:?}", (a / b) as f64);\n}',
-          ['3.5', '4.0', '3.0', '3'],
-          2,
+          '3.0',
           'a / b is integer division, giving 3, and only then is it converted to 3.0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    println!("{}", 9.99 as i32);\n    println!("{}", -2.7 as i32);\n}',
-          ['10\n-3', '9\n-3', '10\n-2', '9\n-2'],
-          3,
+          '9\n-2',
           'Converting to i32 drops the fraction toward zero, never rounding: 9.99 becomes 9 and -2.7 becomes -2.',
         ),
         choose(
@@ -1680,25 +1575,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'sum is a tiny bit above 0.3, so == is false. Their distance is far below 1e-9, so the tolerance check is true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a: f64 = 2.5;\n    let b: f64 = 4.0;\n    println!("{}", (a - b).abs());\n}',
-          ['-1.5', '1.5', '6.5', '1'],
-          1,
+          '1.5',
           'a - b is -1.5, and .abs() removes the sign.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn close(a: f64, b: f64) -> bool {\n    (a - b).abs() < 0.01\n}\n\nfn main() {\n    println!("{}", close(1.004, 1.0));\n    println!("{}", close(1.0, 1.5));\n}',
-          ['true\nfalse', 'false\nfalse', 'true\ntrue', 'false\ntrue'],
-          0,
+          'true\nfalse',
           'The first pair differs by 0.004, under 0.01; the second differs by 0.5.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    let total: f64 = 0.1 + 0.2;\n    println!("{}", total == 0.3);\n}',
-          ['true', '0.3', 'false', '0.30000000000000004'],
-          2,
+          'false',
           'total is stored as 0.30000000000000004, which is not exactly equal to 0.3.',
         ),
         choose(
@@ -1730,25 +1622,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '>= includes equality, so 18 counts. 17 is below 18, so the second call returns false.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn fits(size: i32) -> bool {\n    size < 10\n}\n\nfn main() {\n    println!("{}", fits(9));\n    println!("{}", fits(10));\n}',
-          ['true\ntrue', 'true\nfalse', 'false\ntrue', 'false\nfalse'],
-          1,
+          'true\nfalse',
           '< is strict: 9 is less than 10, but 10 is not.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    println!("{}", 3 * 4 == 12);\n    println!("{}", 10 - 3 >= 8);\n}',
-          ['false\nfalse', 'true\ntrue', 'false\ntrue', 'true\nfalse'],
-          3,
+          'true\nfalse',
           'The arithmetic runs before the comparison: 12 == 12 is true, and 7 >= 8 is false.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    println!("{}", 7 != 7);\n    println!("{}", 7 != 8);\n}',
-          ['false\ntrue', 'true\nfalse', 'true\ntrue', 'false\nfalse'],
-          0,
+          'false\ntrue',
           '!= is true only when the two values differ.',
         ),
         choose(
@@ -1773,18 +1662,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '13 passes both checks. 20 passes age >= 13 but fails age <= 19, so && gives false.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn valid_month(m: i32) -> bool {\n    m >= 1 && m <= 12\n}\n\nfn main() {\n    println!("{}", valid_month(12));\n    println!("{}", valid_month(0));\n}',
-          ['true\nfalse', 'true\ntrue', 'false\nfalse', 'false\ntrue'],
-          0,
+          'true\nfalse',
           '12 meets both bounds because <= includes 12. 0 fails m >= 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    println!("{}", 5 > 2 && 2 > 5);\n    println!("{}", 1 < 2 && 2 < 3);\n}',
-          ['true\ntrue', 'false\nfalse', 'false\ntrue', 'true\nfalse'],
-          2,
+          'false\ntrue',
           'The first line has one false side, so it is false; both sides of the second are true.',
         ),
         choose(
@@ -1798,16 +1685,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Both inclusive bounds must hold, so each gets its own comparison joined by &&. Rust does not allow chained comparisons like 10 <= n <= 20.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn check(n: i32) -> bool {\n    println!("checking {}", n);\n    n > 0\n}\n\nfn main() {\n    println!("{}", check(-1) && check(5));\n}',
-          [
-            'checking -1\nchecking 5\nfalse',
-            'checking -1\nfalse',
-            'false',
-            'checking 5\nchecking -1\nfalse',
-          ],
-          1,
+          'checking -1\nfalse',
           'check(-1) returns false, so && skips check(5) entirely and the result is false.',
         ),
       ],
@@ -1826,18 +1707,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'For 7 the right side is true, which is enough. For 3 neither side is true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn out_of_range(n: i32) -> bool {\n    n < 0 || n > 100\n}\n\nfn main() {\n    println!("{}", out_of_range(50));\n    println!("{}", out_of_range(101));\n}',
-          ['true\nfalse', 'false\ntrue', 'false\nfalse', 'true\ntrue'],
-          1,
+          'false\ntrue',
           '50 fails both sides, so it is not out of range; 101 is above 100.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    println!("{}", 2 > 1 || 1 > 2);\n    println!("{}", 0 > 1 || 1 > 2);\n}',
-          ['false\nfalse', 'true\ntrue', 'false\ntrue', 'true\nfalse'],
-          3,
+          'true\nfalse',
           'One true side is enough for the first line; both sides of the second are false.',
         ),
         choose(
@@ -1851,16 +1730,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Either condition alone makes the ticket free, so the two exact bounds are joined with ||.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn noisy(b: bool) -> bool {\n    println!("saw {}", b);\n    b\n}\n\nfn main() {\n    println!("{}", noisy(true) || noisy(false));\n}',
-          [
-            'saw true\ntrue',
-            'saw true\nsaw false\ntrue',
-            'true',
-            'saw false\nsaw true\ntrue',
-          ],
-          0,
+          'saw true\ntrue',
           'The left call returns true, so || never runs noisy(false).',
         ),
       ],
@@ -1879,18 +1752,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'in_digits(12) is false, and ! flips it to true. 3 > 1 is true, so its negation is false.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn outside(n: i32, low: i32, high: i32) -> bool {\n    !(n >= low && n <= high)\n}\n\nfn main() {\n    println!("{}", outside(5, 1, 10));\n    println!("{}", outside(11, 1, 10));\n}',
-          ['true\nfalse', 'true\ntrue', 'false\ntrue', 'false\nfalse'],
-          2,
+          'false\ntrue',
           '5 is inside 1 to 10, so the negation is false; 11 is not inside, so it is true.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    println!("{}", true || false && false);\n    println!("{}", (true || false) && false);\n}',
-          ['false\nfalse', 'true\nfalse', 'false\ntrue', 'true\ntrue'],
-          1,
+          'true\nfalse',
           'Without parentheses, false && false is grouped first, and true || false is true. The parentheses in the second line make || go first.',
         ),
         choose(
@@ -1899,11 +1770,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Not greater than 3 means 3 or less, which includes a == 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'fn main() {\n    println!("{}", !(4 == 4) || 2 < 3);\n    println!("{}", !(2 < 3 && 5 > 1));\n}',
-          ['true\nfalse', 'false\nfalse', 'true\ntrue', 'false\ntrue'],
-          0,
+          'true\nfalse',
           '!(4 == 4) is false, but 2 < 3 is true, so the first line is true. The second negates a true &&, giving false.',
         ),
       ],
@@ -1924,11 +1794,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'days reads DAYS_PER_WEEK to compute 3 * 7 = 21, and main reads the same constant directly.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'const LIMIT: i32 = 50;\n\nfn main() {\n    println!("{}", LIMIT - 8);\n}',
-          ['58', '42', 'LIMIT - 8', '50'],
-          1,
+          '42',
           'LIMIT stands for 50, so LIMIT - 8 is 42.',
         ),
         choose(
@@ -1942,11 +1811,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A const needs the const keyword, a name, an explicit type and a value, and it cannot be mut.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'const BOX: u32 = 12;\n\nfn boxes(items: u32) -> u32 {\n    items / BOX\n}\n\nfn loose(items: u32) -> u32 {\n    items % BOX\n}\n\nfn main() {\n    println!("{} {}", boxes(30), loose(30));\n}',
-          ['2 6', '2.5 6', '3 6', '6 2'],
-          0,
+          '2 6',
           'Both functions read the same BOX: 30 / 12 is 2 and 30 % 12 is 6.',
         ),
         choose(
@@ -1989,18 +1857,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'A const is not a variable, so it cannot appear on the left of an assignment.',
           'const SPEED: u32 = 30;\n\nfn main() {\n    SPEED = 40;\n    println!("{}", SPEED);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'const BASE: i32 = 3;\n\nfn main() {\n    let mut total = BASE;\n    total *= BASE;\n    total += BASE;\n    println!("{}", total);\n}',
-          ['9', '12', '6', '18'],
-          1,
+          '12',
           'total starts at 3, becomes 3 * 3 = 9, then 9 + 3 = 12; BASE is 3 at every use.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'const STEP: i32 = 4;\n\nfn next(n: i32) -> i32 {\n    n + STEP\n}\n\nfn main() {\n    println!("{}", next(next(1)));\n}',
-          ['5', '13', '9', '8'],
-          2,
+          '9',
           'Each call adds the same STEP: 1 + 4 = 5, then 5 + 4 = 9.',
         ),
         choose(
@@ -2030,18 +1896,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both functions use the same CM_PER_M. 3 meters is 300 cm, and 250 cm splits into 2 whole meters and 50 cm.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'const SECONDS_PER_MINUTE: u32 = 60;\n\nfn to_seconds(minutes: u32, seconds: u32) -> u32 {\n    minutes * SECONDS_PER_MINUTE + seconds\n}\n\nfn main() {\n    println!("{}", to_seconds(2, 15));\n}',
-          ['75', '135', '150', '2015'],
-          1,
+          '135',
           'Multiplication happens first: 2 * 60 = 120, plus 15 gives 135.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'const PER_TEAM: u32 = 5;\n\nfn teams(players: u32) -> (u32, u32) {\n    (players / PER_TEAM, players % PER_TEAM)\n}\n\nfn main() {\n    println!("{:?}", teams(23));\n}',
-          ['(4, 3)', '(5, 0)', '(3, 4)', '(4.6, 3)'],
-          0,
+          '(4, 3)',
           '23 / 5 is 4 full teams, and 23 % 5 leaves 3 players.',
         ),
         choose(
@@ -2055,11 +1919,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A const gives the fixed value one named definition that every function can read.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output of this program?',
           'const LEVELS: [u32; 3] = [10, 20, 40];\n\nfn bonus(level: usize) -> u32 {\n    LEVELS[level] / 2\n}\n\nfn main() {\n    println!("{}", bonus(0) + bonus(2));\n}',
-          ['15', '50', '30', '25'],
-          3,
+          '25',
           'bonus(0) is 10 / 2 = 5 and bonus(2) is 40 / 2 = 20, for a total of 25.',
         ),
       ],
@@ -2080,11 +1943,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '12 > 10 is true, so the first call prints big. 10 > 10 is false, so the second call runs the else block. Both calls print checked after the if.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn report(temp: i32) {\n    if temp < 0 {\n        println!("ice");\n    } else {\n        println!("water");\n    }\n}\n\nfn main() {\n    report(0);\n}',
-          ['ice', 'water', 'ice\nwater', 'Nothing'],
-          1,
+          'water',
           '0 < 0 is false, so only the else block runs.',
         ),
         predictOutput(
@@ -2111,16 +1973,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'An if condition must be a bool. n is an i32, and Rust does not treat a nonzero number as true, so this is a type error.',
           'fn show(n: i32) {\n    if n {\n        println!("yes");\n    } else {\n        println!("no");\n    }\n}\n\nfn main() {\n    show(3);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn warn(level: i32) {\n    if level > 3 {\n        println!("alert");\n    }\n    println!("done");\n}\n\nfn main() {\n    warn(2);\n    warn(5);\n}',
-          [
-            'alert\ndone',
-            'done\ndone',
-            'alert\ndone\ndone',
-            'done\nalert\ndone',
-          ],
-          3,
+          'done\nalert\ndone',
           'With no else, warn(2) skips the block and prints only done. warn(5) prints alert, then done.',
         ),
       ],
@@ -2139,18 +1995,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'For 4 and 9 the condition is false, so the else block’s value, 9, is returned. For -2 and -5 the condition is true, so -2 is returned.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn fee(members: i32) -> i32 {\n    if members > 4 {\n        members * 8\n    } else {\n        members * 10\n    }\n}\n\nfn main() {\n    println!("{}", fee(4));\n}',
-          ['32', '40', '4', '72'],
-          1,
+          '40',
           '4 > 4 is false, so the else branch gives 4 * 10 = 40.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn bonus(score: i32) -> i32 {\n    if score >= 90 {\n        5\n    } else {\n        0\n    }\n}\n\nfn main() {\n    println!("{}", 88 + bonus(88));\n    println!("{}", 90 + bonus(90));\n}',
-          ['93\n95', '88\n90', '93\n90', '88\n95'],
-          3,
+          '88\n95',
           'bonus(88) is 0 because 88 is below 90, and bonus(90) is 5 because >= includes 90.',
         ),
         choose(
@@ -2193,25 +2047,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '1 passes the first test. 7 fails the first test and passes the second. 25 fails both, so the final else supplies 30.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn grade(score: i32) -> i32 {\n    if score >= 90 {\n        4\n    } else if score >= 80 {\n        3\n    } else if score >= 70 {\n        2\n    } else {\n        0\n    }\n}\n\nfn main() {\n    println!("{}", grade(80));\n}',
-          ['2', '4', '3', '0'],
-          2,
+          '3',
           '80 fails score >= 90 but passes score >= 80, so the chain stops there with 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn size(n: i32) -> i32 {\n    if n > 10 {\n        1\n    } else if n > 100 {\n        2\n    } else {\n        3\n    }\n}\n\nfn main() {\n    println!("{}", size(500));\n}',
-          ['1', '2', '3', '12'],
-          0,
+          '1',
           '500 > 10 is already true, so the first branch wins and the n > 100 test is never reached.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn sign(n: i32) {\n    if n > 0 {\n        println!("plus");\n    } else if n < 0 {\n        println!("minus");\n    } else {\n        println!("zero");\n    }\n}\n\nfn main() {\n    sign(-4);\n    sign(0);\n}',
-          ['plus\nzero', 'zero\nminus', 'minus\nminus', 'minus\nzero'],
-          3,
+          'minus\nzero',
           '-4 fails n > 0 and passes n < 0. 0 fails both tests, so the else prints zero.',
         ),
         choose(
@@ -2241,25 +2092,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '70 satisfies age >= 65, so the first branch wins even on a weekend. 30 fails the first test, so weekend decides between 12 and 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn parking(hours: i32, member: bool) -> i32 {\n    if member && hours <= 2 {\n        0\n    } else if hours <= 2 {\n        4\n    } else {\n        hours * 3\n    }\n}\n\nfn main() {\n    println!("{}", parking(3, true));\n}',
-          ['0', '4', '9', '3'],
-          2,
+          '9',
           '&& needs both parts; hours <= 2 is false, so the first two tests fail and the else gives 3 * 3 = 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn alarm(smoke: bool, heat: i32) -> i32 {\n    if smoke || heat > 60 {\n        2\n    } else if heat > 40 {\n        1\n    } else {\n        0\n    }\n}\n\nfn main() {\n    println!("{}", alarm(false, 50));\n    println!("{}", alarm(true, 20));\n}',
-          ['1\n0', '0\n2', '2\n2', '1\n2'],
-          3,
+          '1\n2',
           'For (false, 50) neither part of the || is true, but 50 > 40 gives 1. For (true, 20) smoke alone makes the || true, giving 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn access(locked: bool, admin: bool) -> i32 {\n    if !locked {\n        1\n    } else if admin {\n        2\n    } else {\n        3\n    }\n}\n\nfn main() {\n    println!("{}", access(true, true) + access(false, false));\n}',
-          ['3', '5', '4', '2'],
-          0,
+          '3',
           'access(true, true) skips !locked and returns 2 because admin is true. access(false, false) returns 1 because !false is true. 2 + 1 = 3.',
         ),
         choose(
@@ -2291,25 +2139,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '2 matches the second arm, so the match produces 6. 7 matches none of the literals, so the _ arm produces 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn wheels(kind: i32) -> i32 {\n    match kind {\n        1 => 2,\n        2 => 4,\n        3 => 18,\n        _ => 0,\n    }\n}\n\nfn main() {\n    println!("{}", wheels(3));\n}',
-          ['3', '18', '0', '4'],
-          1,
+          '18',
           'The value 3 matches the pattern 3, whose result is 18.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn day_name(day: i32) {\n    match day {\n        6 => println!("Saturday"),\n        7 => println!("Sunday"),\n        _ => println!("weekday"),\n    }\n}\n\nfn main() {\n    day_name(7);\n    day_name(1);\n}',
-          ['Sunday\nweekday', 'Sunday\nSaturday', 'weekday\nweekday', 'Sunday'],
-          0,
+          'Sunday\nweekday',
           '7 runs the Sunday arm. 1 matches no literal, so the _ arm prints weekday.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn code(n: i32) -> i32 {\n    match n {\n        0 => 100,\n        1 => 200,\n        _ => -1,\n    }\n}\n\nfn main() {\n    println!("{}", code(1) + code(5));\n}',
-          ['300', '200', '99', '199'],
-          3,
+          '199',
           'code(1) is 200 and code(5) falls to the _ arm, giving -1. 200 + -1 = 199.',
         ),
         choose(
@@ -2351,11 +2196,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Values such as 0 and 4 match no arm, so the match is not exhaustive and the compiler rejects it.',
           'fn rating(stars: i32) -> i32 {\n    match stars {\n        1 => 20,\n        2 => 40,\n        3 => 60,\n    }\n}\n\nfn main() {\n    println!("{}", rating(2));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn price(size: i32) -> i32 {\n    match size {\n        _ => 9,\n        1 => 3,\n        2 => 5,\n    }\n}\n\nfn main() {\n    println!("{}", price(1));\n}',
-          ['3', '9', '5', '12'],
-          1,
+          '9',
           'The _ arm comes first and matches every value, so it always wins; the arms for 1 and 2 can never run.',
         ),
         predictOutput(
@@ -2397,25 +2241,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '9 is one of the alternatives in 4 | 6 | 9 | 11. 7 skips the first two arms and falls inside 1..=12. 13 is outside every pattern, so _ returns 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn level(score: i32) -> i32 {\n    match score {\n        0..=49 => 1,\n        50..=79 => 2,\n        80..=100 => 3,\n        _ => 0,\n    }\n}\n\nfn main() {\n    println!("{}", level(79));\n    println!("{}", level(80));\n}',
-          ['2\n2', '2\n3', '1\n3', '3\n3'],
-          1,
+          '2\n3',
           '..= includes its upper end, so 79 belongs to 50..=79 and 80 starts 80..=100.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn points(card: i32) -> i32 {\n    match card {\n        1 => 11,\n        11 | 12 | 13 => 10,\n        2..=10 => card,\n        _ => 0,\n    }\n}\n\nfn main() {\n    println!("{}", points(12) + points(10) + points(1));\n}',
-          ['33', '21', '30', '31'],
-          3,
+          '31',
           '12 matches 11 | 12 | 13 and gives 10, 10 is inside 2..=10 and gives itself, and 1 gives 11: 10 + 10 + 11 = 31.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn zone(t: i32) -> i32 {\n    match t {\n        -10..=-1 => 1,\n        0 => 2,\n        1..=10 => 3,\n        _ => 4,\n    }\n}\n\nfn main() {\n    println!("{}", zone(-1));\n    println!("{}", zone(10));\n    println!("{}", zone(11));\n}',
-          ['1\n4\n4', '4\n3\n4', '1\n3\n4', '2\n3\n4'],
-          2,
+          '1\n3\n4',
           '-1 is the upper end of -10..=-1 and 10 is the upper end of 1..=10; both ends are included. 11 is outside every range.',
         ),
         choose(
@@ -2440,30 +2281,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '250 passes the guard n > 100. 42 fails that guard and passes n > 0. -8 fails both guards, so _ gives -1.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn discount(qty: i32) -> i32 {\n    match qty {\n        0 => 0,\n        q if q >= 10 => 20,\n        q if q >= 5 => 10,\n        _ => 5,\n    }\n}\n\nfn main() {\n    println!("{}", discount(5));\n    println!("{}", discount(12));\n}',
-          ['10\n20', '5\n20', '10\n10', '20\n20'],
-          0,
+          '10\n20',
           '5 fails q >= 10 but passes q >= 5, giving 10. 12 passes the first guard, giving 20.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn rank(n: i32) -> i32 {\n    match n {\n        n if n > 0 => 1,\n        n if n > 50 => 2,\n        _ => 0,\n    }\n}\n\nfn main() {\n    println!("{}", rank(80));\n}',
-          ['2', '0', '1', '3'],
-          2,
+          '1',
           '80 > 0 is true, so the first arm wins; the n > 50 arm is never tried.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn describe(n: i32) {\n    match n {\n        1 | 3 | 5 => println!("small odd"),\n        n if n > 5 && n < 10 => println!("medium"),\n        0..=9 => println!("small even"),\n        _ => println!("large"),\n    }\n}\n\nfn main() {\n    describe(4);\n    describe(7);\n    describe(10);\n}',
-          [
-            'small even\nsmall odd\nlarge',
-            'medium\nmedium\nlarge',
-            'small even\nmedium\nmedium',
-            'small even\nmedium\nlarge',
-          ],
-          3,
+          'small even\nmedium\nlarge',
           '4 fails the first two arms and lands in 0..=9. 7 passes the guard. 10 fails the guard (10 < 10 is false) and is outside 0..=9.',
         ),
         choose(
@@ -2496,18 +2329,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each pass prints n and then checks it. When n is 3 the break ends the loop before n += 1, and the program continues with after.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut count = 0;\n    loop {\n        count += 2;\n        if count >= 7 {\n            break;\n        }\n    }\n    println!("{}", count);\n}',
-          ['6', '7', '8', '10'],
-          2,
+          '8',
           'count goes 2, 4, 6, 8. The first value that is at least 7 is 8, and the loop stops there.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut n = 10;\n    loop {\n        if n < 4 {\n            break;\n        }\n        println!("{}", n);\n        n -= 3;\n    }\n}',
-          ['10\n7', '10\n7\n4', '10\n7\n4\n1', '7\n4\n1'],
-          1,
+          '10\n7\n4',
           '10, 7 and 4 are printed. Then n becomes 1, and the check at the top breaks before printing it.',
         ),
         choose(
@@ -2522,11 +2353,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Nothing in the body changes n, so n == 5 is never true and the break is never reached.',
           'fn main() {\n    let mut n = 0;\n    loop {\n        if n == 5 {\n            break;\n        }\n        println!("{}", n);\n    }\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut steps = 0;\n    let mut x = 1;\n    loop {\n        x *= 3;\n        steps += 1;\n        if x > 50 {\n            break;\n        }\n    }\n    println!("{} {}", steps, x);\n}',
-          ['3 27', '4 27', '5 243', '4 81'],
-          3,
+          '4 81',
           'x goes 3, 9, 27, 81. The fourth pass makes x 81, which is over 50, so the loop breaks with steps at 4.',
         ),
       ],
@@ -2545,25 +2375,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'n reaches 6 before n * n exceeds 30, and break n * n hands 36 back as the loop’s value. The loop is the function’s tail expression, so 36 is returned.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut total = 0;\n    let mut i = 1;\n    let result = loop {\n        total += i;\n        if total > 10 {\n            break i;\n        }\n        i += 1;\n    };\n    println!("{} {}", result, total);\n}',
-          ['4 10', '15 5', '5 15', '5 10'],
-          2,
+          '5 15',
           'total goes 1, 3, 6, 10, 15. It first exceeds 10 when i is 5, so the loop’s value is 5 and total is 15.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn next_multiple(n: i32, step: i32) -> i32 {\n    let mut x = n;\n    loop {\n        if x % step == 0 {\n            break x;\n        }\n        x += 1;\n    }\n}\n\nfn main() {\n    println!("{}", next_multiple(14, 5));\n    println!("{}", next_multiple(20, 5));\n}',
-          ['15\n20', '15\n25', '10\n20', '14\n20'],
-          0,
+          '15\n20',
           'From 14 the loop climbs to 15, the first multiple of 5. 20 is already a multiple, so it breaks on the first pass.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut x = 100;\n    let mut count = 0;\n    let steps = loop {\n        if x < 10 {\n            break count;\n        }\n        x /= 2;\n        count += 1;\n    };\n    println!("{} {}", steps, x);\n}',
-          ['3 12', '5 3', '4 6.25', '4 6'],
-          3,
+          '4 6',
           'x goes 100, 50, 25, 12, 6; integer division drops the .5 from 25 / 2. After four halvings x is below 10.',
         ),
         choose(
@@ -2594,18 +2421,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'n is advanced first on every pass. For 3 and 6 the continue skips the println!, and at 7 the break ends the loop.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut i = 0;\n    let mut sum = 0;\n    loop {\n        i += 1;\n        if i > 5 {\n            break;\n        }\n        if i == 2 {\n            continue;\n        }\n        sum += i;\n    }\n    println!("{}", sum);\n}',
-          ['15', '13', '1', '8'],
-          1,
+          '13',
           'When i is 2 the continue skips the addition, so the sum is 1 + 3 + 4 + 5 = 13.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut n = 10;\n    loop {\n        n -= 1;\n        if n < 5 {\n            break;\n        }\n        if n % 2 == 1 {\n            continue;\n        }\n        println!("{}", n);\n    }\n}',
-          ['8\n6', '9\n7\n5', '8\n6\n4', '10\n8\n6'],
-          0,
+          '8\n6',
           'n is decreased before anything else, so the values are 9 to 5. Odd values are skipped, and at 4 the loop breaks before printing.',
         ),
         choose(
@@ -2620,11 +2445,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'When n is 2 the continue jumps back before n += 1, so n stays 2 and the same pass repeats forever.',
           'fn main() {\n    let mut n = 0;\n    loop {\n        if n == 2 {\n            continue;\n        }\n        if n == 4 {\n            break;\n        }\n        println!("{}", n);\n        n += 1;\n    }\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut x = 0;\n    let mut passes = 0;\n    loop {\n        x += 3;\n        if x > 20 {\n            break;\n        }\n        if x % 2 == 0 {\n            continue;\n        }\n        passes += 1;\n    }\n    println!("{} {}", passes, x);\n}',
-          ['3 18', '3 21', '6 21', '4 21'],
-          1,
+          '3 21',
           'x takes the values 3 to 18 in steps of 3; only the odd ones (3, 9, 15) reach passes += 1. The loop breaks when x is 21.',
         ),
       ],
@@ -2642,25 +2466,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Numbers that are not multiples of 4 are skipped. Among 4, 8 and 12, the first that is also a multiple of 6 is 12, so break n returns it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn collatz_steps(start: i32) -> i32 {\n    let mut n = start;\n    let mut steps = 0;\n    loop {\n        if n == 1 {\n            break steps;\n        }\n        if n % 2 == 0 {\n            n /= 2;\n        } else {\n            n = 3 * n + 1;\n        }\n        steps += 1;\n    }\n}\n\nfn main() {\n    println!("{}", collatz_steps(6));\n}',
-          ['9', '16', '8', '7'],
-          2,
+          '8',
           'The values are 6, 3, 10, 5, 16, 8, 4, 2, 1: eight changes before n reaches 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut n = 20;\n    let found = loop {\n        n += 1;\n        if n % 2 == 0 {\n            continue;\n        }\n        if n % 3 == 0 {\n            break (n, n / 3);\n        }\n    };\n    println!("{:?}", found);\n}',
-          ['(24, 8)', '21 7', '(27, 9)', '(21, 7)'],
-          3,
+          '(21, 7)',
           '21 is odd and divisible by 3, so the loop breaks with the tuple (21, 7), which {:?} prints with parentheses.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut n = 0;\n    let mut skipped = 0;\n    let hit = loop {\n        n += 7;\n        if n % 5 != 0 {\n            skipped += 1;\n            continue;\n        }\n        break n;\n    };\n    println!("{} {}", hit, skipped);\n}',
-          ['35 4', '35 5', '28 4', '70 9'],
-          0,
+          '35 4',
           '7, 14, 21 and 28 are skipped, and 35 is the first multiple of 7 that is also a multiple of 5.',
         ),
         choose(
@@ -2692,25 +2513,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The body runs for 1, 2 and 3. After n becomes 4, the test n <= 3 is false, so the loop ends with n still 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut x = 5;\n    while x > 0 {\n        println!("{}", x);\n        x -= 2;\n    }\n}',
-          ['5\n3\n1\n-1', '5\n3', '5\n3\n1', '3\n1\n-1'],
-          2,
+          '5\n3\n1',
           'x is 5, 3 and 1 when the test passes. Once x is -1, x > 0 is false and nothing more prints.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut count = 0;\n    let mut n = 8;\n    while n < 5 {\n        count += 1;\n        n += 1;\n    }\n    println!("{} {}", count, n);\n}',
-          ['1 9', '0 8', '0 5', '3 5'],
-          1,
+          '0 8',
           '8 < 5 is false at the first test, so the body never runs and both values stay as they were.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut total = 0;\n    let mut step = 1;\n    while total < 20 {\n        total += step;\n        step *= 2;\n    }\n    println!("{} {}", total, step);\n}',
-          ['15 16', '31 16', '20 32', '31 32'],
-          3,
+          '31 32',
           'total goes 1, 3, 7, 15, 31 while step doubles to 32. 15 < 20 allows one more pass, which makes total 31.',
         ),
         choose(
@@ -2740,11 +2558,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'value goes 20, 10, 5, 2, 1; 5 / 2 is 2 because the remainder is dropped. Four passes bring value down to 1, where value > 1 is false.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut n = 50721;\n    let mut digits = 0;\n    while n > 0 {\n        n /= 10;\n        digits += 1;\n    }\n    println!("{}", digits);\n}',
-          ['4', '6', '1', '5'],
-          3,
+          '5',
           'Each pass removes one digit: 5072, 507, 50, 5, 0. Five passes bring n to 0.',
         ),
         choose(
@@ -2759,18 +2576,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The body never changes n, so n > 0 stays true and the loop repeats forever.',
           'fn main() {\n    let mut n = 3;\n    while n > 0 {\n        println!("{}", n);\n    }\n    println!("liftoff");\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut n = 100;\n    while n >= 10 {\n        n /= 3;\n    }\n    println!("{}", n);\n}',
-          ['11', '1', '3', '3.7'],
-          2,
+          '3',
           'n goes 100, 33, 11, 3, with each division dropping the remainder. 3 is the first value below 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut n = 9073;\n    let mut sum = 0;\n    while n > 0 {\n        sum += n % 10;\n        n /= 10;\n    }\n    println!("{}", sum);\n}',
-          ['19', '4', '16', '3'],
-          0,
+          '19',
           'Each pass adds the last digit and then removes it: 3 + 7 + 0 + 9 = 19.',
         ),
       ],
@@ -2789,18 +2604,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'i takes the indexes 0, 1, 2 and 3, adding 3 - 1 + 4 + 10 = 16. When i reaches 4, i < 4 is false and the loop ends.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let scores = [7, 2, 9];\n    let mut i = scores.len();\n    while i > 0 {\n        i -= 1;\n        println!("{}", scores[i]);\n    }\n}',
-          ['7\n2\n9', '9\n2\n7', '2\n7', '9\n2'],
-          1,
+          '9\n2\n7',
           'i starts at 3 and is decreased before each read, so the indexes are 2, 1 and 0: the array backwards.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let data = [5, 8, 1, 6, 3];\n    let mut i = 0;\n    let mut sum = 0;\n    while i < data.len() {\n        sum += data[i];\n        i += 2;\n    }\n    println!("{} {}", sum, i);\n}',
-          ['14 4', '9 5', '9 6', '23 5'],
-          2,
+          '9 6',
           'i visits 0, 2 and 4, adding 5 + 1 + 3 = 9. The next step makes i 6, which fails i < 5.',
         ),
         choose(
@@ -2815,11 +2628,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'With <= the loop also runs for i = 3, and a[3] is past the end of a 3-element array, so the program panics.',
           'fn main() {\n    let a = [1, 2, 3];\n    let mut i = 0;\n    while i <= a.len() {\n        println!("{}", a[i]);\n        i += 1;\n    }\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let temps = [12, 15, 21, 18, 25];\n    let mut i = 0;\n    while i < temps.len() && temps[i] < 20 {\n        i += 1;\n    }\n    println!("{}", i);\n}',
-          ['3', '21', '1', '2'],
-          3,
+          '2',
           '12 and 15 are below 20, so i advances twice. At index 2 the value 21 fails the test, and the loop stops with i = 2.',
         ),
       ],
@@ -2840,25 +2652,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The range starts at 2 and stops before 5, so x is 2, 3 and 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    for n in 0..3 {\n        println!("{}", n);\n    }\n}',
-          ['0\n1\n2\n3', '1\n2\n3', '0\n1\n2', '1\n2'],
-          2,
+          '0\n1\n2',
           'The range includes its start, 0, and excludes its end, 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut total = 0;\n    for x in 3..7 {\n        total += x;\n    }\n    println!("{}", total);\n}',
-          ['25', '18', '22', '15'],
-          1,
+          '18',
           'x takes 3, 4, 5 and 6, so total is 18; 7 is not included.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut count = 0;\n    let mut last = 0;\n    for i in 10..15 {\n        count += 1;\n        last = i;\n    }\n    println!("{}", count);\n    println!("{}", last);\n}',
-          ['5\n15', '6\n15', '4\n14', '5\n14'],
-          3,
+          '5\n14',
           '10..15 gives 15 - 10 = 5 values, and the last of them is 14.',
         ),
         choose(
@@ -2883,18 +2692,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '1..=5 includes 5, so product is 1 * 2 * 3 * 4 * 5 = 120. With 1..5 it would stop at 4 and give 24.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    for x in 7..=9 {\n        println!("{}", x);\n    }\n}',
-          ['7\n8', '8\n9', '7\n8\n9', '7\n8\n9\n10'],
-          2,
+          '7\n8\n9',
           '..= includes both ends, so x is 7, 8 and 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut a = 0;\n    for x in 1..5 {\n        a += x;\n    }\n    let mut b = 0;\n    for x in 1..=5 {\n        b += x;\n    }\n    println!("{}", a);\n    println!("{}", b);\n}',
-          ['10\n15', '15\n15', '10\n10', '15\n21'],
-          0,
+          '10\n15',
           '1..5 stops at 4 (sum 10); 1..=5 also includes 5 (sum 15).',
         ),
         choose(
@@ -2908,11 +2715,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The levels start at 1 and must include n, so the range is inclusive: 1..=n.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut sum = 0;\n    for x in 2..=4 {\n        sum += x * x;\n    }\n    println!("{}", sum);\n}',
-          ['13', '29', '54', '9'],
-          1,
+          '29',
           'x is 2, 3 and 4, so sum is 4 + 9 + 16 = 29.',
         ),
       ],
@@ -2931,30 +2737,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '3..6 gives 3 + 4 + 5 = 12. 6..6 and 9..2 are empty, so total stays 0 in those calls.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    println!("start");\n    for x in 5..2 {\n        println!("{}", x);\n    }\n    println!("end");\n}',
-          [
-            'start\n5\n4\n3\nend',
-            'start\n2\n3\n4\nend',
-            'start\nend',
-            'start\n5\n4\n3\n2\nend',
-          ],
-          2,
+          'start\nend',
           'Ranges do not count down. 5..2 is empty, so the body never runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut total = 10;\n    for x in 4..4 {\n        total += x;\n    }\n    for x in 4..=4 {\n        total += x;\n    }\n    println!("{}", total);\n}',
-          ['14', '18', '10', '22'],
-          0,
+          '14',
           '4..4 is empty, but 4..=4 holds the single value 4, so total becomes 14.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn product_up_to(n: i32) -> i32 {\n    let mut product = 1;\n    for k in 1..=n {\n        product *= k;\n    }\n    product\n}\n\nfn main() {\n    println!("{}", product_up_to(0));\n    println!("{}", product_up_to(3));\n}',
-          ['0\n6', '1\n6', '1\n2', '0\n0'],
-          1,
+          '1\n6',
           '1..=0 is empty, so product keeps its starting value 1. 1..=3 gives 1 * 2 * 3 = 6.',
         ),
         choose(
@@ -2979,25 +2777,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'k runs over 0, 1, 2 and 3, so 2 * k + 1 gives the odd numbers 1, 3, 5 and 7, which add up to 16.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn window_sum(start: i32, len: i32) -> i32 {\n    let mut total = 0;\n    for x in start..start + len {\n        total += x;\n    }\n    total\n}\n\nfn main() {\n    println!("{}", window_sum(5, 3));\n}',
-          ['18', '26', '15', '13'],
-          0,
+          '18',
           'The range is 5..8, which gives 5, 6 and 7, so the sum is 18.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut total = 0;\n    for row in 1..=3 {\n        for col in 1..=row {\n            total += col;\n        }\n    }\n    println!("{}", total);\n}',
-          ['6', '4', '10', '14'],
-          2,
+          '10',
           'The inner range grows with row: 1, then 1 + 2, then 1 + 2 + 3. Together that is 1 + 3 + 6 = 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn power(base: i32, exp: i32) -> i32 {\n    let mut result = 1;\n    for _ in 0..exp {\n        result *= base;\n    }\n    result\n}\n\nfn main() {\n    println!("{}", power(3, 4));\n}',
-          ['27', '12', '243', '81'],
-          3,
+          '81',
           '0..4 runs four times, multiplying 1 by 3 four times: 3 * 3 * 3 * 3 = 81.',
         ),
         choose(
@@ -3029,11 +2824,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'For 8 the return ends the function before the println! and the tail expression. For 30 the if is skipped, so the message prints and the tail gives 25.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn step(n: i32) -> i32 {\n    if n > 5 {\n        return 100;\n    }\n    println!("small");\n    n + 1\n}\n\nfn main() {\n    println!("{}", step(9));\n}',
-          ['small\n100', '100', '10', 'small\n10'],
-          1,
+          '100',
           '9 > 5, so return 100 ends the call before the println! or the tail expression can run.',
         ),
         predictOutput(
@@ -3059,11 +2853,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'return ends the function on the spot, so nothing after it runs during that call.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn adjust(n: i32) -> i32 {\n    let mut value = n * 2;\n    if value > 10 {\n        return value - 10;\n    }\n    value += 1;\n    value\n}\n\nfn main() {\n    println!("{}", adjust(8));\n    println!("{}", adjust(3));\n}',
-          ['7\n7', '6\n6', '16\n7', '6\n7'],
-          3,
+          '6\n7',
           'adjust(8) doubles to 16 and returns 16 - 10 = 6 without reaching value += 1. adjust(3) doubles to 6, skips the if, and adds 1.',
         ),
       ],
@@ -3082,23 +2875,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '50 / 4 truncates to 12. With 0 people the guard returns 0 before the division, which would otherwise panic.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn cost(items: i32) -> i32 {\n    if items <= 0 {\n        return 0;\n    }\n    5 + items * 3\n}\n\nfn main() {\n    println!("{}", cost(-2));\n    println!("{}", cost(4));\n}',
-          ['-1\n17', '0\n12', '5\n17', '0\n17'],
-          3,
+          '0\n17',
           '-2 hits the guard and returns 0. 4 passes it, so the tail gives 5 + 12 = 17.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn split(n: i32) -> (i32, i32) {\n    if n < 10 {\n        return (0, n);\n    }\n    (n / 10, n % 10)\n}\n\nfn main() {\n    println!("{:?}", split(7));\n    println!("{:?}", split(47));\n}',
-          [
-            '(7, 0)\n(4, 7)',
-            '(0, 7)\n(4, 7)',
-            '(0, 7)\n(0, 47)',
-            '(0, 0)\n(4, 7)',
-          ],
-          1,
+          '(0, 7)\n(4, 7)',
           '7 is a single digit, so the guard returns (0, 7). 47 reaches the tail, which splits it into (4, 7).',
         ),
         choose(
@@ -3140,30 +2926,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'A weight of 0 stops at the first guard even though express is true. 12 with express stops at the second guard; without express it reaches the third. 3 passes every guard and gets the tail value 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn bounded(n: i32) -> i32 {\n    if n > 50 {\n        return 50;\n    }\n    if n < 0 {\n        return 0;\n    }\n    n\n}\n\nfn main() {\n    println!("{}", bounded(70) + bounded(-5) + bounded(20));\n}',
-          ['85', '120', '70', '65'],
-          2,
+          '70',
           '70 is capped at 50, -5 is raised to 0, and 20 passes both guards: 50 + 0 + 20 = 70.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn fee(age: i32) -> i32 {\n    if age < 18 {\n        return 5;\n    }\n    if age < 5 {\n        return 0;\n    }\n    12\n}\n\nfn main() {\n    println!("{}", fee(3));\n}',
-          ['0', '5', '12', '17'],
-          1,
+          '5',
           '3 < 18 is true, so the first guard returns 5; the age < 5 guard below it is never reached.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn classify(n: i32) -> i32 {\n    if n == 0 {\n        println!("zero");\n        return 0;\n    }\n    if n % 2 == 0 {\n        println!("even");\n        return 2;\n    }\n    println!("odd");\n    1\n}\n\nfn main() {\n    println!("{}", classify(6) + classify(0));\n}',
-          [
-            'zero\neven\n2',
-            'even\nodd\nzero\n3',
-            'even\nzero\n0',
-            'even\nzero\n2',
-          ],
-          3,
+          'even\nzero\n2',
           'classify(6) runs first: it prints even and returns 2. classify(0) prints zero and returns 0. main then prints 2 + 0.',
         ),
         choose(
@@ -3196,16 +2974,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Calling announce prints its line, and the call itself evaluates to (). Storing that in result and printing it with {:?} shows ().',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn ping() {\n    println!("ping");\n}\n\nfn main() {\n    let r = ping();\n    println!("{:?}", r);\n    println!("{:?}", (r, 5));\n}',
-          [
-            'ping\nping\n((), 5)',
-            '()\nping\n((), 5)',
-            'ping\n()\n((), 5)',
-            'ping\n()\n(5)',
-          ],
-          2,
+          'ping\n()\n((), 5)',
           'ping runs once, when it is called, and returns (). The tuple holds () and 5, and {:?} shows both.',
         ),
         choose(
@@ -3226,11 +2998,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '() has no {} form, so println!("{}", show()) is rejected; {:?} would be needed to print ().',
           'fn show() {\n    println!("hi");\n}\n\nfn main() {\n    println!("{}", show());\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn twice(n: i32) {\n    println!("{}", n * 2);\n}\n\nfn main() {\n    let a = twice(1);\n    let b = twice(2);\n    println!("{:?}", [a, b]);\n}',
-          ['2\n4\n[(), ()]', '2\n4\n[2, 4]', '[(), ()]', '2\n4\n[]'],
-          0,
+          '2\n4\n[(), ()]',
           'twice prints its result but returns (), so a and b are both () and the array prints as [(), ()].',
         ),
       ],
@@ -3249,11 +3020,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first block ends with the expression x * 2, so a is 6. In the second block x * 2; is a statement, so b is ().',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let first = { 10 - 4 };\n    let second = { 10 - 4; };\n    println!("{:?}", (first, second));\n}',
-          ['(6, 6)', '(6, ())', '((), 6)', '(6, 0)'],
-          1,
+          '(6, ())',
           'The first block ends in an expression worth 6. The second ends in a statement, so its value is ().',
         ),
         choose(
@@ -3268,11 +3038,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'n * 3; is a statement, so the body’s value is () while the signature promises an i32.',
           'fn triple(n: i32) -> i32 {\n    n * 3;\n}\n\nfn main() {\n    println!("{}", triple(4));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let x = 5;\n    let y = {\n        let z = x + 1;\n    };\n    let w = {\n        let z = x + 1;\n        z * z\n    };\n    println!("{:?} {:?}", y, w);\n}',
-          ['6 36', '6 ()', '() ()', '() 36'],
-          3,
+          '() 36',
           'A let is a statement, so a block that ends with one has the value (). The second block ends with z * z, which is 36.',
         ),
         choose(
@@ -3302,25 +3071,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The block’s value is () because it ends in a statement, but running it still added 5 to total.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut level = 2;\n    let r = {\n        level *= 4;\n    };\n    println!("{:?}", (r, level));\n}',
-          ['(8, 8)', '((), 2)', '((), 8)', '(8, 2)'],
-          2,
+          '((), 8)',
           'The block evaluates to (), while level *= 4 changes level from 2 to 8.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn main() {\n    let mut a = 1;\n    let mut b = 1;\n    let r = {\n        a = a + b;\n        b = a + b;\n    };\n    println!("{} {}", a, b);\n    println!("{:?}", r);\n}',
-          ['2 2\n()', '2 3\n()', '2 3\n3', '1 1\n()'],
-          1,
+          '2 3\n()',
           'a becomes 2, then b uses the new a and becomes 3. The block itself ends in an assignment statement, so r is ().',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn update(start: i32, extra: i32) -> (i32, ()) {\n    let mut n = start;\n    let u = {\n        n -= extra;\n    };\n    (n, u)\n}\n\nfn main() {\n    println!("{:?}", update(10, 3));\n}',
-          ['(10, ())', '((), 7)', '(7, 7)', '(7, ())'],
-          3,
+          '(7, ())',
           'n is reduced to 7, and u holds the () value of the assignment block. The tuple lists n first.',
         ),
         choose(
@@ -3352,25 +3118,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'sum_to(4) is 4 + sum_to(3), and so on down to sum_to(0), which returns 0 directly. Adding back up gives 4 + 3 + 2 + 1 + 0 = 10.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn power_of_two(n: u32) -> u32 {\n    if n == 0 {\n        1\n    } else {\n        2 * power_of_two(n - 1)\n    }\n}\n\nfn main() {\n    println!("{}", power_of_two(5));\n}',
-          ['10', '16', '32', '64'],
-          2,
+          '32',
           'Five calls each multiply by 2, and the base case supplies 1: 2 * 2 * 2 * 2 * 2 * 1 = 32.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn mystery(n: i32) -> i32 {\n    if n == 0 {\n        0\n    } else {\n        n * mystery(n - 1)\n    }\n}\n\nfn main() {\n    println!("{}", mystery(3));\n}',
-          ['6', '0', '3', '9'],
-          1,
+          '0',
           'The chain ends at mystery(0), which returns 0, and multiplying anything by 0 gives 0: 3 * 2 * 1 * 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn digit_sum(n: u32) -> u32 {\n    if n < 10 {\n        n\n    } else {\n        n % 10 + digit_sum(n / 10)\n    }\n}\n\nfn main() {\n    println!("{}", digit_sum(4096));\n}',
-          ['13', '15', '4', '19'],
-          3,
+          '19',
           'Each call peels off the last digit: 6 + 9 + 0, and the base case returns the single digit 4. The total is 19.',
         ),
         choose(
@@ -3407,11 +3170,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'From 5 the input goes 3, 1, -1, -3 and so on. It skips 0, so the base case is never reached.',
           'fn down(n: i32) -> i32 {\n    if n == 0 {\n        0\n    } else {\n        1 + down(n - 2)\n    }\n}\n\nfn main() {\n    println!("{}", down(5));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn steps_to_zero(n: u32) -> u32 {\n    if n == 0 {\n        0\n    } else {\n        1 + steps_to_zero(n / 3)\n    }\n}\n\nfn main() {\n    println!("{}", steps_to_zero(50));\n}',
-          ['3', '5', '4', '16'],
-          2,
+          '4',
           'Integer division takes 50 to 16, 5, 1 and 0. Four calls add 1 before the base case.',
         ),
         choose(
@@ -3425,11 +3187,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Subtracting 1 moves n one step toward 0 each time. The others repeat n or move it away from 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn halve_until_small(x: f64) -> f64 {\n    if x < 1.0 {\n        x\n    } else {\n        halve_until_small(x / 2.0)\n    }\n}\n\nfn main() {\n    println!("{}", halve_until_small(12.0));\n}',
-          ['0.75', '1.5', '0', '0.375'],
-          0,
+          '0.75',
           'The value goes 12, 6, 3, 1.5, 0.75. Floats keep the fraction, and 0.75 is the first value below 1.',
         ),
       ],
@@ -3448,11 +3209,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each call prints n before calling deeper, so the numbers appear on the way down, and the base case prints go last.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn count_up(n: u32) {\n    if n > 0 {\n        count_up(n - 1);\n        println!("{}", n);\n    }\n}\n\nfn main() {\n    count_up(3);\n}',
-          ['3\n2\n1', '0\n1\n2\n3', '1\n2\n3', '3\n2\n1\n0'],
-          2,
+          '1\n2\n3',
           'Each call finishes its deeper call before printing, so count_up(1) prints first. count_up(0) prints nothing.',
         ),
         predictOutput(
@@ -3467,11 +3227,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The in lines print on the way down, the base case prints *, and the out lines print on the way back up, innermost call first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn print_digits(n: u32) {\n    if n >= 10 {\n        print_digits(n / 10);\n    }\n    println!("{}", n % 10);\n}\n\nfn main() {\n    print_digits(507);\n}',
-          ['7\n0\n5', '507', '5\n7', '5\n0\n7'],
-          3,
+          '5\n0\n7',
           'The call for 507 first handles 50, which first handles 5. Each prints its last digit after the deeper call returns: 5, then 0, then 7.',
         ),
         choose(
@@ -3501,25 +3260,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The calls are gcd(48, 18), gcd(18, 12), gcd(12, 6) and gcd(6, 0). The base case b == 0 returns a, which is 6.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn power(base: f64, exp: u32) -> f64 {\n    if exp == 0 {\n        1.0\n    } else {\n        base * power(base, exp - 1)\n    }\n}\n\nfn main() {\n    println!("{:?}", power(0.5, 3));\n    println!("{:?}", power(3.0, 2));\n}',
-          ['0.125\n9', '1.5\n6.0', '0.125\n9.0', '0.25\n9.0'],
-          2,
+          '0.125\n9.0',
           'exp shrinks to 0 while base stays fixed: 0.5 * 0.5 * 0.5 = 0.125 and 3.0 * 3.0 = 9.0. {:?} keeps the .0 on a whole f64.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn sum_range(lo: u32, hi: u32) -> u32 {\n    if lo > hi {\n        0\n    } else {\n        lo + sum_range(lo + 1, hi)\n    }\n}\n\nfn main() {\n    println!("{}", sum_range(3, 6));\n}',
-          ['15', '18', '12', '21'],
-          1,
+          '18',
           'lo climbs toward hi, so the gap between them shrinks on every call. Once lo passes hi the base case adds 0: 3 + 4 + 5 + 6 = 18.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this complete Rust program print?',
           'fn fib(n: u32) -> u32 {\n    if n < 2 {\n        n\n    } else {\n        fib(n - 1) + fib(n - 2)\n    }\n}\n\nfn main() {\n    println!("{}", fib(7));\n}',
-          ['8', '21', '7', '13'],
-          3,
+          '13',
           'fib(0) and fib(1) are base cases; every other value is the sum of the two before it: 0, 1, 1, 2, 3, 5, 8, 13.',
         ),
         choose(
@@ -3551,25 +3307,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'label returns an owned String. {} prints the bare text, {:?} adds quotes, and the empty String from String::new() prints as "" in Debug form.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let city = String::from("Lima");\n    println!("{:?}", city);\n}',
-          ['"Lima"', 'Lima', "'Lima'", 'String("Lima")'],
-          0,
+          '"Lima"',
           'The Debug form of a String is its text in double quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn greeting(name: String) -> String {\n    format!("hi {}", name)\n}\n\nfn main() {\n    let text = greeting(String::from("Ana"));\n    println!("{}", text);\n}',
-          ['"hi Ana"', 'hi Ana', 'hi "Ana"', 'Ana'],
-          1,
+          'hi Ana',
           'greeting builds a new String with format!, and {} prints it without quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn main() {\n    let blank = String::new();\n    let word = String::from("ok");\n    println!("{:?} {:?}", blank, word);\n}',
-          ['"ok"', '"" ok', '"" "ok"', '"ok" ""'],
-          2,
+          '"" "ok"',
           'String::new() is empty, and its Debug form is a pair of quotes with nothing between them.',
         ),
         choose(
@@ -3611,11 +3364,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'After let b = a; the text belongs to b. Reading a afterwards is a use of a moved value, which the compiler rejects.',
           'fn main() {\n    let a = String::from("map");\n    let b = a;\n    println!("{} {}", a, b);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut slot = String::from("red");\n    let kept = slot;\n    slot = String::from("blue");\n    println!("{} {}", slot, kept);\n}',
-          ['blue red', 'red blue', 'blue blue', 'red red'],
-          0,
+          'blue red',
           'kept takes the text red. Assigning a new String to slot gives it fresh text, blue, so both bindings can be read.',
         ),
         choose(
@@ -3670,18 +3422,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'consume takes the String by value, so the first call moves s; the second call would use a moved value.',
           'fn consume(text: String) {\n    println!("{}", text);\n}\n\nfn main() {\n    let s = String::from("hi");\n    consume(s);\n    consume(s);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn mark(text: String, n: i32) -> (String, i32) {\n    (text, n * 2)\n}\n\nfn main() {\n    let result = mark(String::from("lap"), 3);\n    println!("{:?}", result);\n}',
-          ['(lap, 6)', '("lap", 6)', '("lap", 3)', '"lap", 6'],
-          1,
+          '("lap", 6)',
           'The String moves into mark and back out inside the tuple; Debug shows the tuple with the text quoted.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn append_tag(text: String) -> String {\n    format!("{}-v2", text)\n}\n\nfn main() {\n    let mut name = String::from("app");\n    name = append_tag(name);\n    println!("{}", name);\n}',
-          ['app', 'app-v2-v2', 'app-v2', '"app-v2"'],
-          2,
+          'app-v2',
           'name moves into append_tag, and the returned String is assigned back to name, so name owns the new text.',
         ),
         choose(
@@ -3710,18 +3460,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'a and b move into the tuple, the tuple moves into swap, and swap returns the two Strings in the other order. swapped owns both now.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn first_of(pair: (String, String)) -> String {\n    let (head, tail) = pair;\n    head\n}\n\nfn main() {\n    let x = String::from("left");\n    let y = String::from("right");\n    let kept = first_of((y, x));\n    println!("{}", kept);\n}',
-          ['left', 'left right', '"right"', 'right'],
-          3,
+          'right',
           'The tuple is built as (y, x), so its first element is right; first_of returns that String.',
         ),
-        predictOutput(
+        typeOutput(
           'What is the output?',
           'fn tag(text: String) -> String {\n    format!("<{}>", text)\n}\n\nfn main() {\n    let a = String::from("b");\n    let b = tag(a);\n    let c = tag(b);\n    println!("{}", c);\n}',
-          ['<b>', '<<<b>>>', '<<b>>', 'b'],
-          2,
+          '<<b>>',
           'a moves into the first call, whose result b moves into the second call, so the text is wrapped twice.',
         ),
         choose(
@@ -3765,18 +3513,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'b starts as a copy of 5. Adding 10 to b changes only b, and a is still readable because an i32 is copied, not moved.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let x = 7;\n    let y = x;\n    println!("{}", x + y);\n}',
-          ['14', '7', '21', 'Compile error: x was moved'],
-          0,
+          '14',
           'Assigning an i32 copies it, so both x and y are 7 and still usable.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut score = 3;\n    let saved = score;\n    score *= 4;\n    println!("{} {}", saved, score);\n}',
-          ['3 12', '12 12', '3 3', '12 3'],
-          0,
+          '3 12',
           'saved holds its own copy of 3, so multiplying score afterwards leaves saved unchanged.',
         ),
         choose(
@@ -3790,11 +3536,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Copy types are duplicated on assignment. A String owns memory, so assignment moves it instead.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn main() {\n    let ready = true;\n    let mut flag = ready;\n    flag = false;\n    println!("{} {}", ready, flag);\n}',
-          ['false false', 'true true', 'false true', 'true false'],
-          3,
+          'true false',
           'A bool is Copy too. flag got its own copy of true, so setting flag to false leaves ready alone.',
         ),
       ],
@@ -3813,25 +3558,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'doubled works on its own copy of 6. It returns 12, and start is still 6 in main.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn bump(n: i32) -> i32 {\n    n + 1\n}\n\nfn main() {\n    let count = 9;\n    let a = bump(count);\n    let b = bump(count);\n    println!("{} {} {}", count, a, b);\n}',
-          ['9 10 10', '9 10 11', '10 10 10', '11 10 11'],
-          0,
+          '9 10 10',
           'Each call gets its own copy of 9 and returns 10; count itself never changes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn reset(value: i32) -> i32 {\n    let mut v = value;\n    v = 0;\n    v\n}\n\nfn main() {\n    let level = 4;\n    let cleared = reset(level);\n    println!("{} {}", level, cleared);\n}',
-          ['0 0', '4 0', '4 4', '0 4'],
-          1,
+          '4 0',
           'reset changes only its local copy; level in main keeps 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn square(n: i32) -> i32 {\n    n * n\n}\n\nfn main() {\n    let side = 3;\n    let area = square(side);\n    let again = square(side);\n    println!("{}", area + again);\n}',
-          ['9', 'Compile error: side was moved', '81', '18'],
-          3,
+          '18',
           'side is copied into each call, so both calls return 9 and the sum is 18.',
         ),
         choose(
@@ -3861,11 +3603,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'b is a full copy of the array. Changing its first element does not affect a, and a is still usable.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let point = (2, 5);\n    let mut shifted = point;\n    shifted.0 = 8;\n    println!("{:?} {:?}", point, shifted);\n}',
-          ['(8, 5) (8, 5)', '(2, 5) (2, 5)', '(8, 5) (2, 5)', '(2, 5) (8, 5)'],
-          3,
+          '(2, 5) (8, 5)',
           'A tuple of two i32 values is Copy, so shifted is a separate tuple; only its first field changes.',
         ),
         choose(
@@ -3880,16 +3621,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The tuple contains a String, so it is not Copy. Assigning it moves it into other, and entry cannot be printed.',
           'fn main() {\n    let entry = (String::from("id"), 4);\n    let other = entry;\n    println!("{:?}", entry);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn total(values: [i32; 3]) -> i32 {\n    values[0] + values[1] + values[2]\n}\n\nfn main() {\n    let nums = [4, 5, 6];\n    let sum = total(nums);\n    println!("{} {:?}", sum, nums);\n}',
-          [
-            '15 []',
-            'Compile error: nums was moved',
-            '6 [4, 5, 6]',
-            '15 [4, 5, 6]',
-          ],
-          3,
+          '15 [4, 5, 6]',
           'An array of i32 is Copy, so total receives a copy and nums is still available to print.',
         ),
         choose(
@@ -3921,16 +3656,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'backup owns its own copy of the text, so original was not moved and both can be printed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a = String::from("ink");\n    let b = a.clone();\n    let c = b.clone();\n    println!("{:?}", (a, b, c));\n}',
-          [
-            '("ink", "", "")',
-            '("ink", "ink")',
-            '(ink, ink, ink)',
-            '("ink", "ink", "ink")',
-          ],
-          3,
+          '("ink", "ink", "ink")',
           'Each clone copies the same text, so the tuple holds three equal Strings.',
         ),
         choose(
@@ -3983,18 +3712,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only copy is changed. base still owns its original text, hi.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut a = String::from("ab");\n    let b = a.clone();\n    a.push_str("cd");\n    println!("{} {}", a, b);\n}',
-          ['abcd abcd', 'abcd ab', 'ab abcd', 'ab ab'],
-          1,
+          'abcd ab',
           'b was cloned before the push, and the push changes only a.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut log = String::from("a");\n    log.push_str("b");\n    let snapshot = log.clone();\n    log.push_str("c");\n    println!("{} {}", snapshot, log);\n}',
-          ['ab abc', 'abc abc', 'a abc', 'ab ab'],
-          0,
+          'ab abc',
           'The clone captures the text at that moment, ab; the later push changes only log.',
         ),
         choose(
@@ -4009,16 +3736,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Appending changes the String, so its binding must be declared let mut.',
           'fn main() {\n    let text = String::from("tea");\n    text.push_str("pot");\n    println!("{}", text);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn main() {\n    let word = String::from("red");\n    let mut first = word.clone();\n    let mut second = word.clone();\n    first.push_str("dish");\n    second.push_str("wood");\n    println!("{} {} {}", word, first, second);\n}',
-          [
-            'reddishwood reddish redwood',
-            'red reddish redwood',
-            'red reddishwood redwood',
-            'reddish reddish redwood',
-          ],
-          1,
+          'red reddish redwood',
           'Each clone is its own String, so each push changes only that clone and word stays red.',
         ),
       ],
@@ -4037,18 +3758,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The clone moves into decorate and comes back with a star. title was never moved, so it still prints menu.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn shout(text: String) -> String {\n    format!("{}!", text)\n}\n\nfn main() {\n    let word = String::from("hey");\n    let loud = shout(word.clone());\n    println!("{} {}", word, loud);\n}',
-          ['hey hey!', 'hey! hey!', 'hey hey', 'hey! hey'],
-          0,
+          'hey hey!',
           'shout received a clone, so word still holds hey and loud holds the new text.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn versions(text: String) -> (String, String) {\n    let mut edited = text.clone();\n    edited.push_str("2");\n    (edited, text)\n}\n\nfn main() {\n    println!("{:?}", versions(String::from("v")));\n}',
-          ['("v", "v2")', '("v2", "v2")', '("v", "v")', '("v2", "v")'],
-          3,
+          '("v2", "v")',
           'edited is a changed clone and comes first in the tuple; text keeps v and comes second.',
         ),
         choose(
@@ -4104,18 +3823,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'drop takes ownership of temp, so the later println! uses a moved value and the program does not compile.',
           'fn main() {\n    let temp = String::from("scratch");\n    drop(temp);\n    println!("{}", temp);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut current = String::from("v1");\n    drop(current);\n    current = String::from("v2");\n    println!("{}", current);\n}',
-          ['v1', 'v1v2', 'Compile error: current was dropped', 'v2'],
-          3,
+          'v2',
           'After drop, current holds nothing usable, but assigning a new String gives it fresh text that may be read.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let a = String::from("left");\n    let b = String::from("right");\n    drop(b);\n    let c = a;\n    println!("{}", c);\n}',
-          ['right', 'left right', 'Compile error: a was moved', 'left'],
-          3,
+          'left',
           'Only b was dropped. a moved into c, and c is what gets printed.',
         ),
         choose(
@@ -4163,16 +3880,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'After the move only b owns the text, so only b frees it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn release(text: String) {\n    println!("freeing {}", text);\n}\n\nfn main() {\n    let a = String::from("a");\n    let b = String::from("b");\n    release(b);\n    println!("still have {}", a);\n    release(a);\n}',
-          [
-            'still have a\nfreeing a\nfreeing b',
-            'freeing a\nfreeing b\nstill have a',
-            'freeing b\nstill have a\nfreeing a',
-            'freeing b\nstill have a',
-          ],
-          2,
+          'freeing b\nstill have a\nfreeing a',
           'Each String is released inside release when it is passed in, in the order main makes the calls.',
         ),
         choose(
@@ -4197,11 +3908,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'old is freed inside swap_out, and new moves out as the return value, so main ends up owning final.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn keep_second(a: String, b: String) -> String {\n    drop(a);\n    b\n}\n\nfn main() {\n    let x = String::from("cat");\n    let y = String::from("dog");\n    println!("{}", keep_second(y, x));\n}',
-          ['dog', 'catdog', 'cat', 'dogcat'],
-          2,
+          'cat',
           'The call passes y first, so dog is dropped and the second argument, cat, is returned.',
         ),
         choose(
@@ -4216,18 +3926,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'drop(b) takes ownership of b, so returning b afterwards uses a moved value. It should drop a and return b, or the other way round.',
           'fn pick(a: String, b: String) -> String {\n    drop(b);\n    b\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn refresh(old: String) -> String {\n    drop(old);\n    String::from("fresh")\n}\n\nfn main() {\n    let mut data = String::from("stale");\n    data = refresh(data);\n    println!("{:?}", data);\n}',
-          ['"fresh"', '"stale"', '"stalefresh"', '""'],
-          0,
+          '"fresh"',
           'The old text is dropped inside refresh, and the new String it returns is assigned back to data.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn tidy(first: String, second: String) -> (String, i32) {\n    drop(first);\n    (second, 2)\n}\n\nfn main() {\n    let result = tidy(String::from("old"), String::from("new"));\n    println!("{:?}", result);\n}',
-          ['("old", 2)', '("new", 2)', '("oldnew", 2)', '(new, 2)'],
-          1,
+          '("new", 2)',
           'first (old) is dropped; second (new) moves into the returned tuple, which Debug prints with quotes.',
         ),
       ],
@@ -4248,16 +3956,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each call borrows word for the length of the call. Ownership never leaves main, so word can be lent twice and then printed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn describe(text: &String) -> String {\n    format!("<{}>", text)\n}\n\nfn main() {\n    let tag = String::from("div");\n    let a = describe(&tag);\n    println!("{} {}", a, tag);\n}',
-          [
-            '<div> <div>',
-            'div div',
-            'Compile error: tag was moved',
-            '<div> div',
-          ],
-          3,
+          '<div> div',
           'describe only borrows tag and builds a new String, so tag is unchanged and still owned by main.',
         ),
         choose(
@@ -4283,16 +3985,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A shared reference lends access for reading; ownership, and the job of freeing the text, stay with the caller.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let base = String::from("id");\n    let r1 = &base;\n    let r2 = &base;\n    println!("{} {} {}", r1, r2, base);\n}',
-          [
-            'id',
-            'Compile error: base is borrowed twice',
-            '&id &id id',
-            'id id id',
-          ],
-          3,
+          'id id id',
           'Any number of shared references may read a value at once, and printing through a reference shows the text itself.',
         ),
       ],
@@ -4311,25 +4007,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'hello world has 11 characters including the space, so it is not empty. The new String has length 0, so is_empty is true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn size(text: &String) -> usize {\n    text.len()\n}\n\nfn main() {\n    let s = String::from("a b c");\n    println!("{}", size(&s));\n}',
-          ['3', '6', '5', '4'],
-          2,
+          '5',
           'The two spaces count too: a, space, b, space, c is 5 characters.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let a = String::new();\n    let b = String::from(" ");\n    println!("{} {}", a.is_empty(), b.is_empty());\n}',
-          ['true true', 'false false', 'true false', 'false true'],
-          2,
+          'true false',
           'A single space is still one character, so only the String from String::new() is empty.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn combined(a: &String, b: &String) -> usize {\n    a.len() + b.len()\n}\n\nfn main() {\n    let first = String::from("rust");\n    let second = String::from("acean");\n    println!("{}", combined(&first, &second));\n}',
-          ['2', '8', '9', '10'],
-          2,
+          '9',
           'rust has 4 characters and acean has 5, so the sum is 9.',
         ),
         choose(
@@ -4354,30 +4047,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'spread indexes through the reference: 15 - 4 is 11. The array still belongs to main, which prints it afterwards.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn flipped(pair: &(i32, i32)) -> (i32, i32) {\n    (pair.1, pair.0)\n}\n\nfn main() {\n    let p = (3, 8);\n    println!("{:?} {:?}", flipped(&p), p);\n}',
-          ['(8, 3) (8, 3)', '(3, 8) (3, 8)', '(8, 3) (3, 8)', '(3, 8) (8, 3)'],
-          2,
+          '(8, 3) (3, 8)',
           'flipped builds a new tuple from the fields it reads; the borrowed tuple p is unchanged.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn total(values: &[i32; 4]) -> i32 {\n    values[0] + values[1] + values[2] + values[3]\n}\n\nfn main() {\n    let costs = [5, 10, 20, 1];\n    let a = total(&costs);\n    let b = total(&costs);\n    println!("{}", a + b);\n}',
-          ['36', '35', '72', '70'],
-          2,
+          '72',
           'Each call reads the same array and returns 36, so the two results add to 72.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn label(entry: &(String, i32)) -> String {\n    format!("{}#{}", entry.0, entry.1)\n}\n\nfn main() {\n    let item = (String::from("bolt"), 12);\n    println!("{}", label(&item));\n    let moved = item;\n    println!("{:?}", moved);\n}',
-          [
-            'bolt#12\n("bolt", 12)',
-            'bolt#12',
-            '"bolt"#12\n("bolt", 12)',
-            'bolt#12\n(bolt, 12)',
-          ],
-          0,
+          'bolt#12\n("bolt", 12)',
           'label only borrows item, so main still owns it and can move it into moved, which Debug prints with quotes.',
         ),
         choose(
@@ -4406,11 +4091,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'summary borrows doc to measure it. Only afterwards does archive take ownership, so both calls are allowed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn width(text: &String) -> usize {\n    text.len()\n}\n\nfn take(text: String) -> String {\n    text\n}\n\nfn main() {\n    let s = String::from("panel");\n    let before = width(&s);\n    let owner = take(s);\n    let after = width(&owner);\n    println!("{} {}", before, after);\n}',
-          ['5 5', '5 0', '0 5', '6 6'],
-          0,
+          '5 5',
           'Moving a String does not change its text; owner holds the same five characters that s did.',
         ),
         choose(
@@ -4425,16 +4109,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The move happens first. After it, s no longer owns anything, so &s is a borrow of a moved value.',
           'fn width(text: &String) -> usize {\n    text.len()\n}\n\nfn take(text: String) -> String {\n    text\n}\n\nfn main() {\n    let s = String::from("panel");\n    let owner = take(s);\n    println!("{}", width(&s));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn is_blank(text: &String) -> bool {\n    text.is_empty()\n}\n\nfn main() {\n    let a = String::new();\n    let b = String::from("x");\n    println!("{:?}", (is_blank(&a), is_blank(&b), a.len() + b.len()));\n}',
-          [
-            '(true, false, 1)',
-            '(false, true, 1)',
-            '(true, false, 2)',
-            '(true, true, 1)',
-          ],
-          0,
+          '(true, false, 1)',
           'a is empty and b holds one character; borrowing them leaves both usable for the lengths.',
         ),
         choose(
@@ -4466,18 +4144,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each call adds 10 to the caller’s points through the reference: 5, then 15, then 25.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn triple(n: &mut i32) {\n    *n *= 3;\n}\n\nfn main() {\n    let mut x = 2;\n    triple(&mut x);\n    println!("{}", x);\n}',
-          ['2', '8', '18', '6'],
-          3,
+          '6',
           'triple multiplies the caller’s x through the reference, so x becomes 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn reset_ref(n: &mut i32) {\n    *n = 0;\n}\n\nfn reset_copy(n: i32) {\n    let mut local = n;\n    local = 0;\n}\n\nfn main() {\n    let mut a = 7;\n    let b = 7;\n    reset_ref(&mut a);\n    reset_copy(b);\n    println!("{} {}", a, b);\n}',
-          ['0 0', '7 0', '7 7', '0 7'],
-          3,
+          '0 7',
           'Only the &mut version writes to the caller’s variable; reset_copy changes its own local copy.',
         ),
         choose(
@@ -4514,18 +4190,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'sign appends to the String that main owns, so main prints the longer text.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn add_ext(name: &mut String) {\n    name.push_str(".txt");\n}\n\nfn main() {\n    let mut file = String::from("notes");\n    add_ext(&mut file);\n    add_ext(&mut file);\n    println!("{}", file);\n}',
-          ['notes.txt', 'notes.txt.txt', 'notes', '.txt.txt'],
-          1,
+          'notes.txt.txt',
           'Both calls append to the same String, so the extension is added twice.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn close(text: &mut String) -> usize {\n    text.push_str("]");\n    text.len()\n}\n\nfn main() {\n    let mut s = String::from("[ab");\n    let n = close(&mut s);\n    println!("{} {}", s, n);\n}',
-          ['[ab 3', '[ab] 3', '[ab] 4', '[ab 4'],
-          2,
+          '[ab] 4',
           'The push happens before len is read, and it changes main’s String, so both values show the closed text.',
         ),
         choose(
@@ -4540,11 +4214,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'A shared reference only allows reading. Appending needs exclusive access through &mut String.',
           'fn shout(text: &String) {\n    text.push_str("!");\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn step(pos: &mut (i32, i32), dx: i32) {\n    pos.0 += dx;\n    pos.1 -= dx;\n}\n\nfn main() {\n    let mut p = (0, 0);\n    step(&mut p, 2);\n    step(&mut p, 3);\n    println!("{:?}", p);\n}',
-          ['(5, -5)', '(3, -3)', '(0, 0)', '(5, 5)'],
-          0,
+          '(5, -5)',
           'Both calls update main’s tuple through the reference: the first field gains 2 + 3 and the second loses the same.',
         ),
       ],
@@ -4587,11 +4260,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'writer is used after the println!, so its &mut borrow is still active when s is read.',
           'fn main() {\n    let mut s = String::from("hi");\n    let writer = &mut s;\n    println!("{}", s);\n    writer.push_str("!");\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut level = 3;\n    {\n        let r = &mut level;\n        *r -= 1;\n    }\n    {\n        let r = &mut level;\n        *r *= 5;\n    }\n    println!("{}", level);\n}',
-          ['14', '15', '2', '10'],
-          3,
+          '10',
           'The borrows take turns, one per block: 3 - 1 is 2, then 2 * 5 is 10.',
         ),
         choose(
@@ -4620,11 +4292,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'checking and savings are different values, so each can be lent mutably in the same call. 15 moves from one to the other.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn log(entry: &mut String, n: &mut i32) {\n    entry.push_str("+");\n    *n += 1;\n}\n\nfn main() {\n    let mut trail = String::from("start");\n    let mut count = 0;\n    log(&mut trail, &mut count);\n    log(&mut trail, &mut count);\n    println!("{} {}", trail, count);\n}',
-          ['start++ 2', 'start+ 1', 'start++ 0', 'start 2'],
-          0,
+          'start++ 2',
           'Each call changes both of main’s values, so after two calls there are two plus signs and count is 2.',
         ),
         choose(
@@ -4639,18 +4310,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both parameters would borrow a mutably for the same call, which breaks the one-&mut rule.',
           'fn transfer(from: &mut i32, to: &mut i32, amount: i32) {\n    *from -= amount;\n    *to += amount;\n}\n\nfn main() {\n    let mut a = 20;\n    transfer(&mut a, &mut a, 5);\n    println!("{}", a);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn swap_values(a: &mut i32, b: &mut i32) {\n    let old_a = *a;\n    *a = *b;\n    *b = old_a;\n}\n\nfn main() {\n    let mut x = 1;\n    let mut y = 9;\n    swap_values(&mut x, &mut y);\n    println!("{} {}", x, y);\n}',
-          ['1 9', '9 9', '9 1', '1 1'],
-          2,
+          '9 1',
           'old_a keeps a copy of 1 before a is overwritten, so the two values trade places.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn record(total: &mut i32, last: &mut i32, score: i32) {\n    *total += score;\n    *last = score;\n}\n\nfn main() {\n    let mut total = 0;\n    let mut last = 0;\n    record(&mut total, &mut last, 4);\n    record(&mut total, &mut last, 7);\n    println!("{} {}", total, last);\n}',
-          ['7 7', '11 4', '11 7', '4 11'],
-          2,
+          '11 7',
           'total collects both scores, 4 + 7, while last is overwritten each time and ends at 7.',
         ),
       ],
@@ -4683,11 +4352,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The last use of view comes after the push, so the shared borrow is still active while s is changed.',
           'fn main() {\n    let mut s = String::from("ab");\n    let view = &s;\n    s.push(\'c\');\n    println!("{}", view);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut list = String::from("x");\n    let r = &list;\n    let size = r.len();\n    list.push_str("yz");\n    println!("{} {}", size, list.len());\n}',
-          ['1 3', '3 3', '1 1', '3 1'],
-          0,
+          '1 3',
           'r is last used to read the length 1. After that the push is allowed, and the String grows to 3.',
         ),
         choose(
@@ -4701,11 +4369,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A borrow lasts only until its final use; later lines are free to change s.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut word = String::from("go");\n    let a = &word;\n    let b = &word;\n    println!("{}{}", a, b);\n    word.push(\'!\');\n    println!("{}", word);\n}',
-          ['gogo\ngogo!', 'go!go!\ngo!', 'gogo\ngo', 'gogo\ngo!'],
-          3,
+          'gogo\ngo!',
           'Both shared borrows end at the first println!, so the push is allowed and changes word to go!.',
         ),
       ],
@@ -4724,11 +4391,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'm is finished after adding 5, so n can be printed. Then m2 borrows n anew and doubles it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut count = 1;\n    let r = &mut count;\n    *r += 1;\n    let seen = count;\n    let r2 = &mut count;\n    *r2 += 10;\n    println!("{} {}", seen, count);\n}',
-          ['12 12', '2 12', '1 12', '2 2'],
-          1,
+          '2 12',
           'seen copies count after r is finished, so it is 2. r2 then adds 10 to count.',
         ),
         choose(
@@ -4743,11 +4409,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The write through m comes after the println!, so m is still active when n is read.',
           'fn main() {\n    let mut n = 1;\n    let m = &mut n;\n    println!("{}", n);\n    *m += 1;\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut s = String::from("a");\n    let w = &mut s;\n    w.push(\'b\');\n    w.push(\'c\');\n    let n = s.len();\n    s.push_str("de");\n    println!("{} {}", n, s);\n}',
-          ['5 abcde', '3 abcde', '1 abcde', '3 abc'],
-          1,
+          '3 abcde',
           'w is finished after the second push, so s.len() reads 3; then s grows to abcde.',
         ),
         choose(
@@ -4777,11 +4442,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'before is a number copied out before the change, so it keeps 3. The String itself grows to 5 bytes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn append_count(text: &mut String) -> usize {\n    let old = text.len();\n    text.push(\'?\');\n    old\n}\n\nfn main() {\n    let mut q = String::from("why");\n    let a = append_count(&mut q);\n    let b = append_count(&mut q);\n    println!("{} {} {}", a, b, q);\n}',
-          ['4 5 why??', '3 3 why?', '3 4 why?', '3 4 why??'],
-          3,
+          '3 4 why??',
           'Each call reports the length before its push: 3 the first time, 4 the second.',
         ),
         choose(
@@ -4796,11 +4460,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'A usize holds no borrow of s, so the push no longer overlaps an active reference.',
           'fn main() {\n    let mut s = String::from("hi");\n    let view = &s;\n    s.push(\'!\');\n    println!("{}", view.len());\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn tag(text: &mut String) -> bool {\n    let was_empty = text.is_empty();\n    text.push(\'*\');\n    was_empty\n}\n\nfn main() {\n    let mut s = String::new();\n    let first = tag(&mut s);\n    let second = tag(&mut s);\n    println!("{} {} {}", first, second, s);\n}',
-          ['true true **', 'false false **', 'true false **', 'true false *'],
-          2,
+          'true false **',
           'Each call checks emptiness before pushing. Only the first call sees an empty String.',
         ),
         choose(
@@ -4832,18 +4495,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The same function accepts arrays of length 2, 5, and 0, because each is passed as a slice. Only the empty one reports true for is_empty.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn count(values: &[i32]) -> usize {\n    values.len()\n}\n\nfn main() {\n    let a = [3, 3, 3];\n    let b = [10, 20, 30, 40, 50, 60];\n    println!("{} {}", count(&a), count(&b));\n}',
-          ['9 210', '3 3', '3 6', '2 5'],
-          2,
+          '3 6',
           'len counts elements, not their values, so the results are 3 and 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn first_last(values: &[i32]) -> (i32, i32) {\n    (values[0], values[values.len() - 1])\n}\n\nfn main() {\n    let temps = [12, 15, 9, 20];\n    println!("{:?}", first_last(&temps));\n}',
-          ['(12, 9)', '(20, 12)', '(15, 20)', '(12, 20)'],
-          3,
+          '(12, 20)',
           'The last index is one less than the length: 4 - 1 is index 3, which holds 20.',
         ),
         choose(
@@ -4857,16 +4518,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A slice type has no length in it, so borrowed arrays of any length fit.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn main() {\n    let data = [5, 6, 7];\n    let view: &[i32] = &data;\n    println!("{:?} {} {}", view, view.len(), view.is_empty());\n}',
-          [
-            '[5, 6, 7] 3 false',
-            '&[5, 6, 7] 3 false',
-            '[5, 6, 7] 2 false',
-            '[5, 6, 7] 3 true',
-          ],
-          0,
+          '[5, 6, 7] 3 false',
           'Debug prints a slice like an array, without an &; it has three elements, so it is not empty.',
         ),
       ],
@@ -4885,18 +4540,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '1..4 covers indexes 1, 2, and 3. The slice has 3 elements, and its index 0 is nums[1], which is 20.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let values = [1, 2, 3, 4, 5, 6];\n    println!("{:?}", &values[2..5]);\n}',
-          ['[2, 3, 4, 5]', '[3, 4, 5, 6]', '[2, 3, 4]', '[3, 4, 5]'],
-          3,
+          '[3, 4, 5]',
           'Indexes 2, 3, and 4 hold 3, 4, and 5; index 5 is excluded.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let v = [8, 6, 4, 2];\n    let head = &v[..1];\n    let tail = &v[1..];\n    println!("{:?} {:?}", head, tail);\n}',
-          ['[8] [6, 4, 2]', '[8, 6] [6, 4, 2]', '[8] [4, 2]', '8 [6, 4, 2]'],
-          0,
+          '[8] [6, 4, 2]',
           '..1 is just index 0, and 1.. is everything from index 1, so the two slices split the array without overlap.',
         ),
         choose(
@@ -4911,11 +4564,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The array has 3 elements, so an end of 5 is out of range, and slicing panics instead of shortening the range.',
           'fn main() {\n    let v = [1, 2, 3];\n    let part = &v[1..5];\n    println!("{:?}", part);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn main() {\n    let v = [4, 5, 6, 7];\n    let inner = &v[1..3];\n    let deeper = &inner[1..];\n    println!("{:?} {}", deeper, deeper[0]);\n}',
-          ['[5, 6] 5', '[6, 7] 6', '[7] 7', '[6] 6'],
-          3,
+          '[6] 6',
           'inner is [5, 6]. Slicing it from its own index 1 leaves [6]; positions count within inner, not v.',
         ),
       ],
@@ -4934,18 +4586,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'total adds each &i32 to sum: 3 + 1 + 4 is 8. last_seen needs plain i32 values to store, so it uses &x; the last one stored is 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let v = [2, 4, 6];\n    for x in &v[1..] {\n        println!("{}", x);\n    }\n}',
-          ['2\n4\n6', '&4\n&6', '4\n6', '4'],
-          2,
+          '4\n6',
           'The loop visits the slice from index 1, and printing a &i32 shows the number itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn count_and_sum(values: &[i32]) -> (i32, i32) {\n    let mut count = 0;\n    let mut sum = 0;\n    for &x in values {\n        count += 1;\n        sum += x;\n    }\n    (count, sum)\n}\n\nfn main() {\n    println!("{:?}", count_and_sum(&[5, 10, 15, 20]));\n}',
-          ['(4, 50)', '(3, 50)', '(4, 30)', '(50, 4)'],
-          0,
+          '(4, 50)',
           'The loop runs once per element, four times, and the elements add up to 50.',
         ),
         choose(
@@ -4960,11 +4610,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'for x in values yields references. Storing one into an i32 is a type mismatch; the &x pattern copies the number out.',
           'fn final_value(values: &[i32]) -> i32 {\n    let mut keep = 0;\n    for x in values {\n        keep = x;\n    }\n    keep\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn doubled_sum(values: &[i32]) -> i32 {\n    let mut out = 0;\n    for x in values {\n        out += x * 2;\n    }\n    out\n}\n\nfn main() {\n    let v = [1, 2, 3, 4];\n    println!("{}", doubled_sum(&v[..2]));\n}',
-          ['6', '20', '12', '3'],
-          0,
+          '6',
           'Only the first two elements are passed: (1 + 2) doubled is 6.',
         ),
       ],
@@ -4983,18 +4632,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'For 2 the limit stays 2. For 10, min picks the length 3, so the slice stops at the end instead of panicking.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a: usize = 4;\n    let b: usize = 9;\n    println!("{} {}", a.min(b), b.min(2));\n}',
-          ['4 2', '9 9', '4 9', '9 2'],
-          0,
+          '4 2',
           'min returns the smaller value: 4 out of 4 and 9, then 2 out of 9 and 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn take_up_to(values: &[i32], n: usize) -> &[i32] {\n    &values[..n.min(values.len())]\n}\n\nfn main() {\n    let v = [1, 2, 3, 4, 5];\n    let a = take_up_to(&v, 0);\n    let b = take_up_to(&v[3..], 4);\n    println!("{:?} {:?}", a, b);\n}',
-          ['[1] [4, 5]', '[] [4, 5, 0, 0]', '[] [1, 2, 3, 4]', '[] [4, 5]'],
-          3,
+          '[] [4, 5]',
           'A limit of 0 gives an empty slice. &v[3..] has only two elements, so 4 is cut down to 2.',
         ),
         choose(
@@ -5009,11 +4656,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Nothing limits the end, and slicing does not shorten an out-of-range request, so it panics.',
           'fn first_three(values: &[i32]) -> &[i32] {\n    &values[..3]\n}\n\nfn main() {\n    println!("{:?}", first_three(&[1, 2]));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn sum_first(values: &[i32], n: usize) -> i32 {\n    let mut total = 0;\n    for x in &values[..n.min(values.len())] {\n        total += x;\n    }\n    total\n}\n\nfn main() {\n    let v = [10, 20, 30];\n    println!("{} {}", sum_first(&v, 2), sum_first(&v, 5));\n}',
-          ['30 60', '30 0', '60 60', '10 60'],
-          0,
+          '30 60',
           'The first call adds 10 and 20. In the second, 5 is limited to 3, so all three elements are added.',
         ),
       ],
@@ -5034,18 +4680,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'All three conversions make an owned String with the same text, and the &str is still usable afterwards because it was only read.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let word = "sky";\n    let owned = word.to_owned();\n    println!("{:?} {:?}", word, owned);\n}',
-          ['sky "sky"', '"sky" sky', '&"sky" "sky"', '"sky" "sky"'],
-          3,
+          '"sky" "sky"',
           'A &str and a String with the same text have the same Debug form: the text in double quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let n = 42;\n    let text = n.to_string();\n    println!("{:?}", text);\n}',
-          ['42', '"42"', "'42'", '"n"'],
-          1,
+          '"42"',
           'to_string turns the number into a String, and Debug shows a String in double quotes.',
         ),
         choose(
@@ -5055,16 +4699,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only the bare literal is a &str. String::from, to_string, and format! all build owned Strings.',
           'fn main() {\n    let a = "hi";\n    let b = String::from("hi");\n    let c = "hi".to_string();\n    let d = format!("{}", "hi");\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn main() {\n    let first: &str = "ice";\n    let second: String = format!("{}{}", first, "berg");\n    let third = first.to_string();\n    println!("{} {} {}", first, second, third);\n}',
-          [
-            'ice iceberg iceberg',
-            'iceberg iceberg ice',
-            'ice iceberg ice',
-            'ice ice ice',
-          ],
-          2,
+          'ice iceberg ice',
           'format! and to_string only read first and build new Strings, so first still says ice.',
         ),
       ],
@@ -5083,11 +4721,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'size takes a literal in the first call and a borrowed String in the second. owned is only borrowed, so main can still print it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn bracket(text: &str) -> String {\n    format!("({})", text)\n}\n\nfn main() {\n    let name = String::from("ok");\n    let a = bracket("hi");\n    let b = bracket(&name);\n    println!("{} {} {}", a, b, name);\n}',
-          ['(hi) (ok) (ok)', 'hi ok ok', '(hi) ok ok', '(hi) (ok) ok'],
-          3,
+          '(hi) (ok) ok',
           'bracket accepts both a literal and &name, and it returns new Strings; name itself is unchanged.',
         ),
         choose(
@@ -5108,16 +4745,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'A &String must point at an owned String. A literal is a &str, so the parameter should be &str.',
           'fn size(text: &String) -> usize {\n    text.len()\n}\n\nfn main() {\n    println!("{}", size("hello"));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn is_blank(text: &str) -> bool {\n    text.is_empty()\n}\n\nfn main() {\n    let empty = String::new();\n    println!("{} {} {}", is_blank(""), is_blank(" "), is_blank(&empty));\n}',
-          [
-            'true true true',
-            'false false true',
-            'true false true',
-            'true false false',
-          ],
-          2,
+          'true false true',
           'The empty literal and the empty String have no characters; a single space is one character.',
         ),
       ],
@@ -5136,11 +4767,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'push adds the single character /, then push_str adds the text docs, both at the end.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut s = "ab".to_string();\n    s.push(\'c\');\n    s.push_str("de");\n    s.push(\'f\');\n    println!("{} {}", s, s.len());\n}',
-          ['abcdef 5', 'abcdef 4', 'abcdef 6', 'abcfde 6'],
-          2,
+          'abcdef 6',
           'Each call appends at the end, in order, and the result has six characters.',
         ),
         choose(
@@ -5166,11 +4796,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'push takes a char in single quotes; push_str takes a &str in double quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let base = "con";\n    let mut word = base.to_owned();\n    word.push_str("text");\n    println!("{} {}", base, word);\n}',
-          ['context context', 'con con', 'con context', 'context con'],
-          2,
+          'con context',
           'to_owned made a separate String, so appending to word leaves the &str base unchanged.',
         ),
       ],
@@ -5189,11 +4818,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'out is a new String built from the borrowed name. The number becomes a String with to_string, and &count.to_string() is passed where push_str expects a &str.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn plural(word: &str) -> String {\n    let mut out = word.to_owned();\n    out.push(\'s\');\n    out\n}\n\nfn main() {\n    let cat = String::from("cat");\n    println!("{} {}", plural(&cat), plural("dog"));\n    println!("{}", cat);\n}',
-          ['cats dogs\ncats', 'cats dogs\ncat', 'cat dog\ncat', 'cats dogs'],
-          1,
+          'cats dogs\ncat',
           'plural changes its own copy and returns it. cat was only borrowed, so it still says cat.',
         ),
         choose(
@@ -5208,11 +4836,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The parameter is a borrowed view, so it cannot be appended to. The changed text must live in a new String that the function returns.',
           "fn excite(text: &str) -> &str {\n    text.push('!');\n    text\n}",
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn repeat_twice(text: &str) -> String {\n    let mut out = text.to_owned();\n    out.push_str(text);\n    out\n}\n\nfn main() {\n    let r = repeat_twice("la");\n    println!("{} {}", r, r.len());\n}',
-          ['lala 4', 'la 2', 'lala 2', 'lalala 6'],
-          0,
+          'lala 4',
           'out starts as a copy of la, then gets la appended once more: four characters.',
         ),
         choose(
@@ -5244,11 +4871,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first char of élan is é, even though it takes two bytes. The empty string has no first char, so next gives None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let first = "zebra".chars().next();\n    println!("{:?}", first);\n}',
-          ["Some('z')", 'Some("z")', "'z'", 'Some(z)'],
-          0,
+          "Some('z')",
           'next returns an Option, and a char inside it prints in single quotes.',
         ),
         predictOutput(
@@ -5299,16 +4925,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The first call consumes n, so the second call returns the next char, é.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let a = "xy".chars().next();\n    let b = "xy".chars().next();\n    println!("{:?} {:?}", a, b);\n}',
-          [
-            "Some('x') Some('y')",
-            "Some('x') None",
-            "Some('y') Some('y')",
-            "Some('x') Some('x')",
-          ],
-          3,
+          "Some('x') Some('x')",
           'Each chars() call creates a fresh iterator, so both start at x.',
         ),
         choose(
@@ -5322,16 +4942,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Once the text is used up, next keeps returning None; it does not start over.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn second(text: &str) -> Option<char> {\n    let mut it = text.chars();\n    it.next();\n    it.next()\n}\n\nfn main() {\n    println!("{:?} {:?}", second("été"), second("a"));\n}',
-          [
-            "Some('t') None",
-            "Some('é') None",
-            "Some('t') Some('a')",
-            'None None',
-          ],
-          0,
+          "Some('t') None",
           'é counts as one char, so the second char of été is t. a has only one char, so its second is None.',
         ),
       ],
@@ -5357,18 +4971,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Each char is printed on its own line, and {} shows it without quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn spaced(text: &str) -> String {\n    let mut out = String::new();\n    for c in text.chars() {\n        out.push(c);\n        out.push(\' \');\n    }\n    out\n}\n\nfn main() {\n    println!("{:?}", spaced("ok"));\n}',
-          ['"o k "', '"o k"', '" o k"', '"ok "'],
-          0,
+          '"o k "',
           'A space is pushed after every char, including the last one.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn count_spaces(text: &str) -> i32 {\n    let mut n = 0;\n    for c in text.chars() {\n        if c == \' \' {\n            n += 1;\n        }\n    }\n    n\n}\n\nfn main() {\n    println!("{}", count_spaces("a b  c"));\n}',
-          ['2', '3', '4', '1'],
-          1,
+          '3',
           'There is one space after a and two between b and c, and each is its own char.',
         ),
         choose(
@@ -5418,11 +5030,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'next already returns Option<char>, which has None for the empty case; a space would pretend a char exists.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn main() {\n    let mut out = String::new();\n    let mut it = "abc".chars();\n    it.next();\n    for c in it {\n        out.push(c);\n    }\n    println!("{}", out);\n}',
-          ['bc', 'abc', 'c', 'ab'],
-          0,
+          'bc',
           'The first next() uses up a, and the loop continues from where the iterator stopped.',
         ),
       ],
@@ -5443,18 +5054,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each of a, b, and c is one byte. é needs 2 bytes, € needs 3, and the emoji needs 4, even though each is one character.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let word = "café";\n    println!("{}", word.len());\n}',
-          ['5', '4', '8', '6'],
-          0,
+          '5',
           'c, a, and f take one byte each and é takes two, so the length is 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let price = String::from("9€");\n    println!("{}", price.len());\n}',
-          ['2', '4', '3', '5'],
-          1,
+          '4',
           'The digit is one byte and the euro sign is three.',
         ),
         choose(
@@ -5486,25 +5095,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'niño has 4 chars, but ñ takes 2 bytes, so it has 5 bytes. For the ASCII text hi, both counts are 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let s = "€10";\n    println!("{} {}", s.len(), s.chars().count());\n}',
-          ['3 3', '3 5', '5 5', '5 3'],
-          3,
+          '5 3',
           'The euro sign is 3 bytes and each digit is 1, so 5 bytes hold 3 chars.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let s = "e\\u{301}";\n    println!("{} {}", s.chars().count(), s.len());\n}',
-          ['1 2', '1 3', '2 2', '2 3'],
-          3,
+          '2 3',
           'The e and the combining accent are separate chars; the accent takes 2 bytes, so there are 3 bytes in all.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn extra_bytes(text: &str) -> usize {\n    text.len() - text.chars().count()\n}\n\nfn main() {\n    println!("{} {}", extra_bytes("año"), extra_bytes("plain"));\n}',
-          ['1 0', '0 0', '2 0', '1 5'],
-          0,
+          '1 0',
           'año has 3 chars in 4 bytes, so ñ adds one extra byte; plain is ASCII, so it has none.',
         ),
         choose(
@@ -5534,18 +5140,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The three chars take 1, 2, and 3 bytes, and their sum, 6, is the length of the string in bytes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           "fn main() {\n    println!(\"{} {} {}\", 'x'.len_utf8(), 'ö'.len_utf8(), '日'.len_utf8());\n}",
-          ['1 1 1', '1 2 2', '1 2 4', '1 2 3'],
-          3,
+          '1 2 3',
           'x is ASCII (1 byte), ö needs 2 bytes, and the CJK character 日 needs 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn start_of_third(text: &str) -> usize {\n    let mut pos = 0;\n    let mut seen = 0;\n    for c in text.chars() {\n        if seen < 2 {\n            pos += c.len_utf8();\n        }\n        seen += 1;\n    }\n    pos\n}\n\nfn main() {\n    println!("{}", start_of_third("éèa"));\n}',
-          ['2', '5', '4', '3'],
-          2,
+          '4',
           'The first two chars, é and è, take 2 bytes each, so the third char starts at byte 4.',
         ),
         choose(
@@ -5559,11 +5163,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'len counts bytes, and len_utf8 gives each char’s bytes; counting chars ignores how wide each one is.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn widest(text: &str) -> usize {\n    let mut best = 0;\n    for c in text.chars() {\n        if c.len_utf8() > best {\n            best = c.len_utf8();\n        }\n    }\n    best\n}\n\nfn main() {\n    println!("{} {}", widest("abc"), widest("a€é"));\n}',
-          ['3 3', '1 2', '1 3', '0 3'],
-          2,
+          '1 3',
           'Every char of abc is 1 byte. In a€é the widest is €, at 3 bytes.',
         ),
       ],
@@ -5581,11 +5184,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'ü takes two bytes, so über has one more byte than chars. uber is all ASCII, so the counts match.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn fits(text: &str, max_bytes: usize) -> bool {\n    text.len() <= max_bytes\n}\n\nfn main() {\n    println!("{} {}", fits("ñandú", 5), fits("nandu", 5));\n}',
-          ['true true', 'false false', 'false true', 'true false'],
-          2,
+          'false true',
           'ñandú has 5 chars but 7 bytes, so it does not fit in 5 bytes; nandu is exactly 5.',
         ),
         choose(
@@ -5599,23 +5201,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The limit is in bytes, and len counts bytes exactly.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let s = "日本";\n    let mut bytes = 0;\n    for c in s.chars() {\n        bytes += c.len_utf8();\n    }\n    println!("{} {} {}", s.chars().count(), bytes, s.len());\n}',
-          ['2 2 6', '2 6 6', '6 6 6', '2 4 4'],
-          1,
+          '2 6 6',
           'Two chars of 3 bytes each: 2 chars, and both byte totals are 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn is_ascii_only(text: &str) -> bool {\n    text.len() == text.chars().count()\n}\n\nfn main() {\n    let a = is_ascii_only("R2-D2");\n    let b = is_ascii_only("Zoë");\n    let c = is_ascii_only("");\n    println!("{} {} {}", a, b, c);\n}',
-          [
-            'true false false',
-            'true true true',
-            'false false true',
-            'true false true',
-          ],
-          3,
+          'true false true',
           'ë makes Zoë one byte longer than its char count. The empty string has 0 of both, so it passes.',
         ),
       ],
@@ -5636,11 +5231,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'é occupies bytes 0 and 1, so 0..2 is exactly é. c, l, and a sit at bytes 2, 3, and 4.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let s = "rustacean";\n    println!("{}", &s[4..8]);\n}',
-          ['stac', 'acea', 'acean', 'tace'],
-          1,
+          'acea',
           'Bytes 4 through 7 hold a, c, e, and a; byte 8 is excluded.',
         ),
         choose(
@@ -5655,11 +5249,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'í takes bytes 1 and 2, so ending a slice at byte 2 would split it, and indexing panics.',
           'fn main() {\n    let s = "día";\n    println!("{}", &s[0..2]);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let s = "mañana";\n    println!("{} {}", &s[0..2], &s[4..]);\n}',
-          ['ma ñana', 'mañ ana', 'ma ana', 'ma nana'],
-          2,
+          'ma ana',
           'ñ fills bytes 2 and 3, so byte 4 is the a after it; &s[4..] is ana.',
         ),
         choose(
@@ -5684,16 +5277,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '0..2 covers exactly é. 0..1 ends inside é, and 1..9 starts inside é and runs past the end, so both give None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let s = "hello";\n    println!("{:?} {:?}", s.get(1..3), s.get(3..8));\n}',
-          [
-            'Some("el") None',
-            'Some("ell") None',
-            'Some("el") Some("lo")',
-            '"el" None',
-          ],
-          0,
+          'Some("el") None',
           '1..3 is e and l. The string has only 5 bytes, so 3..8 is out of range and gives None rather than a shorter slice.',
         ),
         predictOutput(
@@ -5719,16 +5306,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Both use byte positions; the difference is that get reports a bad position as None.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn main() {\n    let s = "ok";\n    println!("{:?} {:?} {:?}", s.get(2..), s.get(0..0), s.get(3..));\n}',
-          [
-            'None None None',
-            'None Some("") None',
-            'Some("") None None',
-            'Some("") Some("") None',
-          ],
-          3,
+          'Some("") Some("") None',
           'Position 2 is the end of the text, a valid boundary, so 2.. and 0..0 give empty slices. Position 3 is past the end.',
         ),
       ],
@@ -5746,16 +5327,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'h is byte 0, é is bytes 1 and 2, and ! is byte 3, so 2 is inside é. 4 is the end of the text, and 5 is past it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let s = "añ";\n    let a = s.is_char_boundary(1);\n    let b = s.is_char_boundary(2);\n    let c = s.is_char_boundary(3);\n    println!("{} {} {}", a, b, c);\n}',
-          [
-            'true true false',
-            'true false true',
-            'false true true',
-            'true false false',
-          ],
-          1,
+          'true false true',
           'ñ starts at byte 1 and ends at byte 2, so 2 is inside it. 3 is the end of the string, which is a boundary.',
         ),
         predictOutput(
@@ -5771,11 +5346,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The single char fills bytes 0 to 2, so only its start and the end of the string are boundaries.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program output?',
           'fn main() {\n    let s = "aé€";\n    let mut count = 0;\n    for i in 0..=s.len() {\n        if s.is_char_boundary(i) {\n            count += 1;\n        }\n    }\n    println!("{} {}", s.len(), count);\n}',
-          ['6 4', '6 3', '3 4', '6 7'],
-          0,
+          '6 4',
           'The string has 6 bytes. The boundaries are 0, 1, and 3, where chars start, plus the end at 6.',
         ),
       ],
@@ -5794,11 +5368,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'c, r, and è take 1 + 1 + 2 = 4 bytes, so the cut is at byte 4. ok has fewer than 5 chars, so end reaches the full length.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn byte_end(text: &str, n: usize) -> usize {\n    let mut end = 0;\n    let mut taken = 0;\n    for c in text.chars() {\n        if taken < n {\n            end += c.len_utf8();\n            taken += 1;\n        }\n    }\n    end\n}\n\nfn main() {\n    println!("{} {}", byte_end("añob", 2), byte_end("añob", 9));\n}',
-          ['2 4', '2 5', '3 5', '3 4'],
-          2,
+          '3 5',
           'a and ñ take 1 + 2 = 3 bytes. Asking for 9 chars covers the whole text, which is 5 bytes.',
         ),
         predictOutput(
@@ -5854,25 +5427,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The literal lists height first, but each value goes to the field it is named with, so width is 2 and height is 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'Which number does this program print?',
           'struct Ticket {\n    row: i32,\n    seat: i32,\n}\n\nfn main() {\n    let t = Ticket { seat: 14, row: 3 };\n    println!("{}", t.row);\n}',
-          ['14', '17', '3', '0'],
-          2,
+          '3',
           'Values attach to fields by name, so row is 3 even though seat is written first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Rect {\n    w: i32,\n    h: i32,\n}\n\nfn main() {\n    let r = Rect { w: 4, h: 6 };\n    println!("{}", r.w * r.h + r.w);\n}',
-          ['28', '24', '40', '10'],
-          0,
+          '28',
           'r.w * r.h is 24, and adding r.w gives 28; the multiplication happens before the addition.',
         ),
-        predictOutput(
+        typeOutput(
           'Two values of the same struct type are created. What is printed?',
           'struct Point {\n    x: i32,\n    y: i32,\n}\n\nfn main() {\n    let a = Point { x: 1, y: 2 };\n    let b = Point { x: 10, y: 20 };\n    println!("{}", a.x + b.y);\n}',
-          ['3', '30', '12', '21'],
-          3,
+          '21',
           'Each value has its own fields: a.x is 1 and b.y is 20.',
         ),
         choose(
@@ -5931,11 +5501,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Every literal must now give z a value; Rust does not supply defaults for missing fields.',
         ),
-        predictOutput(
+        typeOutput(
           'This literal gives every field, one of them zero. What is printed?',
           'struct Stock {\n    item: i32,\n    count: i32,\n    reserved: i32,\n}\n\nfn main() {\n    let s = Stock {\n        item: 42,\n        reserved: 0,\n        count: 9,\n    };\n    println!("{}", s.count - s.reserved + s.item);\n}',
-          ['9', '42', '33', '51'],
-          3,
+          '51',
           'All three fields are set by name: 9 - 0 + 42 is 51.',
         ),
       ],
@@ -5954,18 +5523,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'c is declared mut, so its fields can change: hits goes from 0 to 2 and misses is set to 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Point {\n    x: i32,\n    y: i32,\n}\n\nfn main() {\n    let mut p = Point { x: 2, y: 3 };\n    p.x = p.y * 4;\n    p.y = p.x - 1;\n    println!("{}", p.y);\n}',
-          ['11', '1', '12', '2'],
-          0,
+          '11',
           'Statements run in order: p.x becomes 12 first, so p.y becomes 12 - 1 = 11.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Wallet {\n    coins: i32,\n    notes: i32,\n}\n\nfn main() {\n    let mut w = Wallet {\n        coins: 10,\n        notes: 2,\n    };\n    w.coins -= 3;\n    w.notes *= 5;\n    println!("{}", w.coins + w.notes);\n}',
-          ['12', '9', '20', '17'],
-          3,
+          '17',
           'coins drops to 7 and notes becomes 10, so the sum is 17.',
         ),
         choose(
@@ -6007,18 +5574,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The parameters width and height fill the fields with the same names, so the area is 3 * 7 = 21.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'The parameters are listed in a different order than the fields. What is printed?',
           'struct Rect {\n    width: i32,\n    height: i32,\n}\n\nfn make(height: i32, width: i32) -> Rect {\n    Rect { width, height }\n}\n\nfn main() {\n    let r = make(2, 9);\n    println!("{}", r.width);\n}',
-          ['2', '9', '18', '11'],
-          1,
+          '9',
           'Shorthand matches by name: the parameter width receives 9, the second argument.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Point {\n    x: i32,\n    y: i32,\n}\n\nfn main() {\n    let x = 4;\n    let p = Point { x, y: x * 2 };\n    println!("{}", p.y - p.x);\n}',
-          ['8', '0', '-4', '4'],
-          3,
+          '4',
           'The shorthand x sets the x field to 4, and y is given explicitly as 8; 8 - 4 is 4.',
         ),
         choose(
@@ -6032,11 +5597,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Shorthand looks for variables with the field names; here write `Rect { width: w, height: h }`.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Rect {\n    width: i32,\n    height: i32,\n}\n\nfn main() {\n    let height = 5;\n    let mut width = 2;\n    width += height;\n    let r = Rect { height, width };\n    println!("{}", r.width);\n}',
-          ['7', '2', '5', '10'],
-          0,
+          '7',
           'Shorthand uses the current value of width, which is 7 after `width += height`.',
         ),
       ],
@@ -6057,25 +5621,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '.0 is the first field and .2 is the third, so the program prints 0 and 128.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Pair(i32, i32);\n\nfn main() {\n    let p = Pair(8, 3);\n    println!("{}", p.1 - p.0);\n}',
-          ['-5', '5', '11', '3'],
-          0,
+          '-5',
           'p.1 is 3 and p.0 is 8, so p.1 - p.0 is -5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Reading(i32, bool);\n\nfn main() {\n    let r = Reading(21, false);\n    println!("{} {}", r.1, r.0);\n}',
-          ['21 false', 'true 21', 'false 21', '21 true'],
-          2,
+          'false 21',
           'r.1 is the second field, false, and it is printed first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Triple(i32, i32, i32);\n\nfn main() {\n    let t = Triple(4, 5, 6);\n    println!("{}", t.0 + t.2);\n}',
-          ['9', '11', '15', '10'],
-          3,
+          '10',
           'Positions start at 0, so t.0 is 4 and t.2 is 6.',
         ),
         choose(
@@ -6123,18 +5684,16 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Matching field types do not make two structs the same type.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Width(i32);\n\nfn grow(w: Width) -> Width {\n    Width(w.0 + 2)\n}\n\nfn main() {\n    let w = grow(grow(Width(1)));\n    println!("{}", w.0);\n}',
-          ['3', '1', '5', '4'],
-          2,
+          '5',
           'Each call builds a new Width two larger: 1 becomes 3, then 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Price(i32);\nstruct Discount(i32);\n\nfn final_price(p: Price, d: Discount) -> i32 {\n    p.0 - d.0\n}\n\nfn main() {\n    println!("{}", final_price(Price(80), Discount(15)));\n}',
-          ['95', '65', '-65', '80'],
-          1,
+          '65',
           'The types fix the roles: 80 is the price and 15 the discount, giving 65.',
         ),
         choose(
@@ -6164,25 +5723,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'shift returns Point(5, 5). The let pattern unpacks it into x and y, and the tuple (x, y) prints in Debug form.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Point(i32, i32);\n\nfn to_tuple(p: Point) -> (i32, i32) {\n    (p.1, p.0)\n}\n\nfn main() {\n    println!("{:?}", to_tuple(Point(7, 2)));\n}',
-          ['(7, 2)', 'Point(2, 7)', '[2, 7]', '(2, 7)'],
-          3,
+          '(2, 7)',
           'The function puts p.1 first, so the tuple is (2, 7); it is a plain tuple, so no Point name appears.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Pair(i32, i32);\n\nfn main() {\n    let Pair(a, b) = Pair(6, 1);\n    println!("{} {}", b, a);\n}',
-          ['1 6', '6 1', '1 1', '6 6'],
-          0,
+          '1 6',
           'The pattern binds a to 6 and b to 1, and b is printed first.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Range(i32, i32);\n\nfn widen(r: Range, by: i32) -> Range {\n    let Range(lo, hi) = r;\n    Range(lo - by, hi + by)\n}\n\nfn main() {\n    let r = widen(Range(3, 5), 2);\n    println!("{:?}", (r.0, r.1));\n}',
-          ['(5, 7)', '(1, 3)', '(1, 7)', '(3, 5)'],
-          2,
+          '(1, 7)',
           'lo is 3 and hi is 5; the new Range moves each end outward by 2.',
         ),
         choose(
@@ -6214,28 +5770,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The literal sets level first, but Debug lists the fields in declaration order, and the String prints with quotes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[derive(Debug)]\nstruct Point {\n    x: i32,\n    y: i32,\n}\n\nfn main() {\n    println!("{:?}", Point { y: -2, x: 5 });\n}',
-          [
-            'Point { x: 5, y: -2 }',
-            'Point { y: -2, x: 5 }',
-            '(5, -2)',
-            'Point(5, -2)',
-          ],
-          0,
+          'Point { x: 5, y: -2 }',
           'Fields print in the order the struct declares them, x and then y.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[derive(Debug)]\nstruct Tag {\n    label: String,\n    id: i32,\n}\n\nfn main() {\n    let t = Tag {\n        label: String::from("new"),\n        id: 3,\n    };\n    println!("{:?}", t);\n}',
-          [
-            'Tag { label: "new", id: 3 }',
-            'Tag { label: new, id: 3 }',
-            '{ label: "new", id: 3 }',
-            'Tag { "new", 3 }',
-          ],
-          0,
+          'Tag { label: "new", id: 3 }',
           'Debug shows the type name and every field name, and the String keeps its quotes.',
         ),
         choose(
@@ -6278,18 +5822,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'minor differs (4 against 5), so the whole values are unequal, even though their major fields are equal.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[derive(PartialEq)]\nstruct Size {\n    w: i32,\n    h: i32,\n}\n\nfn main() {\n    let a = Size { w: 3, h: 4 };\n    let b = Size { h: 4, w: 3 };\n    println!("{} {}", a == b, a != b);\n}',
-          ['true false', 'false true', 'true true', 'false false'],
-          0,
+          'true false',
           'Every field has the same value; the order of the literal does not matter, so == is true and != is false.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[derive(PartialEq)]\nstruct Card {\n    suit: String,\n    rank: i32,\n}\n\nfn main() {\n    let a = Card {\n        suit: String::from("hearts"),\n        rank: 10,\n    };\n    let b = Card {\n        suit: String::from("Hearts"),\n        rank: 10,\n    };\n    println!("{} {}", a == b, a.rank == b.rank);\n}',
-          ['true true', 'false false', 'true false', 'false true'],
-          3,
+          'false true',
           '"hearts" and "Hearts" are different Strings, so the cards differ even though their ranks match.',
         ),
         choose(
@@ -6304,11 +5846,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Debug only adds printing; == needs PartialEq, which is not derived here.',
           '#[derive(Debug)]\nstruct Point {\n    x: i32,\n    y: i32,\n}\n\nfn main() {\n    let a = Point { x: 1, y: 2 };\n    let b = Point { x: 1, y: 2 };\n    println!("{}", a == b);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[derive(PartialEq)]\nstruct Point {\n    x: i32,\n    y: i32,\n}\n\nfn main() {\n    let mut a = Point { x: 1, y: 1 };\n    let b = Point { x: 1, y: 2 };\n    a.y += 1;\n    println!("{} {}", a == b, a != Point { x: 1, y: 1 });\n}',
-          ['false true', 'true false', 'true true', 'false false'],
-          2,
+          'true true',
           'After a.y += 1, a has the same fields as b, and it no longer equals Point { x: 1, y: 1 }.',
         ),
       ],
@@ -6328,11 +5869,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'copy owns its own title and words, so push_str and += change only copy.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[derive(Clone)]\nstruct Counter {\n    n: i32,\n}\n\nfn main() {\n    let a = Counter { n: 5 };\n    let mut b = a.clone();\n    b.n *= 2;\n    println!("{} {}", a.n, b.n);\n}',
-          ['10 10', '5 5', '5 10', '10 5'],
-          2,
+          '5 10',
           'b is a separate copy, so doubling b.n leaves a.n at 5.',
         ),
         choose(
@@ -6347,23 +5887,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Assigning a to b moves the whole value, String included. Deriving Clone and writing a.clone() would keep a usable.',
           'struct Note {\n    text: String,\n}\n\nfn main() {\n    let a = Note {\n        text: String::from("hi"),\n    };\n    let b = a;\n    println!("{}", a.text);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[derive(Clone, PartialEq)]\nstruct Label {\n    text: String,\n    size: i32,\n}\n\nfn main() {\n    let first = Label {\n        text: String::from("ok"),\n        size: 2,\n    };\n    let mut second = first.clone();\n    second.size = 3;\n    println!("{} {}", first == second, first.text == second.text);\n}',
-          ['false true', 'true true', 'false false', 'true false'],
-          0,
+          'false true',
           'The clone starts out equal, but changing size makes the whole values differ; the text fields are still equal.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[derive(Debug, Clone)]\nstruct Pet {\n    name: String,\n    age: i32,\n}\n\nfn main() {\n    let a = Pet {\n        name: String::from("Al"),\n        age: 3,\n    };\n    let mut b = a.clone();\n    b.name = String::from("Bo");\n    println!("{:?}", a);\n}',
-          [
-            'Pet { name: "Bo", age: 3 }',
-            'Pet { name: Al, age: 3 }',
-            'Pet { name: "AlBo", age: 3 }',
-            'Pet { name: "Al", age: 3 }',
-          ],
-          3,
+          'Pet { name: "Al", age: 3 }',
           'Only the clone b got the new name; a still holds "Al".',
         ),
       ],
@@ -6417,16 +5950,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The inner struct prints in its own Debug form, nested inside the outer one.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           '#[derive(Debug, Clone, PartialEq)]\nstruct Score {\n    team: String,\n    pts: i32,\n}\n\nfn main() {\n    let a = Score {\n        team: String::from("red"),\n        pts: 3,\n    };\n    let b = a.clone();\n    let mut c = a.clone();\n    c.pts += 1;\n    println!("{} {} {}", a == b, a == c, b != c);\n}',
-          [
-            'true true false',
-            'true false true',
-            'false false true',
-            'true false false',
-          ],
-          1,
+          'true false true',
           'b is an unchanged clone of a, while c gained a point and so differs from both.',
         ),
       ],
@@ -6447,18 +5974,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only volume is listed, so brightness and muted are taken from base.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Stats {\n    hp: i32,\n    mp: i32,\n    level: i32,\n}\n\nfn main() {\n    let start = Stats {\n        hp: 10,\n        mp: 4,\n        level: 1,\n    };\n    let next = Stats { level: 2, ..start };\n    println!("{} {} {}", next.hp, next.mp, next.level);\n}',
-          ['10 4 1', '0 0 2', '10 4 2', '2 4 1'],
-          2,
+          '10 4 2',
           'level is given as 2; hp and mp are copied from start.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Point3 {\n    x: i32,\n    y: i32,\n    z: i32,\n}\n\nfn main() {\n    let a = Point3 { x: 1, y: 2, z: 3 };\n    let b = Point3 { x: 9, z: 0, ..a };\n    println!("{:?}", (b.x, b.y, b.z));\n}',
-          ['(9, 2, 0)', '(9, 2, 3)', '(1, 2, 3)', '(9, 0, 0)'],
-          0,
+          '(9, 2, 0)',
           'x and z are listed, so only y comes from a.',
         ),
         choose(
@@ -6472,11 +5997,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The changed fields come first and `..base` comes last.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Lamp {\n    on: bool,\n    watts: i32,\n}\n\nfn main() {\n    let lamp = Lamp {\n        on: true,\n        watts: 60,\n    };\n    let off = Lamp { on: false, ..lamp };\n    println!("{} {}", off.on, off.watts);\n}',
-          ['false 60', 'true 60', 'false 0', 'true 0'],
-          0,
+          'false 60',
           'on is set to false and watts is filled in from lamp.',
         ),
       ],
@@ -6495,18 +6019,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'wide gets width 800 and copies height 200, while small keeps its width of 300.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Rect {\n    w: i32,\n    h: i32,\n}\n\nfn main() {\n    let a = Rect { w: 2, h: 3 };\n    let b = Rect { h: 10, ..a };\n    println!("{}", a.h + b.h);\n}',
-          ['13', '20', '6', '10'],
-          0,
+          '13',
           'a.h is still 3 and b.h is 10.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Rect {\n    w: i32,\n    h: i32,\n}\n\nfn main() {\n    let a = Rect { w: 1, h: 1 };\n    let b = Rect { h: 4, ..a };\n    let c = Rect { w: 5, ..b };\n    println!("{:?}", (c.w, c.h));\n}',
-          ['(5, 1)', '(1, 4)', '(1, 1)', '(5, 4)'],
-          3,
+          '(5, 4)',
           'b is w 1, h 4; c takes w = 5 and copies h = 4 from b.',
         ),
         choose(
@@ -6520,11 +6042,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Update syntax builds b from a without changing a; the new reading is set only on b.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Level {\n    n: i32,\n    lives: i32,\n}\n\nfn main() {\n    let mut base = Level { n: 1, lives: 3 };\n    let next = Level { n: 2, ..base };\n    base.lives = 0;\n    println!("{} {}", next.lives, base.lives);\n}',
-          ['0 0', '3 3', '0 3', '3 0'],
-          3,
+          '3 0',
           'next copied lives = 3 when it was built; changing base afterwards does not reach next.',
         ),
       ],
@@ -6543,25 +6064,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The inner literal sets score to 55, deactivated then sets active to false, and rank is copied through both steps.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Player {\n    level: i32,\n    coins: i32,\n}\n\nfn promote(p: Player) -> Player {\n    Player {\n        level: p.level + 1,\n        ..p\n    }\n}\n\nfn main() {\n    let p = promote(promote(Player {\n        level: 1,\n        coins: 50,\n    }));\n    println!("{} {}", p.level, p.coins);\n}',
-          ['2 50', '3 52', '3 50', '1 50'],
-          2,
+          '3 50',
           'Each call raises level by one and copies coins, so two calls give level 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Frame {\n    width: i32,\n    height: i32,\n}\n\nfn resized(width: i32, base: Frame) -> Frame {\n    Frame { width, ..base }\n}\n\nfn main() {\n    let f = resized(\n        15,\n        Frame {\n            width: 10,\n            height: 20,\n        },\n    );\n    println!("{:?}", (f.width, f.height));\n}',
-          ['(15, 20)', '(10, 20)', '(15, 15)', '(10, 15)'],
-          0,
+          '(15, 20)',
           'Shorthand takes width from the parameter, 15, and height comes from base.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Toggle {\n    on: bool,\n    id: i32,\n}\n\nfn main() {\n    let s = Toggle { on: true, id: 7 };\n    let t = Toggle { on: !s.on, ..s };\n    println!("{} {}", s.on && t.on, s.on || t.on);\n}',
-          ['true true', 'false false', 'true false', 'false true'],
-          3,
+          'false true',
           't.on is the negation of s.on, so exactly one of them is true.',
         ),
         choose(
@@ -6593,25 +6111,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'r.area() passes r to area as &self, and self.width * self.height is 3 * 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Pair(i32, i32);\n\nimpl Pair {\n    fn spread(&self) -> i32 {\n        self.1 - self.0\n    }\n}\n\nfn main() {\n    println!("{}", Pair(3, 10).spread());\n}',
-          ['7', '-7', '13', '3'],
-          0,
+          '7',
           'self.1 is 10 and self.0 is 3, so the method returns 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Rect {\n    width: i32,\n    height: i32,\n}\n\nimpl Rect {\n    fn scaled_area(&self, k: i32) -> i32 {\n        self.width * k * self.height * k\n    }\n}\n\nfn main() {\n    let r = Rect {\n        width: 2,\n        height: 3,\n    };\n    println!("{}", r.scaled_area(2));\n}',
-          ['12', '48', '24', '6'],
-          2,
+          '24',
           'k is the argument 2, so the sides become 4 and 6, giving 24.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Square(i32);\n\nimpl Square {\n    fn side(&self) -> i32 {\n        self.0\n    }\n\n    fn perimeter(&self) -> i32 {\n        self.side() * 4\n    }\n}\n\nfn main() {\n    println!("{}", Square(6).perimeter());\n}',
-          ['36', '6', '10', '24'],
-          3,
+          '24',
           'perimeter calls self.side(), which returns 6, and multiplies it by 4.',
         ),
         choose(
@@ -6648,11 +6163,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'into_text takes self, so n moves into that call and cannot be borrowed afterwards.',
           'struct Name(String);\n\nimpl Name {\n    fn length(&self) -> usize {\n        self.0.len()\n    }\n\n    fn into_text(self) -> String {\n        self.0\n    }\n}\n\nfn main() {\n    let n = Name(String::from("Rosa"));\n    let t = n.into_text();\n    println!("{}", n.length());\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Wallet(i32);\n\nimpl Wallet {\n    fn peek(&self) -> i32 {\n        self.0\n    }\n\n    fn spend(self) -> i32 {\n        self.0 - 5\n    }\n}\n\nfn main() {\n    let w = Wallet(20);\n    let a = w.peek();\n    let b = w.peek();\n    let c = w.spend();\n    println!("{} {} {}", a, b, c);\n}',
-          ['20 15 10', '15 15 15', '20 20 20', '20 20 15'],
-          3,
+          '20 20 15',
           'peek only borrows, so both calls see 20; spend takes the wallet and returns 15.',
         ),
         choose(
@@ -6661,11 +6175,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Reading needs only a borrow; taking self would consume the value.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Tag(String);\n\nimpl Tag {\n    fn label(self) -> String {\n        format!("<{}>", self.0)\n    }\n}\n\nfn main() {\n    let t = Tag(String::from("b"));\n    let s = t.label();\n    println!("{} {}", s, s.len());\n}',
-          ['<b> 3', 'b 1', '<"b"> 5', '<b> 1'],
-          0,
+          '<b> 3',
           'label consumes the Tag and builds the String "<b>", which is 3 characters long.',
         ),
       ],
@@ -6684,11 +6197,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each bump borrows c mutably and adds 1, so get returns 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Score(i32);\n\nimpl Score {\n    fn add(&mut self, pts: i32) {\n        self.0 += pts;\n    }\n}\n\nfn main() {\n    let mut s = Score(10);\n    s.add(5);\n    s.add(-3);\n    println!("{}", s.0);\n}',
-          ['10', '15', '12', '18'],
-          2,
+          '12',
           'Both calls change s itself: 10 + 5 - 3 is 12.',
         ),
         choose(
@@ -6703,11 +6215,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Calling a &mut self method needs a mutable binding, so c must be declared `let mut c`.',
           'struct Counter {\n    value: i32,\n}\n\nimpl Counter {\n    fn bump(&mut self) {\n        self.value += 1;\n    }\n}\n\nfn main() {\n    let c = Counter { value: 0 };\n    c.bump();\n    println!("{}", c.value);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Tally {\n    hits: i32,\n    total: i32,\n}\n\nimpl Tally {\n    fn record(&mut self, n: i32) {\n        self.hits += 1;\n        self.total += n;\n    }\n}\n\nfn main() {\n    let mut t = Tally { hits: 0, total: 0 };\n    t.record(3);\n    t.record(4);\n    println!("{} {}", t.hits, t.total);\n}',
-          ['2 7', '1 4', '7 2', '2 4'],
-          0,
+          '2 7',
           'Each record call adds 1 to hits and n to total.',
         ),
         choose(
@@ -6732,11 +6243,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'fill changes t to 15, level reads it, and drain consumes t and returns the same 15.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Account(i32);\n\nimpl Account {\n    fn deposit(&mut self, amount: i32) {\n        self.0 += amount;\n    }\n\n    fn balance(&self) -> i32 {\n        self.0\n    }\n\n    fn close(self) -> i32 {\n        self.0 - 1\n    }\n}\n\nfn main() {\n    let mut a = Account(100);\n    a.deposit(20);\n    let b = a.balance();\n    let c = a.close();\n    println!("{} {}", b, c);\n}',
-          ['100 99', '120 120', '119 120', '120 119'],
-          3,
+          '120 119',
           'deposit raises the balance to 120; close consumes the account and returns 120 - 1.',
         ),
         choose(
@@ -6751,11 +6261,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'drain takes self, so it must be the last call; every other order uses t after it has moved.',
           'struct Tank(i32);\n\nimpl Tank {\n    fn level(&self) -> i32 {\n        self.0\n    }\n\n    fn fill(&mut self, amount: i32) {\n        self.0 += amount;\n    }\n\n    fn drain(self) -> i32 {\n        self.0\n    }\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Rect {\n    width: i32,\n    height: i32,\n}\n\nimpl Rect {\n    fn dims(&self) -> (i32, i32) {\n        (self.width, self.height)\n    }\n\n    fn rotate(&mut self) {\n        let w = self.width;\n        self.width = self.height;\n        self.height = w;\n    }\n}\n\nfn main() {\n    let mut r = Rect {\n        width: 2,\n        height: 7,\n    };\n    r.rotate();\n    println!("{:?}", r.dims());\n}',
-          ['(2, 7)', '(7, 2)', '(7, 7)', '(2, 2)'],
-          1,
+          '(7, 2)',
           'rotate saves the old width before overwriting it, so the two sides swap.',
         ),
         choose(
@@ -6787,18 +6296,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Point::new runs without any existing Point and returns one built from its two arguments.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Span {\n    low: i32,\n    high: i32,\n}\n\nimpl Span {\n    fn new(start: i32, length: i32) -> Span {\n        Span {\n            low: start,\n            high: start + length,\n        }\n    }\n}\n\nfn main() {\n    let s = Span::new(3, 4);\n    println!("{:?}", (s.low, s.high));\n}',
-          ['(3, 4)', '(4, 7)', '(3, 7)', '(7, 3)'],
-          2,
+          '(3, 7)',
           'new stores start as low and start + length, 7, as high.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Grid {\n    rows: i32,\n    cols: i32,\n}\n\nimpl Grid {\n    fn square(n: i32) -> Grid {\n        Grid { rows: n, cols: n }\n    }\n}\n\nfn main() {\n    let g = Grid::square(3);\n    println!("{}", g.rows * g.cols + g.rows);\n}',
-          ['12', '9', '6', '18'],
-          0,
+          '12',
           'square builds a 3 by 3 grid, and 3 * 3 + 3 is 12.',
         ),
         choose(
@@ -6840,11 +6347,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Timer::new sets both fields to 0; starting_at fills seconds from its parameter and sets laps to 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Money(i32);\n\nimpl Money {\n    fn zero() -> Self {\n        Self(0)\n    }\n\n    fn dollars(d: i32) -> Self {\n        Self(d * 100)\n    }\n}\n\nfn main() {\n    println!("{}", Money::dollars(3).0 + Money::zero().0);\n}',
-          ['3', '0', '103', '300'],
-          3,
+          '300',
           'Self(d * 100) builds a Money holding 300, and zero adds nothing.',
         ),
         choose(
@@ -6858,18 +6364,16 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Self names the type Counter, so this is an ordinary Counter literal.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Vec2 {\n    x: i32,\n    y: i32,\n}\n\nimpl Vec2 {\n    fn new(x: i32, y: i32) -> Self {\n        Self { x, y }\n    }\n\n    fn flipped(&self) -> Self {\n        Self::new(self.y, self.x)\n    }\n}\n\nfn main() {\n    let v = Vec2::new(1, 8).flipped();\n    println!("{} {}", v.x, v.y);\n}',
-          ['8 1', '1 8', '8 8', '1 1'],
-          0,
+          '8 1',
           'flipped calls Self::new with y and x swapped, building Vec2 { x: 8, y: 1 }.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Config {\n    retries: i32,\n    timeout: i32,\n}\n\nimpl Config {\n    fn new() -> Self {\n        Self::with_retries(3)\n    }\n\n    fn with_retries(retries: i32) -> Self {\n        Self {\n            retries,\n            timeout: retries * 10,\n        }\n    }\n}\n\nfn main() {\n    let c = Config::new();\n    println!("{} {}", c.retries, c.timeout);\n}',
-          ['3 10', '0 0', '3 30', '30 3'],
-          2,
+          '3 30',
           'new hands the work to with_retries(3), which sets timeout to 3 * 10.',
         ),
       ],
@@ -6899,18 +6403,16 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'With no existing value to call it on, it takes no self and is called as Deck::full().',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Stack {\n    size: i32,\n}\n\nimpl Stack {\n    fn empty() -> Self {\n        Self { size: 0 }\n    }\n\n    fn pushed(&self) -> Self {\n        Self {\n            size: self.size + 1,\n        }\n    }\n}\n\nfn main() {\n    let s = Stack::empty().pushed().pushed().pushed();\n    println!("{}", s.size);\n}',
-          ['1', '0', '4', '3'],
-          3,
+          '3',
           'empty starts at 0, and each pushed call returns a new Stack one larger.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'struct Pair {\n    a: i32,\n    b: i32,\n}\n\nimpl Pair {\n    fn new(a: i32, b: i32) -> Self {\n        Self { a, b }\n    }\n\n    fn swapped(&self) -> Self {\n        Self::new(self.b, self.a)\n    }\n\n    fn diff(&self) -> i32 {\n        self.a - self.b\n    }\n}\n\nfn main() {\n    let p = Pair::new(10, 4);\n    println!("{} {}", p.diff(), p.swapped().diff());\n}',
-          ['6 6', '6 -6', '-6 6', '14 -6'],
-          1,
+          '6 -6',
           'p.diff() is 10 - 4, and the swapped pair computes 4 - 10.',
         ),
         choose(
@@ -6943,18 +6445,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'now holds Yellow, so it matches Light::Yellow and does not match Light::Green.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Coin {\n    Heads,\n    Tails,\n}\n\nfn main() {\n    let c = Coin::Tails;\n    println!("{}", matches!(c, Coin::Heads));\n}',
-          ['true', 'Tails', 'false', 'Heads'],
-          2,
+          'false',
           'c is Tails, so it does not match the Heads pattern.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum State {\n    Idle,\n    Running,\n}\n\nfn main() {\n    let mut s = State::Idle;\n    s = State::Running;\n    let code = if matches!(s, State::Idle) { 0 } else { 1 };\n    println!("{}", code);\n}',
-          ['0', '1', 'Running', 'Idle'],
-          1,
+          '1',
           'Reassigning s replaces Idle with Running, so the if takes its else branch.',
         ),
         choose(
@@ -6990,25 +6490,22 @@ export const knowledgePoints: KnowledgePointModule = {
         explanation: 'Medium costs 4, and Large reaches the final else for 5.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Size {\n    Small,\n    Medium,\n    Large,\n}\n\nfn price(size: Size) -> i32 {\n    if matches!(size, Size::Small) {\n        3\n    } else if matches!(size, Size::Medium) {\n        4\n    } else {\n        5\n    }\n}\n\nfn main() {\n    println!("{}", price(Size::Small) * 2 + price(Size::Large));\n}',
-          ['11', '13', '16', '8'],
-          0,
+          '11',
           'Small costs 3, doubled to 6, and Large adds 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Gear {\n    Park,\n    Reverse,\n    Drive,\n}\n\nfn speed(g: Gear) -> i32 {\n    if matches!(g, Gear::Reverse) {\n        -5\n    } else if matches!(g, Gear::Park) {\n        0\n    } else {\n        30\n    }\n}\n\nfn main() {\n    println!("{}", speed(Gear::Drive) + speed(Gear::Reverse));\n}',
-          ['35', '30', '25', '-5'],
-          2,
+          '25',
           'Drive reaches the final else for 30, and Reverse gives -5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Day {\n    Mon,\n    Fri,\n    Sat,\n    Sun,\n}\n\nfn hours(d: Day) -> i32 {\n    if matches!(d, Day::Sat) || matches!(d, Day::Sun) {\n        0\n    } else {\n        8\n    }\n}\n\nfn main() {\n    println!("{}", hours(Day::Fri) + hours(Day::Sat) + hours(Day::Mon));\n}',
-          ['24', '8', '0', '16'],
-          3,
+          '16',
           'Saturday gives 0 and each of the two weekdays gives 8.',
         ),
         choose(
@@ -7050,18 +6547,16 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'An enum value is exactly one variant, so contradictory states cannot exist.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Light {\n    Red,\n    Yellow,\n    Green,\n}\n\nfn next(l: Light) -> Light {\n    if matches!(l, Light::Red) {\n        Light::Green\n    } else if matches!(l, Light::Green) {\n        Light::Yellow\n    } else {\n        Light::Red\n    }\n}\n\nfn code(l: Light) -> i32 {\n    if matches!(l, Light::Red) {\n        1\n    } else if matches!(l, Light::Yellow) {\n        2\n    } else {\n        3\n    }\n}\n\nfn main() {\n    println!("{}", code(next(next(Light::Green))));\n}',
-          ['1', '2', '3', '0'],
-          0,
+          '1',
           'Green becomes Yellow, then Yellow reaches the final else and becomes Red, whose code is 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Phase {\n    Start,\n    Middle,\n    End,\n}\n\nfn advance(p: Phase) -> Phase {\n    if matches!(p, Phase::Start) {\n        Phase::Middle\n    } else {\n        Phase::End\n    }\n}\n\nfn main() {\n    let mut p = Phase::Start;\n    p = advance(p);\n    p = advance(p);\n    p = advance(p);\n    let score = if matches!(p, Phase::End) {\n        100\n    } else if matches!(p, Phase::Middle) {\n        50\n    } else {\n        0\n    };\n    println!("{}", score);\n}',
-          ['0', '50', '100', '150'],
-          2,
+          '100',
           'Start becomes Middle, Middle becomes End, and End stays End.',
         ),
         choose(
@@ -7093,18 +6588,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The Square arm binds side to 4, and the Rect arm binds w to 2 and h to 7.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Cmd {\n    Up(i32),\n    Down(i32),\n    Stop,\n}\n\nfn delta(c: Cmd) -> i32 {\n    match c {\n        Cmd::Up(n) => n,\n        Cmd::Down(n) => -n,\n        Cmd::Stop => 0,\n    }\n}\n\nfn main() {\n    println!(\n        "{}",\n        delta(Cmd::Up(5)) + delta(Cmd::Down(8)) + delta(Cmd::Stop)\n    );\n}',
-          ['13', '3', '-3', '5'],
-          2,
+          '-3',
           'Up(5) gives 5, Down(8) gives -8, and Stop gives 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Pay {\n    Hourly(i32, i32),\n    Salary(i32),\n}\n\nfn weekly(p: Pay) -> i32 {\n    match p {\n        Pay::Hourly(rate, hours) => rate * hours,\n        Pay::Salary(amount) => amount,\n    }\n}\n\nfn main() {\n    println!(\n        "{} {}",\n        weekly(Pay::Hourly(20, 3)),\n        weekly(Pay::Salary(500))\n    );\n}',
-          ['60 500', '23 500', '20 500', '60 0'],
-          0,
+          '60 500',
           'Hourly binds rate 20 and hours 3, and Salary binds 500.',
         ),
         choose(
@@ -7158,25 +6651,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Building Note::Text(words) moves the String into the enum value.',
           'enum Note {\n    Blank,\n    Text(String),\n}\n\nfn main() {\n    let words = String::from("hi");\n    let note = Note::Text(words);\n    println!("{}", words);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Entry {\n    Name(String),\n    Id(i32),\n}\n\nfn describe(e: Entry) -> String {\n    match e {\n        Entry::Name(n) => format!("name {}", n),\n        Entry::Id(i) => format!("id {}", i),\n    }\n}\n\nfn main() {\n    println!("{}", describe(Entry::Name(String::from("Kai"))));\n    println!("{}", describe(Entry::Id(7)));\n}',
-          ['name "Kai"\nid 7', 'Kai\n7', 'name Kai\nname 7', 'name Kai\nid 7'],
-          3,
+          'name Kai\nid 7',
           'Each arm formats its own payload with {}, which prints the String without quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Reply {\n    Empty,\n    Text(String),\n}\n\nfn text_or_dash(r: Reply) -> String {\n    match r {\n        Reply::Empty => String::from("-"),\n        Reply::Text(t) => t,\n    }\n}\n\nfn main() {\n    let a = text_or_dash(Reply::Text(String::from("ok")));\n    let b = text_or_dash(Reply::Empty);\n    println!("{:?} {:?}", a, b);\n}',
-          ['ok -', '"ok" "-"', 'Text("ok") Empty', '"ok" -'],
-          1,
+          '"ok" "-"',
           'The Text arm returns its String unchanged, and {:?} prints both Strings with quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Field {\n    Count(i32),\n    Label(String),\n    Flag(bool),\n}\n\nfn size(f: Field) -> usize {\n    match f {\n        Field::Count(_) => 4,\n        Field::Label(s) => s.len(),\n        Field::Flag(_) => 1,\n    }\n}\n\nfn main() {\n    println!(\n        "{}",\n        size(Field::Label(String::from("abc"))) + size(Field::Flag(true))\n    );\n}',
-          ['4', '5', '8', '3'],
-          0,
+          '4',
           'The label "abc" has length 3 and the flag adds 1.',
         ),
       ],
@@ -7195,25 +6685,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '35 passes the guard of the second arm; 0 is caught by the literal pattern in the first arm.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Reading {\n    Celsius(i32),\n    Missing,\n}\n\nfn label(r: Reading) -> String {\n    match r {\n        Reading::Celsius(0) => String::from("freezing point"),\n        Reading::Celsius(t) if t > 30 => format!("hot {}", t),\n        Reading::Celsius(t) => format!("mild {}", t),\n        Reading::Missing => String::from("no data"),\n    }\n}\n\nfn main() {\n    println!("{}", label(Reading::Celsius(30)));\n}',
-          ['hot 30', 'freezing point', 'mild 30', 'no data'],
-          2,
+          'mild 30',
           '30 is not greater than 30, so the guard fails and the next Celsius arm matches.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Bid {\n    Pass,\n    Raise(i32),\n}\n\nfn cost(b: Bid) -> i32 {\n    match b {\n        Bid::Raise(n) if n > 100 => 100,\n        Bid::Raise(n) => n,\n        Bid::Pass => 0,\n    }\n}\n\nfn main() {\n    println!(\n        "{} {} {}",\n        cost(Bid::Raise(250)),\n        cost(Bid::Raise(40)),\n        cost(Bid::Pass)\n    );\n}',
-          ['250 40 0', '100 40 0', '100 100 0', '100 40 100'],
-          1,
+          '100 40 0',
           'Raises above 100 are capped by the guarded arm; 40 falls through to the plain Raise arm.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Cell {\n    Wall,\n    Coins(i32),\n}\n\nfn kind(c: Cell) -> i32 {\n    match c {\n        Cell::Wall => 0,\n        Cell::Coins(_) => 1,\n        Cell::Coins(0) => 2,\n    }\n}\n\nfn main() {\n    println!("{}", kind(Cell::Coins(0)));\n}',
-          ['2', '0', '3', '1'],
-          3,
+          '1',
           'Arms are tried in order, and Coins(_) already matches every Coins value, so the Coins(0) arm is never reached.',
         ),
         choose(
@@ -7243,23 +6730,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Click binds both coordinates, and Key binds its String, which the arm both prints and measures.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Event {\n    Click(i32, i32),\n    Key(String),\n    Quit,\n}\n\nfn describe(e: Event) -> String {\n    match e {\n        Event::Click(x, y) => format!("click at {} {}", x, y),\n        Event::Key(k) => format!("key {} ({} chars)", k, k.len()),\n        Event::Quit => String::from("quit"),\n    }\n}\n\nfn main() {\n    println!("{}", describe(Event::Key(String::from("tab"))));\n    println!("{}", describe(Event::Quit));\n}',
-          [
-            'key "tab" (3 chars)\nquit',
-            'key tab (4 chars)\nquit',
-            'key tab (3 chars)\nquit',
-            'tab (3 chars)\nquit',
-          ],
-          2,
+          'key tab (3 chars)\nquit',
           'The String prints without quotes under {}, and "tab" has 3 characters.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Txn {\n    Deposit(i32),\n    Withdraw(i32),\n    Fee,\n}\n\nfn apply(balance: i32, t: Txn) -> i32 {\n    match t {\n        Txn::Deposit(n) => balance + n,\n        Txn::Withdraw(n) if n > balance => balance,\n        Txn::Withdraw(n) => balance - n,\n        Txn::Fee => balance - 2,\n    }\n}\n\nfn main() {\n    let mut b = apply(10, Txn::Deposit(5));\n    b = apply(b, Txn::Withdraw(50));\n    b = apply(b, Txn::Fee);\n    println!("{}", b);\n}',
-          ['13', '-37', '15', '-35'],
-          0,
+          '13',
           'The deposit makes 15, the guarded arm refuses the 50 withdrawal, and the fee leaves 13.',
         ),
         choose(
@@ -7273,11 +6753,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A match must be exhaustive, so the new variant needs its own arm or a fallback.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Token {\n    Num(i32),\n    Word(String),\n    End,\n}\n\nfn is_num(t: Token) -> i32 {\n    match t {\n        Token::Num(_) => 1,\n        _ => 0,\n    }\n}\n\nfn main() {\n    let count = is_num(Token::Num(0)) + is_num(Token::Word(String::from("7"))) + is_num(Token::End);\n    println!("{}", count);\n}',
-          ['2', '3', '0', '1'],
-          3,
+          '1',
           'Only the Num value matches the first arm, whatever its payload; the Word holding "7" is still a Word.',
         ),
       ],
@@ -7298,25 +6777,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'found matches Some and binds n to 42; missing is None, so its block is skipped.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut total = 0;\n    let a = Some(5);\n    let b: Option<i32> = None;\n    if let Some(x) = a {\n        total += x;\n    }\n    if let Some(x) = b {\n        total += x;\n    }\n    total += 1;\n    println!("{}", total);\n}',
-          ['5', '1', '6', '11'],
-          2,
+          '6',
           'Only a matches Some, adding 5; the second block is skipped, and the last line adds 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Msg {\n    Ping,\n    Data(i32),\n}\n\nfn main() {\n    let m = Msg::Data(9);\n    if let Msg::Ping = m {\n        println!("ping");\n    }\n    if let Msg::Data(d) = m {\n        println!("data {}", d);\n    }\n}',
-          ['ping\ndata 9', 'data 9', 'ping', 'data 0'],
-          1,
+          'data 9',
           'm is Data(9), so only the second pattern matches, binding d to 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let v = Some(0);\n    if let Some(0) = v {\n        println!("zero");\n    }\n    if let Some(1) = v {\n        println!("one");\n    }\n    println!("end");\n}',
-          ['one\nend', 'zero\none\nend', 'zero\nend', 'end'],
-          2,
+          'zero\nend',
           'A literal inside the pattern must match too: Some(0) matches and Some(1) does not.',
         ),
         choose(
@@ -7358,30 +6834,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Without else the if let has no value when v is None, so it cannot be the i32 result.',
           'fn or_zero(v: Option<i32>) -> i32 {\n    if let Some(n) = v {\n        n\n    }\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn describe(v: Option<i32>) -> String {\n    if let Some(n) = v {\n        format!("{} items", n)\n    } else {\n        String::from("empty")\n    }\n}\n\nfn main() {\n    println!("{} / {}", describe(Some(3)), describe(None));\n}',
-          [
-            '3 items / empty',
-            '3 items / 0 items',
-            'Some(3) items / empty',
-            '3 items / None',
-          ],
-          0,
+          '3 items / empty',
           'Some(3) binds n to 3, and None takes the else branch.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Size {\n    Fixed(i32),\n    Auto,\n}\n\nfn px(s: Size) -> i32 {\n    if let Size::Fixed(n) = s {\n        n * 2\n    } else {\n        16\n    }\n}\n\nfn main() {\n    println!("{}", px(Size::Fixed(5)) + px(Size::Auto));\n}',
-          ['10', '26', '21', '16'],
-          1,
+          '26',
           'Fixed(5) gives 10, and Auto takes the else branch for 16.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn head_or(values: &[i32], fallback: i32) -> i32 {\n    if let Some(&x) = values.first() {\n        x\n    } else {\n        fallback\n    }\n}\n\nfn main() {\n    println!("{} {}", head_or(&[7, 1], 0), head_or(&[], -1));\n}',
-          ['7 0', '1 -1', '0 -1', '7 -1'],
-          3,
+          '7 -1',
           'The first slice starts with 7; the empty slice has no first element, so the fallback -1 is used.',
         ),
       ],
@@ -7400,25 +6868,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The three Some values add up to 4 - 1 + 10 = 13, and the None is skipped.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn count_missing(values: &[Option<i32>]) -> i32 {\n    let mut missing = 0;\n    for &v in values {\n        if let None = v {\n            missing += 1;\n        }\n    }\n    missing\n}\n\nfn main() {\n    println!("{}", count_missing(&[None, Some(0), None]));\n}',
-          ['1', '3', '2', '0'],
-          2,
+          '2',
           'The None pattern matches the first and third items; Some(0) is present, not missing.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn kind(v: Option<i32>) -> i32 {\n    if let Some(0) = v {\n        0\n    } else if let Some(n) = v {\n        n * 10\n    } else {\n        -1\n    }\n}\n\nfn main() {\n    println!("{} {} {}", kind(Some(0)), kind(Some(2)), kind(None));\n}',
-          ['0 20 -1', '0 2 -1', '0 20 0', '-1 20 -1'],
-          0,
+          '0 20 -1',
           'Some(0) hits the first pattern, Some(2) reaches else if let, and None falls to else.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let values = [Some(3), None, Some(8), None];\n    let mut last = 0;\n    for &v in &values {\n        if let Some(n) = v {\n            last = n;\n        }\n    }\n    println!("{}", last);\n}',
-          ['3', '0', '11', '8'],
-          3,
+          '8',
           'Each Some overwrites last and each None is skipped, so 8 remains at the end.',
         ),
         choose(
@@ -7450,25 +6915,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first call binds a to 3 and b to 9; the None call takes the other arm.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let (count, (x, y)) = (4, (10, -2));\n    println!("{} {}", x + y, count);\n}',
-          ['8 4', '12 4', '4 8', '10 -2'],
-          0,
+          '8 4',
           'The inner tuple binds x = 10 and y = -2, and count is 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn spread(range: Option<(i32, i32)>) -> Option<i32> {\n    match range {\n        Some((lo, hi)) => Some(hi - lo),\n        None => None,\n    }\n}\n\nfn main() {\n    println!("{:?} {:?}", spread(Some((2, 9))), spread(None));\n}',
-          ['7 None', 'Some(-7) None', 'Some(7) Some(0)', 'Some(7) None'],
-          3,
+          'Some(7) None',
           'lo is 2 and hi is 9, so the result is Some(7); None stays None.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn greet(p: Option<(String, i32)>) -> String {\n    match p {\n        Some((name, age)) => format!("{} is {}", name, age),\n        None => String::from("nobody"),\n    }\n}\n\nfn main() {\n    println!("{}", greet(Some((String::from("Mia"), 30))));\n}',
-          ['"Mia" is 30', 'Mia is 30', 'Some(Mia) is 30', 'nobody'],
-          1,
+          'Mia is 30',
           'The pattern unpacks both the Option and the tuple, binding the String and the number.',
         ),
         choose(
@@ -7493,18 +6955,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only the first position is bound; the two underscores match 6 and 7 without naming them.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let value = Some((8, 3));\n    let doubled = match value {\n        Some((_, b)) => b * 2,\n        None => 0,\n    };\n    println!("{}", doubled);\n}',
-          ['16', '11', '6', '0'],
-          2,
+          '6',
           '_ skips the 8, and b binds the 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let (first, ..) = (4, 5, 6, 7);\n    let (.., last) = (4, 5, 6, 7);\n    println!("{} {}", first, last);\n}',
-          ['4 7', '4 5', '7 4', '4 6'],
-          0,
+          '4 7',
           '.. skips every position it covers, leaving the first element in one pattern and the last in the other.',
         ),
         choose(
@@ -7518,11 +6978,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The tuple has three positions; _ fills the first and last, and b binds the middle one.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn score(p: Option<(String, i32)>) -> i32 {\n    match p {\n        Some((_, points)) => points,\n        None => -1,\n    }\n}\n\nfn main() {\n    println!("{} {}", score(Some((String::from("zed"), 12))), score(None));\n}',
-          ['zed -1', '12 -1', '12 0', '-1 12'],
-          1,
+          '12 -1',
           'The name is ignored with _ and points binds 12; None gives -1.',
         ),
       ],
@@ -7541,18 +7000,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Two present values are added, a single present value is passed through, and two Nones give None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn pick(a: Option<i32>, b: Option<i32>) -> i32 {\n    match (a, b) {\n        (Some(x), _) => x,\n        (None, Some(y)) => y * 10,\n        (None, None) => 0,\n    }\n}\n\nfn main() {\n    println!(\n        "{} {} {}",\n        pick(Some(1), Some(2)),\n        pick(None, Some(3)),\n        pick(None, None)\n    );\n}',
-          ['1 30 0', '2 30 0', '1 3 0', '20 30 0'],
-          0,
+          '1 30 0',
           'The first arm takes x whenever a is Some, ignoring b; otherwise b decides.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn status(code: (i32, Option<i32>)) -> i32 {\n    match code {\n        (0, _) => 0,\n        (_, None) => -1,\n        (c, Some(extra)) => c + extra,\n    }\n}\n\nfn main() {\n    println!(\n        "{} {} {}",\n        status((0, None)),\n        status((5, None)),\n        status((5, Some(2)))\n    );\n}',
-          ['-1 -1 7', '0 -1 7', '0 5 7', '0 -1 5'],
-          1,
+          '0 -1 7',
           '(0, None) hits the first arm before the None arm, (5, None) gives -1, and (5, Some(2)) adds up to 7.',
         ),
         choose(
@@ -7566,11 +7023,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The arms must cover every combination, including (None, Some(_)) and (None, None).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn larger(pair: (Option<i32>, Option<i32>)) -> i32 {\n    match pair {\n        (Some(a), Some(b)) if a > b => a,\n        (Some(_), Some(b)) => b,\n        _ => 0,\n    }\n}\n\nfn main() {\n    println!(\n        "{} {} {}",\n        larger((Some(9), Some(4))),\n        larger((Some(1), Some(6))),\n        larger((Some(3), None))\n    );\n}',
-          ['9 6 3', '9 1 0', '4 6 0', '9 6 0'],
-          3,
+          '9 6 0',
           'The guard picks a when it is larger, the next arm picks b, and any pair with a None falls to _.',
         ),
       ],
@@ -7589,25 +7045,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'A circle’s width is twice its radius; for a rectangle only the first payload is bound.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Shape {\n    Circle(i32),\n    Rect(i32, i32),\n}\n\nfn width(s: Option<Shape>) -> i32 {\n    match s {\n        Some(Shape::Circle(r)) => r * 2,\n        Some(Shape::Rect(w, _)) => w,\n        None => 0,\n    }\n}\n\nfn main() {\n    println!(\n        "{}",\n        width(Some(Shape::Circle(5))) + width(Some(Shape::Rect(4, 9))) + width(None)\n    );\n}',
-          ['19', '13', '9', '14'],
-          3,
+          '14',
           'Circle(5) gives 10, the Rect gives its width 4, and None gives 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Event {\n    Key(i32),\n    Click((i32, i32)),\n}\n\nfn x_pos(e: Event) -> i32 {\n    match e {\n        Event::Click((x, _)) => x,\n        Event::Key(_) => -1,\n    }\n}\n\nfn main() {\n    println!(\n        "{} {}",\n        x_pos(Event::Click((12, 30))),\n        x_pos(Event::Key(65))\n    );\n}',
-          ['30 -1', '12 65', '12 -1', '42 -1'],
-          2,
+          '12 -1',
           'The Click payload is a tuple; the pattern binds its first element and ignores the second.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Shape {\n    Circle(i32),\n    Rect(i32, i32),\n}\n\nfn total(order: Option<(Shape, i32)>) -> i32 {\n    match order {\n        Some((Shape::Rect(w, h), n)) => w * h * n,\n        Some((Shape::Circle(_), n)) => n,\n        None => 0,\n    }\n}\n\nfn main() {\n    println!(\n        "{} {}",\n        total(Some((Shape::Rect(2, 5), 3))),\n        total(Some((Shape::Circle(7), 4)))\n    );\n}',
-          ['10 4', '30 4', '30 7', '30 28'],
-          1,
+          '30 4',
           'The Rect arm multiplies 2 * 5 by the count 3; the Circle arm ignores the radius and returns the count.',
         ),
         choose(
@@ -7639,18 +7092,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each Option prints in Debug form; the text payload keeps its quotes inside Some.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a = Some(0);\n    let b: Option<i32> = None;\n    println!("{:?} {:?}", a, b);\n}',
-          ['0 None', 'None None', 'Some(0) None', 'Some(0) Some(None)'],
-          2,
+          'Some(0) None',
           'Some(0) holds a real zero, which is different from None.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let pair = Some((1, true));\n    println!("{:?}", pair);\n}',
-          ['Some(1, true)', 'Some((1, true))', '(1, true)', 'Some([1, true])'],
-          1,
+          'Some((1, true))',
           'The payload is a tuple, so its own parentheses appear inside Some( ).',
         ),
         choose(
@@ -7665,16 +7116,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Option has no {} form; {:?} would print Some(5).',
           'fn main() {\n    let x = Some(5);\n    println!("{}", x);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let names = [Some("a"), None];\n    println!("{:?}", names);\n}',
-          [
-            '[Some(a), None]',
-            '["a", None]',
-            '[Some("a")]',
-            '[Some("a"), None]',
-          ],
-          3,
+          '[Some("a"), None]',
           'Each element prints in Debug form, and the string keeps its quotes inside Some.',
         ),
       ],
@@ -7693,23 +7138,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The non-empty slice has a last element, 15. The empty slice has none, so the function returns None instead of inventing a number.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn second(values: &[i32]) -> Option<i32> {\n    if values.len() >= 2 {\n        Some(values[1])\n    } else {\n        None\n    }\n}\n\nfn main() {\n    println!(\n        "{:?} {:?} {:?}",\n        second(&[9, 4, 1]),\n        second(&[9]),\n        second(&[])\n    );\n}',
-          [
-            'Some(9) None None',
-            'Some(4) None None',
-            'Some(4) Some(9) None',
-            '4 None None',
-          ],
-          1,
+          'Some(4) None None',
           'Only the first slice has a second element; the shorter slices return None.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn remaining(have: i32, need: i32) -> Option<i32> {\n    if need > have {\n        None\n    } else {\n        Some(have - need)\n    }\n}\n\nfn main() {\n    println!("{:?} {:?}", remaining(5, 5), remaining(2, 7));\n}',
-          ['None None', 'Some(0) Some(-5)', '0 None', 'Some(0) None'],
-          3,
+          'Some(0) None',
           '5 - 5 is a real answer, Some(0); needing 7 when you have 2 has no answer, so None.',
         ),
         choose(
@@ -7751,30 +7189,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'first and last find 70 and 92; the empty slice has neither, so first returns None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let words = ["red", "green", "blue"];\n    println!("{:?}", words.last());\n}',
-          ['Some(blue)', '"blue"', 'Some("red")', 'Some("blue")'],
-          3,
+          'Some("blue")',
           'last gives Some with the final element, and Debug keeps the string’s quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let v = [5];\n    println!("{:?} {:?}", v.first(), v.last());\n}',
-          ['Some(5) None', 'Some(5) Some(5)', '5 5', 'None Some(5)'],
-          1,
+          'Some(5) Some(5)',
           'With one element, that element is both the first and the last.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let data = [1, 2, 3, 4];\n    println!("{:?} {:?}", data[2..].first(), data[..0].last());\n}',
-          [
-            'Some(2) None',
-            'Some(3) Some(4)',
-            'Some(3) None',
-            'Some(3) Some(0)',
-          ],
-          2,
+          'Some(3) None',
           'data[2..] starts at 3, and data[..0] is empty, so its last is None.',
         ),
         choose(
@@ -7804,18 +7234,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Some(3) runs the first arm with n = 3; None runs the second arm.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn doubled_or(v: Option<i32>) -> i32 {\n    match v {\n        Some(n) => n * 2,\n        None => -1,\n    }\n}\n\nfn main() {\n    println!("{} {}", doubled_or(Some(0)), doubled_or(None));\n}',
-          ['-1 -1', '0 -1', '2 -1', '0 0'],
-          1,
+          '0 -1',
           'Some(0) is present, so its arm doubles 0; only None gives -1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn opening(values: &[i32]) -> String {\n    match values.first() {\n        Some(x) => format!("starts with {}", x),\n        None => String::from("empty"),\n    }\n}\n\nfn main() {\n    println!("{}", opening(&[8, 3]));\n}',
-          ['starts with Some(8)', 'starts with 3', 'starts with 8', 'empty'],
-          2,
+          'starts with 8',
           'The Some arm binds x to the first element, which {} prints as 8.',
         ),
         choose(
@@ -7830,11 +7258,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'A match on an Option must cover both Some and None.',
           'fn value(v: Option<i32>) -> i32 {\n    match v {\n        Some(n) => n,\n    }\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn ends(values: &[i32]) -> i32 {\n    let a = match values.first() {\n        Some(&x) => x,\n        None => 0,\n    };\n    let b = match values.last() {\n        Some(&x) => x,\n        None => 0,\n    };\n    a + b\n}\n\nfn main() {\n    println!("{} {} {}", ends(&[2, 9, 4]), ends(&[7]), ends(&[]));\n}',
-          ['6 7 0', '15 14 0', '6 0 0', '6 14 0'],
-          3,
+          '6 14 0',
           'A one-element slice has the same first and last element, so 7 + 7; the empty slice gives 0 + 0.',
         ),
       ],
@@ -7855,18 +7282,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'square runs on the 4 inside a, giving Some(16); b has no value, so it stays None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn add_ten(n: i32) -> i32 {\n    n + 10\n}\n\nfn main() {\n    println!("{:?}", Some(-3).map(add_ten));\n}',
-          ['7', 'Some(-13)', 'Some(7)', 'Some(Some(7))'],
-          2,
+          'Some(7)',
           'add_ten receives -3 and returns 7, which map wraps in Some.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn add_ten(n: i32) -> i32 {\n    n + 10\n}\n\nfn main() {\n    let missing: Option<i32> = None;\n    println!("{:?}", missing.map(add_ten));\n}',
-          ['Some(10)', 'None', '10', 'Some(None)'],
-          1,
+          'None',
           'There is no value to transform, so map returns None.',
         ),
         choose(
@@ -7880,11 +7305,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'map wants the function itself, named without parentheses.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn inc(n: i32) -> i32 {\n    n + 1\n}\n\nfn triple(n: i32) -> i32 {\n    n * 3\n}\n\nfn main() {\n    println!("{:?}", Some(2).map(inc).map(triple));\n}',
-          ['Some(9)', 'Some(7)', 'Some(6)', 'Some(3)'],
-          0,
+          'Some(9)',
           'inc runs first and gives 3, then triple gives 9.',
         ),
       ],
@@ -7903,23 +7327,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'announce runs only once, for the Some(5); mapping the None prints nothing and gives None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn log(n: i32) -> i32 {\n    println!("log {}", n);\n    n\n}\n\nfn main() {\n    let x: Option<i32> = None;\n    let y = x.map(log).map(log);\n    println!("{:?}", y);\n}',
-          ['None', 'log 0\nNone', 'log 0\nlog 0\nNone', 'Some(0)'],
-          0,
+          'None',
           'Neither map has a value to pass on, so log never runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn log(n: i32) -> i32 {\n    println!("log {}", n);\n    n\n}\n\nfn main() {\n    let y = Some(2).map(log).map(log);\n    println!("{:?}", y);\n}',
-          [
-            'log 2\nSome(2)',
-            'Some(2)',
-            'Some(2)\nlog 2\nlog 2',
-            'log 2\nlog 2\nSome(2)',
-          ],
-          3,
+          'log 2\nlog 2\nSome(2)',
           'Each map calls log once with 2 before the last line prints the Option.',
         ),
         choose(
@@ -7933,16 +7350,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'map wraps the function’s result in Some and passes None through without a call.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn bump(n: i32) -> i32 {\n    println!("run");\n    n + 1\n}\n\nfn main() {\n    let a = Some(3);\n    let b: Option<i32> = None;\n    let r = a.map(bump);\n    let s = b.map(bump);\n    println!("{:?}", (r, s));\n}',
-          [
-            'run\n(Some(4), None)',
-            'run\nrun\n(Some(4), None)',
-            '(Some(4), None)',
-            'run\n(Some(4), Some(1))',
-          ],
-          0,
+          'run\n(Some(4), None)',
           'bump runs only for a; b stays None without a call.',
         ),
       ],
@@ -7961,30 +7372,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'describe turns the &i32 into a String, so the result is an Option<String>; the empty slice gives None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn is_big(n: i32) -> bool {\n    n > 100\n}\n\nfn main() {\n    println!("{:?} {:?}", Some(250).map(is_big), Some(5).map(is_big));\n}',
-          [
-            'true false',
-            'Some(250) None',
-            'Some(true) Some(false)',
-            'Some(true) None',
-          ],
-          2,
+          'Some(true) Some(false)',
           'map wraps each bool in Some; a false result is still a present value.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn with_square(n: i32) -> (i32, i32) {\n    (n, n * n)\n}\n\nfn main() {\n    println!("{:?}", Some(3).map(with_square));\n}',
-          ['Some(3, 9)', 'Some((9, 3))', '(3, 9)', 'Some((3, 9))'],
-          3,
+          'Some((3, 9))',
           'The function returns a tuple, so map produces a Some holding that tuple.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn plus_one(n: &i32) -> i32 {\n    n + 1\n}\n\nfn main() {\n    let v = [10, 20, 30];\n    println!("{:?}", v.last().map(plus_one));\n}',
-          ['Some(11)', 'Some(31)', 'Some(30)', '31'],
-          1,
+          'Some(31)',
           'last gives a reference to 30, and plus_one returns 31 inside Some.',
         ),
         choose(
@@ -8014,23 +7417,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first price 3 becomes 300 and then the String "300 cents"; the empty slice stays None through both maps.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn negate(n: &i32) -> i32 {\n    -n\n}\n\nfn is_positive(n: i32) -> bool {\n    n > 0\n}\n\nfn main() {\n    let values = [4, -2];\n    println!("{:?}", values.last().map(negate).map(is_positive));\n}',
-          ['Some(false)', 'Some(true)', 'Some(2)', 'None'],
-          1,
+          'Some(true)',
           'The last value, -2, is negated to 2, which is positive.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn positive(n: i32) -> Option<i32> {\n    if n > 0 {\n        Some(n)\n    } else {\n        None\n    }\n}\n\nfn main() {\n    println!("{:?} {:?}", Some(3).map(positive), Some(-3).map(positive));\n}',
-          [
-            'Some(3) None',
-            'Some(3) Some(None)',
-            'Some(Some(3)) None',
-            'Some(Some(3)) Some(None)',
-          ],
-          3,
+          'Some(Some(3)) Some(None)',
           'map wraps the Option that positive returns in another Some, so the results are nested.',
         ),
         choose(
@@ -8044,16 +7440,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The first map returns None without calling f, and the second does the same for g.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn cents(n: &i32) -> i32 {\n    n * 100\n}\n\nfn tag(c: i32) -> String {\n    format!("{}c", c)\n}\n\nfn main() {\n    let prices = [7, 2];\n    let empty: &[i32] = &[];\n    println!(\n        "{:?} {:?}",\n        prices.last().map(cents).map(tag),\n        empty.last().map(cents).map(tag)\n    );\n}',
-          [
-            'Some("200c") None',
-            'Some("700c") None',
-            'Some(200c) None',
-            'Some("200c") Some("0c")',
-          ],
-          0,
+          'Some("200c") None',
           'last picks 2, which becomes 200 and then the String "200c"; the empty slice stays None.',
         ),
       ],
@@ -8074,23 +7464,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'map wraps the Option that positive returns; and_then hands it back as it is, so -2 ends as plain None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn share(n: i32) -> Option<i32> {\n    let total: i32 = 100;\n    total.checked_div(n)\n}\n\nfn main() {\n    println!(\n        "{:?} {:?}",\n        Some(4).and_then(share),\n        Some(0).and_then(share)\n    );\n}',
-          [
-            'Some(25) Some(0)',
-            'Some(Some(25)) None',
-            'Some(25) None',
-            '25 None',
-          ],
-          2,
+          'Some(25) None',
           'and_then returns share’s own result: Some(25), or None for a division by zero.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn positive(n: i32) -> Option<i32> {\n    if n > 0 {\n        Some(n)\n    } else {\n        None\n    }\n}\n\nfn main() {\n    let x = Some(-1);\n    println!("{:?} {:?}", x.and_then(positive), x.map(positive));\n}',
-          ['None None', 'None Some(None)', 'Some(None) None', 'Some(-1) None'],
-          1,
+          'None Some(None)',
           'and_then returns positive’s None as it is; map wraps it, giving Some(None).',
         ),
         choose(
@@ -8104,11 +7487,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'and_then flattens the result by returning the step’s Option directly.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn double_small(n: i32) -> Option<i32> {\n    if n <= 10 {\n        Some(n * 2)\n    } else {\n        None\n    }\n}\n\nfn main() {\n    println!(\n        "{:?} {:?}",\n        Some(10).and_then(double_small),\n        Some(11).and_then(double_small)\n    );\n}',
-          ['Some(20) None', 'Some(20) Some(22)', 'Some(10) None', 'None None'],
-          0,
+          'Some(20) None',
           '10 passes the check and doubles to 20; 11 fails it, so the result is None.',
         ),
       ],
@@ -8127,23 +7509,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '12 split 4 ways is Some(3); with 0 people, checked_div returns None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn divide_pair(pair: (i32, i32)) -> Option<i32> {\n    pair.0.checked_div(pair.1)\n}\n\nfn per_person(total: Option<i32>, people: i32) -> Option<i32> {\n    let pair = match total {\n        Some(t) => Some((t, people)),\n        None => None,\n    };\n    pair.and_then(divide_pair)\n}\n\nfn main() {\n    println!("{:?} {:?}", per_person(None, 3), per_person(Some(-12), 4));\n}',
-          ['Some(0) Some(-3)', 'None Some(3)', 'None None', 'None Some(-3)'],
-          3,
+          'None Some(-3)',
           'A missing total stays None, and -12 divided by 4 is -3.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn split(pair: (i32, i32)) -> Option<i32> {\n    pair.0.checked_div(pair.1)\n}\n\nfn main() {\n    println!("{:?}", Some((20, 5)).and_then(split));\n    println!("{:?}", Some((20, 0)).and_then(split));\n}',
-          [
-            'Some(4)\nSome(0)',
-            '4\nNone',
-            'Some(4)\nNone',
-            'Some(4)\nSome(None)',
-          ],
-          2,
+          'Some(4)\nNone',
           'Both inputs are Some, so split runs each time; dividing by zero gives None instead of a panic.',
         ),
         choose(
@@ -8157,16 +7532,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'The Some payload is the only argument, so both numbers must travel together inside it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn divide_pair(pair: (i32, i32)) -> Option<i32> {\n    pair.0.checked_div(pair.1)\n}\n\nfn main() {\n    let input = Some((9, 0));\n    println!(\n        "{:?} {:?}",\n        input.map(divide_pair),\n        input.and_then(divide_pair)\n    );\n}',
-          [
-            'None None',
-            'Some(None) None',
-            'Some(0) None',
-            'Some(None) Some(None)',
-          ],
-          1,
+          'Some(None) None',
           'map wraps the None from checked_div in Some; and_then returns it directly.',
         ),
       ],
@@ -8185,28 +7554,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '30 passes both checks and doubles to 60; -4 fails the first check, so the rest of the chain is skipped.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn non_negative(n: i32) -> Option<i32> {\n    if n >= 0 {\n        Some(n)\n    } else {\n        None\n    }\n}\n\nfn below_hundred(n: i32) -> Option<i32> {\n    if n < 100 {\n        Some(n)\n    } else {\n        None\n    }\n}\n\nfn doubled(n: i32) -> i32 {\n    n * 2\n}\n\nfn check(n: i32) -> Option<i32> {\n    Some(n)\n        .and_then(non_negative)\n        .and_then(below_hundred)\n        .map(doubled)\n}\n\nfn main() {\n    println!("{:?} {:?}", check(150), check(0));\n}',
-          [
-            'Some(300) Some(0)',
-            'None Some(0)',
-            'None None',
-            'Some(150) Some(0)',
-          ],
-          1,
+          'None Some(0)',
           '150 fails below_hundred; 0 passes both checks and doubles to 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn step(n: i32) -> Option<i32> {\n    println!("step {}", n);\n    if n > 0 {\n        Some(n - 1)\n    } else {\n        None\n    }\n}\n\nfn main() {\n    println!("{:?}", Some(1).and_then(step).and_then(step).and_then(step));\n}',
-          [
-            'step 1\nstep 0\nstep -1\nNone',
-            'step 1\nNone',
-            'step 1\nstep 0\nSome(0)',
-            'step 1\nstep 0\nNone',
-          ],
-          3,
+          'step 1\nstep 0\nNone',
           'step(1) returns Some(0), step(0) returns None, and the third and_then never calls step.',
         ),
         choose(
@@ -8215,11 +7572,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Once f returns None, map and the second and_then pass None along without calling g or h.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'enum Token {\n    Num(i32),\n    Word,\n}\n\nfn as_num(t: Token) -> Option<i32> {\n    match t {\n        Token::Num(n) => Some(n),\n        Token::Word => None,\n    }\n}\n\nfn below_hundred(n: i32) -> Option<i32> {\n    if n < 100 {\n        Some(n)\n    } else {\n        None\n    }\n}\n\nfn main() {\n    let a = Some(Token::Num(8)).and_then(as_num).and_then(below_hundred);\n    let b = Some(Token::Word).and_then(as_num).and_then(below_hundred);\n    println!("{:?} {:?}", a, b);\n}',
-          ['Some(8) None', 'Some(Num(8)) None', 'Some(8) Some(Word)', '8 None'],
-          0,
+          'Some(8) None',
           'as_num turns a Num into Some(8), which passes the check; a Word becomes None and stops the chain.',
         ),
       ],
@@ -8240,30 +7596,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The Ok moves outside the Some, the error is kept as the error, and the None becomes a successful None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let x: Option<Result<i32, &str>> = Some(Ok(0));\n    println!("{:?}", x.transpose());\n}',
-          ['Some(Ok(0))', 'Ok(0)', 'Ok(None)', 'Ok(Some(0))'],
-          3,
+          'Ok(Some(0))',
           'The Ok moves to the outside and the Some to the inside; the 0 is still present.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let x: Option<Result<bool, &str>> = None;\n    println!("{:?}", x.transpose());\n}',
-          ['None', 'Err(None)', 'Ok(None)', 'Ok(Some(false))'],
-          2,
+          'Ok(None)',
           'An absent value becomes a successful Result holding None.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let x: Option<Result<i32, &str>> = Some(Err("empty"));\n    println!("{:?}", x.transpose());\n}',
-          [
-            'Err("empty")',
-            'Some(Err("empty"))',
-            'Err(Some("empty"))',
-            'Ok(None)',
-          ],
-          0,
+          'Err("empty")',
           'An error that is present is kept as the error of the outer Result.',
         ),
         choose(
@@ -8293,23 +7641,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '"41" parses, the missing text stays a successful None, and "4x1" keeps its parse error.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn optional_age(text: Option<&str>) -> Result<Option<i32>, std::num::ParseIntError> {\n    text.map(str::parse::<i32>).transpose()\n}\n\nfn main() {\n    println!("{:?}", optional_age(Some("-7")));\n}',
-          ['Some(Ok(-7))', 'Ok(Some(-7))', 'Ok(Some(7))', 'Ok(-7)'],
-          1,
+          'Ok(Some(-7))',
           'The text parses to -7, and transpose puts the Ok outside the Some.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn read(text: Option<&str>) -> Result<Option<i32>, std::num::ParseIntError> {\n    text.map(str::parse::<i32>).transpose()\n}\n\nfn report(text: Option<&str>) -> String {\n    match read(text) {\n        Ok(v) => format!("ok {:?}", v),\n        Err(_) => String::from("parse error"),\n    }\n}\n\nfn main() {\n    println!("{}", report(Some("12a")));\n    println!("{}", report(None));\n}',
-          [
-            'ok None\nok None',
-            'parse error\nparse error',
-            'parse error\nok None',
-            'ok Some(12)\nok None',
-          ],
-          2,
+          'parse error\nok None',
           '"12a" is not a number, so its error is kept; missing text is a successful None.',
         ),
         choose(
@@ -8323,16 +7664,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'Ok(None) means absent, Ok(Some(n)) means present and valid, and Err means malformed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn read_level(text: Option<&str>) -> Result<Option<u8>, std::num::ParseIntError> {\n    text.map(str::parse::<u8>).transpose()\n}\n\nfn main() {\n    println!("{:?} {:?}", read_level(Some("255")), read_level(None));\n}',
-          [
-            'Ok(Some(255)) Ok(None)',
-            'Ok(Some(255)) None',
-            'Some(Ok(255)) None',
-            'Ok(Some(255)) Err(None)',
-          ],
-          0,
+          'Ok(Some(255)) Ok(None)',
           '255 fits in a u8, and a missing level is Ok(None).',
         ),
       ],
@@ -8351,23 +7686,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'With a tip, extra is Some(6) and the total is 46; without one, extra is None and counts as 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn total_with_tip(bill: &str, tip: Option<&str>) -> Result<i32, std::num::ParseIntError> {\n    let base = bill.parse::<i32>()?;\n    let extra = tip.map(str::parse::<i32>).transpose()?;\n    let added = match extra {\n        Some(t) => t,\n        None => 0,\n    };\n    Ok(base + added)\n}\n\nfn main() {\n    match total_with_tip("40", Some("six")) {\n        Ok(n) => println!("{}", n),\n        Err(_) => println!("rejected"),\n    }\n}',
-          ['40', '46', 'rejected', '0'],
-          2,
+          'rejected',
           '"six" fails to parse, and ? returns that error before any total is built.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn double(n: i32) -> i32 {\n    n * 2\n}\n\nfn doubled(text: Option<&str>) -> Result<Option<i32>, std::num::ParseIntError> {\n    let n = text.map(str::parse::<i32>).transpose()?;\n    Ok(n.map(double))\n}\n\nfn main() {\n    println!("{:?} {:?}", doubled(Some("21")), doubled(None));\n}',
-          [
-            'Ok(Some(21)) Ok(None)',
-            'Ok(Some(42)) Ok(None)',
-            'Some(42) None',
-            'Ok(Some(42)) Ok(Some(0))',
-          ],
-          1,
+          'Ok(Some(42)) Ok(None)',
           'After ?, n is Some(21) or None; map doubles a present value and leaves None alone.',
         ),
         choose(
@@ -8381,16 +7709,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'transpose gives Result<Option<i32>, ParseIntError>, and ? removes the Result layer.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn read(text: Option<&str>) -> Result<i32, std::num::ParseIntError> {\n    let n = text.map(str::parse::<i32>).transpose()?;\n    match n {\n        Some(v) => Ok(v),\n        None => Ok(0),\n    }\n}\n\nfn main() {\n    println!("{:?} {:?}", read(None), read(Some("5")));\n}',
-          [
-            'Ok(0) Ok(5)',
-            'Err(None) Ok(5)',
-            'Ok(None) Ok(Some(5))',
-            'None Ok(5)',
-          ],
-          0,
+          'Ok(0) Ok(5)',
           'None transposes to Ok(None), so ? continues with n = None and the match returns Ok(0).',
         ),
       ],
@@ -8411,23 +7733,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '10 is even, so half returns Ok holding 5. 7 is odd, so half returns Err holding a message instead of inventing a number.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn checked_age(age: i32) -> Result<i32, &\'static str> {\n    if age < 0 {\n        Err("negative age")\n    } else if age > 150 {\n        Err("too large")\n    } else {\n        Ok(age)\n    }\n}\n\nfn main() {\n    println!("{:?}", checked_age(200));\n}',
-          [
-            'Ok(200)',
-            'Err(too large)',
-            'Err("too large")',
-            'Err("negative age")',
-          ],
-          2,
+          'Err("too large")',
           '200 is not negative but it is above 150, so the second branch returns Err with that message, which {:?} prints in quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn ratio(a: f64, b: f64) -> Result<f64, &\'static str> {\n    if b == 0.0 {\n        Err("division by zero")\n    } else {\n        Ok(a / b)\n    }\n}\n\nfn main() {\n    println!("{:?}", ratio(6.0, 3.0));\n}',
-          ['Ok(2)', 'Ok(2.0)', '2.0', 'Err("division by zero")'],
-          1,
+          'Ok(2.0)',
           'The divisor is not zero, so the result is Ok holding 6.0 / 3.0. Debug output of an f64 always shows the decimal point.',
         ),
         choose(
@@ -8436,11 +7751,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'The first type is the Ok payload and the second is the Err payload, so Ok must hold a u32 and Err a string. A u32 cannot be negative.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn label(code: i32) -> Result<&\'static str, String> {\n    if code == 200 {\n        Ok("fine")\n    } else {\n        Err(format!("code {}", code))\n    }\n}\n\nfn main() {\n    println!("{:?}", label(404));\n}',
-          ['Err("code 404")', 'Err(code 404)', 'Ok("fine")', 'Err("code {}")'],
-          0,
+          'Err("code 404")',
           'format! fills {} with 404, and the String payload prints with quotes inside Err.',
         ),
       ],
@@ -8459,18 +7773,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '80 is more than the balance of 50, so withdraw returns Err. The Err arm binds the message to reason and prints it with {}, without quotes.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn seats_left(capacity: i32, booked: i32) -> Result<i32, &\'static str> {\n    if booked > capacity {\n        Err("overbooked")\n    } else {\n        Ok(capacity - booked)\n    }\n}\n\nfn main() {\n    match seats_left(30, 12) {\n        Ok(n) => println!("{} seats", n),\n        Err(e) => println!("error: {}", e),\n    }\n}',
-          ['Ok(18) seats', '18 seats', 'error: overbooked', '42 seats'],
-          1,
+          '18 seats',
           '12 is not above 30, so the result is Ok(18). The Ok arm binds 18 to n and prints it without the Ok wrapper.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn level(score: i32) -> Result<i32, &\'static str> {\n    if score < 0 {\n        Err("bad score")\n    } else {\n        Ok(score / 10)\n    }\n}\n\nfn main() {\n    let shown = match level(-25) {\n        Ok(n) => n,\n        Err(_) => 0,\n    };\n    println!("{}", shown);\n}',
-          ['-2', '-3', '0', 'bad score'],
-          2,
+          '0',
           'level returns Err for a negative score, so the match takes the Err(_) arm, which produces 0. The message is ignored.',
         ),
         choose(
@@ -8485,11 +7797,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'match must cover every variant of Result. Without an Err arm the compiler rejects the program, even though this particular value is Ok.',
           'fn main() {\n    let result: Result<i32, &str> = Ok(3);\n    match result {\n        Ok(n) => println!("{}", n),\n    }\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn pick(index: usize) -> Result<&\'static str, usize> {\n    let names = ["ann", "bo", "cy"];\n    if index < names.len() {\n        Ok(names[index])\n    } else {\n        Err(index)\n    }\n}\n\nfn main() {\n    match pick(3) {\n        Ok(name) => println!("found {}", name),\n        Err(i) => println!("no item at {}", i),\n    }\n}',
-          ['no item at 3', 'found cy', 'Err(3)', 'no item at Err(3)'],
-          0,
+          'no item at 3',
           'The array has indexes 0 to 2, so 3 is not below names.len() and pick returns Err(3). The Err arm binds the plain number and prints it.',
         ),
       ],
@@ -8519,16 +7830,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Err is a separate variant, so no real position can be confused with failure, and the caller must handle it. Err does not stop the program.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn discount(price: i32, percent: i32) -> Result<i32, &\'static str> {\n    if percent < 0 || percent > 100 {\n        Err("percent out of range")\n    } else {\n        Ok(price - price * percent / 100)\n    }\n}\n\nfn main() {\n    println!("{:?}", discount(80, 100));\n    println!("{:?}", discount(80, 120));\n}',
-          [
-            'Ok(0)\nOk(-16)',
-            'Ok(80)\nErr("percent out of range")',
-            'Ok(0)\nErr("percent out of range")',
-            'Err("percent out of range")\nErr("percent out of range")',
-          ],
-          2,
+          'Ok(0)\nErr("percent out of range")',
           '100 is inside the allowed range, so the first call computes 80 - 80 = 0. 120 is out of range, so the second returns Err instead of a negative price.',
         ),
         choose(
@@ -8537,16 +7842,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'No integer squared gives -9. Any Ok value would be an invented answer, so the function should return Err and say why.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn temperature(reading: i32) -> Result<i32, String> {\n    if reading < -90 {\n        Err(format!("sensor fault: {}", reading))\n    } else {\n        Ok(reading)\n    }\n}\n\nfn main() {\n    match temperature(-120) {\n        Ok(t) => println!("{} degrees", t),\n        Err(message) => println!("{}", message),\n    }\n}',
-          [
-            'sensor fault: -120',
-            'Err("sensor fault: -120")',
-            '-120 degrees',
-            '"sensor fault: -120"',
-          ],
-          0,
+          'sensor fault: -120',
           '-120 is below -90, so temperature returns Err with a formatted message. The Err arm prints that String with {}, so no quotes appear.',
         ),
       ],
@@ -8567,23 +7866,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'good holds 4, so map calls square(4) and wraps 16 in Ok. bad is Err, so map hands back the same Err without calling square.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn add_tax(cents: i32) -> i32 {\n    cents + cents / 10\n}\n\nfn main() {\n    let price: Result<i32, &str> = Ok(250);\n    println!("{:?}", price.map(add_tax));\n}',
-          ['275', 'Ok(250)', 'Ok(25)', 'Ok(275)'],
-          3,
+          'Ok(275)',
           'map calls add_tax(250), which adds 250 / 10 = 25, and wraps the result in Ok.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn negate(n: i32) -> i32 {\n    -n\n}\n\nfn main() {\n    let value: Result<i32, &str> = Err("sensor offline");\n    println!("{:?}", value.map(negate));\n}',
-          [
-            'Ok(0)',
-            'Err("sensor offline")',
-            'Ok("sensor offline")',
-            'sensor offline',
-          ],
-          1,
+          'Err("sensor offline")',
           'The value is Err, so map returns it unchanged and negate is never called.',
         ),
         choose(
@@ -8598,16 +7890,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'map needs the function itself, written double. double() tries to call it right away with no argument, which does not compile.',
           'fn double(n: i32) -> i32 {\n    n * 2\n}\n\nfn main() {\n    let r: Result<i32, &str> = Ok(5);\n    println!("{:?}", r.map(double()));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn report(n: i32) -> i32 {\n    println!("mapping {}", n);\n    n + 1\n}\n\nfn main() {\n    let first: Result<i32, &str> = Ok(1);\n    let second: Result<i32, &str> = Err("skip");\n    let a = first.map(report);\n    let b = second.map(report);\n    println!("{:?} {:?}", a, b);\n}',
-          [
-            'Ok(2) Err("skip")',
-            'mapping 1\nOk(2) Err("skip")',
-            'mapping 1\nmapping skip\nOk(2) Err("skip")',
-            'mapping 1\nOk(1) Err("skip")',
-          ],
-          1,
+          'mapping 1\nOk(2) Err("skip")',
           'map calls report only for the Ok value, so mapping 1 is printed once and a becomes Ok(2). The Err passes through unchanged.',
         ),
       ],
@@ -8626,11 +7912,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'is_adult turns the u32 15 into the bool false, so the Ok payload changes type from u32 to bool, as the annotation on checked says. The error type is still &str.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn describe(n: i32) -> String {\n    format!("{} items", n)\n}\n\nfn main() {\n    let count: Result<i32, &str> = Ok(3);\n    println!("{:?}", count.map(describe));\n}',
-          ['Ok(3 items)', 'Ok(3)', '"3 items"', 'Ok("3 items")'],
-          3,
+          'Ok("3 items")',
           'describe turns 3 into a String, so map produces Ok holding that String, and Debug output shows it in quotes.',
         ),
         choose(
@@ -8644,11 +7929,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'map replaces the Ok type with what to_float returns and leaves the String error type alone.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn halve(n: i32) -> f64 {\n    n as f64 / 2.0\n}\n\nfn main() {\n    let r: Result<i32, &str> = Ok(7);\n    println!("{:?}", r.map(halve));\n}',
-          ['Ok(3)', 'Ok(4)', 'Ok(7)', 'Ok(3.5)'],
-          3,
+          'Ok(3.5)',
           'halve converts 7 to f64 before dividing, so it returns 3.5, and map wraps it in Ok.',
         ),
         choose(
@@ -8679,23 +7963,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'checked_width(3) is Ok(3); area makes 9 and add_border makes 13. checked_width(0) is Err, so neither area nor add_border runs.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn double(n: i32) -> i32 {\n    n * 2\n}\n\nfn plus_one(n: i32) -> i32 {\n    n + 1\n}\n\nfn main() {\n    let r: Result<i32, &str> = Ok(5);\n    println!("{:?}", r.map(plus_one).map(double));\n}',
-          ['Ok(12)', 'Ok(11)', 'Ok(6)', 'Ok(10)'],
-          0,
+          'Ok(12)',
           'The maps run left to right: plus_one turns 5 into 6, then double turns 6 into 12.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn validate(n: i32) -> Result<i32, &\'static str> {\n    if n > 100 {\n        Err("too big")\n    } else {\n        Ok(n)\n    }\n}\n\nfn triple(n: i32) -> i32 {\n    n * 3\n}\n\nfn main() {\n    println!("{:?}", validate(40).map(triple));\n    println!("{:?}", validate(400).map(triple));\n}',
-          [
-            'Ok(120)\nOk(1200)',
-            'Ok(40)\nErr("too big")',
-            'Ok(120)\nErr(1200)',
-            'Ok(120)\nErr("too big")',
-          ],
-          3,
+          'Ok(120)\nErr("too big")',
           '40 passes validation and triple makes 120. 400 fails, so its Err passes through map and triple is not called.',
         ),
         choose(
@@ -8704,16 +7981,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Each map returns the Err unchanged without calling its function, so the error flows through all three calls.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn parse_flag(n: i32) -> Result<i32, String> {\n    if n == 0 || n == 1 {\n        Ok(n)\n    } else {\n        Err(format!("{} is not a flag", n))\n    }\n}\n\nfn to_bool(n: i32) -> bool {\n    n == 1\n}\n\nfn main() {\n    println!("{:?}", parse_flag(1).map(to_bool));\n    println!("{:?}", parse_flag(2).map(to_bool));\n}',
-          [
-            'Ok(1)\nErr("2 is not a flag")',
-            'Ok(true)\nErr("2 is not a flag")',
-            'Ok(true)\nOk(false)',
-            'true\n2 is not a flag',
-          ],
-          1,
+          'Ok(true)\nErr("2 is not a flag")',
           'parse_flag(1) is Ok(1), and to_bool turns it into true. parse_flag(2) is Err, so map leaves its message as it is.',
         ),
       ],
@@ -8733,23 +8004,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'failed is Err, so map_err calls shout and wraps its String in Err. fine is Ok, so map_err returns Ok(9) untouched.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn with_prefix(e: &str) -> String {\n    format!("config: {}", e)\n}\n\nfn main() {\n    let r: Result<u32, &str> = Err("missing key");\n    println!("{:?}", r.map_err(with_prefix));\n}',
-          [
-            'Err("missing key")',
-            'Ok("config: missing key")',
-            'Err("config: missing key")',
-            'Err(config: missing key)',
-          ],
-          2,
+          'Err("config: missing key")',
           'The value is Err, so map_err passes "missing key" to with_prefix and wraps the new String in Err.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn code_for(e: &str) -> i32 {\n    println!("translating {}", e);\n    500\n}\n\nfn main() {\n    let r: Result<&str, &str> = Ok("page");\n    println!("{:?}", r.map_err(code_for));\n}',
-          ['translating page\nOk("page")', 'Err(500)', 'Ok("page")', 'Ok(500)'],
-          2,
+          'Ok("page")',
           'The value is Ok, so map_err returns it unchanged and never calls code_for; nothing else is printed.',
         ),
         choose(
@@ -8809,23 +8073,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only the error types differ, so the Err payload must be converted. map_err(owned) turns the &str error into a String and keeps the i32.',
           'fn checked(n: i32) -> Result<i32, &\'static str> {\n    if n < 0 {\n        Err("negative")\n    } else {\n        Ok(n)\n    }\n}\n\nfn owned(e: &str) -> String {\n    String::from(e)\n}\n\nfn run(n: i32) -> Result<i32, String> {\n    checked(n)\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn as_text(e: i32) -> String {\n    format!("error #{}", e)\n}\n\nfn main() {\n    let r: Result<i32, i32> = Err(7);\n    let s: Result<i32, i32> = Ok(7);\n    println!("{:?}", r.map_err(as_text));\n    println!("{:?}", s.map_err(as_text));\n}',
-          [
-            'Err(7)\nOk(7)',
-            'Err("error #7")\nOk("error #7")',
-            'Err("error #7")\nOk(7)',
-            'Err("error #7")\nErr("error #7")',
-          ],
-          2,
+          'Err("error #7")\nOk(7)',
           'r is Err(7), so as_text turns it into a String. s is Ok(7), which map_err leaves alone even though it holds the same number.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn length(e: &str) -> usize {\n    e.len()\n}\n\nfn main() {\n    let r: Result<bool, &str> = Err("timeout");\n    println!("{:?}", r.map_err(length));\n}',
-          ['Err("timeout")', 'Ok(7)', 'Err(8)', 'Err(7)'],
-          3,
+          'Err(7)',
           'length returns the number of bytes in "timeout", which is 7, so the error becomes the usize 7 inside Err.',
         ),
       ],
@@ -8843,23 +8100,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'validate(4) is Ok, so double runs and map_err leaves Ok(8) alone. validate(-4) is Err, so map skips double and context adds the prefix.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn on_ok(n: i32) -> i32 {\n    println!("ok ran");\n    n + 1\n}\n\nfn on_err(e: &str) -> usize {\n    println!("err ran");\n    e.len()\n}\n\nfn main() {\n    let r: Result<i32, &str> = Err("oops");\n    println!("{:?}", r.map(on_ok).map_err(on_err));\n}',
-          [
-            'ok ran\nerr ran\nErr(4)',
-            'ok ran\nOk(5)',
-            'err ran\nErr("oops")',
-            'err ran\nErr(4)',
-          ],
-          3,
+          'err ran\nErr(4)',
           'r is Err, so map skips on_ok. map_err calls on_err, which prints its line and returns the length 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn checked_percent(p: i32) -> Result<i32, i32> {\n    if p > 100 {\n        Err(p)\n    } else {\n        Ok(p)\n    }\n}\n\nfn to_fraction(p: i32) -> f64 {\n    p as f64 / 100.0\n}\n\nfn explain(p: i32) -> String {\n    format!("{} is over 100", p)\n}\n\nfn main() {\n    println!("{:?}", checked_percent(25).map(to_fraction).map_err(explain));\n}',
-          ['Ok(0.25)', 'Ok(25)', 'Ok(0)', 'Err("25 is over 100")'],
-          0,
+          'Ok(0.25)',
           '25 is not over 100, so only the Ok path runs: to_fraction converts to f64 before dividing and gives 0.25. explain is not called.',
         ),
         choose(
@@ -8873,16 +8123,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'map applies to the success value and map_err to the error, so square goes with map and tag goes with map_err.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn bump(n: u32) -> u32 {\n    n + 10\n}\n\nfn wrap(e: &str) -> String {\n    format!("[{}]", e)\n}\n\nfn main() {\n    let a: Result<u32, &str> = Ok(5);\n    let b: Result<u32, &str> = Err("late");\n    println!("{:?} {:?}", a.map_err(wrap).map(bump), b.map_err(wrap).map(bump));\n}',
-          [
-            'Ok(15) Err("late")',
-            'Ok(5) Err("[late]")',
-            'Ok(15) Err("[late]")',
-            'Ok("[15]") Err("[late]")',
-          ],
-          2,
+          'Ok(15) Err("[late]")',
           'Calling map_err first does not change the outcome: a is Ok, so only bump changes it, and b is Err, so only wrap changes it.',
         ),
       ],
@@ -8903,16 +8147,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '"42" is a valid i32, so the result is Ok(42). "4x2" contains a character that is not a digit, so parse returns Err with kind InvalidDigit.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{:?}", "-15".parse::<i32>());\n}',
-          [
-            'Ok(15)',
-            'Ok(-15)',
-            '-15',
-            'Err(ParseIntError { kind: InvalidDigit })',
-          ],
-          1,
+          'Ok(-15)',
           'A leading minus sign is valid for a signed type like i32, so parse succeeds with -15 inside Ok.',
         ),
         predictOutput(
@@ -8967,16 +8205,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '300 fits in a u32, so the first parse succeeds. A u8 stops at 255, so the second reports PosOverflow instead of wrapping around.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{:?}", "255".parse::<u8>());\n}',
-          [
-            'Err(ParseIntError { kind: PosOverflow })',
-            'Ok(255)',
-            'Ok(-1)',
-            'Err(ParseIntError { kind: InvalidDigit })',
-          ],
-          1,
+          'Ok(255)',
           '255 is the largest u8, so it still fits and parse returns Ok(255).',
         ),
         predictOutput(
@@ -9042,16 +8274,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'parse can produce many types, and neither a turbofish nor an annotation names one, so the compiler asks for a type annotation.',
           'fn main() {\n    let value = "64".parse();\n    println!("{:?}", value);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn read_price(text: &str) -> Result<f64, std::num::ParseFloatError> {\n    text.parse()\n}\n\nfn main() {\n    println!("{:?}", read_price("5"));\n}',
-          [
-            'Ok(5)',
-            'Ok(5.0)',
-            'Ok("5")',
-            'Err(ParseFloatError { kind: Invalid })',
-          ],
-          1,
+          'Ok(5.0)',
           'The return type makes parse produce an f64. "5" is a valid f64, and Debug output of an f64 shows the decimal point.',
         ),
         predictOutput(
@@ -9092,11 +8318,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '"70" fits in a u8. "700" is too large and "loud" is not a number, so both take the Err arm and become 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn doubled(text: &str) -> i32 {\n    match text.parse::<i32>() {\n        Ok(n) => n * 2,\n        Err(_) => -1,\n    }\n}\n\nfn main() {\n    println!("{} {}", doubled("21"), doubled("twenty"));\n}',
-          ['42 -1', '2121 -1', '42 0', '-1 -1'],
-          0,
+          '42 -1',
           '"21" parses to 21, which doubles to 42. "twenty" is not digits, so the Err arm returns -1.',
         ),
         predictOutput(
@@ -9111,11 +8336,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'parse fails at the a. The Err arm binds only the payload, so the output has no Err( wrapper around it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn value(text: &str) -> i32 {\n    match text.parse::<i32>() {\n        Ok(n) => n,\n        Err(_) => 0,\n    }\n}\n\nfn main() {\n    println!("{}", value("8") + value("x") + value("-3"));\n}',
-          ['11', '8', '5', '0'],
-          2,
+          '5',
           '"x" falls back to 0 and "-3" parses to -3, so the sum is 8 + 0 - 3 = 5.',
         ),
         choose(
@@ -9147,11 +8371,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '"41" parses successfully, so ? hands back 41 as a plain i32. The function adds 1 and wraps 42 in Ok.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn difference(a: &str, b: &str) -> Result<i32, std::num::ParseIntError> {\n    let x = a.parse::<i32>()?;\n    let y = b.parse::<i32>()?;\n    Ok(x - y)\n}\n\nfn main() {\n    println!("{:?}", difference("10", "4"));\n}',
-          ['6', 'Ok(6)', 'Ok(Ok(6))', 'Ok(-6)'],
-          1,
+          'Ok(6)',
           'Both parses succeed, so ? gives 10 and 4 as plain i32 values, and the function returns Ok(10 - 4).',
         ),
         choose(
@@ -9172,16 +8395,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Without ?, n is the whole Result from parse, and a Result cannot be added to 10.',
           'fn plus_ten(text: &str) -> Result<i32, std::num::ParseIntError> {\n    let n = text.parse::<i32>();\n    Ok(n + 10)\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn square_text(text: &str) -> Result<i64, std::num::ParseIntError> {\n    let n = text.parse::<i64>()?;\n    Ok(n * n)\n}\n\nfn main() {\n    println!("{:?}", square_text("-9"));\n}',
-          [
-            'Ok(-81)',
-            'Ok(81)',
-            'Err(ParseIntError { kind: InvalidDigit })',
-            '81',
-          ],
-          1,
+          'Ok(81)',
           '"-9" is a valid i64, so ? gives -9, and -9 * -9 is 81, wrapped in Ok.',
         ),
       ],
@@ -9212,16 +8429,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'start prints first. 999 does not fit in a u8, so ? returns the Err before done is printed.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn parse_and_halve(text: &str) -> Result<i32, std::num::ParseIntError> {\n    let n = text.parse::<i32>()?;\n    Ok(n / 2)\n}\n\nfn main() {\n    match parse_and_halve("ten") {\n        Ok(v) => println!("half is {}", v),\n        Err(_) => println!("not a number"),\n    }\n}',
-          [
-            'half is 5',
-            'half is 0',
-            'Err(ParseIntError { kind: InvalidDigit })',
-            'not a number',
-          ],
-          3,
+          'not a number',
           '"ten" is not digits, so ? returns the Err from parse_and_halve, and the Err arm in main prints its message.',
         ),
         choose(
@@ -9360,16 +8571,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The first ? already sees an Err and returns it, so y is never parsed.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn average(a: &str, b: &str) -> Result<i32, std::num::ParseIntError> {\n    let x = a.parse::<i32>()?;\n    let y = b.parse::<i32>()?;\n    Ok((x + y) / 2)\n}\n\nfn main() {\n    match average("7", "10") {\n        Ok(v) => println!("avg {}", v),\n        Err(e) => println!("bad input: {:?}", e),\n    }\n}',
-          [
-            'avg 8.5',
-            'avg 9',
-            'avg 8',
-            'bad input: ParseIntError { kind: InvalidDigit }',
-          ],
-          2,
+          'avg 8',
           'Both texts parse, so average returns Ok((7 + 10) / 2). Integer division truncates 8.5 to 8.',
         ),
       ],
@@ -9397,11 +8602,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'i32::MAX becomes an i64 first, and an i64 has room for one more, so the sum is 2147483648.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let a: u8 = 200;\n    let b: u8 = 100;\n    let total = u32::from(a) + u32::from(b);\n    println!("{}", total);\n}',
-          ['300', '255', '44', '200100'],
-          0,
+          '300',
           'Both u8 values are widened to u32 before adding, so 300 fits instead of overflowing a u8.',
         ),
         choose(
@@ -9461,11 +8665,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'add_wide takes i64 parameters, so each into converts to i64 and the sum fits.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn label(text: String) -> String {\n    format!("[{}]", text)\n}\n\nfn main() {\n    let tag: String = "new".into();\n    println!("{:?}", label(tag));\n}',
-          ['[new]', '"new"', '["new"]', '"[new]"'],
-          3,
+          '"[new]"',
           'The annotation makes into produce a String, label wraps it in brackets, and {:?} prints the String with quotes.',
         ),
         choose(
@@ -9529,11 +8732,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A u32 can be as large as 4294967295, which is more than i32::MAX. An i64 holds every u32 value.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a: u8 = 255;\n    let b: u32 = u32::from(a) * 1000;\n    let c: i64 = i64::from(b) - 300000;\n    println!("{}", c);\n}',
-          ['45000', '-45000', '0', '255000'],
-          1,
+          '-45000',
           'Every step widens: 255 becomes the u32 255000, then the i64 255000, and subtracting 300000 in i64 gives -45000.',
         ),
       ],
@@ -9563,11 +8765,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Rust never converts integer types implicitly, so a + b with a u8 and an i32 is rejected.',
           'fn main() {\n    let a: u8 = 10;\n    let b: i32 = 5;\n    println!("{}", a + b);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn mean(a: u8, b: u8) -> i32 {\n    (i32::from(a) + i32::from(b)) / 2\n}\n\nfn main() {\n    println!("{}", mean(250, 101));\n}',
-          ['175.5', '47', '176', '175'],
-          3,
+          '175',
           'Both bytes become i32 first, so 351 fits, and integer division gives 175.',
         ),
         choose(
@@ -9581,11 +8782,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Both operands must be i64 before multiplying. The other bodies mix types or multiply before widening.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn total(a: u8, b: u8, bonus: i32) -> i32 {\n    i32::from(a) + i32::from(b) + bonus\n}\n\nfn main() {\n    println!("{}", total(200, 200, -500));\n}',
-          ['-100', '144', '-356', '400'],
-          0,
+          '-100',
           'Both bytes become i32 before adding, so 200 + 200 is 400, and adding the bonus of -500 gives -100.',
         ),
       ],
@@ -9722,11 +8922,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '42 fits. -7 fails and is negative, so the fallback is 0. 9000000000 fails and is positive, so the fallback is u32::MAX.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn level(n: i32) -> u8 {\n    match u8::try_from(n) {\n        Ok(v) => v,\n        Err(_) => 0,\n    }\n}\n\nfn main() {\n    println!("{} {} {}", level(12), level(256), level(-3));\n}',
-          ['12 255 0', '12 0 0', '12 0 253', '12 256 -3'],
-          1,
+          '12 0 0',
           '12 fits in a u8. 256 and -3 do not, and this match uses 0 for every Err, whichever side the value was on.',
         ),
         predictOutput(
@@ -9752,11 +8951,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'TryFromIntError carries no direction, so the function looks at n itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn clamp(n: i32) -> u8 {\n    match u8::try_from(n) {\n        Ok(b) => b,\n        Err(_) => {\n            if n < 0 {\n                0\n            } else {\n                255\n            }\n        }\n    }\n}\n\nfn main() {\n    let total = u32::from(clamp(300)) + u32::from(clamp(-20)) + u32::from(clamp(45));\n    println!("{}", total);\n}',
-          ['300', '325', '45', '555'],
-          0,
+          '300',
           'clamp(300) is 255, clamp(-20) is 0, and clamp(45) is 45. Widened to u32, they sum to 300.',
         ),
       ],
@@ -9777,18 +8975,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'last() gives a reference to 92, and copied turns it into an owned i32, matching the declared Option<i32>. For an empty slice, last() is None and copied keeps None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let temps = [18, 21, 17];\n    let first = temps.first().copied();\n    println!("{:?}", first);\n}',
-          ['Some(&18)', 'Some(17)', '18', 'Some(18)'],
-          3,
+          'Some(18)',
           'first() refers to 18, and copied makes it an owned i32 inside Some.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn first_reading(values: &[u32]) -> Option<u32> {\n    values.first().copied()\n}\n\nfn main() {\n    println!("{:?}", first_reading(&[]));\n}',
-          ['Some(0)', '0', 'None', 'Some(None)'],
-          2,
+          'None',
           'An empty slice has no first element, so first() is None, and copied leaves None unchanged.',
         ),
         choose(
@@ -9825,11 +9021,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'cloned makes a new String "Ada" for the caller. The array still owns both of its Strings, so it prints unchanged.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let words = [String::from("red"), String::from("blue")];\n    let last = words.last().cloned();\n    println!("{:?}", last);\n}',
-          ['Some(blue)', 'Some("red")', '"blue"', 'Some("blue")'],
-          3,
+          'Some("blue")',
           'last() refers to the String "blue", and cloned returns an owned copy inside Some. Debug output quotes the String.',
         ),
         choose(
@@ -9855,16 +9050,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'i32 is Copy, and every Copy type can also be cloned, so both produce an owned Option<i32> with the same value.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let items = [String::from("pen"), String::from("ink")];\n    let a = items.first().cloned();\n    let b = items.first().cloned();\n    println!("{:?} {:?} {}", a, b, items.len());\n}',
-          [
-            'Some("pen") Some("pen") 2',
-            'Some("pen") Some("ink") 2',
-            'Some("pen") None 1',
-            'Some("pen") Some("pen") 0',
-          ],
-          0,
+          'Some("pen") Some("pen") 2',
           'cloned copies the String without removing it, so the second call finds the same first element and the array still has 2 items.',
         ),
       ],
@@ -9883,28 +9072,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'For the whole array the ends are "start" and "end". The slice words[1..2] holds only "middle", so it is both the first and the last element.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn ends(values: &[u8]) -> (Option<u8>, Option<u8>) {\n    (values.first().copied(), values.last().copied())\n}\n\nfn main() {\n    let data = [4, 9, 2, 7];\n    println!("{:?}", ends(&data[1..3]));\n}',
-          [
-            '(Some(4), Some(7))',
-            '(Some(9), Some(7))',
-            '(Some(9), Some(2))',
-            '(Some(4), Some(2))',
-          ],
-          2,
+          '(Some(9), Some(2))',
           'data[1..3] contains the elements at indexes 1 and 2, which are 9 and 2. The range excludes index 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn edges(words: &[String]) -> (Option<String>, Option<String>) {\n    (words.first().cloned(), words.last().cloned())\n}\n\nfn main() {\n    let words = [String::from("a"), String::from("b")];\n    println!("{:?}", edges(&words[1..1]));\n}',
-          [
-            '(Some("b"), Some("b"))',
-            '(None, None)',
-            '(Some("a"), Some("a"))',
-            '(Some("a"), None)',
-          ],
-          1,
+          '(None, None)',
           '1..1 is an empty range, so the slice has no elements and both lookups give None.',
         ),
         choose(
@@ -9941,30 +9118,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Some(0) holds a value, even though the value is zero, so is_some is true. "12x" fails to parse, so the Result is Err: is_ok is false and is_err is true.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let scores = [40, 75];\n    println!("{} {}", scores.first().is_none(), scores.last().is_some());\n}',
-          ['true false', 'false true', 'true true', 'false false'],
-          1,
+          'false true',
           'The array is not empty, so first() is Some and is_none is false, while last() is Some and is_some is true.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let count = "0".parse::<u32>();\n    let price = "9.99".parse::<u32>();\n    println!("{} {}", count.is_ok(), price.is_err());\n}',
-          ['false true', 'true false', 'true true', 'false false'],
-          2,
+          'true true',
           '"0" is a valid u32, so is_ok is true; zero is a value, not a failure. "9.99" is not a whole number, so is_err is true.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn kind(text: &str) -> &\'static str {\n    if text.parse::<i32>().is_ok() {\n        "number"\n    } else {\n        "word"\n    }\n}\n\nfn main() {\n    println!("{} {} {}", kind("-8"), kind("eight"), kind("8.0"));\n}',
-          [
-            'number word number',
-            'number word word',
-            'word word number',
-            'number number number',
-          ],
-          1,
+          'number word word',
           '"-8" parses as an i32, but "eight" and "8.0" do not, so only the first is_ok is true.',
         ),
         choose(
@@ -9994,25 +9163,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'present holds 7, so unwrap_or returns it and ignores the default. absent is None, so it returns the default 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let retries = "three".parse::<u32>().unwrap_or(3);\n    println!("{}", retries + 1);\n}',
-          ['1', 'Ok(4)', '3', '4'],
-          3,
+          '4',
           '"three" is not digits, so the default 3 is used, and 3 + 1 is 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn half(n: i32) -> Option<i32> {\n    if n % 2 == 0 {\n        Some(n / 2)\n    } else {\n        None\n    }\n}\n\nfn main() {\n    println!("{} {}", half(10).unwrap_or(-1), half(7).unwrap_or(-1));\n}',
-          ['5 -1', '5 3', '-1 -1', 'Some(5) None'],
-          0,
+          '5 -1',
           'half(10) is Some(5), so 5 is returned. half(7) is None, so the default -1 is used.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let width = "0".parse::<i32>().unwrap_or(80);\n    let height = "".parse::<i32>().unwrap_or(24);\n    println!("{}x{}", width, height);\n}',
-          ['80x24', '0x0', '80x0', '0x24'],
-          3,
+          '0x24',
           '"0" parses successfully, so its own value 0 is kept. Only the empty text fails and falls back to 24.',
         ),
         choose(
@@ -10037,28 +9203,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The successful parse becomes Some(15) and the failed one becomes None. missing is None, so ok_or turns it into Err holding the given message.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    println!("{:?}", "256".parse::<u8>().ok());\n}',
-          [
-            'Some(256)',
-            'Some(0)',
-            'Err(ParseIntError { kind: PosOverflow })',
-            'None',
-          ],
-          3,
+          'None',
           '256 does not fit in a u8, so parse returns Err, and ok turns any Err into None.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let scores = [88, 92];\n    let empty: [i32; 0] = [];\n    println!("{:?}", scores.last().ok_or("empty"));\n    println!("{:?}", empty.last().ok_or("empty"));\n}',
-          [
-            'Some(92)\nNone',
-            'Ok(92)\nErr("empty")',
-            'Ok(92)\nOk("empty")',
-            'Ok(88)\nErr("empty")',
-          ],
-          1,
+          'Ok(92)\nErr("empty")',
           'last() is Some for the full array, so ok_or gives Ok(92). For the empty array it is None, which becomes Err("empty").',
         ),
         choose(
@@ -10072,11 +9226,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'ok_or keeps a Some value as Ok and uses its argument as the Err payload for None.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a = "7".parse::<i32>().ok();\n    let b: Option<i32> = Some(7);\n    println!("{:?} {:?}", a, b.ok_or(0));\n}',
-          ['Ok(7) Some(7)', 'Some(7) Ok(7)', 'Some(7) Some(7)', '7 7'],
-          1,
+          'Some(7) Ok(7)',
           'ok turns Ok(7) into Some(7). ok_or turns Some(7) into Ok(7); the 0 would be used only for None.',
         ),
       ],
@@ -10095,18 +9248,16 @@ export const knowledgePoints: KnowledgePointModule = {
           '"5" parses to 5. "five" is not a number, and u32 rejects the minus sign in "-5", so both fall back to 30.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn pages(text: &str) -> u8 {\n    text.parse::<u8>().ok().unwrap_or(1)\n}\n\nfn main() {\n    println!("{} {} {}", pages("12"), pages("300"), pages("0"));\n}',
-          ['12 1 0', '12 255 0', '12 1 1', '12 44 0'],
-          0,
+          '12 1 0',
           '"300" is too large for a u8 and falls back to 1, while "0" is a valid u8 and keeps its value 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let inputs = ["4", "four", "40", ""];\n    let mut total = 0;\n    for i in 0..inputs.len() {\n        total += inputs[i].parse::<i32>().ok().unwrap_or(0);\n    }\n    println!("{}", total);\n}',
-          ['440', '44', '4', '0'],
-          1,
+          '44',
           'Each text that does not parse adds the default 0, so the total is 4 + 0 + 40 + 0 = 44.',
         ),
         choose(
@@ -10120,16 +9271,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'A default that is also a valid result hides the failure from the caller.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn read(text: &str) -> Result<i32, &\'static str> {\n    text.parse::<i32>().ok().ok_or("not a number")\n}\n\nfn main() {\n    println!("{:?} {:?}", read("-2"), read("2-"));\n}',
-          [
-            'Some(-2) None',
-            'Ok(-2) Err(ParseIntError { kind: InvalidDigit })',
-            'Ok(-2) Ok(2)',
-            'Ok(-2) Err("not a number")',
-          ],
-          3,
+          'Ok(-2) Err("not a number")',
           'ok turns the parse result into an Option, and ok_or turns it back into a Result with the new message in place of the ParseIntError.',
         ),
       ],
@@ -10150,11 +9295,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '"12" parses, so unwrap gives the i32 12. Some(3).unwrap() gives 3. Their sum is 15.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let values = [8, 1, 6];\n    let last = values.last().unwrap();\n    println!("{}", last);\n}',
-          ['Some(6)', '8', '6', '&6'],
-          2,
+          '6',
           'last() is Some holding the final element, and unwrap returns that element, 6.',
         ),
         choose(
@@ -10169,11 +9313,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '"4.5" is not a valid i32, so parse returns Err and unwrap panics before println runs.',
           'fn main() {\n    let n = "4.5".parse::<i32>().unwrap();\n    println!("{}", n);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn halve(n: i32) -> Option<i32> {\n    if n % 2 == 0 {\n        Some(n / 2)\n    } else {\n        None\n    }\n}\n\nfn main() {\n    let x = halve(20).unwrap();\n    let y = halve(x).unwrap();\n    println!("{}", y);\n}',
-          ['5', '10', 'Some(5)', '20'],
-          0,
+          '5',
           'halve(20) is Some(10), which unwrap turns into 10. halve(10) is Some(5), which unwraps to 5.',
         ),
         choose(
@@ -10204,11 +9347,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The annotation makes parse target u32. "640" is valid, so expect returns 640 and the message is never used.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a: i32 = "-7".parse().expect("a must be an integer");\n    let b = Some(10).expect("b is always set");\n    println!("{}", a * b);\n}',
-          ['-70', 'a must be an integer', '70', 'Some(-70)'],
-          0,
+          '-70',
           'Both expect calls succeed, so they return -7 and 10, and the product is -70. The messages appear only on failure.',
         ),
         choose(
@@ -10233,11 +9375,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'expect on an Err panics with your message followed by the error’s Debug form, which is the part after the colon.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let data = [3, 9, 4];\n    let first = data.first().expect("data is never empty");\n    let parsed: i32 = "5".parse().expect("literal is a number");\n    println!("{}", first + parsed);\n}',
-          ['8', '35', 'Some(8)', '9'],
-          0,
+          '8',
           'first() is Some(3) and "5" parses, so both expect calls return their values, and 3 + 5 is 8.',
         ),
       ],
@@ -10278,11 +9419,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'A typo from a user is expected, not a bug, so the program should handle Err instead of panicking with any message.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let default_size: u32 = "16".parse().expect("default size is a valid number");\n    let requested = "big".parse::<u32>().unwrap_or(default_size);\n    println!("{}", requested * 2);\n}',
-          ['0', '16', '32', '2'],
-          2,
+          '32',
           'The constant parses to 16, and "big" falls back to that default, so requested is 16 and twice that is 32.',
         ),
         choose(
@@ -10315,11 +9455,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'half(20) is Some(10), so ? gives 10. half(10) is Some(5), which quarter returns as its result.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn first_doubled(values: &[i32]) -> Option<i32> {\n    let first = values.first()?;\n    Some(first * 2)\n}\n\nfn main() {\n    println!("{:?}", first_doubled(&[6, 1]));\n}',
-          ['12', 'Some(Some(12))', 'Some(2)', 'Some(12)'],
-          3,
+          'Some(12)',
           'first() is Some, so ? gives the first element 6, and the function returns Some(6 * 2).',
         ),
         choose(
@@ -10328,11 +9467,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           '? takes the value out of Some, so n is the plain u32 9.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn non_zero(n: i32) -> Option<i32> {\n    if n == 0 {\n        None\n    } else {\n        Some(n)\n    }\n}\n\nfn ratio(a: i32, b: i32) -> Option<i32> {\n    let divisor = non_zero(b)?;\n    Some(a / divisor)\n}\n\nfn main() {\n    println!("{:?}", ratio(17, 5));\n}',
-          ['Some(3.4)', 'Some(2)', 'None', 'Some(3)'],
-          3,
+          'Some(3)',
           '5 is not zero, so ? gives 5, and integer division of 17 by 5 is 3.',
         ),
         choose(
@@ -10362,23 +9500,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first println runs. The slice is empty, so first() is None and ? returns None before found first is printed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn half(n: i32) -> Option<i32> {\n    if n % 2 == 0 {\n        Some(n / 2)\n    } else {\n        None\n    }\n}\n\nfn eighth(n: i32) -> Option<i32> {\n    let a = half(n)?;\n    let b = half(a)?;\n    half(b)\n}\n\nfn main() {\n    println!("{:?} {:?}", eighth(40), eighth(12));\n}',
-          ['Some(5) None', 'Some(5) Some(1)', 'Some(5) Some(3)', 'None None'],
-          0,
+          'Some(5) None',
           '40 halves to 20, 10, then 5. 12 halves to 6 and then 3, but half(3) is None, so eighth(12) returns None.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn positive(n: i32) -> Option<i32> {\n    if n > 0 {\n        Some(n)\n    } else {\n        None\n    }\n}\n\nfn trace(n: i32) -> Option<i32> {\n    println!("start {}", n);\n    let p = positive(n)?;\n    println!("passed {}", p);\n    Some(p * 10)\n}\n\nfn main() {\n    println!("{:?}", trace(-2));\n}',
-          [
-            'start -2\npassed -2\nNone',
-            'None',
-            'start -2\nNone',
-            'start -2\npassed -2\nSome(-20)',
-          ],
-          2,
+          'start -2\nNone',
           'start prints first. positive(-2) is None, so ? returns None before passed is printed.',
         ),
         choose(
@@ -10392,11 +9523,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           '? returns None from the function immediately, so nothing after the second ? runs.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn spread(values: &[i32]) -> Option<i32> {\n    let low = values.first()?;\n    let high = values.last()?;\n    Some(high - low)\n}\n\nfn main() {\n    let data = [2, 9, 15];\n    println!("{:?} {:?}", spread(&data[..1]), spread(&data[3..]));\n}',
-          ['None None', 'Some(0) None', 'Some(13) None', 'Some(0) Some(0)'],
-          1,
+          'Some(0) None',
           'data[..1] holds only 2, so first and last are both 2 and the spread is Some(0). data[3..] is empty, so first() is None and ? returns None.',
         ),
       ],
@@ -10439,28 +9569,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'parse returns a Result, and ? cannot turn its Err into the None this function returns.',
           'fn parse_first(texts: &[&str]) -> Option<i32> {\n    let text = texts.first()?;\n    let n = text.parse::<i32>()?;\n    Some(n)\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn pair_product(a: &[i32], b: &[i32]) -> Option<i32> {\n    let x = a.last()?;\n    let y = b.last()?;\n    Some(x * y)\n}\n\nfn main() {\n    let empty: [i32; 0] = [];\n    println!("{:?}", pair_product(&[3, 4], &[5]));\n    println!("{:?}", pair_product(&empty, &[5]));\n}',
-          [
-            'Some(15)\nNone',
-            'Some(20)\nSome(0)',
-            'Some(20)\nNone',
-            'Some(20)\nSome(5)',
-          ],
-          2,
+          'Some(20)\nNone',
           'The last elements are 4 and 5, so the first call returns Some(20). In the second call a is empty, so ? returns None.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn digit(n: i32) -> Option<i32> {\n    if n >= 0 && n <= 9 {\n        Some(n)\n    } else {\n        None\n    }\n}\n\nfn two_digit(tens: i32, ones: i32) -> Option<i32> {\n    let t = digit(tens)?;\n    let o = digit(ones)?;\n    Some(t * 10 + o)\n}\n\nfn main() {\n    println!("{:?} {:?}", two_digit(4, 2), two_digit(4, 12));\n}',
-          [
-            'Some(42) Some(52)',
-            'Some(42) Some(4)',
-            'Some(42) Some(40)',
-            'Some(42) None',
-          ],
-          3,
+          'Some(42) None',
           '4 and 2 are both digits, giving Some(42). 12 is not a digit, so the second ? returns None.',
         ),
       ],
@@ -10481,25 +9599,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'temps[0] is the first element, 18, and len counts all three elements. {:?} prints the elements in order inside square brackets.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let v = vec![4, 7, 1];\n    println!("{} {}", v[1], v.len());\n}',
-          ['4 3', '7 3', '7 2', '1 3'],
-          1,
+          '7 3',
           'Indexes start at 0, so v[1] is the second element, 7. len counts all 3 elements.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let names = vec!["ann", "bo"];\n    println!("{:?}", names);\n}',
-          ['["ann", "bo"]', '[ann, bo]', 'vec!["ann", "bo"]', '("ann", "bo")'],
-          0,
+          '["ann", "bo"]',
           '{:?} prints a Vec in square brackets, and each string keeps its quotes in Debug form.',
         ),
-        predictOutput(
+        typeOutput(
           'Which number does this program print?',
           'fn main() {\n    let v = vec![10, 20, 30, 40];\n    let last = v[v.len() - 1];\n    println!("{}", last);\n}',
-          ['30', '4', '10', '40'],
-          3,
+          '40',
           'len is 4, so the last valid index is 3, which holds 40.',
         ),
         choose(
@@ -10530,25 +9645,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The Vec starts empty. The two pushes add 12 and then 8 at the end, so it holds two elements in that order and is no longer empty.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = Vec::new();\n    v.push(3);\n    v.push(1);\n    v.push(2);\n    println!("{:?}", v);\n}',
-          ['[1, 2, 3]', '[2, 1, 3]', '[3, 1, 2]', '[3]'],
-          2,
+          '[3, 1, 2]',
           'push always appends at the end, so the elements keep the order they were pushed in.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed after the loop?',
           'fn main() {\n    let mut squares = Vec::new();\n    for i in 1..4 {\n        squares.push(i * i);\n    }\n    println!("{:?}", squares);\n}',
-          ['[1, 4, 9]', '[1, 4, 9, 16]', '[0, 1, 4, 9]', '[1, 2, 3]'],
-          0,
+          '[1, 4, 9]',
           'The range 1..4 yields 1, 2 and 3, and each square is pushed in turn.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![5, 6];\n    v.push(4);\n    println!("{} {}", v[2], v.len());\n}',
-          ['6 2', '4 2', '5 3', '4 3'],
-          3,
+          '4 3',
           'push adds 4 after the existing elements, at index 2, and the length becomes 3.',
         ),
         choose(
@@ -10579,30 +9691,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first pop removes 6, the last element, and returns Some(6); the Vec keeps [2, 4]. The empty Vec has nothing to give, so its pop returns None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![1, 2, 3];\n    v.pop();\n    let x = v.pop();\n    println!("{:?} {}", x, v.len());\n}',
-          ['Some(3) 2', 'Some(2) 1', 'Some(1) 1', 'Some(2) 2'],
-          1,
+          'Some(2) 1',
           'The first pop removes 3 and its result is ignored. The second removes 2, leaving one element.',
         ),
-        predictOutput(
+        typeOutput(
           'What are the three printed lines?',
           'fn main() {\n    let mut v = vec![7, 9];\n    println!("{:?}", v.pop());\n    println!("{:?}", v.pop());\n    println!("{:?}", v.pop());\n}',
-          [
-            'Some(7)\nSome(9)\nNone',
-            '9\n7\nNone',
-            'Some(9)\nSome(7)\nSome(7)',
-            'Some(9)\nSome(7)\nNone',
-          ],
-          3,
+          'Some(9)\nSome(7)\nNone',
           'pop takes from the end: 9, then 7. The third call finds the Vec empty and returns None.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![0];\n    v.pop();\n    let again = v.pop();\n    println!("{:?} {}", again, v.len());\n}',
-          ['None 0', 'Some(0) 0', 'Some(0) 1', 'None 1'],
-          0,
+          'None 0',
           'The first pop removes the only element, 0. The second finds the Vec empty and returns None; a stored 0 would have shown as Some(0).',
         ),
         choose(
@@ -10627,30 +9731,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'history grows to [1, 5, 10]. pop removes the most recent value, 10, leaving two elements.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut s = Vec::new();\n    s.push(1);\n    s.push(2);\n    s.pop();\n    s.push(3);\n    println!("{:?}", s);\n}',
-          ['[1, 2, 3]', '[2, 3]', '[1, 3]', '[3, 1]'],
-          2,
+          '[1, 3]',
           'pop removes 2, the most recent push, before 3 is pushed onto the end.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn take_top(mut v: Vec<i32>) -> (Option<i32>, usize) {\n    let top = v.pop();\n    (top, v.len())\n}\n\nfn main() {\n    println!("{:?}", take_top(Vec::new()));\n}',
-          ['(None, 0)', '(Some(0), 0)', '(None, 1)', 'None'],
-          0,
+          '(None, 0)',
           'An empty Vec has nothing to pop, so top is None and the length stays 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = Vec::new();\n    for i in 0..3 {\n        v.push(i * 10);\n    }\n    let a = v.pop();\n    let b = v.pop();\n    println!("{:?} {:?} {:?}", a, b, v);\n}',
-          [
-            'Some(0) Some(10) [20]',
-            'Some(30) Some(20) [0, 10]',
-            'Some(20) Some(10) [0, 10, 20]',
-            'Some(20) Some(10) [0]',
-          ],
-          3,
+          'Some(20) Some(10) [0]',
           'The loop pushes 0, 10 and 20. Popping twice takes 20 and then 10, leaving [0].',
         ),
         choose(
@@ -10683,18 +9779,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Index 1 holds 9, so get returns Some with a reference to it. The array has 3 elements, so index 3 is out of range and get returns None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let a = [3, 6, 9];\n    println!("{:?}", a.get(2));\n}',
-          ['Some(9)', 'Some(6)', 'None', '9'],
-          0,
+          'Some(9)',
           'Indexes start at 0, so index 2 is the third element, 9, wrapped in Some.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn peek(values: &[i32], i: usize) -> Option<&i32> {\n    values.get(i)\n}\n\nfn main() {\n    println!("{:?} {:?}", peek(&[5, 1], 2), peek(&[], 0));\n}',
-          ['Some(1) None', 'None None', 'None Some(0)', 'Some(1) Some(0)'],
-          1,
+          'None None',
           'A 2-element slice has indexes 0 and 1, so index 2 gives None. An empty slice has no index 0 either.',
         ),
         choose(
@@ -10731,18 +9825,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'copied turns the Some(&3) from get into Some(3), and index 2 stays None. cloned makes an owned copy of the String at index 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn pick(values: &[i32], i: usize) -> Option<i32> {\n    values.get(i).copied()\n}\n\nfn main() {\n    let v = [7, 8, 9];\n    println!("{:?} {:?}", pick(&v, 0), pick(&v, 9));\n}',
-          ['Some(7) None', 'Some(8) None', 'Some(7) Some(9)', 'None None'],
-          0,
+          'Some(7) None',
           'Index 0 holds 7. Index 9 is past the end, and copied keeps that None as None.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let names = [String::from("ada"), String::from("lin")];\n    let chosen: Option<String> = names.get(1).cloned();\n    println!("{:?}", chosen);\n}',
-          ['Some(lin)', 'Some("ada")', '"lin"', 'Some("lin")'],
-          3,
+          'Some("lin")',
           'cloned gives an owned copy of the String at index 1, and Debug prints it with quotes inside Some.',
         ),
         choose(
@@ -10784,35 +9876,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'At index 1 both lookups land inside the slice. At index 2, i + 1 is 3, which is past the end, so the second lookup is None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn after(values: &[i32], i: usize) -> Option<i32> {\n    values.get(i + 1).copied()\n}\n\nfn main() {\n    let v = [2, 4, 8];\n    println!("{:?} {:?}", after(&v, 0), after(&v, 2));\n}',
-          ['Some(2) Some(8)', 'Some(4) None', 'Some(4) Some(8)', 'None None'],
-          1,
+          'Some(4) None',
           'after(&v, 0) looks at index 1, which holds 4. after(&v, 2) looks at index 3, past the end.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let v = [10, 20, 30, 40];\n    let window = &v[1..3];\n    println!("{:?} {:?}", window.get(0), window.get(2));\n}',
-          [
-            'Some(10) Some(30)',
-            'Some(20) Some(40)',
-            'Some(20) None',
-            'Some(10) None',
-          ],
-          2,
+          'Some(20) None',
           'window is [20, 30], and its indexes start from its own first element, so get(0) is 20 and get(2) is past its end.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn ends(values: &[i32]) -> (Option<i32>, Option<i32>) {\n    let last = values.len();\n    (values.get(0).copied(), values.get(last).copied())\n}\n\nfn main() {\n    println!("{:?}", ends(&[3, 1, 7]));\n}',
-          [
-            '(Some(3), None)',
-            '(Some(3), Some(7))',
-            '(Some(3), Some(1))',
-            '(None, Some(7))',
-          ],
-          0,
+          '(Some(3), None)',
           'len() is 3, one past the last index, so get(3) returns None. The last element sits at len() - 1.',
         ),
         choose(
@@ -10844,18 +9923,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'is_small returns true for 4 and 9 and false for 12 and 30, so only 4 and 9 remain.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn positive(n: &i32) -> bool {\n    *n > 0\n}\n\nfn main() {\n    let mut v = vec![0, 5, -2, 7];\n    v.retain(positive);\n    println!("{:?}", v);\n}',
-          ['[5, 7]', '[0, 5, 7]', '[0, -2]', '[7, 5]'],
-          0,
+          '[5, 7]',
           'positive returns false for 0 and -2, so they are removed; 5 and 7 stay.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn over_hundred(n: &i32) -> bool {\n    *n > 100\n}\n\nfn main() {\n    let mut v = vec![3, 50, 99];\n    v.retain(over_hundred);\n    println!("{:?} {}", v, v.is_empty());\n}',
-          ['[3, 50, 99] false', '[] true', '[99] false', '[] false'],
-          1,
+          '[] true',
           'No element is above 100, so the predicate is false every time and retain removes them all.',
         ),
         choose(
@@ -10892,25 +9969,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'clean removes -1 and -7 from the caller’s Vec through the mutable reference. 5, 0 and 3 stay in their original order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn big(n: &i32) -> bool {\n    *n > 5\n}\n\nfn main() {\n    let mut v = vec![9, 1, 8, 2, 7];\n    v.retain(big);\n    println!("{:?} {}", v, v.len());\n}',
-          ['[7, 8, 9] 3', '[9, 8, 7] 5', '[1, 2] 2', '[9, 8, 7] 3'],
-          3,
+          '[9, 8, 7] 3',
           'retain keeps 9, 8 and 7 in the order they already had, and the length drops to 3.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn short(n: &i32) -> bool {\n    *n < 4\n}\n\nfn main() {\n    let mut v = vec![3, 4, 1];\n    let result = v.retain(short);\n    println!("{:?} {:?}", result, v);\n}',
-          ['[3, 1] [3, 1]', '() [3, 1]', '2 [3, 1]', '() [3, 4, 1]'],
-          1,
+          '() [3, 1]',
           'retain returns (), the unit value. The filtering shows up in v itself.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn not_marker(n: &i32) -> bool {\n    *n != -1\n}\n\nfn drop_markers(values: &mut Vec<i32>) {\n    values.retain(not_marker);\n}\n\nfn main() {\n    let mut v = vec![-1, 6, -1, 2, 6];\n    drop_markers(&mut v);\n    println!("{:?}", v);\n}',
-          ['[6, 2]', '[-1, 6, -1, 2, 6]', '[6, 2, 6]', '[2, 6, 6]'],
-          2,
+          '[6, 2, 6]',
           'Both -1 values are removed from the caller’s Vec. Repeated values that pass, like the two 6s, all stay where they were.',
         ),
         choose(
@@ -10940,18 +10014,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only 3 and 9 satisfy both bounds. retain leaves the Vec ready for more changes, so push adds 0 at the end.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn in_range(n: &i32) -> bool {\n    *n > 1 && *n < 5\n}\n\nfn main() {\n    let mut v = vec![1, 2, 5, 4, 0];\n    v.retain(in_range);\n    println!("{:?}", v);\n}',
-          ['[1, 2, 5, 4]', '[2, 4]', '[1, 5, 0]', '[2, 5, 4]'],
-          1,
+          '[2, 4]',
           'Both comparisons are strict, so 1 and 5 fail along with 0. Only 2 and 4 are kept.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn extreme(n: &i32) -> bool {\n    *n < 0 || *n > 100\n}\n\nfn main() {\n    let mut v = vec![-5, 50, 150, 0];\n    v.retain(extreme);\n    println!("{:?} {}", v, v.len());\n}',
-          ['[-5, 150] 2', '[50, 0] 2', '[-5, 0, 150] 3', '[150, -5] 2'],
-          0,
+          '[-5, 150] 2',
           'With ||, either condition keeps an element: -5 is below 0 and 150 is above 100. They stay in their original order.',
         ),
         choose(
@@ -10965,16 +10037,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           '&& requires both bounds, and >= and <= include the ends. With || every integer passes, and the < 10 || > 20 test keeps exactly the values outside.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn small_positive(n: &i32) -> bool {\n    *n > 0 && *n < 10\n}\n\nfn main() {\n    let mut v = vec![8, -3, 15, 2, 6];\n    v.retain(small_positive);\n    let last = v.pop();\n    println!("{:?} {:?}", last, v);\n}',
-          [
-            'Some(8) [2, 6]',
-            'Some(6) [8, -3, 15, 2]',
-            'Some(15) [8, 2, 6]',
-            'Some(6) [8, 2]',
-          ],
-          3,
+          'Some(6) [8, 2]',
           'retain leaves [8, 2, 6]. pop then removes the last of those, 6.',
         ),
       ],
@@ -10995,25 +10061,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The range 5..8 yields 5, 6 and 7, which are appended after 1 and 2. The Vec now has 5 elements.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![0];\n    v.extend(1..=3);\n    println!("{:?}", v);\n}',
-          ['[0, 1, 2, 3]', '[0, 1, 2]', '[1, 2, 3, 0]', '[0, 3]'],
-          0,
+          '[0, 1, 2, 3]',
           '1..=3 includes 3, and extend appends each item after the existing 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut v = Vec::new();\n    v.push(9);\n    v.extend(3..5);\n    v.push(1);\n    println!("{:?}", v);\n}',
-          ['[9, 3, 4, 5, 1]', '[9, 1, 3, 4]', '[9, 3, 4, 1]', '[1, 3, 4, 9]'],
-          2,
+          '[9, 3, 4, 1]',
           'Each call adds at the end in the order the calls run: 9, then 3 and 4, then 1.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![7];\n    v.extend(4..4);\n    println!("{:?} {}", v, v.len());\n}',
-          ['[7, 4] 2', '[7] 1', '[7, 4, 4] 3', '[] 0'],
-          1,
+          '[7] 1',
           'The range 4..4 stops before it starts, so it yields nothing and extend appends nothing.',
         ),
         choose(
@@ -11043,23 +10106,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Copies of 4 and 5 are appended after 1, in slice order. extra was only borrowed by iter, so it still holds [4, 5].',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let data = [3, 6, 9, 12];\n    let mut v = vec![0];\n    v.extend(data[1..3].iter().copied());\n    println!("{:?}", v);\n}',
-          ['[0, 3, 6]', '[0, 6, 9, 12]', '[0, 6, 9]', '[6, 9, 0]'],
-          2,
+          '[0, 6, 9]',
           'data[1..3] is the slice [6, 9], and extend appends its elements after 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let more = [String::from("b"), String::from("c")];\n    let mut names = vec![String::from("a")];\n    names.extend(more.iter().cloned());\n    println!("{:?} {}", names, more.len());\n}',
-          [
-            '["a", "b", "c"] 0',
-            '[a, b, c] 2',
-            '["b", "c", "a"] 2',
-            '["a", "b", "c"] 2',
-          ],
-          3,
+          '["a", "b", "c"] 2',
           'cloned appends owned copies of "b" and "c". more keeps its two Strings because iter only borrowed them.',
         ),
         choose(
@@ -11074,11 +10130,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'copied only works for Copy types such as i32. A String has to be duplicated with cloned.',
           'fn main() {\n    let more = [String::from("x")];\n    let mut names = vec![String::from("w")];\n    names.extend(more.iter().copied());\n    println!("{:?}", names);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn joined(mut left: Vec<i32>, right: &[i32]) -> Vec<i32> {\n    left.extend(right.iter().copied());\n    left\n}\n\nfn main() {\n    let tail = [8, 2];\n    let first = joined(vec![5], &tail);\n    let second = joined(first, &tail);\n    println!("{:?}", second);\n}',
-          ['[5, 8, 2]', '[5, 8, 2, 8, 2]', '[5, 8, 8, 2, 2]', '[8, 2, 5]'],
-          1,
+          '[5, 8, 2, 8, 2]',
           'The first call appends 8 and 2 after 5. The second appends them again, in the same order, because tail was only borrowed.',
         ),
       ],
@@ -11096,11 +10151,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Building doubled prints nothing. Only when extend consumes it does the closure run, once for 1 and once for 2, and the results are appended after 0.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let prices = [5, 8];\n    let mut v = vec![1];\n    v.extend(prices.iter().map(|p| p + 1));\n    println!("{:?}", v);\n}',
-          ['[1, 5, 8]', '[6, 9]', '[1, 6, 9]', '[6, 9, 1]'],
-          2,
+          '[1, 6, 9]',
           'map adds 1 to each price as extend consumes it, and the results go after the existing 1.',
         ),
         predictOutput(
@@ -11115,16 +10169,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'The closure does not run when items is created. extend consumes the range 1..3, running the closure for 1 and 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let offset = 100;\n    let mut v = vec![1, 2];\n    v.extend((1..=2).map(|n| n + offset));\n    v.push(3);\n    println!("{:?}", v);\n}',
-          [
-            '[1, 2, 101, 102, 3]',
-            '[1, 2, 3, 101, 102]',
-            '[101, 102, 1, 2, 3]',
-            '[1, 2, 101, 3]',
-          ],
-          0,
+          '[1, 2, 101, 102, 3]',
           'extend appends 101 and 102 right away, so the later push puts 3 after them.',
         ),
         choose(
@@ -11156,32 +10204,28 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each pass pops the current last element and prints it. The fourth pop returns None, which ends the loop with the Vec empty.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![4, 5, 6];\n    let mut total = 0;\n    while let Some(x) = v.pop() {\n        total += x;\n    }\n    println!("{} {}", total, v.len());\n}',
-          ['15 0', '15 3', '6 2', '11 1'],
-          0,
+          '15 0',
           'The loop pops all three values, adding each one, and stops once the Vec is empty.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut v = vec![10, 20];\n    let mut rounds = 0;\n    while let Some(_) = v.pop() {\n        rounds += 1;\n    }\n    println!("{}", rounds);\n}',
-          ['3', '1', '30', '2'],
-          3,
+          '2',
           'The body runs once per Some, so twice. The third pop returns None, which ends the loop without running the body.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![3];\n    while let Some(n) = v.pop() {\n        println!("{}", n);\n        if n > 1 {\n            v.push(n - 1);\n        }\n    }\n}',
-          ['3', '1\n2\n3', '3\n2', '3\n2\n1'],
-          3,
+          '3\n2\n1',
           'The condition is checked again before every pass. The body keeps pushing a smaller value until it reaches 1, which pushes nothing.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut v: Vec<i32> = Vec::new();\n    while let Some(x) = v.pop() {\n        println!("{}", x);\n    }\n    println!("done");\n}',
-          ['None\ndone', '0\ndone', 'done', 'done\nNone'],
-          2,
+          'done',
           'The first pop already returns None, so the body never runs.',
         ),
       ],
@@ -11200,18 +10244,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first two pops return Some(0) and match. The third returns Some(7), which does not match Some(0), so the loop stops, but 7 has already been removed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut digits = vec![0, 5, 0];\n    let mut zeros = 0;\n    while let Some(0) = digits.pop() {\n        zeros += 1;\n    }\n    println!("{} {:?}", zeros, digits);\n}',
-          ['2 []', '1 [0, 5]', '1 [0]', '0 [0, 5, 0]'],
-          2,
+          '1 [0]',
           'The last 0 matches. Then 5 is popped, fails the pattern and ends the loop, leaving only the first 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut tasks = vec![("wash", true), ("dry", false), ("fold", true)];\n    while let Some((name, true)) = tasks.pop() {\n        println!("{}", name);\n    }\n    println!("{}", tasks.len());\n}',
-          ['fold\n1', 'fold\nwash\n0', 'fold\n2', 'wash\nfold\n1'],
-          0,
+          'fold\n1',
           'fold is popped and matches. dry has false, so the loop stops after removing it, leaving only wash.',
         ),
         choose(
@@ -11225,11 +10267,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'pop ran before the pattern was checked, so the 9 left the Vec. Nothing kept it, so it was dropped.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut v = vec![4, 12, 3, 8];\n    let mut count = 0;\n    while let Some(1..=9) = v.pop() {\n        count += 1;\n    }\n    println!("{} {}", count, v.len());\n}',
-          ['2 1', '3 0', '2 2', '3 1'],
-          0,
+          '2 1',
           '8 and 3 are in 1..=9. 12 is not, so the loop ends after removing it, and only 4 remains.',
         ),
       ],
@@ -11248,30 +10289,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Values come off the end: 6, 4, 3, 2, 1. Only the even ones are pushed, so out holds them in reverse order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut source = vec![1, 2, 3];\n    let mut out = Vec::new();\n    while let Some(x) = source.pop() {\n        out.push(x * 10);\n    }\n    println!("{:?} {:?}", out, source);\n}',
-          [
-            '[10, 20, 30] []',
-            '[30, 20, 10] []',
-            '[30, 20, 10] [1, 2, 3]',
-            '[30, 20] [1]',
-          ],
-          1,
+          '[30, 20, 10] []',
           'pop takes 3 first, so the scaled values arrive in reverse order, and source ends up empty.',
         ),
-        predictOutput(
+        typeOutput(
           'What are the printed lines?',
           'fn main() {\n    let mut n = 472;\n    let mut digits = Vec::new();\n    while n > 0 {\n        digits.push(n % 10);\n        n = n / 10;\n    }\n    while let Some(d) = digits.pop() {\n        println!("{}", d);\n    }\n}',
-          ['2\n7\n4', '472', '4\n7', '4\n7\n2'],
-          3,
+          '4\n7\n2',
           'The first loop pushes the digits from the right: 2, 7, 4. Popping them back gives 4, 7, 2.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut a = vec![1, 2];\n    let mut b = vec![9];\n    while let Some(x) = a.pop() {\n        b.push(x);\n    }\n    println!("{:?} {:?}", a, b);\n}',
-          ['[] [9, 1, 2]', '[1, 2] [9, 2, 1]', '[] [9, 2, 1]', '[] [2, 1, 9]'],
-          2,
+          '[] [9, 2, 1]',
           '2 is popped first and pushed after 9, then 1. a is left empty.',
         ),
         choose(
@@ -11304,25 +10337,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'ana joined first, so pop_front serves her first. {:?} prints the rest of the queue from front to back.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut q = std::collections::VecDeque::new();\n    q.push_back(1);\n    q.push_back(2);\n    q.push_back(3);\n    let first = q.pop_front();\n    println!("{:?} {:?}", first, q);\n}',
-          ['Some(3) [1, 2]', 'Some(1) [2, 3]', 'Some(1) [1, 2, 3]', '1 [2, 3]'],
-          1,
+          'Some(1) [2, 3]',
           'pop_front removes the oldest value, 1, and returns it wrapped in Some.',
         ),
-        predictOutput(
+        typeOutput(
           'What are the printed lines?',
           'fn main() {\n    let mut q = std::collections::VecDeque::new();\n    for n in 4..7 {\n        q.push_back(n);\n    }\n    while let Some(n) = q.pop_front() {\n        println!("{}", n);\n    }\n}',
-          ['6\n5\n4', '4\n5\n6\n7', '4\n5\n6', '5\n6'],
-          2,
+          '4\n5\n6',
           'Values leave from the front in the order they were pushed at the back. The range 4..7 stops before 7.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut q = std::collections::VecDeque::new();\n    q.push_back(8);\n    q.pop_front();\n    let again = q.pop_front();\n    println!("{:?} {}", again, q.len());\n}',
-          ['Some(8) 0', 'Some(0) 0', 'None 1', 'None 0'],
-          3,
+          'None 0',
           'The first pop_front removes 8. The queue is then empty, so the second returns None.',
         ),
         choose(
@@ -11352,30 +10382,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'push_front puts 1 ahead of 2, and push_back puts 3 behind it. front only looks at 1, while pop_back removes 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut q = std::collections::VecDeque::new();\n    q.push_front(1);\n    q.push_front(2);\n    q.push_front(3);\n    println!("{:?}", q);\n}',
-          ['[1, 2, 3]', '[3]', '[1, 3, 2]', '[3, 2, 1]'],
-          3,
+          '[3, 2, 1]',
           'Each push_front goes ahead of everything already there, so the last value pushed ends up at the front.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut q = std::collections::VecDeque::new();\n    q.push_back(5);\n    q.push_back(9);\n    let peeked = q.front();\n    println!("{:?} {}", peeked, q.len());\n}',
-          ['Some(9) 2', 'Some(5) 1', 'Some(5) 2', '5 2'],
-          2,
+          'Some(5) 2',
           'front returns the oldest value, 5, without removing it, so both values are still in the queue.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut q = std::collections::VecDeque::new();\n    q.push_back(1);\n    q.push_back(2);\n    q.push_back(3);\n    let a = q.pop_back();\n    let b = q.pop_front();\n    println!("{:?} {:?} {:?}", a, b, q);\n}',
-          [
-            'Some(3) Some(1) [2]',
-            'Some(1) Some(3) [2]',
-            'Some(3) Some(2) [1]',
-            'Some(3) Some(1) []',
-          ],
-          0,
+          'Some(3) Some(1) [2]',
           'pop_back takes 3 from the back and pop_front takes 1 from the front, leaving 2.',
         ),
         choose(
@@ -11399,25 +10421,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Once a fourth value arrives, the oldest is dropped from the front. After all five readings, the window holds the last three.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut window = std::collections::VecDeque::new();\n    for &n in &[5, 1, 8, 2] {\n        window.push_back(n);\n        if window.len() > 2 {\n            window.pop_front();\n        }\n    }\n    println!("{:?}", window);\n}',
-          ['[8, 2]', '[5, 1]', '[2, 8]', '[1, 8, 2]'],
-          0,
+          '[8, 2]',
           'Only the two newest values survive, and they keep their arrival order.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut window = std::collections::VecDeque::new();\n    for n in 1..6 {\n        window.push_back(n);\n        if window.len() >= 3 {\n            window.pop_front();\n        }\n    }\n    println!("{:?}", window);\n}',
-          ['[3, 4, 5]', '[4, 5]', '[1, 2]', '[5]'],
-          1,
+          '[4, 5]',
           'The test >= 3 pops as soon as the window reaches 3, so it never keeps more than 2 values: the newest two are 4 and 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn newest_first(values: &[i32], k: usize) -> Vec<i32> {\n    let mut window = std::collections::VecDeque::new();\n    for &value in values {\n        window.push_back(value);\n        if window.len() > k {\n            window.pop_front();\n        }\n    }\n    let mut out = Vec::new();\n    while let Some(value) = window.pop_back() {\n        out.push(value);\n    }\n    out\n}\n\nfn main() {\n    println!("{:?}", newest_first(&[2, 4, 6, 8], 3));\n}',
-          ['[4, 6, 8]', '[8, 6, 4]', '[8, 6, 4, 2]', '[6, 4, 2]'],
-          1,
+          '[8, 6, 4]',
           'The window keeps 4, 6 and 8. Draining it with pop_back takes them newest first.',
         ),
         choose(
@@ -11449,23 +10468,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'ana is a key, so get returns Some with her value. cy was never inserted, so get returns None. The map holds 2 keys, including ben.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut rooms = std::collections::HashMap::new();\n    rooms.insert(101, "lab");\n    rooms.insert(204, "office");\n    println!("{:?} {:?}", rooms.get(&204), rooms.get(&102));\n}',
-          [
-            'Some(office) None',
-            'Some("office") None',
-            'Some("lab") None',
-            'Some("office") Some("lab")',
-          ],
-          1,
+          'Some("office") None',
           'Key 204 maps to "office", which Debug prints with quotes. 102 was never inserted.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let pairs = [("x", 3), ("y", 7), ("z", 1)];\n    let mut map = std::collections::HashMap::new();\n    for &(key, value) in &pairs {\n        map.insert(key, value);\n    }\n    println!("{:?} {} {}", map.get("y"), map.contains_key("w"), map.len());\n}',
-          ['Some(7) false 3', 'Some(1) false 3', 'Some(7) true 3', '7 false 3'],
-          0,
+          'Some(7) false 3',
           'y was inserted with 7, w never was, and the loop inserted 3 distinct keys.',
         ),
         choose(
@@ -11501,18 +10513,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'pens is stocked with 0, so the lookup gives Some(0). ink was never listed, so it gives None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut fines = std::collections::HashMap::new();\n    fines.insert("lee", 0);\n    fines.insert("max", 15);\n    let a = fines.get("lee").copied();\n    let b = fines.get("sam").copied();\n    println!("{:?} {:?}", a, b);\n}',
-          ['None None', 'Some(0) Some(0)', 'Some(0) None', '0 None'],
-          2,
+          'Some(0) None',
           'lee is stored with 0, which is still Some(0). sam is not a key, so the lookup is None.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn describe(found: Option<i32>) {\n    match found {\n        Some(0) => println!("zero"),\n        Some(n) => println!("{}", n),\n        None => println!("missing"),\n    }\n}\n\nfn main() {\n    let mut votes = std::collections::HashMap::new();\n    votes.insert(1, 0);\n    votes.insert(2, 5);\n    describe(votes.get(&1).copied());\n    describe(votes.get(&3).copied());\n}',
-          ['missing\nmissing', 'zero\nmissing', 'zero\nzero', '0\nmissing'],
-          1,
+          'zero\nmissing',
           'Key 1 holds 0, which matches Some(0). Key 3 is absent, which matches None.',
         ),
         choose(
@@ -11526,16 +10536,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Option<i32> gives None for a missing key and Some(0) for a stored zero. The other types merge the two cases.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut nick = std::collections::HashMap::new();\n    nick.insert("robert", String::from("bob"));\n    let found: Option<String> = nick.get("robert").cloned();\n    let missing: Option<String> = nick.get("alice").cloned();\n    println!("{:?} {:?}", found, missing);\n}',
-          [
-            'Some(bob) None',
-            'Some("bob") Some("")',
-            'Some("robert") None',
-            'Some("bob") None',
-          ],
-          3,
+          'Some("bob") None',
           'cloned makes an owned copy of the stored String, which Debug prints with quotes. The missing key stays None.',
         ),
       ],
@@ -11554,23 +10558,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first insert adds a new key and returns None. The second replaces 3 with 7 and returns the old 3. The map still has one key.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let entries = [("a", 1), ("b", 2), ("a", 5)];\n    let mut map = std::collections::HashMap::new();\n    for &(key, value) in &entries {\n        map.insert(key, value);\n    }\n    println!("{:?} {}", map.get("a"), map.len());\n}',
-          ['Some(1) 2', 'Some(5) 3', 'Some(6) 2', 'Some(5) 2'],
-          3,
+          'Some(5) 2',
           'The second insert for "a" replaces 1 with 5. Only two distinct keys exist.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut seats = std::collections::HashMap::new();\n    let first = seats.insert(12, "kai");\n    let second = seats.insert(14, "mo");\n    let third = seats.insert(12, "zoe");\n    println!("{:?} {:?} {:?}", first, second, third);\n}',
-          [
-            'None None Some("zoe")',
-            'None None Some("kai")',
-            'Some("kai") Some("mo") Some("zoe")',
-            'None None None',
-          ],
-          1,
+          'None None Some("kai")',
           'Seats 12 and 14 are new at first, so those inserts return None. The third replaces "kai" and returns it.',
         ),
         choose(
@@ -11584,16 +10581,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'Each key holds one value, and a later insert replaces an earlier one.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut best = std::collections::HashMap::new();\n    best.insert("jump", 4);\n    match best.insert("jump", 6) {\n        Some(old) => println!("replaced {}", old),\n        None => println!("new"),\n    }\n    println!("{:?}", best.get("jump"));\n}',
-          [
-            'replaced 4\nSome(6)',
-            'new\nSome(6)',
-            'replaced 6\nSome(6)',
-            'replaced 4\nSome(4)',
-          ],
-          0,
+          'replaced 4\nSome(6)',
           'jump already held 4, so insert returns Some(4) and stores 6 in its place.',
         ),
       ],
@@ -11614,18 +10605,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'apple already holds 5, so its default is ignored and 2 is added. pear is missing, so 10 is stored first and then 1 is added.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut m = std::collections::HashMap::new();\n    m.insert("x", 4);\n    *m.entry("x").or_insert(100) += 1;\n    println!("{:?}", m.get("x"));\n}',
-          ['Some(101)', 'Some(5)', 'Some(100)', 'Some(4)'],
-          1,
+          'Some(5)',
           'x is already present, so or_insert ignores 100 and returns the existing 4, which becomes 5.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut m = std::collections::HashMap::new();\n    m.entry("y").or_insert(3);\n    m.entry("y").or_insert(8);\n    println!("{:?} {}", m.get("y"), m.len());\n}',
-          ['Some(3) 1', 'Some(8) 1', 'Some(11) 1', 'Some(3) 2'],
-          0,
+          'Some(3) 1',
           'The first call stores 3. The second finds y present, so 8 is never stored.',
         ),
         choose(
@@ -11640,11 +10629,10 @@ export const knowledgePoints: KnowledgePointModule = {
           '+= cannot add to the reference itself; *counts.entry("a").or_insert(0) += 1 changes the value it points to.',
           'fn main() {\n    let mut counts = std::collections::HashMap::new();\n    counts.entry("a").or_insert(0) += 1;\n    println!("{:?}", counts.get("a"));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut m = std::collections::HashMap::new();\n    let slot = m.entry(7).or_insert(1);\n    *slot *= 5;\n    println!("{:?} {:?}", m.get(&7), m.get(&5));\n}',
-          ['Some(1) None', 'Some(7) None', 'Some(5) Some(1)', 'Some(5) None'],
-          3,
+          'Some(5) None',
           'Key 7 is created with 1, and slot points at that value, so it becomes 5. Key 5 was never inserted.',
         ),
       ],
@@ -11663,28 +10651,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'red is counted three times and blue once. green never appeared, so it has no entry at all.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let rolls = [3, 1, 3, 3, 6];\n    let mut counts = std::collections::HashMap::new();\n    for &r in &rolls {\n        *counts.entry(r).or_insert(0) += 1;\n    }\n    println!("{:?} {:?} {}", counts.get(&3), counts.get(&2), counts.len());\n}',
-          [
-            'Some(3) None 3',
-            'Some(3) Some(0) 3',
-            'Some(2) None 5',
-            'Some(3) None 5',
-          ],
-          0,
+          'Some(3) None 3',
           '3 appears three times and 2 never does. len counts distinct keys: 3, 1 and 6.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let sales = [("tea", 4), ("cake", 3), ("tea", 6)];\n    let mut totals = std::collections::HashMap::new();\n    for &(item, amount) in &sales {\n        *totals.entry(item).or_insert(0) += amount;\n    }\n    println!("{:?} {:?}", totals.get("tea"), totals.get("cake"));\n}',
-          [
-            'Some(10) Some(3)',
-            'Some(6) Some(3)',
-            'Some(2) Some(1)',
-            'Some(4) Some(3)',
-          ],
-          0,
+          'Some(10) Some(3)',
           'Each sale adds its amount to the total for its item, so tea collects 4 + 6.',
         ),
         choose(
@@ -11698,16 +10674,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'insert resets the count to 1 each time, or_insert(1) alone never increments, and starting at 1 before adding 1 counts the first sighting twice.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn tally(values: &[i32]) -> std::collections::HashMap<i32, usize> {\n    let mut counts = std::collections::HashMap::new();\n    for &n in values {\n        *counts.entry(n).or_insert(0) += 1;\n    }\n    counts\n}\n\nfn main() {\n    let t = tally(&[5, 5, -5]);\n    println!("{:?} {:?} {}", t.get(&5), t.get(&-5), tally(&[]).len());\n}',
-          [
-            'Some(3) None 0',
-            'Some(2) None 0',
-            'Some(2) Some(1) 1',
-            'Some(2) Some(1) 0',
-          ],
-          3,
+          'Some(2) Some(1) 0',
           '5 and -5 are different keys with counts 2 and 1. An empty slice creates no entries.',
         ),
       ],
@@ -11726,35 +10696,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'ivy starts at 7, rises to 12, and keeps 12 when 9 arrives. max has only one round, so the 4 stored as its default stays.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let times = [("a", 30), ("b", 25), ("a", 22), ("a", 28)];\n    let mut fastest = std::collections::HashMap::new();\n    for &(runner, t) in &times {\n        let slot = fastest.entry(runner).or_insert(t);\n        if t < *slot {\n            *slot = t;\n        }\n    }\n    println!("{:?} {:?}", fastest.get("a"), fastest.get("b"));\n}',
-          [
-            'Some(28) Some(25)',
-            'Some(22) Some(25)',
-            'Some(30) Some(25)',
-            'Some(22) None',
-          ],
-          1,
+          'Some(22) Some(25)',
           'a starts at 30, drops to 22, and 28 does not beat 22. b keeps its only time.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn votes_for(ballots: &[&str], name: &str) -> Option<i32> {\n    let mut tally = std::collections::HashMap::new();\n    for &b in ballots {\n        *tally.entry(b).or_insert(0) += 1;\n    }\n    tally.get(name).copied()\n}\n\nfn main() {\n    let ballots = ["kim", "lou", "kim"];\n    println!("{:?} {:?}", votes_for(&ballots, "lou"), votes_for(&ballots, "ray"));\n}',
-          ['Some(1) Some(0)', 'Some(2) None', 'Some(1) None', 'None None'],
-          2,
+          'Some(1) None',
           'lou got one vote. ray got none, so entry never created a key for ray and get returns None.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut level = std::collections::HashMap::new();\n    for &k in &["a", "b", "a"] {\n        *level.entry(k).or_insert(1) *= 2;\n    }\n    println!("{:?} {:?}", level.get("a"), level.get("b"));\n}',
-          [
-            'Some(4) Some(2)',
-            'Some(2) Some(2)',
-            'Some(3) Some(2)',
-            'Some(4) Some(1)',
-          ],
-          0,
+          'Some(4) Some(2)',
           'Each new key starts at 1 and is doubled on every sighting: a twice gives 4, b once gives 2.',
         ),
         choose(
@@ -11787,25 +10744,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Five values are inserted, but 4 is stored only once. The set holds 4, 9 and 2.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn distinct(values: &[i32]) -> usize {\n    let mut seen = std::collections::HashSet::new();\n    for &v in values {\n        seen.insert(v);\n    }\n    seen.len()\n}\n\nfn main() {\n    println!("{} {}", distinct(&[7, 7, 7]), distinct(&[1, 2, 1, 3]));\n}',
-          ['3 4', '1 3', '1 2', '0 2'],
-          1,
+          '1 3',
           'Three 7s collapse into one value. 1, 2 and 3 are the distinct values of the second slice.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut tags = std::collections::HashSet::new();\n    for &t in &["Rust", "rust", "RUST", "rust"] {\n        tags.insert(t);\n    }\n    println!("{}", tags.len());\n}',
-          ['1', '4', '3', '2'],
-          2,
+          '3',
           'Strings are equal only if they match exactly, including case, so only the repeated "rust" is a duplicate.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut edges = std::collections::HashSet::new();\n    edges.insert((1, 2));\n    edges.insert((2, 1));\n    edges.insert((1, 2));\n    println!("{}", edges.len());\n}',
-          ['1', '3', '0', '2'],
-          3,
+          '2',
           '(1, 2) and (2, 1) are different tuples. Only the second (1, 2) is a duplicate.',
         ),
         choose(
@@ -11835,28 +10789,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first insert adds ox and returns true. The second finds it already there and returns false. contains then confirms ox is present and yak is not.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut s = std::collections::HashSet::new();\n    let a = s.insert(5);\n    let b = s.insert(6);\n    let c = s.insert(5);\n    println!("{} {} {} {}", a, b, c, s.len());\n}',
-          [
-            'true true true 3',
-            'true true false 2',
-            'false false true 2',
-            'true true false 3',
-          ],
-          1,
+          'true true false 2',
           '5 and 6 are new, so their inserts return true. The second 5 returns false and adds nothing.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut s = std::collections::HashSet::new();\n    for &n in &[2, 4, 6] {\n        s.insert(n);\n    }\n    println!("{} {}", s.contains(&4), s.contains(&5));\n    println!("{}", s.contains(&2) && !s.contains(&8));\n}',
-          [
-            'true false\ntrue',
-            'true false\nfalse',
-            'false false\ntrue',
-            'true true\ntrue',
-          ],
-          0,
+          'true false\ntrue',
           '4 is in the set and 5 is not. 2 is present and 8 is absent, so the && expression is true.',
         ),
         choose(
@@ -11898,25 +10840,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first slice keeps all 3 values in the set. In the second, 3 repeats, so the set holds 2 values against a slice of 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn extra_copies(values: &[i32]) -> usize {\n    let mut seen = std::collections::HashSet::new();\n    for &v in values {\n        seen.insert(v);\n    }\n    values.len() - seen.len()\n}\n\nfn main() {\n    println!("{}", extra_copies(&[5, 5, 5, 2]));\n}',
-          ['3', '1', '2', '4'],
-          2,
+          '2',
           'The slice has 4 values and the set has 2 (5 and 2), so there are 2 extra copies.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn all_distinct(values: &[&str]) -> bool {\n    let mut seen = std::collections::HashSet::new();\n    for &v in values {\n        seen.insert(v);\n    }\n    seen.len() == values.len()\n}\n\nfn main() {\n    println!("{} {}", all_distinct(&[]), all_distinct(&["a", "A"]));\n}',
-          ['false true', 'true false', 'true true', 'false false'],
-          2,
+          'true true',
           'An empty slice and an empty set both have length 0. "a" and "A" are different strings, so nothing repeats.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut seen = std::collections::HashSet::new();\n    let mut fresh = true;\n    for &n in &[8, 3, 8] {\n        fresh = seen.insert(n);\n    }\n    println!("{} {}", fresh, seen.len());\n}',
-          ['true 3', 'false 2', 'true 2', 'false 3'],
-          1,
+          'false 2',
           'fresh holds only the result of the last insert, the repeated 8, which is false. The set holds 8 and 3.',
         ),
         choose(
@@ -11948,16 +10887,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The keys were inserted as 30, 10, 20, but the map prints and loops over them in ascending order.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut pets = std::collections::BTreeMap::new();\n    pets.insert("cat", 3);\n    pets.insert("ant", 2);\n    pets.insert("bee", 1);\n    println!("{:?}", pets);\n}',
-          [
-            '{"cat": 3, "ant": 2, "bee": 1}',
-            '{"bee": 1, "ant": 2, "cat": 3}',
-            '{"ant": 2, "bee": 1, "cat": 3}',
-            '{ant: 2, bee: 1, cat: 3}',
-          ],
-          2,
+          '{"ant": 2, "bee": 1, "cat": 3}',
           'A BTreeMap is ordered by key, and text keys sort alphabetically. Debug keeps the quotes.',
         ),
         predictOutput(
@@ -11972,16 +10905,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'Keys are visited in ascending numeric order, and -2 is smaller than 0.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut m = std::collections::BTreeMap::new();\n    m.insert(2, "b");\n    m.insert(1, "a");\n    m.insert(2, "z");\n    println!("{:?} {}", m, m.len());\n}',
-          [
-            '{1: "a", 2: "z"} 2',
-            '{2: "b", 1: "a", 2: "z"} 3',
-            '{1: "a", 2: "b"} 2',
-            '{2: "z", 1: "a"} 2',
-          ],
-          0,
+          '{1: "a", 2: "z"} 2',
           'Inserting key 2 again replaces "b" with "z", and the two keys print in ascending order.',
         ),
         choose(
@@ -12011,25 +10938,22 @@ export const knowledgePoints: KnowledgePointModule = {
           '9..15 visits hours 9 and 12 but not 15. 9..=15 also includes 15, so the total is 15 + 21 + 19.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What are the printed lines?',
           'fn main() {\n    let mut m = std::collections::BTreeMap::new();\n    for &k in &[1, 3, 5, 6, 8] {\n        m.insert(k, 0);\n    }\n    for (k, _) in m.range(3..6) {\n        println!("{}", k);\n    }\n}',
-          ['3\n5', '3\n5\n6', '5', '3\n4\n5'],
-          0,
+          '3\n5',
           '3..6 includes 3 and stops before 6. range only visits keys that exist, so there is no 4.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut m = std::collections::BTreeMap::new();\n    m.insert(2, 10);\n    m.insert(5, 20);\n    m.insert(9, 30);\n    let mut total = 0;\n    for (_, v) in m.range(4..=9) {\n        total += v;\n    }\n    println!("{}", total);\n}',
-          ['50', '20', '60', '30'],
-          0,
+          '50',
           'Keys 5 and 9 fall in 4..=9, so their values 20 and 30 are added. Key 2 is below the range.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn main() {\n    let mut m = std::collections::BTreeMap::new();\n    for &k in &[2, 5, 7, 11] {\n        m.insert(k, k * 2);\n    }\n    for (k, v) in m.range(6..) {\n        println!("{} {}", k, v);\n    }\n}',
-          ['5 10\n7 14\n11 22', '7 14\n11 22', '2 4\n5 10', '7 14'],
-          1,
+          '7 14\n11 22',
           '6.. has no end, so it runs to the largest key. 6 is not a key, so the visit starts at 7.',
         ),
         choose(
@@ -12071,18 +10995,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'BTreeMap::range checks its bounds and panics when the start is greater than the end. Guard with an early return instead.',
           'fn main() {\n    let mut m = std::collections::BTreeMap::new();\n    m.insert(3, "c");\n    m.insert(7, "g");\n    let mut seen = 0;\n    for _ in m.range(5..=2) {\n        seen += 1;\n    }\n    println!("{}", seen);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let mut m = std::collections::BTreeMap::new();\n    m.insert(4, 40);\n    m.insert(6, 60);\n    let mut seen = 0;\n    for _ in m.range(4..4) {\n        seen += 1;\n    }\n    println!("{}", seen);\n}',
-          ['1', '40', '0', '2'],
-          2,
+          '0',
           '4..4 starts at 4 but stops before 4, so it is empty. Its start is not greater than its end, so range visits nothing instead of panicking.',
         ),
-        predictOutput(
+        typeOutput(
           'What is printed?',
           'fn sum_range(entries: &[(i32, i32)], low: i32, high: i32) -> i32 {\n    if low > high {\n        return -1;\n    }\n    let mut map = std::collections::BTreeMap::new();\n    for &(k, v) in entries {\n        map.insert(k, v);\n    }\n    let mut total = 0;\n    for (_, v) in map.range(low..high) {\n        total += v;\n    }\n    total\n}\n\nfn main() {\n    let e = [(1, 5), (3, 7), (6, 2)];\n    println!("{} {} {}", sum_range(&e, 1, 6), sum_range(&e, 6, 1), sum_range(&e, 3, 3));\n}',
-          ['14 -1 7', '12 -1 0', '12 0 0', '14 -1 0'],
-          1,
+          '12 -1 0',
           'The half-open range 1..6 visits keys 1 and 3, giving 12. 6 > 1 returns -1 before range runs, and 3..3 is empty.',
         ),
         choose(
@@ -12114,16 +11036,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both calls pass an even number, so the assertion holds silently and each call returns half. half(7) would instead stop with assertion failed: n % 2 == 0 before reaching the division.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let width = 4;\n    let height = 3;\n    assert!(width > height);\n    println!("area {}", width * height);\n}',
-          [
-            'true\narea 12',
-            'area 12',
-            'assertion passed\narea 12',
-            'Nothing; the program panics',
-          ],
-          1,
+          'area 12',
           '4 > 3 is true, so assert! does nothing visible and the program goes on to print the area.',
         ),
         choose(
@@ -12138,11 +11054,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Lines run in order: checking prints, then the false condition panics at the assert!, so ordered never prints.',
           'fn main() {\n    let stock = 2;\n    println!("checking");\n    assert!(stock >= 5);\n    println!("ordered");\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn ticket_price(age: u32) -> u32 {\n    assert!(age <= 120);\n    if age < 12 {\n        5\n    } else {\n        9\n    }\n}\n\nfn main() {\n    println!("{}", ticket_price(8) + ticket_price(30));\n}',
-          ['5\n9', 'true\ntrue\n14', '14', '18'],
-          2,
+          '14',
           'Both ages pass the assertion, which prints nothing. The prices 5 and 9 are added and printed once.',
         ),
         choose(
@@ -12180,11 +11095,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'assert_eq! prints both sides with Debug in the order written, so the strings keep their quotes and name is on the left.',
           'fn main() {\n    let name = String::from("ferris");\n    assert_eq!(name, "Ferris");\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let scores = [4, 9, 4];\n    assert_eq!(scores[0], scores[2]);\n    assert_ne!(scores[0], scores[1]);\n    println!("{} {}", scores[0], scores.len());\n}',
-          ['true\ntrue\n4 3', 'Nothing; the program panics', '4 3', '4 2'],
-          2,
+          '4 3',
           'scores[0] and scores[2] are both 4, and 4 differs from 9, so both checks pass silently before the final line prints.',
         ),
         choose(
@@ -12238,16 +11152,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'With a message, assert! panics with the formatted message instead of the default text, and {} is filled with 0.',
           'fn main() {\n    let retries = 0;\n    assert!(retries > 0, "retries must be positive, got {}", retries);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn label(level: u8) -> String {\n    assert!(level <= 3, "unknown level {}", level);\n    format!("level {}", level)\n}\n\nfn main() {\n    println!("{}", label(3));\n}',
-          [
-            'unknown level 3\nlevel 3',
-            'unknown level 3',
-            'Nothing; the program panics',
-            'level 3',
-          ],
-          3,
+          'level 3',
           '3 <= 3 is true, so the assertion passes and its message is never printed.',
         ),
         choose(
@@ -12301,11 +11209,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'The assertion runs first and its condition is false, so the program stops with your message before the division could fail.',
           'fn per_item(total: u32, items: &[u32]) -> u32 {\n    assert!(!items.is_empty(), "no items to share {} among", total);\n    total / items.len() as u32\n}\n\nfn main() {\n    println!("{}", per_item(12, &[]));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn last_minus_first(values: &[i32]) -> i32 {\n    assert!(values.len() >= 2, "need two values, got {}", values.len());\n    values[values.len() - 1] - values[0]\n}\n\nfn main() {\n    println!("{}", last_minus_first(&[3, 8, 10]));\n}',
-          ['need two values, got 3\n7', '-7', '5', '7'],
-          3,
+          '7',
           'Three values satisfy the precondition silently, and the last value 10 minus the first value 3 is 7.',
         ),
         choose(
@@ -12319,11 +11226,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'Placed after the division, the program would already have panicked with a division by zero. The check must run before the code it protects.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn pair_sum(values: &[i32]) -> i32 {\n    assert_eq!(values.len(), 2, "expected a pair");\n    values[0] + values[1]\n}\n\nfn main() {\n    let total = pair_sum(&[6, -2]);\n    assert_ne!(total, 0);\n    println!("{}", total);\n}',
-          ['8', '4', 'expected a pair\n4', 'true\n4'],
-          1,
+          '4',
           'The slice has exactly two values and their sum 4 is not 0, so both assertions pass silently and only 4 prints.',
         ),
       ],
@@ -12407,18 +11313,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'A normal run compiles greeting and main but not the tests module, so the test line never prints.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does a normal run of this program print?',
           'fn total(a: u32, b: u32) -> u32 {\n    a + b\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn adds() {\n        println!("test: {}", total(2, 2));\n        assert_eq!(total(2, 2), 4);\n    }\n}\n\nfn main() {\n    println!("main: {}", total(5, 1));\n}',
-          ['main: 6', 'test: 4\nmain: 6', 'main: 6\ntest: 4', 'test: 4'],
-          0,
+          'main: 6',
           'The tests module is left out of a normal build, so only main prints.',
         ),
-        predictOutput(
+        typeOutput(
           'What does a normal run of this program print?',
           'fn discount(price: u32) -> u32 {\n    price - price / 10\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn takes_ten_percent() {\n        assert_eq!(discount(50), 40);\n    }\n}\n\nfn main() {\n    println!("{}", discount(50));\n}',
-          ['40', 'Nothing; the program panics', '45', '45\ntest failed'],
-          2,
+          '45',
           'The wrong expectation would fail under cargo test, but a normal run leaves the tests module out, so main prints 50 - 5 = 45.',
         ),
         choose(
@@ -12432,11 +11336,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'cfg(test) is false outside cargo test, so the module is not compiled at all.',
         ),
-        predictOutput(
+        typeOutput(
           'What does a normal run of this program print?',
           'const LIMIT: u32 = 3;\n\nfn clamp(n: u32) -> u32 {\n    if n > LIMIT {\n        LIMIT\n    } else {\n        n\n    }\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn clamps_large_values() {\n        assert_eq!(clamp(10), LIMIT);\n        println!("clamped");\n    }\n}\n\nfn main() {\n    println!("{} {}", clamp(2), clamp(7));\n}',
-          ['clamped\n2 3', '2 7', '2 3\nclamped', '2 3'],
-          3,
+          '2 3',
           'Only main runs: 2 stays 2 and 7 is capped at LIMIT, 3. The test and its println! are not part of a normal build.',
         ),
       ],
@@ -12489,16 +11392,10 @@ export const knowledgePoints: KnowledgePointModule = {
           3,
           'super names the parent module, where area is defined. self and tests both refer to the tests module itself.',
         ),
-        predictOutput(
+        typeOutput(
           'The same use super::* line works in any child module. What does this program print?',
           'const PREFIX: &str = "id";\n\nfn tag(n: u32) -> String {\n    format!("{}-{}", PREFIX, n)\n}\n\nmod report {\n    use super::*;\n\n    pub fn line() -> String {\n        format!("{} and {}", tag(1), tag(2))\n    }\n}\n\nfn main() {\n    println!("{}", report::line());\n}',
-          [
-            'It does not compile: tag is private',
-            'id-1 and id-2',
-            'It does not compile: report cannot see PREFIX',
-            'tag(1) and tag(2)',
-          ],
-          1,
+          'id-1 and id-2',
           'use super::* imports tag and PREFIX into report, and a child module may use private parent items, so line builds id-1 and id-2.',
         ),
       ],
@@ -12517,11 +11414,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'cargo run prints 5 + 2 * 2 = 9 from main. cargo test calls light_parcel and heavy_parcel instead; both expectations match, so it reports 2 passed; 0 failed and main does not run.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does cargo run print for this file?',
           'fn countdown_sum(n: u32) -> u32 {\n    let mut total = 0;\n    let mut i = n;\n    while i > 0 {\n        total += i;\n        i -= 1;\n    }\n    total\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn sums_three() {\n        assert_eq!(countdown_sum(3), 6);\n    }\n\n    #[test]\n    fn sums_zero() {\n        assert_eq!(countdown_sum(0), 1);\n    }\n}\n\nfn main() {\n    println!("{}", countdown_sum(4));\n}',
-          ['6\n1\n10', '1 passed; 1 failed', '10', '10\n1 passed; 1 failed'],
-          2,
+          '10',
           'cargo run leaves the tests out and runs main, which prints 4 + 3 + 2 + 1 = 10. The failing sums_zero test matters only to cargo test.',
         ),
         choose(
@@ -12548,16 +11444,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'cargo test calls each #[test] function, and any function they call runs as usual; main is not run.',
           'fn helper(n: u32) -> u32 {\n    n + 1\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn adds_one() {\n        assert_eq!(helper(1), 2);\n    }\n\n    #[test]\n    fn adds_one_to_zero() {\n        assert_eq!(helper(0), 1);\n    }\n}\n\nfn main() {\n    println!("{}", helper(41));\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does cargo run print for this file?',
           'fn label(count: u32) -> String {\n    if count == 1 {\n        format!("{} item", count)\n    } else {\n        format!("{} items", count)\n    }\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn singular() {\n        assert_eq!(label(1), "1 item");\n    }\n}\n\nfn main() {\n    println!("{}", label(1));\n    println!("{}", label(0));\n}',
-          [
-            '1 item\n0 items',
-            '1 item\n0 item',
-            '1 item\n1 item\n0 items',
-            '0 items\n1 item',
-          ],
-          0,
+          '1 item\n0 items',
           'Only main runs: count 1 gives the singular form and 0 gives the plural. The test is not part of a normal run.',
         ),
       ],
@@ -12601,16 +11491,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'show_total returns (), and assert_eq! cannot compare () with a string, so the test module does not compile.',
           'fn show_total(a: u32, b: u32) {\n    println!("total {}", a + b);\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn totals() {\n        assert_eq!(show_total(2, 3), "total 5");\n    }\n}\n\nfn main() {\n    show_total(2, 3);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn status(done: u32, total: u32) -> String {\n    format!("{} of {} done", done, total)\n}\n\nfn main() {\n    let line = status(2, 5);\n    println!("[{}]", line);\n}',
-          [
-            '2 of 5 done\n[2 of 5 done]',
-            '[]',
-            '[2 of 5 done]',
-            '["2 of 5 done"]',
-          ],
-          2,
+          '[2 of 5 done]',
           'status only builds and returns the String; the single println! in main prints it inside brackets.',
         ),
         choose(
@@ -12640,18 +11524,16 @@ export const knowledgePoints: KnowledgePointModule = {
           "The first call's String is never used, so nothing appears for it. The only output is main's println!, which prints both returned lines once.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn shout(word: &str) -> String {\n    format!("{}!", word)\n}\n\nfn main() {\n    shout("hey");\n    let loud = shout("go");\n    println!("{}", loud);\n}',
-          ['hey!\ngo!', 'hey!', 'hey!\ngo!\ngo!', 'go!'],
-          3,
+          'go!',
           'Calling shout only returns a String. The result of shout("hey") is ignored, and main prints only loud.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn row(label: &str, value: u32) -> String {\n    format!("{}={}", label, value)\n}\n\nfn main() {\n    let a = row("x", 1);\n    let b = row("y", 2);\n    println!("{}; {}", b, a);\n}',
-          ['x=1; y=2', 'x=1\ny=2\ny=2; x=1', 'y=2; x=1', 'x=1\ny=2'],
-          2,
+          'y=2; x=1',
           "Building a and b prints nothing. The only output is main's line, which puts b first.",
         ),
         choose(
@@ -12665,11 +11547,10 @@ export const knowledgePoints: KnowledgePointModule = {
           1,
           'count_line should only return its String. main prints it, and the test compares it with assert_eq!.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn noisy_sum(a: i32, b: i32) -> i32 {\n    println!("adding");\n    a + b\n}\n\nfn quiet_sum(a: i32, b: i32) -> i32 {\n    a + b\n}\n\nfn main() {\n    let x = quiet_sum(1, 2);\n    let y = noisy_sum(3, 4);\n    println!("{}", x + y);\n}',
-          ['adding\n10', 'adding\nadding\n10', '10', '3\nadding\n7\n10'],
-          0,
+          'adding\n10',
           'Only noisy_sum prints, once, when it is called. quiet_sum just returns, and main prints the total 3 + 7.',
         ),
       ],
@@ -12700,23 +11581,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only this version returns the formatted line. The others return an empty String, (), or the number, none of which is the text a test needs.',
           'fn print_score(points: u32) {\n    println!("score: {}", points);\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does a normal run of this program print?',
           'fn temperature(celsius: i32) -> String {\n    if celsius < 0 {\n        format!("{} below zero", -celsius)\n    } else {\n        format!("{} degrees", celsius)\n    }\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn negative_reads_below_zero() {\n        assert_eq!(temperature(-4), "4 below zero");\n    }\n}\n\nfn main() {\n    println!("{}", temperature(-2));\n    println!("{}", temperature(15));\n}',
-          [
-            '2 below zero\n15 degrees',
-            '-2 degrees\n15 degrees',
-            '4 below zero\n2 below zero\n15 degrees',
-            '-2 below zero\n15 degrees',
-          ],
-          0,
+          '2 below zero\n15 degrees',
           'main prints the two returned lines; -2 is negated to 2 in the below-zero form. The test is left out of a normal run.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn ratio_line(hits: u32, shots: u32) -> String {\n    format!("{} hits in {} shots", hits, shots)\n}\n\nfn main() {\n    let line = ratio_line(3, 8);\n    assert_eq!(line, "3 hits in 8 shots");\n    println!("{}", line.len());\n}',
-          ['3 hits in 8 shots\n17', '17', 'true\n17', '18'],
-          1,
+          '17',
           'Because the line is returned, main can check it with assert_eq!, which passes silently, and then print its length, 17 characters.',
         ),
         choose(
@@ -12749,16 +11623,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'replace changes every dash, not just the first, and returns a new String. package still holds the dashed name.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let name = "tiny-http-server";\n    println!("{}", name.replace(\'-\', "_"));\n}',
-          [
-            'tiny_http-server',
-            'tiny_http_server',
-            'tinyhttpserver',
-            'tiny-http-server',
-          ],
-          1,
+          'tiny_http_server',
           'replace swaps every dash for an underscore, not just the first one.',
         ),
         choose(
@@ -12772,16 +11640,10 @@ export const knowledgePoints: KnowledgePointModule = {
           2,
           'A dash is not allowed in a Rust path, so each dash in the package name becomes an underscore.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let package = String::from("log-parse");\n    let module = package.replace(\'-\', "_");\n    println!("{} {}", package, module);\n}',
-          [
-            'log-parse log_parse',
-            'log_parse log_parse',
-            'log-parse log-parse',
-            'log_parse log-parse',
-          ],
-          0,
+          'log-parse log_parse',
           'replace returns a new String and leaves package unchanged, so the dashed and underscored names both print.',
         ),
         choose(
@@ -12811,25 +11673,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The line starts with "version = ", so the first call returns the rest, "2". It does not start with "name = ", so the second is None. strip_suffix removes only the final 2, keeping the space before it.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let path = "src/main.rs";\n    println!("{:?}", path.strip_prefix("src/"));\n}',
-          ['Some("main.rs")', 'Some("src/")', '"main.rs"', 'None'],
-          0,
+          'Some("main.rs")',
           'The path starts with src/, so strip_prefix returns Some with what comes after it.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let file = "notes.txt";\n    println!("{:?}", file.strip_suffix(".md"));\n}',
-          ['Some("notes")', 'Some("notes.txt")', 'None', '"notes.txt"'],
-          2,
+          'None',
           'notes.txt does not end with .md, so strip_suffix returns None rather than the unchanged text.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let word = "\\"quoted\\"";\n    match word.strip_prefix(\'"\') {\n        Some(rest) => println!("{}", rest),\n        None => println!("no quote"),\n    }\n}',
-          ['quoted', '"quoted"', 'no quote', 'quoted"'],
-          3,
+          'quoted"',
           'strip_prefix removes only the opening quote; the closing quote at the end stays in rest.',
         ),
         choose(
@@ -12854,23 +11713,16 @@ export const knowledgePoints: KnowledgePointModule = {
           "The first line passes all three cuts, leaving 2021 from between the quotes. The second has no opening quote, so the strip_prefix('\"')? step returns None from the function.",
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn version_of(line: &str) -> Option<String> {\n    let rest = line.strip_prefix("version = ")?;\n    let inner = rest.strip_prefix(\'"\')?.strip_suffix(\'"\')?;\n    Some(inner.to_string())\n}\n\nfn main() {\n    println!("{:?}", version_of("name = \\"cli\\""));\n}',
-          ['Some("cli")', 'None', 'Some("")', '"cli"'],
-          1,
+          'None',
           'The line does not start with version = , so the first ? returns None from version_of before the quotes are looked at.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn bracketed(text: &str) -> Option<String> {\n    let inner = text.strip_prefix(\'[\')?.strip_suffix(\']\')?;\n    Some(format!("<{}>", inner))\n}\n\nfn main() {\n    println!("{:?}", bracketed("[core]"));\n    println!("{:?}", bracketed("[core"));\n}',
-          [
-            'Some("<core>")\nSome("<core>")',
-            'Some("<core>")\nSome("<core")',
-            'Some("<core>")\nNone',
-            '"<core>"\nNone',
-          ],
-          2,
+          'Some("<core>")\nNone',
           '[core] passes both cuts. [core has no closing bracket, so strip_suffix gives None and ? returns None from the function.',
         ),
         choose(
@@ -12911,40 +11763,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'The name line passes every cut, its dash becomes an underscore, and format! builds the use line. The version line fails the first strip_prefix, so the function returns None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn use_line(manifest_line: &str) -> Option<String> {\n    let quoted = manifest_line.strip_prefix("name = ")?;\n    let name = quoted.strip_prefix(\'"\')?.strip_suffix(\'"\')?;\n    Some(format!("use {};", name.replace(\'-\', "_")))\n}\n\nfn main() {\n    println!("{:?}", use_line("name = \\"web-api-kit\\""));\n}',
-          [
-            'Some("use web-api-kit;")',
-            'Some("use web_api-kit;")',
-            'Some("use web_api_kit;")',
-            'None',
-          ],
-          2,
+          'Some("use web_api_kit;")',
           'The line is a quoted name line, so every cut succeeds and both dashes become underscores.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn use_line(manifest_line: &str) -> Option<String> {\n    let quoted = manifest_line.strip_prefix("name = ")?;\n    let name = quoted.strip_prefix(\'"\')?.strip_suffix(\'"\')?;\n    Some(format!("use {};", name.replace(\'-\', "_")))\n}\n\nfn main() {\n    println!("{:?}", use_line("name = \\"rand\\""));\n    println!("{:?}", use_line("name=\\"rand\\""));\n}',
-          [
-            'Some("use rand;")\nSome("use rand;")',
-            'Some("use rand;")\nNone',
-            'None\nNone',
-            '"use rand;"\nNone',
-          ],
-          1,
+          'Some("use rand;")\nNone',
           'The second line has no spaces around =, so it does not start with "name = " exactly and the first ? returns None.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn use_line(manifest_line: &str) -> Option<String> {\n    let quoted = manifest_line.strip_prefix("name = ")?;\n    let name = quoted.strip_prefix(\'"\')?.strip_suffix(\'"\')?;\n    Some(format!("use {};", name.replace(\'-\', "_")))\n}\n\nfn main() {\n    match use_line("name = \\"my-app\\"") {\n        Some(line) => println!("{}", line),\n        None => println!("not a name line"),\n    }\n    match use_line("[package]") {\n        Some(line) => println!("{}", line),\n        None => println!("not a name line"),\n    }\n}',
-          [
-            'use my-app;\nnot a name line',
-            'Some("use my_app;")\nNone',
-            'use my_app;\nNone',
-            'use my_app;\nnot a name line',
-          ],
-          3,
+          'use my_app;\nnot a name line',
           'The match prints the String inside Some without Debug quotes. The [package] header is not a name line, so it takes the None arm.',
         ),
         choose(
@@ -12976,18 +11810,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'ana needs no change, so tidy returns it borrowed. The empty name is replaced by a new String, so that result is Owned and matches! gives false for Borrowed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn label(code: &str) -> std::borrow::Cow<\'_, str> {\n    if code == "x" {\n        std::borrow::Cow::Owned(String::from("unknown"))\n    } else {\n        std::borrow::Cow::Borrowed(code)\n    }\n}\n\nfn main() {\n    let c = label("x");\n    println!("{}", matches!(c, std::borrow::Cow::Owned(_)));\n}',
-          ['true', 'false', 'Owned', 'unknown'],
-          0,
+          'true',
           'code is "x", so label returns a new String as Owned, and matches! returns the bool true.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn with_unit(value: &str) -> std::borrow::Cow<\'_, str> {\n    if value == "0" {\n        std::borrow::Cow::Borrowed(value)\n    } else {\n        std::borrow::Cow::Owned(format!("{} kg", value))\n    }\n}\n\nfn main() {\n    let a = with_unit("0");\n    let b = with_unit("12");\n    let a_borrowed = matches!(a, std::borrow::Cow::Borrowed(_));\n    let b_borrowed = matches!(b, std::borrow::Cow::Borrowed(_));\n    println!("{} {}", a_borrowed, b_borrowed);\n}',
-          ['false true', 'true true', 'true false', 'false false'],
-          2,
+          'true false',
           '"0" is returned as it is, borrowed; "12" gets a unit added in a new String, so it is Owned.',
         ),
         choose(
@@ -13028,30 +11860,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both values print the same way with {} and with {:?}, even though one is Owned and one is Borrowed. Each has length 3.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let note: std::borrow::Cow<\'_, str> = std::borrow::Cow::Borrowed("ok");\n    println!("{:?}", note);\n}',
-          ['Borrowed("ok")', '"ok"', 'ok', 'Cow("ok")'],
-          1,
+          '"ok"',
           'Debug for a Cow<str> shows the text the way a str would, in quotes, without the variant name.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let word: std::borrow::Cow<\'_, str> = std::borrow::Cow::Owned(String::from("sky"));\n    println!("[{}] has {} letters", word, word.len());\n}',
-          [
-            '[Owned("sky")] has 3 letters',
-            '["sky"] has 3 letters',
-            '[sky] has 3 letters',
-            '[sky] has 5 letters',
-          ],
-          2,
+          '[sky] has 3 letters',
           '{} prints the bare text, and len counts the three letters of sky, not quotes or the variant.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn or_dash(text: &str) -> std::borrow::Cow<\'_, str> {\n    if text.is_empty() {\n        std::borrow::Cow::Owned(String::from("-"))\n    } else {\n        std::borrow::Cow::Borrowed(text)\n    }\n}\n\nfn main() {\n    println!("{:?} {:?}", or_dash(""), or_dash("x"));\n}',
-          ['Owned("-") Borrowed("x")', '- x', '"" "x"', '"-" "x"'],
-          3,
+          '"-" "x"',
           'The empty input is replaced by "-" and x is borrowed, but Debug shows only each text in quotes.',
         ),
         choose(
@@ -13081,18 +11905,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'doc starts Borrowed. to_mut copies draft into a new String, so doc becomes Owned and gets the edit, while original still reads draft.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn main() {\n    let base = "file";\n    let mut name = std::borrow::Cow::Borrowed(base);\n    name.to_mut().push_str(".txt");\n    println!("{} {}", base, name);\n}',
-          ['file.txt file.txt', 'file file', 'file.txt file', 'file file.txt'],
-          3,
+          'file file.txt',
           "to_mut copies file into the Cow's own String before the edit, so only name gains .txt and base is unchanged.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           "fn main() {\n    let mut code: std::borrow::Cow<'_, str> = std::borrow::Cow::Owned(String::from(\"ab\"));\n    code.to_mut().push('c');\n    code.to_mut().push('d');\n    println!(\"{:?} {}\", code, matches!(code, std::borrow::Cow::Owned(_)));\n}",
-          ['"abcd" true', '"abd" true', '"abcd" false', 'Owned("abcd") true'],
-          0,
+          '"abcd" true',
           'Both pushes edit the same owned String, which stays Owned. Debug prints only the text in quotes.',
         ),
         choose(
@@ -13130,40 +11952,22 @@ export const knowledgePoints: KnowledgePointModule = {
           'docs/ already ends with a slash, so to_mut is never called and it stays Borrowed. img needs the slash, so it is copied and becomes Owned.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn with_hash(tag: &str) -> std::borrow::Cow<\'_, str> {\n    let mut result = std::borrow::Cow::Borrowed(tag);\n    if !tag.starts_with(\'#\') {\n        result = std::borrow::Cow::Owned(format!("#{}", tag));\n    }\n    result\n}\n\nfn main() {\n    let a = with_hash("#rust");\n    let b = with_hash("news");\n    println!("{} {}", a, b);\n    println!("{}", matches!(a, std::borrow::Cow::Owned(_)));\n}',
-          [
-            '#rust #news\ntrue',
-            '##rust #news\nfalse',
-            '#rust #news\nfalse',
-            '#rust news\nfalse',
-          ],
-          2,
+          '#rust #news\nfalse',
           '#rust already starts with #, so it is returned borrowed and unchanged. Only news gets a new String with # in front.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn ensure_ext(name: &str) -> std::borrow::Cow<\'_, str> {\n    let mut result = std::borrow::Cow::Borrowed(name);\n    if !name.ends_with(".rs") {\n        result.to_mut().push_str(".rs");\n    }\n    result\n}\n\nfn main() {\n    println!("{:?}", ensure_ext("lib.rs"));\n    println!("{:?}", ensure_ext("main"));\n}',
-          [
-            '"lib.rs.rs"\n"main.rs"',
-            '"lib.rs"\n"main.rs"',
-            'Borrowed("lib.rs")\nOwned("main.rs")',
-            '"lib.rs"\n"main"',
-          ],
-          1,
+          '"lib.rs"\n"main.rs"',
           'lib.rs already ends with .rs and is returned as it is; main gets .rs added. Debug shows each text in quotes.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'fn closed(line: &str) -> std::borrow::Cow<\'_, str> {\n    let mut result = std::borrow::Cow::Borrowed(line);\n    if !line.ends_with(\';\') {\n        result.to_mut().push(\';\');\n    }\n    result\n}\n\nfn main() {\n    let a = closed("x = 1;");\n    let b = closed("y = 2");\n    let c = closed("");\n    let owned_a = matches!(a, std::borrow::Cow::Owned(_));\n    let owned_b = matches!(b, std::borrow::Cow::Owned(_));\n    let owned_c = matches!(c, std::borrow::Cow::Owned(_));\n    println!("{} {} {}", owned_a, owned_b, owned_c);\n}',
-          [
-            'false true false',
-            'true true true',
-            'false false true',
-            'false true true',
-          ],
-          3,
+          'false true true',
           'Only x = 1; already ends with a semicolon. The empty line does not end with one either, so it is edited and becomes Owned too.',
         ),
         choose(
@@ -13195,18 +11999,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first poll of a ready future returns its value wrapped in Poll::Ready, and Debug prints that as Ready(7).',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::Context;\nuse std::task::Waker;\n\nfn main() {\n    let mut fut = std::future::ready(String::from("ok"));\n    let mut cx = Context::from_waker(Waker::noop());\n    println!("{:?}", Pin::new(&mut fut).poll(&mut cx));\n}',
-          ['Ready(ok)', 'Ready("ok")', 'Some("ok")', '"ok"'],
-          1,
+          'Ready("ok")',
           'poll returns Poll::Ready holding the String, and Debug shows the String in quotes inside Ready(...).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::Context;\nuse std::task::Waker;\n\nfn main() {\n    let mut fut = std::future::ready((2, true));\n    let mut cx = Context::from_waker(Waker::noop());\n    let result = Pin::new(&mut fut).poll(&mut cx);\n    println!("{:?}", result);\n}',
-          ['Ready((2, true))', 'Ready(2, true)', '(2, true)', 'Pending'],
-          0,
+          'Ready((2, true))',
           "The future's result is the whole tuple, so Ready wraps it and Debug shows both sets of parentheses.",
         ),
         choose(
@@ -13243,23 +12045,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The pending future never produces a value, so the match takes the Pending arm, and a second poll is Pending again. The type annotation says what the future would produce.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::Context;\nuse std::task::Waker;\n\nfn main() {\n    let mut fut: std::future::Pending<u8> = std::future::pending();\n    let mut cx = Context::from_waker(Waker::noop());\n    println!("{:?}", Pin::new(&mut fut).poll(&mut cx));\n}',
-          ['Pending(0)', 'Ready(0)', 'Pending', 'None'],
-          2,
+          'Pending',
           'A pending future has no result yet, and Pending carries no value, so Debug prints just Pending.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::Context;\nuse std::task::Poll;\nuse std::task::Waker;\n\nfn describe(p: Poll<i32>) -> String {\n    match p {\n        Poll::Ready(v) => format!("done: {}", v),\n        Poll::Pending => String::from("not yet"),\n    }\n}\n\nfn main() {\n    let mut cx = Context::from_waker(Waker::noop());\n    let mut a = std::future::ready(5);\n    let mut b = std::future::pending();\n    println!("{}", describe(Pin::new(&mut b).poll(&mut cx)));\n    println!("{}", describe(Pin::new(&mut a).poll(&mut cx)));\n}',
-          [
-            'done: 5\nnot yet',
-            'not yet\ndone: 5',
-            'not yet\nnot yet',
-            'not yet\ndone: 0',
-          ],
-          1,
+          'not yet\ndone: 5',
           'b is polled first and is Pending; a is a ready future, so its first poll is Ready(5).',
         ),
         choose(
@@ -13274,11 +12069,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'Poll::Pending is a variant without data, so the pattern Pending(v) does not exist.',
           'fn take(p: std::task::Poll<i32>) -> i32 {\n    match p {\n        std::task::Poll::Ready(v) => v,\n        std::task::Poll::Pending(v) => v,\n    }\n}',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::Context;\nuse std::task::Poll;\nuse std::task::Waker;\n\nfn main() {\n    let mut cx = Context::from_waker(Waker::noop());\n    let mut fut: std::future::Pending<i32> = std::future::pending();\n    let mut waits = 0;\n    for _ in 0..3 {\n        if let Poll::Pending = Pin::new(&mut fut).poll(&mut cx) {\n            waits += 1;\n        }\n    }\n    println!("{}", waits);\n}',
-          ['3', '1', '0', '2'],
-          0,
+          '3',
           'A pending future never finishes, so each of the three polls returns Pending and waits is counted up three times.',
         ),
       ],
@@ -13297,28 +12091,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Creating fut runs none of the closure, so future created prints first. The closure runs only during poll, printing working before Ready(10) is printed.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::task::Poll;\n\nfn main() {\n    let fut = std::future::poll_fn(|_cx| {\n        println!("side effect");\n        Poll::Ready(1)\n    });\n    println!("end of main");\n}',
-          [
-            'side effect\nend of main',
-            'end of main',
-            'end of main\nside effect',
-            'Ready(1)\nend of main',
-          ],
-          1,
+          'end of main',
           "fut is created but never polled, so its closure never runs and only main's own line prints.",
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::Context;\nuse std::task::Poll;\nuse std::task::Waker;\n\nfn main() {\n    let mut fut = std::future::poll_fn(|_cx| {\n        println!("poll");\n        Poll::Pending\n    });\n    let mut cx = Context::from_waker(Waker::noop());\n    let first: Poll<i32> = Pin::new(&mut fut).poll(&mut cx);\n    let second: Poll<i32> = Pin::new(&mut fut).poll(&mut cx);\n    println!("{:?} {:?}", first, second);\n}',
-          [
-            'poll\nPending Pending',
-            'Pending Pending',
-            'poll\npoll\nPending Pending',
-            'Pending Pending\npoll\npoll',
-          ],
-          2,
+          'poll\npoll\nPending Pending',
           'Each call to poll runs the closure again, so poll prints twice before the two Pending results are printed.',
         ),
         choose(
@@ -13332,16 +12114,10 @@ export const knowledgePoints: KnowledgePointModule = {
           0,
           'A future does its work only inside poll. With no poll, the closure is stored but never called.',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::Context;\nuse std::task::Poll;\nuse std::task::Waker;\n\nfn main() {\n    let mut a = std::future::poll_fn(|_cx| {\n        println!("a runs");\n        Poll::Ready(1)\n    });\n    let mut b = std::future::poll_fn(|_cx| {\n        println!("b runs");\n        Poll::Ready(2)\n    });\n    let mut cx = Context::from_waker(Waker::noop());\n    let second = Pin::new(&mut b).poll(&mut cx);\n    let first = Pin::new(&mut a).poll(&mut cx);\n    println!("{:?} {:?}", first, second);\n}',
-          [
-            'a runs\nb runs\nReady(1) Ready(2)',
-            'b runs\na runs\nReady(2) Ready(1)',
-            'Ready(1) Ready(2)',
-            'b runs\na runs\nReady(1) Ready(2)',
-          ],
-          3,
+          'b runs\na runs\nReady(1) Ready(2)',
           'Work runs in the order the futures are polled, not created, so b runs first. The final line prints first, then second.',
         ),
       ],
@@ -13360,18 +12136,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'The ready future gives Ready(8) on its first poll, which becomes Some(8). The pending future gives Pending, which becomes None.',
       },
       questions: [
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::Context;\nuse std::task::Poll;\nuse std::task::Waker;\n\nfn first_poll(text: &str) -> Option<usize> {\n    let mut fut = std::future::ready(text.len());\n    let mut cx = Context::from_waker(Waker::noop());\n    match Pin::new(&mut fut).poll(&mut cx) {\n        Poll::Ready(n) => Some(n),\n        Poll::Pending => None,\n    }\n}\n\nfn main() {\n    println!("{:?}", first_poll("async"));\n}',
-          ['Some(5)', 'Ready(5)', 'None', '5'],
-          0,
+          'Some(5)',
           'The ready future returns Ready(5) on its first poll, and the match turns that into Some(5).',
         ),
-        predictOutput(
+        typeOutput(
           'What does this program print?',
           'use std::future::Future;\nuse std::pin::Pin;\nuse std::task::Context;\nuse std::task::Poll;\nuse std::task::Waker;\n\nfn poll_never() -> Option<u32> {\n    let mut fut: std::future::Pending<u32> = std::future::pending();\n    let mut cx = Context::from_waker(Waker::noop());\n    match Pin::new(&mut fut).poll(&mut cx) {\n        Poll::Ready(value) => Some(value),\n        Poll::Pending => None,\n    }\n}\n\nfn main() {\n    println!("{:?}", poll_never());\n}',
-          ['Some(0)', 'Pending', 'None', 'Ready(None)'],
-          2,
+          'None',
           'The poll returns Pending, which has no value, so the function returns None.',
         ),
         choose(
