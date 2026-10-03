@@ -53,15 +53,23 @@ import {
   type Refresh,
 } from './remediation';
 import { isTypedType, TYPED_RESPONSE_MAX_LENGTH } from './typed-answer';
+import { answerTime } from './answer-time';
+
+/** The `elapsedMs` field of an attempt, when there is a time to record. */
+export function timed(elapsedMs: unknown): { elapsedMs?: number } {
+  const ms = answerTime(elapsedMs);
+  return ms === undefined ? {} : { elapsedMs: ms };
+}
 
 /**
  * The learner-state schema version. 2 adds knowledge-point lesson attempts,
  * cooldowns and task XP; 3 quizzes; 4 implicit review credit; 5 placement
  * diagnostics; 6 prerequisite refreshes after failed lessons; 7 the variant
  * of a generated question on attempts, quiz questions, and placement
- * questions; 8 cards stored by reference rather than with their text.
+ * questions; 8 cards stored by reference rather than with their text; 9 the
+ * answer time of every attempt (`elapsedMs`).
  */
-export const STATE_VERSION = 8;
+export const STATE_VERSION = 9;
 
 export const DAY_MS = 86_400_000;
 /**
@@ -202,6 +210,12 @@ export interface Attempt {
   response?: string;
   /** The variant number asked, for a generated question (see variants.ts). */
   variant?: number;
+  /**
+   * Answer time: milliseconds from the question becoming visible to its
+   * submission, paused while the tab was hidden, at most MAX_ANSWER_MS
+   * (src/lib/answer-time.ts). Absent on attempts before version 9.
+   */
+  elapsedMs?: number;
 }
 
 export interface Progress {
@@ -234,6 +248,8 @@ export interface AttemptInput {
   response?: string;
   /** The variant shown, for a generated question; kept on the attempt. */
   variant?: number;
+  /** Answer time measured by the page; capped and kept on the attempt. */
+  elapsedMs?: number;
 }
 
 export interface NextTask {
@@ -1343,6 +1359,7 @@ export function applyAttempt(
     ...(isGenerated(question) && isVariant(input.variant)
       ? { variant: input.variant }
       : {}),
+    ...timed(input.elapsedMs),
   };
   const updated: Progress = {
     ...progress,

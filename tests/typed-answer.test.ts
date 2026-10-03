@@ -839,9 +839,7 @@ describe('validating equivalent typed answers (CEN-161)', () => {
         },
       ],
     };
-    expect(
-      validateCurriculum([colliding], { ...catalog, skills: [colliding] }),
-    ).toEqual([]);
+    expect(validateCurriculum([colliding], catalog)).toEqual([]);
     const lenient: Skill = {
       ...colliding,
       knowledgePoints: [
@@ -856,9 +854,9 @@ describe('validating equivalent typed answers (CEN-161)', () => {
         },
       ],
     };
-    expect(
-      validateCurriculum([lenient], { ...catalog, skills: [lenient] }).join(),
-    ).toContain('which fixture-typed-kp2-q4 counts wrong');
+    expect(validateCurriculum([lenient], catalog).join()).toContain(
+      'which fixture-typed-kp2-q4 counts wrong',
+    );
   });
 });
 

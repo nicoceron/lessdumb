@@ -62,7 +62,8 @@ export interface QueuedCard
  * adds placement diagnostics; version 6 adds the pending prerequisite
  * refresh a failed lesson schedules; version 7 adds the variant number of a
  * generated question to attempts, quiz questions, and placement questions;
- * version 8 stores new cards by reference instead of copying their text.
+ * version 8 stores new cards by reference instead of copying their text;
+ * version 9 adds the answer time of every attempt (`elapsedMs`).
  */
 export interface LearnerState {
   version: typeof STATE_VERSION;
@@ -144,10 +145,12 @@ const reviewRewardKey = (attempt: Attempt) =>
       ])
     : null;
 
-/** A saved state from an earlier schema: before card references, variants, refreshes, quizzes, or knowledge points. */
+/** A saved state from an earlier schema: before answer times, card references, variants, refreshes, quizzes, or knowledge points. */
 export type LegacyLearnerState = Omit<LearnerState, 'version' | 'progress'> & {
-  version: 1 | 2 | 3 | 4 | 5 | 6 | 7;
-  progress: Omit<Progress, 'version'> & { version: 1 | 2 | 3 | 4 | 5 | 6 | 7 };
+  version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  progress: Omit<Progress, 'version'> & {
+    version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  };
 };
 
 /**
@@ -160,9 +163,10 @@ export function migrateState(
   catalog: GraphCatalog = defaultCatalog,
 ): LearnerState {
   // Every later version only adds optional fields, so older progress reads
-  // as is under the current version. Cards saved with their text (before
-  // version 8) keep it: rebuilding them from today's catalog could rewrite
-  // notes already in a learner's Anki collection.
+  // as is under the current version: attempts before version 9 simply have
+  // no answer time. Cards saved with their text (before version 8) keep it:
+  // rebuilding them from today's catalog could rewrite notes already in a
+  // learner's Anki collection.
   const progress = normalizeProgress(
     state.progress.version === STATE_VERSION
       ? (state.progress as Progress)

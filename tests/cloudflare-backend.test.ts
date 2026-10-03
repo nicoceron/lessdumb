@@ -6,7 +6,13 @@ import { hashPassword, verifyPassword } from 'better-auth/crypto';
 import { d1StateStore } from '../src/lib/server/d1-state-store';
 import { d1MailBudget } from '../src/lib/server/cloudflare-mail';
 import { nativePassword } from '../src/lib/server/native-password';
-import { createState } from '../src/lib/state';
+import {
+  createState,
+  migrateState,
+  recordLearningAnswer,
+} from '../src/lib/state';
+import { decodeState, encodeState } from '../src/lib/server/state-codec';
+import { STATE_VERSION } from '../src/lib/learning';
 
 const runtimes: Miniflare[] = [];
 afterEach(async () => {
@@ -81,6 +87,44 @@ describe('Cloudflare D1 revision and account storage', () => {
         .first('encoding'),
     ).toBe('gzip-base64');
     expect(await store.read('first')).toEqual({ state, revision: 2 });
+  });
+
+  it('keeps version 8 rows readable and stores version 9 answer times exactly', async () => {
+    const db = await database();
+    // A compressed version 8 row, as the previous release wrote it.
+    const timed = recordLearningAnswer(createState(), {
+      skillId: 'print-output',
+      questionId: 'print-output-kp1-q1',
+      correct: true,
+      mode: 'learn',
+      elapsedMs: 12_345,
+    });
+    const v8 = JSON.parse(JSON.stringify(timed));
+    v8.version = 8;
+    v8.progress.version = 8;
+    delete v8.progress.attempts[0].elapsedMs;
+    await db
+      .prepare(
+        "INSERT INTO learner_state (user_id, state_json, revision, updated_at, encoding) VALUES (?, ?, 1, 0, 'gzip-base64')",
+      )
+      .bind('first', await encodeState(v8))
+      .run();
+    const store = d1StateStore(db);
+    const read = await store.read('first');
+    expect(read).toEqual({ state: v8, revision: 1 });
+    // Readers migrate on load: the browser cache and the state endpoint.
+    expect(migrateState(read.state!).version).toBe(STATE_VERSION);
+    expect(migrateState(read.state!).progress.attempts).toEqual(
+      v8.progress.attempts,
+    );
+    // A version 9 state round-trips through the codec with its answer time.
+    expect((await store.write('first', timed, 1)).saved).toBe(true);
+    const saved = await store.read('first');
+    expect(saved).toEqual({ state: timed, revision: 2 });
+    expect(saved.state!.progress.attempts[0].elapsedMs).toBe(12_345);
+    expect(await decodeState(await encodeState(timed), 'gzip-base64')).toEqual(
+      timed,
+    );
   });
 
   it('allows exactly one concurrent creation and one writer at the same revision', async () => {

@@ -15,6 +15,7 @@ import {
   type LearnerState,
 } from '../src/lib/state';
 import { cardWithText } from '../src/lib/cards';
+import { MAX_ANSWER_MS } from '../src/lib/answer-time';
 import {
   applyAttempt,
   DAY_MS,
@@ -572,8 +573,8 @@ describe('versioned per-account progress', () => {
     });
   });
 
-  it('migrates accounts saved before knowledge-point lessons, quizzes, and refreshes', async () => {
-    for (const version of [1, 2, 3, 4, 5]) {
+  it('migrates accounts saved before knowledge-point lessons, quizzes, refreshes, and answer times', async () => {
+    for (const version of [1, 2, 3, 4, 5, 6, 7, 8]) {
       const { backend } = await freshBackend();
       const cookie = await register(backend);
       const legacy = progressFixture(version);
@@ -656,6 +657,8 @@ describe('versioned per-account progress', () => {
             ...(question.variant !== undefined
               ? { variant: question.variant }
               : {}),
+            // Every attempt has an answer time; the cap is the longest.
+            elapsedMs: MAX_ANSWER_MS,
           });
         }
       }
@@ -674,13 +677,20 @@ describe('versioned per-account progress', () => {
         0,
       ),
     ).toBe(missed.size * 2);
+    // Every retained attempt carries its answer time (state version 9).
+    expect(
+      state.progress.attempts.every(
+        (attempt) => attempt.elapsedMs === MAX_ANSWER_MS,
+      ),
+    ).toBe(true);
     // Cards are references; every one still has its text from the catalog.
     expect(state.cards.every((card) => card.front === undefined)).toBe(true);
     expect(state.cards.every((card) => cardWithText(card))).toBe(true);
     const body = { state, revision: 0 };
     const bytes = Buffer.byteLength(JSON.stringify(body));
     // At least 25% headroom under the request limit for the catalog to grow:
-    // copying card text put this state at 98% of it (CEN-153).
+    // copying card text put this state at 98% of it (CEN-153). Answer times
+    // add 19 bytes per retained attempt: 1,871,676 to 1,909,676 (CEN-161).
     expect(bytes).toBeLessThanOrEqual(MAX_STATE_BODY_BYTES * 0.75);
     const saved = await stateRequest(backend, cookie, body);
     expect(saved.status).toBe(200);
