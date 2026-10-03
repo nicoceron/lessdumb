@@ -27,3 +27,21 @@ export function earnedXp(base: number, incorrect: number, completed: boolean) {
   if (incorrect === 0) return base + Math.ceil(base / 4);
   return Math.max(1, base - incorrect);
 }
+
+/** Base XP per quiz question: a ten-question quiz is worth 15 XP. */
+export const QUIZ_XP_PER_QUESTION = 1.5;
+
+/** Base XP shown on a quiz task. */
+export function quizXp(questions: number): number {
+  return Math.round(QUIZ_XP_PER_QUESTION * questions);
+}
+
+/**
+ * XP earned for a finished quiz: its base scaled by accuracy, rounded. Nine of
+ * ten correct on a 15 XP quiz earns 14 XP; unanswered questions count as
+ * incorrect.
+ */
+export function earnedQuizXp(base: number, correct: number, total: number) {
+  if (total <= 0) return 0;
+  return Math.round((base * Math.min(correct, total)) / total);
+}

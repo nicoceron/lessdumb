@@ -13,6 +13,7 @@ import {
   type SkillProgress,
 } from './learning';
 import { defaultCatalog, type CurriculumCatalog } from './curriculum';
+import { mergeQuizzes, type Quiz } from './quiz';
 import {
   evidenceIdFor,
   findQuestion,
@@ -36,9 +37,12 @@ export interface QueuedCard extends AnkiCard {
   noteId?: number;
   lastError?: string;
 }
-/** Version 2 adds knowledge-point lesson attempts, cooldowns and task XP. */
+/**
+ * Version 2 adds knowledge-point lesson attempts, cooldowns and task XP;
+ * version 3 adds quizzes.
+ */
 export interface LearnerState {
-  version: 2;
+  version: 3;
   progress: Progress;
   dailyGoal: number;
   /** Optional for backward compatibility with existing saved accounts. */
@@ -50,7 +54,7 @@ export interface LearnerState {
 }
 export function createState(): LearnerState {
   return {
-    version: 2,
+    version: 3,
     progress: emptyProgress(),
     dailyGoal: 50,
     activeCourseId: 'python-foundations',
@@ -127,10 +131,10 @@ const reviewRewardKey = (attempt: Attempt) =>
       ])
     : null;
 
-/** A saved state from before knowledge-point lessons. */
+/** A saved state from an earlier schema: before quizzes, or before knowledge points. */
 export type LegacyLearnerState = Omit<LearnerState, 'version' | 'progress'> & {
-  version: 1;
-  progress: Omit<Progress, 'version'> & { version: 1 };
+  version: 1 | 2;
+  progress: Omit<Progress, 'version'> & { version: 1 | 2 };
 };
 
 /**
@@ -143,13 +147,14 @@ export function migrateState(
   catalog: CurriculumCatalog = defaultCatalog,
 ): LearnerState {
   const progress = normalizeProgress(
-    state.progress.version === 2
-      ? state.progress
-      : { ...state.progress, version: 2 },
+    state.progress.version === 3
+      ? (state.progress as Progress)
+      : { ...state.progress, version: 3 },
     catalog,
   );
-  if (state.version === 2 && progress === state.progress) return state;
-  return { ...state, version: 2, progress };
+  if (state.version === 3 && progress === state.progress)
+    return state as LearnerState;
+  return { ...state, version: 3, progress };
 }
 
 /** Converts legacy evidence for skills now taught through knowledge points. */
@@ -233,6 +238,16 @@ function mergeLessonAttempt(
   return { startedAt: left.startedAt, steps };
 }
 
+/** Quiz XP is recorded on finished quizzes rather than on answers. */
+function quizRewards(quizzes: Quiz[] = [], timeZone: string) {
+  return quizzes
+    .filter((quiz) => quiz.completedAt !== undefined && (quiz.earned ?? 0) > 0)
+    .map((quiz) => ({
+      day: dateKey(quiz.completedAt!, timeZone),
+      xp: quiz.earned!,
+    }));
+}
+
 function representedXp(progress: Progress) {
   const learnRewards = new Set<string>();
   const reviewRewards = new Set<string>();
@@ -256,6 +271,10 @@ function representedXp(progress: Progress) {
     daily[day] = (daily[day] ?? 0) + attempt.xp;
     total += attempt.xp;
   }
+  for (const reward of quizRewards(progress.quizzes, progress.timeZone)) {
+    daily[reward.day] = (daily[reward.day] ?? 0) + reward.xp;
+    total += reward.xp;
+  }
   const historicalLearnRewards = Object.entries(progress.skills).flatMap(
     ([id, skill]) =>
       [
@@ -273,6 +292,7 @@ function reconcileXp(
   remote: Progress,
   merged: Attempt[],
   timeZone: string,
+  quizzes: Quiz[] = [],
 ) {
   const representedLocal = representedXp(local);
   const representedRemote = representedXp(remote);
@@ -302,6 +322,12 @@ function reconcileXp(
     representedTotal += xp;
     return xp === attempt.xp ? attempt : { ...attempt, xp };
   });
+  // Each quiz pays once, however many devices recorded it.
+  for (const reward of quizRewards(quizzes, timeZone)) {
+    representedDaily[reward.day] =
+      (representedDaily[reward.day] ?? 0) + reward.xp;
+    representedTotal += reward.xp;
+  }
   const days = new Set([
     ...Object.keys(local.dailyXp),
     ...Object.keys(remote.dailyXp),
@@ -363,6 +389,7 @@ export function mergeStates(
     ...local.progress.attempts,
   ])
     attemptsById.set(attempt.id, attempt);
+  const quizzes = mergeQuizzes(local.progress.quizzes, remote.progress.quizzes);
   const xp = reconcileXp(
     local.progress,
     remote.progress,
@@ -370,6 +397,7 @@ export function mergeStates(
       (a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id),
     ),
     recent.progress.timeZone,
+    quizzes,
   );
   const { attempts } = xp;
   const skillIds = new Set([
@@ -408,13 +436,16 @@ export function mergeStates(
         snapshot: typeof a,
         events: Attempt[],
       ): Progress => {
+        // Quiz XP belongs to the learner, not to one skill.
         const represented = representedXp({
           ...progress,
+          quizzes: undefined,
           attempts: events,
           skills: { [id]: snapshot },
         });
         return {
           ...progress,
+          quizzes: undefined,
           attempts: events,
           skills: { [id]: snapshot },
           totalXp: snapshot.totalXp ?? represented.total,
@@ -434,7 +465,10 @@ export function mergeStates(
       const evidenceOf = (questionId: string) =>
         (definition && evidenceIdFor(definition, questionId)) ?? questionId;
       const evidence = new Set([...a.questionIds, ...b.questionIds]);
+      // Quiz answers are retrieval checks: a miss schedules a review, it
+      // does not remove lesson evidence.
       for (const attempt of history) {
+        if (attempt.mode === 'quiz') continue;
         if (!attempt.correct) evidence.delete(evidenceOf(attempt.questionId));
         else if (!pointLesson && !attempt.usedHint && attempt.mode === 'learn')
           evidence.add(attempt.questionId);
@@ -456,6 +490,7 @@ export function mergeStates(
       for (const [questionId, update] of Object.entries(evidenceUpdates)) {
         const newer = history.findLast(
           (event) =>
+            event.mode !== 'quiz' &&
             evidenceOf(event.questionId) === questionId &&
             Date.parse(event.at) > update.at &&
             (!event.correct ||
@@ -653,6 +688,7 @@ export function mergeStates(
       ...recent.progress,
       skills,
       ...xp,
+      ...(quizzes.length ? { quizzes } : {}),
       attempts: xp.attempts.slice(-MAX_RECENT_ATTEMPTS),
       lastActivityDate,
       streak: activitySource.progress.streak,

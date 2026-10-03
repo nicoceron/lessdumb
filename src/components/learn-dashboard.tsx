@@ -1,5 +1,10 @@
 import { useId, useMemo, useState } from 'react';
-import { BookOpen, CheckCircle2, RotateCcw } from 'lucide-react';
+import {
+  BookOpen,
+  CheckCircle2,
+  ClipboardCheck,
+  RotateCcw,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { courses, skillById, type Course } from '../lib/curriculum';
@@ -10,12 +15,14 @@ import {
   formatDayHeading,
   formatMonthYear,
   groupByDay,
+  quizTask,
   taskHistory,
   taskQueue,
   todayXp,
   weekXp,
   type DashboardTask,
   type HistoryEntry,
+  type QuizTask,
   type WeekDay,
 } from '../lib/dashboard';
 import { type LearnerState } from '../lib/state';
@@ -35,6 +42,7 @@ export function Dashboard({ state }: { state: LearnerState }) {
       mastery: courseMastery(progress, course),
       estimate: estimateCompletion(progress, dailyGoal, course.id, now),
       tasks: taskQueue(progress, course.id, now),
+      quiz: quizTask(progress, course.id),
       today: todayXp(progress, now),
       week: weekXp(progress, now),
       history: taskHistory(progress),
@@ -70,8 +78,13 @@ export function Dashboard({ state }: { state: LearnerState }) {
             <h2 id="tasks-heading" className="sr-only">
               Tasks
             </h2>
-            {view.tasks.length ? (
+            {view.tasks.length || view.quiz ? (
               <ol className="ma-task-list">
+                {view.quiz && (
+                  <li>
+                    <QuizCard quiz={view.quiz} activeCourseId={course.id} />
+                  </li>
+                )}
                 {view.tasks.map((task) => (
                   <li key={task.skill.id}>
                     <TaskCard
@@ -241,16 +254,61 @@ function XpCard({
   );
 }
 
-function TaskType({ mode }: { mode: 'learn' | 'review' }) {
+type TaskKind = 'learn' | 'review' | 'quiz' | 'assessment';
+const taskLabels: Record<TaskKind, string> = {
+  learn: 'Lesson',
+  review: 'Review',
+  quiz: 'Quiz',
+  assessment: 'Assessment',
+};
+
+function TaskType({ mode }: { mode: TaskKind }) {
   return (
     <span className="ma-task-type">
       {mode === 'review' ? (
         <RotateCcw size={15} aria-hidden="true" />
-      ) : (
+      ) : mode === 'learn' ? (
         <BookOpen size={15} aria-hidden="true" />
+      ) : (
+        <ClipboardCheck size={15} aria-hidden="true" />
       )}
-      {mode === 'review' ? 'Review' : 'Lesson'}
+      {taskLabels[mode]}
     </span>
+  );
+}
+
+/** A quiz is earned by recent work and checks it without lesson material. */
+function QuizCard({
+  quiz,
+  activeCourseId,
+}: {
+  quiz: QuizTask;
+  activeCourseId: string;
+}) {
+  const minutes = Math.round((quiz.questions * 90) / 60);
+  return (
+    <article className="ma-panel ma-task ma-quiz-task is-open">
+      <h3>
+        <span className="ma-task-toggle">
+          <span className="ma-task-meta">
+            <TaskType mode="quiz" />
+            <span className="ma-task-xp">{quiz.xp} XP</span>
+          </span>
+          <span className="ma-task-title">Quiz {quiz.number}</span>
+        </span>
+      </h3>
+      <div className="ma-task-detail">
+        <p className="ma-muted">
+          {quiz.questions} questions from skills you have learned · {minutes}{' '}
+          minute limit. Lessons and explanations stay hidden until you finish.
+        </p>
+        <Button asChild className="ma-task-action">
+          <a href={`/learn?quiz=next&course=${activeCourseId}`}>
+            {quiz.started ? 'Resume quiz' : 'Start quiz'}
+          </a>
+        </Button>
+      </div>
+    </article>
   );
 }
 
@@ -355,23 +413,38 @@ function History({
               <li key={entry.id} className="ma-panel ma-history-item">
                 <span className="ma-task-meta">
                   <TaskType
-                    mode={entry.kind === 'review' ? 'review' : 'learn'}
+                    mode={
+                      entry.kind === 'quiz'
+                        ? 'assessment'
+                        : entry.kind === 'review'
+                          ? 'review'
+                          : 'learn'
+                    }
                   />
                   <span className="ma-task-xp">
                     {entry.earned}/{entry.possible} XP
                   </span>
                 </span>
-                {entry.skill.courseId !== activeCourseId && (
+                {entry.skill && entry.skill.courseId !== activeCourseId && (
                   <span className="ma-course-label">
                     {courseTitle(entry.skill.courseId)}
                   </span>
                 )}
-                <a
-                  className="ma-task-title"
-                  href={`/graph?skill=${entry.skill.id}`}
-                >
-                  {entry.skill.title}
-                </a>
+                {entry.skill ? (
+                  <a
+                    className="ma-task-title"
+                    href={`/graph?skill=${entry.skill.id}`}
+                  >
+                    {entry.skill.title}
+                  </a>
+                ) : (
+                  <a
+                    className="ma-task-title"
+                    href={`/learn?quiz=${encodeURIComponent(entry.quizId!)}`}
+                  >
+                    {entry.title}
+                  </a>
+                )}
                 <span className="ma-completed-at">
                   Completed @ {formatClockTime(entry.at, timeZone)}
                 </span>

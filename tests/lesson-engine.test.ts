@@ -472,8 +472,8 @@ describe('saved state migration, merge and validation', () => {
       },
     });
     const parsed = parseStateUpdate({ state: saved, revision: 0 }).state;
-    expect(parsed.version).toBe(2);
-    expect(parsed.progress.version).toBe(2);
+    expect(parsed.version).toBe(3);
+    expect(parsed.progress.version).toBe(3);
     expect(isMastered(parsed.progress, skill.id)).toBe(true);
     const migrated = getSkillState(parsed.progress, skill.id);
     expect(migrated.dueAt).toBe(NOW + DAY_MS);
@@ -627,7 +627,7 @@ describe('saved state migration, merge and validation', () => {
       (copy.progress.attempts[0] as { outcome?: string }).outcome = 'won';
     });
     reject((copy) => {
-      (copy as { version: number }).version = 3;
+      (copy as { version: number }).version = 4;
     });
     // A recorded answer still applies to the current state.
     state = recordLearningAnswer(state, {

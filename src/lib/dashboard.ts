@@ -14,10 +14,13 @@ import {
   lessonCoolingDown,
   lessonState,
   lessonXpAvailable,
+  MAX_CONSECUTIVE_REVIEWS,
   nextTask,
+  reviewsSinceLesson,
   type Attempt,
   type Progress,
 } from './learning';
+import { quizStatus } from './quiz';
 import { legacyMemory, recallProbability } from './retention';
 import { lessonXp, REVIEW_XP } from './xp';
 
@@ -92,7 +95,8 @@ export interface DashboardTask {
 
 /**
  * Up to `limit` frontier tasks in scheduler order: the engine's own next task
- * first, then due reviews, unfinished lessons, and fresh ready lessons.
+ * first, then due reviews interleaved with lessons (unfinished, then fresh):
+ * at most MAX_CONSECUTIVE_REVIEWS reviews in a row while a lesson is ready.
  */
 export function taskQueue(
   progress: Progress,
@@ -155,16 +159,28 @@ export function taskQueue(
   );
 
   const head = nextTask(progress, at, courseId, catalog);
-  const ordered: { skill: Skill; mode: 'learn' | 'review' }[] = [
-    ...(head && byId.has(head.skillId)
+  const lessons = [...new Set([...remediation, ...active, ...fresh])];
+  const ordered: { skill: Skill; mode: 'learn' | 'review' }[] =
+    head && byId.has(head.skillId)
       ? [{ skill: byId.get(head.skillId)!, mode: head.mode }]
-      : []),
-    ...due.map((skill) => ({ skill, mode: 'review' as const })),
-    ...[...remediation, ...active, ...fresh].map((skill) => ({
-      skill,
-      mode: 'learn' as const,
-    })),
-  ];
+      : [];
+  // Continue the engine's rule past its first choice.
+  let streak = reviewsSinceLesson(progress) + (head?.mode === 'review' ? 1 : 0);
+  if (head?.mode === 'learn') streak = 0;
+  const reviews = due.filter((skill) => skill.id !== head?.skillId);
+  const learning = lessons.filter((skill) => skill.id !== head?.skillId);
+  while (reviews.length || learning.length) {
+    if (
+      reviews.length &&
+      (streak < MAX_CONSECUTIVE_REVIEWS || !learning.length)
+    ) {
+      ordered.push({ skill: reviews.shift()!, mode: 'review' });
+      streak++;
+    } else {
+      ordered.push({ skill: learning.shift()!, mode: 'learn' });
+      streak = 0;
+    }
+  }
   const seen = new Set<string>();
   const tasks: DashboardTask[] = [];
   for (const { skill, mode } of ordered) {
@@ -312,8 +328,12 @@ export function formatClockTime(at: number, timeZone: string): string {
 
 export interface HistoryEntry {
   id: string;
-  kind: 'lesson' | 'review';
-  skill: Skill;
+  kind: 'lesson' | 'review' | 'quiz';
+  /** The lesson or review's skill; quizzes span several skills. */
+  skill?: Skill;
+  /** Quiz entries: "Quiz N" and the quiz's ID. */
+  title?: string;
+  quizId?: string;
   /** Completion time in epoch milliseconds. */
   at: number;
   /** XP the engine recorded for this task's answers. */
@@ -325,8 +345,8 @@ export interface HistoryEntry {
 const attemptTime = (attempt: Attempt) => Date.parse(attempt.at);
 
 /**
- * Completed lessons and reviews, newest first, reconstructed from the recent
- * attempt log. A lesson completes when its skill was first learned; a due
+ * Completed lessons, reviews, and quizzes, newest first. Lessons and reviews
+ * are reconstructed from the recent attempt log; quizzes from saved quizzes. A lesson completes when its skill was first learned; a due
  * review completes when its cycle was rescheduled without relearning.
  * Tasks whose answers have aged out of the bounded log are omitted.
  */
@@ -399,7 +419,51 @@ export function taskHistory(
       });
     });
   }
+  for (const quiz of progress.quizzes ?? [])
+    if (quiz.completedAt !== undefined)
+      entries.push({
+        id: quiz.id,
+        kind: 'quiz',
+        title: `Quiz ${quiz.number}`,
+        quizId: quiz.id,
+        at: quiz.completedAt,
+        earned: quiz.earned ?? 0,
+        possible: quiz.possible,
+      });
   return entries.sort((a, b) => b.at - a.at || a.id.localeCompare(b.id));
+}
+
+export interface QuizTask {
+  number: number;
+  /** Base XP: a perfect score. */
+  xp: number;
+  questions: number;
+  /** A quiz already under way; the action resumes it. */
+  started: boolean;
+}
+
+/** The quiz card on Learn: a quiz under way, or one now available. */
+export function quizTask(
+  progress: Progress,
+  courseId: string,
+  catalog: CurriculumCatalog = defaultCatalog,
+): QuizTask | null {
+  const status = quizStatus(progress, courseId, catalog);
+  if (status.kind === 'active')
+    return {
+      number: status.quiz.number,
+      xp: status.quiz.possible,
+      questions: status.quiz.questions.length,
+      started: true,
+    };
+  if (status.kind === 'available')
+    return {
+      number: status.number,
+      xp: status.xp,
+      questions: status.questions,
+      started: false,
+    };
+  return null;
 }
 
 export function groupByDay(
