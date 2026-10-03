@@ -32,7 +32,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 - **Lessons:** each lesson is one page that grows as you work, as in Math Academy: the introduction, then for each knowledge point its explanation, a worked example, and its questions, then the code exercise. Answered questions stay on the page with their explanations, so you can scroll back and reread while you solve. Reviews stack their questions on one page the same way.
 - **Account menu:** the avatar menu opens the knowledge graph, flashcards, code lab, and settings, and signs you in or out.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
-- **Flashcards:** receive recall cards after mastery and correction cards after mistakes; connect Anki or export a tab-separated deck.
+- **Flashcards:** receive recall cards after mastery and correction cards after mistakes, with math typeset; connect Anki or export a tab-separated deck.
 - **Code lab:** experiment with real Python, Rust, or C++ in a separate playground without changing mastery.
 - **Accounts and settings:** create an email/password account, save progress across browsers using the same server, delete the account and its progress, configure Anki, and export a JSON backup.
 
@@ -52,7 +52,7 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 | C++                      |     216 |              549 |     1,938 |                  216 |        432 |
 | **Total**                | **720** |        **1,945** | **7,540** |              **658** |  **1,440** |
 
-Questions are the knowledge points' practice questions; the four-question lessons they replaced were deleted (CEN-117). The browser keeps only the graph index in memory and downloads a course's lessons when one opens ([how content is loaded](docs/knowledge-graph.md#how-the-browser-loads-the-catalog)).
+Questions are the knowledge points' practice questions; the four-question lessons they replaced were deleted (CEN-117). The browser keeps only the graph index in memory and downloads a unit's lessons when one of them opens ([how content is loaded](docs/knowledge-graph.md#how-the-browser-loads-the-catalog)).
 
 Choosing a course on the Courses page makes it your active course. The scheduler includes its prerequisite ancestors across courses, so missing foundations become real tasks rather than a dead end. The graph offers course paths with supporting prerequisites and an all-course view. Each node retains a domain and course identity, and its detail panel navigates both prerequisite and dependent edges.
 
@@ -198,6 +198,7 @@ src/components/learn-dashboard.tsx   Learn: course, XP, tasks, and history
 src/components/courses-page.tsx      Courses: course sequence and numbered units
 src/components/learning-session.tsx  One-page lessons and reviews, language-aware grading
 src/components/secondary-pages.tsx   Flashcards, settings, account Dialog, Code lab
+src/components/code-editor.tsx  CodeMirror editor, loaded with one grammar on demand
 src/components/ui/              shadcn/ui source components
 src/components/reui/            Free ReUI Stepper and CodeBlock
 src/components/useLearner.ts    Device persistence and account synchronization
@@ -205,7 +206,7 @@ src/lib/curriculum.ts           Catalog types and the full curriculum (server, t
 src/lib/math-text.ts            $…$ and $$…$$ math in prose: parsing and validation
 src/lib/katex-render.ts         KaTeX renderer, loaded only on pages whose text has math
 src/lib/catalog-index.ts        Graph index: every skill outline, without lesson content
-src/lib/content/                Per-course lesson content, loaded on demand in the browser
+src/lib/content/                Lesson content, loaded one unit at a time in the browser
 src/lib/courses/                Course, unit, skill, exercise, and card definitions
 src/lib/knowledge-points/       Knowledge points and their practice questions
 src/lib/learning.ts             Mastery evidence, task selection, review, XP, streaks
@@ -218,6 +219,7 @@ src/lib/code-runner.ts         Language-aware execution and cancellation
 src/lib/server/compiled-code.ts  Canonical assessment and free sandbox adapter
 public/python-worker.mjs       Real Pyodide execution and exercise assertions
 src/lib/anki.ts                 Documented AnkiConnect client and note identity
+src/lib/card-text.ts            Mistake card text: prose with math, code kept apart
 src/lib/state.ts                Versioned learner state and conflict merging
 src/lib/server/                SQLite auth, state storage, API validation
 src/pages/api/                 Auth, learner-state, and compiled-code endpoints
@@ -230,7 +232,7 @@ docs/                          Learning, backend, and Anki implementation notes
 
 ## Growing the knowledge graph
 
-Courses, units, and skills have stable IDs. Skills declare a domain, course, unit, and explicit prerequisite IDs; a course lists its member skills. A prerequisite means the skill actually uses that rule or construct: list direct requirements only, never course position. The validator rejects implied edges and teaching orders that run backwards, and tests reject playlist-shaped courses. [Graph rules and audit](docs/knowledge-graph.md) records the rules, metrics, and known content gaps. To add a course, add an original catalog module under `src/lib/courses/` and its knowledge points under `src/lib/knowledge-points/`, combine them in a content module under `src/lib/content/`, register that module in `src/lib/curriculum.ts` and `src/lib/content/index.ts`, and run the graph validator and tests to catch missing references and cycles. Keep published IDs stable so saved progress and Anki notes continue to refer to the same concepts.
+Courses, units, and skills have stable IDs. Skills declare a domain, course, unit, and explicit prerequisite IDs; a course lists its member skills. A prerequisite means the skill actually uses that rule or construct: list direct requirements only, never course position. The validator rejects implied edges and teaching orders that run backwards, and tests reject playlist-shaped courses. [Graph rules and audit](docs/knowledge-graph.md) records the rules, metrics, and known content gaps. To add a course, add an original catalog module under `src/lib/courses/` and its knowledge points under `src/lib/knowledge-points/`, combine them in a content module under `src/lib/content/`, register that module in `src/lib/curriculum.ts` and `src/lib/content/parts.ts`, and run the graph validator and tests to catch missing references and cycles. Keep published IDs stable so saved progress and Anki notes continue to refer to the same concepts.
 
 The graph, scheduler, and account-state model support additional programming languages, mathematics, physics, and natural languages. Skills can declare an assessment policy with required review question types and an answer count. Choice-only math or vocabulary skills can be mastered and reviewed without Python; the launched Python course explicitly requires code and choice evidence in its reviews. Learning functions also accept an optional catalog for independent subject registries, with cross-course prerequisites validated as one graph.
 

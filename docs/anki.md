@@ -18,7 +18,7 @@ Only one desktop profile should sync to a given AnkiWeb account. See the [Anki p
 
 The application queues concise recall cards when skills are mastered and correction cards after mistakes. A card has a stable identity derived from its skill or exercise, so retrying the queue updates an existing note instead of creating another one.
 
-The **lessdumb** note type has `Front`, `Back`, and `Skill` fields, with one recall card template. The client escapes plain text and Python examples before inserting them into Anki HTML. It adds a `lessdumb` tag, an encoded identity tag, an encoded skill tag, and a mastery or mistake tag. Updating fields preserves the note ID, Anki review scheduling, and any tags you add yourself.
+The **lessdumb** note type has `Front`, `Back`, and `Skill` fields, with one recall card template. The client escapes plain text and code before inserting them into Anki HTML. It adds a `lessdumb` tag, an encoded identity tag, an encoded skill tag, and a mastery or mistake tag. Updating fields preserves the note ID, Anki review scheduling, and any tags you add yourself.
 
 The browser uses AnkiConnect's documented JSON API at `http://127.0.0.1:8765`; requests stay on your computer. The first request is `requestPermission`, which returns immediately for trusted origins and can prompt in Anki for other origins. The client then checks API version 6, the active profile, and available decks. It never automatically switches profiles. If the profile changes after connection, sending stops until you reconnect. Older AnkiConnect versions without `getActiveProfile` are supported only when they have exactly one profile, with the connection marked as inferred.
 
@@ -26,7 +26,15 @@ Cards remain in the application's queue when Anki is closed, a permission is mis
 
 Saving a note locally is separate from uploading it to AnkiWeb. Use **Sync** in Anki. Anki also supports automatic sync when opening or closing a profile. lessdumb uses the supported desktop add-on rather than an undocumented web-login or account API.
 
-For manual import, **Export for Anki** downloads a UTF-8 TSV with Anki's separator, HTML, column, and tags-column headers. The Front and Back fields preserve Python indentation and line breaks, convert tabs to four spaces, and escape literal HTML characters. Import the file through **File → Import** in Anki and map Front, Back, and Tags as shown in the preview. The export includes stable lessdumb identity tags. See Anki's [text-file import documentation](https://docs.ankiweb.net/importing/text-files.html).
+For manual import, **Export for Anki** downloads a UTF-8 TSV with Anki's separator, HTML, column, and tags-column headers. The Front and Back fields preserve Python indentation and line breaks, convert tabs to four spaces, escape literal HTML characters, and lay out math as described below. Import the file through **File → Import** in Anki and map Front, Back, and Tags as shown in the preview. The export includes stable lessdumb identity tags. See Anki's [text-file import documentation](https://docs.ankiweb.net/importing/text-files.html).
+
+## Math in cards
+
+Lessons write math as `$…$` and `$$…$$` (see [math notation](knowledge-points.md#math-notation)). Anki typesets math with its built-in MathJax, which recognizes only `\(…\)` and `\[…\]`, so a card's prose is sent with those delimiters: `$x^2$` becomes `\(x^2\)`, `$$…$$` becomes `\[…\]`, and `\$` becomes a plain `$`, which MathJax leaves alone. MathJax skips `<pre>` and `<code>` (Anki keeps MathJax's default `skipHtmlTags`; checked in Anki's bundled `mathjax.js`), so prose goes in a `<div>` with `white-space:pre-wrap`, and code, a program's output, a typed question's accepted answer (with its unit), and backtick code spans go in `<pre>` or `<code>`, where nothing is typeset. AnkiConnect and the TSV export use the same layout.
+
+This applies to mistake cards made since CEN-128. They store prose and code apart: `format: 'prose'` marks a card whose `front` and `back` are authored prose with code in fenced blocks, as in Markdown (`src/lib/card-text.ts`). The Flashcards page typesets their math with KaTeX.
+
+**No migration.** Older mistake cards keep the plain text they were saved with and show it as written, TeX source included, on the Flashcards page, in AnkiConnect fields, and in the TSV `<pre>`. Their text cannot be split back safely: it mixes the question's program into the prose, and `\$` was already turned into `$`, so a literal dollar and a math delimiter look alike. Rebuilding them from the current catalog would rewrite notes already in learners' collections with today's question text. A new mistake on the same question keeps the existing card, as before. Mastery cards are authored as plain text and have no math.
 
 ## Troubleshooting
 

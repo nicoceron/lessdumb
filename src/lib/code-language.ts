@@ -1,7 +1,7 @@
-import { python } from '@codemirror/lang-python';
-import { rust } from '@codemirror/lang-rust';
-import { cpp } from '@codemirror/lang-cpp';
 import type { CodeLanguage } from './curriculum';
+
+// Editor grammars live in `src/components/code-editor.tsx`, which loads them
+// on demand; this module stays free of CodeMirror.
 
 export const codeLanguageLabels: Record<CodeLanguage, string> = {
   python: 'Python',
@@ -11,8 +11,4 @@ export const codeLanguageLabels: Record<CodeLanguage, string> = {
 
 export function codeLanguage(value?: string): CodeLanguage {
   return value === 'rust' || value === 'cpp' ? value : 'python';
-}
-
-export function editorLanguage(language: CodeLanguage) {
-  return language === 'rust' ? rust() : language === 'cpp' ? cpp() : python();
 }

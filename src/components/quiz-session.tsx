@@ -8,7 +8,7 @@ import {
   Timer,
   X,
 } from 'lucide-react';
-import { courses, skillById } from '../lib/catalog-index';
+import { courses } from '../lib/catalog-index';
 import { choiceLetter, choiceOrder } from '../lib/choice-order';
 import { codeLanguage } from '../lib/code-language';
 import {
@@ -27,7 +27,7 @@ import { TypedAnswerInput } from './typed-answer';
 import { acceptedAnswer, gradeTyped } from '../lib/typed-answer';
 import type { AnswerQuestion } from '../lib/curriculum';
 import { Btn, ContentLoading } from './shared';
-import { useCourseContent } from './use-content';
+import { useSkillContent } from './use-content';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -75,9 +75,9 @@ export default function QuizSession({
     if (!quizId && running) setQuizId(running.id);
   }, [quizId, running?.id]);
   const finished = quiz?.completedAt !== undefined;
-  // Questions and explanations are lesson content, loaded per course.
-  const content = useCourseContent(
-    (quiz?.questions ?? []).map((slot) => skillById[slot.skillId]?.courseId),
+  // Questions and explanations are lesson content, loaded per unit.
+  const content = useSkillContent(
+    (quiz?.questions ?? []).map((slot) => slot.skillId),
   );
   useEffect(() => {
     if (!quiz || finished) return;
