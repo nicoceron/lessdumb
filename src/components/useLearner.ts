@@ -27,6 +27,11 @@ interface Snapshot {
   needsSave: boolean;
   hasDeviceState: boolean;
   guestMigrationRaw?: string;
+  /**
+   * A merge with account progress may have completed a skill's mastery whose
+   * cards wait for that course's content to load.
+   */
+  mergedCards?: boolean;
 }
 export interface Learner {
   state: LearnerState;
@@ -80,8 +85,6 @@ export function useLearner(): Learner {
   }));
   const [sync, setSync] = useState('Loading your learning space…');
   const [retry, setRetry] = useState(0);
-  // Counts merges with account progress; each may complete mastery cards.
-  const [merges, setMerges] = useState(0);
   const generation = useRef(0);
   const sessionOwner = useRef<string | null | undefined>(undefined);
   const latest = useRef(snapshot);
@@ -139,6 +142,7 @@ export function useLearner(): Learner {
         setSnapshot((current) => {
           if (current.owner !== userId) return current;
           const hasLocalProgress = current.hasDeviceState || current.needsSave;
+          const merged = !!result.state && hasLocalProgress;
           const value = result.state
             ? hasLocalProgress
               ? mergeStates(current.value, result.state)
@@ -156,9 +160,9 @@ export function useLearner(): Learner {
               !result.state && !hasLocalProgress
                 ? guest?.raw
                 : current.guestMigrationRaw,
+            mergedCards: merged || current.mergedCards,
           };
         });
-        setMerges((count) => count + 1);
         setSync('Account connected');
       })
       .catch((error) => {
@@ -301,9 +305,9 @@ export function useLearner(): Learner {
                     : value.value,
                   revision: error.latest.revision,
                   needsSave: true,
+                  mergedCards: !!error.latest.state || value.mergedCards,
                 },
           );
-          setMerges((count) => count + 1);
           setSync('Combining progress from your devices…');
         } else {
           if (error instanceof AccountRequestError && error.status === 401) {
@@ -337,13 +341,23 @@ export function useLearner(): Learner {
   // Merging can complete a skill's mastery, which earns its cards. Card text
   // is lesson content: load the courses it belongs to, then queue the cards.
   useEffect(() => {
-    if (!ready || !merges) return;
+    if (!ready || !snapshot.mergedCards) return;
+    const owner = snapshot.owner;
+    const settle = () =>
+      setSnapshot((value) =>
+        value.owner === owner ? { ...value, mergedCards: false } : value,
+      );
     const missing = missingMasteryCards(latest.current.value);
-    if (!missing.length) return;
+    if (!missing.length) {
+      settle();
+      return;
+    }
     let current = true;
     loadSkills(missing).then(
       () => {
-        if (current) update((state) => queueMasteryCards(state));
+        if (!current) return;
+        settle();
+        update((state) => queueMasteryCards(state));
       },
       // Offline: the next merge tries again.
       () => {},
@@ -351,7 +365,7 @@ export function useLearner(): Learner {
     return () => {
       current = false;
     };
-  }, [ready, merges]);
+  }, [ready, snapshot.owner, snapshot.mergedCards]);
 
   function retrySync() {
     setSnapshot((value) => ({ ...value, revision: null }));
