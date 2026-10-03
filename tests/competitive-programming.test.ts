@@ -17,6 +17,7 @@ import {
 import { createState, recordLearningAnswer } from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
 import { competitiveTopicStages } from '../src/lib/courses/competitive-programming';
+import { masterSkill } from './helpers/mastery';
 
 const courseId = 'competitive-programming';
 const NOW = Date.parse('2026-10-02T15:00:00Z');
@@ -26,13 +27,7 @@ function master(progress: Progress, id: string): Progress {
   for (const prerequisite of skillById[id].prerequisites)
     if (getSkillState(result, prerequisite).mastery < 1)
       result = master(result, prerequisite);
-  for (const question of skillById[id].questions)
-    result = applyAttempt(
-      result,
-      { skillId: id, questionId: question.id, correct: true, mode: 'learn' },
-      NOW,
-    );
-  return result;
+  return masterSkill(result, id, NOW);
 }
 
 afterEach(() => vi.useRealTimers());
