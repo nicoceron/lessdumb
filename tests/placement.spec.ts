@@ -7,7 +7,7 @@ import {
   type Diagnostic,
 } from '../src/lib/placement';
 import type { LearnerState } from '../src/lib/state';
-import { choiceButton, feedback, prompt } from './helpers/lesson';
+import { choiceButton, expectProse, feedback, prompt } from './helpers/lesson';
 
 /** Skills the simulated learner knows: these and everything they use. */
 function closure(ids: string[]): Set<string> {
@@ -59,7 +59,7 @@ test('a placement test adapts without feedback, reports the placement, and Learn
     const diagnostic: Diagnostic | undefined = activeDiagnostic(state.progress);
     if (!diagnostic) break;
     const { skill, question } = diagnosticQuestion(diagnostic.current!)!;
-    await expect(prompt(page)).toHaveText(question.prompt);
+    await expectProse(prompt(page), question.prompt);
     await expect(page.getByText(`Question ${index + 1}`)).toBeVisible();
     await expect(
       page.getByRole('progressbar', { name: 'Placement progress' }),

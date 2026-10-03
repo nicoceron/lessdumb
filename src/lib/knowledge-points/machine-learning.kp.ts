@@ -455,7 +455,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'train_minutes = [20, 30, 25, 45]\nbaseline = sum(train_minutes) / len(train_minutes)\ntest_rows = ["order 7", "order 8"]\npredictions = [baseline for row in test_rows]\nprint(baseline)\nprint(predictions)',
         output: '30.0\n[30.0, 30.0]',
         explanation:
-          'The training mean is 120 / 4 = 30.0, and the baseline predicts that same value for every new row.',
+          'The training mean is $120 / 4 = 30.0$, and the baseline predicts that same value for every new row.',
       },
       questions: [
         predictOutput(
@@ -463,7 +463,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'train = [3, 5, 10]\ntest = [4, 100]\nbaseline = sum(train) / len(train)\nprint(baseline)',
           ['24.4', '52.0', '6', '6.0'],
           3,
-          'Only the training targets are averaged: 18 / 3 = 6.0. Division with / gives a float.',
+          'Only the training targets are averaged: $18 / 3 = 6.0$. Division with / gives a float.',
         ),
         choose(
           'Why compute the baseline constant from the training targets only?',
@@ -543,7 +543,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'majority = 0\nvalidation = [1, 0, 0, 0, 0, 1, 0, 0]\ncorrect = sum([1 for y in validation if y == majority])\nprint(correct, correct / len(validation))',
           ['6 0.75', '2 0.25', '6 0.6', '8 1.0'],
           0,
-          'Six validation labels equal the predicted class 0, and 6 / 8 = 0.75.',
+          'Six validation labels equal the predicted class 0, and $6 / 8 = 0.75$.',
         ),
       ],
     },
@@ -557,7 +557,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'residuals = [3, 0, -4, 0]\nmse = sum([r ** 2 for r in residuals]) / len(residuals)\nrmse = mse ** 0.5\nprint(mse)\nprint(rmse)',
         output: '6.25\n2.5',
         explanation:
-          'The squares are 9, 0, 16, and 0, which average to 25 / 4 = 6.25. Its square root is 2.5.',
+          'The squares are 9, 0, 16, and 0, which average to $25 / 4 = 6.25$. Its square root is 2.5.',
       },
       questions: [
         predictOutput(
@@ -565,7 +565,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'actual = [10, 12, 9]\nprediction = 10\nmse = sum([(a - prediction) ** 2 for a in actual]) / len(actual)\nprint(round(mse, 3))',
           ['0.333', '1.0', '1.667', '5'],
           2,
-          'The residuals are 0, 2, and -1; their squares sum to 5, and 5 / 3 rounds to 1.667.',
+          'The residuals are 0, 2, and -1; their squares sum to 5, and $5 / 3$ rounds to 1.667.',
         ),
         predictOutput(
           'What does this program print?',
@@ -589,7 +589,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'MSE cannot compare them',
           ],
           0,
-          'The first MSE is 4 / 4 = 1, the second is 16 / 4 = 4: squaring makes the single large error dominate.',
+          'The first MSE is $4 / 4 = 1$, the second is $16 / 4 = 4$: squaring makes the single large error dominate.',
         ),
       ],
     },
@@ -611,7 +611,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'baseline_residuals = [4, -4, 2, -2]\nmodel_residuals = [3, -1, 1, -3]\nbaseline_mse = sum([r ** 2 for r in baseline_residuals]) / 4\nmodel_mse = sum([r ** 2 for r in model_residuals]) / 4\nprint(baseline_mse - model_mse)',
           ['-5.0', '0.0', '5.0', '20.0'],
           2,
-          'The baseline MSE is 40 / 4 = 10.0 and the model MSE is 20 / 4 = 5.0, so the model is 5.0 lower.',
+          'The baseline MSE is $40 / 4 = 10.0$ and the model MSE is $20 / 4 = 5.0$, so the model is 5.0 lower.',
         ),
         choose(
           'A model has an RMSE of 8 minutes on the validation set. The training-mean baseline has an RMSE of 11 minutes on the test set. What is wrong with concluding that the model is better?',
@@ -649,7 +649,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Standardize with training statistics',
       explanation: [
-        'Standardizing rescales a feature to z = (x - mean) / std, so features measured in different units become comparable. With NumPy, train.mean() and train.std() give the mean and the population standard deviation.',
+        'Standardizing rescales a feature to $z = (x - \\text{mean}) / \\text{std}$, so features measured in different units become comparable. With NumPy, train.mean() and train.std() give the mean and the population standard deviation.',
         'The mean and standard deviation come from the training rows only, and every later row is transformed with those same two numbers. A new value outside the training range simply gets a large z value.',
       ],
       example: {
@@ -819,7 +819,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'import numpy as np\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.impute import SimpleImputer\nfrom sklearn.preprocessing import StandardScaler\nprep = make_pipeline(SimpleImputer(strategy="mean"), StandardScaler())\nprep.fit([[0.0], [np.nan], [6.0]])\nprint(np.round(prep.transform([[np.nan], [9.0]]), 3).tolist())',
         output: '[[0.0], [2.449]]',
         explanation:
-          'The imputer learns mean 3 and fills the gap, so the scaler learns from [0, 3, 6]. A new NaN becomes 3, which is 0.0 after scaling; 9 becomes 6 / 2.449 ≈ 2.449.',
+          'The imputer learns mean 3 and fills the gap, so the scaler learns from [0, 3, 6]. A new NaN becomes 3, which is 0.0 after scaling; 9 becomes $6 / 2.449 \\approx 2.449$.',
       },
       questions: [
         predictOutput(
@@ -874,14 +874,14 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Predict with an intercept plus weighted features',
       explanation: [
-        'A linear regression prediction is an intercept b plus each feature times its weight: b + w1*x1 + w2*x2 + .... The weighted sum is the dot product of the weight vector and the feature vector; with NumPy arrays, (w * x).sum() computes it, and X @ w computes it for every row of a feature matrix X at once.',
+        'A linear regression prediction is an intercept $b$ plus each feature times its weight: $b + w_1 x_1 + w_2 x_2 + \\cdots$. The weighted sum is the dot product of the weight vector and the feature vector; with NumPy arrays, (w * x).sum() computes it, and X @ w computes it for every row of a feature matrix X at once.',
         'The model is linear in its weights, not necessarily in the raw input. Adding a column that holds x squared still gives a linear model, because the prediction remains a weighted sum of the columns.',
       ],
       example: {
         code: 'import numpy as np\nw = np.array([40.0, 15.0])\nb = 50.0\nx = np.array([3.0, 2.0])\nprint(b + (w * x).sum())\nX = np.array([[3.0, 2.0], [1.0, 0.0]])\nprint((X @ w + b).tolist())',
         output: '200.0\n[200.0, 90.0]',
         explanation:
-          'For one row, 50 + 40*3 + 15*2 = 200. X @ w computes each row’s weighted sum, and adding b shifts every prediction.',
+          'For one row, $50 + 40 \\times 3 + 15 \\times 2 = 200$. X @ w computes each row’s weighted sum, and adding b shifts every prediction.',
       },
       questions: [
         predictOutput(
@@ -889,7 +889,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import numpy as np\nw = np.array([3.0, -2.0])\nb = 10.0\nx = np.array([4.0, 5.0])\nprint(b + (w * x).sum())',
           ['32.0', '2.0', '12.0', '-12.0'],
           2,
-          '10 + 3*4 + (-2)*5 = 10 + 12 - 10 = 12.0. The negative weight lowers the prediction.',
+          '$10 + 3 \\times 4 + (-2) \\times 5 = 10 + 12 - 10 = 12.0$. The negative weight lowers the prediction.',
         ),
         predictOutput(
           'What does this program print?',
@@ -915,10 +915,15 @@ export const knowledgePoints: KnowledgePointModule = {
           'Only the age term changes: -5 times an increase of 2 is -10.',
         ),
         choose(
-          'Which formula is still a linear regression model with learned weights b, w1, and w2?',
-          ['b + w1*x + w2*x**2', 'b + x**w1', 'b + w1*w2*x', 'b / (w1*x)'],
+          'Which formula is still a linear regression model with learned weights $b$, $w_1$, and $w_2$?',
+          [
+            '$b + w_1 x + w_2 x^2$',
+            '$b + x^{w_1}$',
+            '$b + w_1 w_2 x$',
+            '$b / (w_1 x)$',
+          ],
           0,
-          'It is a weighted sum of the columns x and x**2, so it is linear in the weights even though it curves in x.',
+          'It is a weighted sum of the columns $x$ and $x^2$, so it is linear in the weights even though it curves in $x$.',
         ),
       ],
     },
@@ -988,7 +993,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'from sklearn.linear_model import LinearRegression\nX = [[1.0], [2.0], [3.0]]\ny = [5.0, 7.0, 9.0]\nmodel = LinearRegression().fit(X, y)\nprint(round(float(model.intercept_), 3), model.coef_.round(3).tolist())\nprint(model.predict([[10.0]]).round(3).tolist())',
         output: '3.0 [2.0]\n[23.0]',
         explanation:
-          'The points lie on y = 3 + 2x, so the fitted intercept is 3 and the one coefficient is 2. At x = 10 the model predicts 23.',
+          'The points lie on $y = 3 + 2x$, so the fitted intercept is 3 and the one coefficient is 2. At $x = 10$ the model predicts 23.',
       },
       questions: [
         predictOutput(
@@ -1001,7 +1006,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[1.0, 2.0] 3.0',
           ],
           1,
-          'Every row satisfies y = 1 + 2*x1 + 3*x2; coef_ lists the weights in column order.',
+          'Every row satisfies $y = 1 + 2x_1 + 3x_2$; coef_ lists the weights in column order.',
         ),
         predictOutput(
           'What does this program print?',
@@ -1069,14 +1074,14 @@ export const knowledgePoints: KnowledgePointModule = {
           'from sklearn.linear_model import LinearRegression\nhours = [[1.0], [2.0], [3.0]]\nminutes = [[60.0], [120.0], [180.0]]\ncost = [30.0, 50.0, 70.0]\na = LinearRegression().fit(hours, cost).coef_[0]\nb = LinearRegression().fit(minutes, cost).coef_[0]\nprint(round(float(a), 3), round(float(b), 3))',
           ['20.0 20.0', '20.0 0.333', '20.0 1200.0', '0.333 20.0'],
           1,
-          'Cost rises 20 per hour, which is 20 / 60 ≈ 0.333 per minute.',
+          'Cost rises 20 per hour, which is $20 / 60 \\approx 0.333$ per minute.',
         ),
         predictOutput(
           'The second column holds x squared. What does this program print?',
           'from sklearn.linear_model import LinearRegression\nX = [[0.0, 0.0], [1.0, 1.0], [2.0, 4.0], [3.0, 9.0]]\ny = [1.0, 2.0, 5.0, 10.0]\nmodel = LinearRegression().fit(X, y)\nprint(model.predict([[4.0, 16.0]]).round(3).tolist())',
           ['[13.0]', '[16.0]', '[10.0]', '[17.0]'],
           3,
-          'The data follow y = 1 + 0*x + 1*x**2, a weighted sum of the two columns, so the model predicts 1 + 16 = 17.',
+          'The data follow $y = 1 + 0 \\cdot x + 1 \\cdot x^2$, a weighted sum of the two columns, so the model predicts $1 + 16 = 17$.',
         ),
       ],
     },
@@ -1085,18 +1090,18 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Step against the gradient',
       explanation: [
-        'Gradient descent improves a parameter by moving it opposite to the loss gradient: w = w - learning_rate * gradient. A positive gradient means the loss rises as w grows, so w moves down; a negative gradient moves w up.',
-        'With several parameters, each one moves by its own gradient entry times the same learning rate. For the loss (w - t)**2 the gradient is 2*(w - t).',
+        'Gradient descent improves a parameter by moving it opposite to the loss gradient: $w = w - \\text{learning\\_rate} \\times \\text{gradient}$. A positive gradient means the loss rises as $w$ grows, so $w$ moves down; a negative gradient moves $w$ up.',
+        'With several parameters, each one moves by its own gradient entry times the same learning rate. For the loss $(w - t)^2$ the gradient is $2(w - t)$.',
       ],
       example: {
         code: 'w = 4.0\ngradient = 2 * (w - 1)\nlearning_rate = 0.25\nw = w - learning_rate * gradient\nprint(gradient, w)',
         output: '6.0 2.5',
         explanation:
-          'For the loss (w - 1)**2 at w = 4, the gradient is 6, so the step subtracts 0.25 * 6 = 1.5 and w moves toward 1.',
+          'For the loss $(w - 1)^2$ at $w = 4$, the gradient is 6, so the step subtracts $0.25 \\times 6 = 1.5$ and $w$ moves toward 1.',
       },
       questions: [
         predictOutput(
-          'The loss is (w - 3)**2. What does this program print?',
+          'The loss is $(w - 3)^2$. What does this program print?',
           'w = 0.0\ngradient = 2 * (w - 3)\nw = w - 0.1 * gradient\nprint(round(w, 2))',
           ['-0.6', '6.0', '0.6', '3.0'],
           2,
@@ -1116,10 +1121,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which update is gradient descent with learning rate lr?',
           [
-            'w = w + lr * gradient',
-            'w = w - lr * gradient',
-            'w = lr * gradient',
-            'w = w - gradient / lr',
+            '$w = w + \\text{lr} \\times \\text{gradient}$',
+            '$w = w - \\text{lr} \\times \\text{gradient}$',
+            '$w = \\text{lr} \\times \\text{gradient}$',
+            '$w = w - \\text{gradient} / \\text{lr}$',
           ],
           1,
           'Subtracting a small multiple of the gradient moves w in the direction of decreasing loss.',
@@ -1129,7 +1134,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'weights = [1.0, -2.0]\ngradient = [4.0, -6.0]\nlr = 0.5\nweights = [weights[i] - lr * gradient[i] for i in range(2)]\nprint(weights)',
           ['[-1.0, 1.0]', '[3.0, -5.0]', '[2.0, -3.0]', '[-1.0, -5.0]'],
           0,
-          'Each weight moves by its own gradient: 1 - 0.5*4 = -1 and -2 - 0.5*(-6) = 1.',
+          'Each weight moves by its own gradient: $1 - 0.5 \\times 4 = -1$ and $-2 - 0.5 \\times (-6) = 1$.',
         ),
       ],
     },
@@ -1137,7 +1142,7 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Pick a learning rate that converges',
       explanation: [
         'Repeating the update moves w step by step toward a minimum. The learning rate sets the step size. Too small, and progress is slow. Too large, and a step jumps past the minimum to the other side.',
-        'For the loss (w - t)**2, each step multiplies the distance to t by (1 - 2*lr). With lr = 0.5 one step lands exactly on t; between 0.5 and 1 the steps overshoot but shrink; above 1 every step overshoots further, so training diverges.',
+        'For the loss $(w - t)^2$, each step multiplies the distance to $t$ by $(1 - 2 \\times \\text{lr})$. With $\\text{lr} = 0.5$ one step lands exactly on $t$; between 0.5 and 1 the steps overshoot but shrink; above 1 every step overshoots further, so training diverges.',
       ],
       example: {
         code: 'def run(lr, steps):\n    w = 0.0\n    for step in range(steps):\n        w = w - lr * 2 * (w - 10)\n    return round(w, 3)\n\nprint(run(0.1, 3))\nprint(run(0.5, 3))\nprint(run(1.1, 3))',
@@ -1147,14 +1152,14 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         predictOutput(
-          'The loss is (w - 8)**2. What does this program print?',
+          'The loss is $(w - 8)^2$. What does this program print?',
           'w = 0.0\nfor step in range(2):\n    w = w - 0.25 * 2 * (w - 8)\nprint(w)',
           ['4.0', '8.0', '6.0', '2.0'],
           2,
           'Each step halves the distance to 8: it goes from 8 to 4 to 2, so w ends at 6.0.',
         ),
         predictOutput(
-          'The loss is (w - 4)**2. What does this program print?',
+          'The loss is $(w - 4)^2$. What does this program print?',
           'w = 0.0\nfor step in range(2):\n    w = w - 0.75 * 2 * (w - 4)\n    print(w)',
           ['3.0\n3.75', '6.0\n3.0', '6.0\n8.0', '6.0\n6.0'],
           1,
@@ -1176,7 +1181,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Evaluate on the test set more often',
             'Reverse the sign of the update',
-            'Start every run from w = 0',
+            'Start every run from $w = 0$',
             'Use a moderately larger learning rate',
           ],
           3,
@@ -1187,14 +1192,14 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Average the gradient over a batch of examples',
       explanation: [
-        'For a model that predicts w*x with mean squared error, each example contributes the gradient 2*(w*x - y)*x, and the loss gradient is their average. Batch gradient descent averages over every training example for each update.',
+        'For a model that predicts $wx$ with mean squared error, each example contributes the gradient $2(wx - y)x$, and the loss gradient is their average. Batch gradient descent averages over every training example for each update.',
         'Stochastic gradient descent updates after a single example, and mini-batch gradient descent after a small group. Smaller batches make cheaper but noisier gradient estimates, because each one depends on which examples were picked.',
       ],
       example: {
         code: 'xs = [1.0, 2.0, 3.0]\nys = [2.0, 4.0, 6.0]\nw = 1.0\ngrads = [2 * (w * xs[i] - ys[i]) * xs[i] for i in range(3)]\nprint(grads)\nprint(round(sum(grads) / len(grads), 3))',
         output: '[-2.0, -8.0, -18.0]\n-9.333',
         explanation:
-          'Each example says w is too small, by different amounts. The batch gradient is their average, -28 / 3.',
+          'Each example says $w$ is too small, by different amounts. The batch gradient is their average, $-28 / 3$.',
       },
       questions: [
         predictOutput(
@@ -1231,21 +1236,21 @@ export const knowledgePoints: KnowledgePointModule = {
           'xs = [1.0, 2.0]\nys = [2.0, 4.0]\nw = 0.0\nfor i in range(2):\n    w = w - 0.1 * 2 * (w * xs[i] - ys[i]) * xs[i]\n    print(round(w, 3))',
           ['0.4\n2.0', '1.0\n1.0', '0.4\n1.68', '0.4\n0.8'],
           2,
-          'The first update gives 0.4. The second gradient is computed at w = 0.4: 2*(0.8 - 4)*2 = -12.8, so w rises by 1.28.',
+          'The first update gives 0.4. The second gradient is computed at $w = 0.4$: $2(0.8 - 4) \\times 2 = -12.8$, so $w$ rises by 1.28.',
         ),
       ],
     },
     {
       title: 'Fit a line by updating both parameters together',
       explanation: [
-        'For predictions b + w*x and mean squared error, the gradient for b averages 2*(prediction - y), and the gradient for w averages 2*(prediction - y)*x. Compute both from the current b and w, then update both, and repeat.',
+        'For predictions $b + wx$ and mean squared error, the gradient for $b$ averages $2(\\text{prediction} - y)$, and the gradient for $w$ averages $2(\\text{prediction} - y)x$. Compute both from the current $b$ and $w$, then update both, and repeat.',
         'When both gradients reach zero, the parameters sit at a flat point. For the mean squared error of a linear model that point is the least-squares solution. A loss with several valleys can also be flat at a valley that is not the lowest one, so a zero gradient alone does not prove the best possible fit.',
       ],
       example: {
         code: 'xs = [0.0, 1.0, 2.0]\nys = [1.0, 3.0, 5.0]\nb, w = 0.0, 0.0\nfor step in range(500):\n    errors = [b + w * xs[i] - ys[i] for i in range(3)]\n    grad_b = sum([2 * e for e in errors]) / 3\n    grad_w = sum([2 * errors[i] * xs[i] for i in range(3)]) / 3\n    b, w = b - 0.1 * grad_b, w - 0.1 * grad_w\nprint(round(b, 3), round(w, 3))',
         output: '1.0 2.0',
         explanation:
-          'Five hundred small steps reach the line y = 1 + 2x, which fits all three points exactly.',
+          'Five hundred small steps reach the line $y = 1 + 2x$, which fits all three points exactly.',
       },
       questions: [
         predictOutput(
@@ -1464,7 +1469,7 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Diagnose overfitting and underfitting',
       explanation: [
         'Compare the error on the training rows with the error on validation rows. Low training error with much higher validation error is overfitting: the model fits details of the training rows that do not carry over. High error on both is underfitting: the model misses patterns even in the data it trained on.',
-        'Model flexibility moves you between the two. Adding columns such as x**2 up to x**5 lets a linear model bend more; with few rows it can pass through every training point and still predict new points badly.',
+        'Model flexibility moves you between the two. Adding columns such as $x^2$ up to $x^5$ lets a linear model bend more; with few rows it can pass through every training point and still predict new points badly.',
       ],
       example: {
         code: 'import numpy as np\nfrom sklearn.linear_model import LinearRegression\nx_train = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])\ny_train = np.array([1.0, 2.6, 2.9, 4.2, 4.8, 6.3])\nx_val = np.array([0.5, 2.5, 4.5])\ny_val = np.array([1.5, 3.8, 5.4])\n\ndef powers(x, degree):\n    return np.column_stack([x ** d for d in range(1, degree + 1)])\n\nfor degree in [1, 5]:\n    model = LinearRegression().fit(powers(x_train, degree), y_train)\n    train_mse = ((model.predict(powers(x_train, degree)) - y_train) ** 2).mean()\n    val_mse = ((model.predict(powers(x_val, degree)) - y_val) ** 2).mean()\n    print(degree, round(float(train_mse), 3), round(float(val_mse), 3))',
@@ -1493,7 +1498,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which change is most likely to reduce overfitting?',
           [
-            'Adding columns for x**6 through x**10',
+            'Adding columns for $x^6$ through $x^{10}$',
             'Training longer on the same few rows',
             'Scoring the model on its training rows',
             'Using a simpler model or more rows',
@@ -1520,7 +1525,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'from sklearn.linear_model import Ridge\nX = [[0.0], [1.0], [2.0], [3.0]]\ny = [0.0, 2.0, 4.0, 6.0]\nfor alpha in [0.1, 1.0, 10.0]:\n    print(alpha, round(float(Ridge(alpha=alpha).fit(X, y).coef_[0]), 3))',
         output: '0.1 1.961\n1.0 1.667\n10.0 0.667',
         explanation:
-          'The least-squares slope is 2. As alpha grows, the penalty pulls the slope toward 0, even though the data fit y = 2x exactly.',
+          'The least-squares slope is 2. As alpha grows, the penalty pulls the slope toward 0, even though the data fit $y = 2x$ exactly.',
       },
       questions: [
         predictOutput(
@@ -1672,14 +1677,14 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Map a linear score to a probability',
       explanation: [
-        'Logistic regression computes a linear score z = b + w1*x1 + ..., which can be any number, and passes it through the sigmoid: p = 1 / (1 + exp(-z)). The result always lies between 0 and 1 and is read as the probability of the positive class.',
+        'Logistic regression computes a linear score $z = b + w_1 x_1 + \\cdots$, which can be any number, and passes it through the sigmoid: $p = \\frac{1}{1 + \\exp(-z)}$. The result always lies between 0 and 1 and is read as the probability of the positive class.',
         'A score of 0 gives exactly 0.5. Positive scores give probabilities above 0.5 and negative scores below. The curve is symmetric: sigmoid(-z) = 1 - sigmoid(z).',
       ],
       example: {
         code: 'import math\n\ndef sigmoid(z):\n    return 1 / (1 + math.exp(-z))\n\nprint(sigmoid(0))\nprint(round(sigmoid(2), 3), round(sigmoid(-2), 3))',
         output: '0.5\n0.881 0.119',
         explanation:
-          'exp(0) = 1, so the score 0 maps to 1 / 2. Scores of 2 and -2 land the same distance above and below 0.5.',
+          '$\\exp(0) = 1$, so the score 0 maps to $1 / 2$. Scores of 2 and -2 land the same distance above and below 0.5.',
       },
       questions: [
         predictOutput(
@@ -1687,7 +1692,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import math\nb, w = -3.0, 0.5\nx = 6.0\nz = b + w * x\nprint(z, 1 / (1 + math.exp(-z)))',
           ['0.0 0.0', '-3.0 0.047', '0.0 1.0', '0.0 0.5'],
           3,
-          'The score is -3 + 0.5*6 = 0, and the sigmoid of 0 is 0.5.',
+          'The score is $-3 + 0.5 \\times 6 = 0$, and the sigmoid of 0 is 0.5.',
         ),
         predictOutput(
           'What does this program print?',
@@ -1774,14 +1779,14 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Score probabilities with log loss',
       explanation: [
-        'Log loss scores a predicted probability p of class 1 against the true label y: -(y*log(p) + (1 - y)*log(1 - p)). Only one term is active: -log(p) when y is 1, and -log(1 - p) when y is 0.',
+        'Log loss scores a predicted probability $p$ of class 1 against the true label $y$: $-(y \\log(p) + (1 - y) \\log(1 - p))$. Only one term is active: $-\\log(p)$ when $y$ is 1, and $-\\log(1 - p)$ when $y$ is 0.',
         'A confident correct prediction costs almost nothing, while a confident wrong one costs a lot. Logistic regression is fitted by minimizing the average log loss over the training rows.',
       ],
       example: {
         code: 'import math\n\ndef log_loss(y, p):\n    return -(y * math.log(p) + (1 - y) * math.log(1 - p))\n\nprint(round(log_loss(1, 0.9), 3))\nprint(round(log_loss(1, 0.1), 3))',
         output: '0.105\n2.303',
         explanation:
-          'Both rows are positive. Predicting 0.9 costs -log(0.9) ≈ 0.105; predicting 0.1 costs -log(0.1) ≈ 2.303, about 22 times more.',
+          'Both rows are positive. Predicting 0.9 costs $-\\log(0.9) \\approx 0.105$; predicting 0.1 costs $-\\log(0.1) \\approx 2.303$, about 22 times more.',
       },
       questions: [
         predictOutput(
@@ -1789,14 +1794,14 @@ export const knowledgePoints: KnowledgePointModule = {
           'import math\n\ndef log_loss(y, p):\n    return -(y * math.log(p) + (1 - y) * math.log(1 - p))\n\nprint(round(log_loss(0, 0.8), 3))',
           ['0.223', '0.8', '1.609', '0.2'],
           2,
-          'The label is 0, so the loss is -log(1 - 0.8) = -log(0.2) ≈ 1.609.',
+          'The label is 0, so the loss is $-\\log(1 - 0.8) = -\\log(0.2) \\approx 1.609$.',
         ),
         predictOutput(
           'What does this program print?',
           'import math\n\ndef log_loss(y, p):\n    return -(y * math.log(p) + (1 - y) * math.log(1 - p))\n\nlosses = [log_loss(1, 0.5), log_loss(0, 0.5)]\nprint(round(sum(losses) / len(losses), 3))',
           ['0.5', '1.386', '0.0', '0.693'],
           3,
-          'A probability of 0.5 costs log(2) ≈ 0.693 whichever label is true, so the average is also 0.693.',
+          'A probability of 0.5 costs $\\log(2) \\approx 0.693$ whichever label is true, so the average is also 0.693.',
         ),
         choose(
           'For a row whose true label is 0, one model predicts 0.99 and another 0.6. Which gets the larger log loss?',
@@ -1807,7 +1812,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Neither, because log loss ignores the label',
           ],
           2,
-          '-log(0.01) ≈ 4.6 is far larger than -log(0.4) ≈ 0.92.',
+          '$-\\log(0.01) \\approx 4.6$ is far larger than $-\\log(0.4) \\approx 0.92$.',
         ),
         choose(
           'Why is logistic regression trained on log loss rather than on the count of wrong labels?',
@@ -1832,7 +1837,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'from sklearn.linear_model import LogisticRegression\nX = [[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]\ny = [0, 0, 0, 1, 1, 1]\nmodel = LogisticRegression().fit(X, y)\nprint(model.classes_.tolist())\nprint(model.predict_proba([[4.5]]).round(3).tolist())\nprint(model.predict([[2.0], [7.5]]).tolist())',
         output: '[0, 1]\n[[0.5, 0.5]]\n[0, 1]',
         explanation:
-          'x = 4.5 is midway between the classes, so both columns are 0.5. Rows far to either side get the matching label.',
+          '$x = 4.5$ is midway between the classes, so both columns are 0.5. Rows far to either side get the matching label.',
       },
       questions: [
         predictOutput(
@@ -1852,7 +1857,7 @@ export const knowledgePoints: KnowledgePointModule = {
             "['no', 'yes']\n[[0.03, 0.97]]",
           ],
           3,
-          'classes_ is sorted, so "no" is column 0. A row at x = 1 is almost surely "yes", which is column 1.',
+          'classes_ is sorted, so "no" is column 0. A row at $x = 1$ is almost surely "yes", which is column 1.',
         ),
         choose(
           'In scikit-learn’s LogisticRegression, what does a smaller C mean?',
@@ -1954,7 +1959,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'from sklearn.metrics import precision_score, recall_score\nactual = [1, 1, 1, 1, 0, 0, 0, 0]\npredicted = [1, 1, 0, 0, 1, 0, 0, 0]\np = precision_score(actual, predicted)\nr = recall_score(actual, predicted)\nprint(round(float(p), 3), round(float(r), 3))',
           ['0.5 0.667', '0.667 0.667', '0.667 0.5', '0.75 0.5'],
           2,
-          'TP = 2, FP = 1, FN = 2. Precision is 2 / 3 and recall is 2 / 4.',
+          'TP = 2, FP = 1, FN = 2. Precision is $2 / 3$ and recall is $2 / 4$.',
         ),
         choose(
           'A spam filter has precision 0.95 and recall 0.40. What does that mean?',
@@ -1986,7 +1991,7 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'See through accuracy with rare classes; combine with F1',
       explanation: [
         'Accuracy is (TP + TN) divided by all rows. When positives are rare, a model that always predicts negative scores high accuracy while finding none of them, so its recall is 0.',
-        'The F1 score, 2 * precision * recall / (precision + recall), is the harmonic mean of the two. It is high only when both are high, so it exposes a model that buys one at the expense of the other.',
+        'The F1 score, $\\frac{2 \\times \\text{precision} \\times \\text{recall}}{\\text{precision} + \\text{recall}}$, is the harmonic mean of the two. It is high only when both are high, so it exposes a model that buys one at the expense of the other.',
       ],
       example: {
         code: 'tp, fp, fn, tn = 0, 0, 10, 990\naccuracy = (tp + tn) / (tp + fp + fn + tn)\nrecall = tp / (tp + fn)\nprint(accuracy, recall)',
@@ -2000,14 +2005,14 @@ export const knowledgePoints: KnowledgePointModule = {
           'precision, recall = 0.5, 1.0\nf1 = 2 * precision * recall / (precision + recall)\nprint(round(f1, 3))',
           ['0.75', '0.667', '0.5', '1.0'],
           1,
-          'The harmonic mean is 2 * 0.5 * 1.0 / 1.5 ≈ 0.667, below the ordinary average 0.75.',
+          'The harmonic mean is $2 \\times 0.5 \\times 1.0 / 1.5 \\approx 0.667$, below the ordinary average 0.75.',
         ),
         predictOutput(
           'What does this program print?',
           'from sklearn.metrics import accuracy_score, f1_score\nactual = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1]\npredicted = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]\nprint(accuracy_score(actual, predicted), round(float(f1_score(actual, predicted)), 3))',
           ['0.9 0.667', '0.9 0.9', '0.5 0.667', '0.9 0.5'],
           0,
-          'Nine of ten rows are correct. Precision is 1.0 and recall 0.5, so F1 = 2 * 0.5 / 1.5 ≈ 0.667.',
+          'Nine of ten rows are correct. Precision is 1.0 and recall 0.5, so $\\text{F1} = 2 \\times 0.5 / 1.5 \\approx 0.667$.',
         ),
         choose(
           'Only 1% of rows are positive. Why can a 99% accuracy be meaningless?',
@@ -2029,7 +2034,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Model B',
           ],
           3,
-          'A’s F1 is 2 * 0.09 / 1.0 = 0.18; B’s is 0.5. The harmonic mean punishes A’s very low recall.',
+          'A’s F1 is $2 \\times 0.09 / 1.0 = 0.18$; B’s is 0.5. The harmonic mean punishes A’s very low recall.',
         ),
       ],
     },
@@ -2164,7 +2169,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import numpy as np\nscores = np.array([-4.0, -9.0, -2.0])\nprint(float(-scores.mean()))',
           ['-5.0', '5.0', '15.0', '3.0'],
           1,
-          'The scores are negated MSEs, so the mean MSE is -(-15 / 3) = 5.0.',
+          'The scores are negated MSEs, so the mean MSE is $-(-15 / 3) = 5.0$.',
         ),
         predictOutput(
           'DummyRegressor predicts the training mean. What does this program print?',
@@ -2286,7 +2291,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[4.0]\n[6.5]\n[9.0]',
           ],
           2,
-          'Each round’s scaler sees only that round’s four training rows; the first round leaves out 1 and 2, so its mean is 36 / 4 = 9.',
+          'Each round’s scaler sees only that round’s four training rows; the first round leaves out 1 and 2, so its mean is $36 / 4 = 9$.',
         ),
         choose(
           'You standardize all 1,000 rows, then run 5-fold cross-validation on the scaled table. What is wrong?',
@@ -2379,7 +2384,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Search a grid of combinations with cross-validation',
       explanation: [
-        'GridSearchCV(model, grid, cv=k) tries every combination of the listed hyperparameter values, scores each with k-fold cross-validation, and records the results in cv_results_. A grid of 3 depths and 2 leaf sizes has 3 * 2 = 6 combinations, so it fits 6 * k models.',
+        'GridSearchCV(model, grid, cv=k) tries every combination of the listed hyperparameter values, scores each with k-fold cross-validation, and records the results in cv_results_. A grid of 3 depths and 2 leaf sizes has $3 \\times 2 = 6$ combinations, so it fits $6 \\times k$ models.',
         'best_params_ is the combination with the highest mean validation score, and best_score_ is that mean. For classifiers, the default score is the fraction of correct predictions; for regression you can pass scoring="neg_mean_squared_error".',
       ],
       example: {
@@ -2412,7 +2417,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'A grid has 5 alphas, 4 depths, and 3 leaf sizes, scored with 5-fold cross-validation. How many models are fitted before the final refit?',
           ['12', '60', '301', '300'],
           3,
-          '5 * 4 * 3 = 60 combinations, each fitted once per fold: 60 * 5 = 300.',
+          '$5 \\times 4 \\times 3 = 60$ combinations, each fitted once per fold: $60 \\times 5 = 300$.',
         ),
         choose(
           'What does search.best_score_ report after GridSearchCV?',
@@ -2605,7 +2610,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'def gini(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    total = len(labels)\n    return 1 - sum([(c / total) ** 2 for c in counts.values()])\n\nprint(round(gini(["x", "y", "z"]), 3))',
           ['0.5', '0.667', '1.0', '0.333'],
           1,
-          'Each class has proportion 1/3, so the impurity is 1 - 3 * (1/9) ≈ 0.667. With three classes it can exceed 0.5.',
+          'Each class has proportion $1/3$, so the impurity is $1 - 3 \\times (1/9) \\approx 0.667$. With three classes it can exceed 0.5.',
         ),
         predictOutput(
           'What does this program print?',
@@ -2648,7 +2653,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'def gini(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    return 1 - sum([(c / len(labels)) ** 2 for c in counts.values()])\n\nx = [1, 2, 3, 4, 5, 6]\ny = [0, 0, 1, 0, 1, 1]\nfor t in [2.5, 3.5]:\n    left = [y[i] for i in range(6) if x[i] <= t]\n    right = [y[i] for i in range(6) if x[i] > t]\n    score = len(left) / 6 * gini(left) + len(right) / 6 * gini(right)\n    print(t, round(score, 3))',
         output: '2.5 0.25\n3.5 0.444',
         explanation:
-          'At 2.5 the left child [0, 0] is pure and the right child [1, 0, 1, 1] scores 0.375, weighted by 4/6. At 3.5 both children are mixed, so 2.5 is the better split.',
+          'At 2.5 the left child [0, 0] is pure and the right child [1, 0, 1, 1] scores 0.375, weighted by $4/6$. At 3.5 both children are mixed, so 2.5 is the better split.',
       },
       questions: [
         predictOutput(
@@ -2661,7 +2666,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '1.5 0.333\n2.5 0.5',
           ],
           1,
-          'At 1.5 the right child [0, 1, 1] scores 0.444, weighted by 3/4. At 2.5 both children are pure.',
+          'At 1.5 the right child [0, 1, 1] scores 0.444, weighted by $3/4$. At 2.5 both children are pure.',
         ),
         choose(
           'Why is each child’s impurity weighted by its share of the rows?',
@@ -2755,7 +2760,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Classify by the sign of a linear decision score',
       explanation: [
-        'A linear support vector classifier computes a score w·x + b and predicts the positive class when the score is positive. The boundary is where the score is 0. The margin is the band where the score lies between -1 and 1; training seeks the widest margin that keeps the classes apart.',
+        'A linear support vector classifier computes a score $w \\cdot x + b$ and predicts the positive class when the score is positive. The boundary is where the score is 0. The margin is the band where the score lies between -1 and 1; training seeks the widest margin that keeps the classes apart.',
         'SVC(kernel="linear") learns w and b. decision_function(X) returns the scores, and predict(X) returns their sign as a class.',
       ],
       example: {
@@ -2775,7 +2780,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[-1.0, 6.0, 2.0]\n[0, 1, 1]',
           ],
           0,
-          'Each score is x1 + 2*x2 - 4, so the first point falls on the negative side and the other two on the positive side.',
+          'Each score is $x_1 + 2x_2 - 4$, so the first point falls on the negative side and the other two on the positive side.',
         ),
         choose(
           'A correctly classified training point has decision score 2.7. Does it lie inside the margin?',
@@ -2922,7 +2927,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Bend the boundary with an RBF kernel and gamma',
       explanation: [
-        'Some classes cannot be separated by a straight boundary, such as a class in the middle of a line with the other class on both sides. kernel="rbf" compares points by similarity exp(-gamma * distance**2), which is 1 for identical points and fades with distance, allowing curved boundaries.',
+        'Some classes cannot be separated by a straight boundary, such as a class in the middle of a line with the other class on both sides. kernel="rbf" compares points by similarity $\\exp(-\\text{gamma} \\times \\text{distance}^2)$, which is 1 for identical points and fades with distance, allowing curved boundaries.',
         'gamma sets how quickly similarity fades. A large gamma makes each training point influence only its immediate neighbourhood, so the boundary can wrap around single points and overfit. Tune gamma together with C on validation data.',
       ],
       example: {
@@ -2942,7 +2947,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[1.0, 0.368, 0.018]',
           ],
           2,
-          'At distance 0 the similarity is exp(0) = 1, and it decays as exp(-0.5 * d**2) with distance.',
+          'At distance 0 the similarity is $\\exp(0) = 1$, and it decays as $\\exp(-0.5 d^2)$ with distance.',
         ),
         predictOutput(
           'What does this program print?',
@@ -3129,7 +3134,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'tree_probabilities = [1.0, 0.0, 1.0, 1.0, 0.5]\nprint(sum(tree_probabilities) / len(tree_probabilities))',
           ['0.5', '0.7', '1.0', '3.5'],
           1,
-          'The forest averages the trees’ class-1 probabilities: 3.5 / 5 = 0.7.',
+          'The forest averages the trees’ class-1 probabilities: $3.5 / 5 = 0.7$.',
         ),
         choose(
           'Two runs of the same forest code give slightly different predictions. What fixes this?',
@@ -3154,7 +3159,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'y = [10.0, 12.0, 30.0, 34.0]\nstart = sum(y) / len(y)\npred = [start for value in y]\nresiduals = [y[i] - pred[i] for i in range(4)]\nprint(residuals)\nstump = [-10.5, -10.5, 10.5, 10.5]\npred = [pred[i] + 0.5 * stump[i] for i in range(4)]\nprint(pred)',
         output: '[-11.5, -9.5, 8.5, 12.5]\n[16.25, 16.25, 26.75, 26.75]',
         explanation:
-          'The constant 21.5 leaves the residuals shown. A one-split tree predicts their group means, ±10.5, and half of that correction moves each prediction toward its target.',
+          'The constant 21.5 leaves the residuals shown. A one-split tree predicts their group means, $\\pm 10.5$, and half of that correction moves each prediction toward its target.',
       },
       questions: [
         predictOutput(
@@ -3167,7 +3172,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[1.0, 1.0, 5.0, 5.0]\n[1.0, 1.0, 5.0, 5.0]',
           ],
           2,
-          'Starting from 3, each round fits the residuals and adds half of them: the residuals go from ±2 to ±1 to ±0.5.',
+          'Starting from 3, each round fits the residuals and adds half of them: the residuals go from $\\pm 2$ to $\\pm 1$ to $\\pm 0.5$.',
         ),
         choose(
           'How does boosting differ from bagging?',
@@ -3210,7 +3215,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Project centered data onto a direction of large variance',
       explanation: [
-        'PCA first centers each feature by subtracting its mean. Projecting a centered row onto a unit-length direction d is the dot product row · d; for a whole matrix, X @ d gives one projected value per row.',
+        'PCA first centers each feature by subtracting its mean. Projecting a centered row onto a unit-length direction $d$ is the dot product $\\text{row} \\cdot d$; for a whole matrix, X @ d gives one projected value per row.',
         'The first principal component is the direction along which those projected values have the largest variance. Each later component has the largest remaining variance while staying orthogonal to the earlier ones, which means its dot product with each of them is 0.',
       ],
       example: {
@@ -3243,7 +3248,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import numpy as np\na = np.array([3.0, 4.0])\nb = np.array([-4.0, 3.0])\nprint(float(a @ b), float(np.linalg.norm(a)))',
           ['0.0 5.0', '24.0 5.0', '0.0 7.0', '0.0 25.0'],
           0,
-          '3*(-4) + 4*3 = 0, so the vectors are orthogonal. np.linalg.norm gives the length, sqrt(9 + 16) = 5; dividing by it would make a unit direction.',
+          '$3 \\times (-4) + 4 \\times 3 = 0$, so the vectors are orthogonal. np.linalg.norm gives the length, $\\sqrt{9 + 16} = 5$; dividing by it would make a unit direction.',
         ),
         choose(
           'Why does PCA center the features before looking for directions?',
@@ -3276,7 +3281,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'from sklearn.decomposition import PCA\nX = [[1.0, 2.0], [2.0, 4.0], [3.0, 6.0], [4.0, 8.0]]\npca = PCA().fit(X)\nprint(pca.explained_variance_ratio_.round(3).tolist())',
           ['[0.5, 0.5]', '[0.667, 0.333]', '[0.8, 0.2]', '[1.0, 0.0]'],
           3,
-          'Every point lies on the line y = 2x, so one direction carries all of the variance.',
+          'Every point lies on the line $y = 2x$, so one direction carries all of the variance.',
         ),
         predictOutput(
           'What does this program print?',
@@ -3508,7 +3513,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import numpy as np\npoints = np.array([1.0, 3.0, 10.0, 12.0])\nlabels = np.array([0, 0, 1, 1])\ncenters = np.array([2.0, 11.0])\nprint(float(((points - centers[labels]) ** 2).sum()))',
           ['2.0', '0.0', '4.0', '8.0'],
           2,
-          'centers[labels] gives each point its own centroid; every point is 1 away, so the inertia is 4 * 1 = 4.0.',
+          'centers[labels] gives each point its own centroid; every point is 1 away, so the inertia is $4 \\times 1 = 4.0$.',
         ),
         choose(
           'When does k-means stop iterating?',
@@ -3557,7 +3562,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[0.0, 7.333333333333333]',
           ],
           1,
-          'The first update gives centroids 0 and 22 / 3. Then 2 is nearer to 0, so the groups become {0, 2} and {9, 11}, with means 1 and 10; this start recovers.',
+          'The first update gives centroids 0 and $22 / 3$. Then 2 is nearer to 0, so the groups become $\\{0, 2\\}$ and $\\{9, 11\\}$, with means 1 and 10; this start recovers.',
         ),
         choose(
           'Why does KMeans run several initializations (n_init)?',
@@ -3608,7 +3613,7 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         predictOutput(
-          'The list holds inertia for k = 1, 2, 3, 4. What does this program print?',
+          'The list holds inertia for $k = 1, 2, 3, 4$. What does this program print?',
           'inertias = [169.21, 4.0, 2.33, 1.12]\ndrops = [round(inertias[i] - inertias[i + 1], 2) for i in range(3)]\nprint(drops)',
           [
             '[165.21, 1.67, 1.21]',
@@ -3617,7 +3622,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[-165.21, -1.67, -1.21]',
           ],
           0,
-          'Going from 1 to 2 clusters removes almost all inertia; later clusters add little, so the elbow is at k = 2.',
+          'Going from 1 to 2 clusters removes almost all inertia; later clusters add little, so the elbow is at $k = 2$.',
         ),
         choose(
           'Why not choose k by picking the lowest inertia?',
@@ -3680,7 +3685,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[2.12, 0.35]\n[True, False]',
           ],
           3,
-          'The reference has mean 10 and standard deviation √2 ≈ 1.41, so 13 is 2.12 standard deviations above the mean.',
+          'The reference has mean 10 and standard deviation $\\sqrt{2} \\approx 1.41$, so 13 is 2.12 standard deviations above the mean.',
         ),
         predictOutput(
           'What does this program print?',
@@ -3690,7 +3695,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'abs() catches unusually low values as well as high ones, so positions 1 and 3 are flagged.',
         ),
         choose(
-          'A reading has z = -4 relative to last month’s data. What does that tell you?',
+          'A reading has $z = -4$ relative to last month’s data. What does that tell you?',
           [
             'It is four standard deviations below the mean',
             'It is four units below the mean',
@@ -3782,7 +3787,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'scores = [0.9, 0.2, 0.75, 0.1, 0.6, 0.85]\nincident = [1, 0, 0, 0, 1, 0]\nalerts = [int(s >= 0.7) for s in scores]\ntp = sum([1 for i in range(6) if alerts[i] == 1 and incident[i] == 1])\nprint(round(tp / sum(alerts), 3), round(tp / sum(incident), 3))',
           ['0.5 0.333', '0.333 0.5', '0.667 0.5', '0.333 1.0'],
           1,
-          'Three rows are alerted but only one is an incident (precision 1/3); one of the two incidents was caught (recall 1/2).',
+          'Three rows are alerted but only one is an incident (precision $1/3$); one of the two incidents was caught (recall $1/2$).',
         ),
         choose(
           'An investigations team can handle about 20 alerts a day out of 10,000 scored events. How should the threshold be set?',
@@ -3851,7 +3856,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'z-scores ignore large values',
             'It inflates the standard deviation',
-            'Extreme values always have z = 0',
+            'Extreme values always have $z = 0$',
             'The mean is unaffected by extreme values',
           ],
           1,
@@ -3876,13 +3881,13 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Compute a dense layer as X @ W + b',
       explanation: [
         'A dense layer gives every output neuron one weight per input plus a bias. For a batch X shaped (batch, inputs), weights W shaped (inputs, outputs), and bias b shaped (outputs,), the layer computes Z = X @ W + b, shaped (batch, outputs). Broadcasting adds b to every row.',
-        'The layer has inputs * outputs weights plus outputs biases. Each column of W holds one neuron’s weights, so column j of Z is that neuron’s weighted sum for every row.',
+        'The layer has $\\text{inputs} \\times \\text{outputs}$ weights plus outputs biases. Each column of $W$ holds one neuron’s weights, so column $j$ of $Z$ is that neuron’s weighted sum for every row.',
       ],
       example: {
         code: 'import numpy as np\nX = np.array([[1.0, 0.0, 2.0], [0.0, 1.0, 1.0]])\nW = np.array([[1.0, -1.0], [2.0, 0.0], [0.5, 1.0]])\nb = np.array([0.0, 1.0])\nZ = X @ W + b\nprint(Z.shape)\nprint(Z.tolist())',
         output: '(2, 2)\n[[2.0, 2.0], [2.5, 2.0]]',
         explanation:
-          'Two rows with three inputs pass through two neurons. Row 1, neuron 1: 1*1 + 0*2 + 2*0.5 + 0 = 2.',
+          'Two rows with three inputs pass through two neurons. Row 1, neuron 1: $1 \\times 1 + 0 \\times 2 + 2 \\times 0.5 + 0 = 2$.',
       },
       questions: [
         predictOutput(
@@ -3902,13 +3907,13 @@ export const knowledgePoints: KnowledgePointModule = {
             '[[5.5, 1.0, 3.0]]',
           ],
           0,
-          'Neuron 1: 2*1 + 1*3 + 0.5 = 5.5. Neuron 3: 2*(-1) + 1*2 + 1 = 1.',
+          'Neuron 1: $2 \\times 1 + 1 \\times 3 + 0.5 = 5.5$. Neuron 3: $2 \\times (-1) + 1 \\times 2 + 1 = 1$.',
         ),
         choose(
           'A dense layer maps 100 input features to 64 neurons. How many parameters does it have?',
           ['164', '6,400', '6,464', '6,500'],
           2,
-          '100 * 64 weights plus one bias per neuron: 6,400 + 64.',
+          '$100 \\times 64$ weights plus one bias per neuron: $6{,}400 + 64$.',
         ),
         choose(
           'A batch X has shape (32, 20) and the layer has 5 neurons. What shape must W have?',
@@ -4034,7 +4039,7 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Match the output layer to the task',
       explanation: [
         'The last layer must produce the kind of prediction the task needs. Regression uses one unit with no activation, so any number is possible. Binary classification uses one sigmoid unit, read as the probability of class 1.',
-        'Multiclass classification with exactly one correct class uses one unit per class followed by softmax: exp(score) / sum of exp(scores). Every output is positive, they add up to 1, and adding the same constant to every score leaves them unchanged.',
+        'Multiclass classification with exactly one correct class uses one unit per class followed by softmax: $\\exp(\\text{score}) / \\sum \\exp(\\text{scores})$. Every output is positive, they add up to 1, and adding the same constant to every score leaves them unchanged.',
       ],
       example: {
         code: 'import numpy as np\nscores = np.array([2.0, 1.0, 0.1])\np = np.exp(scores) / np.exp(scores).sum()\nprint(p.round(3).tolist(), round(float(p.sum()), 3))',
@@ -4096,14 +4101,14 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Chain derivatives from the loss back to a weight',
       explanation: [
-        'Backpropagation applies the chain rule. For a prediction p = w*x + b and loss L = (p - y)**2, first find how the loss changes with the prediction, dL/dp = 2*(p - y). Then multiply by how the prediction changes with each parameter: dp/dw = x and dp/db = 1.',
-        'So dL/dw = 2*(p - y)*x and dL/db = 2*(p - y). The upstream value 2*(p - y) is computed once and reused for every parameter that feeds into p.',
+        'Backpropagation applies the chain rule. For a prediction $p = wx + b$ and loss $L = (p - y)^2$, first find how the loss changes with the prediction, $\\frac{dL}{dp} = 2(p - y)$. Then multiply by how the prediction changes with each parameter: $\\frac{dp}{dw} = x$ and $\\frac{dp}{db} = 1$.',
+        'So $\\frac{dL}{dw} = 2(p - y)x$ and $\\frac{dL}{db} = 2(p - y)$. The upstream value $2(p - y)$ is computed once and reused for every parameter that feeds into $p$.',
       ],
       example: {
         code: 'x, y, w, b = 3.0, 4.0, 2.0, 1.0\np = w * x + b\nupstream = 2 * (p - y)\nprint(p, upstream, upstream * x, upstream * 1)',
         output: '7.0 6.0 18.0 6.0',
         explanation:
-          'The prediction overshoots by 3, so dL/dp = 6. The weight gradient multiplies by x = 3, and the bias gradient by 1.',
+          'The prediction overshoots by 3, so $\\frac{dL}{dp} = 6$. The weight gradient multiplies by $x = 3$, and the bias gradient by 1.',
       },
       questions: [
         predictOutput(
@@ -4111,11 +4116,11 @@ export const knowledgePoints: KnowledgePointModule = {
           'x, y, w, b = 2.0, 5.0, 1.0, 0.0\np = w * x + b\nupstream = 2 * (p - y)\nprint(upstream * x, upstream)',
           ['-12.0 -6.0', '-6.0 -12.0', '12.0 6.0', '-6.0 -6.0'],
           0,
-          'The prediction 2 is 3 below the target, so dL/dp = -6, and the weight gradient adds a factor of x = 2.',
+          'The prediction 2 is 3 below the target, so $\\frac{dL}{dp} = -6$, and the weight gradient adds a factor of $x = 2$.',
         ),
         choose(
-          'For p = w*x + b, which factor turns dL/dp into dL/dw?',
-          ['b', 'y', 'x', '1'],
+          'For $p = wx + b$, which factor turns $\\frac{dL}{dp}$ into $\\frac{dL}{dw}$?',
+          ['$b$', '$y$', '$x$', '$1$'],
           2,
           'Changing w by a small amount changes p by x times that amount.',
         ),
@@ -4143,13 +4148,13 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Multiply by each activation’s local derivative',
       explanation: [
         'The forward pass computes and stores every intermediate value; the backward pass walks the same steps in reverse, multiplying the incoming gradient by each step’s local derivative at the stored value.',
-        'ReLU’s local derivative is 1 where its input was positive and 0 elsewhere, so it blocks gradient for inactive neurons. The sigmoid’s is s*(1 - s), at most 0.25. For a sigmoid output with log loss, the chain simplifies to dL/dz = p - y.',
+        'ReLU’s local derivative is 1 where its input was positive and 0 elsewhere, so it blocks gradient for inactive neurons. The sigmoid’s is $s(1 - s)$, at most 0.25. For a sigmoid output with log loss, the chain simplifies to $\\frac{dL}{dz} = p - y$.',
       ],
       example: {
         code: 'import math\nx, y, w = 1.0, 1.0, 0.0\nz = w * x\np = 1 / (1 + math.exp(-z))\nloss = -math.log(p)\ndp = -1 / p\ndz = dp * p * (1 - p)\nprint(p, round(loss, 3), dz, dz * x)',
         output: '0.5 0.693 -0.5 -0.5',
         explanation:
-          'The loss derivative -1/p times the sigmoid derivative p*(1 - p) gives dz = -(1 - p) = p - y = -0.5.',
+          'The loss derivative $-1/p$ times the sigmoid derivative $p(1 - p)$ gives $dz = -(1 - p) = p - y = -0.5$.',
       },
       questions: [
         predictOutput(
@@ -4157,7 +4162,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import numpy as np\nz = np.array([0.0, 2.0])\ns = 1 / (1 + np.exp(-z))\nprint((s * (1 - s)).round(3).tolist())',
           ['[0.5, 0.881]', '[0.25, 0.105]', '[0.0, 0.105]', '[1.0, 1.0]'],
           1,
-          'The sigmoid’s slope is largest, 0.25, at z = 0 and shrinks as z moves away from 0.',
+          'The sigmoid’s slope is largest, 0.25, at $z = 0$ and shrinks as $z$ moves away from 0.',
         ),
         predictOutput(
           'What does this program print?',
@@ -4180,7 +4185,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'They are the final predictions for every layer',
           ],
           0,
-          'Derivatives such as s*(1 - s) or the ReLU mask depend on the values computed going forward.',
+          'Derivatives such as $s(1 - s)$ or the ReLU mask depend on the values computed going forward.',
         ),
         choose(
           'A ReLU neuron’s pre-activation is negative for every training row. What gradient reaches its incoming weights?',
@@ -4213,7 +4218,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'def loss(w):\n    return w ** 2\n\nh = 0.001\nw = 3.0\nprint(round((loss(w + h) - loss(w - h)) / (2 * h), 3))',
           ['3.0', '9.0', '6.0', '0.006'],
           2,
-          'The slope of w**2 at w = 3 is 2*3 = 6, and the symmetric difference recovers it.',
+          'The slope of $w^2$ at $w = 3$ is $2 \\times 3 = 6$, and the symmetric difference recovers it.',
         ),
         choose(
           'A gradient check gives 6.0 numerically, but your backpropagation code gives 3.0. What is the most likely conclusion?',
@@ -4269,7 +4274,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[[1.0], [2.0]] [[0.0], [0.0]]',
           ],
           2,
-          'dP is [[0.5], [-0.5]]. The first weight gets 1*0.5 + 3*(-0.5) = -1; the second gets 2*0.5 + 0*(-0.5) = 1.',
+          'dP is [[0.5], [-0.5]]. The first weight gets $1 \\times 0.5 + 3 \\times (-0.5) = -1$; the second gets $2 \\times 0.5 + 0 \\times (-0.5) = 1$.',
         ),
         choose(
           'What is the difference between backpropagation and an optimizer step?',
@@ -4292,7 +4297,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '0 3.0 1.5\n1 1.5 2.25',
           ],
           0,
-          'The loss is printed from the forward pass before each update: 9 at w = 0, then 2.25 at w = 1.5.',
+          'The loss is printed from the forward pass before each update: 9 at $w = 0$, then 2.25 at $w = 1.5$.',
         ),
         choose(
           'In which order does one training step run?',
@@ -4345,7 +4350,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'grad = 1.0\nfor layer in range(8):\n    grad = grad * 2.0\nprint(grad)',
           ['16.0', '2.0', '256.0', '10.0'],
           2,
-          'Eight factors of 2 multiply the gradient by 2**8 = 256, which is how gradients explode with depth.',
+          'Eight factors of 2 multiply the gradient by $2^8 = 256$, which is how gradients explode with depth.',
         ),
         choose(
           'Training loss of a 50-layer network suddenly becomes NaN after a few steps. What is a likely cause?',
@@ -4363,7 +4368,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Limit update size with clipping and learning-rate schedules',
       explanation: [
-        'Norm clipping rescales a gradient vector whose length, np.linalg.norm(g), exceeds a limit: g * min(1, limit / norm). The direction is kept and only oversized gradients shrink.',
+        'Norm clipping rescales a gradient vector whose length, np.linalg.norm(g), exceeds a limit: $g \\times \\min(1, \\text{limit} / \\text{norm})$. The direction is kept and only oversized gradients shrink.',
         'A learning-rate schedule changes the step size during training, for example halving it every 10 epochs, so early steps make fast progress and later steps settle in. Neither technique fixes overfitting, which is a generalization problem rather than a numerical one.',
       ],
       example: {
@@ -4383,7 +4388,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '1.0 [1.0, 2.0, 2.0]\n5.0 [1.0, 2.0, 2.0]',
           ],
           2,
-          'The norm is 3. A limit of 1 scales the vector by 1/3; a limit of 5 leaves it alone, because clipping never enlarges.',
+          'The norm is 3. A limit of 1 scales the vector by $1/3$; a limit of 5 leaves it alone, because clipping never enlarges.',
         ),
         predictOutput(
           'What does this program print?',
@@ -4543,14 +4548,14 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Stack layers and count their parameters',
       explanation: [
-        'In Keras, a Sequential model is a list of layers applied in order: an input of n features, then Dense layers such as Dense(8, activation="relu"), ending in an output layer that suits the task. model.summary() lists each layer’s parameter count, inputs * units + units.',
+        'In Keras, a Sequential model is a list of layers applied in order: an input of n features, then Dense layers such as Dense(8, activation="relu"), ending in an output layer that suits the task. model.summary() lists each layer’s parameter count, $\\text{inputs} \\times \\text{units} + \\text{units}$.',
         'When a model needs branches, several inputs, or several outputs, the Functional API connects layers as a graph instead of a single stack. TensorFlow does not run in this browser, so the programs here compute the same quantities with plain Python and NumPy.',
       ],
       example: {
         code: 'layers = [4, 8, 3]\ntotal = 0\nfor i in range(len(layers) - 1):\n    params = layers[i] * layers[i + 1] + layers[i + 1]\n    print(params)\n    total += params\nprint(total)',
         output: '40\n27\n67',
         explanation:
-          'A stack of 4 inputs, Dense(8), and Dense(3) has 4*8 + 8 = 40 and 8*3 + 3 = 27 parameters: 67 in total, as model.summary() would report.',
+          'A stack of 4 inputs, Dense(8), and Dense(3) has $4 \\times 8 + 8 = 40$ and $8 \\times 3 + 3 = 27$ parameters: 67 in total, as model.summary() would report.',
       },
       questions: [
         predictOutput(
@@ -4558,7 +4563,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'layers = [10, 16, 1]\ntotal = 0\nfor i in range(len(layers) - 1):\n    total += layers[i] * layers[i + 1] + layers[i + 1]\nprint(total)',
           ['176', '177', '193', '160'],
           2,
-          '10*16 + 16 = 176 and 16*1 + 1 = 17, which sum to 193.',
+          '$10 \\times 16 + 16 = 176$ and $16 \\times 1 + 1 = 17$, which sum to 193.',
         ),
         choose(
           'A model takes an image and a text caption as two separate inputs. Which Keras style is needed?',
@@ -4605,7 +4610,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'import numpy as np\np = np.array([0.1, 0.2, 0.7])\none_hot = np.array([0.0, 0.0, 1.0])\nlabel = 2\nprint(round(float(-(one_hot * np.log(p)).sum()), 3), round(float(-np.log(p[label])), 3))',
         output: '0.357 0.357',
         explanation:
-          'The one-hot form and the integer form pick out the same probability, 0.7, so both losses are -log(0.7).',
+          'The one-hot form and the integer form pick out the same probability, 0.7, so both losses are $-\\log(0.7)$.',
       },
       questions: [
         predictOutput(
@@ -4631,7 +4636,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import numpy as np\np = np.array([[0.8, 0.1, 0.1], [0.2, 0.2, 0.6]])\nlabels = np.array([0, 1])\nlosses = -np.log(p[np.arange(2), labels])\nprint(losses.round(3).tolist())',
           ['[0.223, 0.511]', '[0.223, 1.609]', '[2.303, 1.609]', '[0.8, 0.2]'],
           1,
-          'Row 1 gave its true class 0.8, a small loss; row 2 gave its true class only 0.2, a loss of -log(0.2) ≈ 1.609.',
+          'Row 1 gave its true class 0.8, a small loss; row 2 gave its true class only 0.2, a loss of $-\\log(0.2) \\approx 1.609$.',
         ),
         choose(
           'A model predicts delivery time in minutes. Which compile setting fits?',
@@ -4664,7 +4669,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import math\nsteps = math.ceil(50000 / 128)\nprint(steps, steps * 10)',
           ['390 3900', '391 3910', '128 1280', '50000 500000'],
           1,
-          '50,000 / 128 is 390.6, which rounds up to 391 updates per epoch.',
+          '$50{,}000 / 128$ is 390.6, which rounds up to 391 updates per epoch.',
         ),
         choose(
           'What is one epoch?',
@@ -4897,7 +4902,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'k, in_channels, filters = 3, 3, 16\nconv = k * k * in_channels * filters + filters\ndense = 32 * 32 * 3 * 16 + 16\nprint(conv, dense)',
           ['432 49152', '448 49168', '448 3088', '160 49168'],
           1,
-          'The convolution reuses 3*3*3 weights per filter at every position; a dense layer needs a weight for every pixel and channel.',
+          'The convolution reuses $3 \\times 3 \\times 3$ weights per filter at every position; a dense layer needs a weight for every pixel and channel.',
         ),
         choose(
           'A convolutional layer has 32 filters. How many output channels does it produce?',
@@ -4922,7 +4927,7 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Pool neighbourhoods and grow the receptive field',
       explanation: [
         'Pooling summarizes neighbouring values to shrink the output. Max pooling with window 2 and stride 2 keeps the largest value of each pair, halving the length and keeping the strongest response.',
-        'Stacking layers widens the receptive field: each layer sees a window of the previous layer’s outputs, so deeper units depend on larger regions of the input. With L stacked stride-1 layers of width k, it is 1 + L*(k - 1) inputs wide. Shared filters and pooling help find a pattern in different places, but they do not make a network fully insensitive to position.',
+        'Stacking layers widens the receptive field: each layer sees a window of the previous layer’s outputs, so deeper units depend on larger regions of the input. With $L$ stacked stride-1 layers of width $k$, it is $1 + L(k - 1)$ inputs wide. Shared filters and pooling help find a pattern in different places, but they do not make a network fully insensitive to position.',
       ],
       example: {
         code: 'import numpy as np\nx = np.array([1.0, 3.0, 2.0, 0.0, 4.0, 6.0])\nprint(x.reshape(-1, 2).max(axis=1).tolist())',
@@ -5030,7 +5035,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Carry a hidden state through the steps',
       explanation: [
-        'A recurrent network reads a sequence one step at a time. At each step it updates a hidden state from the current input and the previous state, h = tanh(w_h * h + w_x * x + b), reusing the same weights at every step. np.tanh squeezes any number into the range -1 to 1.',
+        'A recurrent network reads a sequence one step at a time. At each step it updates a hidden state from the current input and the previous state, $h = \\tanh(w_h h + w_x x + b)$, reusing the same weights at every step. np.tanh squeezes any number into the range -1 to 1.',
         'The final state summarizes the whole sequence, and the state at each step can also produce a prediction for that step. Information from early inputs fades unless the weights preserve it.',
       ],
       example: {
@@ -5086,14 +5091,14 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Control memory with gates',
       explanation: [
-        'LSTM and GRU cells add gates: learned values between 0 and 1 that decide how much of the old state to keep and how much new information to write. A simplified update is h = g * h_old + (1 - g) * candidate.',
+        'LSTM and GRU cells add gates: learned values between 0 and 1 that decide how much of the old state to keep and how much new information to write. A simplified update is $h = g \\cdot h_{\\text{old}} + (1 - g) \\cdot \\text{candidate}$.',
         'A gate near 1 preserves the old state almost unchanged, which lets information survive many steps; a gate near 0 replaces it with the candidate. This is how gated cells keep long-range information that a plain recurrence would lose.',
       ],
       example: {
         code: 'h_old, candidate = 0.8, -0.4\nfor g in [0.9, 0.1]:\n    print(g, round(g * h_old + (1 - g) * candidate, 3))',
         output: '0.9 0.68\n0.1 -0.28',
         explanation:
-          'With g = 0.9 the state stays close to its old value 0.8; with g = 0.1 it moves most of the way to the candidate -0.4.',
+          'With $g = 0.9$ the state stays close to its old value 0.8; with $g = 0.1$ it moves most of the way to the candidate -0.4.',
       },
       questions: [
         predictOutput(
@@ -5215,7 +5220,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '[2.0, 3.0, 2.0]',
           ],
           0,
-          'Each score is the dot product of a key with the query: 0*1 + 2*1 = 2, 0*0 + 2*3 = 6, and 2*0 + 0*2 = 0.',
+          'Each score is the dot product of a key with the query: $0 \\times 1 + 2 \\times 1 = 2$, $0 \\times 0 + 2 \\times 3 = 6$, and $2 \\times 0 + 0 \\times 2 = 0$.',
         ),
         choose(
           'What does softmax do to the attention scores?',
@@ -5278,7 +5283,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '4 4.0 2.0\n64 64.0 8.0',
           ],
           3,
-          'Raw dot products grow with d; dividing by √d keeps them in a smaller range.',
+          'Raw dot products grow with $d$; dividing by $\\sqrt{d}$ keeps them in a smaller range.',
         ),
         choose(
           'In attention, what do the value vectors provide?',
@@ -5292,7 +5297,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Keys and queries produce weights; values are what those weights combine.',
         ),
         choose(
-          'Why are attention scores divided by √d before softmax?',
+          'Why are attention scores divided by $\\sqrt{d}$ before softmax?',
           [
             'To make every weight equal',
             'To stop softmax piling weight on one position',
@@ -5708,7 +5713,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Sample new codes from a variational autoencoder',
       explanation: [
-        'A variational autoencoder (VAE) encodes each input as a distribution, a mean mu and a spread sigma, rather than a single code. During training it samples a code as z = mu + sigma * eps, where eps is random noise, and a regularizer keeps the codes close to a standard normal distribution.',
+        'A variational autoencoder (VAE) encodes each input as a distribution, a mean $\\mu$ (mu) and a spread $\\sigma$ (sigma), rather than a single code. During training it samples a code as $z = \\mu + \\sigma \\varepsilon$, where $\\varepsilon$ (eps) is random noise, and a regularizer keeps the codes close to a standard normal distribution.',
         'Because the codes fill a smooth, known region, you can generate new data by sampling z from that normal distribution and decoding it; nearby codes decode to similar outputs.',
       ],
       example: {
@@ -5765,7 +5770,7 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Train a generator against a discriminator',
       explanation: [
         'A generative adversarial network (GAN) has two networks. The generator turns random noise into samples; the discriminator outputs the probability that a sample is real. The discriminator is trained with log loss to say real for real data and fake for generated data.',
-        'The generator is trained to make the discriminator call its samples real, for example by minimizing -log(D(fake)). The two improve against each other, which can be unstable, and a generator may collapse onto a few kinds of output.',
+        'The generator is trained to make the discriminator call its samples real, for example by minimizing $-\\log(D(\\text{fake}))$. The two improve against each other, which can be unstable, and a generator may collapse onto a few kinds of output.',
       ],
       example: {
         code: 'import math\nd_real, d_fake = 0.9, 0.2\ndisc_loss = -math.log(d_real) - math.log(1 - d_fake)\ngen_loss = -math.log(d_fake)\nprint(round(disc_loss, 3), round(gen_loss, 3))',
@@ -5824,14 +5829,14 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Generate by learning to remove noise (diffusion)',
       explanation: [
-        'A diffusion model corrupts training data step by step with Gaussian noise. At a step with signal level a, the noisy version is x_t = sqrt(a) * x0 + sqrt(1 - a) * noise. A network is trained to predict the noise that was added.',
+        'A diffusion model corrupts training data step by step with Gaussian noise. At a step with signal level $a$, the noisy version is $x_t = \\sqrt{a} \\, x_0 + \\sqrt{1 - a} \\cdot \\text{noise}$. A network is trained to predict the noise that was added.',
         'Knowing the noise lets you recover an estimate of the clean data. Generation starts from pure noise and repeatedly removes the predicted noise, step by step, until a sample emerges.',
       ],
       example: {
         code: 'import numpy as np\nx0 = np.array([2.0, -1.0])\nnoise = np.array([0.5, 1.0])\na = 0.64\nxt = np.sqrt(a) * x0 + np.sqrt(1 - a) * noise\nprint(xt.round(3).tolist())\nprint(((xt - np.sqrt(1 - a) * noise) / np.sqrt(a)).round(3).tolist())',
         output: '[1.9, -0.2]\n[2.0, -1.0]',
         explanation:
-          'With a = 0.64 the noisy point is 0.8 parts signal and 0.6 parts noise. Subtracting the noise contribution and rescaling recovers the clean point exactly.',
+          'With $a = 0.64$ the noisy point is 0.8 parts signal and 0.6 parts noise. Subtracting the noise contribution and rescaling recovers the clean point exactly.',
       },
       questions: [
         predictOutput(
@@ -5844,7 +5849,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '1.0 [3.0]\n0.0 [3.0]',
           ],
           2,
-          'At a = 1 the sample is the clean data; at a = 0 it is pure noise.',
+          'At $a = 1$ the sample is the clean data; at $a = 0$ it is pure noise.',
         ),
         choose(
           'What does the network in a diffusion model learn to predict?',
@@ -5862,7 +5867,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'import numpy as np\na = 0.36\nxt = np.array([1.4])\npredicted_noise = np.array([1.0])\nprint(((xt - np.sqrt(1 - a) * predicted_noise) / np.sqrt(a)).round(3).tolist())',
           ['[1.4]', '[0.6]', '[2.333]', '[1.0]'],
           3,
-          'sqrt(0.64) = 0.8 of noise is removed, leaving 0.6, and dividing by sqrt(0.36) = 0.6 gives 1.0.',
+          '$\\sqrt{0.64} = 0.8$ of noise is removed, leaving 0.6, and dividing by $\\sqrt{0.36} = 0.6$ gives 1.0.',
         ),
         choose(
           'Where does a diffusion model start when generating a new sample?',
@@ -5887,7 +5892,7 @@ export const knowledgePoints: KnowledgePointModule = {
         code: 'import numpy as np\ntrain = np.array([[0.0, 0.0], [5.0, 5.0], [9.0, 1.0]])\nsamples = np.array([[5.0, 5.0], [2.0, 3.0]])\nfor s in samples:\n    d = np.sqrt(((train - s) ** 2).sum(axis=1))\n    print(round(float(d.min()), 3))',
         output: '0.0\n3.606',
         explanation:
-          'The first sample is an exact copy of a training example. The second is new, at distance √13 ≈ 3.606 from its nearest neighbour.',
+          'The first sample is an exact copy of a training example. The second is new, at distance $\\sqrt{13} \\approx 3.606$ from its nearest neighbour.',
       },
       questions: [
         predictOutput(
@@ -5998,14 +6003,14 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Discount future rewards into a return',
       explanation: [
-        'The agent tries to maximize its return, the total of future rewards, not just the next one. A discount factor gamma between 0 and 1 weights a reward t steps away by gamma ** t, so nearer rewards count more.',
+        'The agent tries to maximize its return, the total of future rewards, not just the next one. A discount factor gamma ($\\gamma$) between 0 and 1 weights a reward $t$ steps away by $\\gamma^t$, so nearer rewards count more.',
         'Computing the return in a loop, start with weight 1 and multiply it by gamma after each reward. A gamma near 0 makes the agent short-sighted; near 1, patient.',
       ],
       example: {
         code: 'rewards = [1, 2, 4]\ngamma = 0.5\ntotal = 0\nweight = 1\nfor reward in rewards:\n    total += weight * reward\n    weight *= gamma\nprint(total)',
         output: '3.0',
         explanation:
-          'The return is 1 + 0.5*2 + 0.25*4 = 3. The weight halves for each step further into the future.',
+          'The return is $1 + 0.5 \\times 2 + 0.25 \\times 4 = 3$. The weight halves for each step further into the future.',
       },
       questions: [
         predictOutput(
@@ -6013,7 +6018,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'rewards = [2, 4]\ngamma = 0.5\ntotal = 0\nweight = 1\nfor reward in rewards:\n    total += weight * reward\n    weight *= gamma\nprint(total)',
           ['6.0', '3.0', '4.0', '2.0'],
           2,
-          'The immediate reward counts fully and the next one is halved: 2 + 0.5*4 = 4.',
+          'The immediate reward counts fully and the next one is halved: $2 + 0.5 \\times 4 = 4$.',
         ),
         predictOutput(
           'What does this program print?',
@@ -6025,7 +6030,7 @@ export const knowledgePoints: KnowledgePointModule = {
             '0.9 0.0\n0.1 0.0',
           ],
           2,
-          'The reward arrives two steps away, so it is weighted by gamma ** 2: 0.81 or 0.01.',
+          'The reward arrives two steps away, so it is weighted by $\\gamma^2$: 0.81 or 0.01.',
         ),
         choose(
           'Why might the action with the best immediate reward be the wrong choice?',
@@ -6055,13 +6060,13 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Pick actions with Q-values and update them from experience',
       explanation: [
         'A Q-value Q(state, action) estimates the return from taking that action in that state and acting well afterwards. A greedy agent chooses the action with the highest Q-value.',
-        'Q-learning improves the estimates from experience. After taking an action and seeing reward r and next state s2, it moves the old estimate toward the target r + gamma * (best Q-value in s2) by a step alpha: Q = Q + alpha * (target - Q).',
+        'Q-learning improves the estimates from experience. After taking an action and seeing reward $r$ and next state $s_2$, it moves the old estimate toward the target $r + \\gamma \\times (\\text{best Q-value in } s_2)$ by a step alpha ($\\alpha$): $Q = Q + \\alpha(\\text{target} - Q)$.',
       ],
       example: {
         code: 'q = {"left": 1.5, "right": 2.5, "stay": 0.5}\nbest = "left"\nfor action in ["left", "right", "stay"]:\n    if q[action] > q[best]:\n        best = action\nprint(best)\nold, reward, gamma, best_next, alpha = 2.0, 1.0, 0.9, 5.0, 0.5\ntarget = reward + gamma * best_next\nprint(target, old + alpha * (target - old))',
         output: 'right\n5.5 3.75',
         explanation:
-          'The greedy choice is the action with the largest Q-value. The update moves 2.0 halfway toward the target 1 + 0.9*5 = 5.5.',
+          'The greedy choice is the action with the largest Q-value. The update moves 2.0 halfway toward the target $1 + 0.9 \\times 5 = 5.5$.',
       },
       questions: [
         predictOutput(
@@ -6076,7 +6081,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'old, reward, gamma, best_next, alpha = 0.0, 2.0, 0.5, 4.0, 0.25\ntarget = reward + gamma * best_next\nprint(target, old + alpha * (target - old))',
           ['4.0 1.0', '6.0 1.5', '4.0 4.0', '2.0 0.5'],
           0,
-          'The target is 2 + 0.5*4 = 4, and the estimate moves a quarter of the way from 0 toward it.',
+          'The target is $2 + 0.5 \\times 4 = 4$, and the estimate moves a quarter of the way from 0 toward it.',
         ),
         choose(
           'What does Q(state, action) estimate?',

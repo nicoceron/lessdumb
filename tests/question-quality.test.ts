@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { courses, skills, type ChoiceQuestion } from '../src/lib/curriculum';
+import { parseMathText } from '../src/lib/math-text';
 
 // Knowledge-point questions are checked for giveaways a learner could exploit
 // without knowing the idea. The executed-output tests in
@@ -24,52 +25,89 @@ const items: Item[] = skills.flatMap((skill) =>
   ),
 );
 
-const length = (choice: string) => choice.trim().length;
+/** TeX source of a math span, measured roughly as KaTeX displays it. */
+const texLength = (tex: string) =>
+  tex
+    .replace(/\\(ln|log|exp|sin|cos|tan|max|min|det)(?![A-Za-z])/g, '$1')
+    .replace(/\\[A-Za-z]+|\\./g, '#')
+    .replace(/[{}^_]/g, '').length;
+
+/**
+ * A choice's length as the learner sees it. Output choices are literal text;
+ * other choices render `$…$` math and backtick code spans, so `$\\lambda$`
+ * counts as one character, not nine.
+ */
+function shownLength(question: ChoiceQuestion, choice: string) {
+  if (question.checksOutput) return choice.trim().length;
+  return parseMathText(choice.trim()).segments.reduce(
+    (total, segment) =>
+      total +
+      (segment.kind === 'math' ? texLength(segment.tex) : segment.text.length),
+    0,
+  );
+}
+const lengths = (question: ChoiceQuestion) => {
+  const all = question.choices.map((choice) => shownLength(question, choice));
+  return {
+    key: all[question.answer],
+    others: all.filter((_, index) => index !== question.answer),
+  };
+};
 const distractors = (question: ChoiceQuestion) =>
   question.choices.filter((_, index) => index !== question.answer);
-const isLongest = (question: ChoiceQuestion) =>
-  distractors(question).every(
-    (choice) => length(question.choices[question.answer]) > length(choice),
-  );
+const isLongest = (question: ChoiceQuestion) => {
+  const { key, others } = lengths(question);
+  return others.every((other) => key > other);
+};
+const isShortest = (question: ChoiceQuestion) => {
+  const { key, others } = lengths(question);
+  return others.every((other) => key < other);
+};
 
 /**
  * With four choices whose lengths are unrelated to the key, the correct one is
  * the strictly longest about a quarter of the time (about 21% in this catalog,
- * because ties never count). Above 40%, "pick the longest" beats chance by
- * more than 15 points, and for any course with at least 40 questions in a
- * group that is over three standard deviations above chance, so a fair course
- * does not fail by accident. Conceptual and output questions are measured
- * separately: an output's length is fixed by its program, which would dilute
- * a bias in the hand-written conceptual choices.
+ * because ties never count), and likewise the strictly shortest. Above 40%,
+ * "pick the longest" (or "pick the shortest") beats chance by more than 15
+ * points; for a group of at least 40 questions that is over three standard
+ * deviations above chance, so a fair course does not fail by accident. The
+ * shortest-choice limit keeps a fix for long keys from trimming every key into
+ * the opposite tell. Conceptual and output questions are measured separately:
+ * an output's length is fixed by its program, which would dilute a bias in the
+ * hand-written conceptual choices.
  */
-const MAX_LONGEST_SHARE = 0.4;
+const MAX_TELL_SHARE = 0.4;
 const MIN_GROUP_SIZE = 40;
 /** A key this much longer than every distractor stands out on its own. */
 const MAX_LENGTH_RATIO = 1.8;
 const MIN_FLAGGED_LENGTH = 8;
 
-function longestShares() {
+interface Tells {
+  questions: number;
+  longest: number;
+  shortest: number;
+}
+
+function lengthTells() {
+  const tells = (group: Item[]): Tells => ({
+    questions: group.length,
+    longest: group.filter((item) => isLongest(item.question)).length,
+    shortest: group.filter((item) => isShortest(item.question)).length,
+  });
   return courses
     .map((course) => {
       const own = items.filter((item) => item.courseId === course.id);
-      const share = (group: Item[]) => ({
-        questions: group.length,
-        longest: group.filter((item) => isLongest(item.question)).length,
-      });
       return {
         course: course.id,
-        conceptual: share(own.filter((item) => !item.question.checksOutput)),
-        output: share(own.filter((item) => item.question.checksOutput)),
-        all: share(own),
+        conceptual: tells(own.filter((item) => !item.question.checksOutput)),
+        output: tells(own.filter((item) => item.question.checksOutput)),
       };
     })
-    .filter((row) => row.all.questions > 0);
+    .filter((row) => row.conceptual.questions + row.output.questions > 0);
 }
 
-const percent = (group: { questions: number; longest: number }) =>
-  group.questions
-    ? `${((100 * group.longest) / group.questions).toFixed(1)}%`
-    : '—';
+const percent = (count: number, total: number) =>
+  total ? `${((100 * count) / total).toFixed(1)}%` : '—';
 
 /** Whitespace-insensitive text, keeping case and symbols that code needs. */
 const collapse = (text: string) => text.trim().replace(/\s+/g, ' ');
@@ -88,24 +126,32 @@ const plain = (text: string) =>
   collapse(text.toLowerCase().replace(/[.,;:!?'’]/g, ' '));
 
 describe('knowledge point question quality', () => {
-  it('reports and limits how often the correct choice is the longest', () => {
-    const rows = longestShares();
+  it('reports and limits how often the correct choice is the longest or shortest', () => {
+    const rows = lengthTells();
     console.table(
-      rows.map((row) => ({
-        course: row.course,
-        conceptual: `${percent(row.conceptual)} of ${row.conceptual.questions}`,
-        output: `${percent(row.output)} of ${row.output.questions}`,
-        all: `${percent(row.all)} of ${row.all.questions}`,
+      rows.map(({ course, conceptual, output }) => ({
+        course,
+        conceptual: conceptual.questions,
+        'longest key': percent(conceptual.longest, conceptual.questions),
+        'shortest key': percent(conceptual.shortest, conceptual.questions),
+        output: output.questions,
+        'output longest': percent(output.longest, output.questions),
+        'output shortest': percent(output.shortest, output.questions),
       })),
     );
     const failures = rows.flatMap((row) =>
-      (['conceptual', 'output'] as const)
-        .filter(
-          (group) =>
-            row[group].questions >= MIN_GROUP_SIZE &&
-            row[group].longest > MAX_LONGEST_SHARE * row[group].questions,
-        )
-        .map((group) => `${row.course} ${group}: ${percent(row[group])}`),
+      (['conceptual', 'output'] as const).flatMap((group) =>
+        (['longest', 'shortest'] as const)
+          .filter(
+            (tell) =>
+              row[group].questions >= MIN_GROUP_SIZE &&
+              row[group][tell] > MAX_TELL_SHARE * row[group].questions,
+          )
+          .map(
+            (tell) =>
+              `${row.course} ${group} ${tell}: ${percent(row[group][tell], row[group].questions)}`,
+          ),
+      ),
     );
     expect(failures).toEqual([]);
   });
@@ -113,12 +159,10 @@ describe('knowledge point question quality', () => {
   it('never makes the correct choice far longer than every distractor', () => {
     const flagged = items
       .filter(({ question }) => {
-        const key = length(question.choices[question.answer]);
+        const { key, others } = lengths(question);
         return (
           key >= MIN_FLAGGED_LENGTH &&
-          distractors(question).every(
-            (choice) => key > MAX_LENGTH_RATIO * length(choice),
-          )
+          others.every((other) => key > MAX_LENGTH_RATIO * other)
         );
       })
       .map(({ question }) => question.id);

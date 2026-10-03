@@ -21,6 +21,7 @@ import { signUp } from './helpers/accounts';
 import {
   answerShown,
   choiceButton,
+  expectProse,
   continueLesson,
   feedback,
   prompt,
@@ -102,7 +103,7 @@ test('a quiz is earned, timed, hides feedback until the end, scores XP, and turn
   for (const [index, slot] of quiz.questions.entries()) {
     const { question } = quizQuestion(slot)!;
     await expect(page.getByText(`Question ${index + 1} of`)).toBeVisible();
-    await expect(prompt(page)).toHaveText(question.prompt);
+    await expectProse(prompt(page), question.prompt);
     // No lesson material during a quiz.
     await expect(page.locator('.lesson-point')).toHaveCount(0);
     const answer =
@@ -129,7 +130,8 @@ test('a quiz is earned, timed, hides feedback until the end, scores XP, and turn
   await expect(results.getByRole('listitem').first()).toContainText(
     'Question 1: Incorrect',
   );
-  await expect(results.getByRole('listitem').first()).toContainText(
+  await expectProse(
+    results.getByRole('listitem').first().locator('.lesson-teaching-text'),
     missed.question.explanation,
   );
   await expect(results.getByRole('listitem').nth(1)).toContainText(
@@ -218,14 +220,18 @@ test('due reviews interleave with lessons: at most two reviews in a row on Learn
   const candidates = due.flatMap((id) =>
     skillById[id].knowledgePoints!.flatMap((point) => point.questions),
   ) as Question[];
+  // A lesson's turn opens its own page, with the lesson's introduction.
+  const lessonPage = page
+    .locator('.lesson-session-stats')
+    .getByText('Lesson', { exact: true });
   for (let index = 0; index < 12; index++) {
     await answerShown(page, candidates);
     await continueLesson(page);
-    if (await page.getByRole('button', { name: 'Start lesson' }).isVisible())
-      break;
+    if (await lessonPage.isVisible()) break;
   }
+  await expect(lessonPage).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Start lesson', exact: true }),
+    page.getByRole('region', { name: 'Introduction', exact: true }),
   ).toBeVisible();
   await expect
     .poll(

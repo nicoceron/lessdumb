@@ -18,7 +18,7 @@ import {
 import { exportCardsTsv } from '../lib/anki';
 import { authClient } from '../lib/account';
 import { type PythonResult } from '../lib/python';
-import { type CodeLanguage } from '../lib/curriculum';
+import type { CodeLanguage } from '../lib/curriculum';
 import { runCode } from '../lib/code-runner';
 import {
   codeLanguage,

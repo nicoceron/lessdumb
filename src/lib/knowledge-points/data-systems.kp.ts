@@ -2558,7 +2558,7 @@ export const knowledgePoints: KnowledgePointModule = {
       title: 'Treat a timeout as an unknown outcome',
       explanation: [
         'When a call times out, the request may never have arrived, may have been processed with the reply lost, or may still be running. The caller cannot tell which.',
-        'Retrying is often right, but a blind retry of “charge $50” can charge twice. Setting a value is safe to repeat; adding to one is not.',
+        'Retrying is often right, but a blind retry of “charge \\$50” can charge twice. Setting a value is safe to repeat; adding to one is not.',
       ],
       example: scenario(
         'A payment call times out after 5 seconds. The payment service had charged the card at 4.9 seconds, and the reply was lost.',
@@ -2567,7 +2567,7 @@ export const knowledgePoints: KnowledgePointModule = {
       ),
       questions: [
         choose(
-          'A “transfer $100” call times out. What do you know?',
+          'A “transfer \\$100” call times out. What do you know?',
           [
             'The transfer did not happen, so retry it',
             'It may or may not have happened',
@@ -2580,7 +2580,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which operation is safe to retry blindly after a timeout?',
           [
-            'Add $10 to the customer’s balance',
+            'Add \\$10 to the customer’s balance',
             'Append a new comment',
             'Send an SMS confirming the order',
             'Set the address to “12 Elm St”',
@@ -3380,7 +3380,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'All orders placed on 3 May',
             'All orders of customer 77',
-            'Orders above $500',
+            'Orders above \\$500',
             'Order counts per country',
           ],
           1,

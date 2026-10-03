@@ -1,7 +1,5 @@
 import type { Skill } from '../../curriculum';
-import { choice, exercise, skill } from './shared';
-
-type ConceptQuestion = [string, string[], number, string, string];
+import { exercise, skill } from './shared';
 type AtomicSkill = {
   id: string;
   unit: string;
@@ -15,7 +13,6 @@ type AtomicSkill = {
   tests: string;
   call: string;
   output: string;
-  questions: [ConceptQuestion, ConceptQuestion, ConceptQuestion];
   cards: [string, string][];
 };
 
@@ -34,7 +31,6 @@ function atom(spec: AtomicSkill): Skill {
       spec.output,
       spec.lesson[1],
       [
-        ...spec.questions.map((question) => choice(...question)),
         exercise(
           spec.prompt,
           `${spec.signature}\n    pass`,
@@ -129,29 +125,6 @@ result.append(9)
 assert source == [3, 1]`,
     call: 'print(push_entry(["draft", "check"], "save"))',
     output: "['draft', 'check', 'save']",
-    questions: [
-      [
-        'Which entry is newest in ["a", "b", "c"]?',
-        ['a', 'b', 'c', 'Cannot tell from the list'],
-        2,
-        'The rightmost entry c was pushed last.',
-        'Read from oldest to newest.',
-      ],
-      [
-        'What does pushing 2 onto [2] produce?',
-        ['[2]', '[2, 2]', '[]', '[4]'],
-        1,
-        'Pushing adds an occurrence even when its value repeats.',
-        'Entries are actions, not a set.',
-      ],
-      [
-        'Which operation adds at a list’s right end?',
-        ['insert(0, value)', 'append(value)', 'pop()', 'sort()'],
-        1,
-        'append adds one value after existing entries.',
-        'Preserve the earlier order.',
-      ],
-    ],
     cards: [
       [
         'Where does a list stack push a new entry?',
@@ -188,34 +161,6 @@ assert peek_entry(source) == 5
 assert source == [2, 5]`,
     call: 'print(peek_entry([7, 2]))\nprint(peek_entry([]))',
     output: '2\nNone',
-    questions: [
-      [
-        'How is the top of a nonempty list stack read?',
-        ['stack[0]', 'stack.pop()', 'stack[-1]', 'len(stack)'],
-        2,
-        'Index -1 selects the rightmost entry.',
-        'The latest entry is on the right.',
-      ],
-      [
-        'After peeking at [4, 8], what should remain?',
-        ['[4]', '[8]', '[4, 8]', '[]'],
-        2,
-        'Peeking does not change the stored entries.',
-        'Inspection has no removal.',
-      ],
-      [
-        'What must happen before reading stack[-1]?',
-        [
-          'Copy the whole stack.',
-          'Check that the stack is nonempty.',
-          'Sort the stack.',
-          'Append None.',
-        ],
-        1,
-        'Indexing an empty list is invalid.',
-        'There must be an entry to inspect.',
-      ],
-    ],
     cards: [
       [
         'How do you peek at a nonempty Python list stack?',
@@ -250,34 +195,6 @@ assert undo_one(source) == [1]
 assert source == [1, 2]`,
     call: 'print(undo_one(["open", "edit", "save"]))\nprint(undo_one([]))',
     output: "['open', 'edit']\n[]",
-    questions: [
-      [
-        'Which entry does pop() remove from [5, 6, 7]?',
-        ['5', '6', '7', 'None without an index'],
-        2,
-        'A pop without an index removes the final entry.',
-        'Undo the most recent push.',
-      ],
-      [
-        'Which guard safely ignores an empty undo?',
-        [
-          'if len(result) >= 0: result.pop()',
-          'if result: result.pop()',
-          'if not result: result.pop()',
-          'result.pop(0)',
-        ],
-        1,
-        'The guard removes only when an entry exists.',
-        'An empty list is false.',
-      ],
-      [
-        'After undoing one entry from ["x", "x"], what remains?',
-        ['[]', '["x"]', '["x", "x"]', '["x", None]'],
-        1,
-        'One occurrence is removed; the earlier identical action remains.',
-        'Undo once.',
-      ],
-    ],
     cards: [
       [
         'Which stack entry does pop() remove?',
@@ -310,39 +227,6 @@ assert pending_values(values, pending) == [2, 9]
 assert values == [9, 2] and pending == [1, 0]`,
     call: 'print(pending_values([6, 2, 6, 1], [0, 2, 3]))',
     output: '[6, 6, 1]',
-    questions: [
-      [
-        'Why store indices in a pending-answer stack?',
-        [
-          'To use less memory than values.',
-          'To know each answer’s destination.',
-          'To sort all values.',
-          'To discard duplicate values.',
-        ],
-        1,
-        'The original position identifies the answer slot.',
-        'An answer belongs to a position.',
-      ],
-      [
-        'For values=[5, 5], can indices 0 and 1 both be pending?',
-        [
-          'No; they are equal.',
-          'Only index 0 can be pending.',
-          'Yes; they have separate answer slots.',
-          'Only index 1 can be pending.',
-        ],
-        2,
-        'Equal values still occupy different positions.',
-        'Separate identity from value.',
-      ],
-      [
-        'With values=[4, 9, 2] and pending=[0, 2], which values are pending?',
-        ['[0, 2]', '[9, 2]', '[4, 9]', '[4, 2]'],
-        3,
-        'Look up each stored index in the original list.',
-        'Use values[index].',
-      ],
-    ],
     cards: [
       [
         'What does an unresolved index identify?',
@@ -388,34 +272,6 @@ assert resolve_smaller([4, 2], source, 3) == ([0], [1])
 assert source == [0, 1]`,
     call: 'print(resolve_smaller([8, 4, 4, 1], [0, 1, 2, 3], 4))',
     output: '([0, 1, 2], [3])',
-    questions: [
-      [
-        'Which comparison resolves a strictly smaller top?',
-        ['old <= current', 'old < current', 'old > current', 'old >= current'],
-        1,
-        'Equality does not satisfy strictly greater.',
-        'Keep equal values pending.',
-      ],
-      [
-        'For pending values [9, 6, 3] and current=7, what pop order occurs?',
-        ['9, then 6', '3 only', '3, then 6', '6, then 3'],
-        2,
-        'Pop 3 and 6; stop at 9.',
-        'Start at the right end.',
-      ],
-      [
-        'Why stop when the top is at least current?',
-        [
-          'Popping it would empty the stack.',
-          'The nonincreasing stack has no smaller value below that top.',
-          'Every answer is complete.',
-          'Current must be the maximum.',
-        ],
-        1,
-        'Values below the top are at least as large as it.',
-        'Use the stack invariant.',
-      ],
-    ],
     cards: [
       [
         'What comparison is used for a strictly greater future answer?',
@@ -459,29 +315,6 @@ assert stack_budget(source) == (3, 2, 1)
 assert source == [2, 1, 4]`,
     call: 'print(stack_budget([5, 2, 3, 7]))',
     output: '(4, 3, 1)',
-    questions: [
-      [
-        'How many times is one index pushed in a one-pass monotonic scan?',
-        ['Twice.', 'Once.', 'n times.', 'Once per pop.'],
-        1,
-        'The for loop handles its index once.',
-        'Indices do not return after removal.',
-      ],
-      [
-        'If 8 indices are pushed and 5 popped, how many remain?',
-        ['13', '3', '5', '8'],
-        1,
-        'Every pop removes one of the 8 pushes.',
-        'Subtract removals from additions.',
-      ],
-      [
-        'What bounds the total number of pushes plus pops for n indices?',
-        ['n squared', 'Only one operation', 'At most 2n', 'n log n'],
-        2,
-        'There are n pushes and at most n pops.',
-        'Charge work to individual indices.',
-      ],
-    ],
     cards: [
       [
         'Why is total monotonic-stack work linear?',
@@ -517,39 +350,6 @@ assert is_min_heap([2, 2, 2]) is True
 assert is_min_heap([-5, -2, -4]) is True`,
     call: 'print(is_min_heap([1, 5, 2]))\nprint(is_min_heap([1, 5, 2, 3]))',
     output: 'True\nFalse',
-    questions: [
-      [
-        'Where is the minimum in a nonempty minimum heap?',
-        [
-          'At the middle index.',
-          'At index 0.',
-          'At the last index.',
-          'At every leaf.',
-        ],
-        1,
-        'The parent-child rule carries the minimum to the root.',
-        'Follow smaller parents upward.',
-      ],
-      [
-        'Is [1, 5, 2] a valid minimum heap?',
-        [
-          'No; it is not sorted.',
-          'No; 5 is larger than 2.',
-          'Yes; both children are at least 1.',
-          'Only when 5 is removed.',
-        ],
-        2,
-        'The siblings 5 and 2 need not be sorted.',
-        'Compare children to the parent.',
-      ],
-      [
-        'What is the parent index of child index 5?',
-        ['5', '3', '2', '4'],
-        2,
-        '(5-1)//2 is 2.',
-        'Use (child-1)//2.',
-      ],
-    ],
     cards: [
       [
         'What is the minimum-heap invariant?',
@@ -592,39 +392,6 @@ assert heap_minimum(source) == 1
 assert source == [9, 1, 4]`,
     call: 'print(heap_minimum([8, 3, 7, 2]))\nprint(heap_minimum([]))',
     output: '2\nNone',
-    questions: [
-      [
-        'What does heapq.heapify(heap) change?',
-        [
-          'Nothing until the first pop.',
-          'The supplied list in place.',
-          'Only a returned new list.',
-          'The numeric values themselves.',
-        ],
-        1,
-        'heapify rearranges its argument.',
-        'Copy first if order belongs to the caller.',
-      ],
-      [
-        'Why copy values before heapifying?',
-        [
-          'To make all values positive.',
-          'To make heapify faster.',
-          'To preserve the caller’s list order.',
-          'To reverse the priorities.',
-        ],
-        2,
-        'The separate heap can be rearranged without touching values.',
-        'Mutation is part of the API.',
-      ],
-      [
-        'What is heapify’s time cost for n entries?',
-        ['O(n squared)', 'O(1) for any n', 'O(log n)', 'O(n)'],
-        3,
-        'Bottom-up heap construction is linear.',
-        'Building a heap differs from sorting.',
-      ],
-    ],
     cards: [
       [
         'Does heapify return the newly arranged heap?',
@@ -665,39 +432,6 @@ assert push_then_take(source, 0) == (-2, [0, 7])
 assert source == [-2, 7]`,
     call: 'print(push_then_take([8, 2, 5], 1))',
     output: '(1, [2, 5, 8])',
-    questions: [
-      [
-        'After pushing 1 into a heap of 2 and 8, what does the next pop return?',
-        ['8', '1', '2', 'Either 1 or 2'],
-        1,
-        'The new entry is now the minimum.',
-        'Consider all entries after insertion.',
-      ],
-      [
-        'Can an inserted value be removed immediately?',
-        [
-          'No; only older entries leave.',
-          'Only if the heap was empty.',
-          'Yes; if it is the minimum.',
-          'Only after one other pop.',
-        ],
-        2,
-        'Heap removal follows priority rather than arrival time.',
-        'A heap is not a queue.',
-      ],
-      [
-        'Which updates preserve minimum-heap order?',
-        [
-          'insert(0, x) and pop()',
-          'heapq.heappush and heapq.heappop',
-          'append and pop(0) without repair',
-          'Reversing after every push',
-        ],
-        1,
-        'The heapq operations restore the parent-child rule.',
-        'Use the documented heap API.',
-      ],
-    ],
     cards: [
       [
         'What does heappop remove from a minimum heap?',
@@ -739,39 +473,6 @@ assert has_character_path({}, "x") is False
 assert root == {"c": {"a": {"t": {}}}, "d": {}}`,
     call: 'print(has_character_path({"p": {"i": {"n": {}}}}, "pi"))\nprint(has_character_path({}, "pi"))',
     output: 'True\nFalse',
-    questions: [
-      [
-        'How many edges does a length-4 path follow?',
-        ['1', '5', '4', 'Every trie edge'],
-        2,
-        'One character chooses one edge.',
-        'Read the string one character at a time.',
-      ],
-      [
-        'What happens when a requested character child is missing?',
-        [
-          'The root is reset.',
-          'The next character is skipped.',
-          'The path does not exist.',
-          'A new child is created.',
-        ],
-        2,
-        'The missing edge stops the requested path.',
-        'No unrelated branch can replace that edge.',
-      ],
-      [
-        'Does the empty path exist in an empty root?',
-        [
-          'Only if the root marks a word.',
-          'Yes.',
-          'No.',
-          'Only if a letter is stored.',
-        ],
-        1,
-        'No edges are required to stay at the root.',
-        'An empty path has zero steps.',
-      ],
-    ],
     cards: [
       [
         'How does a trie follow a string?',
@@ -814,44 +515,6 @@ assert contains_word(prefix, "a") is False
 assert contains_word({"end": True, "children": {}}, "") is True`,
     call: 'print(contains_word({"end": False, "children": {"a": {"end": False, "children": {}}}}, "a"))',
     output: 'False',
-    questions: [
-      [
-        'Inserting only "river" makes "riv" what?',
-        [
-          'A stored complete word automatically.',
-          'A separate branch from the root.',
-          'A prefix path, not necessarily a stored word.',
-          'A missing path.',
-        ],
-        2,
-        'Its path exists but lacks a word-ending marker.',
-        'Path existence and word membership differ.',
-      ],
-      [
-        'Where is an empty word’s end marker stored?',
-        [
-          'On its first character.',
-          'Nowhere.',
-          'At every leaf.',
-          'At the root.',
-        ],
-        3,
-        'An empty word ends before taking an edge.',
-        'Its final node is the root.',
-      ],
-      [
-        'Why separate children from the end field?',
-        [
-          'To keep node metadata distinct from character edges.',
-          'To alphabetically sort every word.',
-          'To forbid single-letter words.',
-          'To make lookups use less memory.',
-        ],
-        0,
-        'Separate fields avoid mixing a marker with valid characters.',
-        'Metadata is not a character.',
-      ],
-    ],
     cards: [
       [
         'Why is a trie end marker necessary?',
@@ -889,34 +552,6 @@ assert stored_prefix_count(root, "A") == 0
 assert stored_prefix_count({"count": 0, "children": {}}, "") == 0`,
     call: 'print(stored_prefix_count({"count": 3, "children": {"g": {"count": 2, "children": {}}}}, "g"))',
     output: '2',
-    questions: [
-      [
-        'If "go" is inserted twice and "gone" once, what is the count at prefix "go"?',
-        ['1', '2', '3', '4'],
-        2,
-        'All three occurrences follow that prefix.',
-        'Count occurrences rather than distinct spellings.',
-      ],
-      [
-        'Which node answers an empty-prefix query?',
-        [
-          'The first inserted word’s node.',
-          'The root.',
-          'The longest word’s final node.',
-          'No node.',
-        ],
-        1,
-        'Every occurrence begins with the empty prefix.',
-        'No character step is needed.',
-      ],
-      [
-        'What does a missing prefix path return?',
-        ['The root count.', 'None.', '0.', 'The previous node count.'],
-        2,
-        'No inserted occurrence follows the missing edge.',
-        'The full prefix must exist.',
-      ],
-    ],
     cards: [
       [
         'What does a trie prefix count include?',
@@ -948,39 +583,6 @@ assert power_base_case(2) is None
 assert power_base_case(10**9) is None`,
     call: 'print(power_base_case(0))\nprint(power_base_case(5))',
     output: '1\nNone',
-    questions: [
-      [
-        'What does a recursive base case do?',
-        [
-          'Calls itself forever.',
-          'Returns without another recursive call.',
-          'Sorts all inputs.',
-          'Makes the input one step smaller.',
-        ],
-        1,
-        'The base case stops that call chain.',
-        'Its result is already known.',
-      ],
-      [
-        'Which exponent is the base case for a nonnegative power?',
-        ['1 only', 'Every even exponent', '0', 'Every odd exponent'],
-        2,
-        'The zero exponent has answer 1.',
-        'The recursive measure eventually reaches zero.',
-      ],
-      [
-        'When should the base case be checked?',
-        [
-          'After the recursive call returns.',
-          'Before making the recursive call.',
-          'After infinitely many calls.',
-          'Only for negative input.',
-        ],
-        1,
-        'Checking first prevents another call at the stopping point.',
-        'Termination must happen before further work.',
-      ],
-    ],
     cards: [
       [
         'What distinguishes a recursive base case?',
@@ -1019,34 +621,6 @@ assert len(halving_arguments(10**9)) <= 31
 assert halving_arguments(10**9)[-1] == 0`,
     call: 'print(halving_arguments(13))',
     output: '[13, 6, 3, 1, 0]',
-    questions: [
-      [
-        'For exponent 7, what is the smaller argument after integer halving?',
-        ['14', '7', '3.5', '3'],
-        3,
-        '7//2 equals 3.',
-        'Use integer division.',
-      ],
-      [
-        'Why does halving a positive integer make progress?',
-        [
-          'The new nonnegative integer is strictly smaller.',
-          'It always becomes negative.',
-          'It preserves the argument.',
-          'It always becomes even.',
-        ],
-        0,
-        'For e>0, e//2 is below e and can reach zero.',
-        'Check a decreasing measure.',
-      ],
-      [
-        'How many halving steps are needed as e grows?',
-        ['O(e squared)', 'O(log e)', 'O(e) always', 'O(1)'],
-        1,
-        'Each step removes about one binary digit.',
-        'The measure shrinks by a factor.',
-      ],
-    ],
     cards: [
       [
         'What makes integer halving a terminating recursive step?',
@@ -1084,34 +658,6 @@ assert combine_power(7, 1, 1) == 7
 assert combine_power(-2, 6, -8) == 64`,
     call: 'print(combine_power(2, 5, 4))\nprint(combine_power(2, 4, 4))',
     output: '32\n16',
-    questions: [
-      [
-        'How is an even exponent’s result combined from half?',
-        ['half + half', 'half ** exponent', 'half * half', 'half * exponent'],
-        2,
-        'Squaring doubles the exponent represented by half.',
-        'Multiply two equal half-powers.',
-      ],
-      [
-        'What extra factor is needed for an odd exponent?',
-        ['exponent', 'half again', '2', 'base'],
-        3,
-        'The floor-halved exponent leaves one base factor unpaired.',
-        'One exponent unit remains.',
-      ],
-      [
-        'Why save one smaller recursive result?',
-        [
-          'It can be reused without calculating the same subproblem twice.',
-          'It removes every base case.',
-          'It forces a positive base.',
-          'It keeps the recursion depth at one.',
-        ],
-        0,
-        'Reuse avoids duplicate calls.',
-        'A returned value can be multiplied by itself.',
-      ],
-    ],
     cards: [
       [
         'How is an even power combined from a half-power?',
@@ -1153,34 +699,6 @@ assert sibling_paths(parent, choices) == [[0, 1], [0, 2]]
 assert parent == [0] and choices == [1, 2]`,
     call: 'print(sibling_paths(["root"], ["left", "right"]))',
     output: "[['root', 'left'], ['root', 'right']]",
-    questions: [
-      [
-        'Why undo an appended branch choice?',
-        [
-          'To stop the search early.',
-          'To restore the parent before the next sibling.',
-          'To erase every result.',
-          'To sort the choices.',
-        ],
-        1,
-        'Sibling branches must begin from the same parent state.',
-        'Temporary changes belong to one branch.',
-      ],
-      [
-        'Parent=[0]; choices=1 then 2. What should the second branch contain?',
-        ['[0, 1, 2]', '[0, 1]', '[0, 2]', '[2]'],
-        2,
-        'Undo 1 before trying 2.',
-        'Preserve the parent only.',
-      ],
-      [
-        'Which operation reverses a just-completed append at the right end?',
-        ['sort()', 'clear()', 'pop(0)', 'pop()'],
-        3,
-        'pop removes exactly the temporary final choice.',
-        'Undo one local change.',
-      ],
-    ],
     cards: [
       [
         'What is the choose-explore-undo invariant?',
@@ -1221,44 +739,6 @@ saved[-1].append(4)
 assert current == [1, 2, 3]`,
     call: 'path = [2, 5]\nsaved = save_path([], path)\npath.pop()\nprint(saved)\nprint(path)',
     output: '[[2, 5]]\n[2]',
-    questions: [
-      [
-        'What does storing path itself retain?',
-        [
-          'A frozen snapshot.',
-          'A reference to the same mutable list.',
-          'Only its length.',
-          'A deep copy of its items.',
-        ],
-        1,
-        'Later mutations are visible through that alias.',
-        'Assignment does not copy a list.',
-      ],
-      [
-        'How should a completed integer path be saved?',
-        [
-          'Clear it first.',
-          'Save only its final entry.',
-          'Append path.copy().',
-          'Append path itself.',
-        ],
-        2,
-        'The separate list preserves the completed contents.',
-        'The result must outlive working-state changes.',
-      ],
-      [
-        'Why is a shallow copy enough for integer path entries?',
-        [
-          'Paths never change after saving.',
-          'Integers are immutable.',
-          'Every list is immutable.',
-          'It automatically copies every nested object.',
-        ],
-        1,
-        'Only the working container needs a separate identity.',
-        'The contract excludes nested mutable entries.',
-      ],
-    ],
     cards: [
       [
         'How can a completed backtracking path survive later mutations?',
@@ -1293,39 +773,6 @@ assert can_complete(4, 4, 0, 1) is False
 assert can_complete(7, 2, 0, 5) is True`,
     call: 'print(can_complete(6, 4, 1, 4))\nprint(can_complete(6, 4, 2, 4))',
     output: 'False\nTrue',
-    questions: [
-      [
-        'Need 3 more entries, but only 2 indices remain. What should happen?',
-        [
-          'Restart from index 0.',
-          'Prune the branch.',
-          'Repeat the last index.',
-          'Record an incomplete selection.',
-        ],
-        1,
-        'Distinct remaining indices cannot supply all three entries.',
-        'Check feasibility before exploring.',
-      ],
-      [
-        'How many indices remain from start through n-1?',
-        ['n+start', 'n-start', 'start', 'n-start-1'],
-        1,
-        'That half-open range has length n-start.',
-        'Count the unprocessed suffix.',
-      ],
-      [
-        'Is a branch feasible when needed equals remaining?',
-        [
-          'Never.',
-          'Only for k=0.',
-          'Yes; choose every remaining index.',
-          'Only when start is 0.',
-        ],
-        2,
-        'Equality supplies exactly enough choices.',
-        'Insufficient means strictly fewer.',
-      ],
-    ],
     cards: [
       [
         'When can a distinct-index combination branch be pruned?',
@@ -1365,39 +812,6 @@ assert key_inside_bounds(-3, -8, None) is True
 assert key_inside_bounds(0, 0, None) is False`,
     call: 'print(key_inside_bounds(11, 4, 9))\nprint(key_inside_bounds(6, 4, 9))',
     output: 'False\nTrue',
-    questions: [
-      [
-        'A node lies in the left subtree of key 9. Can a deeper descendant have key 11?',
-        [
-          'Yes, if its parent is below 9.',
-          'Yes, in a right child.',
-          'No; the inherited upper bound is 9.',
-          'Only at even depth.',
-        ],
-        2,
-        'The ancestor’s ordering constraint applies to the entire subtree.',
-        'Keep every ancestor bound.',
-      ],
-      [
-        'In a strict BST, can a key equal its lower bound?',
-        ['Always.', 'Only at a leaf.', 'Only in a left subtree.', 'No.'],
-        3,
-        'The bound is strict because stored keys are distinct.',
-        'Use > rather than >=.',
-      ],
-      [
-        'What does an absent bound mean?',
-        [
-          'That side places no constraint on the key.',
-          'The key must be zero.',
-          'The node must be absent.',
-          'The key must equal the other bound.',
-        ],
-        0,
-        'None represents no lower or upper restriction.',
-        'Missing bound differs from missing node.',
-      ],
-    ],
     cards: [
       [
         'Do BST bounds apply only to direct children?',
@@ -1435,39 +849,6 @@ assert search_branch(-3, -8) == "left"
 assert search_branch(0, 1) == "right"`,
     call: 'print(search_branch(9, 6))\nprint(search_branch(9, 9))',
     output: 'left\nfound',
-    questions: [
-      [
-        'At key 10, where could target 4 occur?',
-        [
-          'In either subtree.',
-          'Only in the left subtree.',
-          'Only in the right subtree.',
-          'Only at the current node.',
-        ],
-        1,
-        'Every right-descendant key is greater than 10.',
-        'Compare target to the node key.',
-      ],
-      [
-        'What should equality return?',
-        ['left', 'none', 'found', 'right'],
-        2,
-        'The current key is already the target.',
-        'Do not discard an exact match.',
-      ],
-      [
-        'Does a correct branch decision prove that the tree is balanced?',
-        [
-          'Yes.',
-          'Only for positive keys.',
-          'Only when the target is found.',
-          'No.',
-        ],
-        3,
-        'Ordering and balance are different properties.',
-        'A chain can still obey BST ordering.',
-      ],
-    ],
     cards: [
       [
         'Which BST branch can contain a target below the current key?',
@@ -1505,34 +886,6 @@ assert improve_floor(-5, -2, 0) == -2
 assert improve_floor(None, 0, 0) == 0`,
     call: 'print(improve_floor(4, 7, 10))\nprint(improve_floor(7, 13, 10))',
     output: '7\n7',
-    questions: [
-      [
-        'Best=4, limit=10, new key=7. What is the new best?',
-        ['4', '7', '10', 'None'],
-        1,
-        '7 qualifies and is better than 4.',
-        'Keep the largest qualifying key.',
-      ],
-      [
-        'Best=7, limit=10, new key=13. What happens?',
-        ['Use 13.', 'Erase best.', 'Keep 7.', 'Use 10.'],
-        2,
-        '13 exceeds the limit, so it cannot qualify.',
-        'A candidate must remain valid.',
-      ],
-      [
-        'Why use None when no floor key has been found?',
-        [
-          'It makes comparisons faster.',
-          'Zero may itself be a valid stored key.',
-          'Every tree excludes zero.',
-          'None is larger than all integers.',
-        ],
-        1,
-        'A numeric sentinel could be confused with real data.',
-        'Absence is distinct from a key value.',
-      ],
-    ],
     cards: [
       [
         'What invariant does a floor candidate maintain?',
@@ -1571,34 +924,6 @@ assert existing_children((8, None, right)) == [right]
 assert existing_children((8, left, None)) == [left]`,
     call: 'print(existing_children((7, (0, None, None), None)))',
     output: '[(0, None, None)]',
-    questions: [
-      [
-        'What denotes an absent child in this tuple contract?',
-        ['A key of 0.', 'An empty string.', 'An empty tuple.', 'None.'],
-        3,
-        'None alone denotes absence.',
-        'A zero-valued node is still a real node.',
-      ],
-      [
-        'Which order should existing_children preserve?',
-        [
-          'Left child before right child.',
-          'Larger key first.',
-          'Random order.',
-          'Smaller subtree first.',
-        ],
-        0,
-        'The structural contract is left-to-right.',
-        'Keys do not determine traversal order.',
-      ],
-      [
-        'Does reading a node’s children require visiting their descendants?',
-        ['Always.', 'No.', 'Only for zero keys.', 'Only for the root.'],
-        1,
-        'The tuple already supplies its immediate children.',
-        'Keep this step local.',
-      ],
-    ],
     cards: [
       [
         'What represents an absent tuple-tree node?',
@@ -1639,34 +964,6 @@ assert schedule_children(source, 3, 4) == [2, 4, 3]
 assert source == [2]`,
     call: 'pending = schedule_children([], "left", "right")\nprint(pending.pop())\nprint(pending.pop())',
     output: 'left\nright',
-    questions: [
-      [
-        'Which child is pushed first to process left first?',
-        ['Left.', 'Both at once.', 'Right.', 'Neither.'],
-        2,
-        'The later left push sits on top.',
-        'A stack reverses insertion order.',
-      ],
-      [
-        'With stack ["old", "R", "L"], what is processed next?',
-        ['old', 'R', 'Nothing until R finishes', 'L'],
-        3,
-        'The top is the final entry L.',
-        'Pop the right end.',
-      ],
-      [
-        'Should an absent child be pushed?',
-        [
-          'No.',
-          'Yes, as a real node.',
-          'Only when both are absent.',
-          'Only when it is the left child.',
-        ],
-        0,
-        'None has no subtree to process.',
-        'Schedule only existing work.',
-      ],
-    ],
     cards: [
       [
         'How does a stack schedule left before right?',
@@ -1700,34 +997,6 @@ assert combine_height(2, 2) == 3
 assert combine_height(4, 7) == 8`,
     call: 'print(combine_height(2, 4))\nprint(combine_height(0, 0))',
     output: '5\n1',
-    questions: [
-      [
-        'When can a parent’s height be combined?',
-        [
-          'Before either child is known.',
-          'Only at the root.',
-          'After both child heights are known.',
-          'After the left child only.',
-        ],
-        2,
-        'The recurrence requires both child results.',
-        'Children supply the subproblem answers.',
-      ],
-      [
-        'For child heights 2 and 5, what is the parent height?',
-        ['7', '6', '8', '5'],
-        1,
-        '1+max(2,5) equals 6.',
-        'Height follows the longer branch.',
-      ],
-      [
-        'What is a leaf’s height in nodes?',
-        ['0', '-1', '1', '2'],
-        2,
-        'Both absent children have height zero; the leaf contributes one.',
-        'The current node counts.',
-      ],
-    ],
     cards: [
       [
         'What order supports combining subtree results?',
@@ -1764,39 +1033,6 @@ graph[3].append(1)
 assert graph[1:3] == [[], []]`,
     call: 'graph = empty_graph(3)\ngraph[0].append(2)\nprint(graph)',
     output: '[[2], [], []]',
-    questions: [
-      [
-        'How many lists represent a graph with 5 vertices and no edges?',
-        ['0', '1', '5', '4'],
-        2,
-        'Each vertex needs its own empty neighbor list.',
-        'Isolated vertices still exist.',
-      ],
-      [
-        'Which construction gives independent inner lists?',
-        [
-          '[[] * n]',
-          '[[] for _ in range(n)]',
-          '[[]] * n',
-          'One list shared by every vertex',
-        ],
-        1,
-        'The comprehension creates a new list per iteration.',
-        'Avoid repeated references to one mutable object.',
-      ],
-      [
-        'What goes wrong with [[]]*3?',
-        [
-          'It omits vertex 0.',
-          'It raises a TypeError.',
-          'All three entries alias the same list.',
-          'It creates a sorted graph.',
-        ],
-        2,
-        'Mutation through one entry appears through every alias.',
-        'Repetition copies references.',
-      ],
-    ],
     cards: [
       [
         'How is an isolated adjacency-list vertex represented?',
@@ -1836,44 +1072,6 @@ result[0].append(2)
 assert source == [[1], [], []]`,
     call: 'print(add_directed([[], [], []], 2, 0))',
     output: '[[], [], [0]]',
-    questions: [
-      [
-        'For u→v, which list receives a new neighbor?',
-        [
-          'Only v’s list.',
-          'Both u’s and v’s lists.',
-          'Only u’s list.',
-          'Every vertex list.',
-        ],
-        2,
-        'v is an outgoing neighbor of u.',
-        'Read the arrow’s direction.',
-      ],
-      [
-        'Does a directed 0→1 imply 1→0?',
-        [
-          'Always.',
-          'Only when there are two vertices.',
-          'No.',
-          'Only when 0 < 1.',
-        ],
-        2,
-        'The reverse route requires another explicit edge.',
-        'Direction belongs to the contract.',
-      ],
-      [
-        'Why copy inner neighbor lists before appending?',
-        [
-          'To avoid duplicate edges.',
-          'To preserve the original graph.',
-          'To remove all loops.',
-          'To sort vertex labels.',
-        ],
-        1,
-        'A copied outer list alone would still alias the original inner lists.',
-        'The mutation occurs inside one list.',
-      ],
-    ],
     cards: [
       [
         'How is a directed u→v adjacency entry stored?',
@@ -1914,39 +1112,6 @@ result[1].append(0)
 assert source[1] == []`,
     call: 'print(add_undirected([[], [], []], 0, 2))\nprint(add_undirected([[]], 0, 0))',
     output: '[[2], [], [0]]\n[[0, 0]]',
-    questions: [
-      [
-        'How many adjacency incidences does one undirected edge add?',
-        ['One.', 'Four.', 'Two.', 'n.'],
-        2,
-        'Each endpoint stores the other as a neighbor.',
-        'Record both traversal directions.',
-      ],
-      [
-        'Under this contract, how is a self-loop stored?',
-        [
-          'It is discarded.',
-          'Only one incidence.',
-          'One incidence in each of two lists.',
-          'Two incidences in the same list.',
-        ],
-        3,
-        'Both endpoint insertions address the same vertex.',
-        'Follow both appends even when u equals v.',
-      ],
-      [
-        'What happens when the same undirected edge is inserted twice?',
-        [
-          'Both occurrences are retained.',
-          'The earlier edge disappears.',
-          'The graph becomes directed.',
-          'The second insertion is ignored.',
-        ],
-        0,
-        'Parallel-edge multiplicity is part of the contract.',
-        'Do not silently convert to a set.',
-      ],
-    ],
     cards: [
       [
         'How is an undirected adjacency edge recorded?',
@@ -1992,44 +1157,6 @@ assert discover_vertex(seen, pending, 1) == ({0, 1}, [0, 1])
 assert seen == {0} and pending == [0]`,
     call: 'seen, pending = discover_vertex({0}, [0], 1)\nseen, pending = discover_vertex(seen, pending, 1)\nprint(sorted(seen))\nprint(pending)',
     output: '[0, 1]\n[0, 1]',
-    questions: [
-      [
-        'When should this reachability search mark a neighbor?',
-        [
-          'When it is popped.',
-          'When it is scheduled.',
-          'Only after the full graph finishes.',
-          'Only if it has no neighbors.',
-        ],
-        1,
-        'Marking on scheduling prevents duplicate pending work.',
-        'Several edges may reach the same vertex.',
-      ],
-      [
-        'If vertex 4 is already seen, what does discovery do?',
-        [
-          'Pushes it again.',
-          'Removes 4 from seen.',
-          'Adds no new work.',
-          'Clears the stack.',
-        ],
-        2,
-        'Already discovered vertices need no duplicate entry.',
-        'Seen includes pending vertices.',
-      ],
-      [
-        'Why can marking only at pop time create duplicate stack entries?',
-        [
-          'The graph must be empty.',
-          'Every vertex is removed.',
-          'Pop order becomes random.',
-          'Several edges can schedule it before its first pop.',
-        ],
-        3,
-        'Until that first pop it appears unseen to other discoverers.',
-        'Pending work must also be marked.',
-      ],
-    ],
     cards: [
       [
         'When is a vertex marked in a discover-once traversal?',
@@ -2067,39 +1194,6 @@ assert take_depth_first(source) == (7, [5])
 assert source == [5, 7]`,
     call: 'print(take_depth_first([0, 3, 1]))',
     output: '(1, [0, 3])',
-    questions: [
-      [
-        'Which pending vertex does a DFS stack select?',
-        [
-          'The smallest label.',
-          'The newest scheduled vertex.',
-          'The oldest scheduled vertex.',
-          'The largest label.',
-        ],
-        1,
-        'The rightmost stack entry is popped next.',
-        'DFS uses last in, first out.',
-      ],
-      [
-        'Pending=[0, 4, 2]. Which entry is next?',
-        ['0', '4', '2', 'It depends on the graph'],
-        2,
-        '2 is the top stack entry.',
-        'Use the final position.',
-      ],
-      [
-        'Does a DFS frontier guarantee shortest unweighted distances?',
-        [
-          'Only for undirected graphs.',
-          'No.',
-          'Always.',
-          'Only when labels are sorted.',
-        ],
-        1,
-        'Its ordering follows branch scheduling rather than distance layers.',
-        'Reachability and shortest distance differ.',
-      ],
-    ],
     cards: [
       [
         'What frontier order does depth-first search use?',
@@ -2142,39 +1236,6 @@ assert unseen_neighbors(neighbors, seen) == [2]
 assert seen == {1} and neighbors == [1, 2, 2]`,
     call: 'print(unseen_neighbors([0, 2, 2, 3, 0], {0}))',
     output: '[2, 3]',
-    questions: [
-      [
-        'What should an edge back to an already discovered vertex schedule?',
-        [
-          'The vertex once more.',
-          'Nothing new.',
-          'The vertex forever.',
-          'Every graph vertex.',
-        ],
-        1,
-        'The vertex already has a discovery or completed expansion.',
-        'Scanning an edge does not require new work.',
-      ],
-      [
-        'For neighbors [2, 2] with 2 unseen initially, how many new entries are scheduled?',
-        ['0', '1', '2', '3'],
-        1,
-        'The first occurrence marks 2; the second sees it already discovered.',
-        'Update the guard immediately.',
-      ],
-      [
-        'Why does the guard handle a self-loop?',
-        [
-          'Self-loops are shortest routes.',
-          'It deletes the graph.',
-          'The current vertex was discovered before its expansion.',
-          'Self-loops are removed when reading input.',
-        ],
-        2,
-        'An edge to itself finds an already marked vertex.',
-        'Scheduling starts by marking the vertex.',
-      ],
-    ],
     cards: [
       [
         'What does a traversal do with an edge to a discovered vertex?',
@@ -2214,39 +1275,6 @@ assert take_breadth_first(source) == (2, [3])
 assert source == [2, 3]`,
     call: 'print(take_breadth_first([0, 3, 1]))',
     output: '(0, [3, 1])',
-    questions: [
-      [
-        'Which pending vertex does a BFS queue select?',
-        [
-          'The newest.',
-          'The largest label.',
-          'The oldest.',
-          'The smallest label.',
-        ],
-        2,
-        'First in, first out selects the earliest queued vertex.',
-        'Use arrival order.',
-      ],
-      [
-        'Which deque operation removes from the left?',
-        ['appendleft()', 'popleft()', 'pop()', 'append()'],
-        1,
-        'popleft removes the oldest queued entry.',
-        'New work is appended at the right.',
-      ],
-      [
-        'Why use deque rather than repeated list.pop(0)?',
-        [
-          'It sorts priorities.',
-          'It avoids shifting the remaining list on each front removal.',
-          'It limits the graph to two vertices.',
-          'It marks vertices as seen.',
-        ],
-        1,
-        'Deque end operations do not repeatedly shift the full frontier.',
-        'A wide frontier makes shifting costly.',
-      ],
-    ],
     cards: [
       [
         'What frontier order does breadth-first search use?',
@@ -2289,39 +1317,6 @@ assert queue_neighbors(pending, seen, neighbors) == ([2, 3], {0, 2, 3})
 assert pending == [2] and seen == {0, 2} and neighbors == [3, 2, 3]`,
     call: 'pending, seen = queue_neighbors([1], {0, 1}, [2, 2, 3])\nprint(pending)\nprint(sorted(seen))',
     output: '[1, 2, 3]\n[0, 1, 2, 3]',
-    questions: [
-      [
-        'When does BFS mark a newly queued vertex?',
-        [
-          'When it is dequeued.',
-          'Immediately on enqueue.',
-          'Only after all other vertices finish.',
-          'Never for duplicate edges.',
-        ],
-        1,
-        'Immediate marking prevents later edges from duplicating pending work.',
-        'Pending vertices are already discovered.',
-      ],
-      [
-        'For neighbors [2, 2] with 2 unseen, how many copies enter the queue?',
-        ['2', '3', '1', '0'],
-        2,
-        'The first edge marks 2; the second is ignored.',
-        'Test the updated discovered set.',
-      ],
-      [
-        'Where do newly discovered neighbors go relative to old pending work?',
-        [
-          'Before it.',
-          'They replace it.',
-          'Sorted among it by label.',
-          'After it.',
-        ],
-        3,
-        'Appending preserves first in, first out.',
-        'Older queued work must stay earlier.',
-      ],
-    ],
     cards: [
       [
         'When should BFS mark a neighbor as discovered?',
@@ -2361,39 +1356,6 @@ assert assign_next_layer(source, 1, [2]) == [0, 1, 2, -1]
 assert source == [0, 1, -1, -1]`,
     call: 'print(assign_next_layer([0, 1, -1, -1], 1, [2, 3]))',
     output: '[0, 1, 2, 2]',
-    questions: [
-      [
-        'A first-discovered neighbor of a distance-4 vertex receives which distance?',
-        ['4', '8', '5', '3'],
-        2,
-        'One unweighted edge contributes one additional step.',
-        'Add one to the parent distance.',
-      ],
-      [
-        'Should a later BFS route replace an already assigned unweighted distance?',
-        [
-          'Yes; the latest route wins.',
-          'No.',
-          'Always.',
-          'Only when the vertex label is smaller.',
-        ],
-        1,
-        'Layer order guarantees the first discovery has minimum edge distance.',
-        'Do not reassign discovered vertices.',
-      ],
-      [
-        'What does -1 mean in this distance contract?',
-        [
-          'A negative edge weight.',
-          'The vertex was visited twice.',
-          'The vertex is undiscovered.',
-          'The vertex is the source.',
-        ],
-        2,
-        'Assigned path lengths are nonnegative; -1 is the separate absence marker.',
-        'Source distance is zero.',
-      ],
-    ],
     cards: [
       [
         'What distance does BFS assign a newly discovered neighbor?',
@@ -2431,39 +1393,6 @@ assert bounded_neighbors(1, 3, 0, 1) == [(0, 0), (0, 2)]
 assert bounded_neighbors(3, 1, 1, 0) == [(0, 0), (2, 0)]`,
     call: 'print(bounded_neighbors(3, 4, 0, 3))',
     output: '[(1, 3), (0, 2)]',
-    questions: [
-      [
-        'Which movement is excluded by four-neighbor connectivity?',
-        [
-          'One row upward.',
-          'One column leftward.',
-          'A diagonal step.',
-          'One column rightward.',
-        ],
-        2,
-        'Only up, down, left, and right are allowed.',
-        'Both coordinates must not change together.',
-      ],
-      [
-        'Why check for a negative row before indexing?',
-        [
-          'Python always rejects negative indices.',
-          'It sorts the grid.',
-          'Negative Python indices can wrap to a different row.',
-          'Negative rows are always blocked.',
-        ],
-        2,
-        'An unchecked -1 selects the last row rather than an invalid neighbor.',
-        'Grid geometry and Python indexing differ.',
-      ],
-      [
-        'What condition makes column c valid?',
-        ['0 < c < cols', '0 <= c < cols', '0 <= c <= cols', 'c > cols'],
-        1,
-        'The final valid column is cols-1.',
-        'Use a half-open bound.',
-      ],
-    ],
     cards: [
       [
         'What moves define four-neighbor grid connectivity?',
@@ -2504,44 +1433,6 @@ assert land_neighbors(source, 0, 0) == [(0, 1)]
 assert source == [[1, 1]]`,
     call: 'print(land_neighbors([[1, 0, 1], [1, 1, 0]], 1, 1))',
     output: '[(1, 0)]',
-    questions: [
-      [
-        'Which valid neighbor can be traversed under the binary-grid contract?',
-        [
-          'Any neighbor.',
-          'Only a cell with value 0.',
-          'Only a cell with value 1.',
-          'Only a diagonal 0.',
-        ],
-        2,
-        '1 is land and 0 is blocked.',
-        'Check passability after geometry.',
-      ],
-      [
-        'Which condition should be checked before grid[nr][nc]?',
-        [
-          'Whether the whole grid is sorted.',
-          'Whether nr equals nc.',
-          'Whether grid[nr][nc] is 1.',
-          'Whether nr,nc are in bounds.',
-        ],
-        3,
-        'Bounds make the indexing correspond to a real neighboring cell.',
-        'Do not read an invalid candidate.',
-      ],
-      [
-        'Does passability alone prevent revisiting a land cell?',
-        [
-          'No; discovery tracking is still required.',
-          'Yes, automatically.',
-          'Only for square grids.',
-          'Only when the grid has one row.',
-        ],
-        0,
-        'A traversable cell can be reached by several routes.',
-        'Separate allowed movement from visited state.',
-      ],
-    ],
     cards: [
       [
         'What two checks decide whether a grid neighbor is usable?',
@@ -2591,39 +1482,6 @@ assert source == [[1, 1, 0], [1, 0, 1]]
 assert land_component_size([[1] * 1500], 0, 0) == 1500`,
     call: 'print(land_component_size([[1, 1, 0], [0, 1, 1], [1, 0, 0]], 0, 0))',
     output: '4',
-    questions: [
-      [
-        'Does one component search count all islands automatically?',
-        [
-          'Yes.',
-          'No; only the start’s connected land.',
-          'Only when using a stack.',
-          'Only when the start is (0, 0).',
-        ],
-        1,
-        'Disconnected land cannot be reached from this start.',
-        'The outer scan supplies additional starts.',
-      ],
-      [
-        'For [[1,0],[0,1]], how large is the top-left four-neighbor component?',
-        ['2', '4', '1', '0'],
-        2,
-        'The other land cell is only diagonal and is not connected.',
-        'Diagonals are excluded.',
-      ],
-      [
-        'Why mark a coordinate when scheduling it?',
-        [
-          'To count islands that touch diagonally.',
-          'To avoid repeated work through multiple land routes.',
-          'To turn water into land.',
-          'To sort the grid.',
-        ],
-        1,
-        'A discovered set prevents cycles from rescheduling cells.',
-        'Components may contain loops.',
-      ],
-    ],
     cards: [
       [
         'What does a component search from one land cell reach?',
@@ -2663,34 +1521,6 @@ assert incoming_counts(source) == [0, 0, 2]
 assert source == [[2], [2], []]`,
     call: 'print(incoming_counts([[2], [2, 3], [3], []]))',
     output: '[0, 0, 2, 2]',
-    questions: [
-      [
-        'What does indegree count?',
-        [
-          'Incoming edge entries.',
-          'Outgoing edge entries only.',
-          'All vertices.',
-          'Distinct incoming neighbors.',
-        ],
-        0,
-        'Each source-to-destination edge contributes to its destination.',
-        'Count prerequisites pointing in.',
-      ],
-      [
-        'Two parallel edges enter vertex 3. How much do they add to indegree?',
-        ['0', '2', '1', '3'],
-        1,
-        'Both entries must later be removed under this contract.',
-        'Retain multiplicity consistently.',
-      ],
-      [
-        'What is the indegree of an isolated vertex?',
-        ['1', 'The graph size', '0', '-1'],
-        2,
-        'No incoming entries point to it.',
-        'A vertex can exist without edges.',
-      ],
-    ],
     cards: [
       [
         'What does a directed vertex’s indegree measure?',
@@ -2726,39 +1556,6 @@ assert ready_vertices(source) == [0]
 assert source == [0, 3]`,
     call: 'print(ready_vertices([0, 2, 0, 1, 0]))',
     output: '[0, 2, 4]',
-    questions: [
-      [
-        'Which vertex is ready in counts [2,0,1]?',
-        ['0', 'None of them', '1', '2'],
-        2,
-        'Vertex 1 has no remaining incoming dependency.',
-        'Look for zero.',
-      ],
-      [
-        'Should isolated vertices enter the ready frontier?',
-        [
-          'Never.',
-          'Only after a neighbor.',
-          'Yes; their incoming count is zero.',
-          'Only at the end.',
-        ],
-        2,
-        'They have no unmet prerequisites.',
-        'Topological ordering must still include them.',
-      ],
-      [
-        'What does an empty ready frontier with unprocessed vertices indicate in Kahn’s algorithm?',
-        [
-          'The graph is disconnected.',
-          'The remaining directed graph contains a cycle.',
-          'All vertices are already processed.',
-          'Every edge has negative weight.',
-        ],
-        1,
-        'A remaining acyclic graph must have a zero-indegree vertex.',
-        'No dependency can be removed next.',
-      ],
-    ],
     cards: [
       [
         'When is a topological vertex ready?',
@@ -2802,39 +1599,6 @@ assert release_edges(counts, edges) == ([0, 1], [])
 assert counts == [0, 3] and edges == [1, 1]`,
     call: 'print(release_edges([0, 1, 2, 1], [2, 1, 2]))',
     output: '([0, 0, 0, 1], [1, 2])',
-    questions: [
-      [
-        'A neighbor has remaining count 3; one incoming edge is removed. Is it ready?',
-        [
-          'Yes immediately.',
-          'No; it stays 3.',
-          'No; its count becomes 2.',
-          'Only if its label is 3.',
-        ],
-        2,
-        'Two dependencies still remain.',
-        'Ready means zero, not merely smaller.',
-      ],
-      [
-        'When should a neighbor enter the ready queue?',
-        [
-          'Whenever its count is positive.',
-          'Only at the start.',
-          'Every time its count drops.',
-          'At the transition to zero.',
-        ],
-        3,
-        'The last dependency removal makes it ready.',
-        'Enqueue once when all prerequisites have left.',
-      ],
-      [
-        'If two parallel edges are removed, how many decrements occur?',
-        ['Two.', 'One.', 'Zero.', 'Two per edge.'],
-        0,
-        'The indegree counted both occurrences, so both must be removed.',
-        'Count and remove using the same edge contract.',
-      ],
-    ],
     cards: [
       [
         'How does processing a topological vertex update its outgoing neighbors?',
@@ -2872,34 +1636,6 @@ assert relax_distance(None, 0, 0) == 0
 assert relax_distance(0, 2, 0) == 0`,
     call: 'print(relax_distance(12, 3, 4))\nprint(relax_distance(None, 0, 5))',
     output: '7\n5',
-    questions: [
-      [
-        'From distance 6 across weight 4, what route distance is proposed?',
-        ['2', '24', '10', '4'],
-        2,
-        'Distances along the route add.',
-        'Add the edge weight.',
-      ],
-      [
-        'Current=8 and candidate=11. What is retained?',
-        ['19', '8', '11', 'None'],
-        1,
-        'The existing shorter route remains best.',
-        'Relaxation keeps the minimum.',
-      ],
-      [
-        'What weight restriction supports ordinary Dijkstra?',
-        [
-          'Every weight is exactly 1.',
-          'Every weight is distinct.',
-          'Every weight is nonnegative.',
-          'Every weight is negative.',
-        ],
-        2,
-        'Nonnegative edges preserve the priority-based distance guarantee.',
-        'Later edges must not decrease a settled route.',
-      ],
-    ],
     cards: [
       [
         'What candidate does weighted-edge relaxation propose?',
@@ -2937,39 +1673,6 @@ assert is_current_distance((3, 1), source) is True
 assert source == [0, 3]`,
     call: 'print(is_current_distance((9, 1), [0, 4]))\nprint(is_current_distance((4, 1), [0, 4]))',
     output: 'False\nTrue',
-    questions: [
-      [
-        'A heap entry says distance 9, but the stored best is 4. What is that entry?',
-        ['Current.', 'Stale.', 'A new graph edge.', 'An improvement.'],
-        1,
-        'The proposal was superseded by the better label.',
-        'Compare entry and stored distance.',
-      ],
-      [
-        'Should a stale entry expand outgoing edges?',
-        [
-          'Always.',
-          'Only for even labels.',
-          'No.',
-          'Only if it is the last entry.',
-        ],
-        2,
-        'Its distance is no longer the best known route.',
-        'Discard obsolete work.',
-      ],
-      [
-        'Why can stale entries exist in a heap-based Dijkstra implementation?',
-        [
-          'heappop returns entries twice.',
-          'A new better entry can be pushed while the old one remains queued.',
-          'Every heap is unsorted by priority.',
-          'Vertices cannot have more than one route.',
-        ],
-        1,
-        'Lazy replacement avoids searching inside the heap to delete old proposals.',
-        'The distance array tracks the current truth.',
-      ],
-    ],
     cards: [
       [
         'How is a stale Dijkstra heap entry recognized?',
@@ -3013,44 +1716,6 @@ assert next_distance_entry(entries, distances) == (2, 0)
 assert entries == [(8, 0), (2, 0), (1, 1)] and distances == [2, 4]`,
     call: 'print(next_distance_entry([(1, 2), (6, 1), (3, 2)], [0, 6, 3]))',
     output: '(3, 2)',
-    questions: [
-      [
-        'Which valid proposal should Dijkstra select next?',
-        [
-          'The newest proposal.',
-          'The oldest proposal.',
-          'The smallest distance proposal.',
-          'The largest vertex label.',
-        ],
-        2,
-        'The frontier is ranked by tentative distance.',
-        'Use a minimum priority queue.',
-      ],
-      [
-        'The smallest heap entry is stale. What happens next?',
-        [
-          'It must be expanded anyway.',
-          'Every current distance is erased.',
-          'Discard it and pop again.',
-          'Stop the search.',
-        ],
-        2,
-        'Stale entries do not supply usable work.',
-        'Continue until a current proposal or an empty heap.',
-      ],
-      [
-        'How do equal-distance integer tuples compare?',
-        [
-          'In random order.',
-          'By vertex in the second field.',
-          'Only by insertion time.',
-          'They cannot be compared.',
-        ],
-        1,
-        'Python tuples compare subsequent fields when earlier fields tie.',
-        'The payload here is an integer vertex.',
-      ],
-    ],
     cards: [
       [
         'How is the next usable Dijkstra proposal selected?',
@@ -3090,39 +1755,6 @@ assert component_root(source, 2) == 0
 assert source == [0, 0, 1]`,
     call: 'print(component_root([0, 0, 1, 3], 2))\nprint(component_root([0, 0, 1, 3], 3))',
     output: '0\n3',
-    questions: [
-      [
-        'What identifies a disjoint-set root?',
-        [
-          'It has the most children.',
-          'Its parent points to itself.',
-          'It has the smallest numeric label always.',
-          'It has no array entry.',
-        ],
-        1,
-        'The self-parent is the stopping condition.',
-        'Follow parent links until they stop changing.',
-      ],
-      [
-        'In parent=[0,0,1], what is the root of vertex 2?',
-        ['2', 'None', '0', '1'],
-        2,
-        '2 points to 1, then 1 points to root 0.',
-        'Trace the full chain.',
-      ],
-      [
-        'Why use an iterative find on a tall parent forest?',
-        [
-          'It sorts the components.',
-          'It changes the graph to directed.',
-          'It avoids Python recursion-depth failures.',
-          'It merges components faster.',
-        ],
-        2,
-        'The loop follows the chain without recursive calls.',
-        'Forest height may be large before compression.',
-      ],
-    ],
     cards: [
       [
         'What is a disjoint-set representative?',
@@ -3168,44 +1800,6 @@ chain = [0] + list(range(1499))
 assert compressed_parent(chain, 1499) == [0] * 1500`,
     call: 'print(compressed_parent([0, 0, 1, 2, 4], 3))',
     output: '[0, 0, 0, 0, 4]',
-    questions: [
-      [
-        'Does path compression change which component contains a vertex?',
-        [
-          'Always.',
-          'No.',
-          'Only when its root is zero.',
-          'Only for the root itself.',
-        ],
-        1,
-        'It preserves the same root while shortening parent paths.',
-        'Compression changes representation, not connectivity.',
-      ],
-      [
-        'Which entries does this compression rewrite?',
-        [
-          'Every component root.',
-          'Every graph edge.',
-          'Only the searched parent path.',
-          'Every vertex in the component.',
-        ],
-        2,
-        'Off-path entries are unchanged by this operation.',
-        'Follow and shortcut one discovered path.',
-      ],
-      [
-        'Why save the old next parent before rewriting an entry?',
-        [
-          'To undo the compression later.',
-          'To continue along the original path.',
-          'To sort labels.',
-          'To create a second component.',
-        ],
-        1,
-        'The shortcut would otherwise lose the next original link.',
-        'Traverse before forgetting the old connection.',
-      ],
-    ],
     cards: [
       [
         'What does path compression redirect?',
@@ -3250,44 +1844,6 @@ assert join_roots(parent, sizes, 1, 0) == ([1, 1], [1, 2])
 assert parent == [0, 1] and sizes == [1, 1]`,
     call: 'print(join_roots([0, 1, 1], [1, 2, 1], 0, 1))',
     output: '([1, 1, 1], [1, 3, 1])',
-    questions: [
-      [
-        'Which component root becomes a child under union by size?',
-        [
-          'The larger one.',
-          'The smaller one.',
-          'Both roots.',
-          'The one with the larger label.',
-        ],
-        1,
-        'Attaching the smaller component limits depth growth.',
-        'Compare root sizes before linking.',
-      ],
-      [
-        'What happens when both arguments name the same root?',
-        [
-          'Its size doubles.',
-          'It points to another random root.',
-          'No merge occurs.',
-          'Its size resets to 1.',
-        ],
-        2,
-        'They already belong to one component.',
-        'Do not count membership twice.',
-      ],
-      [
-        'Where is the merged size stored?',
-        [
-          'At the smaller label.',
-          'At the surviving root.',
-          'At every vertex.',
-          'Only at the attached non-root.',
-        ],
-        1,
-        'Future union comparisons consult representative sizes.',
-        'Root sizes describe components.',
-      ],
-    ],
     cards: [
       [
         'What root does union by size attach?',
@@ -3323,39 +1879,6 @@ assert order_weighted_edges(source) == [(0, 1, -3), (0, 2, 0)]
 assert source == [(0, 2, 0), (0, 1, -3)]`,
     call: 'print(order_weighted_edges([(0, 1, 7), (1, 2, 2), (0, 2, 4)]))',
     output: '[(1, 2, 2), (0, 2, 4), (0, 1, 7)]',
-    questions: [
-      [
-        'Which field ranks (u,v,weight) edges in Kruskal’s scan?',
-        ['u', 'u + v', 'weight', 'v'],
-        2,
-        'Candidate cost is the third tuple field.',
-        'Representations determine indexing.',
-      ],
-      [
-        'How should negative edge weights be ordered?',
-        [
-          'Always last.',
-          'They must be erased.',
-          'Normally, before larger weights.',
-          'By absolute value.',
-        ],
-        2,
-        'Minimum spanning forests permit negative edge costs.',
-        'This differs from Dijkstra’s weight restriction.',
-      ],
-      [
-        'What happens to duplicate edge occurrences during this ordering step?',
-        [
-          'Their weights are summed.',
-          'All are retained.',
-          'Only one survives.',
-          'They become self-loops.',
-        ],
-        1,
-        'Ordering does not silently deduplicate candidates.',
-        'Cycle filtering is a separate step.',
-      ],
-    ],
     cards: [
       [
         'In what order does Kruskal inspect candidate edges?',
@@ -3394,44 +1917,6 @@ assert accept_component_edge(source, 1, 0) == (True, [5, 5, 5])
 assert source == [2, 5, 5]`,
     call: 'print(accept_component_edge([0, 0, 2, 2], 1, 2))',
     output: '(True, [0, 0, 0, 0])',
-    questions: [
-      [
-        'Which candidate edge can be safely added to a forest?',
-        [
-          'The cheapest remaining edge.',
-          'One joining two different components.',
-          'One inside the same component.',
-          'Every self-loop.',
-        ],
-        1,
-        'A cross-component edge connects without closing a cycle.',
-        'Compare endpoint representatives.',
-      ],
-      [
-        'Why reject a self-loop?',
-        [
-          'It has two different components.',
-          'It has no weight.',
-          'Its endpoint is already connected to itself.',
-          'Its weight is always negative.',
-        ],
-        2,
-        'It adds a cycle and no new connectivity.',
-        'Both endpoints are the same vertex.',
-      ],
-      [
-        'After accepting a cross-component edge, what must happen?',
-        [
-          'Erase every other component.',
-          'Sort vertex labels.',
-          'Merge the two components.',
-          'Remove the edge from the input.',
-        ],
-        2,
-        'Later cycle checks must see the new connectivity.',
-        'Acceptance changes the forest partition.',
-      ],
-    ],
     cards: [
       [
         'When would a candidate edge create a forest cycle?',
@@ -3471,39 +1956,6 @@ assert completed_forest_cost(3, source) == 8
 assert source == [3, 5]`,
     call: 'print(completed_forest_cost(4, [2, 5, 1]))\nprint(completed_forest_cost(4, [2, 5]))',
     output: '8\nNone',
-    questions: [
-      [
-        'How many accepted forest edges span 6 vertices?',
-        ['6', '5', '12', '15'],
-        1,
-        'An acyclic connected n-vertex tree has n-1 edges.',
-        'One fewer edge than vertices.',
-      ],
-      [
-        'Why is edge count alone insufficient for arbitrary selected edges?',
-        [
-          'Every edge has equal cost.',
-          'Trees cannot have negative weights.',
-          'The selection might contain a cycle and leave a vertex isolated.',
-          'Edge order changes the count.',
-        ],
-        2,
-        'The n-1 rule requires an already acyclic forest.',
-        'State the invariant supporting the completion test.',
-      ],
-      [
-        'After scanning all candidates, an acyclic forest has fewer than n-1 edges. What does that mean?',
-        [
-          'Some edge weights were negative.',
-          'The graph could not be spanned.',
-          'It is automatically minimum and connected.',
-          'The edge sum must be zero.',
-        ],
-        1,
-        'The accepted components were not all joined.',
-        'A disconnected input produces a forest.',
-      ],
-    ],
     cards: [
       [
         'When is an acyclic forest on n>0 vertices spanning?',

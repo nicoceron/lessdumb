@@ -3,17 +3,22 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { cppCatalog, cppTopicStages } from '../src/lib/courses/cpp';
+import { cppTopicStages } from '../src/lib/courses/cpp';
+// The course with its knowledge points, as a lesson loads it.
+import cppCatalog from '../src/lib/content/cpp';
 import { validateCurriculum } from '../src/lib/curriculum';
 import {
   applyAttempt,
   coursePath,
   getSkillState,
+  isMastered,
   isUnlocked,
   nextTask,
+  selectQuestion,
   type Progress,
 } from '../src/lib/learning';
 import { createState } from '../src/lib/state';
+import { masterSkill } from './helpers/mastery';
 
 const NOW = Date.parse('2026-10-02T15:00:00Z');
 const skillById = Object.fromEntries(
@@ -25,14 +30,7 @@ function master(progress: Progress, id: string): Progress {
   for (const prerequisite of skillById[id].prerequisites)
     if (getSkillState(result, prerequisite).mastery < 1)
       result = master(result, prerequisite);
-  for (const question of skillById[id].questions)
-    result = applyAttempt(
-      result,
-      { skillId: id, questionId: question.id, correct: true, mode: 'learn' },
-      NOW,
-      cppCatalog,
-    );
-  return result;
+  return masterSkill(result, id, NOW, cppCatalog);
 }
 
 describe('granular C++20 curriculum', () => {
@@ -58,13 +56,13 @@ describe('granular C++20 curriculum', () => {
         expect(skill.lesson.example.language).toBe('cpp');
         expect(skill.lesson.example.kind).not.toBe('text');
         expect(skill.lesson.example.code).toContain('int main()');
-        expect(skill.questions.map((question) => question.type)).toEqual([
-          'choice',
-          'choice',
-          'choice',
-          'code',
+        // Choice practice comes from knowledge points; the exercise keeps
+        // its original ID.
+        expect(skill.knowledgePoints?.length).toBeGreaterThan(0);
+        expect(skill.questions.map((question) => question.id)).toEqual([
+          `${id}-q4`,
         ]);
-        const question = skill.questions[3];
+        const question = skill.questions[0];
         if (question.type !== 'code') throw new Error('Missing C++ evidence');
         expect(question.language).toBe('cpp');
         expect(question.solution).not.toContain('int main()');
@@ -80,7 +78,7 @@ describe('granular C++20 curriculum', () => {
         expect(skill.flashcards).toHaveLength(2);
       });
     }
-    const reference = byId['cpp-references'].questions[3];
+    const reference = byId['cpp-references'].questions[0];
     if (reference.type !== 'code')
       throw new Error('Missing returned-reference exercise');
     expect(reference.starterCode).toContain('int& solve(int& value)');
@@ -143,7 +141,7 @@ describe('granular C++20 curriculum', () => {
     expect(ancestors('cpp-independent-copy').has('cpp-vector-elements')).toBe(
       true,
     );
-    const access = skillById['cpp-vector-elements'].questions[3];
+    const access = skillById['cpp-vector-elements'].questions[0];
     if (access.type !== 'code')
       throw new Error('Missing checked vector contract');
     expect(access.contract).toContain('assert(solve({}, 0) == -1);');
@@ -153,8 +151,14 @@ describe('granular C++20 curriculum', () => {
   it('needs independent choice and code evidence before unlocking the next atom and creating retention memory', () => {
     const [first, second] = cppTopicStages['cpp-values'];
     const skill = skillById[first];
+    const exercise = skill.questions[0];
     let progress = createState().progress;
-    for (const question of skill.questions.slice(0, 3))
+    // Pass every knowledge point; the code exercise is the last step.
+    for (
+      let question = selectQuestion(progress, skill, 'learn');
+      question.id !== exercise.id;
+      question = selectQuestion(progress, skill, 'learn')
+    )
       progress = applyAttempt(
         progress,
         {
@@ -166,6 +170,7 @@ describe('granular C++20 curriculum', () => {
         NOW,
         cppCatalog,
       );
+    expect(isMastered(progress, first, cppCatalog)).toBe(false);
     expect(getSkillState(progress, first).mastery).toBeLessThan(1);
     expect(getSkillState(progress, first).memory).toBeUndefined();
     expect(isUnlocked(progress, second, cppCatalog)).toBe(false);
@@ -173,7 +178,7 @@ describe('granular C++20 curriculum', () => {
       progress,
       {
         skillId: first,
-        questionId: skill.questions[3].id,
+        questionId: exercise.id,
         correct: true,
         mode: 'learn',
       },
@@ -194,7 +199,7 @@ describe('granular C++20 curriculum', () => {
       progress,
       {
         skillId: ancestor.id,
-        questionId: ancestor.questions[3].id,
+        questionId: ancestor.questions[0].id,
         correct: false,
         mode: 'review',
       },

@@ -1,17 +1,12 @@
-import type {
-  ChoiceQuestion,
-  CodeQuestion,
-  CurriculumCatalog,
-  Skill,
-} from '../curriculum';
+import type { CodeQuestion, CurriculumCatalog, Skill } from '../curriculum';
 import { cppPrerequisites } from './cpp/prerequisites';
+import { withExerciseId } from './exercise';
 import { withTeachingOrder } from './teaching-order';
 
 interface Atom {
   key: string;
   title: string;
   definition: string;
-  misconception: string;
   rule: string;
   violation: string;
   signature: string;
@@ -40,8 +35,6 @@ const topics: Topic[] = [
         title: 'Initialized integer values',
         definition:
           'An int object stores an integer value; initialize it before reading it.',
-        misconception:
-          'A local int without an initializer is guaranteed to start at zero.',
         rule: 'Initialize every local scalar before using its value.',
         violation:
           'Read an uninitialized local and assume the compiler supplied zero.',
@@ -61,7 +54,6 @@ const topics: Topic[] = [
         title: 'Integer division and remainder',
         definition:
           'Integer / discards the fractional part, truncating toward zero, and % gives the matching remainder, which has the sign of the left operand.',
-        misconception: '-7 % 2 is 1, because a remainder is never negative.',
         rule: 'Use a nonzero divisor, and expect a negative remainder when the left operand is negative.',
         violation:
           'Test for an odd number with value % 2 == 1, which misses negative odd values.',
@@ -81,8 +73,6 @@ const topics: Topic[] = [
         title: 'Cast before division',
         definition:
           'Converting one operand to double before division selects floating-point arithmetic.',
-        misconception:
-          'Casting an already truncated integer quotient recovers its fraction.',
         rule: 'Apply the conversion before the division operator is evaluated.',
         violation: 'Divide integers first and cast the result afterward.',
         signature: 'double solve(int numerator, int denominator)',
@@ -101,8 +91,6 @@ const topics: Topic[] = [
         title: 'Guard an integer addition',
         definition:
           'Signed integer overflow is undefined behavior, so check bounds before evaluating the sum.',
-        misconception:
-          'Signed integer overflow is required to wrap on every C++ implementation.',
         rule: 'Compare against numeric_limits bounds before the potentially overflowing addition.',
         violation:
           'Compute the overflowing sum and check whether its sign changed.',
@@ -129,8 +117,6 @@ const topics: Topic[] = [
         title: 'Boolean comparisons',
         definition:
           'A comparison produces bool, whose values are true and false.',
-        misconception:
-          'A comparison changes its left operand to the right operand.',
         rule: 'Use == for equality and = only for assignment.',
         violation: 'Replace an equality comparison with an assignment.',
         signature: 'bool solve(int lhs, int rhs)',
@@ -149,8 +135,6 @@ const topics: Topic[] = [
         title: 'Unsigned modular arithmetic',
         definition:
           'Unsigned arithmetic is defined modulo one greater than the maximum representable value.',
-        misconception:
-          'Unsigned overflow has the same undefined behavior as signed overflow.',
         rule: 'Use unsigned wrap deliberately; it does not validate business bounds.',
         violation:
           'Rely on wrapping to reject a quantity that exceeded a business limit.',
@@ -170,8 +154,6 @@ const topics: Topic[] = [
         title: 'Scoped enumeration values',
         definition:
           'An enum class defines named alternatives without implicitly converting them to int.',
-        misconception:
-          'An enum class converts implicitly to every arithmetic type.',
         rule: 'Handle each domain alternative explicitly.',
         violation:
           'Pass an arbitrary integer where a scoped enumerator is required.',
@@ -191,8 +173,6 @@ const topics: Topic[] = [
         title: 'Deduce values with auto',
         definition:
           'auto deduces the initializer type; plain auto makes a value rather than preserving a reference.',
-        misconception:
-          'Plain auto always preserves reference qualifiers from its initializer.',
         rule: 'Choose auto& when the new name must refer to the existing object.',
         violation:
           'Expect assignment to a plain auto copy to mutate the source.',
@@ -219,7 +199,6 @@ const topics: Topic[] = [
         title: 'Store characters in char',
         definition:
           "A char holds one character as a small integer code, and a character literal such as 'A' uses single quotes.",
-        misconception: "The digit character '7' has the integer value 7.",
         rule: "Convert a digit character to its value with c - '0', because the codes for '0' through '9' are consecutive.",
         violation:
           "Add the digit character '7' to a total as though it were the number 7.",
@@ -239,7 +218,6 @@ const topics: Topic[] = [
         title: 'Measure sizes with sizeof',
         definition:
           'sizeof reports how many bytes a type or object occupies, as a std::size_t known at compile time, and sizeof(char) is always 1.',
-        misconception: 'sizeof(int) is exactly 4 on every C++ implementation.',
         rule: 'Compute byte counts with sizeof instead of hard-coding the size of a type.',
         violation:
           'Write 4 in place of sizeof(int) when computing a buffer size.',
@@ -259,8 +237,6 @@ const topics: Topic[] = [
         title: 'Choose exact-width integers',
         definition:
           '<cstdint> types such as std::int32_t and std::uint8_t have exactly the number of bits in their names.',
-        misconception:
-          'std::uint8_t values print as numbers with std::cout, just as int values do.',
         rule: 'Use an exact-width type where a format fixes the size, and convert 8-bit values to int before printing them.',
         violation:
           'Store a 16-bit wire field in int and expect it to wrap at 65536.',
@@ -280,8 +256,6 @@ const topics: Topic[] = [
         title: 'Ask the compiler about a type',
         definition:
           '<type_traits> answers questions about types at compile time: std::is_same_v<A, B> and std::is_unsigned_v<T> are bool constants.',
-        misconception:
-          'std::is_same_v<int, long> is true on any platform where int and long have the same size.',
         rule: 'State a type requirement with a trait instead of inferring it from sizes.',
         violation:
           'Treat two types as interchangeable because sizeof reports the same number of bytes.',
@@ -308,8 +282,6 @@ const topics: Topic[] = [
         title: 'Shift bits left and right',
         definition:
           'For an unsigned value, x << k moves its bits left by k places, multiplying by 2 to the power k, and x >> k moves them right, dividing by 2 to the power k.',
-        misconception:
-          '1u << 3 evaluates to 1000 because three zeros are appended in decimal.',
         rule: 'Shift unsigned values, and by fewer places than their width in bits.',
         violation:
           'Shift a 32-bit unsigned value by 32 places and expect the result to be zero.',
@@ -329,7 +301,6 @@ const topics: Topic[] = [
         title: 'Select and set bits with masks',
         definition:
           'x & mask keeps only the bits that are set in both values, and x | mask turns the mask bits on.',
-        misconception: 'x & 0xF0 and x && 0xF0 produce the same result.',
         rule: 'Use & with a mask to test or extract bits and | to set them; keep && and || for conditions.',
         violation: 'Use && where a bitwise mask was intended.',
         signature: 'unsigned solve(unsigned value)',
@@ -348,7 +319,6 @@ const topics: Topic[] = [
         title: 'Toggle and clear single-bit flags',
         definition:
           'The flag 1u << k has only bit k set; x ^ flag toggles that bit and x & ~flag clears it.',
-        misconception: '2 ^ 3 raises 2 to the third power and evaluates to 8.',
         rule: 'Build a flag with 1u << k, then use | to set it, ^ to toggle it, and & ~ to clear it.',
         violation:
           'Clear a flag with x & flag, which keeps only that flag instead.',
@@ -368,8 +338,6 @@ const topics: Topic[] = [
         title: 'Extract a byte from a word',
         definition:
           'Shifting a word right by 8 * i places and masking with 0xFF extracts byte i, counting from the least significant byte.',
-        misconception:
-          'Masking with 0xFF and then shifting right extracts the same byte as shifting first.',
         rule: 'Shift the wanted byte down to the lowest position first, then mask with 0xFF.',
         violation:
           'Mask with 0xFF before shifting, which discards the byte you wanted.',
@@ -396,8 +364,6 @@ const topics: Topic[] = [
         title: 'Select with if',
         definition:
           'An if statement executes only the branch selected by its condition.',
-        misconception:
-          'Both if and else branches execute whenever the condition is evaluated.',
         rule: 'Return the result for every possible branch.',
         violation: 'Leave one branch without a defined return value.',
         signature: 'int solve(int value)',
@@ -416,7 +382,6 @@ const topics: Topic[] = [
         title: 'Count a half-open range',
         definition:
           'A loop with i < end visits indices from the start through end minus one.',
-        misconception: 'A loop with i < end also visits the end index.',
         rule: 'Use half-open bounds so the end position is never accessed.',
         violation: 'Use <= size when indexing a size-element sequence.',
         signature: 'int solve(int end)',
@@ -435,8 +400,6 @@ const topics: Topic[] = [
         title: 'Advance a while loop',
         definition:
           'A while loop checks its condition before every iteration, including the first, so its body can run zero times.',
-        misconception:
-          'A while loop always runs its body once before checking its condition.',
         rule: 'Update the quantity that controls termination on every path.',
         violation: 'Keep the loop condition true without updating its state.',
         signature: 'int solve(int value)',
@@ -455,8 +418,6 @@ const topics: Topic[] = [
         title: 'Stop a search early',
         definition:
           'Returning from a function immediately stops its remaining statements.',
-        misconception:
-          'return only stops the innermost loop and then continues the function.',
         rule: 'Distinguish a found position from the sentinel used for absence.',
         violation:
           'Return zero for both a missing item and an item at position zero.',
@@ -483,7 +444,6 @@ const topics: Topic[] = [
         title: 'Combine conditions',
         definition:
           'a && b is true only when both operands are true, a || b is true when at least one is, and !a inverts a bool.',
-        misconception: 'a || b is false when both of its operands are true.',
         rule: 'Add parentheses when mixing && and ||, because && groups more tightly than ||.',
         violation: 'Write a || b && c and expect it to mean (a || b) && c.',
         signature: 'bool solve(int hour, bool holiday)',
@@ -502,8 +462,6 @@ const topics: Topic[] = [
         title: 'Guard with short-circuit evaluation',
         definition:
           '&& evaluates its right operand only when the left one is true, and || only when the left one is false.',
-        misconception:
-          'Both operands of && are always evaluated before the result is decided.',
         rule: 'Put the safety check on the left so the risky operand runs only when it is valid.',
         violation:
           'Divide by a count on the left of && and check that the count is nonzero on the right.',
@@ -523,8 +481,6 @@ const topics: Topic[] = [
         title: 'Choose a value with ?:',
         definition:
           'condition ? a : b evaluates the condition, then evaluates only a when it is true or only b when it is false.',
-        misconception:
-          'condition ? a : b evaluates both a and b before choosing one of them.',
         rule: 'Use ?: to choose between two values of compatible types, and parenthesize it inside a larger expression.',
         violation:
           'Give the two branches unrelated types, such as a string literal and an int.',
@@ -544,8 +500,6 @@ const topics: Topic[] = [
         title: 'Test an inclusive range',
         definition:
           'A value lies in the inclusive range from low to high when low <= value && value <= high.',
-        misconception:
-          'low <= value <= high checks both bounds, just as the same notation does in mathematics.',
         rule: 'Write each bound as its own comparison joined with &&, and use || to test for a value outside the range.',
         violation: 'Chain two comparisons as low <= value <= high.',
         signature: 'bool solve(int value, int low, int high)',
@@ -571,8 +525,6 @@ const topics: Topic[] = [
         title: 'Store a fixed number of values',
         definition:
           'std::array<T, N> holds exactly N elements of type T, indexed from 0 through N - 1, and size() returns N.',
-        misconception:
-          'A std::array grows by one element whenever push_back is called.',
         rule: 'Index only positions below size(), and write {} to start every element at zero.',
         violation: 'Use N itself as an index into a std::array of N elements.',
         signature: 'int solve(std::array<int, 4> values)',
@@ -591,8 +543,6 @@ const topics: Topic[] = [
         title: 'Visit each element with range-for',
         definition:
           'for (int x : values) runs its body once per element, in order, with x holding a copy of that element.',
-        misconception:
-          'Assigning to x inside for (int x : values) changes the element stored in values.',
         rule: 'Use a by-value loop variable when the loop only reads the elements.',
         violation:
           'Assign to a by-value loop variable and expect the array to change.',
@@ -612,8 +562,6 @@ const topics: Topic[] = [
         title: 'Skip or stop with continue and break',
         definition:
           'continue jumps to the next iteration of the innermost loop, and break leaves that loop immediately.',
-        misconception:
-          'break skips only the current element, and the loop then carries on with the next one.',
         rule: 'Use continue to skip one element and break once the remaining elements no longer matter.',
         violation:
           'Use break where only the current element should be skipped.',
@@ -633,8 +581,6 @@ const topics: Topic[] = [
         title: 'Change elements through a range-for reference',
         definition:
           'for (int& x : values) binds x to each element itself, so assigning to x updates the array.',
-        misconception:
-          'A range-based for loop can never modify the elements it visits.',
         rule: 'Declare the loop variable as a reference, such as int& or auto&, when the loop must update each element.',
         violation:
           'Write for (int x : values) when the loop is meant to update each element.',
@@ -662,8 +608,6 @@ const topics: Topic[] = [
         title: 'Return a computed value',
         definition:
           'A function can compute a result from parameters without mutating its caller.',
-        misconception:
-          'Passing an int by value lets assignment change the caller variable.',
         rule: 'Keep input parameters and the returned result distinct.',
         violation: 'Assume a local parameter assignment updates the caller.',
         signature: 'int solve(int input)',
@@ -682,8 +626,6 @@ const topics: Topic[] = [
         title: 'Select an overload',
         definition:
           'Overloaded functions share a name but differ in parameter types; argument types select the overload.',
-        misconception:
-          'Only the return type is sufficient to distinguish overloads.',
         rule: 'Provide parameter lists that distinguish overload candidates.',
         violation: 'Define two functions differing only in return type.',
         signature: 'int solve(int input)',
@@ -702,8 +644,6 @@ const topics: Topic[] = [
         title: 'Supply default arguments',
         definition:
           'A default argument is used when the caller omits that trailing argument.',
-        misconception:
-          'A default argument overrides every value explicitly supplied by the caller.',
         rule: 'Place defaulted parameters after the required parameters.',
         violation: 'Put a required parameter after a defaulted parameter.',
         signature: 'int solve(int value, int offset = 2)',
@@ -722,8 +662,6 @@ const topics: Topic[] = [
         title: 'Express a read-only parameter',
         definition:
           'A const reference borrows an existing object and prevents mutation through that reference.',
-        misconception:
-          'A const reference guarantees no other alias can ever modify the object.',
         rule: 'Use const& for a borrowed input that this function only reads.',
         violation:
           'Cast away constness to mutate an object supplied as read-only.',
@@ -750,8 +688,6 @@ const topics: Topic[] = [
         title: 'Bind an lvalue reference',
         definition:
           'An lvalue reference is another name for an existing object.',
-        misconception:
-          'An lvalue reference holds an independent copy of its initializer.',
         rule: 'Initialize the reference with an object whose lifetime covers every use.',
         violation: 'Return a reference to a function-local object.',
         signature: 'int solve(int value)',
@@ -770,8 +706,6 @@ const topics: Topic[] = [
         title: 'Mutate through a reference parameter',
         definition:
           'A non-const reference parameter lets the function modify the caller object.',
-        misconception:
-          'A non-const reference parameter can only read its argument.',
         rule: 'Use a mutation contract when modification is part of the intended API.',
         violation:
           'Hide unintended input mutations in an API described as read-only.',
@@ -791,8 +725,6 @@ const topics: Topic[] = [
         title: 'Assignment through an alias',
         definition:
           'Assigning to a reference changes its referent; it does not rebind the reference.',
-        misconception:
-          'Assigning to a reference makes it refer to a different object.',
         rule: 'Remember that a reference binding is fixed after initialization.',
         violation:
           'Use reference assignment as though it were pointer reseating.',
@@ -812,8 +744,6 @@ const topics: Topic[] = [
         title: 'Return a reference to live storage',
         definition:
           'A returned reference aliases its referenced caller-owned object and is usable only while that object remains alive.',
-        misconception:
-          'Returning a reference automatically extends any local variable lifetime.',
         rule: 'Return a reference to caller-owned storage whose lifetime covers every use of the returned alias.',
         violation:
           'Return a reference to a function-local scalar after its lifetime ends.',
@@ -840,8 +770,6 @@ const topics: Topic[] = [
         title: 'Take and dereference an address',
         definition:
           'A pointer can store an object address; dereferencing a valid pointer accesses that object.',
-        misconception:
-          'Dereferencing a pointer copies the pointer address into the object.',
         rule: 'Dereference only a valid pointer to a live object.',
         violation: 'Dereference a pointer after its object lifetime ends.',
         signature: 'int solve(int value)',
@@ -859,8 +787,6 @@ const topics: Topic[] = [
         key: 'nullptr-guard',
         title: 'Handle a null pointer',
         definition: 'nullptr represents the absence of an object address.',
-        misconception:
-          'nullptr can be dereferenced safely and yields a zero value.',
         rule: 'Check a nullable pointer before dereferencing it.',
         violation:
           'Dereference the pointer before checking whether it is null.',
@@ -879,8 +805,6 @@ const topics: Topic[] = [
         key: 'pointer-reseat',
         title: 'Reseat a non-owning pointer',
         definition: 'A pointer variable can be assigned a different address.',
-        misconception:
-          'Pointers cannot change their pointed-to object after initialization.',
         rule: 'Keep address changes separate from ownership and deletion.',
         violation:
           'Delete storage merely because a borrowed pointer no longer uses it.',
@@ -900,8 +824,6 @@ const topics: Topic[] = [
         title: 'Traverse a valid array range',
         definition:
           'Pointer arithmetic is defined within one array and its one-past position.',
-        misconception:
-          'Adding an offset to any pointer is valid whenever the numeric address exists.',
         rule: 'Never dereference the one-past pointer.',
         violation:
           'Read through the one-past address as if it were an array element.',
@@ -928,7 +850,6 @@ const topics: Topic[] = [
         title: 'Borrow a contiguous span',
         definition:
           'std::span carries a pointer and an element count without owning its elements.',
-        misconception: 'std::span owns a copy of every element supplied to it.',
         rule: 'Keep the backing sequence alive for the entire span use.',
         violation:
           'Store a span to a local array after the array is destroyed.',
@@ -948,8 +869,6 @@ const topics: Topic[] = [
         title: 'Select a checked subspan',
         definition:
           'A subspan views part of the same backing storage and does not allocate a new sequence.',
-        misconception:
-          'Taking a subspan copies the selected elements into a new allocation.',
         rule: 'Check the requested offset against size before making the subspan.',
         violation: 'Pass an offset larger than the span length.',
         signature: 'int solve(std::span<const int> values, std::size_t offset)',
@@ -968,8 +887,6 @@ const topics: Topic[] = [
         title: 'Read a non-owning string view',
         definition:
           'std::string_view borrows characters and stores a length; it need not be null terminated.',
-        misconception:
-          'Every std::string_view owns a null-terminated character allocation.',
         rule: 'Use the stored length rather than a C-string scan.',
         violation:
           'Call strlen on arbitrary string_view data and assume a terminator exists.',
@@ -989,8 +906,6 @@ const topics: Topic[] = [
         title: 'Materialize an owning result',
         definition:
           'Constructing std::string from a view creates an owning copy of the viewed characters.',
-        misconception:
-          'A string built from a view always borrows the view original allocation.',
         rule: 'Copy into an owning string before the borrowed source expires.',
         violation: 'Retain a view to a temporary string and read it later.',
         signature: 'std::string solve(std::string_view text)',
@@ -1016,8 +931,6 @@ const topics: Topic[] = [
         title: 'Initialize aggregate members',
         definition:
           'Brace initialization can provide values for public aggregate members in declaration order.',
-        misconception:
-          'Aggregate brace initialization ignores the order of member declarations.',
         rule: 'Initialize members before any operation reads them.',
         violation:
           'Assume an uninitialized numeric member already holds a useful value.',
@@ -1037,8 +950,6 @@ const topics: Topic[] = [
         title: 'Initialize in a constructor',
         definition:
           'Member initializers construct members before the constructor body runs.',
-        misconception:
-          'Members are first constructed only when the constructor body assigns to them.',
         rule: 'Declare and initialize members in the dependency order they require.',
         violation:
           'Rely on initializer-list order to override member declaration order.',
@@ -1058,8 +969,6 @@ const topics: Topic[] = [
         title: 'Observe scope exit',
         definition:
           'An automatic object destructor runs when control leaves its scope normally.',
-        misconception:
-          'Automatic object destructors run only when delete is called manually.',
         rule: 'Keep resource release in the destructor of its owning object.',
         violation:
           'Manually call a destructor and then let scope exit destroy the object again.',
@@ -1079,8 +988,6 @@ const topics: Topic[] = [
         title: 'Destroy locals in reverse order',
         definition:
           'Objects in a scope are destroyed in the reverse order their construction completed.',
-        misconception:
-          'Local objects are destroyed in the same order their construction completed.',
         rule: 'Ensure a referenced dependency outlives the object using it.',
         violation:
           'Declare an owner after a borrower whose destructor needs that owner.',
@@ -1107,8 +1014,6 @@ const topics: Topic[] = [
         title: 'Call a member function on an object',
         definition:
           "A member function is declared inside a struct and called on one object as object.function(), reading and updating that object's members directly.",
-        misconception:
-          'Calling a member function on one object updates the members of every object of the same type.',
         rule: 'Call the member function on the specific object whose state it should use.',
         violation:
           'Call add on one counter and expect a second counter to change too.',
@@ -1128,8 +1033,6 @@ const topics: Topic[] = [
         title: 'Mark read-only member functions const',
         definition:
           'A member function declared with const after its parameter list promises not to modify members, so it can be called on a const object.',
-        misconception:
-          'A const object may call any member function that happens not to change its members.',
         rule: 'Mark every member function that only reads state as const.',
         violation:
           'Leave a read-only member function unmarked and then call it on a const object.',
@@ -1149,8 +1052,6 @@ const topics: Topic[] = [
         title: 'Read objects through const references',
         definition:
           'Through a const T& parameter a function can call only const member functions, so read-only access needs const accessors.',
-        misconception:
-          'A const T& parameter receives a copy, so the function may call any member function on it.',
         rule: 'Take objects the function only reads as const T&, mark their accessors const, and use T& only when the function must change the object.',
         violation:
           'Drop const from a getter so that it compiles, then pass every object by non-const reference.',
@@ -1170,8 +1071,6 @@ const topics: Topic[] = [
         title: 'Protect an invariant with private members',
         definition:
           "Members declared private can be changed only by the class's own member functions, so those functions can keep an invariant true.",
-        misconception:
-          'A private member can still be assigned directly by any function that has the object.',
         rule: 'Make state private when every change must pass a check, and expose it through const accessors.',
         violation:
           'Leave a capped level public so callers can assign values above the cap.',
@@ -1198,8 +1097,6 @@ const topics: Topic[] = [
         title: 'Acquire and release one resource',
         definition:
           'RAII ties resource ownership to an object lifetime so release follows scope exit.',
-        misconception:
-          'RAII requires a manual release call on every return path.',
         rule: 'Acquire only after you can represent ownership and release exactly once.',
         violation:
           'Release the same owned resource from two independent owners.',
@@ -1219,8 +1116,6 @@ const topics: Topic[] = [
         title: 'Release during stack unwinding',
         definition:
           'Stack unwinding destroys completed automatic objects while an exception leaves their scopes.',
-        misconception:
-          'Throwing an exception skips all automatic object destructors.',
         rule: 'Use destructors that do not throw during cleanup.',
         violation:
           'Throw a second exception from a destructor during active unwinding.',
@@ -1240,8 +1135,6 @@ const topics: Topic[] = [
         title: 'Disable duplicate ownership',
         definition:
           'Deleting copy operations prevents a resource owner from accidentally copying its release responsibility.',
-        misconception:
-          'Deleting copy operations prevents an object from being constructed at all.',
         rule: 'Make exclusive resource owners non-copyable or define a deliberate ownership transfer.',
         violation:
           'Allow default copying of a raw owning handle with one release action.',
@@ -1261,8 +1154,6 @@ const topics: Topic[] = [
         title: 'Restore a temporary change',
         definition:
           'A scope guard can restore an invariant on every scope-exit path.',
-        misconception:
-          'A scope guard can only run when execution reaches the final line of the block.',
         rule: 'Save the prior value and restore it once at scope exit.',
         violation: 'Restore a fixed default instead of the actual prior value.',
         signature: 'int solve(int original)',
@@ -1288,7 +1179,6 @@ const topics: Topic[] = [
         title: 'Create a unique owner',
         definition:
           'std::make_unique creates an object managed by one std::unique_ptr owner.',
-        misconception: 'std::unique_ptr is an ordinary copyable shared owner.',
         rule: 'Use make_unique instead of exposing a raw owning new expression.',
         violation:
           'Store an owning new result in a borrowed raw pointer and forget deletion.',
@@ -1308,8 +1198,6 @@ const topics: Topic[] = [
         title: 'Transfer exclusive ownership',
         definition:
           'Moving a unique_ptr transfers its owned pointer and leaves the source empty.',
-        misconception:
-          'Copying a unique_ptr creates another independent owner of the same object.',
         rule: 'Use std::move for an intentional ownership transfer.',
         violation: 'Dereference the emptied source unique_ptr after transfer.',
         signature: 'int solve(int value)',
@@ -1328,8 +1216,6 @@ const topics: Topic[] = [
         title: 'Share an object lifetime',
         definition:
           'std::shared_ptr keeps an object alive while at least one owning shared_ptr remains.',
-        misconception:
-          'Copying a shared_ptr always clones its pointed-to object.',
         rule: 'Use shared ownership only when multiple owners must independently extend lifetime.',
         violation:
           'Use shared_ptr merely to avoid deciding which component owns the object.',
@@ -1349,8 +1235,6 @@ const topics: Topic[] = [
         title: 'Observe with a weak pointer',
         definition:
           'A weak_ptr observes a shared object without extending its lifetime; lock returns a temporary shared owner if it still exists.',
-        misconception:
-          'A weak_ptr guarantees its observed object can never expire.',
         rule: 'Lock once and retain that shared_ptr while accessing the object.',
         violation:
           'Check expired and later dereference without obtaining ownership.',
@@ -1377,8 +1261,6 @@ const topics: Topic[] = [
         title: 'Select a value-category overload',
         definition:
           'An lvalue names an existing object; a temporary can bind to an rvalue-reference overload.',
-        misconception:
-          'Every named variable is an rvalue merely because it was move-constructed.',
         rule: 'Distinguish the expression category from the declared reference type.',
         violation:
           'Treat a named T&& variable as an rvalue without an explicit cast.',
@@ -1398,8 +1280,6 @@ const topics: Topic[] = [
         title: 'Understand std::move',
         definition:
           'std::move is a cast that permits move-aware overload selection; the cast itself does not transfer bytes or ownership.',
-        misconception:
-          'Calling std::move immediately deletes the source object.',
         rule: 'Let the receiving operation perform the move; avoid reading unspecified moved-from values.',
         violation:
           'Assume every moved-from standard container is guaranteed to be empty.',
@@ -1419,8 +1299,6 @@ const topics: Topic[] = [
         title: 'Move an owned member',
         definition:
           'A move constructor can transfer a unique_ptr member into a new object.',
-        misconception:
-          'A move constructor must copy every member regardless of its type.',
         rule: 'Transfer every exclusive resource and leave the source destructible.',
         violation:
           'Give both source and destination ownership of the same raw allocation.',
@@ -1440,8 +1318,6 @@ const topics: Topic[] = [
         title: 'Mark a nonthrowing move',
         definition:
           'A truthful noexcept move contract allows generic code to select move operations without risking a thrown exception.',
-        misconception:
-          'noexcept catches every exception and silently continues execution.',
         rule: 'Mark a move noexcept only when its operations really cannot throw.',
         violation:
           'Declare noexcept while deliberately throwing from the move operation.',
@@ -1468,8 +1344,6 @@ const topics: Topic[] = [
         title: 'Copy independent container values',
         definition:
           'Copying std::vector copies its element values into independently owned storage.',
-        misconception:
-          'Copying std::vector makes both vectors aliases of the same element storage.',
         rule: 'Use value containers when independent object values are intended.',
         violation:
           'Assume mutation of one copied vector should alter the other.',
@@ -1489,8 +1363,6 @@ const topics: Topic[] = [
         title: 'Delegate ownership to value members',
         definition:
           'The rule of zero lets owning standard-library members implement copying, moving, and destruction for your class.',
-        misconception:
-          'Every class needs hand-written copy, move, and destructor functions.',
         rule: 'Let value members own resources whenever their semantics fit the class.',
         violation:
           'Add manual delete to a class whose vector already owns its storage.',
@@ -1510,8 +1382,6 @@ const topics: Topic[] = [
         title: 'Assign a replacement value',
         definition:
           'Copy assignment replaces an existing object value while preserving value ownership semantics.',
-        misconception:
-          'Copy assignment merely rebinds an object name to another object address.',
         rule: 'Handle self-assignment safely by relying on sound member assignment.',
         violation:
           'Destroy owned state before reading the same state during self-assignment.',
@@ -1531,8 +1401,6 @@ const topics: Topic[] = [
         title: 'Swap whole values',
         definition:
           'std::swap exchanges two values; standard containers support efficient ownership exchange.',
-        misconception:
-          'Swapping two vectors requires re-creating every integer from scratch.',
         rule: 'Swap complete invariant-preserving objects rather than partial ownership fields.',
         violation:
           'Swap only a pointer while leaving its ownership metadata unchanged.',
@@ -1559,8 +1427,6 @@ const topics: Topic[] = [
         title: 'Count owned characters',
         definition:
           'std::string stores a character sequence and owns its storage.',
-        misconception:
-          'std::string size stops at the first embedded zero character.',
         rule: 'Use size to count stored characters, including embedded zeros.',
         violation:
           'Use a C-string scan to infer an owning string stored length.',
@@ -1580,8 +1446,6 @@ const topics: Topic[] = [
         title: 'Append characters',
         definition:
           'Appending to a string increases its stored sequence and can reallocate its storage.',
-        misconception:
-          'Appending to a string is guaranteed never to invalidate any pointer to its data.',
         rule: 'Refresh borrowed views after an operation that may reallocate.',
         violation:
           'Keep using a saved data pointer after a capacity-changing append.',
@@ -1601,7 +1465,6 @@ const topics: Topic[] = [
         title: 'Represent a missing substring',
         definition:
           'string::find returns npos when its search does not find a match.',
-        misconception: 'string::find returns zero whenever no match exists.',
         rule: 'Compare the result with npos before treating it as an index.',
         violation: 'Index at the result even when it equals npos.',
         signature: 'int solve(const std::string& text, char needle)',
@@ -1620,8 +1483,6 @@ const topics: Topic[] = [
         title: 'Parse an integer without allocation',
         definition:
           'std::from_chars reports parsing success with an error code and a pointer to the first unparsed character.',
-        misconception:
-          'from_chars throws an exception whenever a character is invalid.',
         rule: 'Accept only when the error code is clear and the entire input was consumed.',
         violation:
           'Accept a numeric prefix while silently ignoring trailing junk.',
@@ -1648,7 +1509,6 @@ const topics: Topic[] = [
         title: 'Read a vector element',
         definition:
           'A vector owns a contiguous sequence indexed from zero through size minus one.',
-        misconception: 'The vector end index is a valid stored element.',
         rule: 'Check index < size before indexing with operator[].',
         violation: 'Read values[size()] as the final element.',
         signature:
@@ -1667,8 +1527,6 @@ const topics: Topic[] = [
         key: 'vector-push',
         title: 'Grow a vector with push_back',
         definition: 'push_back appends one element and increases size by one.',
-        misconception:
-          'push_back overwrites the final element without changing size.',
         rule: 'Use size to describe constructed elements rather than capacity.',
         violation:
           'Index reserved but unconstructed capacity as if it contained elements.',
@@ -1688,8 +1546,6 @@ const topics: Topic[] = [
         title: 'Reserve capacity without changing size',
         definition:
           'reserve requests storage capacity but does not construct new elements or change size.',
-        misconception:
-          'reserve(n) changes vector size to n and initializes n values.',
         rule: 'Append or resize before accessing elements in newly reserved storage.',
         violation: 'Write values[0] after reserve on an empty vector.',
         signature: 'int solve(std::size_t capacity)',
@@ -1708,8 +1564,6 @@ const topics: Topic[] = [
         title: 'Erase a selected value',
         definition:
           'Erasing a vector element shifts later elements and decreases its size.',
-        misconception:
-          'Erasing a vector element leaves a permanently empty hole at that index.',
         rule: 'Check the position and refresh iterators at or after the erased element.',
         violation:
           'Use an iterator to a shifted element after an erase invalidated it.',
@@ -1736,8 +1590,6 @@ const topics: Topic[] = [
         title: 'Follow a half-open iterator range',
         definition:
           'The begin/end pair represents a half-open range; end is a sentinel past the final element.',
-        misconception:
-          'The end iterator refers to the final element and can always be dereferenced.',
         rule: 'Test against end before dereferencing an iterator.',
         violation: 'Dereference end to read the last element.',
         signature: 'int solve(const std::vector<int>& values)',
@@ -1756,8 +1608,6 @@ const topics: Topic[] = [
         title: 'Measure a range distance',
         definition:
           'std::distance returns how many increments separate two ordered iterators in the same range.',
-        misconception:
-          'std::distance always returns the number of bytes between addresses.',
         rule: 'Compute distance using iterators from the same valid range.',
         violation: 'Subtract unrelated container iterators to obtain an index.',
         signature: 'int solve(const std::vector<int>& values)',
@@ -1776,8 +1626,6 @@ const topics: Topic[] = [
         title: 'Reacquire after reallocation',
         definition:
           'A vector reallocation invalidates pointers, references, and iterators to its elements.',
-        misconception:
-          'Vector reallocation preserves every old element pointer.',
         rule: 'Retain an index and reacquire the element after growth.',
         violation:
           'Dereference a saved pointer after the vector may have reallocated.',
@@ -1797,8 +1645,6 @@ const topics: Topic[] = [
         title: 'Erase while iterating safely',
         definition:
           'vector::erase returns the next valid iterator after the erased position.',
-        misconception:
-          'The iterator passed to erase stays valid and must be incremented afterward.',
         rule: 'Assign the returned iterator when erasing and increment only when retaining an element.',
         violation: 'Increment the invalidated erased iterator.',
         signature: 'int solve(std::vector<int> values)',
@@ -1824,8 +1670,6 @@ const topics: Topic[] = [
         title: 'Group two values in a std::pair',
         definition:
           'std::pair<A, B> stores two values together: .first holds the A value and .second holds the B value.',
-        misconception:
-          'first and second are member functions of a pair, so they are read as p.first().',
         rule: 'Build the pair in a fixed order and read its parts as p.first and p.second.',
         violation: 'Call p.first() as though first were a member function.',
         signature: 'std::pair<int, int> solve(int total, int divisor)',
@@ -1844,8 +1688,6 @@ const topics: Topic[] = [
         title: 'Compare pairs lexicographically',
         definition:
           'Pairs compare by .first, and only when the firsts are equal does .second decide; == requires both members to match.',
-        misconception:
-          'p < q compares only the .first members and ignores .second.',
         rule: 'Put the primary key in .first and the tie-breaker in .second when pair order should decide.',
         violation:
           'Put the tie-breaking value in .first and the primary key in .second.',
@@ -1865,8 +1707,6 @@ const topics: Topic[] = [
         title: 'Unpack a pair with structured bindings',
         definition:
           'auto [a, b] = p; declares a and b as copies of p.first and p.second, while auto& [a, b] = p; makes them refer to the members.',
-        misconception:
-          'Assigning to a after auto [a, b] = p; also changes p.first.',
         rule: 'Unpack with auto& when the names must update the pair, and with plain auto for independent copies.',
         violation:
           'Unpack with plain auto and expect writes to reach the original pair.',
@@ -1886,8 +1726,6 @@ const topics: Topic[] = [
         title: 'Return two results as a pair',
         definition:
           'A function can return a std::pair to report two related results, and the caller can name both with structured bindings.',
-        misconception:
-          'A function cannot hand back two results, so the second one must be stored in a global variable.',
         rule: 'Return {low, high} as a pair and unpack it at the call site in the same order.',
         violation:
           'Unpack the returned pair in a different order from the one the function used to build it.',
@@ -1914,8 +1752,6 @@ const topics: Topic[] = [
         title: 'Look up without inserting',
         definition:
           'map::find searches for a key without inserting a missing entry.',
-        misconception:
-          'map::find creates a default value for every missing key.',
         rule: 'Compare the lookup iterator to end before dereferencing.',
         violation: 'Dereference a missing lookup result.',
         signature: 'int solve(const std::map<int, int>& values, int key)',
@@ -1934,8 +1770,6 @@ const topics: Topic[] = [
         title: 'Insert a unique key',
         definition:
           'map::emplace reports whether a key was inserted; an existing key retains its mapped value.',
-        misconception:
-          'map::emplace always overwrites the value of an existing key.',
         rule: 'Use the insertion boolean when duplicate handling matters.',
         violation:
           'Assume insertion succeeded merely because a key now exists.',
@@ -1955,8 +1789,6 @@ const topics: Topic[] = [
         title: 'Count with a hash mapping',
         definition:
           'unordered_map supports keyed lookup with average constant-time complexity but does not maintain sorted key order.',
-        misconception:
-          'unordered_map iteration is guaranteed to follow ascending keys.',
         rule: 'Avoid relying on hash-table iteration order for a deterministic result.',
         violation:
           'Choose the smallest key by taking the first unordered_map element.',
@@ -1976,8 +1808,6 @@ const topics: Topic[] = [
         title: 'Select an ordered map boundary',
         definition:
           'std::map orders unique keys and exposes the first ordered entry at begin.',
-        misconception:
-          'std::map preserves the order in which keys were inserted.',
         rule: 'Check emptiness before reading begin.',
         violation: 'Read begin on an empty map.',
         signature: 'int solve(const std::map<int, int>& levels)',
@@ -2002,8 +1832,6 @@ const topics: Topic[] = [
         key: 'set-membership',
         title: 'Represent unique membership',
         definition: 'A std::set stores each distinct key at most once.',
-        misconception:
-          'A std::set retains one entry for every repeated insertion.',
         rule: 'Use a set when duplicate identity should collapse.',
         violation: 'Use set size as the count of all repeated events.',
         signature: 'int solve(const std::vector<int>& values)',
@@ -2022,8 +1850,6 @@ const topics: Topic[] = [
         title: 'Find the first qualifying key',
         definition:
           'set::lower_bound returns the first key that is not less than the target.',
-        misconception:
-          'set::lower_bound returns the first key strictly greater than the target.',
         rule: 'Handle end when no qualifying key exists.',
         violation:
           'Dereference lower_bound without considering the all-smaller case.',
@@ -2043,8 +1869,6 @@ const topics: Topic[] = [
         title: 'Read the largest heap value',
         definition:
           'The default priority_queue exposes its largest element at top.',
-        misconception:
-          'The default priority_queue exposes the oldest inserted element at top.',
         rule: 'Check empty before top or pop.',
         violation: 'Read top when the queue has no elements.',
         signature: 'int solve(const std::vector<int>& values)',
@@ -2063,8 +1887,6 @@ const topics: Topic[] = [
         title: 'Order a min heap',
         definition:
           'Using std::greater as a priority_queue comparator places the smallest value at top.',
-        misconception:
-          'std::greater makes the priority_queue preserve input arrival order.',
         rule: 'Choose the comparator that matches the priority contract.',
         violation: 'Use the largest-first heap for an earliest-deadline queue.',
         signature: 'int solve(const std::vector<int>& values)',
@@ -2090,8 +1912,6 @@ const topics: Topic[] = [
         title: 'Sort a sequence',
         definition:
           'std::sort rearranges a random-access range according to a strict weak ordering.',
-        misconception:
-          'A comparator that returns true for equal elements is valid for std::sort.',
         rule: 'Use a strict comparator such as <, never <=.',
         violation: 'Use <= so an element compares less than itself.',
         signature: 'int solve(std::vector<int> values)',
@@ -2110,7 +1930,6 @@ const topics: Topic[] = [
         title: 'Search a sorted range',
         definition:
           'binary_search requires a range sorted under the same comparison used for the search.',
-        misconception: 'binary_search works correctly on every unsorted range.',
         rule: 'Sort using the search comparator before binary search.',
         violation:
           'Search an unsorted sequence and interpret any result as reliable.',
@@ -2130,8 +1949,6 @@ const topics: Topic[] = [
         title: 'Choose an accumulation seed',
         definition:
           'std::accumulate uses the initial value type for the running result.',
-        misconception:
-          'std::accumulate always infers a wider result from the element type.',
         rule: 'Choose a wide seed before summing quantities that exceed int range.',
         violation:
           'Use an int zero seed and expect a long long assignment afterward to repair overflow.',
@@ -2151,8 +1968,6 @@ const topics: Topic[] = [
         title: 'Remove values with erase-remove',
         definition:
           'std::remove partitions retained values at the front and returns a logical end; it does not shrink the container.',
-        misconception:
-          'std::remove directly changes vector size by deleting elements.',
         rule: 'Erase the tail beginning at the returned logical end.',
         violation:
           'Treat old vector size as the retained count after remove alone.',
@@ -2179,8 +1994,6 @@ const topics: Topic[] = [
         title: 'Capture a snapshot by value',
         definition:
           'A value capture stores its own copy of the captured value when the closure is created.',
-        misconception:
-          'A value capture automatically observes every later source mutation.',
         rule: 'Choose value capture when the closure needs a snapshot that can outlive the source variable.',
         violation:
           'Assume later source updates change a value-captured snapshot.',
@@ -2200,8 +2013,6 @@ const topics: Topic[] = [
         title: 'Capture a live object by reference',
         definition:
           'A reference capture accesses the referenced object rather than a snapshot.',
-        misconception:
-          'A reference capture extends the referenced object lifetime indefinitely.',
         rule: 'Ensure the referenced object outlives every closure invocation.',
         violation:
           'Return a closure that refers to a local variable that has gone out of scope.',
@@ -2221,8 +2032,6 @@ const topics: Topic[] = [
         title: 'Pass a predicate to an algorithm',
         definition:
           'A predicate returns a boolean decision for each element an algorithm examines.',
-        misconception:
-          'An algorithm predicate is required to modify every examined element.',
         rule: 'Keep the predicate comparison consistent with the intended filter.',
         violation:
           'Capture a threshold by reference when its lifetime ends before deferred use.',
@@ -2242,8 +2051,6 @@ const topics: Topic[] = [
         title: 'Move ownership into a closure',
         definition:
           'An init capture can move a unique_ptr into a closure, making the closure its owner.',
-        misconception:
-          'A closure that owns a unique_ptr must be freely copyable.',
         rule: 'Move an exclusive owner into the closure and use only the new owner.',
         violation:
           'Capture a local unique_ptr by reference and invoke after its scope ends.',
@@ -2270,8 +2077,6 @@ const topics: Topic[] = [
         title: 'Instantiate a function template',
         definition:
           'A function template describes operations that are instantiated for selected argument types.',
-        misconception:
-          'One template body is dynamically interpreted for every possible type at run time.',
         rule: 'Use operations supported by the instantiated type.',
         violation:
           'Assume an unconstrained template operation exists for every type.',
@@ -2291,8 +2096,6 @@ const topics: Topic[] = [
         title: 'Deduce a template argument',
         definition:
           'Template argument deduction matches function parameter patterns with argument types.',
-        misconception:
-          'A same-T template always deduces a common type for unrelated argument types.',
         rule: 'Pass compatible deduced types or explicitly select the desired template type.',
         violation:
           'Expect a two-T-equal template to deduce one T from int and double without conversion guidance.',
@@ -2312,8 +2115,6 @@ const topics: Topic[] = [
         title: 'Parameterize stored values',
         definition:
           'A class template creates a family of concrete class types with chosen member types.',
-        misconception:
-          'All class-template specializations share one mandatory global member value.',
         rule: 'Keep per-object state inside members of the instantiated class.',
         violation:
           'Use a shared global to represent every distinct object value.',
@@ -2333,8 +2134,6 @@ const topics: Topic[] = [
         title: 'Forward an argument category',
         definition:
           'std::forward<T> preserves the category represented by a deduced forwarding-reference parameter.',
-        misconception:
-          'std::forward always turns every argument into an rvalue regardless of T.',
         rule: 'Forward with the original deduced template parameter.',
         violation:
           'Apply std::move to every argument and accidentally consume caller lvalues.',
@@ -2361,8 +2160,6 @@ const topics: Topic[] = [
         title: 'Constrain an integer operation',
         definition:
           'The std::integral concept is satisfied by integral types and can constrain a template parameter.',
-        misconception:
-          'std::integral is satisfied by every floating-point type.',
         rule: 'Constrain modulo-based functions to types that support integral arithmetic.',
         violation:
           'Accept arbitrary floating-point inputs for an operation based on %.',
@@ -2382,8 +2179,6 @@ const topics: Topic[] = [
         title: 'Describe a required operation',
         definition:
           'A requires expression checks whether specified expressions are well formed for a type.',
-        misconception:
-          'A requires expression executes the operation on a live object during constraint checking.',
         rule: 'Express the operations actually needed by the template body.',
         violation:
           'Constrain an unrelated property while the body requires an unsupported method.',
@@ -2403,8 +2198,6 @@ const topics: Topic[] = [
         title: 'Discard an unselected compile-time branch',
         definition:
           'if constexpr discards the branch not selected by its constant condition during template instantiation.',
-        misconception:
-          'An unselected if constexpr branch must be instantiated for every T anyway.',
         rule: 'Use a type trait condition to guard operations specific to one type category.',
         violation:
           'Use an ordinary run-time if to hide an invalid dependent template operation.',
@@ -2424,7 +2217,6 @@ const topics: Topic[] = [
         title: 'Select a constrained overload',
         definition:
           'A more constrained matching overload can be preferred over an unconstrained alternative.',
-        misconception: 'Constraints never affect overload selection.',
         rule: 'Make the specialized constraint express a genuine stronger contract.',
         violation:
           'Assume return type alone distinguishes specialized overloads.',
@@ -2451,8 +2243,6 @@ const topics: Topic[] = [
         title: 'Make a compile-time-capable function',
         definition:
           'A constexpr function can be evaluated at compile time when its call satisfies constant-expression rules.',
-        misconception:
-          'A constexpr function is forbidden from being called at run time.',
         rule: 'Keep constant evaluation free of operations disallowed in constant expressions.',
         violation:
           'Assume adding constexpr makes every possible call a constant expression.',
@@ -2472,8 +2262,6 @@ const topics: Topic[] = [
         title: 'Validate a compile-time invariant',
         definition:
           'static_assert rejects a program when its compile-time condition is false.',
-        misconception:
-          'static_assert prints a warning but always lets a false condition execute.',
         rule: 'Use a constant expression that expresses the structural requirement.',
         violation: 'Use a run-time input as a static_assert condition.',
         signature: 'int solve()',
@@ -2492,8 +2280,6 @@ const topics: Topic[] = [
         title: 'Require constant evaluation',
         definition:
           'A consteval function requires its relevant calls to produce a compile-time constant expression.',
-        misconception:
-          'consteval is simply a request to optimize a run-time function.',
         rule: 'Call an immediate function with valid constant-expression arguments.',
         violation:
           'Pass an arbitrary run-time parameter to a consteval function.',
@@ -2513,8 +2299,6 @@ const topics: Topic[] = [
         title: 'Build a fixed lookup table',
         definition:
           'A constexpr std::array can store results computed at compile time.',
-        misconception:
-          'A constexpr std::array changes its length dynamically when indexed.',
         rule: 'Check a run-time index before accessing the fixed table.',
         violation: 'Index beyond the fixed compile-time array length.',
         signature: 'int solve(std::size_t index)',
@@ -2539,8 +2323,6 @@ const topics: Topic[] = [
         key: 'optional-value',
         title: 'Represent an absent result',
         definition: 'std::optional<T> holds either one T value or no value.',
-        misconception:
-          'An empty optional always contains a default-constructed accessible T.',
         rule: 'Check has_value before dereferencing an optional.',
         violation: 'Dereference an empty optional.',
         signature: 'int solve(bool available)',
@@ -2559,7 +2341,6 @@ const topics: Topic[] = [
         title: 'Return an optional lookup',
         definition:
           'An optional return can distinguish absence from any valid value, including zero.',
-        misconception: 'A zero value must always mean lookup failure.',
         rule: 'Represent failure independently from valid domain values.',
         violation:
           'Use zero as an absent sentinel when zero is a valid answer.',
@@ -2579,8 +2360,6 @@ const topics: Topic[] = [
         title: 'Store one tagged alternative',
         definition:
           'std::variant stores one active alternative and tracks which type is active.',
-        misconception:
-          'std::variant contains all its alternatives as simultaneously active values.',
         rule: 'Query or visit the active alternative rather than assuming its type.',
         violation:
           'Use std::get with a type that is not active and assume it succeeds.',
@@ -2600,8 +2379,6 @@ const topics: Topic[] = [
         title: 'Visit the active alternative',
         definition:
           'std::visit invokes a visitor with the currently active variant value.',
-        misconception:
-          'std::visit calls the visitor once for every possible alternative regardless of activity.',
         rule: 'Provide a visitor that is valid for every alternative.',
         violation:
           'Write a visitor body that only compiles for one of the variant types.',
@@ -2628,8 +2405,6 @@ const topics: Topic[] = [
         title: 'Report and catch an exception',
         definition:
           'throw transfers control to a matching handler while unwinding completed local objects.',
-        misconception:
-          'throw continues with the statement immediately following the throw.',
         rule: 'Catch standard exception objects by const reference.',
         violation:
           'Catch by value when preserving a derived exception object matters.',
@@ -2649,8 +2424,6 @@ const topics: Topic[] = [
         title: 'Use checked container access',
         definition:
           'vector::at throws out_of_range when an index is outside the constructed element range.',
-        misconception:
-          'vector::at silently returns a default value for any invalid index.',
         rule: 'Choose at when the API requires checked access and handle its failure deliberately.',
         violation: 'Rely on operator[] to throw for an invalid index.',
         signature:
@@ -2670,8 +2443,6 @@ const topics: Topic[] = [
         title: 'Commit after successful validation',
         definition:
           'The strong exception guarantee leaves observable state unchanged when an operation fails.',
-        misconception:
-          'The strong exception guarantee permits arbitrary partial mutation after failure.',
         rule: 'Prepare a replacement and commit only after all fallible validation succeeds.',
         violation: 'Clear the destination before validating the replacement.',
         signature: 'int solve(int original, int replacement)',
@@ -2690,8 +2461,6 @@ const topics: Topic[] = [
         title: 'Inspect a nonthrowing expression',
         definition:
           'The noexcept operator determines at compile time whether an expression is declared nonthrowing.',
-        misconception:
-          'The noexcept operator executes its expression to test whether it throws.',
         rule: 'Use noexcept as a contract, not as an exception-recovery mechanism.',
         violation:
           'Expect a noexcept declaration to catch a thrown exception and return normally.',
@@ -2718,8 +2487,6 @@ const topics: Topic[] = [
         title: 'Call through a virtual interface',
         definition:
           'A virtual function call through a base reference selects the most-derived override for the live object.',
-        misconception:
-          'A virtual call always selects the base implementation from the static reference type.',
         rule: 'Use override to have the compiler check the intended override signature.',
         violation:
           'Accidentally change the parameter list and assume a new method overrides the base.',
@@ -2739,8 +2506,6 @@ const topics: Topic[] = [
         title: 'Destroy through an owning base pointer',
         definition:
           'A polymorphic base needs a virtual destructor when derived objects are deleted through base pointers.',
-        misconception:
-          'Deleting through a non-virtual base destructor always destroys the complete derived object safely.',
         rule: 'Make the owning polymorphic base destructor virtual.',
         violation:
           'Delete a derived allocation through a base pointer whose destructor is non-virtual.',
@@ -2760,8 +2525,6 @@ const topics: Topic[] = [
         title: 'Borrow a polymorphic object',
         definition:
           'Copying a derived object into a base value slices away the derived subobject.',
-        misconception:
-          'Passing a derived object by base value preserves all derived dynamic behavior.',
         rule: 'Pass polymorphic objects by reference or owning smart pointer.',
         violation:
           'Copy a derived instance into a base value when dynamic dispatch is required.',
@@ -2781,8 +2544,6 @@ const topics: Topic[] = [
         title: 'Compose an implementation',
         definition:
           'Composition stores collaborating objects explicitly instead of inheriting implementation details unnecessarily.',
-        misconception:
-          'Every reusable operation requires a public inheritance relationship.',
         rule: 'Use inheritance for an interface contract and members for owned implementation state.',
         violation:
           'Expose internal storage through inheritance merely to reuse a helper method.',
@@ -2809,8 +2570,6 @@ const topics: Topic[] = [
         title: 'Separate declarations from definitions',
         definition:
           'A declaration describes a function signature; a definition supplies its body, which the linker must find when needed.',
-        misconception:
-          'Declaring a function automatically generates its implementation body.',
         rule: 'Match the declaration and definition signatures exactly.',
         violation:
           'Declare one signature and define a different overload accidentally.',
@@ -2830,8 +2589,6 @@ const topics: Topic[] = [
         title: 'Qualify a namespace member',
         definition:
           'A namespace groups names and allows qualification to disambiguate otherwise matching identifiers.',
-        misconception:
-          'A namespace creates a new thread or process for its functions.',
         rule: 'Use qualified names where another declaration could conflict.',
         violation:
           'Import every namespace globally and rely on accidental overload selection.',
@@ -2851,8 +2608,6 @@ const topics: Topic[] = [
         title: 'Limit a helper to its translation unit',
         definition:
           'A name in an unnamed namespace has internal linkage and can be used privately within its translation unit.',
-        misconception:
-          'An unnamed namespace exports all its names to every linked translation unit.',
         rule: 'Give file-local helpers internal linkage when they are implementation details.',
         violation:
           'Export a common helper name from every source file and violate the one-definition rule.',
@@ -2872,8 +2627,6 @@ const topics: Topic[] = [
         title: 'Define a header-safe inline entity',
         definition:
           'An inline entity may have matching definitions in multiple translation units under the one-definition rule.',
-        misconception:
-          'inline guarantees that the optimizer substitutes the body at every call site.',
         rule: 'Keep all definitions of the same inline entity identical.',
         violation:
           'Define a header entity differently in separate translation units.',
@@ -2900,8 +2653,6 @@ const topics: Topic[] = [
         title: 'Assert a known result',
         definition:
           'assert checks a condition in builds where NDEBUG is not defined and aborts when the condition is false.',
-        misconception:
-          'assert is a production input-validation mechanism that is always enabled.',
         rule: 'Keep production validation separate from debug-only assertions.',
         violation:
           'Use assert as the only check protecting against hostile input.',
@@ -2921,8 +2672,6 @@ const topics: Topic[] = [
         title: 'Specify empty-input behavior',
         definition:
           'A function contract should define what an empty range produces before code accesses its first element.',
-        misconception:
-          'An empty vector has a valid first element initialized to zero.',
         rule: 'Test the empty case before accessing front or back.',
         violation: 'Use front before checking whether the input is empty.',
         signature: 'int solve(const std::vector<int>& values)',
@@ -2941,8 +2690,6 @@ const topics: Topic[] = [
         title: 'Check a round-trip property',
         definition:
           'A round-trip test checks that an inverse operation reconstructs valid original inputs.',
-        misconception:
-          'One matching example proves a round trip for every possible input and type.',
         rule: 'Test varied inputs and the domain preconditions of both operations.',
         violation:
           'Treat one happy-path sample as a proof of every boundary case.',
@@ -2962,8 +2709,6 @@ const topics: Topic[] = [
         title: 'Compare an approximate result',
         definition:
           'Floating-point arithmetic can introduce rounding, so numeric tests need a specified error tolerance.',
-        misconception:
-          'All decimal fractions are represented exactly as binary floating-point values.',
         rule: 'Compare absolute error against a justified tolerance for this numeric contract.',
         violation:
           'Demand exact equality for a result whose computation introduces expected rounding.',
@@ -2991,7 +2736,6 @@ const topics: Topic[] = [
         title: 'Join a worker thread',
         definition:
           'join waits for a joinable thread to complete and synchronizes with its completion.',
-        misconception: 'join cancels a thread without waiting for its work.',
         rule: 'Join or otherwise safely manage every started thread before its owner is destroyed.',
         violation:
           'Destroy a joinable std::thread and expect automatic joining.',
@@ -3011,8 +2755,6 @@ const topics: Topic[] = [
         title: 'Give a worker a stable input',
         definition:
           'Copying input into a worker closure can avoid sharing caller mutation and lifetime responsibilities.',
-        misconception:
-          'A value-captured thread input always observes later changes in the caller.',
         rule: 'Own or copy the values needed until the worker has completed.',
         violation: 'Pass a dangling reference to a detached worker.',
         signature: 'int solve(int value)',
@@ -3031,8 +2773,6 @@ const topics: Topic[] = [
         title: 'Partition independent worker outputs',
         definition:
           'Separate result objects let workers write independently without racing on the same scalar.',
-        misconception:
-          'Writing to the same scalar from multiple threads is safe whenever each write is small.',
         rule: 'Keep simultaneous writes on independent objects or protect shared state.',
         violation: 'Accumulate into one non-atomic scalar from both workers.',
         signature: 'int solve(int first, int second)',
@@ -3051,8 +2791,6 @@ const topics: Topic[] = [
         title: 'Use automatic joining with jthread',
         definition:
           'std::jthread joins a joinable owned thread when its destructor runs.',
-        misconception:
-          'std::jthread detaches its worker automatically at destruction.',
         rule: 'Keep all referenced inputs alive until jthread destruction has joined the worker.',
         violation:
           'Declare referenced storage after the jthread that needs it during destruction.',
@@ -3079,8 +2817,6 @@ const topics: Topic[] = [
         title: 'Own a mutex lock with RAII',
         definition:
           'lock_guard locks a mutex on construction and unlocks it at destruction.',
-        misconception:
-          'lock_guard requires a manual unlock call on every return path.',
         rule: 'Use the same mutex for every access to the protected invariant.',
         violation:
           'Protect writes with a mutex while performing concurrent reads without that mutex.',
@@ -3100,8 +2836,6 @@ const topics: Topic[] = [
         title: 'Serialize a shared increment',
         definition:
           'A mutex makes a read-modify-write critical section exclusive among threads that acquire that mutex.',
-        misconception:
-          'A mutex only protects the assignment and never protects the preceding read.',
         rule: 'Put the whole read-modify-write operation under the same lock.',
         violation:
           'Read the counter outside the lock and write a stale increment inside it.',
@@ -3121,8 +2855,6 @@ const topics: Topic[] = [
         title: 'Acquire two mutexes together',
         definition:
           'scoped_lock can acquire multiple mutexes using a deadlock-avoidance locking algorithm.',
-        misconception:
-          'scoped_lock locks each mutex in an arbitrary permanent order that can introduce deadlock by itself.',
         rule: 'Use coordinated multi-mutex locking for an operation spanning two guarded states.',
         violation:
           'Hold mutex A while waiting for B in one code path and reverse that order in another.',
@@ -3142,7 +2874,6 @@ const topics: Topic[] = [
         title: 'Temporarily release a unique lock',
         definition:
           'unique_lock tracks ownership and can release and reacquire its mutex explicitly.',
-        misconception: 'Calling unique_lock::unlock destroys the mutex object.',
         rule: 'Unlock only when the unique_lock owns the mutex.',
         violation: 'Call unlock twice without a successful intervening lock.',
         signature: 'bool solve()',
@@ -3168,8 +2899,6 @@ const topics: Topic[] = [
         title: 'Wait for state with a predicate',
         definition:
           'A condition-variable predicate is rechecked under the mutex, handling spurious wakeups and already-satisfied state.',
-        misconception:
-          'A condition-variable wakeup guarantees the application state is ready without any check.',
         rule: 'Wait with a predicate over state protected by the associated mutex.',
         violation:
           'Treat a single notification as proof that data is available.',
@@ -3189,8 +2918,6 @@ const topics: Topic[] = [
         title: 'Publish guarded state before notifying',
         definition:
           'The producer changes the predicate state while holding the mutex and then notifies waiting consumers.',
-        misconception:
-          'The producer must notify first and only afterward initialize the guarded payload.',
         rule: 'Modify payload and predicate under the same mutex used by the waiter.',
         violation:
           'Modify the non-atomic predicate concurrently without the mutex.',
@@ -3210,8 +2937,6 @@ const topics: Topic[] = [
         title: 'Release the mutex while waiting',
         definition:
           'condition_variable::wait releases the unique_lock mutex while blocked and reacquires it before returning.',
-        misconception:
-          'wait keeps the mutex locked throughout the blocked interval so no producer can change state.',
         rule: 'Use a unique_lock that owns the same mutex guarding the predicate.',
         violation:
           'Wait without allowing the producer to acquire the predicate mutex.',
@@ -3231,8 +2956,6 @@ const topics: Topic[] = [
         title: 'Represent queue shutdown in the predicate',
         definition:
           'A consumer can wait for either available data or an explicit closed state.',
-        misconception:
-          'A closed queue must keep empty consumers blocked forever.',
         rule: 'Include closure in the wait predicate and distinguish an empty closed queue from data.',
         violation:
           'Wait only for nonempty data after the producer has permanently closed the queue.',
@@ -3259,8 +2982,6 @@ const topics: Topic[] = [
         title: 'Read and write an atomic value',
         definition:
           'An atomic object supports race-free atomic load and store operations on its own value.',
-        misconception:
-          'An atomic object automatically makes every nearby non-atomic variable safe.',
         rule: 'Use load and store for the atomic itself and separately synchronize other shared data.',
         violation:
           'Assume atomicity of one flag protects an unrelated payload without an ordering protocol.',
@@ -3280,8 +3001,6 @@ const topics: Topic[] = [
         title: 'Use an atomic read-modify-write',
         definition:
           'fetch_add atomically adds a value and returns the prior value.',
-        misconception:
-          'fetch_add returns the updated value rather than the prior value.',
         rule: 'Use one atomic read-modify-write instead of a separate load and store increment.',
         violation:
           'Implement a concurrent increment as load then store on the same atomic.',
@@ -3301,8 +3020,6 @@ const topics: Topic[] = [
         title: 'Update only an expected atomic value',
         definition:
           'compare_exchange_strong writes the desired value only when the current value equals expected; failure updates expected.',
-        misconception:
-          'compare_exchange_strong overwrites the atomic value even when expected does not match.',
         rule: 'On failure, use the refreshed expected value before retrying an update.',
         violation: 'Retry forever with an unchanged stale expected value.',
         signature: 'int solve(int current, int expected)',
@@ -3321,8 +3038,6 @@ const topics: Topic[] = [
         title: 'Accumulate independent atomic events',
         definition:
           'An atomic counter can count events from multiple workers without lost read-modify-write updates.',
-        misconception:
-          'Two atomic loads followed by stores are equivalent to fetch_add across concurrent workers.',
         rule: 'Use fetch_add for each independent counted event.',
         violation:
           'Replace fetch_add with a separate load-plus-store pair under contention.',
@@ -3349,8 +3064,6 @@ const topics: Topic[] = [
         title: 'Use relaxed ordering for a counter',
         definition:
           'memory_order_relaxed preserves atomicity and per-object modification order without publishing unrelated data.',
-        misconception:
-          'A relaxed flag automatically publishes all preceding ordinary writes.',
         rule: 'Use relaxed counters only when they do not carry a cross-object publication contract.',
         violation:
           'Read an ordinary payload based only on a relaxed flag and assume a happens-before edge.',
@@ -3370,8 +3083,6 @@ const topics: Topic[] = [
         title: 'Publish data with release and acquire',
         definition:
           'An acquire load that reads a release store synchronizes with that store and makes the preceding payload writes visible.',
-        misconception:
-          'An acquire load synchronizes with every release store regardless of the value it reads.',
         rule: 'Read the payload only after acquiring the publication value from the producer.',
         violation: 'Read the payload before observing the release publication.',
         signature: 'int solve(int value)',
@@ -3390,8 +3101,6 @@ const topics: Topic[] = [
         title: 'Use a sequentially consistent operation',
         definition:
           'Sequentially consistent atomic operations participate in one total order consistent with their required ordering constraints.',
-        misconception:
-          'Sequential consistency makes racing non-atomic operations defined automatically.',
         rule: 'Keep ordinary shared accesses data-race free even when atomics use seq_cst.',
         violation:
           'Use a seq_cst counter as a replacement for all unrelated data synchronization.',
@@ -3411,8 +3120,6 @@ const topics: Topic[] = [
         title: 'Retry a compare-exchange update',
         definition:
           'compare_exchange_weak may fail spuriously, so retry loops update the desired value from the refreshed expected value.',
-        misconception:
-          'compare_exchange_weak never fails spuriously and needs no retry.',
         rule: 'Recompute desired from the expected value after every failed attempt.',
         violation:
           'Keep a fixed desired value computed from stale state on every retry.',
@@ -3439,8 +3146,6 @@ const topics: Topic[] = [
         title: 'Get an asynchronous result',
         definition:
           'std::async with launch::async runs an invocation asynchronously and returns a future for its result.',
-        misconception:
-          'std::async always runs eagerly even when its launch policy allows deferral.',
         rule: 'Choose an explicit launch policy when the distinction matters.',
         violation:
           'Assume the default launch policy guarantees a new worker thread.',
@@ -3460,8 +3165,6 @@ const topics: Topic[] = [
         title: 'Fulfill a promise once',
         definition:
           'A promise supplies one result to the future associated with its shared state.',
-        misconception:
-          'A promise can repeatedly replace the same future result indefinitely.',
         rule: 'Fulfill the promise exactly once with either a result or an exception.',
         violation:
           'Call set_value twice on the same already-satisfied promise.',
@@ -3481,8 +3184,6 @@ const topics: Topic[] = [
         title: 'Propagate a worker exception',
         definition:
           'future::get rethrows an exception stored by the asynchronous operation.',
-        misconception:
-          'A future silently discards every exception raised by its worker.',
         rule: 'Handle exceptions at the future result boundary.',
         violation:
           'Assume worker exceptions are impossible because the caller did not throw directly.',
@@ -3502,8 +3203,6 @@ const topics: Topic[] = [
         title: 'Read a shared result repeatedly',
         definition:
           'shared_future permits multiple reads of the same shared result through copied handles.',
-        misconception:
-          'An ordinary future::get can be called repeatedly after consuming its shared state.',
         rule: 'Use shared_future when multiple consumers must observe one result.',
         violation: 'Call get repeatedly on a consumed ordinary future.',
         signature: 'int solve(int value)',
@@ -3529,8 +3228,6 @@ const topics: Topic[] = [
         title: 'Split a model address into page and offset',
         definition:
           'For a chosen page size, an address offset is its remainder modulo that page size.',
-        misconception:
-          'The page offset is always equal to the virtual page number.',
         rule: 'Treat the page size as an explicit model input rather than a universal hardware constant.',
         violation: 'Hardcode one page size and assume every system uses it.',
         signature:
@@ -3550,8 +3247,6 @@ const topics: Topic[] = [
         title: 'Translate through a page-table model',
         definition:
           'A page-table model maps a virtual page number to a frame while preserving the page offset.',
-        misconception:
-          'Address translation changes the offset randomly for each access.',
         rule: 'Validate the page lookup before constructing the translated model address.',
         violation:
           'Access a page-table entry beyond the represented address range.',
@@ -3572,8 +3267,6 @@ const topics: Topic[] = [
         title: 'Round a model allocation size',
         definition:
           'A model allocation can round a byte count upward to a chosen positive alignment multiple.',
-        misconception:
-          'Every allocation size is aligned by truncating it to the preceding multiple.',
         rule: 'Use the requested alignment and avoid treating an illustrative value as an ABI guarantee.',
         violation: 'Round downward and allocate fewer bytes than requested.',
         signature:
@@ -3593,8 +3286,6 @@ const topics: Topic[] = [
         title: 'Distinguish local and persistent storage',
         definition:
           'A static local variable persists across calls while an ordinary local is recreated for each call.',
-        misconception:
-          'A static local is reinitialized to its initializer on every function call.',
         rule: 'Choose persistent state deliberately and avoid hidden cross-test state.',
         violation:
           'Use a static local for per-request scratch state and assume calls are independent.',
@@ -3621,8 +3312,6 @@ const topics: Topic[] = [
         title: 'Traverse contiguous values',
         definition:
           'std::vector elements occupy contiguous storage, making sequential traversal straightforward.',
-        misconception:
-          'std::vector guarantees a distinct unrelated allocation for every element.',
         rule: 'Traverse live elements using their valid contiguous range.',
         violation:
           'Perform pointer arithmetic across separate unrelated allocations.',
@@ -3642,8 +3331,6 @@ const topics: Topic[] = [
         title: 'Count cache lines in an explicit model',
         definition:
           'A simple aligned model uses ceiling division to count fixed-width lines needed for a byte range.',
-        misconception:
-          'A model line count proves the exact cache-miss count of every hardware run.',
         rule: 'Label the line width and starting-alignment assumptions explicitly.',
         violation:
           'Present a deterministic line model as a measured hardware latency.',
@@ -3664,8 +3351,6 @@ const topics: Topic[] = [
         title: 'Index a row-major matrix',
         definition:
           'A row-major flat layout places row r and column c at r times the column count plus c.',
-        misconception:
-          'A row-major flat layout always uses column times row count plus row.',
         rule: 'Use the known stride and validate row and column bounds.',
         violation:
           'Use a mismatched stride and silently access a different logical cell.',
@@ -3686,8 +3371,6 @@ const topics: Topic[] = [
         title: 'Separate hot fields in a data layout',
         definition:
           'A structure-of-arrays layout stores one field contiguously across many records.',
-        misconception:
-          'A structure-of-arrays layout forces each field access to load every other field logically.',
         rule: 'Keep parallel field arrays at matching lengths before combining them.',
         violation:
           'Combine mismatched arrays and assume every index exists in both.',
@@ -3715,8 +3398,6 @@ const topics: Topic[] = [
         title: 'Request object alignment',
         definition:
           'alignas requests an allowed alignment for an object type and can increase its padding.',
-        misconception:
-          'alignas changes the object numeric value to match the requested alignment.',
         rule: 'Use alignof to inspect the language alignment contract.',
         violation:
           'Assume an illustrative alignas value proves the actual cache-line size on every CPU.',
@@ -3736,8 +3417,6 @@ const topics: Topic[] = [
         title: 'Separate independent aligned counters',
         definition:
           'Giving independent counters separately aligned storage can reduce false sharing on a matching line-size model.',
-        misconception:
-          'Padding fixes an actual data race on a non-atomic shared counter.',
         rule: 'Use synchronization for correctness and padding only for a measured layout concern.',
         violation:
           'Replace atomics with ordinary variables because padding allegedly prevents races.',
@@ -3757,8 +3436,6 @@ const topics: Topic[] = [
         title: 'Inspect object stride',
         definition:
           'sizeof a complete aligned type includes the padding needed for arrays of that type.',
-        misconception:
-          'Array elements of an aligned type can always be placed closer than its sizeof.',
         rule: 'Check layout properties rather than asserting a speedup from alignment alone.',
         violation:
           'Treat a type size check as proof of lower measured latency.',
@@ -3778,8 +3455,6 @@ const topics: Topic[] = [
         title: 'Detect a shared line in a model',
         definition:
           'Two different model addresses share one chosen line when their line-index quotients are equal.',
-        misconception:
-          'Different C++ variables can never reside in the same hardware cache line.',
         rule: 'Specify the modeled line size and treat this as a layout calculation.',
         violation:
           'Claim a modeled address comparison measures coherence traffic.',
@@ -3807,8 +3482,6 @@ const topics: Topic[] = [
         title: 'Hold time as a std::chrono duration',
         definition:
           'A std::chrono duration stores a tick count together with its unit; count() returns the ticks, and adding durations of different units yields the finer unit.',
-        misconception:
-          'count() on any std::chrono duration returns the amount in seconds.',
         rule: 'Keep time values as durations, and call count() only where a plain number is needed, stating its unit.',
         violation:
           'Add a count of seconds to a count of milliseconds as plain integers.',
@@ -3828,8 +3501,6 @@ const topics: Topic[] = [
         title: 'Convert durations with duration_cast',
         definition:
           'Converting a duration to a finer unit happens implicitly, but converting to a coarser unit needs std::chrono::duration_cast, which truncates toward zero.',
-        misconception:
-          'duration_cast<std::chrono::seconds> rounds 2700 milliseconds up to 3 seconds.',
         rule: 'Use duration_cast only where dropping the remainder is acceptable, and keep the finer unit otherwise.',
         violation:
           'Cast to seconds early and then report the truncated value as an exact time.',
@@ -3849,7 +3520,6 @@ const topics: Topic[] = [
         title: 'Subtract time points to get a duration',
         definition:
           'A time_point marks an instant on one clock; subtracting two time points of that clock gives the duration between them.',
-        misconception: 'Adding two time points produces a later time point.',
         rule: 'Subtract time points from the same clock, and add a duration to a time point to move it.',
         violation:
           'Subtract time points that were read from two different clocks.',
@@ -3869,8 +3539,6 @@ const topics: Topic[] = [
         title: 'Time an interval with steady_clock',
         definition:
           'std::chrono::steady_clock::now() reads a monotonic clock, so a later reading minus an earlier one is never negative.',
-        misconception:
-          'system_clock suits interval timing because it never moves backward.',
         rule: 'Measure intervals with steady_clock and convert the difference to an explicit unit before reporting it.',
         violation:
           'Time an interval with system_clock and trust it across clock adjustments.',
@@ -3897,8 +3565,6 @@ const topics: Topic[] = [
         title: 'Compute elapsed duration',
         definition:
           'Elapsed time is the end reading minus the start reading from a suitable consistent clock.',
-        misconception:
-          'A timestamp alone is the elapsed duration of the measured operation.',
         rule: 'Use a monotonic clock for intervals and keep units explicit.',
         violation:
           'Subtract unrelated clock epochs and label the result as nanoseconds.',
@@ -3918,8 +3584,6 @@ const topics: Topic[] = [
         title: 'Summarize supplied samples with a median',
         definition:
           'The median of sorted samples is the middle value, or the mean of the two middle values for an even sample count.',
-        misconception:
-          'The median is always the arithmetic mean of every supplied sample.',
         rule: 'Sort a copy and define the empty-sample contract explicitly.',
         violation:
           'Treat a single unusually slow sample as the median automatically.',
@@ -3939,8 +3603,6 @@ const topics: Topic[] = [
         title: 'Compute a specified percentile rule',
         definition:
           'The nearest-rank percentile selects ceil(p times n) in a sorted one-based sample sequence.',
-        misconception:
-          'Every percentile rule always selects the same element for small samples.',
         rule: 'State the percentile convention and validate the percentile domain.',
         violation:
           'Report p99 without stating the sample count or rank convention.',
@@ -3960,8 +3622,6 @@ const topics: Topic[] = [
         title: 'Separate a work model from timing',
         definition:
           'An operation-count model describes algorithmic work without pretending to measure machine execution time.',
-        misconception:
-          'Counting loop visits directly yields universal hardware nanoseconds.',
         rule: 'Label modeled work separately from measured wall-clock results.',
         violation:
           'Turn one operation count into an invented latency measurement.',
@@ -3988,8 +3648,6 @@ const topics: Topic[] = [
         title: 'Aggregate a price level',
         definition:
           'A price-level map can aggregate positive order sizes at each price.',
-        misconception:
-          'Adding a new order always replaces all previous quantity at its price.',
         rule: 'Validate positive sizes before changing level quantity.',
         violation:
           'Add a negative order size and silently create negative displayed liquidity.',
@@ -4010,8 +3668,6 @@ const topics: Topic[] = [
         title: 'Cancel bounded level quantity',
         definition:
           'A cancellation reduces available quantity without allowing the level to become negative.',
-        misconception:
-          'Cancelling more than available quantity must create a negative order-book level.',
         rule: 'Clamp or reject over-cancellation according to the stated contract.',
         violation:
           'Subtract an unchecked cancel size from an unsigned quantity.',
@@ -4031,7 +3687,6 @@ const topics: Topic[] = [
         title: 'Select the highest bid',
         definition:
           'The best bid is the highest available bid price, which an ordered price map exposes through rbegin.',
-        misconception: 'The best bid is always the lowest bid price.',
         rule: 'Define the empty-book result before accessing the reverse iterator.',
         violation: 'Dereference rbegin on an empty book.',
         signature: 'int solve(const std::map<int, int>& bids)',
@@ -4050,8 +3705,6 @@ const topics: Topic[] = [
         title: 'Compute a best-price spread',
         definition:
           'A quoted spread is the best ask price minus the best bid price.',
-        misconception:
-          'A spread is best bid minus best ask, so ordinary positive spreads are negative.',
         rule: 'Require both sides to be present before computing the spread.',
         violation: 'Treat an absent side as a valid zero-price quote.',
         signature:
@@ -4078,8 +3731,6 @@ const topics: Topic[] = [
         title: 'Wrap a ring index',
         definition:
           'A bounded ring advances a valid index modulo its positive capacity.',
-        misconception:
-          'A ring index increases forever without wrapping or any capacity requirement.',
         rule: 'Reject zero capacity and out-of-range current indices.',
         violation: 'Evaluate modulo zero when the capacity is zero.',
         signature: 'int solve(int current, int capacity)',
@@ -4098,8 +3749,6 @@ const topics: Topic[] = [
         title: 'Reject writes into a full ring',
         definition:
           'A count-based ring is full when its occupied count equals capacity.',
-        misconception:
-          'A bounded ring can overwrite unread values and still preserve FIFO without reporting loss.',
         rule: 'Check full before writing and advance the write index only after acceptance.',
         violation:
           'Overwrite the read position without notifying the consumer of data loss.',
@@ -4119,8 +3768,6 @@ const topics: Topic[] = [
         title: 'Pop in FIFO order',
         definition:
           'A ring consumer reads at the current read index, advances it modulo capacity, and decreases the occupied count.',
-        misconception:
-          'A ring pop must return the most recently pushed item first.',
         rule: 'Reject empty pops before accessing the read slot.',
         violation: 'Advance the read index when no occupied element exists.',
         signature: 'int solve(const std::vector<int>& input)',
@@ -4139,8 +3786,6 @@ const topics: Topic[] = [
         title: 'Publish an SPSC slot safely',
         definition:
           'A single-producer single-consumer ring can use release/acquire index publication to protect payload writes and slot reuse.',
-        misconception:
-          'Atomic indices alone make arbitrary multiple-producer writes to the same slot safe.',
         rule: 'Keep exactly one writer per index and use acquire observations before consuming or reusing slots.',
         violation:
           'Reuse a slot before acquiring the consumer progress that released it.',
@@ -4167,8 +3812,6 @@ const topics: Topic[] = [
         title: 'Decode a big-endian word',
         definition:
           'A big-endian two-byte unsigned value places the high-order byte first.',
-        misconception:
-          'Big-endian byte order is identical to every host machine native byte order.',
         rule: 'Convert bytes explicitly rather than relying on host byte layout.',
         violation:
           'Reinterpret arbitrary byte storage as a host integer and assume the byte order matches.',
@@ -4188,8 +3831,6 @@ const topics: Topic[] = [
         title: 'Validate a length-prefixed frame',
         definition:
           'A frame length must fit within the available payload before parsing may read that payload.',
-        misconception:
-          'An advertised length is trustworthy whenever its header was readable.',
         rule: 'Validate both header availability and payload extent.',
         violation:
           'Read advertised bytes before checking the buffer contains them.',
@@ -4209,8 +3850,6 @@ const topics: Topic[] = [
         title: 'Detect a message sequence gap',
         definition:
           'A sequence number lets a consumer detect a missing message when the received number differs from the expected next number.',
-        misconception:
-          'A checksum alone proves that no message was dropped from the stream.',
         rule: 'Track the expected next sequence separately from payload validation.',
         violation:
           'Treat a valid payload checksum as proof of contiguous delivery.',
@@ -4230,8 +3869,6 @@ const topics: Topic[] = [
         title: 'Encode adjacent byte runs',
         definition:
           'Run-length encoding combines consecutive equal values into value/count pairs.',
-        misconception:
-          'Run-length encoding combines all occurrences of a value regardless of their position.',
         rule: 'Split a run when the byte changes and preserve input order.',
         violation:
           'Merge separated runs of the same byte across intervening values.',
@@ -4258,8 +3895,6 @@ const topics: Topic[] = [
         title: 'Compute a normalized book imbalance',
         definition:
           'A basic size imbalance is bid size minus ask size divided by their positive total size.',
-        misconception:
-          'Normalized size imbalance is independent of the supplied bid and ask sizes.',
         rule: 'Define the zero-total result and reject negative size inputs.',
         violation: 'Divide by zero when both sides have zero size.',
         signature: 'double solve(int bid_size, int ask_size)',
@@ -4278,8 +3913,6 @@ const topics: Topic[] = [
         title: 'Check an integer notional limit',
         definition:
           'Notional quantity can be represented in integer ticks using a sufficiently wide multiplication type.',
-        misconception:
-          'Assigning a narrow overflowing product to a wide integer repairs the prior overflow.',
         rule: 'Convert an operand to the wide type before multiplication.',
         violation: 'Multiply two int operands first and widen only the result.',
         signature: 'bool solve(int price_ticks, int quantity, long long limit)',
@@ -4298,8 +3931,6 @@ const topics: Topic[] = [
         title: 'Check the next net position',
         definition:
           'A position-limit check evaluates the post-trade net position against both negative and positive bounds.',
-        misconception:
-          'Only positive positions can violate a symmetric position limit.',
         rule: 'Widen before adding and compare both sides of the symmetric limit.',
         violation:
           'Apply abs to the minimum signed int and assume it is representable.',
@@ -4319,8 +3950,6 @@ const topics: Topic[] = [
         title: 'Expire an event at its deadline',
         definition:
           'An event-time contract can define expiry as now greater than or equal to the stated deadline.',
-        misconception:
-          'An event remains live forever once it was accepted before its deadline.',
         rule: 'Use supplied event-time values so boundary tests are deterministic.',
         violation:
           'Depend on wall-clock sleep timing to decide a precise expiration boundary.',
@@ -4347,8 +3976,6 @@ const topics: Topic[] = [
         title: 'Insert at both deque ends',
         definition:
           'std::deque supports insertion at both ends without requiring contiguous element storage.',
-        misconception:
-          'std::deque guarantees one contiguous allocation exactly like vector.',
         rule: 'Use iterator or indexed access rather than assuming one contiguous data pointer.',
         violation:
           'Pass an imagined deque data pointer and total size as one span.',
@@ -4368,7 +3995,6 @@ const topics: Topic[] = [
         title: 'Pop only a nonempty deque',
         definition:
           'pop_front removes the current front item from a nonempty deque.',
-        misconception: 'pop_front returns the removed value automatically.',
         rule: 'Read the front value before removing it and check empty first.',
         violation: 'Call pop_front on an empty deque.',
         signature: 'int solve(std::deque<int> values)',
@@ -4387,7 +4013,6 @@ const topics: Topic[] = [
         title: 'Use a FIFO queue adapter',
         definition:
           'std::queue exposes front removal and back insertion to enforce FIFO operations.',
-        misconception: 'std::queue removes the newest item first by default.',
         rule: 'Use queue for arrival-order processing rather than priority ordering.',
         violation:
           'Expect queue to return the maximum-priority item automatically.',
@@ -4407,8 +4032,6 @@ const topics: Topic[] = [
         title: 'Enforce an explicit queue capacity',
         definition:
           'A deque does not have an application capacity limit unless the application enforces one.',
-        misconception:
-          'std::deque automatically rejects its fourth element in every program.',
         rule: 'Check the configured capacity before accepting a queued message.',
         violation:
           'Rely on container allocation failure as the intended backpressure policy.',
@@ -4436,8 +4059,6 @@ const topics: Topic[] = [
         title: 'Call a stateful function object',
         definition:
           'A type with operator() can carry state and behave as a callable object.',
-        misconception:
-          'Only global free functions can be called with parentheses.',
         rule: 'Keep the callable state contract explicit.',
         violation:
           'Assume every callable object is stateless because it looks like a function call.',
@@ -4457,8 +4078,6 @@ const topics: Topic[] = [
         title: 'Store a type-erased callable',
         definition:
           'std::function stores a callable matching its signature and erases the concrete callable type.',
-        misconception:
-          'std::function requires all stored callbacks to have the same concrete lambda type.',
         rule: 'Choose a signature that matches the input and result contract.',
         violation: 'Assume an empty std::function is always safe to call.',
         signature: 'int solve(int value)',
@@ -4477,8 +4096,6 @@ const topics: Topic[] = [
         title: 'Handle an absent callback',
         definition:
           'A std::function can be empty and converts to bool to report whether it holds a target.',
-        misconception:
-          'An empty std::function silently returns a default result when invoked.',
         rule: 'Check the target before invoking an optional callback.',
         violation: 'Invoke an empty std::function without an absence contract.',
         signature: 'int solve(bool configured, int value)',
@@ -4497,8 +4114,6 @@ const topics: Topic[] = [
         title: 'Copy callable state deliberately',
         definition:
           'Copying a value-owned std::function target can create independently stored captured state.',
-        misconception:
-          'Copying std::function always aliases one mutable capture state regardless of its target.',
         rule: 'Distinguish value-owned captures from deliberately shared captures.',
         violation:
           'Expect independent value-captured callback copies to share every update.',
@@ -4525,8 +4140,6 @@ const topics: Topic[] = [
         title: 'Represent producer backpressure',
         definition:
           'A bounded pipeline must report or otherwise handle inability to accept more work.',
-        misconception:
-          'A full bounded queue should silently accept infinite additional work.',
         rule: 'Make the acceptance result part of the producer contract.',
         violation:
           'Return success after discarding a message without an explicit loss policy.',
@@ -4546,8 +4159,6 @@ const topics: Topic[] = [
         title: 'Apply each message identity once',
         definition:
           'An idempotency set can prevent a repeated message identity from changing state twice.',
-        misconception:
-          'Every retry must apply an event again even when its identity is unchanged.',
         rule: 'Define stable event identities and retain them for the deduplication contract duration.',
         violation:
           'Generate a new identity for each retry and call the result deduplicated.',
@@ -4567,8 +4178,6 @@ const topics: Topic[] = [
         title: 'Replay an ordered event log',
         definition:
           'Deterministic event replay applies the recorded operations in their specified order.',
-        misconception:
-          'Every sequence of noncommuting events has the same result regardless of order.',
         rule: 'Preserve event order and make each operation contract explicit.',
         violation:
           'Sort a causal event log by payload value before replaying it.',
@@ -4589,8 +4198,6 @@ const topics: Topic[] = [
         title: 'Replay only after a snapshot boundary',
         definition:
           'A snapshot boundary states which earlier event positions are already represented by the saved state.',
-        misconception:
-          'Every snapshot requires applying the entire event log again from its start.',
         rule: 'Start replay after the recorded included-event boundary.',
         violation:
           'Apply already-snapshotted events again and double count them.',
@@ -4618,8 +4225,6 @@ const topics: Topic[] = [
         title: 'Specify a total tie-break key',
         definition:
           'A deterministic priority contract can order equal-price records by an explicit secondary identity.',
-        misconception:
-          'Sorting by price alone guarantees identical tie order for all algorithms and input permutations.',
         rule: 'Include the intended tie-break field in the comparator or use a specified stable policy.',
         violation:
           'Rely on unspecified equal-key ordering as an arrival-priority guarantee.',
@@ -4639,8 +4244,6 @@ const topics: Topic[] = [
         title: 'Keep exact integer tick accounting',
         definition:
           'Integer tick accounting represents discrete monetary units exactly within its checked integer range.',
-        misconception:
-          'Binary double represents every decimal currency amount exactly.',
         rule: 'State the tick scale and keep arithmetic within the representable domain.',
         violation:
           'Mix quantities expressed in different tick scales without conversion.',
@@ -4660,8 +4263,6 @@ const topics: Topic[] = [
         title: 'Use an explicit random-engine seed',
         definition:
           'A fixed seed and a specified standard random engine provide a reproducible engine sequence.',
-        misconception:
-          'The default wall-clock seed produces an identical sequence on every run.',
         rule: 'Record the engine and seed; distribution algorithms can have separate portability contracts.',
         violation:
           'Report a seed without specifying the random engine or sampling procedure.',
@@ -4681,8 +4282,6 @@ const topics: Topic[] = [
         title: 'Apply a deduplicated bounded risk event',
         definition:
           'Combining identity deduplication and a position bound gives each accepted event one explicit state transition.',
-        misconception:
-          'A repeated accepted event must change position again to remain consistent.',
         rule: 'Deduplicate identities and reject a transition before mutating protected state.',
         violation:
           'Mutate position before checking the risk limit and forget to restore rejected changes.',
@@ -4752,24 +4351,6 @@ const unitDetails: Record<string, [string, string]> = {
   ],
 };
 
-function choice(
-  prompt: string,
-  correct: string,
-  incorrect: string,
-  explanation: string,
-  index: number,
-): Omit<ChoiceQuestion, 'id'> {
-  const choices = index % 2 === 0 ? [correct, incorrect] : [incorrect, correct];
-  return {
-    type: 'choice',
-    prompt,
-    choices,
-    answer: index % 2,
-    explanation,
-    hint: 'Follow the operation and its stated lifetime, bounds, or ordering contract.',
-  };
-}
-
 export const cppTopicStages: Record<string, string[]> = Object.fromEntries(
   topics.map((topic) => [
     `cpp-${topic.key}`,
@@ -4781,53 +4362,20 @@ export const cppTopicStages: Record<string, string[]> = Object.fromEntries(
 const authored: Skill[] = topics.flatMap((topic, topicIndex) =>
   topic.atoms.map((atom, stageIndex) => {
     const id = cppTopicStages[`cpp-${topic.key}`][stageIndex];
-    const wrongOutput = atom.output === '0' ? '1' : '0';
-    const traceChoices = [
-      atom.output,
-      wrongOutput,
-      'Compilation fails',
-      'The function never returns',
+    // Choice practice lives in knowledge points; this is the code exercise.
+    const exercises: Omit<CodeQuestion, 'id'>[] = [
+      {
+        type: 'code',
+        language: 'cpp',
+        prompt: `Implement ${atom.signature}. ${atom.definition} ${atom.rule} The contract checks below specify required inputs and expected results. Keep the supplied helper declarations and required headers; define the operation without adding main().`,
+        starterCode: atom.starterCode,
+        solution: atom.solution,
+        tests: atom.tests,
+        contract: atom.tests,
+        explanation: `${atom.definition} ${atom.rule}`,
+        hint: `${atom.rule} The lesson gives a runnable example of this exact operation.`,
+      },
     ];
-    const rotated = traceChoices
-      .slice(stageIndex)
-      .concat(traceChoices.slice(0, stageIndex));
-    const questions: (Omit<ChoiceQuestion, 'id'> | Omit<CodeQuestion, 'id'>)[] =
-      [
-        choice(
-          `Which statement correctly describes ${atom.title.toLowerCase()}?`,
-          atom.definition,
-          atom.misconception,
-          atom.definition,
-          topicIndex + stageIndex,
-        ),
-        {
-          type: 'choice',
-          prompt: 'What does this complete C++20 program print?',
-          code: atom.example,
-          choices: rotated,
-          answer: rotated.indexOf(atom.output),
-          explanation: `The operation follows its contract and prints ${JSON.stringify(atom.output)}. ${atom.definition}`,
-          hint: 'Trace the supplied arguments through the function, including the selected return path.',
-        },
-        choice(
-          'Which rule preserves the contract of this operation?',
-          atom.rule,
-          atom.violation,
-          atom.rule,
-          topicIndex + stageIndex + 1,
-        ),
-        {
-          type: 'code',
-          language: 'cpp',
-          prompt: `Implement ${atom.signature}. ${atom.definition} ${atom.rule} The contract checks below specify required inputs and expected results. Keep the supplied helper declarations and required headers; define the operation without adding main().`,
-          starterCode: atom.starterCode,
-          solution: atom.solution,
-          tests: atom.tests,
-          contract: atom.tests,
-          explanation: `${atom.definition} ${atom.rule}`,
-          hint: `${atom.rule} The lesson gives a runnable example of this exact operation.`,
-        },
-      ];
     return {
       id,
       courseId: 'cpp',
@@ -4855,10 +4403,7 @@ const authored: Skill[] = topics.flatMap((topic, topicIndex) =>
           explanation: `${atom.definition} ${atom.rule}`,
         },
       },
-      questions: questions.map((question, index) => ({
-        ...question,
-        id: `${id}-q${index + 1}`,
-      })),
+      questions: withExerciseId(id, exercises),
       flashcards: [
         {
           id: `${id}-card1`,

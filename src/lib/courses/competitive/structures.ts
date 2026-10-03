@@ -1,11 +1,5 @@
 import type { Skill } from '../../curriculum';
-import {
-  choice,
-  exercise,
-  skill,
-  withLargeCase,
-  withoutShortcuts,
-} from './shared';
+import { exercise, skill, withLargeCase, withoutShortcuts } from './shared';
 
 export const competitiveStructures: Skill[] = [
   skill(
@@ -32,37 +26,6 @@ print(history[-1])`,
 publish`,
     'Undo removes review, the latest active action; draft remains before publish.',
     [
-      choice(
-        'What remains after push("a"), push("b"), pop(), push("c")?',
-        ['["b", "c"]', '["a", "c"]', '["c", "a"]', '["a", "b", "c"]'],
-        1,
-        'pop removes b, which was pushed most recently. The surviving order is a then c.',
-        'Track the rightmost item after every operation.',
-      ),
-      choice(
-        'Which guard makes an ignored empty undo safe?',
-        [
-          'if stack: stack.pop()',
-          'if not stack: stack.pop()',
-          'stack.pop(0)',
-          'stack[-1].pop()',
-        ],
-        0,
-        'An empty list is false, so the guard prevents an invalid pop.',
-        'Only remove an item when one exists.',
-      ),
-      choice(
-        'Why is a list stack useful for n undoable commands?',
-        [
-          'It sorts each command automatically.',
-          'It limits memory to one item.',
-          'It always removes the oldest action.',
-          'Each command needs at most one amortized O(1) end operation.',
-        ],
-        3,
-        'The total number of end operations is at most n; a growing list can still require O(n) space.',
-        'Count pushes and pops rather than repeatedly scanning history.',
-      ),
       exercise(
         'Implement replay(tokens). Each string other than "#" records an action; "#" undoes the most recent recorded action, or does nothing when there is none. Return a new list of surviving strings in recording order. Preserve tokens, including duplicate actions.',
         `def replay(tokens):
@@ -122,37 +85,6 @@ print(answer)`,
     '[6, 6, 6, None, None]',
     'The value 6 resolves all three earlier pending measurements; 3 resolves none.',
     [
-      choice(
-        'For [3, 3, 5], what are the first strictly greater values to the right?',
-        ['[3, 5, None]', '[5, None, None]', '[5, 5, None]', '[5, 5, 5]'],
-        2,
-        'Neither 3 is strictly greater than the other; 5 is the first qualifying value for both.',
-        'Equality must leave an index unresolved.',
-      ),
-      choice(
-        'What does an index left on the stack after the full scan mean?',
-        [
-          'No strictly greater value occurs to its right.',
-          'It was never inspected.',
-          'It must contain the global minimum.',
-          'Its answer is the immediately next value.',
-        ],
-        0,
-        'Any later strictly greater value would have popped and answered it.',
-        'The stack holds pending answers.',
-      ),
-      choice(
-        'Why does the nested scan still take O(n) time?',
-        [
-          'Every while loop runs exactly once.',
-          'Each index is pushed once and popped at most once.',
-          'Python runs nested loops in parallel.',
-          'The values must already be sorted.',
-        ],
-        1,
-        'Charging each push and pop to its index bounds all stack operations by 2n.',
-        'Count operations over the entire run.',
-      ),
       exercise(
         'Implement later_larger(values) for a list of integers. Return one result per index: the value at the first later index with a strictly greater value, or None if none exists. Preserve values. Equal measurements do not count. A hidden case with 200,000 values must finish within 3 seconds.',
         `def later_larger(values):
@@ -220,37 +152,6 @@ print(jobs[0])`,
 5`,
     'After an inserted priority 3, the next removals are 2 and 3; 5 becomes the minimum.',
     [
-      choice(
-        'Which statement is guaranteed by a nonempty Python min-heap?',
-        [
-          'Every adjacent pair is sorted.',
-          'The largest value is at index 0.',
-          'All values are distinct.',
-          'Index 0 contains a smallest value.',
-        ],
-        3,
-        'Only the parent-child invariant is required; arbitrary adjacent positions need not be ordered.',
-        'Distinguish the root guarantee from a completely sorted sequence.',
-      ),
-      choice(
-        'What is the cost of heapify on an existing n-item list?',
-        ['O(n)', 'O(n²)', 'O(1)', 'O(n log n) in every case'],
-        0,
-        'Bottom-up heap construction is linear; pushing n items one at a time has a different bound.',
-        'Building from an existing array is not n independent insertions.',
-      ),
-      choice(
-        'A heap stores (priority, payload) and two priorities tie. What can go wrong?',
-        [
-          'The heap necessarily loses one item.',
-          'heappop returns both items together.',
-          'Python may try to compare payloads that cannot be ordered.',
-          'Tuple heaps silently switch to a max-heap.',
-        ],
-        2,
-        'Tuple comparison continues to the next field on a tie. A unique numeric counter avoids comparing payloads.',
-        'Consider what tuple comparison does after equal first fields.',
-      ),
       exercise(
         'Implement take_cheapest(stock, events). stock is a list of integer prices already available. Each event is ("add", price), which makes one more item available, or ("take",), which removes the cheapest available item and records its price, or records None when nothing is available. Return the recorded results in event order, preserving duplicates and both inputs. Use a heap: a hidden case with 100,000 items and 200,000 events must finish within 3 seconds.',
         `import heapq
@@ -339,37 +240,6 @@ print(contains("oak"))`,
 True`,
     'The path oa exists, but only oak has an end marker at its final node.',
     [
-      choice(
-        'Only "campus" was inserted. What proves that "camp" is also a stored word?',
-        [
-          'Its characters form a path.',
-          'Its final node has an explicit word-ending marker.',
-          'It is shorter than campus.',
-          'Its first letter is stored at the root.',
-        ],
-        1,
-        'A character path proves a prefix exists; the end marker proves a whole word was inserted.',
-        'A word boundary is separate from the existence of children.',
-      ),
-      choice(
-        'If occurrences ["go", "gone", "go"] are counted, how many match prefix "go"?',
-        ['1', '2', '4', '3'],
-        3,
-        'All three input occurrences have that prefix; duplicate go contributes twice under this contract.',
-        'Count occurrences, not distinct spellings.',
-      ),
-      choice(
-        'What is the expected cost of querying one length-p prefix in a built dictionary trie?',
-        [
-          'O(p)',
-          'O(number of complete words)',
-          'O(L²)',
-          'O(1) for every prefix length',
-        ],
-        0,
-        'The query follows one dictionary edge per prefix character.',
-        'No other branches need to be scanned.',
-      ),
       exercise(
         'Implement prefix_counts(words, prefixes). words and prefixes are lists of strings. Return, for each prefix in order, how many word occurrences start with it. Count repeated words separately; the empty prefix matches every occurrence, including an empty word. Matching is case-sensitive. Preserve both lists. Build one trie with a count at each node: a hidden case with 60,000 words and 60,000 prefixes must finish within 3 seconds.',
         `def prefix_counts(words, prefixes):
@@ -465,37 +335,6 @@ print(power(0, 0))`,
 1`,
     'The zero-exponent contract returns 1, and each nonzero call halves its exponent.',
     [
-      choice(
-        'Which property is necessary for a terminating recursive step?',
-        [
-          'It must print its current argument.',
-          'It must call itself twice.',
-          'It must approach a reachable base case.',
-          'It must keep every argument unchanged.',
-        ],
-        2,
-        'A decreasing measure, such as the nonnegative exponent, establishes progress toward termination.',
-        'Identify what becomes smaller.',
-      ),
-      choice(
-        'Why save half = power(base, exponent // 2) before multiplying half * half?',
-        [
-          'It changes an odd exponent into an even answer.',
-          'It computes the same smaller problem only once.',
-          'It removes the need for a base case.',
-          'It limits the base to positive numbers.',
-        ],
-        1,
-        'Reusing the returned value avoids two identical recursive subcomputations.',
-        'A stored result can be used twice without making two calls.',
-      ),
-      choice(
-        'What is the call depth when a positive exponent is halved at every step?',
-        ['O(e²)', 'O(e)', 'Exactly one call for every input', 'O(log e)'],
-        3,
-        'After about log₂(e) halvings the exponent reaches zero.',
-        'Compare repeated subtraction with repeated halving.',
-      ),
       exercise(
         'Implement binary_power(base, exponent), returning the integer base raised to exponent. base is an integer and exponent is an integer from 0 through 10⁹. Define every zero exponent, including 0⁰, as 1. Use one recursive half-power per level; do not recurse once per exponent step. The checks count Python calls: binary_power(1, 10**9) must make at least 30 recursive calls, so ** and pow alone are not accepted.',
         `def binary_power(base, exponent):
@@ -585,42 +424,6 @@ print(choices(3, 2))`,
     '[[0, 1], [0, 2], [1, 2]]',
     'The increasing next index prevents repeated choices and duplicate permutations.',
     [
-      choice(
-        'Why call path.pop() after exploring one appended choice?',
-        [
-          'To sort the completed result.',
-          'To erase every earlier decision.',
-          'To restore the parent path before trying another branch.',
-          'To count the number of solutions.',
-        ],
-        2,
-        'The next branch must inherit exactly the decisions that existed before the appended choice.',
-        'Every reversible change needs a matching undo.',
-      ),
-      choice(
-        'Why store path.copy() when a combination is complete?',
-        [
-          'To preserve a snapshot while the working path changes later.',
-          'To make the result recursive.',
-          'To reverse every combination.',
-          'To prevent integers from being comparable.',
-        ],
-        0,
-        'A copied list is a separate result; references to the same working list would all change together.',
-        'Consider aliasing when lists are mutable.',
-      ),
-      choice(
-        'A path needs three more indices, but only two remain. What should the search do?',
-        [
-          'Repeat the final index.',
-          'Record an incomplete path.',
-          'Search all permutations anyway.',
-          'Prune the branch because it cannot reach a valid result.',
-        ],
-        3,
-        'The remaining capacity proves no completion exists under the distinct-index contract.',
-        'Check feasibility before making another recursive call.',
-      ),
       exercise(
         'Implement choose_channels(n, k) for integers 0 ≤ k ≤ n ≤ 12. Return every k-element selection from indices 0 through n-1. Each selection must be increasing, and the outer list must be in lexicographic order. Choosing zero indices returns [[]]. Use backtracking and preserve a separate snapshot for each result. The checks disable itertools.combinations, permutations, and product.',
         `def choose_channels(n, k):
@@ -706,37 +509,6 @@ print(contains(tree, 7))`,
 False`,
     'Each comparison discards a whole subtree; a missing child ends an unsuccessful search.',
     [
-      choice(
-        'A node has key 8. Which requirement must its left subtree satisfy?',
-        [
-          'Only its direct child must be below 8.',
-          'Every key in the subtree must be below 8.',
-          'Every key must be above 8.',
-          'Its keys must have even parity.',
-        ],
-        1,
-        'A deeper key of 11 in the left subtree would violate the search invariant even if the direct child were 4.',
-        'The ordering rule is inherited by descendants.',
-      ),
-      choice(
-        'While finding the largest key ≤ 10, the current key is 7. What is the useful next step?',
-        [
-          'Return 7 immediately without inspecting another key.',
-          'Search only left and forget 7.',
-          'Record 7 as a candidate and search right for a better qualifying key.',
-          'Visit both entire subtrees unconditionally.',
-        ],
-        2,
-        'A larger qualifying key can only be to the right; 7 remains a fallback if none exists.',
-        'Maintain the best valid key found so far.',
-      ),
-      choice(
-        'What is the worst-case search time for an unbalanced n-node BST?',
-        ['O(n)', 'Always O(log n)', 'O(1)', 'O(n²) for one search'],
-        0,
-        'A chain of n nodes has height n, and a search can follow the entire chain.',
-        'Separate the ordering invariant from balance.',
-      ),
       exercise(
         'Implement bst_floor(tree, limit). tree is a valid strict binary search tree of distinct integer keys, represented by nested (key, left, right) tuples; an absent node is None. Return the largest stored key ≤ limit, or None if no key qualifies. Use an iterative search so a tall valid tree does not exceed Python’s recursion limit. A hidden case runs 100,000 searches in a balanced tree of about 150,000 keys and must finish within 3 seconds.',
         `def bst_floor(tree, limit):
@@ -826,37 +598,6 @@ print(sizes)`,
     '[4, 2, 1, 1]',
     'Vertex 3 finishes before vertex 1, and both child subtrees finish before root 0.',
     [
-      choice(
-        'Which traversal order directly supports a parent aggregate that depends on child results?',
-        [
-          'Random order without storage',
-          'Preorder only',
-          'Sorted vertex labels',
-          'Postorder',
-        ],
-        3,
-        'Postorder completes descendants before the parent that combines their results.',
-        'Put dependencies before the value that uses them.',
-      ),
-      choice(
-        'For a leaf, what is its subtree size under the 1 + sum(child sizes) rule?',
-        ['0', '1', 'The total number of graph edges', 'Its parent’s size'],
-        1,
-        'A leaf has no child contribution and counts itself once.',
-        'The empty sum is zero.',
-      ),
-      choice(
-        'Why use explicit completion events on a very tall tree?',
-        [
-          'They avoid a Python call stack proportional to tree height.',
-          'They make every tree balanced.',
-          'They remove all input edges.',
-          'They turn a cyclic graph into a valid tree.',
-        ],
-        0,
-        'The work is stored in an ordinary list stack; the input must still satisfy the tree contract.',
-        'An explicit stack and the interpreter call stack are different storage mechanisms.',
-      ),
       exercise(
         'Implement subtree_sizes(children). For a nonempty input, children describes a valid rooted tree on vertices 0 through len(children)-1, rooted at 0: no cycles, every other vertex has one parent, and every vertex is reachable. Return each vertex’s subtree size, including itself. An empty input returns []. Use an iterative traversal to support tall trees. Preserve children. A hidden tall tree with 100,000 vertices must finish within 3 seconds.',
         `def subtree_sizes(children):
@@ -931,42 +672,6 @@ print(neighbors[3])`,
 []`,
     'Both directions of each undirected edge are represented, and isolated vertex 3 still exists.',
     [
-      choice(
-        'How is directed edge 2 → 5 represented in an adjacency list?',
-        [
-          'Append 2 to neighbors[5] only.',
-          'Append 5 to neighbors[2] only.',
-          'Delete isolated vertices first.',
-          'Append every vertex to both lists.',
-        ],
-        1,
-        'Outgoing neighbors of 2 include 5; the reverse edge is not implied.',
-        'The arrow identifies the source and destination.',
-      ),
-      choice(
-        'Why can [[]] * n be incorrect for adjacency lists?',
-        [
-          'The outer list has length zero.',
-          'It automatically sorts edges.',
-          'It shares the same mutable inner list across vertices.',
-          'It allocates n independent empty lists.',
-        ],
-        2,
-        'List repetition repeats references. A comprehension evaluates [] separately for every vertex.',
-        'Think about which list append changes.',
-      ),
-      choice(
-        'A graph has n=5 and only edge (0, 1). Which vertices must its representation include?',
-        [
-          'Only 0',
-          'Only 0 and 1',
-          'Only vertices of odd degree',
-          'All five vertices, including 2, 3, and 4',
-        ],
-        3,
-        'Isolated vertices remain part of the graph even though they have no neighbor entries.',
-        'The vertex count is independent of the edge list.',
-      ),
       exercise(
         'Implement make_neighbors(n, edges, directed=False). n is nonnegative; each edge is a (u, v) pair of valid vertex indices 0 through n-1. Return n independent adjacency lists in input-edge order. Directed edges add v at u only; undirected edges add both directions. Preserve parallel edges, and store an undirected self-loop twice. Preserve edges. With n=0, edges is empty.',
         `def make_neighbors(n, edges, directed=False):
@@ -1034,42 +739,6 @@ print(sorted(seen))`,
     '[0, 1, 2, 3]',
     'The cycle through 0, 1, and 2 terminates because discovered vertices are not pushed again; vertex 4 is unreachable.',
     [
-      choice(
-        'When should this reachability search mark a newly found neighbor?',
-        [
-          'Only after every graph vertex is visited.',
-          'Whenever it is popped, allowing duplicate pushes.',
-          'When it is pushed for the first time.',
-          'Only when it has no outgoing edges.',
-        ],
-        2,
-        'Marking on discovery prevents multiple pending copies of the same vertex.',
-        'Several edges may discover the same neighbor before it is processed.',
-      ),
-      choice(
-        'What does DFS from one source guarantee?',
-        [
-          'Discovery of every vertex reachable from that source.',
-          'The minimum weighted path to every vertex.',
-          'An ordering that always obeys all directed edges.',
-          'That the entire graph is connected.',
-        ],
-        0,
-        'DFS explores all reachable outgoing edges, but disconnected or directionally unreachable vertices stay unseen.',
-        'Separate reachability from shortest-path and ordering problems.',
-      ),
-      choice(
-        'Why is a visited set necessary when the graph contains 0 → 1 → 0?',
-        [
-          'It forces vertex labels to be sorted.',
-          'It removes the cycle from the input.',
-          'It changes edges to undirected edges.',
-          'It prevents scheduling already discovered vertices forever.',
-        ],
-        3,
-        'The search may scan the back edge, but it does not push vertex 0 again.',
-        'An edge to a seen vertex creates no new work.',
-      ),
       exercise(
         'Implement reachable_count(graph, start). graph is an adjacency list on vertices 0 through len(graph)-1; every neighbor index is valid and edges may be directed, repeated, or cyclic. For a nonempty graph, start is valid. Return how many distinct vertices are reachable from start, including start. For graph=[] return 0. Preserve graph and use an iterative stack. A hidden graph with 200,000 vertices must finish within 3 seconds.',
         `def reachable_count(graph, start):
@@ -1146,42 +815,6 @@ print(distance)`,
     '[0, 1, 1, 2, -1]',
     'Both distance-one vertices are processed before distance-two vertex 3; isolated vertex 4 remains unreachable.',
     [
-      choice(
-        'When does ordinary BFS guarantee shortest-path distances?',
-        [
-          'When vertices have alphabetical labels.',
-          'When every edge has the same unit cost.',
-          'For arbitrary negative edge weights.',
-          'Only when every vertex has two neighbors.',
-        ],
-        1,
-        'BFS orders paths by edge count, which matches cost when every edge contributes one unit.',
-        'Ask whether one extra edge always adds the same cost.',
-      ),
-      choice(
-        'Which deque operations implement the queue used by BFS?',
-        [
-          'append and pop from the right',
-          'appendleft and popleft only',
-          'sort and pop',
-          'append on the right and popleft on the left',
-        ],
-        3,
-        'The oldest queued vertex leaves first, while newly discovered vertices join the back.',
-        'First in should be first out.',
-      ),
-      choice(
-        'Why assign a neighbor’s distance before enqueueing it?',
-        [
-          'It records discovery and prevents duplicate queue entries.',
-          'It makes the graph acyclic.',
-          'It guarantees all vertices are reachable.',
-          'It sorts every neighbor list.',
-        ],
-        0,
-        'Other edges can now see that the neighbor was already discovered.',
-        'Use the distance array as the visited marker.',
-      ),
       exercise(
         'Implement hop_distances(graph, source). graph is an adjacency list with valid vertex indices 0 through len(graph)-1; edges may be directed, cyclic, repeated, or self-loops. Every edge costs one hop. For a nonempty graph source is valid. Return the fewest-hop distance to each vertex, using -1 for unreachable vertices. An empty graph returns []. Preserve graph. A hidden graph with 100,000 vertices must finish within 3 seconds.',
         `from collections import deque
@@ -1273,32 +906,6 @@ print(sizes)`,
     '[3, 2, 1]',
     'The scan starts searches at (0, 0), (1, 3), and (2, 0). Each search claims its whole island, so later cells of the same island are skipped.',
     [
-      choice(
-        'In the grid [[1, 0], [0, 1]], how many four-direction islands are there?',
-        ['1', '2', '4', '0'],
-        1,
-        'The two land cells touch only at a corner, which is not a move, so each is its own island.',
-        'Diagonal contact is not an edge.',
-      ),
-      choice(
-        'Why does the scan share one discovered set across all flood fills?',
-        [
-          'So the largest island is always found first.',
-          'So diagonal cells join the same island.',
-          'So each island is counted once, when the scan first reaches it.',
-          'So the grid can be modified in place.',
-        ],
-        2,
-        'Cells claimed by an earlier search are skipped, so only the first cell the scan meets on each island starts a search.',
-        'Ask what stops a second search from starting on the same island.',
-      ),
-      choice(
-        'What is the running time of the shared-discovery scan on an R-by-C grid?',
-        ['O(R + C)', 'O(RC)', 'O((RC)²)', 'O(RC log RC)'],
-        1,
-        'Every cell is scanned once and discovered at most once, and each discovery checks at most four neighbors.',
-        'Count how often one cell can be discovered.',
-      ),
       exercise(
         'Implement island_summary(grid). grid is [] or a rectangular list of equal-length rows containing 0 (water) and 1 (land). An island is a maximal group of land cells joined by up, down, left, or right moves; diagonal contact does not join cells. Return (island_count, largest_island_size), or (0, 0) when there is no land. Preserve grid. Share one discovered set across iterative flood fills: a hidden 400-by-400 grid must finish within 3 seconds.',
         `def island_summary(grid):
@@ -1400,42 +1007,6 @@ print(order if len(order) == n else None)`,
     '[0, 1, 2, 3]',
     'Vertices 0 and 1 are initially ready; vertex 2 must wait for both prerequisites.',
     [
-      choice(
-        'Under edge u → v meaning a prerequisite, what must every topological order satisfy?',
-        [
-          'v must precede u.',
-          'u and v must be adjacent.',
-          'u must precede v.',
-          'Vertices must be sorted numerically.',
-        ],
-        2,
-        'Each directed edge imposes an earlier-to-later ordering constraint.',
-        'Read the edge as prerequisite followed by dependent.',
-      ),
-      choice(
-        'Kahn’s algorithm processes only three of five vertices. What should a complete-schedule function return?',
-        [
-          'The three-vertex prefix as a successful schedule.',
-          'None, because a cycle prevents a full order.',
-          'A duplicate of the last processed vertex.',
-          'The remaining vertices in arbitrary order.',
-        ],
-        1,
-        'A partial schedule does not satisfy the requirement to order all vertices.',
-        'Compare the processed count with n.',
-      ),
-      choice(
-        'Why should the initial ready queue inspect every vertex?',
-        [
-          'To include isolated vertices and zero-indegree vertices in all components.',
-          'To make every vertex have indegree zero.',
-          'To reverse all dependency edges.',
-          'To ensure the answer is unique.',
-        ],
-        0,
-        'A topological order covers the whole graph, including disconnected components.',
-        'A single chosen source does not represent the entire schedule.',
-      ),
       exercise(
         'Implement dependency_order(n, edges). n is nonnegative, and each (u, v) pair uses valid vertices 0 through n-1 and requires u before v. Return any topological order containing every vertex exactly once, or None if a directed cycle exists. For n=0 return []. Keep isolated vertices; parallel edges and self-loops are allowed. Preserve edges. A hidden graph with 100,000 vertices and 400,000 edges must finish within 3 seconds.',
         `from collections import deque
@@ -1544,44 +1115,8 @@ print(distance)`,
     '[0, 3, 2, 7, None]',
     'The indirect route through 2 improves vertex 1 from cost 9 to 3, making the old heap entry stale.',
     [
-      choice(
-        'Which edge weights satisfy this Dijkstra contract?',
-        [
-          'Only strictly positive weights',
-          'Arbitrary positive and negative weights',
-          'Only weights equal to one',
-          'Nonnegative weights, including zero',
-        ],
-        3,
-        'Zero is permitted; negative edges invalidate the usual minimum-distance argument.',
-        'A route extension must never reduce its cost by a negative edge.',
-      ),
-      choice(
-        'The heap pops (12, u), but distance[u] is now 7. What should the algorithm do?',
-        [
-          'Restore distance[u] to 12.',
-          'Skip this stale entry.',
-          'Delete every edge leaving u.',
-          'Mark every unreachable vertex as 12.',
-        ],
-        1,
-        'A better entry already represents the current route; scanning from the stale distance is unnecessary.',
-        'Compare a heap snapshot with the current distance array.',
-      ),
-      choice(
-        'What does relaxing edge u → v with weight w attempt?',
-        [
-          'Improve v with distance[u] + w.',
-          'Replace u with the greatest outgoing weight.',
-          'Decrease every graph weight by w.',
-          'Require u and v to have equal distances.',
-        ],
-        0,
-        'A known route to u can be extended by the edge cost to form a candidate route to v.',
-        'A path’s cost is the sum of its edge weights.',
-      ),
       exercise(
-        'Implement shortest_costs(n, edges, source). n is positive; vertices are 0 through n-1, source is valid, and edges contains directed (u, v, weight) triples with valid endpoints and integer weights. Return minimum costs from source, using None for unreachable vertices. Parallel edges, self-loops, and zero-weight cycles are allowed. Raise ValueError if any weight is negative, even in an unreachable component. Preserve edges. A hidden graph with 50,000 vertices and 250,000 edges must finish within 3 seconds.',
+        'Implement shortest_costs(n, edges, source). n is positive; vertices are 0 through n-1, source is valid, and edges contains directed (u, v, weight) triples with valid endpoints and integer weights. Return minimum costs from source, using None for unreachable vertices. Parallel edges, self-loops, and zero-weight cycles are allowed. Raise ValueError if any weight is negative, even in an unreachable component. Preserve edges. A hidden graph with 100,000 vertices and 500,000 edges must finish within 3 seconds.',
         `import heapq
 
 def shortest_costs(n, edges, source):
@@ -1621,15 +1156,15 @@ except ValueError:
 else:
     assert False, "Reject every negative edge, including unreachable ones."
 assert edges == [(0, 1, 9), (0, 2, 2), (2, 1, 1), (1, 3, 4), (2, 3, 8)], "Preserve edges."`,
-          `_u = _numbers(150000, 0, 49999, 191)
-_v = _numbers(150000, 0, 49999, 192)
-_w = _numbers(150000, 0, 10**6, 193)
-_edges = [(_u[i], _v[i], _w[i]) for i in range(150000)]
-_edges += [(i + 1, i, 1) for i in range(49998, -1, -1)]
-_edges += [(i, i + 1, 3) for i in range(49998, -1, -1)]
-_result, _seconds = _timed(shortest_costs, 50000, _edges, 0)
-assert _checksum(_result) == 1645433355848269451, "The 50,000-vertex graph returned wrong costs."
-_check_time(_seconds, "The 50,000-vertex graph", "Settle vertices in heap order instead of relaxing every edge in rounds.")`,
+          `_u = _numbers(300000, 0, 99999, 191)
+_v = _numbers(300000, 0, 99999, 192)
+_w = _numbers(300000, 0, 10**6, 193)
+_edges = [(_u[i], _v[i], _w[i]) for i in range(300000)]
+_edges += [(i + 1, i, 1) for i in range(99998, -1, -1)]
+_edges += [(i, i + 1, 3) for i in range(99998, -1, -1)]
+_result, _seconds = _timed(shortest_costs, 100000, _edges, 0)
+assert _checksum(_result) == 2066851167642563454, "The 100,000-vertex graph returned wrong costs."
+_check_time(_seconds, "The 100,000-vertex graph", "Settle vertices in heap order instead of relaxing every edge in rounds.")`,
         ),
         'Validating all edges establishes the nonnegative precondition before exploration. Heap entries propose routes; the distance array decides which proposals are still current.',
         'Build outgoing weighted lists, reject negative weights, then relax from matching minimum heap entries.',
@@ -1681,42 +1216,6 @@ print(counts)`,
     '[4, 3, 2, 2, 2]',
     'The first three edges merge separate sets; the final two create no new connection between components.',
     [
-      choice(
-        'When should adding an undirected edge decrease the DSU component count?',
-        [
-          'Whenever the endpoints have different numeric labels.',
-          'For every edge, including repeated edges.',
-          'Only when the endpoint representatives differ.',
-          'Only when the edge has positive weight.',
-        ],
-        2,
-        'Different representatives identify separate sets; an internal edge does not merge components.',
-        'Compare roots rather than endpoint labels.',
-      ),
-      choice(
-        'What does union by size attach?',
-        [
-          'The smaller set’s root below the larger set’s root.',
-          'Every member directly to the smallest vertex label.',
-          'The larger root below a random non-root vertex.',
-          'A new copy of the entire smaller set.',
-        ],
-        0,
-        'Attaching roots preserves the partition and avoids copying every member.',
-        'Size is a property of the representative set.',
-      ),
-      choice(
-        'Which question is ordinary DSU designed to answer?',
-        [
-          'What is the minimum directed route cost?',
-          'What is the topological order?',
-          'How many hops connect two vertices?',
-          'Do two vertices belong to the same undirected component?',
-        ],
-        3,
-        'Equal representatives establish component membership, without recording a particular route.',
-        'A partition does not store ordered paths.',
-      ),
       exercise(
         'Implement component_counts(n, edges). n is nonnegative and starts with n isolated vertices, numbered 0 through n-1. edges is a sequence of undirected (u, v) connections with valid endpoints; when n=0 it is empty. Return the number of connected components after each edge, in input order. Repeated edges and self-loops must not decrease the count again. Preserve edges. Use iterative find, path compression, and union by size. A hidden case with 100,000 vertices and 200,000 edges must finish within 3 seconds.',
         `def component_counts(n, edges):
@@ -1807,42 +1306,6 @@ print(cost if chosen == 3 else None)`,
     '7',
     'Weights 1, 2, and 4 connect all four vertices; heavier edges would be unnecessary or create cycles.',
     [
-      choice(
-        'Why does Kruskal reject an edge whose endpoints already share a DSU root?',
-        [
-          'Its weight must be negative.',
-          'Adding it would create a cycle in the chosen forest.',
-          'It must be the most expensive graph edge.',
-          'It would make a vertex isolated.',
-        ],
-        1,
-        'The chosen forest already has a path between those endpoints, so another edge closes a cycle.',
-        'DSU tracks connectivity of the accepted edges.',
-      ),
-      choice(
-        'What does a minimum spanning tree minimize?',
-        [
-          'The shortest route from vertex 0 to every vertex separately.',
-          'The number of input edges.',
-          'The total weight of an acyclic network connecting every vertex.',
-          'The largest vertex label.',
-        ],
-        2,
-        'The objective is the sum of selected network edges, not every source-to-vertex path.',
-        'Distinguish a connection objective from a route objective.',
-      ),
-      choice(
-        'Kruskal accepts fewer than n-1 edges after considering all edges, with n > 1. What follows?',
-        [
-          'The graph is disconnected, so no spanning tree exists.',
-          'The accepted prefix is necessarily a spanning tree.',
-          'Negative edges must have appeared.',
-          'All equal-weight edges must be accepted.',
-        ],
-        0,
-        'If the selected forest cannot merge to one component, some vertices cannot be connected by the input graph.',
-        'A tree on n vertices needs n-1 successful merges.',
-      ),
       exercise(
         'Implement minimum_link_cost(n, edges). n is nonnegative; edges contains undirected (u, v, weight) triples with valid vertex indices 0 through n-1 and integer weights. Return the minimum total cost of a spanning tree, or None if the graph is disconnected. For n=0 or n=1 return 0. Parallel edges, self-loops, ties, and negative weights are allowed. Preserve edges. Use Kruskal with DSU. A hidden graph with 50,000 vertices and 200,000 edges must finish within 3 seconds.',
         `def minimum_link_cost(n, edges):

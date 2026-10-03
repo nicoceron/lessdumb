@@ -10,10 +10,13 @@ import { earnedXp, lessonXp, REVIEW_XP } from '../src/lib/xp';
 import { signUp } from './helpers/accounts';
 import {
   answerChoice,
+  answeredQuestions,
   answerShown,
   choiceButton,
   continueLesson,
+  currentQuestion,
   feedback,
+  openNextTask,
   prompt,
   shownQuestion,
 } from './helpers/lesson';
@@ -58,11 +61,28 @@ function markers(page: Page, name = 'Lesson progress') {
   return page.getByRole('list', { name, exact: true });
 }
 
+/** A knowledge point's section: its heading, teaching, and questions. */
+function pointSection(page: Page, title: string) {
+  return page.getByRole('region', { name: title, exact: true });
+}
+
+async function noHorizontalScroll(page: Page) {
+  const fits = () =>
+    page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+  expect(await fits()).toBe(true);
+  // Linux CI fonts are wider than macOS ones; checking a narrower phone too
+  // catches overflow that only shows up on another platform's fonts.
+  const viewport = page.viewportSize()!;
+  await page.setViewportSize({ width: 320, height: viewport.height });
+  expect(await fits()).toBe(true);
+  await page.setViewportSize(viewport);
+}
+
 const print = skillById['print-output'];
 const [firstPoint, secondPoint] = print.knowledgePoints!;
 const printCode = print.questions.find((q) => q.type === 'code')!;
 
-test('the introduction and worked example teach without awarding evidence, XP, or cards', async ({
+test('a lesson opens as one page: introduction, first point, worked example, and its first question, without awarding anything for reading', async ({
   page,
 }) => {
   const baseline = await register(page);
@@ -80,15 +100,17 @@ test('the introduction and worked example teach without awarding evidence, XP, o
     secondPoint.title,
     'Write the code',
   ]);
-  await expect(page.getByText('A MOMENT OF RETRIEVAL')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /hint/i })).toHaveCount(0);
-  expect((await cloud(page)).progress).toEqual(baseline.progress);
-
-  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
   await expect(markers(page).locator('[aria-current="step"]')).toContainText(
     firstPoint.title,
   );
-  const teaching = page.locator('.lesson-point');
+  // No intro screen, no wizard: the first question is already on the page,
+  // under the first point's explanation and worked example.
+  await expect(
+    page.getByRole('button', { name: 'Start lesson', exact: true }),
+  ).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /slide/i })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /hint/i })).toHaveCount(0);
+  const teaching = pointSection(page, firstPoint.title);
   await expect(teaching.getByRole('heading', { level: 2 })).toHaveText(
     firstPoint.title,
   );
@@ -96,41 +118,81 @@ test('the introduction and worked example teach without awarding evidence, XP, o
     teaching.getByText(firstPoint.explanation[0], { exact: true }),
   ).toBeVisible();
   await expect(
+    teaching.getByRole('heading', { name: 'Worked example', exact: true }),
+  ).toBeVisible();
+  await expect(
     teaching.getByText(firstPoint.example.explanation, { exact: true }),
   ).toBeVisible();
+  await expect(teaching.locator('.question-prompt')).toHaveText(
+    firstPoint.questions[0].prompt,
+  );
   await expect(prompt(page)).toHaveText(firstPoint.questions[0].prompt);
   await expect(
     page.getByRole('button', { name: 'Submit', exact: true }),
   ).toBeDisabled();
+  // Later points are added as the learner reaches them.
+  await expect(pointSection(page, secondPoint.title)).toHaveCount(0);
 
-  await expect
-    .poll(async () => (await cloud(page)).progress.skills[print.id]?.lessonSeen)
-    .toBe(true);
+  // Reading records nothing: no attempt, XP, card, or "seen" flag.
   const afterReading = await cloud(page);
-  expect(afterReading.progress.attempts).toEqual([]);
-  expect(afterReading.progress.totalXp).toBe(0);
+  expect(afterReading.progress).toEqual(baseline.progress);
   expect(afterReading.cards).toEqual([]);
-  // With no answers yet, a reload opens the introduction again.
   await page.reload();
   await expect(introduction).toBeVisible();
+  await expect(prompt(page)).toHaveText(firstPoint.questions[0].prompt);
   expect((await cloud(page)).progress.attempts).toEqual([]);
 });
 
-test('two correct answers pass a point; three misses fail the lesson, keep nothing, and the retry starts at the first point', async ({
+test('answered questions and teaching stay on the page; a passed point appends the next; three misses fail the lesson below everything', async ({
   page,
 }) => {
   test.setTimeout(90_000);
   await register(page);
   await page.goto(`/learn?skill=${print.id}&mode=learn`);
-  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
+  const first = pointSection(page, firstPoint.title);
   const seen: string[] = [];
   for (let index = 0; index < 2; index++) {
     const question = await answerShown(page, firstPoint.questions);
     seen.push(question.id);
     await expect(feedback(page)).toContainText('Correct');
+    // The explanation and worked example stay visible after answering.
+    await expect(
+      first.getByText(firstPoint.explanation[0], { exact: true }),
+    ).toBeVisible();
+    await expect(
+      first.getByText(firstPoint.example.explanation, { exact: true }),
+    ).toBeVisible();
     await continueLesson(page);
+    // Every earlier answer stays, frozen with its result and explanation.
+    await expect(answeredQuestions(page)).toHaveCount(index + 1);
+    const answered = answeredQuestions(page).nth(index);
+    await expect(answered).toContainText(question.explanation);
+    await expect(answered.getByText('Your answer')).toBeVisible();
+    await expect(answered.getByRole('button', { name: 'Submit' })).toHaveCount(
+      0,
+    );
   }
   expect(new Set(seen).size).toBe(2);
+  await expect(first.getByText('Passed', { exact: true })).toBeVisible();
+  await expect(first.locator('.question-paper')).toHaveCount(2);
+  // The next point's section is appended below the passed one, and its
+  // first question is the one being answered now.
+  const second = pointSection(page, secondPoint.title);
+  await expect(second).toBeVisible();
+  await expect(second.getByRole('heading', { level: 2 })).toBeFocused();
+  await expect(
+    second.getByText(secondPoint.explanation[0], { exact: true }),
+  ).toBeVisible();
+  await expect(second.locator('[data-state="current"]')).toHaveCount(1);
+  // Measure both sections in one frame: the page may still be scrolling to
+  // the new point, so two separate measurements can disagree.
+  const appendedBelow = await page.evaluate(
+    ([above, below]) =>
+      below.getBoundingClientRect().top >=
+      above.getBoundingClientRect().bottom - 1,
+    [(await first.elementHandle())!, (await second.elementHandle())!],
+  );
+  expect(appendedBelow).toBe(true);
   await expect(markers(page).getByRole('listitem').first()).toContainText(
     'complete',
   );
@@ -148,13 +210,31 @@ test('two correct answers pass a point; three misses fail the lesson, keep nothi
   for (let miss = 1; miss <= 3; miss++) {
     await answerShown(page, secondPoint.questions, false);
     await expect(feedback(page)).toContainText('Incorrect');
-    await continueLesson(page);
+    if (miss < 3) await continueLesson(page);
   }
+  // The attempt has ended: no Continue, and the result sits below all of
+  // the lesson's content, which stays on the page.
   await expect(
-    page.getByRole('heading', {
-      name: 'Lesson failed — you’ll see it again later',
-    }),
+    page.getByRole('button', { name: 'Continue', exact: true }),
+  ).toHaveCount(0);
+  const failure = page.getByRole('region', {
+    name: 'Lesson failed — you’ll see it again later',
+    exact: true,
+  });
+  await expect(failure).toBeVisible();
+  await expect(failure).toBeFocused();
+  await expect(page.locator('.question-paper')).toHaveCount(5);
+  await expect(
+    first.getByText(firstPoint.example.explanation, { exact: true }),
   ).toBeVisible();
+  const lastQuestion = await page
+    .locator('.question-paper')
+    .last()
+    .boundingBox();
+  const failureBox = await failure.boundingBox();
+  expect(failureBox!.y).toBeGreaterThan(
+    lastQuestion!.y + lastQuestion!.height - 1,
+  );
   await expect
     .poll(async () => (await cloud(page)).progress.attempts.length)
     .toBe(5);
@@ -172,22 +252,58 @@ test('two correct answers pass a point; three misses fail the lesson, keep nothi
   expect(saved.cards.every((card) => card.kind === 'mistake')).toBe(true);
   expect(saved.cards).toHaveLength(3);
 
-  await page.getByRole('link', { name: 'Back to Today' }).click();
+  await failure.getByRole('link', { name: 'Back to Today' }).click();
   await expect(page).toHaveURL(`${baseURL}/`);
   await page.goto(`/learn?skill=${print.id}&mode=learn`);
-  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
   await expect(markers(page).locator('[aria-current="step"]')).toContainText(
     firstPoint.title,
   );
+  await expect(answeredQuestions(page)).toHaveCount(0);
   // The retry begins with a variant of the first point not seen before.
   const retry = await answerShown(page, firstPoint.questions);
   expect(seen).not.toContain(retry.id);
 });
 
-test('the lesson page works by keyboard on a phone, and scenario examples never pretend to be code', async ({
+test('a reload mid-attempt rebuilds passed points and the current question without inventing earlier answers', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+  let state = createState();
+  // The first point passed, and one correct answer on the second.
+  for (const questionId of lessonAnswerIds(print.id).slice(0, 3))
+    state = recordLearningAnswer(state, {
+      skillId: print.id,
+      questionId,
+      correct: true,
+      mode: 'learn',
+    });
+  await register(page, print.courseId, state);
+  await page.goto(`/learn?skill=${print.id}&mode=learn`);
+  const first = pointSection(page, firstPoint.title);
+  const second = pointSection(page, secondPoint.title);
+  await expect(first.getByText('Passed', { exact: true })).toBeVisible();
+  await expect(first).toContainText(firstPoint.explanation[0]);
+  await expect(first).toContainText(firstPoint.example.explanation);
+  await expect(second.getByText('Passed', { exact: true })).toHaveCount(0);
+  await expect(second).toContainText(secondPoint.example.explanation);
+  await expect(second).toContainText(
+    'Answered earlier in this attempt: 1 correct, 0 incorrect.',
+  );
+  // Only the current question is shown; past answers are not reconstructed.
+  await expect(answeredQuestions(page)).toHaveCount(0);
+  await expect(second.locator('[data-state="current"]')).toContainText(
+    'Question 2',
+  );
+  await shownQuestion(page, secondPoint.questions);
+  await expect(pointSection(page, 'Write the code')).toHaveCount(0);
+  await expect(markers(page).locator('[aria-current="step"]')).toContainText(
+    secondPoint.title,
+  );
+});
+
+test('the lesson page works by keyboard on a 375px phone, and scenario examples never pretend to be code', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 812 });
   const skill = skillById['ds-workloads'];
   const point = skill.knowledgePoints![0];
   expect(point.example.kind).toBe('text');
@@ -198,12 +314,9 @@ test('the lesson page works by keyboard on a phone, and scenario examples never 
       .getByRole('region', { name: 'Introduction', exact: true })
       .getByText(skill.lesson.paragraphs[0], { exact: true }),
   ).toBeVisible();
-  const start = page.getByRole('button', { name: 'Start lesson', exact: true });
-  await start.focus();
-  await start.press('Enter');
 
   // The worked scenario is text with a decision, not a program to run.
-  const teaching = page.locator('.lesson-point');
+  const teaching = pointSection(page, point.title);
   await expect(teaching.getByRole('heading', { level: 2 })).toHaveText(
     point.title,
   );
@@ -218,21 +331,11 @@ test('the lesson page works by keyboard on a phone, and scenario examples never 
   await expect(page.getByRole('button', { name: 'Run & check' })).toHaveCount(
     0,
   );
-  // The explanation folds and unfolds from the keyboard.
-  const toggle = teaching.getByRole('button', {
-    name: 'Explanation and worked example',
-  });
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  await toggle.focus();
-  await toggle.press('Enter');
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  await toggle.press('Enter');
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
+  // Nothing folds away: there is no toggle around the teaching.
+  await expect(
+    page.getByRole('button', { name: 'Explanation and worked example' }),
+  ).toHaveCount(0);
+  await noHorizontalScroll(page);
 
   // Lettered choices are reachable, named, and selectable from the keyboard.
   const question = (await shownQuestion(
@@ -252,14 +355,13 @@ test('the lesson page works by keyboard on a phone, and scenario examples never 
     .getByRole('button', { name: 'Submit', exact: true })
     .press('Enter');
   await expect(feedback(page)).toContainText('Correct');
+  // Feedback is announced, and focus stays on the button, now Continue.
   await expect(
-    page.getByRole('button', { name: 'Continue', exact: true }),
-  ).toBeVisible();
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
+    currentQuestion(page).locator('.question-feedback'),
+  ).toHaveAttribute('aria-live', 'polite');
+  const next = page.getByRole('button', { name: 'Continue', exact: true });
+  await expect(next).toBeFocused();
+  await noHorizontalScroll(page);
   await expect
     .poll(async () => (await cloud(page)).progress.attempts.length)
     .toBe(1);
@@ -271,21 +373,23 @@ test('the lesson page works by keyboard on a phone, and scenario examples never 
   expect(after.progress.skills[skill.id].questionIds).toEqual([]);
   expect(after.cards).toEqual([]);
 
-  // A programming lesson keeps its markers and choices inside the screen.
+  // Continue appends the next question and moves focus to its prompt.
+  await next.press('Enter');
+  await expect(prompt(page)).toBeFocused();
+  await expect(answeredQuestions(page)).toHaveCount(1);
+  await expect(
+    teaching.getByText(point.example.output, { exact: true }),
+  ).toBeVisible();
+  await noHorizontalScroll(page);
+
+  // A programming lesson keeps its markers, code, and choices inside the screen.
   await page.goto(`/learn?skill=${print.id}&mode=learn`);
-  await page
-    .getByRole('button', { name: 'Start lesson', exact: true })
-    .press('Enter');
   await expect(markers(page)).toBeVisible();
   await expect(prompt(page)).toBeVisible();
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
+  await noHorizontalScroll(page);
 });
 
-test('a due review asks a fresh variant of each point plus the code exercise and strengthens memory once', async ({
+test('a due review stacks a fresh variant of each point plus the code exercise, offers rereading after each answer, and strengthens memory once', async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -301,7 +405,11 @@ test('a due review asks a fresh variant of each point plus the code exercise and
     markers(page, 'Review progress').getByRole('listitem'),
   ).toContainText(['Question 1', 'Question 2', 'Code']);
   // Reviews show no lesson material.
-  await expect(page.locator('.lesson-point')).toHaveCount(0);
+  await expect(page.locator('.lesson-step')).toHaveCount(0);
+  await expect(
+    page.getByRole('region', { name: 'Introduction', exact: true }),
+  ).toHaveCount(0);
+  await expect(page.getByText(firstPoint.explanation[0])).toHaveCount(0);
 
   const candidates = [
     ...firstPoint.questions,
@@ -309,6 +417,10 @@ test('a due review asks a fresh variant of each point plus the code exercise and
     printCode,
   ];
   for (let index = 0; index < 3; index++) {
+    // Rereading is offered only after answering, so recall comes first.
+    await expect(
+      currentQuestion(page).getByRole('button', { name: /^Reread:/ }),
+    ).toHaveCount(0);
     const question = await answerShown(page, candidates);
     // Reviews draw point variants the lesson did not use.
     if (question.type === 'choice')
@@ -322,7 +434,29 @@ test('a due review asks a fresh variant of each point plus the code exercise and
       expect(saved.progress.skills[print.id].memory).toEqual(mastered.memory);
       expect(saved.progress.skills[print.id].dueAt).toBe(mastered.dueAt);
       expect(saved.progress.totalXp).toBe(state.progress.totalXp);
+      // The answered question offers its point's explanation and example,
+      // collapsed until asked for.
+      const point = [firstPoint, secondPoint].find((item) =>
+        item.questions.some((candidate) => candidate.id === question.id),
+      )!;
+      const reread = currentQuestion(page).getByRole('button', {
+        name: `Reread: ${point.title}`,
+        exact: true,
+      });
+      await expect(reread).toHaveAttribute('aria-expanded', 'false');
+      await reread.press('Enter');
+      await expect(reread).toHaveAttribute('aria-expanded', 'true');
+      await expect(
+        currentQuestion(page).getByText(point.example.explanation, {
+          exact: true,
+        }),
+      ).toBeVisible();
       await continueLesson(page);
+      // The answered question stays above the next one.
+      await expect(answeredQuestions(page)).toHaveCount(index + 1);
+      await expect(answeredQuestions(page).nth(index)).toContainText(
+        question.explanation,
+      );
     } else {
       await expect(feedback(page)).toContainText(
         `Review complete · +${earnedXp(REVIEW_XP, 0, true)} XP`,
@@ -338,6 +472,7 @@ test('a due review asks a fresh variant of each point plus the code exercise and
       expect(saved.cards).toEqual(state.cards);
     }
   }
+  await expect(page.locator('.question-paper')).toHaveCount(3);
   const reviewedPoints = (await cloud(page)).progress.attempts
     .slice(lessonQuestions.length, lessonQuestions.length + 2)
     .map((attempt) => attempt.questionId.split('-q')[0]);
@@ -346,7 +481,7 @@ test('a due review asks a fresh variant of each point plus the code exercise and
   );
 });
 
-test('initial teaching for the next unseen skill does not turn its first answer into practice without a lesson', async ({
+test('a completed lesson ends with a summary, and the next task opens as a fresh page whose first answer counts toward its first point', async ({
   page,
 }) => {
   const skill = skillById['ds-workloads'];
@@ -367,7 +502,7 @@ test('initial teaching for the next unseen skill does not turn its first answer 
   await page.goto(
     `/learn?skill=${skill.id}&mode=learn&course=${skill.courseId}`,
   );
-  // An attempt in progress resumes at its current point, not the introduction.
+  // An attempt in progress resumes at its current point.
   await expect(markers(page).locator('[aria-current="step"]')).toContainText(
     lastPoint.title,
   );
@@ -376,6 +511,19 @@ test('initial teaching for the next unseen skill does not turn its first answer 
   await expect(feedback(page)).toContainText(
     `Lesson complete · +${lessonReward} XP`,
   );
+  // The summary follows the content; there is nothing left to continue.
+  const summary = page.getByRole('region', {
+    name: 'Lesson complete',
+    exact: true,
+  });
+  await expect(summary).toContainText(`You earned ${lessonReward} XP.`);
+  await expect(summary).toBeFocused();
+  await expect(
+    page.getByRole('button', { name: 'Continue', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    pointSection(page, lastPoint.title).getByText('Passed', { exact: true }),
+  ).toBeVisible();
   await expect
     .poll(async () => (await cloud(page)).progress.totalXp)
     .toBe(lessonReward);
@@ -388,16 +536,23 @@ test('initial teaching for the next unseen skill does not turn its first answer 
   expect(nextSkill.knowledgePoints?.length).toBeGreaterThan(0);
   expect(getSkillState(mastered.progress, nextSkill.id).lessonSeen).toBe(false);
 
-  await continueLesson(page);
+  await openNextTask(page);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     nextSkill.title,
   );
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   await expect(
     page
       .getByRole('region', { name: 'Introduction', exact: true })
       .getByText(nextSkill.lesson.paragraphs[0], { exact: true }),
   ).toBeVisible();
-  await expect(prompt(page)).toHaveCount(0);
+  // The new lesson's first question is already on its page, and nothing
+  // from the previous lesson is carried over.
+  const firstQuestion = selectQuestion(mastered.progress, nextSkill, 'learn');
+  if (firstQuestion.type !== 'choice')
+    throw new Error('The systems acquisition must use a real scenario choice.');
+  await expect(prompt(page)).toHaveText(firstQuestion.prompt);
+  await expect(answeredQuestions(page)).toHaveCount(0);
   const afterReading = await cloud(page);
   expect(afterReading.progress.totalXp).toBe(mastered.progress.totalXp);
   expect(afterReading.progress.attempts).toEqual(mastered.progress.attempts);
@@ -406,21 +561,13 @@ test('initial teaching for the next unseen skill does not turn its first answer 
   );
   expect(afterReading.cards).toEqual(mastered.cards);
 
-  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
-  const firstQuestion = selectQuestion(mastered.progress, nextSkill, 'learn');
-  if (firstQuestion.type !== 'choice')
-    throw new Error('The systems acquisition must use a real scenario choice.');
-  await expect
-    .poll(
-      async () => (await cloud(page)).progress.skills[nextSkill.id]?.lessonSeen,
-    )
-    .toBe(true);
   await answerChoice(page, firstQuestion);
   await expect(feedback(page)).toContainText('Correct');
   await expect
     .poll(async () => (await cloud(page)).progress.attempts.length)
     .toBe(mastered.progress.attempts.length + 1);
   const independent = await cloud(page);
+  expect(independent.progress.skills[nextSkill.id].lessonSeen).toBe(true);
   expect(independent.progress.attempts.at(-1)).toMatchObject({
     skillId: nextSkill.id,
     questionId: firstQuestion.id,

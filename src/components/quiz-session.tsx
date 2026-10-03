@@ -8,7 +8,7 @@ import {
   Timer,
   X,
 } from 'lucide-react';
-import { courses } from '../lib/curriculum';
+import { courses, skillById } from '../lib/catalog-index';
 import { choiceLetter, choiceOrder } from '../lib/choice-order';
 import { codeLanguage } from '../lib/code-language';
 import {
@@ -22,7 +22,9 @@ import {
   type Quiz,
 } from '../lib/quiz';
 import { type LearnerState } from '../lib/state';
-import { Btn } from './shared';
+import { ChoiceText, InlineText } from './inline-text';
+import { Btn, ContentLoading } from './shared';
+import { useCourseContent } from './use-content';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -68,6 +70,10 @@ export default function QuizSession({
     if (!quizId && running) setQuizId(running.id);
   }, [quizId, running?.id]);
   const finished = quiz?.completedAt !== undefined;
+  // Questions and explanations are lesson content, loaded per course.
+  const content = useCourseContent(
+    (quiz?.questions ?? []).map((slot) => skillById[slot.skillId]?.courseId),
+  );
   useEffect(() => {
     if (!quiz || finished) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -135,6 +141,8 @@ export default function QuizSession({
     );
   }
 
+  if (!content.ready)
+    return <ContentLoading error={content.error} retry={content.retry} />;
   if (finished) return <QuizResults quiz={quiz} />;
 
   const index = quiz.questions.findIndex((slot) => slot.answer === undefined);
@@ -165,7 +173,9 @@ export default function QuizSession({
             Question {index + 1} of {quiz.questions.length}
           </span>
         </div>
-        <h1>{question.prompt}</h1>
+        <h1>
+          <InlineText text={question.prompt} />
+        </h1>
         {question.code && (
           <CodeBlock
             code={question.code}
@@ -187,7 +197,9 @@ export default function QuizSession({
               <Badge variant="outline" className="shrink-0 font-mono">
                 {choiceLetter(position)}
               </Badge>
-              <pre>{question.choices[choice]}</pre>
+              <pre>
+                <ChoiceText question={question} index={choice} />
+              </pre>
             </Button>
           ))}
         </div>
@@ -274,7 +286,9 @@ function QuizResults({ quiz }: { quiz: Quiz }) {
                   )}
                   Question {index + 1}: {slot.correct ? 'Correct' : 'Incorrect'}
                 </p>
-                <h3>{question.prompt}</h3>
+                <h3>
+                  <InlineText text={question.prompt} />
+                </h3>
                 {question.code && (
                   <CodeBlock
                     code={question.code}
@@ -284,17 +298,21 @@ function QuizResults({ quiz }: { quiz: Quiz }) {
                 )}
                 <p>
                   Your answer:{' '}
-                  {slot.answer === null || slot.answer === undefined
-                    ? 'No answer (time ran out)'
-                    : question.choices[slot.answer]}
+                  {slot.answer === null || slot.answer === undefined ? (
+                    'No answer (time ran out)'
+                  ) : (
+                    <ChoiceText question={question} index={slot.answer} />
+                  )}
                 </p>
                 {!slot.correct && (
                   <p>
                     <Check size={15} aria-hidden="true" /> Correct answer:{' '}
-                    {question.choices[question.answer]}
+                    <ChoiceText question={question} index={question.answer} />
                   </p>
                 )}
-                <p className="lesson-teaching-text">{question.explanation}</p>
+                <p className="lesson-teaching-text">
+                  <InlineText text={question.explanation} />
+                </p>
               </Card>
             </li>
           );

@@ -88,7 +88,6 @@ test('two authenticated learners keep separate mastery, due reviews, mistakes, c
       .toBe(lessonReward);
 
     await otherPage.goto(`/learn?skill=${mistakeSkill.id}`);
-    await otherPage.getByRole('button', { name: 'Start lesson' }).click();
     const firstQuestion = await shownQuestion(
       otherPage,
       mistakeSkill.knowledgePoints![0].questions,
@@ -198,7 +197,6 @@ test('guest learning migrates durably into one account and stays out of the next
   const skill = skillById['ds-workloads'];
   const point = skill.knowledgePoints![0];
   await page.goto(`/learn?skill=${skill.id}`);
-  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
   const question = await shownQuestion(page, point.questions);
   if (question.type !== 'choice')
     throw new Error('Expected scenario question.');

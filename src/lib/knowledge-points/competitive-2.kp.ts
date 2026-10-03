@@ -2596,7 +2596,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'A heap removes the newest job first',
           ],
           0,
-          'Re-sorting costs O(n log n) per change, while a heap update costs only O(log n).',
+          'Re-sorting costs at least O(n) per change, even when only one item is new, while a heap update costs only O(log n).',
         ),
         choose(
           'After several pushes and pops, heap is [2, 7, 3, 9]. Which value will the next heappop return?',
@@ -7161,7 +7161,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'So vertices nearer the source are processed first',
           ],
           3,
-          'Waiting vertices were found earlier from closer vertices, so they must be handled first.',
+          'Waiting vertices were found earlier, so none is farther from the source than a new discovery; they must be handled first.',
         ),
       ],
     },
@@ -7389,7 +7389,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '2 was queued before 1, so it leaves first; 3 is discovered from 2 at distance 2 and leaves after 1.',
         ),
         choose(
-          'The queue currently holds vertices with distances [3, 3, 4], front first. What distance can the next newly appended vertex have?',
+          'The queue currently holds vertices with distances [3, 3, 4], front first. The front vertex is dequeued and discovers a new vertex. What distance does that vertex get?',
           ['3', '5', '4', '2'],
           2,
           'The next vertex expanded has distance 3, so anything it discovers gets 4.',
