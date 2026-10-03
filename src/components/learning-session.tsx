@@ -434,10 +434,23 @@ function LessonPage({
   // A page whose skill has a Python exercise loads Python before the click.
   usePythonSpare(pythonExerciseSource(currentSkill ?? skill));
   // Answer time runs from when the live question's card scrolls into view.
-  const answerTime = useAnswerTime(current?.key, () => {
-    const prompt = current && document.getElementById(promptId(current.key));
-    return prompt?.closest('.lesson-question') ?? prompt ?? null;
-  });
+  // Its key names this showing of the question, so a remounted page that
+  // shows the same question again resumes the clock.
+  const answerTime = useAnswerTime(
+    current
+      ? [
+          current.skillId,
+          current.mode,
+          current.questionId,
+          current.presentation,
+          current.variant ?? '',
+        ].join(':')
+      : undefined,
+    () => {
+      const prompt = current && document.getElementById(promptId(current.key));
+      return prompt?.closest('.lesson-question') ?? prompt ?? null;
+    },
+  );
   const pointLesson = !!skill && hasKnowledgePoints(skill);
   const lesson = skill ? lessonState(state.progress, skill) : null;
   const recorded = current?.feedback

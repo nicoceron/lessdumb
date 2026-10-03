@@ -237,17 +237,64 @@ describe('timing a question in the page', () => {
     watch.stop();
   });
 
-  it('stops listening once stopped', () => {
+  it('pauses and stops listening once stopped', () => {
     const page = fakeEnvironment();
     const watch = watchAnswerTime(card, page.environment);
     page.intersect();
     page.advance(1_000);
     watch.stop();
     expect(page.observers[0].disconnected).toBe(true);
+    page.advance(5_000);
+    expect(watch.read()).toBe(1_000);
+    // The listener is gone: showing the tab again does not restart it.
     page.setHidden(true);
+    page.setHidden(false);
     page.advance(1_000);
-    // The listener is gone, so hiding no longer pauses this clock.
-    expect(watch.read()).toBe(2_000);
+    expect(watch.read()).toBe(1_000);
+  });
+
+  it('resumes a stopped clock when the same question is shown again', () => {
+    const page = fakeEnvironment();
+    const first = watchAnswerTime(card, page.environment);
+    page.intersect();
+    page.advance(4_000);
+    first.stop(); // the page remounted, or the learner left it
+    page.advance(60_000);
+    const again = watchAnswerTime(card, page.environment, first.clock);
+    // Already seen: it runs on without waiting to scroll into view.
+    expect(page.observers).toHaveLength(1);
+    page.advance(3_000);
+    expect(again.read()).toBe(7_000);
+    page.setHidden(true);
+    page.advance(MINUTE);
+    expect(again.read()).toBe(7_000);
+    again.stop();
+  });
+
+  it('resumes paused when the tab is hidden, and waits for a question never seen', () => {
+    const page = fakeEnvironment();
+    const first = watchAnswerTime(card, page.environment);
+    page.intersect();
+    page.advance(2_000);
+    first.stop();
+    page.setHidden(true);
+    const hidden = watchAnswerTime(card, page.environment, first.clock);
+    page.advance(MINUTE);
+    expect(hidden.read()).toBe(2_000);
+    page.setHidden(false);
+    page.advance(500);
+    expect(hidden.read()).toBe(2_500);
+    hidden.stop();
+    // A question that never scrolled into view still waits to be seen.
+    const unseen = watchAnswerTime(card, page.environment);
+    unseen.stop();
+    const back = watchAnswerTime(card, page.environment, unseen.clock);
+    page.advance(9_000);
+    expect(back.read()).toBeUndefined();
+    page.intersect();
+    page.advance(1_000);
+    expect(back.read()).toBe(1_000);
+    back.stop();
   });
 });
 

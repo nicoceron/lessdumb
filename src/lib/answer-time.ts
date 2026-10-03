@@ -31,14 +31,19 @@ export class AnswerClock {
   private elapsed = 0;
   /** When the current visible stretch began, while running. */
   private since: number | null = null;
-  private started = false;
+  private seen = false;
 
   constructor(private visible = true) {}
 
+  /** Whether the question has become visible. */
+  get started(): boolean {
+    return this.seen;
+  }
+
   /** The question became visible. Later calls change nothing. */
   start(now: number) {
-    if (this.started) return;
-    this.started = true;
+    if (this.seen) return;
+    this.seen = true;
     if (this.visible) this.since = now;
   }
 
@@ -46,7 +51,7 @@ export class AnswerClock {
   setVisible(visible: boolean, now: number) {
     if (visible === this.visible) return;
     this.visible = visible;
-    if (!this.started) return;
+    if (!this.seen) return;
     if (visible) this.since = now;
     else if (this.since !== null) {
       this.elapsed += Math.max(0, now - this.since);
@@ -56,7 +61,7 @@ export class AnswerClock {
 
   /** The answer time so far, capped; undefined if never started. */
   read(now: number): number | undefined {
-    if (!this.started) return undefined;
+    if (!this.seen) return undefined;
     const running = this.since === null ? 0 : Math.max(0, now - this.since);
     return answerTime(this.elapsed + running);
   }
@@ -89,19 +94,24 @@ function browserEnvironment(): AnswerTimeEnvironment {
  * Time one question. The clock starts when `target` first scrolls into view
  * (immediately without a target, or where IntersectionObserver is missing),
  * pauses while the tab is hidden, and keeps running if the learner scrolls
- * back up to reread. Call `read` on submit and `stop` when done.
+ * back up to reread. Call `read` on submit and `stop` when done: `stop`
+ * pauses the clock, and passing it back in resumes it, so a question that
+ * is unmounted and shown again keeps the time already spent on it.
  */
 export function watchAnswerTime(
   target: Element | null,
   environment: AnswerTimeEnvironment = browserEnvironment(),
-): { read(): number | undefined; stop(): void } {
+  resume?: AnswerClock,
+): { clock: AnswerClock; read(): number | undefined; stop(): void } {
   const { document: doc, now } = environment;
-  const clock = new AnswerClock(doc.visibilityState !== 'hidden');
-  const onVisibility = () =>
-    clock.setVisible(doc.visibilityState !== 'hidden', now());
+  const visible = () => doc.visibilityState !== 'hidden';
+  const clock = resume ?? new AnswerClock(visible());
+  clock.setVisible(visible(), now());
+  const onVisibility = () => clock.setVisible(visible(), now());
   doc.addEventListener('visibilitychange', onVisibility);
   let observer: { disconnect(): void } | undefined;
-  if (target && environment.IntersectionObserver) {
+  // A resumed clock was already seen, so it runs on at once.
+  if (!clock.started && target && environment.IntersectionObserver) {
     const watcher = new environment.IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return;
       clock.start(now());
@@ -111,10 +121,12 @@ export function watchAnswerTime(
     observer = watcher;
   } else clock.start(now());
   return {
+    clock,
     read: () => clock.read(now()),
     stop() {
       doc.removeEventListener('visibilitychange', onVisibility);
       observer?.disconnect();
+      clock.setVisible(false, now());
     },
   };
 }
