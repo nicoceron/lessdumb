@@ -1,4 +1,4 @@
-import { choose, predictOutput, type KnowledgePointModule } from '.';
+import { choose, predictOutput, type KnowledgePointModule } from './authoring';
 
 export const knowledgePoints: KnowledgePointModule = {
   'rust-generic-functions': [
@@ -2127,6 +2127,1107 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           2,
           'The collected value is a single Result, which is exactly what ? works on.',
+        ),
+      ],
+    },
+  ],
+  'rust-module-privacy': [
+    {
+      title: 'Module items are private unless marked pub',
+      explanation: [
+        'mod kitchen { ... } groups items under a name. Code outside the module reaches them by path, as kitchen::soup_rating(), but only if the item is declared pub.',
+        'Inside the module, every item can use every other item, private or not. That lets a module expose a small public function while keeping its helpers hidden.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'mod kitchen {\n    fn secret_spice() -> u32 {\n        3\n    }\n\n    pub fn soup_rating() -> u32 {\n        secret_spice() + 5\n    }\n}\n\nfn main() {\n    println!("{}", kitchen::soup_rating());\n}',
+        output: '8',
+        explanation:
+          'main may call the pub function, and that function may call the private helper because both live in kitchen.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'mod scores {\n    fn base() -> u32 {\n        10\n    }\n\n    pub fn doubled() -> u32 {\n        base() * 2\n    }\n\n    pub fn bonus() -> u32 {\n        base() + 1\n    }\n}\n\nfn main() {\n    println!("{} {}", scores::doubled(), scores::bonus());\n}',
+          ['10 11', '20 10', '11 20', '20 11'],
+          3,
+          'Both public functions use the private base, which returns 10.',
+        ),
+        choose(
+          'With the module below, which call compiles inside main?',
+          ['bank::balance()', 'bank::audit()', 'audit()', 'balance()'],
+          0,
+          'Only pub items are reachable from outside, and they are named through the module path.',
+          'mod bank {\n    fn audit() -> u32 {\n        1\n    }\n\n    pub fn balance() -> u32 {\n        audit() + 99\n    }\n}',
+        ),
+        choose(
+          'Why may soup_rating call secret_spice although secret_spice is private?',
+          [
+            'pub on soup_rating makes the whole module public',
+            'Any pub function anywhere may call private functions',
+            'Private items are visible everywhere inside their own module',
+            'secret_spice is defined first, so it counts as public',
+          ],
+          2,
+          'Privacy only restricts access from outside the module; items inside it see each other.',
+        ),
+        choose(
+          'main calls tools::helper(), where helper is declared as fn helper() -> u32 inside mod tools. What happens?',
+          [
+            'It runs, because main may call anything',
+            'It runs, but returns a default value',
+            'A warning is printed and the call is skipped',
+            'A compile error: helper is private to tools',
+          ],
+          3,
+          'Without pub, helper can only be used from inside tools, and the compiler rejects the outside call.',
+        ),
+      ],
+    },
+    {
+      title: 'Every module on the path must be visible',
+      explanation: [
+        'A path such as shop::till::total() works from main only if each step is visible there: till must be pub inside shop, and total must be pub inside till. A pub function inside a private module is still unreachable from outside.',
+        'shop itself needs no pub, because it is declared right next to main. A public function in shop can still use its private submodules on the caller’s behalf.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'mod shop {\n    pub mod till {\n        pub fn total() -> u32 {\n            42\n        }\n    }\n\n    mod storage {\n        pub fn count() -> u32 {\n            7\n        }\n    }\n\n    pub fn stock() -> u32 {\n        storage::count() * 2\n    }\n}\n\nfn main() {\n    println!("{} {}", shop::till::total(), shop::stock());\n}',
+        output: '42 14',
+        explanation:
+          'till and total are both pub, so main can name the path. storage is private, so main reaches its count only through stock.',
+      },
+      questions: [
+        choose(
+          'In the example, why would shop::storage::count() be rejected in main even though count is pub?',
+          [
+            'storage is private, so main cannot reach into it',
+            'count may only be called as storage::count()',
+            'A pub fn inside a private module is an error',
+            'shop must be marked pub before main can use it',
+          ],
+          0,
+          'Every module along the path has to be visible to the caller, and storage is private to shop.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'mod outer {\n    fn hidden() -> u32 {\n        5\n    }\n\n    pub mod inner {\n        pub fn seven() -> u32 {\n            7\n        }\n    }\n\n    pub fn combined() -> u32 {\n        hidden() + inner::seven()\n    }\n}\n\nfn main() {\n    println!("{} {}", outer::inner::seven(), outer::combined());\n}',
+          ['7 5', '12 7', '5 12', '7 12'],
+          3,
+          'main can reach seven directly, and combined adds the private hidden value to it.',
+        ),
+        choose(
+          'With the modules below, which call can main make?',
+          [
+            'app::db::connect()',
+            'app::ui::refresh()',
+            'app::ui::draw()',
+            'app::refresh()',
+          ],
+          1,
+          'db is private, draw is private, and refresh lives in ui, not directly in app.',
+          'mod app {\n    mod db {\n        pub fn connect() -> u32 {\n            1\n        }\n    }\n\n    pub mod ui {\n        fn draw() -> u32 {\n            2\n        }\n\n        pub fn refresh() -> u32 {\n            3\n        }\n    }\n}',
+        ),
+        choose(
+          'A module has pub fn report() that calls a private fn format_rows() in the same module. What can outside code do?',
+          [
+            'Call both report and format_rows directly',
+            'Call report, which may use format_rows internally',
+            'Call neither, since one of them is private',
+            'Call format_rows through report::format_rows()',
+          ],
+          1,
+          'Outside code sees only report; the private helper still runs whenever report calls it.',
+        ),
+      ],
+    },
+  ],
+  'rust-use': [
+    {
+      title: 'use brings a path into scope under a short name',
+      explanation: [
+        'use std::cmp::max; lets later code write max(3, 9) instead of std::cmp::max(3, 9). It works for your own modules too: use geometry::area;.',
+        'use only introduces a name. It runs nothing and copies nothing, and the name is available only in the module or block where the use line appears.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'mod geometry {\n    pub fn area(w: u32, h: u32) -> u32 {\n        w * h\n    }\n}\n\nuse geometry::area;\n\nfn main() {\n    println!("{} {}", area(3, 4), geometry::area(2, 5));\n}',
+        output: '12 10',
+        explanation:
+          'area and geometry::area name the same function; the use line just adds the short name.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::cmp::max;\nuse std::cmp::min;\n\nfn main() {\n    let low = min(8, 3);\n    let high = max(8, 3);\n    println!("{} {}", low, high);\n}',
+          ['8 3', '3 8', '8 8', '3 3'],
+          1,
+          'The imported names call std::cmp::min and std::cmp::max, which return the smaller and larger value.',
+        ),
+        choose(
+          'What does use std::cmp::max; do when the program runs?',
+          [
+            'Nothing at run time; it only makes the name max available',
+            'It calls max once to check that the import works',
+            'It copies the max function into the current file',
+            'It loads std::cmp from disk before main starts',
+          ],
+          0,
+          'use is resolved by the compiler; it only adds a name to the current scope.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'mod units {\n    pub fn cm(m: u32) -> u32 {\n        m * 100\n    }\n}\n\nfn first() -> u32 {\n    use units::cm;\n    cm(3)\n}\n\nfn main() {\n    println!("{}", first() + units::cm(2));\n}',
+          ['300', '5', '500', '302'],
+          2,
+          'first uses the short name cm, and main uses the full path; both reach the same function: 300 + 200.',
+        ),
+        choose(
+          'fn a contains use std::cmp::max;, and fn b, defined separately, calls max(1, 2) with no use of its own. What happens?',
+          [
+            'It compiles, because use applies to the whole file',
+            'It compiles, but max returns 0 inside b',
+            'b is rejected: the use only applies inside a',
+            'b borrows the imported name by calling a first',
+          ],
+          2,
+          'A use inside a function body only adds the name within that block.',
+        ),
+      ],
+    },
+    {
+      title: 'Rename an import with as',
+      explanation: [
+        'use metric::convert as to_cm; imports the item under a local name of your choice. This avoids clashes when two modules export the same name, and can shorten a long name.',
+        'The alias is just another name for the same item. Importing a type under an alias does not create a new type.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'mod metric {\n    pub fn convert(x: u32) -> u32 {\n        x * 100\n    }\n}\n\nmod imperial {\n    pub fn convert(x: u32) -> u32 {\n        x * 12\n    }\n}\n\nuse imperial::convert as to_inches;\nuse metric::convert as to_cm;\n\nfn main() {\n    println!("{} {}", to_cm(2), to_inches(2));\n}',
+        output: '200 24',
+        explanation:
+          'Both modules export convert. The aliases give each one a distinct local name.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'use std::cmp::max as larger;\nuse std::cmp::min as smaller;\n\nfn main() {\n    let a = larger(4, 11);\n    let b = smaller(a, 7);\n    println!("{} {}", a, b);\n}',
+          ['4 7', '11 4', '11 7', '7 11'],
+          2,
+          'larger is max, so a is 11; smaller is min, so b is the smaller of 11 and 7.',
+        ),
+        choose(
+          'Modules a and b both export pub fn parse. Which imports let one scope call both by short names?',
+          [
+            'use a::parse; use b::parse;',
+            'use a::parse; use b::parse as parse_b;',
+            'use a::parse as parse; use b::parse as parse;',
+            'use a::parse as b; use b::parse as a;',
+          ],
+          1,
+          'Two items cannot share one name in a scope, so at least one import needs a distinct alias.',
+        ),
+        choose(
+          'After use std::collections::HashMap as Map;, how are Map and HashMap related?',
+          [
+            'Map is a new type copied from HashMap',
+            'Map is a HashMap that always starts empty',
+            'Map is another name for the same HashMap type',
+            'Map replaces HashMap throughout the standard library',
+          ],
+          2,
+          'An alias changes only the local name; the type is the same.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'mod network {\n    pub mod http {\n        pub fn port() -> u32 {\n            80\n        }\n    }\n}\n\nuse network::http as web;\n\nfn main() {\n    println!("{}", web::port() + network::http::port());\n}',
+          ['80', '8080', '160', '0'],
+          2,
+          'web is an alias for the module network::http, so both paths call the same function: 80 + 80.',
+        ),
+      ],
+    },
+  ],
+  'rust-reexport': [
+    {
+      title: 'pub use publishes an item at a new path',
+      explanation: [
+        'Inside a module, pub use internal::checksum; makes checksum available as library::checksum to outside code, even though the module internal is private.',
+        'Callers depend only on that public path, so the module can reorganize its internals later without breaking them. The re-exported item must itself be visible to the module doing the re-export.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'mod library {\n    mod internal {\n        pub fn checksum() -> u32 {\n            99\n        }\n    }\n\n    pub use internal::checksum;\n}\n\nfn main() {\n    println!("{}", library::checksum());\n}',
+        output: '99',
+        explanation:
+          'main cannot name library::internal, but the re-export gives checksum a public path one level up.',
+      },
+      questions: [
+        choose(
+          'In the example, which call from main is rejected?',
+          [
+            'library::checksum()',
+            'library::internal::checksum()',
+            'Neither; both paths are accepted',
+            'Both; re-exports cannot be called',
+          ],
+          1,
+          'internal is still private. Only the re-exported path is public.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'mod shapes {\n    mod circle {\n        pub fn area_x100(r: u32) -> u32 {\n            r * r * 314\n        }\n    }\n\n    pub use circle::area_x100 as circle_area;\n}\n\nfn main() {\n    println!("{}", shapes::circle_area(2));\n}',
+          ['628', '314', '1256', '2512'],
+          2,
+          'The re-export renames area_x100 to circle_area; with r = 2 it computes 2 * 2 * 314.',
+        ),
+        choose(
+          'What is the main benefit of pub use internal::checksum; in a library module?',
+          [
+            'checksum runs once automatically when the module loads',
+            'Callers use a short stable path while internals stay private',
+            'Every item in internal becomes public too',
+            'checksum is copied, so internal can be deleted',
+          ],
+          1,
+          'A re-export separates the public API path from the private module layout.',
+        ),
+        choose(
+          'A parent module writes pub use internal::secret;, where internal contains fn secret() -> u32 without pub. What happens?',
+          [
+            'It is rejected: a private item cannot be re-exported',
+            'It compiles: pub use makes secret public',
+            'It compiles, but calls to secret return 0',
+            'It compiles only if internal is also pub',
+          ],
+          0,
+          'pub use can only publish items that are visible to the module doing the re-export.',
+        ),
+      ],
+    },
+    {
+      title: 'Re-export exactly the supported API',
+      explanation: [
+        'Each pub use publishes one item. Neighboring items in the same private module stay hidden, so a facade module can expose a few functions while everything else remains internal.',
+        'Re-exports can be chained: a module may re-export an item that a child module re-exported in turn, so a deeply nested function gets a short public path.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'mod engine {\n    mod math {\n        pub fn add(a: u32, b: u32) -> u32 {\n            a + b\n        }\n\n        pub fn scale(a: u32) -> u32 {\n            a * 10\n        }\n    }\n\n    mod text {\n        pub fn label() -> &\'static str {\n            "sum"\n        }\n    }\n\n    pub use math::add;\n    pub use text::label;\n}\n\nfn main() {\n    println!("{} = {}", engine::label(), engine::add(2, 3));\n}',
+        output: 'sum = 5',
+        explanation:
+          'Only add and label are published. scale stays private to engine even though it sits next to add.',
+      },
+      questions: [
+        choose(
+          'In the example, which call from main is rejected?',
+          [
+            'engine::add(1, 1)',
+            'engine::label()',
+            'engine::scale(4)',
+            'engine::add(engine::add(1, 1), 1)',
+          ],
+          2,
+          'scale was never re-exported, and math is private.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'mod outer {\n    mod middle {\n        mod inner {\n            pub fn depth() -> u32 {\n                3\n            }\n        }\n\n        pub use inner::depth;\n    }\n\n    pub use middle::depth;\n}\n\nfn main() {\n    println!("{}", outer::depth() * 2);\n}',
+          ['3', '6', '9', '12'],
+          1,
+          'The chain of re-exports gives inner’s function the short path outer::depth.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'mod api {\n    pub mod v1 {\n        pub fn version() -> u32 {\n            1\n        }\n    }\n\n    pub mod v2 {\n        pub fn version() -> u32 {\n            2\n        }\n    }\n\n    pub use v2::version as latest;\n}\n\nfn main() {\n    println!("{} {}", api::latest(), api::v1::version());\n}',
+          ['1 2', '2 1', '2 2', '1 1'],
+          1,
+          'latest is a re-export of v2::version, while v1::version is still reachable by its own path.',
+        ),
+        choose(
+          'A library re-exports pub use parsing::parse; and later moves parse into a module named reader, changing that line to pub use reader::parse;. What must callers who use the re-exported path change?',
+          [
+            'Nothing; the public path stays the same',
+            'Every call, to name reader::parse instead',
+            'Their own use lines, to name parsing',
+            'They must add a pub use of their own',
+          ],
+          0,
+          'Callers only see the re-exported path, which did not change.',
+        ),
+      ],
+    },
+  ],
+  'rust-module-paths': [
+    {
+      title: 'super starts a path at the parent module',
+      explanation: [
+        'Inside mod shop { pub mod checkout { ... } }, a path beginning with super:: starts at shop, the module that contains checkout. super::super:: goes up two levels.',
+        'A child module may use private items of its ancestors, so super::tax() works even though tax has no pub. The reverse does not hold: a parent cannot see its child’s private items.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'mod shop {\n    fn tax() -> u32 {\n        2\n    }\n\n    pub mod checkout {\n        pub fn total(price: u32) -> u32 {\n            price + super::tax()\n        }\n    }\n}\n\nfn main() {\n    println!("{}", shop::checkout::total(10));\n}',
+        output: '12',
+        explanation:
+          'super::tax() inside checkout names the private tax in shop, which a child module may use.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'mod a {\n    fn level() -> u32 {\n        1\n    }\n\n    pub mod b {\n        fn level() -> u32 {\n            2\n        }\n\n        pub mod c {\n            pub fn sum() -> u32 {\n                super::level() * 10 + super::super::level()\n            }\n        }\n    }\n}\n\nfn main() {\n    println!("{}", a::b::c::sum());\n}',
+          ['12', '3', '20', '21'],
+          3,
+          'From c, super is b (level 2) and super::super is a (level 1), giving 2 * 10 + 1.',
+        ),
+        choose(
+          'Why may code in checkout call super::tax() although tax is private?',
+          [
+            'super makes every item public for that one call',
+            'Private items are visible to the whole program',
+            'A child module can see private items of its ancestors',
+            'tax is public because it is defined first',
+          ],
+          2,
+          'Privacy hides items from outside a module, but descendants of the module are inside it.',
+        ),
+        choose(
+          'Inside mod parent { mod child { ... } }, a function in child calls super::helper(). Where does the compiler look for helper?',
+          [
+            'In child itself',
+            'In the first external dependency',
+            'In parent, the module containing child',
+            'In every module, starting from main',
+          ],
+          2,
+          'super always refers to the module one level up from where the path is written.',
+        ),
+        choose(
+          'Can code in outer call a private function declared inside its child module inner?',
+          [
+            'Yes; parents see everything their children define',
+            'Yes, but only through a self:: path',
+            'Only if the call is written with super',
+            'No; inner’s private items are hidden from its parent',
+          ],
+          3,
+          'Visibility flows down to descendants, not up: an item private to inner is visible only within inner.',
+        ),
+      ],
+    },
+    {
+      title: 'self names the current module',
+      explanation: [
+        'A path beginning with self:: starts at the module where it is written, so self::body::rows() names a child of the current module. It makes clear that the item is local rather than from somewhere else.',
+        'Combining the two reaches siblings: from network, super::config::retries() goes up to the shared parent and down into config.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'mod report {\n    fn header() -> u32 {\n        100\n    }\n\n    pub fn build() -> u32 {\n        self::header() + self::body::rows()\n    }\n\n    mod body {\n        pub fn rows() -> u32 {\n            5\n        }\n    }\n}\n\nfn main() {\n    println!("{}", report::build());\n}',
+        output: '105',
+        explanation:
+          'Both self:: paths start at report: one names its private header, the other its child module body.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'mod app {\n    pub mod config {\n        pub fn retries() -> u32 {\n            3\n        }\n    }\n\n    pub mod network {\n        pub fn attempts() -> u32 {\n            super::config::retries() + 1\n        }\n    }\n}\n\nfn main() {\n    println!("{}", app::network::attempts());\n}',
+          ['4', '3', '1', '31'],
+          0,
+          'From network, super is app, and app::config::retries returns 3.',
+        ),
+        choose(
+          'Inside mod network, which path reaches its sibling module config when both are inside app?',
+          ['self::config', 'config', 'super::config', 'network::config'],
+          2,
+          'A sibling lives in the parent, so the path goes up with super and then down into config.',
+        ),
+        choose(
+          'At the start of a path, what does self:: refer to?',
+          [
+            'The value a method was called on',
+            'The parent of the current module',
+            'The root module of the program',
+            'The module the path is written in',
+          ],
+          3,
+          'In a path, self means the current module. The method receiver is a different use of the word.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'mod math {\n    pub fn double(n: u32) -> u32 {\n        n * 2\n    }\n\n    pub mod extra {\n        pub fn quadruple(n: u32) -> u32 {\n            super::double(super::double(n))\n        }\n\n        pub fn octuple(n: u32) -> u32 {\n            self::quadruple(n) * 2\n        }\n    }\n}\n\nfn main() {\n    println!("{}", math::extra::octuple(3));\n}',
+          ['24', '12', '48', '6'],
+          0,
+          'self::quadruple is extra’s own function, which doubles 3 twice via super; octuple doubles that 12.',
+        ),
+      ],
+    },
+  ],
+  'rust-semver': [
+    {
+      title: 'Read major, minor, and patch numbers',
+      explanation: [
+        'A semantic version has three whole numbers, MAJOR.MINOR.PATCH, such as 1.4.2. A breaking change raises major, a compatible new feature raises minor, and a bug fix raises patch; the numbers to the right of a raised one reset to 0.',
+        'Versions compare number by number, from major to patch. They must be compared as numbers, not as text: 1.10.0 is newer than 1.9.3, but the string "1.10.0" sorts before "1.9.3".',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let a = (1, 10, 0);\n    let b = (1, 9, 3);\n    println!("{} {}", a > b, "1.10.0" > "1.9.3");\n}',
+        output: 'true false',
+        explanation:
+          'Tuples compare field by field, so 10 beats 9 in the minor position. As text, the character 1 sorts before 9.',
+      },
+      questions: [
+        choose(
+          'A library at version 2.3.1 adds a backward-compatible feature. What is its next version?',
+          ['2.3.2', '3.0.0', '2.4.1', '2.4.0'],
+          3,
+          'A compatible feature raises minor and resets patch to 0.',
+        ),
+        choose(
+          'A release of version 3.6.2 removes a public function that callers used. What should the next version be?',
+          ['4.0.0', '3.7.0', '3.6.3', '4.6.2'],
+          0,
+          'Removing public API breaks callers, so major increases and the other parts reset.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let installed = (2, 0, 9);\n    let required = (2, 1, 0);\n    println!("{} {}", installed >= required, (3, 0, 0) > (2, 99, 99));\n}',
+          ['false true', 'true true', 'true false', 'false false'],
+          0,
+          'The minor part decides the first comparison (0 < 1), and the major part decides the second (3 > 2).',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let text_newer = "0.10.1" > "0.9.0";\n    let number_newer = (0, 10, 1) > (0, 9, 0);\n    println!("text: {}, numbers: {}", text_newer, number_newer);\n}',
+          [
+            'text: true, numbers: true',
+            'text: true, numbers: false',
+            'text: false, numbers: true',
+            'text: false, numbers: false',
+          ],
+          2,
+          'As text, "0.1…" sorts before "0.9…"; as numbers, minor 10 is greater than 9.',
+        ),
+      ],
+    },
+    {
+      title: 'Parse exactly three numeric components',
+      explanation: [
+        'Parsing "2.14.0" means splitting on dots, parsing each piece as an integer, and rejecting anything else: too few pieces, too many, or a piece that is not a number. Returning Option lets the caller see None instead of a silently guessed version.',
+        'In a function that returns Option, ? on an Option returns None early when the value is missing. .ok() turns parse’s Result into an Option so that ? can be used on it too.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn parse_version(text: &str) -> Option<(u32, u32, u32)> {\n    let mut parts = text.split(\'.\');\n    let major = parts.next()?.parse().ok()?;\n    let minor = parts.next()?.parse().ok()?;\n    let patch = parts.next()?.parse().ok()?;\n    if parts.next().is_some() {\n        return None;\n    }\n    Some((major, minor, patch))\n}\n\nfn main() {\n    match parse_version("2.14.0") {\n        Some((major, minor, patch)) => println!("{} {} {}", major, minor, patch),\n        None => println!("invalid"),\n    }\n}',
+        output: '2 14 0',
+        explanation:
+          'All three pieces parse and nothing is left over, so the function returns the three numbers.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn parse_version(text: &str) -> Option<(u32, u32, u32)> {\n    let mut parts = text.split(\'.\');\n    let major = parts.next()?.parse().ok()?;\n    let minor = parts.next()?.parse().ok()?;\n    let patch = parts.next()?.parse().ok()?;\n    if parts.next().is_some() {\n        return None;\n    }\n    Some((major, minor, patch))\n}\n\nfn show(text: &str) {\n    match parse_version(text) {\n        Some(v) => println!("{}.{}.{}", v.0, v.1, v.2),\n        None => println!("invalid {}", text),\n    }\n}\n\nfn main() {\n    show("1.2");\n    show("3.0.12");\n}',
+          [
+            '1.2.0\n3.0.12',
+            'invalid 1.2\n3.0.12',
+            '1.2\n3.0.12',
+            'invalid 1.2\ninvalid 3.0.12',
+          ],
+          1,
+          '"1.2" runs out of pieces at patch, so ? returns None; "3.0.12" has exactly three numbers.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn parse_version(text: &str) -> Option<(u32, u32, u32)> {\n    let mut parts = text.split(\'.\');\n    let major = parts.next()?.parse().ok()?;\n    let minor = parts.next()?.parse().ok()?;\n    let patch = parts.next()?.parse().ok()?;\n    if parts.next().is_some() {\n        return None;\n    }\n    Some((major, minor, patch))\n}\n\nfn show(text: &str) {\n    match parse_version(text) {\n        Some(v) => println!("{}.{}.{}", v.0, v.1, v.2),\n        None => println!("invalid {}", text),\n    }\n}\n\nfn main() {\n    show("1.2.3.4");\n    show("1.x.3");\n}',
+          [
+            '1.2.3\ninvalid 1.x.3',
+            '1.2.3\n1.0.3',
+            'invalid 1.2.3.4\n1.0.3',
+            'invalid 1.2.3.4\ninvalid 1.x.3',
+          ],
+          3,
+          'A fourth piece is rejected rather than ignored, and x fails to parse, so both inputs are invalid.',
+        ),
+        choose(
+          'Why should a parser reject "1.2" instead of reading it as 1.2.0?',
+          [
+            'Two-part versions must be parsed as floating point numbers',
+            'Rust cannot split a string into fewer than three pieces',
+            'The patch number must always be written as 0',
+            'A missing part is malformed input, and guessing hides the error',
+          ],
+          3,
+          'Silently filling in a value turns bad input into a version nobody wrote.',
+        ),
+        choose(
+          'In a function returning Option<(u32, u32, u32)>, what does parts.next()? do when no piece is left?',
+          [
+            'Substitutes an empty string and continues',
+            'Panics because the iterator is exhausted',
+            'Restarts the split from the first piece',
+            'Returns None from the whole function immediately',
+          ],
+          3,
+          'next() gives None at the end, and ? on None returns None from the enclosing function.',
+        ),
+      ],
+    },
+  ],
+  'rust-cfg': [
+    {
+      title: 'cfg removes items at compile time',
+      explanation: [
+        '#[cfg(predicate)] on an item keeps the item only if the predicate is true for this build. Otherwise the item is removed before type checking, as if it had never been written.',
+        'Real predicates test the build, such as target_os = "linux", test, or a Cargo feature. cfg(all()) is always true and cfg(any()) always false, which makes them handy for experiments. Two items may share a name if exactly one survives.',
+      ],
+      example: {
+        language: 'rust',
+        code: '#[cfg(all())]\nfn mode() -> &\'static str {\n    "included"\n}\n\n#[cfg(any())]\nfn mode() -> &\'static str {\n    "excluded"\n}\n\nfn main() {\n    println!("{}", mode());\n}',
+        output: 'included',
+        explanation:
+          'The second mode is removed during compilation, so only the first exists to be called.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          '#[cfg(not(any()))]\nfn limit() -> u32 {\n    10\n}\n\n#[cfg(any())]\nfn limit() -> u32 {\n    20\n}\n\nfn main() {\n    println!("{}", limit() + 1);\n}',
+          ['11', '21', '10', '31'],
+          0,
+          'not(any()) is true, so the first limit is kept and the second is removed.',
+        ),
+        choose(
+          'What happens to a function marked #[cfg(any())]?',
+          [
+            'It is compiled but never called',
+            'It is left out of the build entirely',
+            'It runs only after main returns',
+            'It is compiled and type-checked, then hidden',
+          ],
+          1,
+          'A false cfg predicate removes the item before it is compiled.',
+        ),
+        choose(
+          'Why can the example define two functions named mode?',
+          [
+            'Rust picks the one defined last when the program runs',
+            'Only one survives cfg, so only one is ever compiled',
+            'The second definition silently overrides the first',
+            'Functions may share a name if their bodies differ',
+          ],
+          1,
+          'After cfg removes the excluded item, the program contains a single mode.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          '#[cfg(all(not(any()), all()))]\nfn greeting() -> &\'static str {\n    "hi"\n}\n\n#[cfg(not(all()))]\nfn greeting() -> &\'static str {\n    "bye"\n}\n\nfn main() {\n    println!("{}", greeting());\n}',
+          ['hi', 'bye', 'hibye', 'bye hi'],
+          0,
+          'all(not(any()), all()) combines two true predicates, while not(all()) is false.',
+        ),
+      ],
+    },
+    {
+      title: 'cfg decides per build, not per run',
+      explanation: [
+        'An if chooses while the program runs, and both of its branches must compile. A cfg attribute chooses during compilation, and the removed item is never compiled, so it may even refer to things that do not exist on this platform.',
+        'The cfg! macro evaluates the same predicates to a plain true or false constant. With if cfg!(...), both branches are still compiled. No value computed at run time can change a cfg decision.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    if cfg!(any()) {\n        println!("never chosen");\n    } else {\n        println!("chosen");\n    }\n    println!("{}", cfg!(all()));\n}',
+        output: 'chosen\ntrue',
+        explanation:
+          'cfg!(any()) is the constant false, so the else branch runs; cfg!(all()) is the constant true.',
+      },
+      questions: [
+        choose(
+          'A program needs different code on Windows and Linux, and the Windows code calls functions that do not exist on Linux. Which tool fits?',
+          [
+            '#[cfg(...)] on each version, so only one is compiled',
+            'An if on a variable holding the OS name',
+            'Two functions with the same name and no attributes',
+            'A match on a string typed in by the user',
+          ],
+          0,
+          'Only cfg removes the code for the other platform, so its missing functions never need to compile.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let a = cfg!(all());\n    let b = cfg!(any());\n    let c = cfg!(not(any()));\n    println!("{} {} {}", a, b, c);\n}',
+          [
+            'true false true',
+            'false true false',
+            'true true true',
+            'true false false',
+          ],
+          0,
+          'all() with no conditions is true, any() with no conditions is false, and not flips it.',
+        ),
+        choose(
+          'How does if cfg!(test) { ... } else { ... } differ from #[cfg(test)] on a function?',
+          [
+            'cfg! is checked at run time, #[cfg] at compile time',
+            'There is no difference; both remove unused code',
+            'With cfg!, both branches compile; #[cfg] removes the item',
+            '#[cfg] may only be placed on main',
+          ],
+          2,
+          'cfg! produces a compile-time boolean, but the code in both branches must still be valid.',
+        ),
+        choose(
+          'Can a value computed while the program runs change which #[cfg] items exist?',
+          [
+            'No; cfg decisions are fixed when the program is compiled',
+            'Yes, if the value is stored in a global variable',
+            'Yes, because cfg re-checks its predicate on each call',
+            'Only for items declared inside main',
+          ],
+          0,
+          'By the time the program runs, the excluded items are already gone from it.',
+        ),
+      ],
+    },
+  ],
+  'rust-boundary-tests': [
+    {
+      title: 'Test at the limit and just past it',
+      explanation: [
+        'Bugs gather at boundaries: writing < where <= was meant, or starting a count at 1 instead of 0. For a rule like "at most capacity", test exactly capacity (allowed), capacity + 1 (refused), and the smallest input.',
+        'A value in the middle of the range cannot tell a correct comparison from an off-by-one one, because both give the same answer there.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn fits(size: u32, capacity: u32) -> bool {\n    size <= capacity\n}\n\nfn main() {\n    let capacity = 5;\n    println!("{} {} {}", fits(4, capacity), fits(5, capacity), fits(6, capacity));\n}',
+        output: 'true true false',
+        explanation:
+          'The three inputs sit just below, exactly at, and just past the limit, which pins down the comparison.',
+      },
+      questions: [
+        predictOutput(
+          'This version has a bug. What does the program print?',
+          'fn fits(size: u32, capacity: u32) -> bool {\n    size < capacity\n}\n\nfn main() {\n    println!("{} {} {}", fits(0, 5), fits(5, 5), fits(6, 5));\n}',
+          [
+            'true true false',
+            'false false false',
+            'true false false',
+            'true true true',
+          ],
+          2,
+          'With <, a size equal to the capacity is refused, which only the middle test reveals.',
+        ),
+        choose(
+          'A function should accept ages 18 through 65 inclusive. Which test inputs best check its boundaries?',
+          [
+            '20, 30, 40, 50',
+            '18 and 65 only',
+            '17, 18, 65, 66',
+            '0 and 100 only',
+          ],
+          2,
+          'Each limit is tested at the edge and one step outside it.',
+        ),
+        choose(
+          'fits(size, capacity) uses size < capacity but should allow size == capacity. Which test exposes the bug?',
+          [
+            'fits(2, 5) should be true',
+            'fits(9, 5) should be false',
+            'fits(5, 5) should be true',
+            'fits(0, 5) should be true',
+          ],
+          2,
+          'Only the case exactly at the limit separates < from <=.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let max_len = 3;\n    let valid = |name: &str| name.len() > 0 && name.len() <= max_len;\n    println!("{} {} {} {}", valid(""), valid("a"), valid("abc"), valid("abcd"));\n}',
+          [
+            'false true true false',
+            'true true true false',
+            'false true false false',
+            'false true true true',
+          ],
+          0,
+          'The four inputs probe both limits: empty is too short, 1 and 3 are inside, 4 is too long.',
+        ),
+      ],
+    },
+    {
+      title: 'Include overflow at the numeric edge',
+      explanation: [
+        'used + extra <= capacity looks safe, but the addition itself can overflow when used is near the type’s maximum. A debug build panics there, and a release build wraps around to a small number that may wrongly pass.',
+        'checked_add returns None on overflow. Treating None as "does not fit" is correct, because the real total exceeds every capacity. is_some_and(|total| total <= capacity) is true only for Some values that pass the test.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn fits(used: u32, extra: u32, capacity: u32) -> bool {\n    used.checked_add(extra).is_some_and(|total| total <= capacity)\n}\n\nfn main() {\n    println!("{} {}", fits(3, 2, 5), fits(u32::MAX, 1, u32::MAX));\n}',
+        output: 'true false',
+        explanation:
+          'The second call would overflow, so checked_add gives None and the request is refused.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn fits(used: u8, extra: u8, capacity: u8) -> bool {\n    used.checked_add(extra).is_some_and(|total| total <= capacity)\n}\n\nfn main() {\n    println!("{} {} {}", fits(200, 55, 255), fits(200, 56, 255), fits(0, 0, 0));\n}',
+          [
+            'true true true',
+            'false false true',
+            'true false false',
+            'true false true',
+          ],
+          3,
+          '200 + 55 is exactly 255; 200 + 56 overflows u8; 0 + 0 fits a capacity of 0.',
+        ),
+        choose(
+          'Why test fits(u32::MAX, 1, u32::MAX) in addition to fits(3, 3, 5)?',
+          [
+            'u32::MAX is the most common capacity in practice',
+            'It is the only way to test the <= comparison',
+            'The addition overflows there, which ordinary sizes never reach',
+            'Large numbers execute more lines of the function',
+          ],
+          2,
+          'Overflow is a boundary of the integer type itself, separate from the capacity limit.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let used: u8 = 250;\n    let extra: u8 = 10;\n    println!("{} {}", used.wrapping_add(extra), used.checked_add(extra).is_some());\n}',
+          ['4 false', '260 true', '255 false', '4 true'],
+          0,
+          'wrapping_add shows what a release build does: 260 wraps to 4. checked_add reports the overflow as None.',
+        ),
+        choose(
+          'In a capacity check, what should happen when used + extra overflows?',
+          [
+            'Refuse the request: the true total exceeds any capacity',
+            'Accept it, since the wrapped total is small',
+            'Clamp the total to the capacity and accept',
+            'Ignore the case, because u32 never overflows',
+          ],
+          0,
+          'An overflowing sum is larger than the type can hold, so it cannot fit.',
+        ),
+      ],
+    },
+  ],
+  'rust-table-tests': [
+    {
+      title: 'Run one check over a table of cases',
+      explanation: [
+        'Instead of repeating the same check for each input, list (input, expected) pairs in an array and loop over them, unpacking each pair with a tuple pattern. Every case goes through identical logic, and adding a case is one line.',
+        'Counting or reporting every mismatch shows all failing cases at once. When a case fails, decide whether the function or the table entry is wrong; never edit the expected value just to match the output.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn sign(n: i32) -> i32 {\n    if n > 0 {\n        1\n    } else if n < 0 {\n        -1\n    } else {\n        0\n    }\n}\n\nfn main() {\n    let cases = [(5, 1), (0, 0), (-3, -1), (-1, -1)];\n    let mut failures = 0;\n    for (input, expected) in cases {\n        if sign(input) != expected {\n            failures += 1;\n        }\n    }\n    println!("{} cases, {} failures", cases.len(), failures);\n}',
+        output: '4 cases, 0 failures',
+        explanation:
+          'The loop applies the same comparison to every row, and all four rows agree with sign.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn clamp_small(n: i32) -> i32 {\n    if n > 2 {\n        2\n    } else {\n        n\n    }\n}\n\nfn main() {\n    let cases = [(9, 2), (2, 2), (0, 0), (-2, -2), (-9, -2)];\n    let mut failed = 0;\n    for (input, expected) in cases {\n        if clamp_small(input) != expected {\n            failed += 1;\n        }\n    }\n    println!("{}", failed);\n}',
+          ['0', '2', '1', '5'],
+          2,
+          'clamp_small never raises small values, so only the -9 row fails.',
+        ),
+        choose(
+          'What is the main advantage of checking a table of (input, expected) pairs in one loop?',
+          [
+            'Every case uses the same check, and adding one is a single line',
+            'The loop makes the function under test run faster',
+            'Only the first case in the table has to be correct',
+            'Expected values can be computed by the function itself',
+          ],
+          0,
+          'The table separates the data from the checking logic, which is written once.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn double(n: i32) -> i32 {\n    n + n\n}\n\nfn main() {\n    let cases = [(1, 2), (0, 0), (3, 7), (-4, -8)];\n    for (input, expected) in cases {\n        if double(input) != expected {\n            println!("double({}) gave {}, expected {}", input, double(input), expected);\n        }\n    }\n    println!("done");\n}',
+          [
+            'done',
+            'double(3) gave 6, expected 7\ndone',
+            'double(3) gave 7, expected 6\ndone',
+            'double(1) gave 2, expected 2\ndone',
+          ],
+          1,
+          'Only the row (3, 7) disagrees, and here the table entry, not the function, is wrong.',
+        ),
+        choose(
+          'A table case fails because the function mishandles 0. What should you do?',
+          [
+            'Change the expected value to what the function returns',
+            'Fix the function so the 0 case passes',
+            'Delete the 0 case because the other cases pass',
+            'Move the 0 case to the end of the table',
+          ],
+          1,
+          'The table states the intended behavior; a failing row points at the code under test.',
+        ),
+      ],
+    },
+    {
+      title: 'Give the table rows for every branch',
+      explanation: [
+        'A table is only as strong as its rows. Include ordinary values, zero, negative values, and both sides of every limit, so each branch of the function runs at least once.',
+        'A table containing only positive numbers can pass while the negative branch is broken.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn bucket(n: i32) -> &\'static str {\n    match n {\n        n if n < 0 => "negative",\n        0 => "zero",\n        n if n < 10 => "small",\n        _ => "large",\n    }\n}\n\nfn main() {\n    let rows = [(-5, "negative"), (0, "zero"), (1, "small"), (9, "small"), (10, "large")];\n    let mut passed = 0;\n    for (n, want) in rows {\n        if bucket(n) == want {\n            passed += 1;\n        }\n    }\n    println!("{}/{}", passed, rows.len());\n}',
+        output: '5/5',
+        explanation:
+          'The rows hit every arm, including both sides of the 10 limit.',
+      },
+      questions: [
+        choose(
+          'A table for an absolute-value function has the rows (3, 3), (10, 10), and (7, 7). Which new row would improve it most?',
+          ['(5, 5)', '(100, 100)', '(8, 8)', '(-4, 4)'],
+          3,
+          'Every existing row takes the non-negative path; a negative input exercises the other branch.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn abs(n: i32) -> i32 {\n    if n < -1 {\n        -n\n    } else {\n        n\n    }\n}\n\nfn count_failures(rows: &[(i32, i32)]) -> usize {\n    let mut failures = 0;\n    for &(input, expected) in rows {\n        if abs(input) != expected {\n            failures += 1;\n        }\n    }\n    failures\n}\n\nfn main() {\n    let positive_only = [(3, 3), (10, 10)];\n    let with_edges = [(3, 3), (0, 0), (-1, 1), (-7, 7)];\n    println!("{} {}", count_failures(&positive_only), count_failures(&with_edges));\n}',
+          ['0 0', '1 1', '0 1', '0 2'],
+          2,
+          'The bug only affects -1, which the positive-only table never tries.',
+        ),
+        choose(
+          'Which inputs exercise every branch of if n > 100 { "big" } else if n > 0 { "pos" } else { "other" } at its limits?',
+          ['50, 60, 70', '101 and 0 only', '1, 2, 3, 4', '101, 100, 1, 0'],
+          3,
+          'These rows sit on both sides of 100 and of 0, so each branch runs.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn positive(n: i32) -> Option<i32> {\n    if n >= 0 {\n        Some(n)\n    } else {\n        None\n    }\n}\n\nfn main() {\n    let rows = [(4, Some(4)), (0, None), (-2, None), (1, Some(1))];\n    let mut ok = 0;\n    for (input, expected) in rows {\n        if positive(input) == expected {\n            ok += 1;\n        }\n    }\n    println!("{} of {}", ok, rows.len());\n}',
+          ['4 of 4', '3 of 4', '2 of 4', '1 of 4'],
+          1,
+          'The function treats 0 as positive, so the (0, None) row is the one that fails.',
+        ),
+      ],
+    },
+  ],
+  'rust-invariants': [
+    {
+      title: 'An invariant holds for every input',
+      explanation: [
+        'An invariant is a relationship that should be true for a whole family of inputs, not one hard-coded answer: reversing twice gives back the original, sorting keeps the length, deduplicating twice equals deduplicating once.',
+        'Checking it across many generated inputs, for example every length from 0 to 20, catches bugs that a single example misses.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn reverse_copy(values: &[i32]) -> Vec<i32> {\n    values.iter().rev().copied().collect()\n}\n\nfn main() {\n    let mut all_hold = true;\n    for n in 0..10 {\n        let input: Vec<i32> = (0..n).collect();\n        all_hold = all_hold && reverse_copy(&reverse_copy(&input)) == input;\n    }\n    println!("{}", all_hold);\n}',
+        output: 'true',
+        explanation:
+          'For every length from 0 to 9, reversing twice restores the input, so the flag stays true.',
+      },
+      questions: [
+        choose(
+          'Which statement is an invariant of a correct sort function?',
+          [
+            'sort of [3, 1, 2] returns [1, 2, 3]',
+            'The first element of the output is 1',
+            'The output has the same length as the input',
+            'The function finishes in under a second',
+          ],
+          2,
+          'The length relationship holds for every input; the others are single examples or unrelated to correctness.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn buggy_reverse(values: &[i32]) -> Vec<i32> {\n    values.iter().skip(1).rev().copied().collect()\n}\n\nfn main() {\n    let held = (0..5)\n        .filter(|n| {\n            let input: Vec<i32> = (0..*n).collect();\n            buggy_reverse(&buggy_reverse(&input)) == input\n        })\n        .count();\n    println!("{}", held);\n}',
+          ['1', '0', '5', '4'],
+          0,
+          'The bug drops an element, so the round trip only survives for the empty input.',
+        ),
+        choose(
+          'A test checks only that reverse of [1, 2, 3] is [3, 2, 1]. What does an invariant check over many inputs add?',
+          [
+            'Confidence across many cases, such as every length up to 20',
+            'A proof that reverse is correct for every possible input',
+            'A guarantee that reverse never allocates memory',
+            'Nothing; one example already covers every length',
+          ],
+          0,
+          'Many generated cases make a bug much harder to miss, though they are still a finite sample.',
+        ),
+        choose(
+          'Which property should hold for every input of a correct function that removes repeated values from a list?',
+          [
+            'The output is always shorter than the input',
+            'The output always has exactly one element',
+            'The output is sorted in descending order',
+            'Applying it twice gives the same result as once',
+          ],
+          3,
+          'After one pass there are no repeats left, so a second pass changes nothing. Lists without repeats keep their length.',
+        ),
+      ],
+    },
+    {
+      title: 'Check round trips on content, not just length',
+      explanation: [
+        'A round trip pairs an operation with its inverse: shift_down(shift_up(x)) == x. Compare whole outputs; a function can return the right length with the wrong values and still pass a length-only check.',
+        'Passing many generated cases is strong evidence, but not a proof. Inputs outside the sample, such as very large values, may still break the invariant.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn shift_up(values: &[i32]) -> Vec<i32> {\n    values.iter().map(|v| v + 10).collect()\n}\n\nfn shift_down(values: &[i32]) -> Vec<i32> {\n    values.iter().map(|v| v - 10).collect()\n}\n\nfn main() {\n    let mut all_hold = true;\n    for n in 0..6 {\n        let input: Vec<i32> = (-n..n).collect();\n        all_hold = all_hold && shift_down(&shift_up(&input)) == input;\n    }\n    println!("{}", all_hold);\n}',
+        output: 'true',
+        explanation:
+          'Each generated list, including negative values, comes back unchanged after the pair of shifts.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn bad_reverse(values: &[i32]) -> Vec<i32> {\n    values.iter().copied().collect()\n}\n\nfn main() {\n    let input = vec![1, 2, 3];\n    let out = bad_reverse(&input);\n    println!("{} {}", out.len() == input.len(), out[0] == input[2]);\n}',
+          ['true false', 'true true', 'false false', 'false true'],
+          0,
+          'The broken function keeps the length, so only a check on the content catches it.',
+        ),
+        choose(
+          'A round-trip check passes for every list of length 0 to 50. What has it shown?',
+          [
+            'That the functions are correct for every possible input',
+            'Nothing, because round trips can never fail',
+            'Strong evidence for those cases, not a proof for all inputs',
+            'That the functions are fast enough for real use',
+          ],
+          2,
+          'A finite sample cannot rule out failures for inputs it never tried.',
+        ),
+        predictOutput(
+          'This function claims to return its input unchanged. What does the program print?',
+          'fn cap(values: &[i32]) -> Vec<i32> {\n    values.iter().map(|v| (*v).min(5)).collect()\n}\n\nfn main() {\n    let held = (0..10)\n        .filter(|n| {\n            let input: Vec<i32> = (0..*n).collect();\n            cap(&input) == input\n        })\n        .count();\n    println!("{}", held);\n}',
+          ['6', '10', '7', '5'],
+          2,
+          'Lists 0..n for n up to 6 contain no value above 5, so they pass; longer lists include 6 or more and fail.',
+        ),
+        choose(
+          'Why compare whole outputs instead of only their lengths?',
+          [
+            'Comparing lengths is slower than comparing contents',
+            'A wrong function can keep the length while changing values',
+            'The lengths of two vectors cannot be compared',
+            'Whole outputs only matter for empty inputs',
+          ],
+          1,
+          'Length is one property; equality of contents is the actual round-trip claim.',
+        ),
+      ],
+    },
+  ],
+  'rust-panic-contracts': [
+    {
+      title: 'Return Option instead of panicking',
+      explanation: [
+        'a / b panics when b is 0, and also for i32::MIN / -1, whose true result does not fit in an i32. a.checked_div(b) returns an Option instead: Some(quotient), or None for those inputs.',
+        'A function that returns Option<i32> states in its type that some inputs have no answer, and the caller must decide what to do with None instead of the program stopping.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn share(total: i32, people: i32) -> Option<i32> {\n    total.checked_div(people)\n}\n\nfn main() {\n    println!("{:?} {:?}", share(12, 4), share(12, 0));\n}',
+        output: 'Some(3) None',
+        explanation:
+          'The valid division returns Some; dividing by zero returns None rather than panicking.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let a: i32 = -8;\n    println!("{:?} {:?}", a.checked_div(2), i32::MIN.checked_div(-1));\n}',
+          [
+            'Some(-4) Some(2147483648)',
+            'Some(4) None',
+            'None None',
+            'Some(-4) None',
+          ],
+          3,
+          '-8 / 2 is fine. i32::MIN / -1 would be 2147483648, which does not fit in an i32, so checked_div returns None.',
+        ),
+        choose(
+          'Which i32 division overflows even though the divisor is not zero?',
+          ['i32::MIN / -1', 'i32::MAX / 1', '0 / -1', '-8 / 2'],
+          0,
+          'Negating the most negative i32 gives a value one larger than i32::MAX.',
+        ),
+        choose(
+          'Why is fn average(total: i32, count: i32) -> Option<i32> a better contract than returning i32?',
+          [
+            'Callers must handle count == 0 instead of a panic',
+            'Option values make the division run faster',
+            'It lets the function skip the division entirely',
+            'An i32 return type cannot hold negative averages',
+          ],
+          0,
+          'The signature makes the impossible case visible, and the caller handles it explicitly.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let scores = [70, 85, 90];\n    println!("{:?} {:?}", scores.get(1), scores.get(3));\n}',
+          ['Some(70) None', 'Some(85) Some(90)', '85 None', 'Some(85) None'],
+          3,
+          'get checks the index: 1 is valid, while 3 is past the end and gives None where scores[3] would panic.',
+        ),
+      ],
+    },
+    {
+      title: 'Test the inputs that would have panicked',
+      explanation: [
+        'A contract that promises None for invalid input must be tested with exactly those inputs: zero divisors, overflow cases, out-of-range indexes. Normal inputs alone never reach the dangerous paths.',
+        'Catching a panic is not a substitute for such a contract. The panic may leave data half-updated, and nothing in the function’s type warns the caller that it can fail.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn safe_quotient(a: i32, b: i32) -> Option<i32> {\n    a.checked_div(b)\n}\n\nfn main() {\n    let cases = [(9, 3), (9, 0), (i32::MIN, -1)];\n    for case in cases {\n        println!("{:?}", safe_quotient(case.0, case.1));\n    }\n}',
+        output: 'Some(3)\nNone\nNone',
+        explanation:
+          'The table covers a normal division, a zero divisor, and the single overflowing division.',
+      },
+      questions: [
+        choose(
+          'A function promises None for a zero divisor. Which tests check that promise?',
+          [
+            'Only inputs where b is positive',
+            'Only the single input (10, 2)',
+            'Inputs where a is 0 and b is nonzero',
+            'b = 0, plus normal and overflow cases',
+          ],
+          3,
+          'The promise is about b = 0, so the tests must include it.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn previous(index: usize) -> Option<usize> {\n    index.checked_sub(1)\n}\n\nfn main() {\n    println!("{:?} {:?}", previous(3), previous(0));\n}',
+          ['Some(2) Some(0)', '2 None', 'Some(4) None', 'Some(2) None'],
+          3,
+          'usize cannot go below 0, so 0 - 1 has no answer and checked_sub returns None.',
+        ),
+        choose(
+          'Why is catching a panic a poor replacement for returning Option?',
+          [
+            'State may be half-updated, and the type hides the failure',
+            'A panic can never be caught by the code that called it',
+            'Catching a panic is always slower than dividing',
+            'A caught panic turns the result into Some(0)',
+          ],
+          0,
+          'An Option result is part of the contract; a panic is an interruption the type does not mention.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let totals: [i32; 3] = [10, 0, 7];\n    let counts = [2, 5, 0];\n    println!(\n        "{:?} {:?} {:?}",\n        totals[0].checked_div(counts[0]),\n        totals[1].checked_div(counts[1]),\n        totals[2].checked_div(counts[2])\n    );\n}',
+          [
+            'Some(5) Some(0) None',
+            'Some(5) None None',
+            'Some(5) Some(0) Some(0)',
+            '5 0 None',
+          ],
+          0,
+          'Dividing 0 by 5 is a valid 0. Only the zero divisor in the last pair gives None.',
         ),
       ],
     },

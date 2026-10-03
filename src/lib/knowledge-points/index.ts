@@ -3,6 +3,7 @@ import type { KnowledgePointDraft, KnowledgePointModule } from './authoring';
 import { knowledgePoints as cpp1 } from './cpp-1.kp';
 import { knowledgePoints as pythonFoundations } from './python-foundations.kp';
 import { knowledgePoints as rust1 } from './rust-1.kp';
+import { knowledgePoints as rust2 } from './rust-2.kp';
 
 export * from './authoring';
 
@@ -12,6 +13,7 @@ const modules: Record<string, KnowledgePointModule> = {
   'cpp-1.kp.ts': cpp1,
   'python-foundations.kp.ts': pythonFoundations,
   'rust-1.kp.ts': rust1,
+  'rust-2.kp.ts': rust2,
 };
 
 /** Registered file names, checked against the folder by the catalog tests. */
