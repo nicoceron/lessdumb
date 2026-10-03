@@ -503,7 +503,7 @@ const curriculum = [
     ['math-gradients', 'ml-baselines'],
     [
       'A gradient tells you how a loss changes when each parameter changes. Gradient descent updates a parameter vector by subtracting learning_rate times the gradient. For the scalar loss L(w) = (w - target)^2, the derivative is 2*(w - target). The subtraction moves toward the target when the step size is suitable.',
-      'A very small learning rate can make progress slow; a very large one can overshoot or diverge. Batch gradient descent uses all training examples per update. Stochastic descent uses one; mini-batch descent uses a small group. A neural-network loss need not be convex, so a zero gradient does not by itself prove that you found the best possible solution.',
+      'A very small learning rate can make progress slow; a very large one can overshoot or diverge. Batch gradient descent uses all training examples per update. Stochastic descent uses one; mini-batch descent uses a small group. A loss can have several valleys, so a zero gradient does not by itself prove that you found the best possible solution.',
     ],
     {
       code: 'w, target, rate = 0.0, 5.0, 0.1\ngradient = 2 * (w - target)\nw = w - rate * gradient\nprint(w)',
@@ -564,7 +564,7 @@ const curriculum = [
       ],
       [
         'Does a zero gradient always certify the global minimum?',
-        'No. In a nonconvex problem it can occur at a local minimum, a maximum, or a saddle point.',
+        'No. When a loss has several valleys or flat regions, it can occur at a local minimum, a maximum, or a saddle point.',
       ],
     ],
   ),
