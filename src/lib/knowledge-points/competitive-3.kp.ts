@@ -2791,6 +2791,1904 @@ print(increasing_length([-3, -1, -2, 0]))`,
   ],
 };
 
+const strategy: KnowledgePointModule = {
+  'cp-interval-overlap': [
+    {
+      title: 'Test overlap with the larger start and the smaller end',
+      explanation: [
+        'Two half-open intervals [a, b) and [c, d) share the region from the later start to the earlier end: [max(a, c), min(b, d)). They overlap exactly when that region is nonempty, which is max(a, c) < min(b, d).',
+        'This one test covers partial overlap, containment, and disjoint intervals in either order, so there is no need for separate cases.',
+      ],
+      example: {
+        code: `def intervals_overlap(first, second):
+    return max(first[0], second[0]) < min(first[1], second[1])
+
+print(intervals_overlap((1, 5), (3, 8)))
+print(max(1, 3), min(5, 8))`,
+        output: 'True\n3 5',
+        explanation:
+          'The shared region runs from the later start 3 to the earlier end 5, and 3 < 5, so it is nonempty.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def intervals_overlap(first, second):
+    return max(first[0], second[0]) < min(first[1], second[1])
+
+print(intervals_overlap((2, 6), (6, 9)), intervals_overlap((2, 7), (6, 9)))`,
+          ['True True', 'False False', 'True False', 'False True'],
+          3,
+          'The first pair shares no point: 6 < 6 is False. The second shares [6, 7).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def intervals_overlap(first, second):
+    return max(first[0], second[0]) < min(first[1], second[1])
+
+print(intervals_overlap((0, 10), (3, 4)), intervals_overlap((5, 6), (1, 2)))`,
+          ['True False', 'False False', 'True True', 'False True'],
+          0,
+          'A contained interval overlaps its container. The second pair is disjoint even though it is listed in reverse order.',
+        ),
+        choose(
+          'Two half-open intervals [a, b) and [c, d) overlap. Which region do they share?',
+          [
+            '[min(a, c), max(b, d))',
+            '[max(a, c), min(b, d))',
+            '[a, d)',
+            '[c, b)',
+          ],
+          1,
+          'A shared point must be after both starts and before both ends.',
+        ),
+        choose(
+          'A program reports overlap whenever first.end > second.start. Which pair does it report wrongly?',
+          [
+            '(1, 4) and (3, 6)',
+            '(1, 4) and (4, 6)',
+            '(2, 9) and (3, 4)',
+            '(5, 8) and (1, 3)',
+          ],
+          3,
+          '8 > 1 is true, but (1, 3) ends before (5, 8) starts. Checking one end against one start ignores the other order.',
+        ),
+      ],
+    },
+    {
+      title: 'Match the comparison to the endpoint convention',
+      explanation: [
+        'A half-open interval [a, b) excludes its end, so [1, 4) and [4, 6) touch without sharing a point; the test uses a strict <. Closed intervals [a, b] include both ends, so [1, 4] and [4, 6] share the point 4, and the test becomes <=.',
+        'Decide which convention the problem uses before writing the comparison; the formula is otherwise the same.',
+      ],
+      example: {
+        code: `def half_open_overlap(first, second):
+    return max(first[0], second[0]) < min(first[1], second[1])
+
+def closed_overlap(first, second):
+    return max(first[0], second[0]) <= min(first[1], second[1])
+
+print(half_open_overlap((1, 4), (4, 6)))
+print(closed_overlap((1, 4), (4, 6)))`,
+        output: 'False\nTrue',
+        explanation:
+          'The shared region would start and end at 4. A half-open region [4, 4) is empty, while a closed region [4, 4] contains 4.',
+      },
+      questions: [
+        choose(
+          'Meeting bookings are half-open: [9, 10) and [10, 11). Do they conflict?',
+          [
+            'Yes, both contain 10',
+            'Yes, because they touch',
+            'No, the first ends as the second starts',
+            'Only if they are sorted',
+          ],
+          2,
+          'The first booking excludes 10, so no moment belongs to both.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def closed_overlap(first, second):
+    return max(first[0], second[0]) <= min(first[1], second[1])
+
+print(closed_overlap((3, 5), (5, 7)), closed_overlap((3, 5), (6, 7)))`,
+          ['False False', 'True False', 'True True', 'False True'],
+          1,
+          'Closed intervals [3, 5] and [5, 7] share 5. [3, 5] and [6, 7] leave a gap.',
+        ),
+        choose(
+          'Which points do the closed intervals [2, 5] and [5, 8] share?',
+          ['None', 'All of [2, 8]', 'Only the point 5', 'The interval [5, 8)'],
+          2,
+          'Both closed intervals include 5, and no other point lies in both.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def half_open_overlap(first, second):
+    return max(first[0], second[0]) < min(first[1], second[1])
+
+results = []
+for first, second in [((-5, -1), (-3, 2)), ((-5, -3), (-3, 0)), ((0, 1), (0, 1))]:
+    results.append(half_open_overlap(first, second))
+print(results)`,
+          [
+            '[True, True, True]',
+            '[False, False, True]',
+            '[True, False, False]',
+            '[True, False, True]',
+          ],
+          3,
+          'Negative endpoints behave like any others. The middle pair only touches at -3; identical intervals overlap.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-interval-start-order': [
+    {
+      title: 'Sort intervals by start before scanning',
+      explanation: [
+        'A left-to-right scan needs every later interval to start no earlier than the current one. sorted(intervals) orders tuples by their first field, the start, which provides that guarantee.',
+        'Arrival order gives no such promise: an interval that arrives last may start first and connect spans that were already passed.',
+      ],
+      example: {
+        code: `intervals = [(4, 9), (1, 3), (2, 8)]
+print(sorted(intervals))`,
+        output: '[(1, 3), (2, 8), (4, 9)]',
+        explanation:
+          'Tuples compare by their first field first, so the intervals come out in increasing start order.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `print(sorted([(6, 7), (2, 9), (4, 5)]))`,
+          [
+            '[(4, 5), (6, 7), (2, 9)]',
+            '[(2, 9), (4, 5), (6, 7)]',
+            '[(6, 7), (2, 9), (4, 5)]',
+            '[(2, 9), (6, 7), (4, 5)]',
+          ],
+          1,
+          'Sorting tuples compares starts first: 2, 4, then 6. Sorting by end would give a different order.',
+        ),
+        choose(
+          'After sorting by start, what is guaranteed about the interval that follows (3, 8)?',
+          [
+            'Its start is at least 8',
+            'Its end is at least 8',
+            'Its start is at least 3',
+            'It overlaps (3, 8)',
+          ],
+          2,
+          'Sorting orders starts only; the next interval may still begin before or after 8.',
+        ),
+        choose(
+          'Why sort before merging instead of scanning in arrival order?',
+          [
+            'Sorting removes overlaps',
+            'A later-arriving interval may start earlier and connect spans already passed',
+            'Arrival order is always reversed',
+            'Merging requires unique starts',
+          ],
+          1,
+          'Without sorted starts, the scan cannot know that no future interval reaches back before the current span.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `print(sorted([(5, 6), (1, 2), (0, 10)]))`,
+          [
+            '[(1, 2), (5, 6), (0, 10)]',
+            '[(5, 6), (1, 2), (0, 10)]',
+            '[(0, 10), (5, 6), (1, 2)]',
+            '[(0, 10), (1, 2), (5, 6)]',
+          ],
+          3,
+          'The long interval starts at 0, so it comes first even though it ends last.',
+        ),
+      ],
+    },
+    {
+      title: 'Break start ties by end and keep the input intact',
+      explanation: [
+        'When two starts are equal, tuple comparison moves on to the second field, so equal starts are ordered by end. Duplicates are kept: sorting reorders, it never removes.',
+        'sorted returns a new list and leaves the original unchanged. list.sort() sorts in place and returns None, so its result must not be used as the sorted list.',
+      ],
+      example: {
+        code: `intervals = [(2, 5), (1, 4), (2, 3), (1, 4)]
+ordered = sorted(intervals)
+print(ordered)
+print(intervals)`,
+        output:
+          '[(1, 4), (1, 4), (2, 3), (2, 5)]\n[(2, 5), (1, 4), (2, 3), (1, 4)]',
+        explanation:
+          'Equal starts are ordered by end, both copies of (1, 4) remain, and the original list keeps its order.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `print(sorted([(3, 9), (3, 4), (3, 6)]))`,
+          [
+            '[(3, 9), (3, 4), (3, 6)]',
+            '[(3, 9), (3, 6), (3, 4)]',
+            '[(3, 4), (3, 6), (3, 9)]',
+            '[(3, 4)]',
+          ],
+          2,
+          'All starts are equal, so the ends decide the order.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `intervals = [(4, 7), (1, 5)]
+result = intervals.sort()
+print(result, intervals)`,
+          [
+            '[(1, 5), (4, 7)] [(4, 7), (1, 5)]',
+            'None [(1, 5), (4, 7)]',
+            '[(1, 5), (4, 7)] [(1, 5), (4, 7)]',
+            'None [(4, 7), (1, 5)]',
+          ],
+          1,
+          'list.sort() reorders the list itself and returns None.',
+        ),
+        choose(
+          'Two bookings are both (2, 3). What should the ordering step do with them?',
+          [
+            'Keep only one, since they are equal',
+            'Merge them into (2, 6)',
+            'Raise an error',
+            'Keep both; sorting never removes items',
+          ],
+          3,
+          'Deciding what duplicates mean is the merge step’s job; sorting only reorders.',
+        ),
+        choose(
+          'Which call sorts intervals by start and then by end?',
+          [
+            'sorted(intervals), since tuples compare start, then end',
+            'sorted(intervals, key=lambda iv: iv[1])',
+            'sorted(intervals, key=lambda iv: iv[0] + iv[1])',
+            'sorted(intervals, reverse=True)',
+          ],
+          0,
+          'Tuple comparison is already lexicographic. Sorting by end or by a sum loses the start order.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-interval-merge-step': [
+    {
+      title: 'Merge when the next start reaches the current end',
+      explanation: [
+        'With intervals sorted by start, compare the next interval with the current covered region. If next_start <= current_end, no gap separates them, so their union is one interval; otherwise a gap begins and the next interval stays separate.',
+        'Touching half-open regions such as [1, 4) and [4, 8) do not overlap, but their union [1, 8) is still one continuous interval, which is why the union test uses <= rather than <.',
+      ],
+      example: {
+        code: `def merge_next(current, following):
+    if following[0] <= current[1]:
+        return [(current[0], max(current[1], following[1]))]
+    return [current, following]
+
+print(merge_next((2, 5), (5, 9)))
+print(merge_next((2, 5), (6, 9)))`,
+        output: '[(2, 9)]\n[(2, 5), (6, 9)]',
+        explanation:
+          'The first pair touches at 5, so the union is one span. The second pair leaves the gap [5, 6).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def merge_next(current, following):
+    if following[0] <= current[1]:
+        return [(current[0], max(current[1], following[1]))]
+    return [current, following]
+
+print(merge_next((1, 6), (3, 8)))
+print(merge_next((1, 6), (7, 8)))`,
+          [
+            '[(1, 8)]\n[(1, 8)]',
+            '[(1, 6), (3, 8)]\n[(1, 6), (7, 8)]',
+            '[(1, 8)]\n[(1, 6), (7, 8)]',
+            '[(3, 6)]\n[(1, 6), (7, 8)]',
+          ],
+          2,
+          '3 <= 6 joins the first pair into (1, 8). 7 > 6 leaves a gap, so the second pair stays separate.',
+        ),
+        choose(
+          'The current region is [4, 7) and the next is [7, 10). Should a union merge join them?',
+          [
+            'No, they do not intersect',
+            'Yes, into [4, 10), since no gap separates them',
+            'Yes, into [4, 7)',
+            'No, starts must differ by more than 1',
+          ],
+          1,
+          'Every point from 4 up to 10 is covered by one of them, so the union is the single span [4, 10).',
+        ),
+        choose(
+          'Why does a union merge use next_start <= current_end while an overlap test uses <?',
+          [
+            'Union and overlap are the same test',
+            '<= is faster than <',
+            'Half-open intervals include their end',
+            'Touching spans share no point, but their union has no gap',
+          ],
+          3,
+          'Overlap asks for a shared point; union asks only whether the covered region is continuous.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def merge_next(current, following):
+    if following[0] <= current[1]:
+        return [(current[0], max(current[1], following[1]))]
+    return [current, following]
+
+print(merge_next((-4, -2), (-1, 3)))`,
+          ['[(-4, -2), (-1, 3)]', '[(-4, 3)]', '[(-2, -1)]', '[(-1, 3)]'],
+          0,
+          '-1 > -2, so the gap [-2, -1) keeps the intervals separate.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep the larger end when one interval contains the next',
+      explanation: [
+        'The next interval may end before the current one, as with [1, 9) and [3, 5). Its end must not replace the current end; the merged end is max(current_end, next_end).',
+        'The merged start can stay current_start, because sorting guarantees the next interval starts no earlier.',
+      ],
+      example: {
+        code: `def merge_next(current, following):
+    if following[0] <= current[1]:
+        return [(current[0], max(current[1], following[1]))]
+    return [current, following]
+
+print(merge_next((1, 9), (3, 5)))`,
+        output: '[(1, 9)]',
+        explanation: '[3, 5) lies inside [1, 9), so the union is still [1, 9).',
+      },
+      questions: [
+        predictOutput(
+          'This version takes the end of the following interval. What does it print?',
+          `def merge_next(current, following):
+    if following[0] <= current[1]:
+        return [(current[0], following[1])]
+    return [current, following]
+
+print(merge_next((0, 10), (2, 4)))`,
+          ['[(0, 10)]', '[(0, 4)]', '[(2, 4)]', '[(0, 10), (2, 4)]'],
+          1,
+          'Replacing the end with 4 drops the covered region [4, 10).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def merge_next(current, following):
+    if following[0] <= current[1]:
+        return [(current[0], max(current[1], following[1]))]
+    return [current, following]
+
+print(merge_next((0, 10), (2, 4)))`,
+          ['[(0, 4)]', '[(2, 4)]', '[(0, 10), (2, 4)]', '[(0, 10)]'],
+          3,
+          'max keeps the longer reach 10, so the contained interval adds nothing.',
+        ),
+        choose(
+          'The current region is [2, 12) and the next is [5, 7). What is the merged region?',
+          ['[2, 7)', '[5, 12)', '[2, 12)', '[5, 7)'],
+          2,
+          'The start stays 2 and the end is max(12, 7) = 12.',
+        ),
+        choose(
+          'Why can the merged region keep current_start without comparing starts?',
+          [
+            'Sorting guarantees the next start is no earlier',
+            'Starts are always zero',
+            'The next interval is always shorter',
+            'max already compared the starts',
+          ],
+          0,
+          'Intervals are processed in increasing start order, so current_start is the smaller start.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-intervals': [
+    {
+      title: 'Scan sorted intervals with one open span',
+      explanation: [
+        'Sort the bookings by start and keep a merged list. For each booking, if its start is <= the end of the last merged span, extend that span to the larger end; otherwise append the booking as a new span.',
+        'Only the last span can still grow. Every earlier span ends before the last span starts, and all later bookings start even later, so earlier spans are final.',
+      ],
+      example: {
+        code: `def merge_bookings(bookings):
+    merged = []
+    for start, end in sorted(bookings):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+        print(merged)
+    return merged
+
+merge_bookings([(5, 7), (1, 3), (2, 4), (8, 9)])`,
+        output:
+          '[(1, 3)]\n[(1, 4)]\n[(1, 4), (5, 7)]\n[(1, 4), (5, 7), (8, 9)]',
+        explanation:
+          '(2, 4) extends (1, 3). (5, 7) starts after 4, so it opens a new span, and (8, 9) does the same.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def merge_bookings(bookings):
+    merged = []
+    for start, end in sorted(bookings):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+print(merge_bookings([(4, 6), (1, 2), (5, 9), (2, 3)]))`,
+          [
+            '[(1, 3), (4, 9)]',
+            '[(1, 2), (2, 3), (4, 9)]',
+            '[(1, 9)]',
+            '[(1, 3), (4, 6), (5, 9)]',
+          ],
+          0,
+          '(1, 2) and (2, 3) touch, giving (1, 3). (4, 6) starts after 3, and (5, 9) extends it to (4, 9).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def merge_bookings(bookings):
+    merged = []
+    for start, end in sorted(bookings):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+print(merge_bookings([(10, 12), (0, 1), (3, 5)]))`,
+          [
+            '[(10, 12), (0, 1), (3, 5)]',
+            '[(0, 12)]',
+            '[(0, 1), (3, 5), (10, 12)]',
+            '[(0, 5), (10, 12)]',
+          ],
+          2,
+          'No booking reaches the next start, so the output is the three bookings in sorted order.',
+        ),
+        choose(
+          'Mid-scan, merged = [(1, 4), (6, 9)] and the next sorted booking is (7, 12). What changes?',
+          [
+            'A new span (7, 12) is appended',
+            'The first span becomes (1, 12)',
+            'Nothing',
+            'The last span becomes (6, 12)',
+          ],
+          3,
+          '7 <= 9, so the last span extends to max(9, 12) = 12.',
+        ),
+        choose(
+          'Why is each booking compared only with the last merged span?',
+          [
+            'Earlier spans end before the last span starts, and later bookings start no earlier',
+            'Earlier spans are deleted after each step',
+            'The last span is always the longest',
+            'Python lists only allow access to [-1]',
+          ],
+          0,
+          'A sorted booking that cannot reach the last span cannot reach any earlier, already-closed span.',
+        ),
+      ],
+    },
+    {
+      title: 'Handle touching, nested, and duplicate bookings',
+      explanation: [
+        'Three cases break naive merges. Touching bookings such as [1, 3) and [3, 5) join because the test is <=. A nested booking inside the current span must not shrink it, which max prevents. Duplicate bookings simply extend a span to the end it already has.',
+        'If a problem wants touching spans kept apart, change <= to <; the rest of the scan is unchanged.',
+      ],
+      example: {
+        code: `def merge_bookings(bookings):
+    merged = []
+    for start, end in sorted(bookings):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+print(merge_bookings([(1, 3), (3, 5)]))
+print(merge_bookings([(2, 10), (4, 6)]))`,
+        output: '[(1, 5)]\n[(2, 10)]',
+        explanation:
+          'The touching bookings form one occupied span. The nested booking leaves the containing span unchanged.',
+      },
+      questions: [
+        predictOutput(
+          'This version uses < instead of <=. What does it print?',
+          `def merge_strict(bookings):
+    merged = []
+    for start, end in sorted(bookings):
+        if merged and start < merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+print(merge_strict([(1, 3), (3, 5)]))`,
+          ['[(1, 5)]', '[(1, 3), (3, 5)]', '[(3, 5)]', '[(1, 3)]'],
+          1,
+          '3 < 3 is False, so the touching booking starts a separate span.',
+        ),
+        predictOutput(
+          'This version replaces the end instead of taking max. What does it print?',
+          `def merge_bookings(bookings):
+    merged = []
+    for start, end in sorted(bookings):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], end)
+        else:
+            merged.append((start, end))
+    return merged
+
+print(merge_bookings([(2, 10), (4, 6), (8, 12)]))`,
+          ['[(2, 12)]', '[(2, 10), (8, 12)]', '[(2, 6)]', '[(2, 6), (8, 12)]'],
+          3,
+          'The nested (4, 6) shrinks the span to end at 6, so (8, 12) no longer looks connected.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def merge_bookings(bookings):
+    merged = []
+    for start, end in sorted(bookings):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+print(merge_bookings([(3, 6), (3, 6), (0, 1)]))`,
+          [
+            '[(0, 1), (3, 6)]',
+            '[(0, 1), (3, 6), (3, 6)]',
+            '[(0, 6)]',
+            '[(0, 1), (3, 12)]',
+          ],
+          0,
+          'The duplicate starts inside the open span and extends it to max(6, 6) = 6.',
+        ),
+        choose(
+          'When should the scan keep touching spans such as [1, 3) and [3, 5) separate?',
+          [
+            'Never; touching spans must always merge',
+            'Only when the input is unsorted',
+            'When the required output keeps touching spans apart; then use < instead of <=',
+            'Only when endpoints are negative',
+          ],
+          2,
+          'Whether touching spans merge is a choice about the output representation, controlled by the comparison.',
+        ),
+      ],
+    },
+    {
+      title: 'Account for sorting and the input contract',
+      explanation: [
+        'Sorting n bookings costs O(n log n) and the scan costs O(n), so sorting dominates. The merged list uses O(n) space.',
+        'sorted(bookings) leaves the caller’s list unchanged, while bookings.sort() would reorder it. Skipping the sort breaks correctness, and an empty input returns an empty list without special handling.',
+      ],
+      example: {
+        code: `def merge_bookings(bookings):
+    merged = []
+    for start, end in sorted(bookings):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+bookings = [(6, 8), (1, 2)]
+print(merge_bookings(bookings))
+print(bookings)
+print(merge_bookings([]))`,
+        output: '[(1, 2), (6, 8)]\n[(6, 8), (1, 2)]\n[]',
+        explanation:
+          'The result is sorted, the caller’s list keeps its order, and an empty input never enters the loop.',
+      },
+      questions: [
+        choose(
+          'Merging n bookings: which step dominates the running time?',
+          [
+            'The scan, at O(n²)',
+            'Appending spans, at O(n²)',
+            'Taking max, at O(log n)',
+            'Sorting, at O(n log n)',
+          ],
+          3,
+          'The scan touches each booking once; sorting costs the extra log factor.',
+        ),
+        predictOutput(
+          'This version sorts the list in place. What does it print?',
+          `def merge_in_place(bookings):
+    bookings.sort()
+    merged = []
+    for start, end in bookings:
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+data = [(5, 6), (1, 2)]
+merge_in_place(data)
+print(data)`,
+          ['[(5, 6), (1, 2)]', '[(1, 2), (5, 6)]', '[]', 'None'],
+          1,
+          'list.sort() reorders the caller’s list, so data changes even though only the result was wanted.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def merge_bookings(bookings):
+    merged = []
+    for start, end in sorted(bookings):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+print(merge_bookings([]), merge_bookings([(4, 9)]))`,
+          ['[] [(4, 9)]', 'None [(4, 9)]', '[] []', '[(0, 0)] [(4, 9)]'],
+          0,
+          'An empty input leaves merged empty; a single booking is appended unchanged.',
+        ),
+        predictOutput(
+          'This version forgets to sort. What does it print?',
+          `def merge_unsorted(bookings):
+    merged = []
+    for start, end in bookings:
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+print(merge_unsorted([(5, 8), (1, 6)]))`,
+          ['[(1, 8)]', '[(1, 6), (5, 8)]', '[(5, 8)]', '[(5, 8), (1, 6)]'],
+          2,
+          '(1, 6) passes the start test against (5, 8), but the span keeps start 5, losing the covered region [1, 5).',
+        ),
+      ],
+    },
+  ],
+
+  'cp-greedy-finish-order': [
+    {
+      title: 'Consider the earliest-finishing activity first',
+      explanation: [
+        'To fit as many non-overlapping activities as possible, look at activities in order of finish time. An activity that ends earlier leaves at least as much time for everything after it.',
+        'Start time is the wrong key: an activity that starts first may run so long that it blocks many short ones.',
+      ],
+      example: {
+        code: `def finish_order(intervals):
+    return sorted(intervals, key=lambda interval: (interval[1], interval[0]))
+
+print(finish_order([(0, 9), (2, 4), (5, 7)]))`,
+        output: '[(2, 4), (5, 7), (0, 9)]',
+        explanation:
+          'The long activity (0, 9) starts first but finishes last, so it is considered last.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def finish_order(intervals):
+    return sorted(intervals, key=lambda interval: (interval[1], interval[0]))
+
+print(finish_order([(1, 8), (0, 3), (4, 6)]))`,
+          [
+            '[(0, 3), (1, 8), (4, 6)]',
+            '[(1, 8), (4, 6), (0, 3)]',
+            '[(0, 3), (4, 6), (1, 8)]',
+            '[(4, 6), (0, 3), (1, 8)]',
+          ],
+          2,
+          'The ends are 3, 6, and 8, so that is the order.',
+        ),
+        choose(
+          'Activities (0, 10), (1, 3), (3, 5), and (6, 8) compete for one room. Which should be considered first to fit the most?',
+          [
+            '(0, 10), the earliest start',
+            '(1, 3), the earliest finish',
+            '(6, 8), the latest start',
+            'Any of them; order does not matter',
+          ],
+          1,
+          'Finishing at 3 leaves the most room; (0, 10) would block every other activity.',
+        ),
+        choose(
+          'Sorting by start picks (0, 100) first from (0, 100), (1, 2), and (3, 4). How many activities does that schedule hold?',
+          ['1', '2', '3', '0'],
+          0,
+          'Both short activities overlap (0, 100), so nothing else fits; earliest finish would fit 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `intervals = [(0, 100), (1, 2), (3, 4)]
+print(sorted(intervals)[0], sorted(intervals, key=lambda iv: (iv[1], iv[0]))[0])`,
+          [
+            '(0, 100) (0, 100)',
+            '(1, 2) (1, 2)',
+            '(1, 2) (0, 100)',
+            '(0, 100) (1, 2)',
+          ],
+          3,
+          'Plain sorting puts the earliest start first; the finish key puts the earliest end first.',
+        ),
+      ],
+    },
+    {
+      title: 'Break finish ties by start, deterministically',
+      explanation: [
+        'Several activities can end at the same time. The key (end, start) sorts by end and then by start, so the result does not depend on input order.',
+        'With only the end as the key, ties keep their input order, because Python’s sort is stable. sorted returns a new list and keeps duplicates, leaving the caller’s list unchanged.',
+      ],
+      example: {
+        code: `def finish_order(intervals):
+    return sorted(intervals, key=lambda interval: (interval[1], interval[0]))
+
+print(finish_order([(3, 5), (1, 5), (2, 4)]))`,
+        output: '[(2, 4), (1, 5), (3, 5)]',
+        explanation:
+          '(2, 4) ends first. The two activities ending at 5 are ordered by start.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `print(sorted([(4, 6), (2, 6), (5, 6)], key=lambda iv: (iv[1], iv[0])))`,
+          [
+            '[(2, 6), (4, 6), (5, 6)]',
+            '[(4, 6), (2, 6), (5, 6)]',
+            '[(5, 6), (4, 6), (2, 6)]',
+            '[(6, 2), (6, 4), (6, 5)]',
+          ],
+          0,
+          'All ends are 6, so the starts decide the order.',
+        ),
+        predictOutput(
+          'This key uses only the end. What does it print?',
+          `print(sorted([(4, 6), (2, 6)], key=lambda iv: iv[1]))`,
+          [
+            '[(2, 6), (4, 6)]',
+            '[(6, 4), (6, 2)]',
+            '[(2, 6)]',
+            '[(4, 6), (2, 6)]',
+          ],
+          3,
+          'The keys tie, and a stable sort keeps tied items in their input order.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `sessions = [(5, 9), (0, 2)]
+ordered = sorted(sessions, key=lambda s: (s[1], s[0]))
+print(sessions[0], ordered[0])`,
+          ['(0, 2) (0, 2)', '(5, 9) (0, 2)', '(5, 9) (5, 9)', '(0, 2) (5, 9)'],
+          1,
+          'sorted builds a new list, so sessions keeps its original first item.',
+        ),
+        choose(
+          'How does the key (iv[1], iv[0]) order (4, 7) and (2, 7)?',
+          [
+            '(4, 7) first, because it appears first',
+            'It drops one as a duplicate',
+            'By start only',
+            '(2, 7) first, because equal ends compare starts',
+          ],
+          3,
+          'The first key fields tie at 7, so the second field, the start, decides.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-greedy-compatibility': [
+    {
+      title: 'Accept a candidate that starts at or after the last end',
+      explanation: [
+        'A schedule on one resource stays valid when each new activity starts at or after the end of the last accepted one. For half-open activities the test is start >= last_end.',
+        'Equality is allowed: an activity [2, 6) excludes 6, so another can begin exactly at 6.',
+      ],
+      example: {
+        code: `def compatible_starts(last_end, candidates):
+    return [start >= last_end for start in candidates]
+
+print(compatible_starts(6, [4, 6, 9]))`,
+        output: '[False, True, True]',
+        explanation:
+          'A start of 4 would overlap the activity ending at 6; starts of 6 or later are compatible.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def compatible_starts(last_end, candidates):
+    return [start >= last_end for start in candidates]
+
+print(compatible_starts(3, [3, 2, 7]))`,
+          [
+            '[False, False, True]',
+            '[True, True, True]',
+            '[True, False, True]',
+            '[False, True, False]',
+          ],
+          2,
+          'A start equal to the last end is compatible; 2 starts before it.',
+        ),
+        choose(
+          'The last selected activity is [2, 6). Which candidate is compatible?',
+          ['[5, 9)', '[6, 8)', '[1, 3)', '[4, 6)'],
+          1,
+          'Only [6, 8) starts at or after 6.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def compatible_starts(last_end, candidates):
+    return [start >= last_end for start in candidates]
+
+print(compatible_starts(-5, [-1, -6, -5]))`,
+          [
+            '[False, True, True]',
+            '[True, True, False]',
+            '[False, False, True]',
+            '[True, False, True]',
+          ],
+          3,
+          'Negative times compare like any integers: -1 and -5 are >= -5, while -6 is not.',
+        ),
+        choose(
+          'Why is a candidate starting exactly at last_end compatible for half-open activities?',
+          [
+            'Both activities include that moment',
+            'Equal times are ignored',
+            'The earlier activity excludes its end',
+            'Only activities of equal length can touch',
+          ],
+          2,
+          'The earlier activity stops just before last_end, so no moment is shared.',
+        ),
+      ],
+    },
+    {
+      title: 'Separate feasibility from optimality',
+      explanation: [
+        'The compatibility test keeps a schedule valid, but it does not say which candidates to take. Accepting every compatible activity in input order gives different counts for different orders.',
+        'Getting the maximum requires a justified order, such as earliest finish first. Starting last_end at negative infinity accepts the first candidate whatever its time.',
+      ],
+      example: {
+        code: `def count_feasible(order):
+    last_end = float("-inf")
+    count = 0
+    for start, end in order:
+        if start >= last_end:
+            count += 1
+            last_end = end
+    return count
+
+print(count_feasible([(0, 9), (1, 3), (4, 6)]))
+print(count_feasible([(1, 3), (4, 6), (0, 9)]))`,
+        output: '1\n2',
+        explanation:
+          'Both schedules are valid, but taking the long activity first blocks the two short ones.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def count_feasible(order):
+    last_end = float("-inf")
+    count = 0
+    for start, end in order:
+        if start >= last_end:
+            count += 1
+            last_end = end
+    return count
+
+print(count_feasible([(0, 5), (1, 2), (2, 3), (5, 6)]))`,
+          ['4', '3', '1', '2'],
+          3,
+          '(0, 5) is accepted first, which rejects (1, 2) and (2, 3); only (5, 6) follows.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def count_feasible(order):
+    last_end = float("-inf")
+    count = 0
+    for start, end in order:
+        if start >= last_end:
+            count += 1
+            last_end = end
+    return count
+
+print(count_feasible([(1, 2), (2, 3), (0, 5), (5, 6)]))`,
+          ['3', '2', '4', '1'],
+          0,
+          'The two short activities are accepted, (0, 5) is rejected, and (5, 6) fits after 3.',
+        ),
+        choose(
+          'Every selected activity passed the start >= last_end check. What does that guarantee?',
+          [
+            'The schedule has the maximum possible size',
+            'The activities are sorted by length',
+            'The schedule has no overlaps',
+            'Every activity was selected',
+          ],
+          2,
+          'The check prevents overlaps; it says nothing about whether a larger schedule exists.',
+        ),
+        choose(
+          'A rule scans candidates in input order and keeps every compatible one. What is missing to make it optimal?',
+          [
+            'A stricter compatibility test using >',
+            'A justified selection order, such as earliest finish first',
+            'Removing activities with negative times',
+            'Nothing; feasibility implies optimality',
+          ],
+          1,
+          'The same check yields different counts in different orders, so the order needs its own justification.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-greedy-exchange-boundary': [
+    {
+      title: 'An earlier finish keeps every later start feasible',
+      explanation: [
+        'Suppose an optimal schedule begins with an activity ending at old_end, and the greedy choice ends at greedy_end <= old_end. Every later activity in that schedule starts at or after old_end, so it also starts at or after greedy_end.',
+        'Swapping in the greedy choice therefore keeps the rest of the schedule valid and the same size. If greedy_end were later than old_end, some later activity could stop fitting.',
+      ],
+      example: {
+        code: `def exchange_preserves(greedy_end, old_end, later_starts):
+    return all(start < old_end or start >= greedy_end for start in later_starts)
+
+print(exchange_preserves(4, 6, [6, 8]))
+print(exchange_preserves(7, 6, [6, 8]))`,
+        output: 'True\nFalse',
+        explanation:
+          'Ending at 4 instead of 6 keeps both later starts valid. Ending at 7 breaks the activity that starts at 6.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def exchange_preserves(greedy_end, old_end, later_starts):
+    return all(start < old_end or start >= greedy_end for start in later_starts)
+
+print(exchange_preserves(2, 5, [5, 7, 1]), exchange_preserves(6, 5, [5]))`,
+          ['True True', 'False False', 'True False', 'False True'],
+          2,
+          'Ending at 2 keeps starts 5 and 7 valid. Ending at 6 breaks the start at 5.',
+        ),
+        choose(
+          'An optimal schedule is [0, 7) then [7, 9). Greedy picks [1, 4) first instead. Is [7, 9) still feasible after [1, 4)?',
+          [
+            'No, because [1, 4) starts later',
+            'Yes, because 7 >= 4',
+            'No, because 7 < 7 is false',
+            'Only if [1, 4) is longer',
+          ],
+          1,
+          'The greedy activity ends at 4, before 7, so the second activity still fits.',
+        ),
+        choose(
+          'Replacing a first activity that ends at old_end with one ending at new_end is always safe when...',
+          [
+            'new_end > old_end',
+            'the new activity starts earlier',
+            'both activities have equal length',
+            'new_end <= old_end',
+          ],
+          3,
+          'Only an end that is no later guarantees that every later start remains valid.',
+        ),
+        predictOutput(
+          'The replacement ends later than the original. What does this program print?',
+          `greedy_end, old_end = 9, 7
+later = [7, 8, 9, 12]
+print([start >= greedy_end for start in later if start >= old_end])`,
+          [
+            '[True, True, True, True]',
+            '[False, False, True, True]',
+            '[False, True, True, True]',
+            '[True, True, False, False]',
+          ],
+          1,
+          'Starts 7 and 8 fit after the old end but not after 9, so a later end can break continuations.',
+        ),
+      ],
+    },
+    {
+      title: 'Write the implication as not old, or new',
+      explanation: [
+        'The exchange claim is: if a start was feasible after the old end, it is feasible after the new end. "old implies new" is false only when old is True and new is False, so it equals (not old) or new.',
+        'For a start, old is start >= old_end and new is start >= greedy_end, which gives start < old_end or start >= greedy_end. all(...) checks every start, and an empty list passes vacuously.',
+      ],
+      example: {
+        code: `greedy_end, old_end = 3, 7
+for start in [1, 5, 7]:
+    old_ok = start >= old_end
+    new_ok = start >= greedy_end
+    print(start, old_ok, new_ok, (not old_ok) or new_ok)`,
+        output: '1 False False True\n5 False True True\n7 True True True',
+        explanation:
+          'Starts 1 and 5 were not feasible after the old end, so they impose no requirement. Start 7 stays feasible.',
+      },
+      questions: [
+        choose(
+          'Which combination violates "old feasible implies new feasible"?',
+          [
+            'old False, new False',
+            'old False, new True',
+            'old True, new True',
+            'old True, new False',
+          ],
+          3,
+          'An implication fails only when its premise holds and its conclusion does not.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def exchange_preserves(greedy_end, old_end, later_starts):
+    return all(start < old_end or start >= greedy_end for start in later_starts)
+
+print(exchange_preserves(4, 4, [1, 4, 9]), exchange_preserves(9, 2, []))`,
+          ['True False', 'True True', 'False True', 'False False'],
+          1,
+          'Equal ends change nothing. With no later starts, all([]) is True.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `old_end, greedy_end = 6, 8
+print([start < old_end or start >= greedy_end for start in [5, 6, 8]])`,
+          [
+            '[True, True, True]',
+            '[False, False, True]',
+            '[True, False, True]',
+            '[True, False, False]',
+          ],
+          2,
+          'Start 6 was feasible after 6 but not after 8, so its implication fails.',
+        ),
+        choose(
+          'Why do starts below old_end not matter to the exchange?',
+          [
+            'They were not feasible after the original first activity anyway',
+            'They are always feasible after the new one',
+            'Sorting removes them',
+            'They cannot overlap anything',
+          ],
+          0,
+          'Such starts are not part of any continuation of the original schedule, so the premise is false.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-greedy': [
+    {
+      title: 'Select sessions by earliest finish',
+      explanation: [
+        'Sort sessions by end time. Walk through them and accept a session when its start is at least the end of the last accepted session. The accepted sessions never overlap.',
+        'Each accepted session is the earliest-finishing session compatible with the ones before it, which is the local choice the exchange argument justifies.',
+      ],
+      example: {
+        code: `def chosen_sessions(sessions):
+    chosen = []
+    for start, end in sorted(sessions, key=lambda session: session[1]):
+        if not chosen or start >= chosen[-1][1]:
+            chosen.append((start, end))
+    return chosen
+
+print(chosen_sessions([(0, 6), (1, 2), (3, 5), (2, 4), (5, 7)]))`,
+        output: '[(1, 2), (2, 4), (5, 7)]',
+        explanation:
+          'By end time the order is (1, 2), (2, 4), (3, 5), (0, 6), (5, 7). (3, 5) and (0, 6) overlap the chosen (2, 4).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def max_sessions(sessions):
+    end_of_last = None
+    count = 0
+    for start, end in sorted(sessions, key=lambda session: session[1]):
+        if end_of_last is None or start >= end_of_last:
+            count += 1
+            end_of_last = end
+    return count
+
+print(max_sessions([(0, 3), (2, 5), (4, 7), (6, 9), (1, 2)]))`,
+          ['2', '5', '4', '3'],
+          3,
+          'The greedy takes (1, 2), (2, 5), and (6, 9); each other session overlaps one of these.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def chosen_sessions(sessions):
+    chosen = []
+    for start, end in sorted(sessions, key=lambda session: session[1]):
+        if not chosen or start >= chosen[-1][1]:
+            chosen.append((start, end))
+    return chosen
+
+print(chosen_sessions([(3, 8), (1, 4), (4, 6), (6, 9), (8, 10)]))`,
+          [
+            '[(1, 4), (4, 6), (6, 9)]',
+            '[(1, 4), (4, 6), (8, 10)]',
+            '[(1, 4), (3, 8), (8, 10)]',
+            '[(1, 4), (4, 6), (6, 9), (8, 10)]',
+          ],
+          0,
+          'After (6, 9) is accepted, (8, 10) starts before 9, so it is rejected.',
+        ),
+        choose(
+          'Sessions are (0, 5), (1, 3), and (4, 6). Which does the earliest-finish greedy select?',
+          ['(0, 5) only', '(1, 3) only', '(1, 3) and (4, 6)', 'All three'],
+          2,
+          '(1, 3) ends first; (0, 5) overlaps it, and (4, 6) starts after 3.',
+        ),
+        choose(
+          'Why does sorting by end make one pass enough?',
+          [
+            'Each session is compared once with the last accepted end, which is final',
+            'Sorting removes overlapping sessions',
+            'Sessions with equal ends are skipped',
+            'The pass is repeated until nothing changes',
+          ],
+          0,
+          'Once a session is accepted or rejected, later sessions end no earlier, so the decision never needs revisiting.',
+        ),
+      ],
+    },
+    {
+      title: 'Justify the choice with an exchange',
+      explanation: [
+        'Take any optimal schedule. Its first session ends no earlier than the earliest-finishing session, so replacing that first session with the greedy one keeps every later session feasible and keeps the count.',
+        'Repeat the argument on the sessions compatible with the chosen one. Step by step, the optimal schedule turns into the greedy schedule without losing a session, so the greedy count is optimal.',
+      ],
+      example: {
+        code: `def valid(schedule):
+    last_end = float("-inf")
+    for start, end in schedule:
+        if start < last_end:
+            return False
+        last_end = end
+    return True
+
+optimal = [(0, 4), (4, 6), (7, 9)]
+greedy_first = (1, 3)
+exchanged = [greedy_first, optimal[1], optimal[2]]
+print(valid(optimal), valid(exchanged), len(exchanged))`,
+        output: 'True True 3',
+        explanation:
+          'The greedy session ends at 3, before the old end 4, so the remaining sessions still fit and the size stays 3.',
+      },
+      questions: [
+        choose(
+          'An optimal schedule’s first session ends at 8. The earliest-finishing session ends at 5. What does swapping it in preserve?',
+          [
+            'Only sessions that start before 5',
+            'Every later session, since each starts at or after 8, which is after 5',
+            'Nothing; the swap must be rechecked by brute force',
+            'The total duration of the schedule',
+          ],
+          1,
+          'Later sessions already started at or after 8, so an end of 5 cannot conflict with them.',
+        ),
+        predictOutput(
+          'This replacement ends later than the session it replaces. What does the program print?',
+          `def valid(schedule):
+    last_end = float("-inf")
+    for start, end in schedule:
+        if start < last_end:
+            return False
+        last_end = end
+    return True
+
+optimal = [(0, 3), (3, 5)]
+exchanged = [(1, 4), optimal[1]]
+print(valid(optimal), valid(exchanged))`,
+          ['True True', 'False True', 'False False', 'True False'],
+          3,
+          'The replacement ends at 4, after the next session’s start 3, so the swap breaks the schedule.',
+        ),
+        choose(
+          'After the first exchange, how does the argument handle the remaining sessions?',
+          [
+            'It sorts them by start',
+            'It assumes they are already optimal',
+            'It repeats the exchange on the sessions compatible with the chosen one',
+            'It removes the longest one',
+          ],
+          2,
+          'The remaining problem has the same form, so the same exchange applies again.',
+        ),
+        choose(
+          'For which objective does this exchange argument break?',
+          [
+            'Maximizing the number of sessions when some touch',
+            'Maximizing total reward when sessions have different rewards',
+            'Maximizing the number of sessions at negative times',
+            'Maximizing the number of sessions with equal ends',
+          ],
+          1,
+          'Swapping in an earlier-finishing session can lower the total reward, so the count-based exchange no longer applies.',
+        ),
+      ],
+    },
+    {
+      title: 'Handle negative times, touching sessions, and cost',
+      explanation: [
+        'Start end_of_last as None, not 0. With 0, every session that starts before time 0 is wrongly rejected. Touching sessions are compatible because the test is start >= end_of_last.',
+        'Sorting costs O(n log n) and the scan O(n). Other natural rules, such as earliest start or shortest duration, have counterexamples; only the earliest-finish rule has the exchange guarantee.',
+      ],
+      example: {
+        code: `def max_sessions(sessions):
+    end_of_last = None
+    count = 0
+    for start, end in sorted(sessions, key=lambda session: session[1]):
+        if end_of_last is None or start >= end_of_last:
+            count += 1
+            end_of_last = end
+    return count
+
+def starts_at_zero(sessions):
+    end_of_last = 0
+    count = 0
+    for start, end in sorted(sessions, key=lambda session: session[1]):
+        if start >= end_of_last:
+            count += 1
+            end_of_last = end
+    return count
+
+sessions = [(-3, -1), (-1, 0), (-5, -2)]
+print(max_sessions(sessions))
+print(starts_at_zero(sessions))`,
+        output: '2\n0',
+        explanation:
+          'The correct version takes (-5, -2) and then (-1, 0). Starting at 0 rejects every session, since all start before 0.',
+      },
+      questions: [
+        predictOutput(
+          'This version starts end_of_last at 0. What does it print?',
+          `def starts_at_zero(sessions):
+    end_of_last = 0
+    count = 0
+    for start, end in sorted(sessions, key=lambda session: session[1]):
+        if start >= end_of_last:
+            count += 1
+            end_of_last = end
+    return count
+
+print(starts_at_zero([(-4, -2), (-2, 1), (1, 3)]))`,
+          ['3', '1', '0', '2'],
+          1,
+          'The two sessions that start before 0 are rejected; only (1, 3) passes, although all three fit together.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def max_sessions(sessions):
+    end_of_last = None
+    count = 0
+    for start, end in sorted(sessions, key=lambda session: session[1]):
+        if end_of_last is None or start >= end_of_last:
+            count += 1
+            end_of_last = end
+    return count
+
+print(max_sessions([(0, 2), (2, 4), (4, 6), (1, 5)]))`,
+          ['2', '4', '3', '1'],
+          2,
+          'The touching sessions (0, 2), (2, 4), and (4, 6) are all compatible; (1, 5) overlaps them.',
+        ),
+        choose(
+          'Sessions are (0, 5), (4, 7), and (6, 11). Shortest-first takes (4, 7) first. How many sessions does it fit, compared with earliest-finish?',
+          ['2 versus 2', '1 versus 3', '1 versus 2', '2 versus 3'],
+          2,
+          '(4, 7) overlaps both others, so shortest-first fits 1; earliest-finish takes (0, 5) and then (6, 11).',
+        ),
+        choose(
+          'How long does max_sessions take on n sessions?',
+          [
+            'O(n²), since every pair is compared',
+            'O(n), one scan only',
+            'O(2^n), every subset',
+            'O(n log n): one sort, then one scan',
+          ],
+          3,
+          'The scan does constant work per session after sorting.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-geometry-displacement': [
+    {
+      title: 'Subtract the start from the end, coordinate by coordinate',
+      explanation: [
+        'The vector from point a to point b is b - a: (b.x - a.x, b.y - a.y). It records how far to move horizontally and vertically to get from a to b.',
+        'Direction matters. The vector from b to a has every coordinate negated.',
+      ],
+      example: {
+        code: `def displacement(a, b):
+    return (b[0] - a[0], b[1] - a[1])
+
+print(displacement((1, 4), (6, 2)))
+print(displacement((6, 2), (1, 4)))`,
+        output: '(5, -2)\n(-5, 2)',
+        explanation:
+          'Going from (1, 4) to (6, 2) moves 5 right and 2 down. The reverse trip negates both moves.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def displacement(a, b):
+    return (b[0] - a[0], b[1] - a[1])
+
+print(displacement((3, -1), (0, 5)))`,
+          ['(3, -6)', '(-3, 6)', '(3, 4)', '(-3, 4)'],
+          1,
+          '0 - 3 = -3 and 5 - (-1) = 6.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def displacement(a, b):
+    return (b[0] - a[0], b[1] - a[1])
+
+print(displacement((2, 2), (5, 7)), displacement((5, 7), (2, 2)))`,
+          [
+            '(3, 5) (3, 5)',
+            '(7, 9) (7, 9)',
+            '(-3, -5) (3, 5)',
+            '(3, 5) (-3, -5)',
+          ],
+          3,
+          'Reversing the direction negates each coordinate.',
+        ),
+        choose(
+          'Which vector goes from A = (4, 1) to B = (1, 3)?',
+          ['(-3, 2)', '(3, -2)', '(5, 4)', '(-3, -2)'],
+          0,
+          'B - A = (1 - 4, 3 - 1) = (-3, 2).',
+        ),
+        choose(
+          'How is the vector from B to A related to the vector from A to B?',
+          [
+            'They are equal',
+            'Its coordinates are swapped',
+            'Each coordinate is negated',
+            'It is doubled',
+          ],
+          2,
+          'A - B = -(B - A).',
+        ),
+      ],
+    },
+    {
+      title: 'Displacement does not depend on the origin',
+      explanation: [
+        'Shifting both points by the same offset adds that offset to b and to a, and the subtraction cancels it. So the displacement between two points is the same wherever they sit.',
+        'With integer coordinates, Python’s subtraction is exact even for huge values. Float coordinates can pick up rounding error, which is why geometry code prefers integers when the input allows it.',
+      ],
+      example: {
+        code: `def displacement(a, b):
+    return (b[0] - a[0], b[1] - a[1])
+
+print(displacement((0, 0), (3, 4)))
+print(displacement((10, 10), (13, 14)))
+print(displacement((10**20, 0), (10**20 + 1, -2)))`,
+        output: '(3, 4)\n(3, 4)\n(1, -2)',
+        explanation:
+          'Moving both points by (10, 10) leaves the vector unchanged, and huge integers subtract exactly.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def displacement(a, b):
+    return (b[0] - a[0], b[1] - a[1])
+
+print(displacement((1, 2), (4, 4)), displacement((101, -48), (104, -46)))`,
+          [
+            '(3, 2) (3, 2)',
+            '(3, 2) (103, -46)',
+            '(3, 2) (-3, -2)',
+            '(3, 2) (100, -50)',
+          ],
+          0,
+          'The second pair is the first pair shifted by (100, -50), which cancels in the subtraction.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def displacement(a, b):
+    return (b[0] - a[0], b[1] - a[1])
+
+print(displacement((10**18, 5), (10**18 + 7, 5)))`,
+          ['(0, 0)', '(7.0, 0)', '(7, 0)', '(1e18, 0)'],
+          2,
+          'Python integers have no fixed size, so the difference 7 is exact.',
+        ),
+        choose(
+          'Both points move right by 9 units. What happens to the displacement between them?',
+          [
+            'Its x coordinate grows by 9',
+            'It does not change',
+            'Both coordinates grow by 9',
+            'It reverses direction',
+          ],
+          1,
+          'The 9 is added to both x coordinates and cancels in b.x - a.x.',
+        ),
+        predictOutput(
+          'These coordinates are floats. What does this program print?',
+          `def displacement(a, b):
+    return (b[0] - a[0], b[1] - a[1])
+
+print(displacement((0.1, 0), (0.3, 0)))`,
+          ['(0.2, 0)', '(0.3, 0)', '(0.2, 0.0)', '(0.19999999999999998, 0)'],
+          3,
+          '0.1 and 0.3 are not stored exactly as floats, so their difference is not exactly 0.2.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-geometry-cross-product': [
+    {
+      title: 'Compute u.x * v.y - u.y * v.x',
+      explanation: [
+        'The 2D cross product of vectors u and v is the single number u.x * v.y - u.y * v.x. Unlike the dot product, which adds matching coordinates’ products, it pairs each x with the other vector’s y and subtracts.',
+        'Order matters: cross(v, u) = -cross(u, v).',
+      ],
+      example: {
+        code: `def cross_product(u, v):
+    return u[0] * v[1] - u[1] * v[0]
+
+print(cross_product((3, 1), (1, 2)))
+print(cross_product((1, 2), (3, 1)))`,
+        output: '5\n-5',
+        explanation:
+          '3 * 2 - 1 * 1 = 5. Swapping the vectors swaps the two products, negating the result.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def cross_product(u, v):
+    return u[0] * v[1] - u[1] * v[0]
+
+print(cross_product((2, 5), (4, 1)))`,
+          ['18', '13', '-18', '22'],
+          2,
+          '2 * 1 - 5 * 4 = 2 - 20 = -18. 13 would be the dot product.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def cross_product(u, v):
+    return u[0] * v[1] - u[1] * v[0]
+
+print(cross_product((1, 3), (2, 0)), cross_product((2, 0), (1, 3)))`,
+          ['6 6', '-6 6', '6 -6', '-6 -6'],
+          1,
+          '1 * 0 - 3 * 2 = -6, and swapping the arguments negates it.',
+        ),
+        choose(
+          'How does swapping the two arguments change the cross product?',
+          [
+            'It leaves it unchanged',
+            'It doubles it',
+            'It negates it',
+            'It makes it zero',
+          ],
+          2,
+          'u.x * v.y - u.y * v.x becomes v.x * u.y - v.y * u.x, the same products subtracted the other way.',
+        ),
+        choose(
+          'Which expression is the dot product rather than the cross product?',
+          [
+            'u.x * v.y - u.y * v.x',
+            'u.y * v.x - u.x * v.y',
+            'abs(u.x * v.y - u.y * v.x)',
+            'u.x * v.x + u.y * v.y',
+          ],
+          3,
+          'The dot product multiplies matching coordinates and adds; the cross product mixes them and subtracts.',
+        ),
+      ],
+    },
+    {
+      title: 'Read the sign and the doubled area',
+      explanation: [
+        'In Cartesian coordinates, a positive cross product means v points counterclockwise from u, a negative one clockwise, and zero means the vectors are parallel or one is zero.',
+        'The absolute value is twice the area of the triangle formed by u and v from a common origin. The formula uses only multiplication and subtraction, so vertical vectors need no special case.',
+      ],
+      example: {
+        code: `def cross_product(u, v):
+    return u[0] * v[1] - u[1] * v[0]
+
+print(cross_product((4, 0), (0, 3)))
+print(cross_product((2, 1), (4, 2)))`,
+        output: '12\n0',
+        explanation:
+          'The right triangle with legs 4 and 3 has area 6, doubled to 12. (4, 2) is parallel to (2, 1), giving 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def cross_product(u, v):
+    return u[0] * v[1] - u[1] * v[0]
+
+print(cross_product((5, 0), (2, 4)) / 2)`,
+          ['20', '10', '10.0', '5.0'],
+          2,
+          'The cross product is 20, twice the triangle area; dividing with / gives the float 10.0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def cross_product(u, v):
+    return u[0] * v[1] - u[1] * v[0]
+
+print(cross_product((3, -6), (-1, 2)))`,
+          ['12', '0', '-12', '-15'],
+          1,
+          '3 * 2 - (-6) * (-1) = 6 - 6 = 0: the vectors point in opposite directions along one line.',
+        ),
+        choose(
+          'cross(u, v) > 0 in Cartesian coordinates. Where does v point relative to u?',
+          [
+            'Counterclockwise from u, to its left',
+            'Clockwise from u, to its right',
+            'In the same direction as u',
+            'Exactly opposite to u',
+          ],
+          0,
+          'A positive sign means a counterclockwise turn from u to v; parallel vectors give 0.',
+        ),
+        choose(
+          'Why does the integer cross product handle a vertical vector like (0, 5) without trouble?',
+          [
+            'Vertical vectors always give 0',
+            'It ignores the y coordinate',
+            'Python converts vertical vectors to floats',
+            'It uses only multiplication and subtraction, never division by an x difference',
+          ],
+          3,
+          'A slope would divide by 0 for a vertical vector; the cross product never divides.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-geometry-turn-sign': [
+    {
+      title: 'Combine B - A and C - A into one turn sign',
+      explanation: [
+        'To classify the turn at points a, b, c, take the vectors b - a and c - a and compute their cross product. Positive means c lies to the left of the directed line a → b, negative means right, and zero means the three points are collinear.',
+        '(cross > 0) - (cross < 0) turns the number into 1, -1, or 0, because True and False count as 1 and 0.',
+      ],
+      example: {
+        code: `def turn(a, b, c):
+    cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    return (cross > 0) - (cross < 0)
+
+print(turn((0, 0), (2, 0), (3, 1)))`,
+        output: '1',
+        explanation:
+          'b - a = (2, 0) and c - a = (3, 1); the cross product 2 * 1 - 0 * 3 = 2 is positive, a left turn.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def turn(a, b, c):
+    cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    return (cross > 0) - (cross < 0)
+
+print(turn((1, 1), (4, 1), (2, -3)))`,
+          ['1', '0', '-12', '-1'],
+          3,
+          'b - a = (3, 0) and c - a = (1, -4); 3 * (-4) - 0 * 1 = -12, a right turn.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def turn(a, b, c):
+    cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    return (cross > 0) - (cross < 0)
+
+print(turn((0, 0), (1, 2), (2, 4)), turn((0, 0), (1, 2), (1, 3)))`,
+          ['0 1', '1 1', '0 -1', '1 0'],
+          0,
+          '(2, 4) lies on the line through (1, 2). For (1, 3), 1 * 3 - 2 * 1 = 1 is positive.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `signs = []
+for cross in [-7, 0, 9]:
+    signs.append((cross > 0) - (cross < 0))
+print(signs)`,
+          ['[-7, 0, 9]', '[False, False, True]', '[-1, 0, 1]', '[1, 0, 1]'],
+          2,
+          'Subtracting the two comparisons gives 1 - 0, 0 - 0, or 0 - 1.',
+        ),
+        choose(
+          'Walking from A = (0, 0) to B = (0, 5), on which side is C = (3, 2)?',
+          [
+            'Left, since the cross product is positive',
+            'Right, since the cross product is negative',
+            'On the line',
+            'It cannot be decided without slopes',
+          ],
+          1,
+          '(0, 5) × (3, 2) = 0 * 2 - 5 * 3 = -15, so C is to the right of the upward walk.',
+        ),
+      ],
+    },
+    {
+      title: 'Treat zero, repeated points, and screen axes carefully',
+      explanation: [
+        'A zero result means a, b, and c lie on one line, but it does not say c is between a and b; c can be behind a or beyond b. Repeated points also give zero, because one of the vectors is (0, 0).',
+        'The sign rule assumes Cartesian axes with y increasing upward. On a screen where y increases downward, the same formula still runs, but a result of 1 looks like a clockwise turn.',
+      ],
+      example: {
+        code: `def turn(a, b, c):
+    cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    return (cross > 0) - (cross < 0)
+
+print(turn((0, 0), (2, 2), (2, 2)))
+print(turn((0, 0), (3, 3), (-1, -1)))`,
+        output: '0\n0',
+        explanation:
+          'Repeated points give a zero vector. (-1, -1) is on the line through (0, 0) and (3, 3), but behind the start.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def turn(a, b, c):
+    cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    return (cross > 0) - (cross < 0)
+
+print(turn((5, 5), (5, 5), (8, 1)))`,
+          ['1', '-1', '0', '-4'],
+          2,
+          'a and b are the same point, so b - a is (0, 0) and the cross product is 0.',
+        ),
+        choose(
+          'On a screen where y increases downward, turn returns 1. How does the turn look on screen?',
+          [
+            'Counterclockwise',
+            'Straight',
+            'It depends on the x coordinates',
+            'Clockwise',
+          ],
+          3,
+          'Flipping the y axis mirrors the picture, so the same algebraic sign appears as the opposite rotation.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def turn(a, b, c):
+    cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    return (cross > 0) - (cross < 0)
+
+print(turn((1, 1), (3, 2), (-1, 0)))`,
+          ['-1', '0', '1', '2'],
+          1,
+          'c - a = (-2, -1) is exactly opposite to b - a = (2, 1), so the points are collinear.',
+        ),
+        choose(
+          'turn(a, b, c) returns 0. Which conclusion is justified?',
+          [
+            'a, b, and c lie on one line, possibly with repeated points',
+            'c lies between a and b',
+            'The points form a right angle',
+            'All three points are equal',
+          ],
+          0,
+          'Zero only says the vectors are parallel or zero; where c lies on the line needs another test.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-geometry': [
+    {
+      title: 'Classify every consecutive triple of a path',
+      explanation: [
+        'For a path of points, each consecutive triple (p[i], p[i + 1], p[i + 2]) has its own turn sign. A path of n points has n - 2 triples, and the signs come out in path order.',
+        'Walking around a convex polygon counterclockwise gives a left turn, 1, at every corner; a right turn reveals a dent.',
+      ],
+      example: {
+        code: `def turn_signs(points):
+    signs = []
+    for index in range(len(points) - 2):
+        a, b, c = points[index:index + 3]
+        cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        signs.append((cross > 0) - (cross < 0))
+    return signs
+
+print(turn_signs([(0, 0), (4, 0), (4, 3), (0, 3)]))`,
+        output: '[1, 1]',
+        explanation:
+          'Going right and then up is a left turn, and going up and then left is another left turn.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def turn_signs(points):
+    signs = []
+    for index in range(len(points) - 2):
+        a, b, c = points[index:index + 3]
+        cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        signs.append((cross > 0) - (cross < 0))
+    return signs
+
+print(turn_signs([(0, 0), (2, 0), (2, 2), (4, 2)]))`,
+          ['[1, 1]', '[-1, 1]', '[1, -1]', '[1, 0]'],
+          2,
+          'Right then up turns left; up then right turns right.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def turn_signs(points):
+    signs = []
+    for index in range(len(points) - 2):
+        a, b, c = points[index:index + 3]
+        cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        signs.append((cross > 0) - (cross < 0))
+    return signs
+
+print(turn_signs([(0, 0), (1, 1), (2, 2), (3, 1)]))`,
+          ['[0, -1]', '[0, 1]', '[1, -1]', '[-1]'],
+          0,
+          'The first three points are collinear. From (1, 1) through (2, 2), the path then bends right to (3, 1).',
+        ),
+        choose(
+          'A path has 7 points. How many signs does turn_signs return?',
+          ['7', '6', '3', '5'],
+          3,
+          'Triples start at indices 0 through 4, which is 7 - 2 = 5 triples.',
+        ),
+        choose(
+          'A walk goes counterclockwise around a convex polygon. Which signs appear at its corners?',
+          ['All -1', 'All 1', 'Alternating 1 and -1', 'All 0'],
+          1,
+          'Every corner of a convex polygon turns the same way, and counterclockwise means left turns.',
+        ),
+      ],
+    },
+    {
+      title: 'Return nothing for short paths and keep the input intact',
+      explanation: [
+        'range(len(points) - 2) is empty when there are fewer than three points, including the empty path where the stop is -2, so short inputs return [] without special cases.',
+        'points[index:index + 3] copies three points into a, b, c without changing the list, so the caller’s path is preserved.',
+      ],
+      example: {
+        code: `def turn_signs(points):
+    signs = []
+    for index in range(len(points) - 2):
+        a, b, c = points[index:index + 3]
+        cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        signs.append((cross > 0) - (cross < 0))
+    return signs
+
+print(turn_signs([]))
+print(turn_signs([(1, 2), (3, 4)]))`,
+        output: '[]\n[]',
+        explanation: 'Neither input has a triple, so the loop body never runs.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `print(list(range(len([(0, 0)]) - 2)), list(range(len([(0, 0), (1, 1), (2, 2), (3, 3)]) - 2)))`,
+          ['[] [0, 1, 2]', '[-1] [0, 1]', '[] [0, 1]', '[0] [0, 1]'],
+          2,
+          'range(-1) is empty. Four points give the two starting indices 0 and 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `points = [(0, 0), (1, 0), (1, 1), (0, 1)]
+a, b, c = points[1:4]
+print(a, c)`,
+          ['(0, 0) (1, 1)', '(1, 0) (1, 1)', '(0, 0) (0, 1)', '(1, 0) (0, 1)'],
+          3,
+          'The slice holds indices 1, 2, and 3, so a is (1, 0) and c is (0, 1).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def turn_signs(points):
+    signs = []
+    for index in range(len(points) - 2):
+        a, b, c = points[index:index + 3]
+        cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        signs.append((cross > 0) - (cross < 0))
+    return signs
+
+print(turn_signs([(3, 3), (3, 3), (3, 3)]))`,
+          ['[0]', '[]', '[1]', '[0, 0, 0]'],
+          0,
+          'Three points form one triple, and repeated points give a zero cross product.',
+        ),
+        choose(
+          'Why does range(len(points) - 2) never cause an index error for 0, 1, or 2 points?',
+          [
+            'Python pads short lists with zeros',
+            'A range whose stop is 0 or less is empty, so the body never runs',
+            'Slicing clips every index automatically',
+            'len always returns at least 3',
+          ],
+          1,
+          'range(0), range(-1), and range(-2) produce no values.',
+        ),
+      ],
+    },
+    {
+      title: 'Prefer exact integer orientation to slopes',
+      explanation: [
+        'Comparing slopes divides by an x difference, which fails for vertical segments and introduces float rounding. The cross product needs only integer multiplication and subtraction, so it is exact for coordinates of any size.',
+        'Orientation is a building block. It classifies one turn; tasks like segment intersection combine several orientation tests with boundary checks.',
+      ],
+      example: {
+        code: `a, b, c = (2, 0), (2, 5), (0, 1)
+cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+print(cross)
+print(b[0] - a[0])`,
+        output: '10\n0',
+        explanation:
+          'A slope through a and b would divide by 0. The cross product is 10, so c is to the left of the upward segment.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def turn_signs(points):
+    signs = []
+    for index in range(len(points) - 2):
+        a, b, c = points[index:index + 3]
+        cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        signs.append((cross > 0) - (cross < 0))
+    return signs
+
+print(turn_signs([(0, 0), (10**15, 1), (2 * 10**15, 3)]))`,
+          ['[0]', '[-1]', '[]', '[1]'],
+          3,
+          'The cross product is 10^15 * 3 - 1 * 2 * 10^15 = 10^15, exactly positive.',
+        ),
+        choose(
+          'A slope-based test divides by B.x - A.x. Which segment breaks it?',
+          [
+            'A horizontal segment such as (0, 3) to (4, 3)',
+            'A vertical segment such as (2, 0) to (2, 5)',
+            'A diagonal such as (0, 0) to (3, 3)',
+            'A segment with negative coordinates',
+          ],
+          1,
+          'A vertical segment has B.x - A.x = 0.',
+        ),
+        predictOutput(
+          'The points (0, 0), (3, 0.3), and (1, 0.1) lie on one line. What does this slope comparison print?',
+          `slope_ab = (0.3 - 0.0) / (3 - 0)
+slope_ac = (0.1 - 0.0) / (1 - 0)
+print(slope_ab == slope_ac)`,
+          ['True', '0.1', 'False', 'An error is raised'],
+          2,
+          '0.3 / 3 rounds to 0.09999999999999999, which is not equal to 0.1, so float slopes miss the collinearity.',
+        ),
+        choose(
+          'What does a single orientation test not decide by itself?',
+          [
+            'Whether C is to the left of A → B',
+            'Whether three points are collinear',
+            'Whether two segments intersect',
+            'Whether a turn is clockwise in Cartesian axes',
+          ],
+          2,
+          'Intersection needs several orientation tests plus checks for collinear and touching cases.',
+        ),
+      ],
+    },
+  ],
+};
+
 export const knowledgePoints: KnowledgePointModule = {
   ...dynamic,
+  ...strategy,
 };
