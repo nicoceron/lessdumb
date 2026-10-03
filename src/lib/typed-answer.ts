@@ -32,7 +32,7 @@ export type TypedGrade =
   | { status: 'invalid'; message: string };
 
 export const NOT_A_NUMBER =
-  'That is not a number this question can read. Type digits, such as 42, -3.5, 3/4, or 1e-3.';
+  'That is not a number, so it was not counted. Type digits, such as 42, -3.5, 3/4, or 1e-3.';
 export const EMPTY_RESPONSE = 'Type an answer first.';
 
 const DECIMAL = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;

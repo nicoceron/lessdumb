@@ -83,7 +83,7 @@ export function TypedAnswerInput({
           <Textarea
             {...shared}
             rows={lines}
-            className="typed-answer-input is-code"
+            className="typed-answer-input min-h-11 font-mono text-base md:text-base"
             onChange={(event) => onChange(event.target.value)}
           />
         ) : (
@@ -92,7 +92,7 @@ export function TypedAnswerInput({
             type="text"
             inputMode={question.type === 'numeric' ? 'decimal' : 'text'}
             enterKeyHint="done"
-            className={`typed-answer-input${code ? ' is-code' : ''}`}
+            className={`typed-answer-input h-11 text-base md:text-base${code ? ' font-mono' : ''}`}
             onChange={(event) => onChange(event.target.value)}
           />
         )}
@@ -169,6 +169,7 @@ export function TypedAnswerResult({
             {acceptedAnswer(question)}
             {unit ? ` ${unit}` : ''}
           </pre>
+          <Check size={18} aria-hidden="true" />
         </div>
       )}
       {others.length > 0 && (
