@@ -2,6 +2,7 @@ import type {
   ChoiceQuestion,
   CodeQuestion,
   LessonExample,
+  MultistepSetup,
   NumericQuestion,
   TextQuestion,
 } from '../curriculum';
@@ -117,6 +118,31 @@ export type AnswerDraft =
   | Omit<ChoiceQuestion, 'id'>
   | Omit<NumericQuestion, 'id'>
   | Omit<TextQuestion, 'id'>;
+
+/** A multistep part as authored: a question tied to the point it exercises. */
+export type PartDraft = AnswerDraft & { point: string };
+
+/** A multistep problem as authored, before its IDs are assigned. */
+export interface MultistepDraft {
+  title: string;
+  setup: MultistepSetup;
+  parts: PartDraft[];
+}
+
+/**
+ * One `*.multistep.ts` file: multistep problems keyed by the skill whose
+ * reviews and quizzes ask them (CEN-163).
+ */
+export type MultistepModule = Record<string, MultistepDraft[]>;
+
+/**
+ * Authoring helper for a multistep part: a question built with the usual
+ * helpers (`typeNumber`, `typeOutput`, `choose`, …) and the ID of the
+ * knowledge point it exercises, of the problem's skill or of an ancestor.
+ */
+export function part(point: string, question: AnswerDraft): PartDraft {
+  return { ...question, point };
+}
 
 /**
  * A question generator: one concrete question of the same type as the

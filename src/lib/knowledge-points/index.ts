@@ -1,9 +1,17 @@
-import type { CurriculumCatalog, KnowledgePoint, Skill } from '../curriculum';
+import type {
+  CurriculumCatalog,
+  KnowledgePoint,
+  MultistepProblem,
+  Skill,
+} from '../curriculum';
+import { partId, problemId } from '../multistep';
 import {
   vary,
   type GeneratorModule,
   type KnowledgePointDraft,
   type KnowledgePointModule,
+  type MultistepDraft,
+  type MultistepModule,
 } from './authoring';
 
 export * from './authoring';
@@ -16,6 +24,8 @@ export interface CourseContent extends CurriculumCatalog {
   knowledgePointSkillIds: string[];
   /** Registered `*.gen.ts` file names, checked against the folder by tests. */
   generatorFiles: string[];
+  /** Registered `*.multistep.ts` file names, checked against the folder by tests. */
+  multistepFiles: string[];
   knowledgePointErrors: string[];
 }
 
@@ -33,6 +43,23 @@ function attach(skill: Skill, drafts: KnowledgePointDraft[]): Skill {
     };
   });
   return { ...skill, knowledgePoints };
+}
+
+/** Stable IDs: `<skill>-ms<n>` and `<skill>-ms<n>#p<k>`. */
+function attachProblems(skill: Skill, drafts: MultistepDraft[]): Skill {
+  const multistep: MultistepProblem[] = drafts.map((draft, index) => {
+    const id = problemId(skill.id, index);
+    return {
+      id,
+      title: draft.title,
+      setup: draft.setup,
+      parts: draft.parts.map((part, partIndex) => ({
+        ...part,
+        id: partId(id, partIndex),
+      })),
+    };
+  });
+  return { ...skill, multistep };
 }
 
 /**
@@ -141,6 +168,45 @@ export function withKnowledgePoints(
     knowledgePointFiles: Object.keys(modules),
     knowledgePointSkillIds: [...registry.keys()],
     generatorFiles: Object.keys(generators),
+    multistepFiles: [],
     knowledgePointErrors: errors,
+  };
+}
+
+/**
+ * Attach a course's multistep problems (CEN-163), from its `*.multistep.ts`
+ * files keyed by the skill whose reviews and quizzes ask them. They travel
+ * with that skill's content, so the browser downloads them with its unit.
+ */
+export function withMultistep(
+  content: CourseContent,
+  modules: Record<string, MultistepModule>,
+): CourseContent {
+  const problems = new Map<
+    string,
+    { file: string; drafts: MultistepDraft[] }
+  >();
+  const errors: string[] = [];
+  const ids = new Set(content.skills.map((skill) => skill.id));
+  for (const [file, module] of Object.entries(modules))
+    for (const [skillId, drafts] of Object.entries(module)) {
+      if (problems.has(skillId))
+        errors.push(
+          `${skillId}: multistep problems defined in ${problems.get(skillId)!.file} and ${file}.`,
+        );
+      else if (!ids.has(skillId))
+        errors.push(
+          `${skillId}: multistep problems in ${file} for a skill outside ${content.courses.map((course) => course.id).join(', ')}.`,
+        );
+      problems.set(skillId, { file, drafts });
+    }
+  return {
+    ...content,
+    skills: content.skills.map((skill) => {
+      const authored = problems.get(skill.id);
+      return authored ? attachProblems(skill, authored.drafts) : skill;
+    }),
+    multistepFiles: [...content.multistepFiles, ...Object.keys(modules)],
+    knowledgePointErrors: [...content.knowledgePointErrors, ...errors],
   };
 }
