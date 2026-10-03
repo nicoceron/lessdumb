@@ -29,9 +29,17 @@ const LESSON_XP = earnedXp(lessonXp(skill), 0, true);
 const start = Date.parse('2026-10-01T12:00:00.000Z');
 // A skill without knowledge points keeps per-question evidence; test it on a
 // catalog where one choice-only skill has its knowledge points removed.
+// Its four checks reuse the retired question IDs, `<skill>-q1` to `-q4`.
 const legacySkill = {
   ...skillById['ds-workloads'],
   knowledgePoints: undefined,
+  questions: skillById['ds-workloads']
+    .knowledgePoints!.flatMap((point) => point.questions)
+    .slice(0, 4)
+    .map((question, index) => ({
+      ...question,
+      id: `ds-workloads-q${index + 1}`,
+    })),
 };
 const legacyCatalog: CurriculumCatalog = {
   ...defaultCatalog,
@@ -269,7 +277,7 @@ describe('recording learning answers against current state', () => {
     expect(() =>
       recordLearningAnswer(current, {
         skillId: skill.id,
-        questionId: systemsSkill.questions[0].id,
+        questionId: systemsSkill.knowledgePoints![0].questions[0].id,
         correct: false,
         mode: 'learn',
       }),
@@ -506,9 +514,9 @@ describe('device progress reconciliation', () => {
       knowledgePoints: undefined,
       id: 'language:greetings',
       title: 'Greetings',
-      questions: skill.questions.filter(
-        (question) => question.type === 'choice',
-      ),
+      questions: skill
+        .knowledgePoints!.flatMap((point) => point.questions)
+        .slice(0, 4),
       flashcards: skill.flashcards.map((card) => ({
         ...card,
         id: `language:${card.id}`,
