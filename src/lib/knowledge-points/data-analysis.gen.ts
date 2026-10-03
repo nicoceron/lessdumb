@@ -515,7 +515,7 @@ export const generators: GeneratorModule = {
       PRINT,
       `${NP}\nz = np.array(${floats(z)})\nprint(np.exp(z).round(${digits}).tolist())`,
       floats(values),
-      `np.exp applies $e^x$ to each entry: ${z.map((x, i) => `$e^{${num(x)}} \\approx ${values[i]}$`).join(', ')}, each rounded to ${digits} decimals by round(${digits}).`,
+      `np.exp applies $e^x$ to each entry: ${z.map((x, i) => `$e^{${num(x)}} ${x === 0 ? '=' : '\\approx'} ${values[i]}$`).join(', ')}, each rounded to ${digits} decimals by round(${digits}).`,
     );
   },
   // da-exp-log: Take natural logs with np.log
@@ -527,7 +527,7 @@ export const generators: GeneratorModule = {
       PRINT,
       `${NP}\nx = np.array(${floats(x)})\nprint(np.log(x).round(3).tolist())`,
       floats(logs),
-      `np.log takes the natural log of each entry: ${x.map((v, i) => `$\\ln ${num(v)} \\approx ${logs[i]}$`).join(', ')}. Entries below 1 have negative logs.`,
+      `np.log takes the natural log of each entry: ${x.map((v, i) => `$\\ln ${num(v)} ${v === 1 ? '=' : '\\approx'} ${logs[i]}$`).join(', ')}.${x.some((v) => v < 1) ? ' Entries below 1 have negative logs.' : ''}`,
     );
   },
   // da-exp-log: Add logs instead of multiplying probabilities
