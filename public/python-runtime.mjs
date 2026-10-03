@@ -5,7 +5,7 @@
 // longer, and a faster device a shorter one, so the gap between an efficient
 // solution and brute force is the same on every device. The scale is clamped
 // to [MIN_TIME_SCALE, MAX_TIME_SCALE]; the runner stops any run after 30 s.
-export const CALIBRATION_REFERENCE_SECONDS = 0.025;
+export const CALIBRATION_REFERENCE_SECONDS = 0.022;
 export const MIN_TIME_SCALE = 0.5;
 export const MAX_TIME_SCALE = 10;
 

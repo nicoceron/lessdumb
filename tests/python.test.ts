@@ -214,7 +214,7 @@ describe('device calibration', () => {
     expect(timeScale(reference * 6)).toBe(6);
     expect(timeScale(reference * 2.47)).toBe(2.5);
     // A faster device gets a proportionally shorter one.
-    expect(timeScale(reference / 1.6)).toBe(0.6);
+    expect(timeScale(reference / 1.5)).toBe(0.7);
   });
 
   it('clamps extreme measurements and ignores invalid ones', () => {
