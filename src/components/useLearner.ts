@@ -7,6 +7,7 @@ import {
   StateConflictError,
   type AccountSessionState,
 } from '../lib/account';
+import { resolveSessionOwner, type SessionOwner } from '../lib/session-owner';
 import { createState, mergeStates, type LearnerState } from '../lib/state';
 import {
   MAX_STATE_BODY_BYTES,
@@ -62,8 +63,17 @@ function guestClaim(): { owner: string; raw: string } | null {
 }
 
 export function useLearner(): Learner {
-  const session = authClient.useSession();
-  const userId = session.data?.user.id ?? null;
+  const sessionOwner = useRef<SessionOwner>(undefined);
+  const auth = authClient.useSession();
+  // Resolved during render from the previous owner, so a background refetch that keeps
+  // the same identity (a guest's null, or the same account) never reads as a new owner.
+  const owner = resolveSessionOwner(sessionOwner.current, auth);
+  sessionOwner.current = owner;
+  const session: AccountSessionState = {
+    ...auth,
+    isPending: owner === undefined,
+  };
+  const userId = owner ?? null;
   const [snapshot, setSnapshot] = useState<Snapshot>(() => ({
     owner: undefined,
     value: createState(),
@@ -74,7 +84,6 @@ export function useLearner(): Learner {
   const [sync, setSync] = useState('Loading your learning space…');
   const [retry, setRetry] = useState(0);
   const generation = useRef(0);
-  const sessionOwner = useRef<string | null | undefined>(undefined);
   const latest = useRef(snapshot);
   const refetchSession = useRef(session.refetch);
   const saving = useRef<{
@@ -82,32 +91,33 @@ export function useLearner(): Learner {
     generation: number;
   } | null>(null);
   latest.current = snapshot;
-  sessionOwner.current = session.isPending ? undefined : userId;
   refetchSession.current = session.refetch;
   // Ownership is checked during render, before effects can write a previous account's state.
-  const ready = !session.isPending && snapshot.owner === userId;
+  const ready = owner !== undefined && snapshot.owner === owner;
 
+  // Runs only when the owner changes: the first resolution, a real identity change, or an
+  // unresolved (failed) lookup. Each one invalidates in-flight work and reloads that owner's copy.
   useEffect(() => {
     const currentGeneration = ++generation.current;
     saving.current?.controller.abort();
     saving.current = null;
-    if (session.isPending) return;
-    const local = readLocal(storageKey(userId));
-    const claim = userId ? guestClaim() : null;
+    if (owner === undefined) return;
+    const local = readLocal(storageKey(owner));
+    const claim = owner ? guestClaim() : null;
     setSnapshot({
-      owner: userId,
+      owner,
       value: local?.state ?? createState(),
       revision: null,
       needsSave: false,
       hasDeviceState: !!local,
-      guestMigrationRaw: claim?.owner === userId ? claim.raw : undefined,
+      guestMigrationRaw: claim?.owner === owner ? claim.raw : undefined,
     });
-    setSync(userId ? 'Loading account progress…' : 'Saved on this device');
+    setSync(owner ? 'Loading account progress…' : 'Saved on this device');
     return () => {
       if (generation.current === currentGeneration)
         saving.current?.controller.abort();
     };
-  }, [userId, session.isPending]);
+  }, [owner]);
 
   useEffect(() => {
     if (!ready || !userId || snapshot.revision !== null) return;
@@ -336,9 +346,9 @@ export function useLearner(): Learner {
     return () => window.removeEventListener('online', online);
   }, []);
   function update(fn: (state: LearnerState) => LearnerState) {
-    const owner = userId;
+    const expected = userId;
     setSnapshot((value) =>
-      value.owner !== owner || sessionOwner.current !== owner
+      value.owner !== expected || sessionOwner.current !== expected
         ? value
         : {
             ...value,
