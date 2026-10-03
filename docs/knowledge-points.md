@@ -43,7 +43,7 @@ Lesson prose is typeset with [KaTeX](https://katex.org/docs/supported): lesson p
 - Inline math cannot start or end with a space, and only ASCII belongs inside it: use `\times`, `\le`, `\sigma`, `\bar{x}`, and `\text{mean}` rather than Unicode symbols or bare words.
 - Use display math only for a long standalone formula in an explanation, never in choices. It scrolls inside its own box on narrow screens.
 - If one choice is a formula, write the comparable choices in TeX too, so formatting never hints at the answer.
-- Titles, summaries, and flashcards are plain text everywhere; keep math out of them.
+- Titles, summaries, and authored flashcards are plain text everywhere; keep math out of them. A mistake card copies the question's prose, so it shows the TeX source.
 
 The catalog validator rejects unclosed, empty, or space-padded `$` delimiters, and a test renders every math span with KaTeX in strict mode, so a TeX typo fails CI. Competitive Programming keeps complexity notation such as O(n log n) as plain text.
 

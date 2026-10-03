@@ -200,6 +200,8 @@ src/components/ui/              shadcn/ui source components
 src/components/reui/            Free ReUI Stepper and CodeBlock
 src/components/useLearner.ts    Device persistence and account synchronization
 src/lib/curriculum.ts           Original course, unit, skill, question, card registry
+src/lib/math-text.ts            $…$ and $$…$$ math in prose: parsing and validation
+src/lib/katex-render.ts         KaTeX renderer, loaded only on pages whose text has math
 src/lib/learning.ts             Mastery evidence, task selection, review, XP, streaks
 src/lib/dashboard.ts            Task queue, XP summaries, completion estimate, history
 src/lib/xp.ts                   XP scale for lessons and reviews
