@@ -9,8 +9,6 @@ import {
 import type { LearnerState } from '../src/lib/state';
 import { choiceButton, feedback, prompt } from './helpers/lesson';
 
-const COURSE = 'python-foundations';
-
 /** Skills the simulated learner knows: these and everything they use. */
 function closure(ids: string[]): Set<string> {
   const result = new Set<string>();
@@ -38,6 +36,7 @@ test('a placement test adapts without feedback, reports the placement, and Learn
   // A new learner is offered the optional test; skipping is the default path.
   await expect(page.getByText(/Already know some of/)).toBeVisible();
   await page.getByRole('link', { name: 'Take the placement test' }).click();
+  await expect(page).toHaveURL(/\/learn\?placement=python-foundations$/);
   await expect(
     page.getByRole('region', { name: 'Placement instructions' }),
   ).toBeVisible();
