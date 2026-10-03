@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPyodide, type PyodideInterface } from 'pyodide';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -15,6 +15,7 @@ import {
   type Skill,
 } from '../src/lib/curriculum';
 import type { PythonResult } from '../src/lib/python';
+import { knowledgePointFiles } from '../src/lib/knowledge-points';
 
 // Every worked example and every "what does this print?" question is run, and
 // its published output must be exactly what the program prints.
@@ -109,6 +110,13 @@ function run(binary: string) {
 }
 
 describe('knowledge point registry', () => {
+  it('registers every knowledge point file in the folder', () => {
+    const files = readdirSync(resolve('src/lib/knowledge-points'))
+      .filter((file) => file.endsWith('.kp.ts'))
+      .sort();
+    expect([...knowledgePointFiles].sort()).toEqual(files);
+  });
+
   it('names each catalog skill at most once and validates every point', () => {
     expect(validateKnowledgePointRegistry()).toEqual([]);
     expect(validateCurriculum()).toEqual([]);
