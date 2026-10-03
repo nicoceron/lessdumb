@@ -2005,6 +2005,91 @@ code {
   }
 }
 
+/* Multistep problem (CEN-163): one card with the shared setup, shown once,
+   then its parts in order; each answered part stays, frozen, above the next. */
+.lesson-page .multistep-problem {
+  margin-bottom: 0;
+  padding: 24px 28px;
+  border-left-width: 4px;
+  border-left-color: var(--primary);
+}
+.multistep-head h3 {
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.5;
+  letter-spacing: -0.2px;
+  overflow-wrap: anywhere;
+  scroll-margin-top: 110px;
+}
+.multistep-head h3:focus {
+  outline: none;
+}
+.multistep-head .lesson-plan-note {
+  margin-top: 4px;
+}
+.multistep-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  margin-top: 16px;
+}
+.multistep-parts {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.multistep-part {
+  min-width: 0;
+  margin-top: 20px;
+  padding: 18px 0 0 16px;
+  border-top: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  scroll-margin-top: 72px;
+}
+.multistep-part[data-state='current'] {
+  border-left-color: var(--primary);
+}
+.multistep-part.is-correct[data-state='answered'] {
+  border-left-color: #22634c;
+}
+.multistep-part.is-incorrect[data-state='answered'] {
+  border-left-color: var(--destructive);
+}
+.lesson-workspace .multistep-part .question-top {
+  align-items: center;
+  margin-bottom: 12px;
+}
+.multistep-part .answer-option pre {
+  flex: 1 1 auto;
+}
+.multistep-part .question-prompt {
+  font-size: 17px;
+}
+.multistep-part > .quiz-result-status {
+  margin-bottom: 10px;
+}
+.multistep-part > p:not(.quiz-result-status) {
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+}
+.multistep-answer {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .lesson-page .multistep-problem {
+    padding: 20px 18px;
+  }
+  .multistep-part {
+    padding-left: 12px;
+  }
+}
+
 /* Quiz: a score card, then each question's result with its explanation. */
 .lesson-page .quiz-score {
   gap: 10px;

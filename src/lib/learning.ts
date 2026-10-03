@@ -1110,7 +1110,13 @@ export function nextTask(
       );
     return coverageCache.get(item.id)!;
   };
+  // A multistep problem part-way through is finished first, on its card.
+  const resuming = due.find(
+    (item) => item.id === lastSkill && openProblem(progress, item),
+  )?.id;
   due.sort((a, b) => {
+    if (a.id === resuming || b.id === resuming)
+      return Number(b.id === resuming) - Number(a.id === resuming);
     // A refresh a failed lesson is waiting for goes first.
     const refreshing =
       Number(refreshPending(progress.skills[b.id])) -
