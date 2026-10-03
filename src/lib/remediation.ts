@@ -31,7 +31,10 @@ export const WEAKNESS_WEIGHTS = {
   lapsed: 1,
   /** FSRS stability below UNSTABLE_DAYS: learned recently or barely reviewed. */
   unstable: 1,
-  /** Its current due date came from implicit credit, not a real review (CEN-88). */
+  /**
+   * Its review would be due by now, but implicit credit postponed it: no real
+   * review backs its current schedule (CEN-88).
+   */
   implicit: 1,
 } as const;
 export type WeaknessSignal = keyof typeof WEAKNESS_WEIGHTS;
@@ -150,11 +153,13 @@ export function prerequisiteWeakness(
     add('unstable');
     if (memory.lapses > 0) add('lapsed');
   }
+  // Its review would be due by now, and only implicit credit postponed it.
   const credit = state.implicitCredit;
   if (
     credit &&
     credit.basis === memory.lastReviewAt &&
-    state.dueAt === credit.dueAt
+    state.dueAt === credit.dueAt &&
+    credit.dueBefore <= time
   )
     add('implicit');
   return result;
