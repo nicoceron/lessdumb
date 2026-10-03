@@ -4688,7 +4688,2696 @@ print(slope_ab == slope_ac)`,
   ],
 };
 
+const numberTheory: KnowledgePointModule = {
+  'cp-gcd-divisibility': [
+    {
+      title: 'Test divisibility with a zero remainder',
+      explanation: [
+        'A positive integer d divides an integer a when a % d == 0, meaning a is an exact multiple of d. In Python, a % d with positive d is never negative, so the same test works for negative a.',
+        'Zero is a multiple of every positive d, since 0 = d × 0. So every positive d divides 0.',
+      ],
+      example: {
+        code: `def divides(divisor, value):
+    return value % divisor == 0
+
+print(divides(4, 28), divides(4, 30))
+print(divides(5, 0), divides(3, -12))`,
+        output: 'True False\nTrue True',
+        explanation:
+          '28 is 4 × 7, while 30 leaves remainder 2. Zero and -12 are exact multiples of 5 and 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `print(-12 % 5, 0 % 7, 18 % 6)`,
+          ['-2 0 0', '3 0 0', '2 0 0', '-2 7 0'],
+          1,
+          'With a positive divisor Python returns a remainder from 0 to 4: -12 = 5 × (-3) + 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def divides(divisor, value):
+    return value % divisor == 0
+
+print(divides(6, -42), divides(6, 15))`,
+          ['False False', 'True True', 'False True', 'True False'],
+          3,
+          '-42 is 6 × (-7), an exact multiple. 15 leaves remainder 3.',
+        ),
+        choose(
+          'Does 9 divide 0?',
+          [
+            'No, 0 has no divisors',
+            'Only when 9 is prime',
+            'Yes, because 0 = 9 × 0',
+            'It is undefined',
+          ],
+          2,
+          '0 % 9 == 0, so 0 is a multiple of 9 like every other multiple.',
+        ),
+        choose(
+          'Which value of a makes a % 4 == 0 true?',
+          ['6', '-8', '2', '-6'],
+          1,
+          '-8 = 4 × (-2). -6 % 4 is 2, so -6 is not a multiple of 4.',
+        ),
+      ],
+    },
+    {
+      title: 'Require a common divisor to divide both numbers',
+      explanation: [
+        'A common divisor of a and b divides each of them, so both remainders must be zero: a % d == 0 and b % d == 0. A divisor of only one number is not common.',
+        'The number 1 divides every integer, so every pair has at least one common divisor; the gcd is the largest of them.',
+      ],
+      example: {
+        code: `def is_common_divisor(a, b, divisor):
+    return a % divisor == 0 and b % divisor == 0
+
+common = []
+for d in [1, 2, 3, 4, 6, 8, 12]:
+    if is_common_divisor(24, 36, d):
+        common.append(d)
+print(common)`,
+        output: '[1, 2, 3, 4, 6, 12]',
+        explanation:
+          '8 divides 24 but leaves remainder 4 on 36, so it is not common. The largest common candidate is 12.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def is_common_divisor(a, b, divisor):
+    return a % divisor == 0 and b % divisor == 0
+
+common = []
+for d in [1, 2, 3, 4, 5, 6, 10, 15]:
+    if is_common_divisor(20, 30, d):
+        common.append(d)
+print(common)`,
+          [
+            '[1, 2, 5, 10]',
+            '[1, 2, 3, 4, 5, 6, 10, 15]',
+            '[2, 5]',
+            '[1, 2, 5, 10, 15]',
+          ],
+          0,
+          '3, 6, and 15 do not divide 20, and 4 does not divide 30.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def is_common_divisor(a, b, divisor):
+    return a % divisor == 0 and b % divisor == 0
+
+print(is_common_divisor(0, 0, 7), is_common_divisor(0, 9, 2))`,
+          ['False False', 'True True', 'True False', 'False True'],
+          2,
+          '7 divides 0 twice over. 2 divides 0 but not 9.',
+        ),
+        choose(
+          'A program uses or instead of and in the common-divisor test. What does it wrongly accept?',
+          [
+            'Only 1',
+            'A divisor of just one number, such as 8 for 24 and 36',
+            'Nothing; the results are the same',
+            'Only negative divisors',
+          ],
+          1,
+          'With or, one zero remainder is enough, so 8 passes because it divides 24.',
+        ),
+        choose(
+          'Which positive integer divides every pair of integers?',
+          ['2', 'The smaller number', 'None', '1'],
+          3,
+          'Every integer is a multiple of 1, so 1 is always a common divisor.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-gcd-remainder-step': [
+    {
+      title: 'Replace (a, b) with (b, a % b)',
+      explanation: [
+        'a % b equals a minus a multiple of b. Any number that divides both a and b also divides that difference, and any number that divides b and a % b divides a again. So (a, b) and (b, a % b) have exactly the same common divisors, and the same gcd.',
+        'When a < b, a % b is a itself, so the step simply swaps the pair.',
+      ],
+      example: {
+        code: `def euclid_step(a, b):
+    return (b, a % b)
+
+print(euclid_step(84, 36))
+print(euclid_step(7, 30))`,
+        output: '(36, 12)\n(30, 7)',
+        explanation:
+          '84 = 2 × 36 + 12. For (7, 30), the remainder is 7, so the step only swaps.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def euclid_step(a, b):
+    return (b, a % b)
+
+print(euclid_step(50, 15))`,
+          ['(15, 5)', '(50, 5)', '(5, 15)', '(15, 3)'],
+          0,
+          '50 = 3 × 15 + 5, so the new pair is (15, 5).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `a, b = 48, 18
+a, b = b, a % b
+print(a, b)
+a, b = b, a % b
+print(a, b)`,
+          ['18 12\n12 0', '18 12\n12 6', '48 12\n12 6', '18 30\n30 18'],
+          1,
+          '48 % 18 = 12, then 18 % 12 = 6.',
+        ),
+        choose(
+          'Why do (a, b) and (b, a % b) have the same common divisors?',
+          [
+            'a % b is always prime',
+            'Both pairs have the same sum',
+            'a % b is a minus a multiple of b, so divisors of a and b divide it',
+            'b always divides a',
+          ],
+          2,
+          'Subtracting multiples of b cannot create or destroy a divisor shared with b.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def euclid_step(a, b):
+    return (b, a % b)
+
+print(euclid_step(7, 30))`,
+          ['(7, 0)', '(30, 23)', '(7, 30)', '(30, 7)'],
+          3,
+          '7 % 30 is 7, so a smaller first value is just swapped into second place.',
+        ),
+      ],
+    },
+    {
+      title: 'Shrink the second value until a zero remainder',
+      explanation: [
+        'The remainder a % b is always smaller than b, so each step makes the second value strictly smaller. A nonnegative value cannot shrink forever, so it eventually reaches 0.',
+        'A zero remainder means b divides a. At that point the pair is (b, 0), and b is a common divisor of the original pair.',
+      ],
+      example: {
+        code: `def euclid_step(a, b):
+    return (b, a % b)
+
+step1 = euclid_step(30, 18)
+step2 = euclid_step(step1[0], step1[1])
+step3 = euclid_step(step2[0], step2[1])
+print(step1, step2, step3)`,
+        output: '(18, 12) (12, 6) (6, 0)',
+        explanation:
+          'The second value goes 18, 12, 6, 0. The final remainder is 0 because 6 divides 12.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def euclid_step(a, b):
+    return (b, a % b)
+
+step1 = euclid_step(21, 8)
+step2 = euclid_step(step1[0], step1[1])
+step3 = euclid_step(step2[0], step2[1])
+print(step1, step2, step3)`,
+          [
+            '(8, 5) (5, 3) (3, 2)',
+            '(8, 13) (13, 8) (8, 5)',
+            '(8, 5) (5, 0) (0, 5)',
+            '(8, 5) (5, 3) (3, 1)',
+          ],
+          0,
+          '21 % 8 = 5, 8 % 5 = 3, and 5 % 3 = 2.',
+        ),
+        choose(
+          'After a step from (a, b) with b > 0, how does the new second value compare with b?',
+          [
+            'It is larger than b',
+            'It is smaller than b, so the steps cannot go on forever',
+            'It equals b',
+            'It can be negative',
+          ],
+          1,
+          'A remainder after dividing by b is between 0 and b - 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def euclid_step(a, b):
+    return (b, a % b)
+
+print(euclid_step(45, 15), 45 % 15 == 0)`,
+          ['(15, 3) True', '(15, 0) False', '(15, 0) True', '(45, 0) True'],
+          2,
+          '15 divides 45 exactly, so the remainder is 0 after one step.',
+        ),
+        choose(
+          'A step produces (9, 0). What does that say about the previous pair (a, 9)?',
+          [
+            'a is prime',
+            'a equals 0',
+            'They share no divisor',
+            '9 divides a, so 9 is a common divisor of the pair',
+          ],
+          3,
+          'a % 9 == 0 means a is a multiple of 9, and 9 divides itself.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-gcd-lcm-zero': [
+    {
+      title: 'Divide by the gcd before multiplying',
+      explanation: [
+        'For nonzero a and b, lcm(a, b) = |a × b| / gcd(a, b). Writing it as (a // g) * b gives the same value, because g divides a exactly, and keeps the intermediate number smaller than a * b.',
+        'abs makes the result nonnegative when an input is negative.',
+      ],
+      example: {
+        code: `def lcm_from_gcd(a, b, divisor):
+    if a == 0 or b == 0:
+        return 0
+    return abs((a // divisor) * b)
+
+print(lcm_from_gcd(18, 30, 6))
+print(lcm_from_gcd(-12, 18, 6))`,
+        output: '90\n36',
+        explanation:
+          '18 // 6 = 3 and 3 × 30 = 90. For -12, the product -36 is made nonnegative by abs.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def lcm_from_gcd(a, b, divisor):
+    if a == 0 or b == 0:
+        return 0
+    return abs((a // divisor) * b)
+
+print(lcm_from_gcd(8, 12, 4), lcm_from_gcd(7, 5, 1))`,
+          ['96 35', '24 35', '24 12', '4 1'],
+          1,
+          '8 // 4 × 12 = 24. Coprime numbers have lcm equal to their product.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def lcm_from_gcd(a, b, divisor):
+    if a == 0 or b == 0:
+        return 0
+    return abs((a // divisor) * b)
+
+print(lcm_from_gcd(-4, 10, 2))`,
+          ['-20', '40', '20', '10'],
+          2,
+          '-4 // 2 = -2, times 10 is -20, and abs gives 20.',
+        ),
+        choose(
+          'Why compute (a // g) * b instead of (a * b) // g?',
+          [
+            'The two formulas give different answers',
+            'Division must always come last',
+            '(a * b) // g divides by zero',
+            'The intermediate value stays smaller',
+          ],
+          3,
+          'Both are exact; dividing first just avoids building the large product a * b.',
+        ),
+        choose(
+          'a = 12, b = 18, and gcd(a, b) = 6. What is lcm(a, b)?',
+          ['216', '6', '36', '72'],
+          2,
+          '12 // 6 × 18 = 36, the smallest positive multiple of both.',
+        ),
+      ],
+    },
+    {
+      title: 'Return 0 whenever an input is zero',
+      explanation: [
+        'The only common multiple of 0 and another number is 0, so lcm(a, 0) is defined as 0. Return it before dividing.',
+        'The early return matters most for (0, 0): its gcd is 0, and dividing by it would raise ZeroDivisionError.',
+      ],
+      example: {
+        code: `def lcm_from_gcd(a, b, divisor):
+    if a == 0 or b == 0:
+        return 0
+    return abs((a // divisor) * b)
+
+print(lcm_from_gcd(0, 15, 15))
+print(lcm_from_gcd(0, 0, 0))`,
+        output: '0\n0',
+        explanation:
+          'Both calls return before the division, so the zero gcd of (0, 0) is never used as a divisor.',
+      },
+      questions: [
+        choose(
+          'Without the zero check, what does lcm_from_gcd(0, 0, 0) do?',
+          [
+            'It returns 0',
+            'It raises ZeroDivisionError when dividing by the gcd 0',
+            'It returns 1',
+            'It loops forever',
+          ],
+          1,
+          '0 // 0 is a division by zero, which Python rejects.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def lcm_from_gcd(a, b, divisor):
+    if a == 0 or b == 0:
+        return 0
+    return abs((a // divisor) * b)
+
+print(lcm_from_gcd(0, 0, 0), lcm_from_gcd(-7, 0, 7))`,
+          ['0 7', '0 0', '0 -7', '1 0'],
+          1,
+          'Either input being zero returns 0 immediately.',
+        ),
+        choose(
+          'Why is lcm(0, 15) defined as 0?',
+          [
+            '15 divides 0, so the answer is 15',
+            'It avoids negative values',
+            '0 is the only common multiple of 0 and 15',
+            'The gcd is 0',
+          ],
+          2,
+          'Every multiple of 0 is 0, so no positive common multiple exists.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def lcm_from_gcd(a, b, divisor):
+    if a == 0 or b == 0:
+        return 0
+    return abs((a // divisor) * b)
+
+print(lcm_from_gcd(5, 0, 5), lcm_from_gcd(-6, -4, 2))`,
+          ['5 12', '0 -12', '0 24', '0 12'],
+          3,
+          'The zero input gives 0. -6 // 2 = -3, times -4 is 12.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-gcd': [
+    {
+      title: 'Loop Euclid’s step until the remainder is zero',
+      explanation: [
+        'Repeat (x, y) = (y, x % y) while y is nonzero. Each step keeps the gcd unchanged, and y shrinks every time, so the loop ends with y = 0. Then gcd(x, 0) = x, so x is the answer.',
+        'The number of steps is O(log(max(a, b))): even numbers near 10^18 need fewer than 100 steps.',
+      ],
+      example: {
+        code: `def gcd(a, b):
+    x, y = abs(a), abs(b)
+    while y:
+        x, y = y, x % y
+        print(x, y)
+    return x
+
+print(gcd(252, 105))`,
+        output: '105 42\n42 21\n21 0\n21',
+        explanation:
+          '252 % 105 = 42, 105 % 42 = 21, and 42 % 21 = 0, leaving 21.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def gcd(a, b):
+    x, y = abs(a), abs(b)
+    while y:
+        x, y = y, x % y
+    return x
+
+print(gcd(84, 120))`,
+          ['6', '24', '4', '12'],
+          3,
+          'The pairs are (120, 84), (84, 36), (36, 12), (12, 0).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `x, y = 13, 8
+steps = 0
+while y:
+    x, y = y, x % y
+    steps += 1
+print(x, steps)`,
+          ['1 5', '1 4', '8 5', '1 6'],
+          0,
+          'The pairs are (8, 5), (5, 3), (3, 2), (2, 1), (1, 0): five steps to reach gcd 1.',
+        ),
+        choose(
+          'When y becomes 0, why is x the gcd?',
+          [
+            'Another step would divide by zero',
+            'x is then always 1',
+            'gcd(x, 0) = x, and every step kept the gcd unchanged',
+            'The pair starts repeating',
+          ],
+          2,
+          'x divides itself and 0, and nothing larger divides x.',
+        ),
+        choose(
+          'About how many remainder steps does Euclid need for numbers near 10^18?',
+          [
+            'About 10^9',
+            'Fewer than about 90, since it is logarithmic',
+            'About 10^18',
+            'Exactly 2',
+          ],
+          1,
+          'Remainders shrink at least as fast as Fibonacci numbers fall, so the step count is O(log n).',
+        ),
+      ],
+    },
+    {
+      title: 'Normalize signs and zeros first',
+      explanation: [
+        'Common divisors ignore sign, so take abs of both inputs before the loop. Without it, Python’s % with a negative divisor can leave a negative result.',
+        'Zeros need no special case in the loop: gcd(a, 0) = |a|, and gcd(0, 0) is defined as 0 because every positive integer divides 0, so there is no largest one.',
+      ],
+      example: {
+        code: `def gcd(a, b):
+    x, y = abs(a), abs(b)
+    while y:
+        x, y = y, x % y
+    return x
+
+print(gcd(-12, 18), gcd(0, -7), gcd(0, 0))`,
+        output: '6 7 0',
+        explanation:
+          'Signs are removed first. With a zero input the loop runs at most once, leaving the other absolute value.',
+      },
+      questions: [
+        predictOutput(
+          'This version skips abs. What does it print?',
+          `def gcd_raw(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+print(gcd_raw(12, -18))`,
+          ['6', '-6', '12', '-18'],
+          1,
+          '12 % -18 is -6 in Python, and the loop ends at -6, a negative "gcd".',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def gcd(a, b):
+    x, y = abs(a), abs(b)
+    while y:
+        x, y = y, x % y
+    return x
+
+print(gcd(0, -7), gcd(0, 0))`,
+          ['0 0', '-7 0', '7 1', '7 0'],
+          3,
+          'gcd(0, -7) is |-7| = 7. gcd(0, 0) is 0 by convention, and the loop never runs.',
+        ),
+        choose(
+          'Why is gcd(0, 0) defined as 0 rather than as a largest common divisor?',
+          [
+            '0 is prime',
+            'Every positive integer divides 0, so no largest one exists',
+            'The loop would run forever otherwise',
+            'Python cannot compute it',
+          ],
+          1,
+          'With no largest common divisor, 0 is the convention that keeps formulas like the lcm consistent.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def gcd(a, b):
+    x, y = abs(a), abs(b)
+    while y:
+        x, y = y, x % y
+    return x
+
+print(gcd(-8, -20))`,
+          ['-4', '20', '4', '8'],
+          2,
+          'After abs, the pairs are (20, 8), (8, 4), (4, 0).',
+        ),
+      ],
+    },
+    {
+      title: 'Derive the lcm from the gcd',
+      explanation: [
+        'Once the gcd g is known, lcm = |(a // g) × b| for nonzero a and b, and 0 if either is zero. For positive a and b this means gcd × lcm = a × b.',
+        'Computing both in one function reuses the loop and keeps the zero cases in one place.',
+      ],
+      example: {
+        code: `def gcd_lcm(a, b):
+    x, y = abs(a), abs(b)
+    while y:
+        x, y = y, x % y
+    multiple = 0 if a == 0 or b == 0 else abs((a // x) * b)
+    return x, multiple
+
+print(gcd_lcm(4, 6))
+print(gcd_lcm(-9, 12))
+print(gcd_lcm(0, 5))`,
+        output: '(2, 12)\n(3, 36)\n(5, 0)',
+        explanation:
+          '4 // 2 × 6 = 12. -9 // 3 × 12 = -36, made nonnegative. A zero input gives lcm 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def gcd_lcm(a, b):
+    x, y = abs(a), abs(b)
+    while y:
+        x, y = y, x % y
+    multiple = 0 if a == 0 or b == 0 else abs((a // x) * b)
+    return x, multiple
+
+print(gcd_lcm(21, 6))`,
+          ['(3, 126)', '(3, 42)', '(6, 21)', '(1, 126)'],
+          1,
+          'gcd(21, 6) = 3, and 21 // 3 × 6 = 42.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def gcd_lcm(a, b):
+    x, y = abs(a), abs(b)
+    while y:
+        x, y = y, x % y
+    multiple = 0 if a == 0 or b == 0 else abs((a // x) * b)
+    return x, multiple
+
+print(gcd_lcm(10, 10), gcd_lcm(1, 9))`,
+          [
+            '(10, 100) (1, 9)',
+            '(10, 10) (9, 9)',
+            '(10, 10) (1, 9)',
+            '(1, 10) (1, 9)',
+          ],
+          2,
+          'Equal numbers are their own gcd and lcm. 1 divides 9, so the lcm is 9.',
+        ),
+        choose(
+          'For positive a and b, which identity holds?',
+          [
+            'gcd + lcm = a + b',
+            'lcm = gcd²',
+            'lcm = a + b - gcd',
+            'gcd × lcm = a × b',
+          ],
+          3,
+          'lcm = a × b / gcd, so multiplying back by the gcd gives the product.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def gcd_lcm(a, b):
+    x, y = abs(a), abs(b)
+    while y:
+        x, y = y, x % y
+    multiple = 0 if a == 0 or b == 0 else abs((a // x) * b)
+    return x, multiple
+
+print(gcd_lcm(0, 0), gcd_lcm(-7, 0))`,
+          ['(0, 0) (7, 0)', '(0, 0) (-7, 0)', '(1, 0) (7, 7)', '(0, 0) (7, 7)'],
+          0,
+          'Both calls skip the division because an input is zero; the gcd of -7 and 0 is 7.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-modular-residue': [
+    {
+      title: 'Read a % m as a residue from 0 to m - 1',
+      explanation: [
+        'For a positive modulus m, Python’s a % m is always between 0 and m - 1, even when a is negative: -1 % 7 is 6, not -1.',
+        'Two integers have the same residue exactly when their difference is a multiple of m. The residue names that whole class of numbers.',
+      ],
+      example: {
+        code: `print(17 % 5, -17 % 5, -5 % 5)`,
+        output: '2 3 0',
+        explanation:
+          '17 = 3 × 5 + 2. -17 = -4 × 5 + 3. -5 is an exact multiple of 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `print(-1 % 7, -8 % 7, 15 % 7)`,
+          ['-1 -1 1', '6 6 1', '1 1 1', '6 -1 1'],
+          1,
+          '-1 and -8 differ by 7, so they share residue 6. 15 = 2 × 7 + 1.',
+        ),
+        choose(
+          'When do two integers have the same residue modulo m?',
+          [
+            'When they are equal',
+            'When their sum is m',
+            'When their difference is a multiple of m',
+            'When both are smaller than m',
+          ],
+          2,
+          'Adding or subtracting multiples of m does not change the residue.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `print(23 % 10 == 3 % 10, -7 % 10 == 3 % 10)`,
+          ['True False', 'False True', 'False False', 'True True'],
+          3,
+          '23 - 3 = 20 and 3 - (-7) = 10 are both multiples of 10.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `print(12 % 1, -5 % 1)`,
+          ['0 0', '1 1', '12 -5', '0 1'],
+          0,
+          'Every integer is a multiple of 1, so modulo 1 the only residue is 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Reduce operands before multiplying',
+      explanation: [
+        'Replacing a factor with its residue changes the product by a multiple of m, so (a % m) * (b % m) % m equals (a * b) % m. Reduce first to keep the numbers being multiplied below m.',
+        'The final % m is still needed: the product of two residues can be as large as (m - 1)², well above m.',
+      ],
+      example: {
+        code: `def product_residue(a, b, modulus):
+    return (a % modulus) * (b % modulus) % modulus
+
+print(product_residue(123, 456, 10))
+print(123 * 456 % 10)`,
+        output: '8\n8',
+        explanation:
+          'Only the last digits matter modulo 10: 3 × 6 = 18, which leaves 8, the same as the full product.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def product_residue(a, b, modulus):
+    return (a % modulus) * (b % modulus) % modulus
+
+print(product_residue(-3, 4, 7))`,
+          ['-5', '5', '2', '-12'],
+          2,
+          '-3 % 7 = 4, and 4 × 4 = 16 leaves 2, matching -12 % 7.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def product_residue(a, b, modulus):
+    return (a % modulus) * (b % modulus) % modulus
+
+print(product_residue(10**30, 10**30, 9))`,
+          ['0', '9', '10', '1'],
+          3,
+          'Every power of 10 leaves 1 modulo 9, so the product leaves 1 × 1 = 1.',
+        ),
+        choose(
+          'Why reduce the operands before multiplying?',
+          [
+            'It keeps intermediate values small without changing the residue',
+            'It changes the residue to a smaller one',
+            'It is needed only for negative numbers',
+            'It makes the modulus prime',
+          ],
+          0,
+          'Reduction removes multiples of m, which never affect the final residue.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `print((6 % 7) * (5 % 7), (6 % 7) * (5 % 7) % 7)`,
+          ['2 2', '30 30', '30 2', '2 30'],
+          2,
+          'The product of residues is 30, which is not itself a residue; one more % 7 gives 2.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-modular-square-step': [
+    {
+      title: 'Move one base factor into the result when the exponent is odd',
+      explanation: [
+        'Fast exponentiation keeps a state (result, base, exponent) that stands for result × base^exponent mod m. Each step must keep that value unchanged.',
+        'When the exponent is odd, base^e = base × base^(e - 1), so one factor moves into the result. The remaining even power can then be rewritten with a squared base.',
+      ],
+      example: {
+        code: `def power_step(result, base, exponent, modulus):
+    if exponent % 2:
+        result = result * base % modulus
+    else:
+        result %= modulus
+    return (result, base * base % modulus, exponent // 2)
+
+print(power_step(1, 5, 3, 11))`,
+        output: '(5, 3, 1)',
+        explanation:
+          'The odd exponent moves a 5 into the result. The base becomes 25 % 11 = 3, and 3 // 2 = 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def power_step(result, base, exponent, modulus):
+    if exponent % 2:
+        result = result * base % modulus
+    else:
+        result %= modulus
+    return (result, base * base % modulus, exponent // 2)
+
+print(power_step(1, 3, 6, 7))`,
+          ['(3, 2, 3)', '(1, 2, 3)', '(1, 9, 3)', '(1, 2, 6)'],
+          1,
+          'The exponent is even, so the result stays 1. The base becomes 9 % 7 = 2 and 6 halves to 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def power_step(result, base, exponent, modulus):
+    if exponent % 2:
+        result = result * base % modulus
+    else:
+        result %= modulus
+    return (result, base * base % modulus, exponent // 2)
+
+print(power_step(2, 4, 3, 10))`,
+          ['(8, 6, 1)', '(2, 6, 1)', '(8, 16, 1)', '(8, 6, 2)'],
+          0,
+          'The odd exponent moves a 4 into the result: 2 × 4 = 8. The base becomes 16 % 10 = 6.',
+        ),
+        choose(
+          'Modulo 13, which value does the state (result, base, exponent) = (3, 5, 4) stand for?',
+          [
+            '3 + 5 × 4 mod 13',
+            '5^(3 × 4) mod 13',
+            '(3 × 5)^4 mod 13',
+            '3 × 5^4 mod 13',
+          ],
+          3,
+          'The state always means result × base^exponent modulo m.',
+        ),
+        choose(
+          'Why does an odd exponent move one base factor into the result before halving?',
+          [
+            'Odd exponents cannot be squared',
+            'base^e = base × (base²)^((e - 1) / 2), so one factor is left over',
+            'It makes the result even',
+            'It resets the base to 1',
+          ],
+          1,
+          'Only an even exponent splits evenly into squares; the extra factor must go somewhere.',
+        ),
+      ],
+    },
+    {
+      title: 'Square the base and halve the exponent',
+      explanation: [
+        'After any odd factor is moved, base^e with an even e equals (base²)^(e / 2). So the step replaces the base with base * base % m and the exponent with e // 2, and result × base^exponent keeps the same residue.',
+        'Halving takes about log₂(e) steps to reach 0, instead of e multiplications.',
+      ],
+      example: {
+        code: `def power_step(result, base, exponent, modulus):
+    if exponent % 2:
+        result = result * base % modulus
+    else:
+        result %= modulus
+    return (result, base * base % modulus, exponent // 2)
+
+state = (1, 3, 5)
+print(state[0] * state[1] ** state[2] % 7)
+state = power_step(state[0], state[1], state[2], 7)
+print(state, state[0] * state[1] ** state[2] % 7)`,
+        output: '5\n(3, 2, 2) 5',
+        explanation:
+          '3^5 = 243 leaves 5 modulo 7. After the step, 3 × 2² = 12 also leaves 5: the represented value is unchanged.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def power_step(result, base, exponent, modulus):
+    if exponent % 2:
+        result = result * base % modulus
+    else:
+        result %= modulus
+    return (result, base * base % modulus, exponent // 2)
+
+state = (1, 2, 5)
+state = power_step(state[0], state[1], state[2], 13)
+state = power_step(state[0], state[1], state[2], 13)
+state = power_step(state[0], state[1], state[2], 13)
+print(state)`,
+          ['(2, 3, 1)', '(32, 9, 0)', '(6, 3, 0)', '(6, 9, 0)'],
+          3,
+          'The states are (2, 4, 2), (2, 3, 1), then (6, 9, 0). With exponent 0 the result 6 is 2^5 = 32 modulo 13.',
+        ),
+        choose(
+          'Starting from exponent 13 and halving with //, which exponents does the process see?',
+          [
+            '13, 6.5, 3.25, ...',
+            '13, 12, 11, ..., 0',
+            '13, 6, 3, 1, 0',
+            '13, 7, 4, 2, 1',
+          ],
+          2,
+          'Floor division drops the remainder each time; the dropped 1 is what the odd case handled.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def power_step(result, base, exponent, modulus):
+    if exponent % 2:
+        result = result * base % modulus
+    else:
+        result %= modulus
+    return (result, base * base % modulus, exponent // 2)
+
+print(power_step(9, -3, 4, 5))`,
+          ['(9, 9, 2)', '(4, 4, 2)', '(4, -4, 2)', '(-3, 4, 2)'],
+          1,
+          'The even case reduces 9 to 4. (-3)² = 9 leaves 4 modulo 5.',
+        ),
+        choose(
+          'How many halving steps take exponent 1000 down to 0?',
+          ['1000', '500', '10', '32'],
+          2,
+          '1000, 500, 250, 125, 62, 31, 15, 7, 3, 1, 0: ten steps, about log₂(1000).',
+        ),
+      ],
+    },
+  ],
+
+  'cp-modular-inverse-condition': [
+    {
+      title: 'An inverse exists exactly when gcd(b, m) = 1',
+      explanation: [
+        'An inverse of b modulo m is an x with b × x % m == 1. If b and m share a factor d > 1, every b × x and every multiple of m are multiples of d, so b × x can never leave remainder 1.',
+        'When gcd(b, m) = 1, an inverse always exists, even for a composite modulus. math.gcd checks the condition directly.',
+      ],
+      example: {
+        code: `from math import gcd
+
+def has_modular_inverse(value, modulus):
+    return gcd(value, modulus) == 1
+
+print(has_modular_inverse(7, 12), has_modular_inverse(8, 12))
+print(7 * 7 % 12)`,
+        output: 'True False\n1',
+        explanation:
+          '7 is coprime to 12, and indeed 7 × 7 = 49 leaves 1. 8 shares the factor 4 with 12.',
+      },
+      questions: [
+        predictOutput(
+          'This program searches for inverses of 3 and 4 modulo 10. What does it print?',
+          `found3 = []
+found4 = []
+x = 0
+while x < 10:
+    if 3 * x % 10 == 1:
+        found3.append(x)
+    if 4 * x % 10 == 1:
+        found4.append(x)
+    x += 1
+print(found3, found4)`,
+          ['[7] [4]', '[] []', '[7] []', '[3] [9]'],
+          2,
+          '3 × 7 = 21 leaves 1. Every multiple of 4 is even, so it never leaves 1 modulo 10.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `from math import gcd
+
+def has_modular_inverse(value, modulus):
+    return gcd(value, modulus) == 1
+
+print(has_modular_inverse(9, 20), has_modular_inverse(15, 20))`,
+          ['True False', 'False False', 'True True', 'False True'],
+          0,
+          '9 and 20 share no factor. 15 and 20 share 5.',
+        ),
+        choose(
+          'Modulus 9 is composite. Which value has an inverse modulo 9?',
+          ['3', '6', '0', '4'],
+          3,
+          'gcd(4, 9) = 1, and 4 × 7 = 28 leaves 1. 3, 6, and 0 share the factor 3 with 9.',
+        ),
+        choose(
+          'Why can 6 not have an inverse modulo 15?',
+          [
+            '6 is even',
+            'They share the factor 3, so 6x mod 15 is always a multiple of 3',
+            '15 is composite, so no value is invertible',
+            '6 is less than 15',
+          ],
+          1,
+          'A remainder that is always a multiple of 3 can never be 1.',
+        ),
+      ],
+    },
+    {
+      title: 'Do not assume the modulus is prime',
+      explanation: [
+        'For a prime modulus, every residue except 0 is invertible. For a composite modulus, only the residues coprime to it are, so the gcd test is the general rule.',
+        'math.gcd ignores signs, so negative values work, and 0 is never invertible because gcd(0, m) = m. A shortcut that is valid only for primes cannot replace the gcd condition.',
+      ],
+      example: {
+        code: `from math import gcd
+
+units = []
+for value in [0, 1, 2, 3, 4, 5, 6, 7]:
+    if gcd(value, 8) == 1:
+        units.append(value)
+print(units)`,
+        output: '[1, 3, 5, 7]',
+        explanation:
+          'Modulo 8, the odd residues are invertible and the even ones share the factor 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `from math import gcd
+
+units = []
+for value in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]:
+    if gcd(value, 10) == 1:
+        units.append(value)
+print(units)`,
+          [
+            '[1, 3, 5, 7, 9]',
+            '[1, 3, 7, 9]',
+            '[2, 3, 5, 7]',
+            '[1, 2, 3, 4, 5, 6, 7, 8, 9]',
+          ],
+          1,
+          'Residues sharing 2 or 5 with 10 are excluded, including 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `from math import gcd
+
+def has_modular_inverse(value, modulus):
+    return gcd(value, modulus) == 1
+
+print(has_modular_inverse(-3, 10), has_modular_inverse(0, 7))`,
+          ['False False', 'True True', 'False True', 'True False'],
+          3,
+          'gcd(-3, 10) = 1, so -3 is invertible (its residue is 7). gcd(0, 7) = 7.',
+        ),
+        choose(
+          'Modulus 13 is prime. Which residues have inverses?',
+          [
+            'Only 1',
+            'Every residue, including 0',
+            'Every residue except 0',
+            'Only odd residues',
+          ],
+          2,
+          'A prime shares no factor with 1 through 12, but gcd(0, 13) = 13.',
+        ),
+        choose(
+          'A solution divides by b modulo m by computing pow(b, m - 2, m) for every m. When is that wrong?',
+          [
+            'When m is not prime, or b is a multiple of m',
+            'Only when b is negative',
+            'Never',
+            'Only when m is even and b is odd',
+          ],
+          0,
+          'That formula comes from Fermat’s little theorem, which needs a prime modulus and b not divisible by it.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-modular': [
+    {
+      title: 'Exponentiate by repeated squaring',
+      explanation: [
+        'Start with result = 1, the base reduced modulo m, and the full exponent. While the exponent is nonzero, move one base factor into the result if the exponent is odd, then square the base and halve the exponent.',
+        'The invariant result × base^exponent ≡ original_base^original_exponent (mod m) holds after every iteration, and the loop runs O(log e) times.',
+      ],
+      example: {
+        code: `def mod_power(base, exponent, modulus):
+    result = 1 % modulus
+    base %= modulus
+    while exponent:
+        if exponent % 2:
+            result = result * base % modulus
+        base = base * base % modulus
+        exponent //= 2
+        print(result, base, exponent)
+    return result
+
+print(mod_power(3, 13, 7))`,
+        output: '3 2 6\n3 4 3\n5 2 1\n3 4 0\n3',
+        explanation:
+          '13 is 1101 in binary, so factors are moved in at the steps where the exponent is odd. Four iterations replace twelve multiplications.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def mod_power(base, exponent, modulus):
+    result = 1 % modulus
+    base %= modulus
+    while exponent:
+        if exponent % 2:
+            result = result * base % modulus
+        base = base * base % modulus
+        exponent //= 2
+    return result
+
+print(mod_power(2, 10, 1000))`,
+          ['1024', '20', '24', '0'],
+          2,
+          '2^10 = 1024, which leaves 24 modulo 1000.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def mod_power(base, exponent, modulus):
+    result = 1 % modulus
+    base %= modulus
+    while exponent:
+        if exponent % 2:
+            result = result * base % modulus
+        base = base * base % modulus
+        exponent //= 2
+    return result
+
+print(mod_power(5, 3, 13))`,
+          ['125', '8', '2', '15'],
+          1,
+          '5^3 = 125 = 9 × 13 + 8.',
+        ),
+        choose(
+          'About how many loop iterations does mod_power take for exponent 10^18?',
+          ['About 10^9', 'About 18', 'About 10^18', 'About 60'],
+          3,
+          'Each iteration halves the exponent, and log₂(10^18) is about 60.',
+        ),
+        choose(
+          'Which invariant does each iteration keep?',
+          [
+            'result = base',
+            'result × base^exponent ≡ original_base^original_exponent (mod m)',
+            'exponent × base = result',
+            'base ≡ 1 (mod m)',
+          ],
+          1,
+          'Moving a factor and squaring the base both preserve the represented power.',
+        ),
+      ],
+    },
+    {
+      title: 'Get the empty product, modulus 1, and negative bases right',
+      explanation: [
+        'Exponent 0 is the empty product, so the answer is 1, even for base 0. Start the result at 1 % m, not 1: when m = 1 the only residue is 0, and the loop never runs to fix a wrong starting value.',
+        'Reducing the base first turns a negative base into its residue, so every later product stays in range.',
+      ],
+      example: {
+        code: `def mod_power(base, exponent, modulus):
+    result = 1 % modulus
+    base %= modulus
+    while exponent:
+        if exponent % 2:
+            result = result * base % modulus
+        base = base * base % modulus
+        exponent //= 2
+    return result
+
+print(mod_power(0, 0, 7), mod_power(9, 0, 1), mod_power(-2, 3, 5))`,
+        output: '1 0 2',
+        explanation:
+          '0^0 is the empty product 1. Modulo 1 everything is 0. (-2)^3 = -8 leaves 2 modulo 5.',
+      },
+      questions: [
+        predictOutput(
+          'The first function starts its result at 1. What does this program print?',
+          `def starts_at_one(base, exponent, modulus):
+    result = 1
+    base %= modulus
+    while exponent:
+        if exponent % 2:
+            result = result * base % modulus
+        base = base * base % modulus
+        exponent //= 2
+    return result
+
+def mod_power(base, exponent, modulus):
+    result = 1 % modulus
+    base %= modulus
+    while exponent:
+        if exponent % 2:
+            result = result * base % modulus
+        base = base * base % modulus
+        exponent //= 2
+    return result
+
+print(starts_at_one(5, 0, 1), mod_power(5, 0, 1))`,
+          ['0 0', '1 0', '1 1', '0 1'],
+          1,
+          'With exponent 0 the loop never runs, so the first version returns 1, which is not a residue modulo 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def mod_power(base, exponent, modulus):
+    result = 1 % modulus
+    base %= modulus
+    while exponent:
+        if exponent % 2:
+            result = result * base % modulus
+        base = base * base % modulus
+        exponent //= 2
+    return result
+
+print(mod_power(-3, 3, 10))`,
+          ['-7', '7', '-27', '3'],
+          3,
+          '-3 becomes 7, and 7^3 = 343 leaves 3, matching -27 % 10.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def mod_power(base, exponent, modulus):
+    result = 1 % modulus
+    base %= modulus
+    while exponent:
+        if exponent % 2:
+            result = result * base % modulus
+        base = base * base % modulus
+        exponent //= 2
+    return result
+
+print(mod_power(0, 0, 7), mod_power(7, 3, 7), mod_power(8, 3, 7))`,
+          ['0 0 1', '1 0 8', '1 0 1', '0 0 0'],
+          2,
+          '0^0 is 1. 7 is 0 modulo 7. 8 is 1 modulo 7, so 8^3 leaves 1.',
+        ),
+        choose(
+          'Why initialize the result to 1 % modulus instead of 1?',
+          [
+            'To make negative bases positive',
+            'To skip the loop',
+            '1 is not a valid residue for any modulus',
+            'With modulus 1 every residue is 0, and exponent 0 must still return a residue',
+          ],
+          3,
+          '1 % 1 is 0, the correct answer for every power modulo 1.',
+        ),
+      ],
+    },
+    {
+      title: 'Divide only by invertible values',
+      explanation: [
+        'Modular division multiplies by an inverse, which exists only when gcd(b, m) = 1. Python’s pow(b, -1, m) returns that inverse for coprime inputs.',
+        'The shortcut pow(b, p - 2, p) gives the inverse only for a prime p that does not divide b. For a composite modulus it returns a number that is not an inverse.',
+      ],
+      example: {
+        code: `from math import gcd
+
+b, m = 7, 12
+if gcd(b, m) == 1:
+    inverse = pow(b, -1, m)
+    print(inverse, b * inverse % m)`,
+        output: '7 1',
+        explanation:
+          'gcd(7, 12) = 1, so the inverse exists. Here 7 is its own inverse, since 49 leaves 1 modulo 12.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `print(pow(3, -1, 11), 3 * pow(3, -1, 11) % 11)`,
+          ['3 1', '4 0', '8 1', '4 1'],
+          3,
+          '3 × 4 = 12 leaves 1 modulo 11, so 4 is the inverse of 3.',
+        ),
+        predictOutput(
+          'Modulus 12 is composite. What does this program print?',
+          `print(pow(5, 12 - 2, 12), pow(5, -1, 12))`,
+          ['5 5', '1 5', '1 1', '5 1'],
+          1,
+          'The prime-only shortcut gives 1, but 5 × 1 is not 1 modulo 12. The real inverse is 5, since 25 leaves 1.',
+        ),
+        choose(
+          'To compute (a / b) mod m, which condition must hold?',
+          [
+            'm must be prime',
+            'b < m',
+            'gcd(b, m) = 1',
+            'a must be divisible by b as integers',
+          ],
+          2,
+          'Division means multiplying by b’s inverse, which exists exactly when b and m are coprime.',
+        ),
+        choose(
+          'When does pow(b, p - 2, p) give b’s inverse modulo p?',
+          [
+            'When p is prime and b is not a multiple of p',
+            'For every modulus p',
+            'When b is even',
+            'When b > p',
+          ],
+          0,
+          'The shortcut relies on Fermat’s little theorem, which needs a prime p not dividing b.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-sieve-candidate-table': [
+    {
+      title: 'Give every integer from 0 to the limit its own entry',
+      explanation: [
+        'A sieve table is a list of booleans where index n says whether n is still a prime candidate. To include the limit itself, the table needs limit + 1 entries.',
+        'Every entry starts as True. A True entry means "not ruled out yet", not "prime": later marking removes the composites.',
+      ],
+      example: {
+        code: `def prime_candidates(limit):
+    table = [True] * (limit + 1)
+    table[0] = False
+    if limit >= 1:
+        table[1] = False
+    return table
+
+table = prime_candidates(6)
+print(table)
+print(len(table))`,
+        output: '[False, False, True, True, True, True, True]\n7',
+        explanation:
+          'Indices 0 through 6 give seven entries. 4 and 6 are still candidates until marking runs.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def prime_candidates(limit):
+    table = [True] * (limit + 1)
+    table[0] = False
+    if limit >= 1:
+        table[1] = False
+    return table
+
+table = prime_candidates(4)
+print(len(table), table[4])`,
+          ['4 False', '5 False', '5 True', '4 True'],
+          2,
+          'Five entries cover 0 through 4, and 4 has not been ruled out yet.',
+        ),
+        choose(
+          'In table = prime_candidates(limit), what does table[9] describe?',
+          [
+            'The ninth prime',
+            'Whether 9 is still a prime candidate',
+            'The number of primes up to 9',
+            'Whether 10 is prime',
+          ],
+          1,
+          'The index is the number itself, and the entry is its candidate status.',
+        ),
+        choose(
+          'Why does the table for limit 30 need 31 entries?',
+          [
+            'One extra entry stores the count of primes',
+            'Primes start at 1',
+            'The last entry is a sentinel',
+            'Indices run from 0 to 30 inclusive',
+          ],
+          3,
+          'Index 30 must exist so that 30 itself can be tested.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def prime_candidates(limit):
+    table = [True] * (limit + 1)
+    table[0] = False
+    if limit >= 1:
+        table[1] = False
+    return table
+
+count = 0
+for flag in prime_candidates(10):
+    if flag:
+        count += 1
+print(count)`,
+          ['9', '4', '11', '10'],
+          0,
+          'Before marking, every number from 2 to 10 is a candidate; only 4 of them will turn out prime.',
+        ),
+      ],
+    },
+    {
+      title: 'Exclude 0 and 1, and guard tiny limits',
+      explanation: [
+        'Primes are greater than 1, so entries 0 and 1 are set to False before any marking. Every other entry stays True for now.',
+        'For limit 0 the table has only index 0, so writing table[1] would raise IndexError. Check limit >= 1 first.',
+      ],
+      example: {
+        code: `def prime_candidates(limit):
+    table = [True] * (limit + 1)
+    table[0] = False
+    if limit >= 1:
+        table[1] = False
+    return table
+
+print(prime_candidates(0))
+print(prime_candidates(1))`,
+        output: '[False]\n[False, False]',
+        explanation:
+          'Limit 0 has a single entry. Limit 1 has entries for 0 and 1, both excluded.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def prime_candidates(limit):
+    table = [True] * (limit + 1)
+    table[0] = False
+    if limit >= 1:
+        table[1] = False
+    return table
+
+print(prime_candidates(3))`,
+          [
+            '[False, True, True, True]',
+            '[False, False, True, True]',
+            '[True, True, True, True]',
+            '[False, False, True]',
+          ],
+          1,
+          'Four entries cover 0 through 3; 0 and 1 are excluded, 2 and 3 remain.',
+        ),
+        choose(
+          'Why check limit >= 1 before writing table[1]?',
+          [
+            'Index 1 is always prime',
+            'To skip even numbers',
+            'For limit 0 the table has only index 0',
+            'table[1] cannot be changed',
+          ],
+          2,
+          'A one-entry list has no index 1, so the assignment would fail.',
+        ),
+        choose(
+          'prime_candidates(9)[9] is True. What does that mean?',
+          [
+            '9 is prime',
+            '9 has not been ruled out yet; marking will remove it',
+            'The table is wrong, since 9 = 3 × 3',
+            '9 is the limit, so it is skipped',
+          ],
+          1,
+          'The candidate table is only the starting point; composites are marked later.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def prime_candidates(limit):
+    table = [True] * (limit + 1)
+    table[0] = False
+    if limit >= 1:
+        table[1] = False
+    return table
+
+print(prime_candidates(2))`,
+          [
+            '[False, True, True]',
+            '[True, True, True]',
+            '[False, False]',
+            '[False, False, True]',
+          ],
+          3,
+          'Three entries cover 0 through 2, and 2 is the first candidate.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-sieve-square-start': [
+    {
+      title: 'Begin a prime’s marking at p × p',
+      explanation: [
+        'A composite multiple k × p with k < p has a prime factor smaller than p, so an earlier pass already marked it. The first multiple that only p can be responsible for is p × p.',
+        'Starting at p × p instead of 2p gives the same result with less work.',
+      ],
+      example: {
+        code: `def square_multiples(prime, limit):
+    return list(range(prime * prime, limit + 1, prime))
+
+print(square_multiples(5, 40))`,
+        output: '[25, 30, 35, 40]',
+        explanation:
+          '10, 15, and 20 were already marked by 2 or 3, so the pass for 5 starts at 25.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def square_multiples(prime, limit):
+    return list(range(prime * prime, limit + 1, prime))
+
+print(square_multiples(7, 70))`,
+          [
+            '[14, 21, 28, 35, 42, 49, 56, 63, 70]',
+            '[49, 56, 63]',
+            '[49, 56, 63, 70]',
+            '[7, 14, 21]',
+          ],
+          2,
+          'The pass starts at 49 and steps by 7 up to and including 70.',
+        ),
+        choose(
+          'When the sieve reaches p = 5, why is 15 already marked?',
+          [
+            '15 = 3 × 5 was marked during the pass for 3',
+            '15 is prime',
+            '15 is larger than 5²',
+            'Multiples of 5 start at 15',
+          ],
+          0,
+          'Every multiple of 5 below 25 has a factor 2 or 3, handled by earlier passes.',
+        ),
+        predictOutput(
+          'Starting at 2p also works but repeats work. What does this program print?',
+          `print(list(range(2 * 3, 16, 3)), list(range(3 * 3, 16, 3)))`,
+          [
+            '[6, 9, 12, 15] [6, 9, 12, 15]',
+            '[9, 12, 15] [6, 9, 12, 15]',
+            '[6, 9, 12] [9, 12]',
+            '[6, 9, 12, 15] [9, 12, 15]',
+          ],
+          3,
+          '6 is already marked by 2, so starting at 9 skips one redundant write.',
+        ),
+        choose(
+          'For prime p = 11, which number is the first one its pass must mark?',
+          ['22', '11', '121', '33'],
+          2,
+          'Smaller multiples of 11 have a factor below 11, so 11 × 11 = 121 is the first new one.',
+        ),
+      ],
+    },
+    {
+      title: 'Step by p and include the limit',
+      explanation: [
+        'Consecutive multiples of p differ by p, so the range steps by p. range excludes its stop, so the stop must be limit + 1 to include the limit itself.',
+        'If p × p is already above the limit, the range is empty, and the pass marks nothing.',
+      ],
+      example: {
+        code: `def square_multiples(prime, limit):
+    return list(range(prime * prime, limit + 1, prime))
+
+print(square_multiples(5, 25))
+print(square_multiples(5, 24))`,
+        output: '[25]\n[]',
+        explanation:
+          'With limit 25 the square itself is included. With limit 24 the pass starts beyond the limit.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `print(list(range(4, 12, 2)), list(range(4, 12 + 1, 2)))`,
+          [
+            '[4, 6, 8, 10] [4, 6, 8, 10, 12]',
+            '[4, 6, 8, 10, 12] [4, 6, 8, 10, 12]',
+            '[4, 6, 8, 10] [4, 6, 8, 10]',
+            '[6, 8, 10] [6, 8, 10, 12]',
+          ],
+          0,
+          'The stop is excluded, so only the second range reaches 12.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def square_multiples(prime, limit):
+    return list(range(prime * prime, limit + 1, prime))
+
+print(square_multiples(2, 9))`,
+          ['[4, 6, 8, 10]', '[2, 4, 6, 8]', '[4, 8]', '[4, 6, 8]'],
+          3,
+          'Starting at 4 and stepping by 2, the next value 10 would pass the limit 9.',
+        ),
+        choose(
+          'A pass for p = 3 uses step 1 instead of 3. What goes wrong?',
+          [
+            'It skips 9',
+            'It marks every number from 9 up, including primes like 11',
+            'It marks nothing',
+            'It marks only even numbers',
+          ],
+          1,
+          'Only multiples of 3 should be marked; a step of 1 visits every number.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def square_multiples(prime, limit):
+    return list(range(prime * prime, limit + 1, prime))
+
+print(square_multiples(11, 100))`,
+          ['[121]', '[11, 22, 33]', '[]', '[100]'],
+          2,
+          '121 is already above 100, so the range is empty.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-sieve-factor-bound': [
+    {
+      title: 'Every composite up to n has a factor at most √n',
+      explanation: [
+        'If n = a × b with both a and b greater than √n, then a × b > n, a contradiction. So a composite n has a factor no larger than √n.',
+        'That is why searching for factors, or running sieve passes, can stop once p × p exceeds n: a number with no factor up to √n is prime.',
+      ],
+      example: {
+        code: `def smallest_factor(n):
+    candidate = 2
+    while candidate * candidate <= n:
+        if n % candidate == 0:
+            return candidate
+        candidate += 1
+    return n
+
+print(smallest_factor(91))
+print(smallest_factor(97))`,
+        output: '7\n97',
+        explanation:
+          '91 = 7 × 13 is found by 7, below √91 ≈ 9.5. 97 has no factor up to 9, so it is prime and returns itself.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def smallest_factor(n):
+    candidate = 2
+    while candidate * candidate <= n:
+        if n % candidate == 0:
+            return candidate
+        candidate += 1
+    return n
+
+print(smallest_factor(221))`,
+          ['17', '221', '11', '13'],
+          3,
+          '221 = 13 × 17, and 13 × 13 = 169 is still within the bound.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def smallest_factor(n):
+    candidate = 2
+    while candidate * candidate <= n:
+        if n % candidate == 0:
+            return candidate
+        candidate += 1
+    return n
+
+print(smallest_factor(49), smallest_factor(53))`,
+          ['7 53', '49 53', '7 1', '49 1'],
+          0,
+          '7 × 7 = 49 is included by <=. 53 has no factor up to 7, so it is prime.',
+        ),
+        choose(
+          'Suppose 100 = a × b with both a and b greater than 10. What follows?',
+          [
+            'a or b must be prime',
+            'a = b',
+            'a × b > 100, a contradiction',
+            'Nothing; such factors are common',
+          ],
+          2,
+          'Two factors above √100 multiply to more than 100.',
+        ),
+        choose(
+          'To find every prime up to 1,000,000, sieve passes are needed for candidates up to...',
+          ['1,000', '500,000', '1,000,000', '100'],
+          0,
+          '√1,000,000 = 1,000; every composite up to the limit has a factor at most 1,000.',
+        ),
+      ],
+    },
+    {
+      title: 'Compare squares as integers',
+      explanation: [
+        'Write the bound as candidate * candidate <= limit. Integer multiplication is exact, and <= includes a candidate whose square equals the limit, such as 7 for 49.',
+        'A floating-point square root can round slightly below the true root for large numbers, so the integer comparison is the safer test.',
+      ],
+      example: {
+        code: `def sieve_factor_candidates(limit):
+    result = []
+    candidate = 2
+    while candidate * candidate <= limit:
+        result.append(candidate)
+        candidate += 1
+    return result
+
+print(sieve_factor_candidates(49))
+print(sieve_factor_candidates(48))`,
+        output: '[2, 3, 4, 5, 6, 7]\n[2, 3, 4, 5, 6]',
+        explanation: '7 × 7 = 49 is within the first bound but not the second.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def sieve_factor_candidates(limit):
+    result = []
+    candidate = 2
+    while candidate * candidate <= limit:
+        result.append(candidate)
+        candidate += 1
+    return result
+
+print(sieve_factor_candidates(35))`,
+          ['[2, 3, 4, 5, 6]', '[2, 3, 5]', '[2, 3, 4, 5]', '[2, 3, 4]'],
+          2,
+          '5 × 5 = 25 <= 35, while 6 × 6 = 36 is too large.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def sieve_factor_candidates(limit):
+    result = []
+    candidate = 2
+    while candidate * candidate <= limit:
+        result.append(candidate)
+        candidate += 1
+    return result
+
+print(sieve_factor_candidates(8), sieve_factor_candidates(9))`,
+          ['[2] [2]', '[2, 3] [2, 3]', '[] [2, 3]', '[2] [2, 3]'],
+          3,
+          '3 × 3 = 9 exceeds 8 but equals 9, so only the second list includes 3.',
+        ),
+        choose(
+          'Why write candidate * candidate <= limit instead of candidate <= limit ** 0.5?',
+          [
+            'Integer multiplication is exact, while a float root can round below the true root',
+            'It is the only way to write a while loop',
+            'Floats cannot be compared',
+            'It excludes the square root',
+          ],
+          0,
+          'An exact integer test never loses the boundary candidate to rounding.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `candidate = 2
+while (candidate + 1) * (candidate + 1) <= 30:
+    candidate += 1
+print(candidate)`,
+          ['6', '5', '15', '30'],
+          1,
+          '5 × 5 = 25 fits within 30, but 6 × 6 = 36 does not.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-sieve': [
+    {
+      title: 'Mark the multiples of each remaining prime',
+      explanation: [
+        'Scan p upward. If table[p] is still True, p is prime, so mark p × p, p × p + p, and so on as composite. If table[p] is False, p is composite and its multiples are already marked by its prime factors.',
+        'After the scan, the True entries are exactly the primes, collected in increasing order.',
+      ],
+      example: {
+        code: `def primes_up_to(limit):
+    if limit < 2:
+        return []
+    prime = [True] * (limit + 1)
+    prime[0] = prime[1] = False
+    p = 2
+    while p * p <= limit:
+        if prime[p]:
+            for multiple in range(p * p, limit + 1, p):
+                prime[multiple] = False
+        p += 1
+    return [value for value in range(2, limit + 1) if prime[value]]
+
+print(primes_up_to(30))`,
+        output: '[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]',
+        explanation:
+          'Passes for 2, 3, and 5 remove every composite up to 30; 4 is skipped because it is already marked.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def primes_up_to(limit):
+    if limit < 2:
+        return []
+    prime = [True] * (limit + 1)
+    prime[0] = prime[1] = False
+    p = 2
+    while p * p <= limit:
+        if prime[p]:
+            for multiple in range(p * p, limit + 1, p):
+                prime[multiple] = False
+        p += 1
+    return [value for value in range(2, limit + 1) if prime[value]]
+
+print(primes_up_to(25))`,
+          [
+            '[2, 3, 5, 7, 11, 13, 17, 19, 23, 25]',
+            '[2, 3, 5, 7, 11, 13, 17, 19, 23]',
+            '[2, 3, 5, 7, 11, 13, 17, 19]',
+            '[1, 2, 3, 5, 7, 11, 13, 17, 19, 23]',
+          ],
+          1,
+          'The pass for 5 starts at 25 and marks it; 1 was excluded from the start.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `limit = 50
+prime = [True] * (limit + 1)
+prime[0] = prime[1] = False
+processed = []
+p = 2
+while p * p <= limit:
+    if prime[p]:
+        processed.append(p)
+        for multiple in range(p * p, limit + 1, p):
+            prime[multiple] = False
+    p += 1
+print(processed)`,
+          [
+            '[2, 3, 4, 5, 6, 7]',
+            '[2, 3, 5]',
+            '[2, 3, 5, 7, 11]',
+            '[2, 3, 5, 7]',
+          ],
+          3,
+          'p runs up to 7, since 7 × 7 = 49 <= 50. 4 and 6 are skipped because they are already marked.',
+        ),
+        choose(
+          'When p = 4 comes up, prime[4] is False. Why skip its marking pass?',
+          [
+            '4 is a perfect square',
+            '4 × 4 exceeds the limit',
+            'Every multiple of 4 is a multiple of 2, already marked',
+            'Multiples of 4 are prime',
+          ],
+          2,
+          'A composite p’s multiples all share its smaller prime factors, which have already been processed.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def primes_up_to(limit):
+    if limit < 2:
+        return []
+    prime = [True] * (limit + 1)
+    prime[0] = prime[1] = False
+    p = 2
+    while p * p <= limit:
+        if prime[p]:
+            for multiple in range(p * p, limit + 1, p):
+                prime[multiple] = False
+        p += 1
+    return [value for value in range(2, limit + 1) if prime[value]]
+
+print(len(primes_up_to(100)))`,
+          ['26', '24', '25', '50'],
+          2,
+          'There are 25 primes up to 100, the last being 97.',
+        ),
+      ],
+    },
+    {
+      title: 'Stop at √n and start at p²',
+      explanation: [
+        'The outer loop needs only p with p × p <= n, because any composite up to n has a prime factor at most √n. Using < instead of <= skips the pass for p = √n and leaves p² unmarked when n is a perfect square.',
+        'Starting each pass at p × p rather than 2p does not change the result; it only skips multiples that smaller primes already marked.',
+      ],
+      example: {
+        code: `def primes_up_to(limit):
+    prime = [True] * (limit + 1)
+    prime[0] = prime[1] = False
+    p = 2
+    while p * p <= limit:
+        if prime[p]:
+            for multiple in range(p * p, limit + 1, p):
+                prime[multiple] = False
+        p += 1
+    return [value for value in range(2, limit + 1) if prime[value]]
+
+def primes_strict(limit):
+    prime = [True] * (limit + 1)
+    prime[0] = prime[1] = False
+    p = 2
+    while p * p < limit:
+        if prime[p]:
+            for multiple in range(p * p, limit + 1, p):
+                prime[multiple] = False
+        p += 1
+    return [value for value in range(2, limit + 1) if prime[value]]
+
+print(primes_up_to(49)[-3:])
+print(primes_strict(49)[-3:])`,
+        output: '[41, 43, 47]\n[43, 47, 49]',
+        explanation:
+          'With <, the loop stops before p = 7, so 49 = 7 × 7 is never marked and is reported as prime.',
+      },
+      questions: [
+        predictOutput(
+          'This version uses < in the outer loop. What does it print?',
+          `def primes_strict(limit):
+    prime = [True] * (limit + 1)
+    prime[0] = prime[1] = False
+    p = 2
+    while p * p < limit:
+        if prime[p]:
+            for multiple in range(p * p, limit + 1, p):
+                prime[multiple] = False
+        p += 1
+    return [value for value in range(2, limit + 1) if prime[value]]
+
+print(primes_strict(25)[-2:])`,
+          ['[19, 23]', '[23]', '[21, 23]', '[23, 25]'],
+          3,
+          'The loop stops at p = 4, so the pass for 5 never marks 25.',
+        ),
+        predictOutput(
+          'This program counts marking writes when passes start at p² and at 2p. What does it print?',
+          `def count_marks(limit, start_at_square):
+    prime = [True] * (limit + 1)
+    marks = 0
+    p = 2
+    while p * p <= limit:
+        if prime[p]:
+            start = p * p if start_at_square else 2 * p
+            for multiple in range(start, limit + 1, p):
+                prime[multiple] = False
+                marks += 1
+        p += 1
+    return marks
+
+print(count_marks(30, True), count_marks(30, False))`,
+          ['28 24', '24 24', '24 28', '14 14'],
+          2,
+          'Starting at 2p rewrites 6, 10, 15, and 20, which earlier passes had already marked.',
+        ),
+        choose(
+          'n = 120. What is the largest p whose marking pass runs?',
+          ['10', '7', '11', '60'],
+          1,
+          '7 × 7 = 49 <= 120 and 11 × 11 = 121 > 120; 8, 9, and 10 are composite, so they are skipped.',
+        ),
+        choose(
+          'A number q <= n survives every pass for primes p <= √n. Why must q be prime?',
+          [
+            'A composite q would have a prime factor <= √q <= √n and would have been marked',
+            'Survivors are always odd',
+            'q is larger than √n',
+            'Each pass marks only primes',
+          ],
+          0,
+          'The factor bound guarantees some pass reaches every composite.',
+        ),
+      ],
+    },
+    {
+      title: 'Build one table for many bounded queries',
+      explanation: [
+        'The sieve does O(n log log n) marking work and stores O(n) booleans. Once built, the table answers "is q prime?" for any q <= n with a single lookup, so it pays off when there are many queries.',
+        'Limits below 2 have no primes. For a single huge number, a table up to that number would be far too large; test it directly instead.',
+      ],
+      example: {
+        code: `def prime_table(limit):
+    prime = [True] * (limit + 1)
+    prime[0] = False
+    if limit >= 1:
+        prime[1] = False
+    p = 2
+    while p * p <= limit:
+        if prime[p]:
+            for multiple in range(p * p, limit + 1, p):
+                prime[multiple] = False
+        p += 1
+    return prime
+
+table = prime_table(100)
+print([q for q in [1, 2, 51, 97] if table[q]])`,
+        output: '[2, 97]',
+        explanation:
+          'One table answers all four queries. 1 is not prime and 51 = 3 × 17.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def primes_up_to(limit):
+    if limit < 2:
+        return []
+    prime = [True] * (limit + 1)
+    prime[0] = prime[1] = False
+    p = 2
+    while p * p <= limit:
+        if prime[p]:
+            for multiple in range(p * p, limit + 1, p):
+                prime[multiple] = False
+        p += 1
+    return [value for value in range(2, limit + 1) if prime[value]]
+
+print(primes_up_to(0), primes_up_to(3))`,
+          ['[0] [2, 3]', '[] [2, 3]', '[] [1, 2, 3]', '[] [2]'],
+          1,
+          'Limits below 2 return immediately. The bound 3 is inclusive.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def prime_table(limit):
+    prime = [True] * (limit + 1)
+    prime[0] = False
+    if limit >= 1:
+        prime[1] = False
+    p = 2
+    while p * p <= limit:
+        if prime[p]:
+            for multiple in range(p * p, limit + 1, p):
+                prime[multiple] = False
+        p += 1
+    return prime
+
+table = prime_table(100)
+print([q for q in [0, 49, 53, 91] if table[q]])`,
+          ['[53, 91]', '[49, 53, 91]', '[]', '[53]'],
+          3,
+          '49 = 7 × 7 and 91 = 7 × 13 are marked by the pass for 7.',
+        ),
+        choose(
+          'You must test 100,000 numbers, each at most 10^6, for primality. What is the better plan?',
+          [
+            'Build one sieve table up to 10^6 and look each number up',
+            'Run a separate sieve up to each number',
+            'Trial-divide each number by every smaller number',
+            'Sieve only up to 100,000',
+          ],
+          0,
+          'One O(n log log n) build plus constant-time lookups beats repeating the work per query.',
+        ),
+        choose(
+          'Why is a sieve a poor way to test one number near 10^15?',
+          [
+            'It cannot handle odd numbers',
+            'Its marking takes O(1) time',
+            'It needs a table with about 10^15 entries',
+            'It only finds primes below 1,000',
+          ],
+          2,
+          'The table size grows with the limit, which is far too much memory here.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-combination-boundaries': [
+    {
+      title: 'Count the empty and the full selection once',
+      explanation: [
+        'C(n, k) counts the ways to choose k of n distinct items, ignoring order. Choosing nothing can be done in exactly one way, and so can choosing everything: C(n, 0) = C(n, n) = 1.',
+        'This holds for n = 0 too: from no items there is exactly one selection, the empty one.',
+      ],
+      example: {
+        code: `def choose_boundary(n, k):
+    if k < 0 or k > n:
+        return 0
+    if k == 0 or k == n:
+        return 1
+    return None
+
+print(choose_boundary(5, 0), choose_boundary(5, 5), choose_boundary(0, 0))`,
+        output: '1 1 1',
+        explanation:
+          'Empty and full selections each count once, including the empty selection from no items.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def choose_boundary(n, k):
+    if k < 0 or k > n:
+        return 0
+    if k == 0 or k == n:
+        return 1
+    return None
+
+print([choose_boundary(3, k) for k in [0, 1, 3]])`,
+          ['[1, 3, 1]', '[0, None, 0]', '[1, None, 1]', '[1, 1, 1]'],
+          2,
+          'k = 1 is an interior state that still needs a recurrence; the ends count once each.',
+        ),
+        choose(
+          'In how many ways can all 6 of 6 items be chosen?',
+          ['6', '720', '0', '1'],
+          3,
+          'There is only one selection containing every item; order does not matter.',
+        ),
+        choose(
+          'Why is C(0, 0) = 1?',
+          [
+            'Zero items give zero selections',
+            'Choosing nothing from nothing is one selection: the empty one',
+            'It is undefined, and 1 is a placeholder',
+            'Because 0 × 0 = 1',
+          ],
+          1,
+          'The empty selection exists even when there are no items.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def choose_boundary(n, k):
+    if k < 0 or k > n:
+        return 0
+    if k == 0 or k == n:
+        return 1
+    return None
+
+print(choose_boundary(7, 7), choose_boundary(7, 0), choose_boundary(7, 6))`,
+          ['7 1 None', '1 0 None', '1 1 7', '1 1 None'],
+          3,
+          'Choosing all or none counts once. k = 6 is a valid interior state.',
+        ),
+      ],
+    },
+    {
+      title: 'Return 0 for impossible selections',
+      explanation: [
+        'Choosing a negative number of items, or more items than exist, is impossible, so C(n, k) = 0 when k < 0 or k > n. Recurrences reach such states at their edges, and 0 makes them contribute nothing.',
+        'Check the impossible cases first. Then 0 and n are the boundaries, and every other k is an interior state that needs computation.',
+      ],
+      example: {
+        code: `def choose_boundary(n, k):
+    if k < 0 or k > n:
+        return 0
+    if k == 0 or k == n:
+        return 1
+    return None
+
+print([choose_boundary(2, k) for k in [-1, 0, 1, 2, 3]])`,
+        output: '[0, 1, None, 1, 0]',
+        explanation:
+          'Outside 0 through 2 the count is 0; the ends count once; k = 1 still needs a recurrence.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def choose_boundary(n, k):
+    if k < 0 or k > n:
+        return 0
+    if k == 0 or k == n:
+        return 1
+    return None
+
+print([choose_boundary(4, k) for k in [5, -2, 2]])`,
+          ['[0, 0, None]', '[1, 0, None]', '[None, None, None]', '[0, 0, 6]'],
+          0,
+          '5 > 4 and -2 < 0 are impossible; 2 is interior.',
+        ),
+        choose(
+          'What is C(3, 5)?',
+          ['1', '10', 'Undefined', '0'],
+          3,
+          'There is no way to choose 5 items from 3.',
+        ),
+        predictOutput(
+          'This version checks the boundaries in a different order. What does it print?',
+          `def bad_boundary(n, k):
+    if k == 0 or k == n:
+        return 1
+    if k > n:
+        return 0
+    return None
+
+print(bad_boundary(3, -1), bad_boundary(3, 4))`,
+          ['0 0', 'None 0', '1 0', 'None None'],
+          1,
+          'It never tests k < 0, so -1 is wrongly treated as an interior state.',
+        ),
+        choose(
+          'Why should C(n, k) return 0, rather than raise an error, when k > n?',
+          [
+            'Errors are slower than returns',
+            'It means k and n should be swapped',
+            'Recurrences reach such states, and they contribute no selections',
+            'It avoids negative numbers',
+          ],
+          2,
+          'For example, C(n - 1, k) with k = n is reached by Pascal’s rule and must add 0.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-combination-pascal-step': [
+    {
+      title: 'Split selections by one item: include or exclude',
+      explanation: [
+        'Fix one distinguished item. A selection of k items from n either excludes it, choosing all k from the other n - 1 items, or includes it, choosing k - 1 more. The two groups do not overlap, so C(n, k) = C(n - 1, k) + C(n - 1, k - 1).',
+        'Applied to a whole row, each interior entry of the next row is the sum of the two entries above it, and both ends are 1.',
+      ],
+      example: {
+        code: `def next_pascal_row(previous, modulus):
+    result = [1 % modulus]
+    for index in range(1, len(previous)):
+        result.append((previous[index - 1] + previous[index]) % modulus)
+    result.append(1 % modulus)
+    return result
+
+print(next_pascal_row([1, 4, 6, 4, 1], 100))`,
+        output: '[1, 5, 10, 10, 5, 1]',
+        explanation: 'For example C(5, 2) = C(4, 1) + C(4, 2) = 4 + 6 = 10.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def next_pascal_row(previous, modulus):
+    result = [1 % modulus]
+    for index in range(1, len(previous)):
+        result.append((previous[index - 1] + previous[index]) % modulus)
+    result.append(1 % modulus)
+    return result
+
+print(next_pascal_row([1, 5, 10, 10, 5, 1], 1000))`,
+          [
+            '[1, 6, 15, 20, 15, 6, 1]',
+            '[1, 5, 15, 20, 15, 5, 1]',
+            '[1, 6, 15, 15, 6, 1]',
+            '[1, 6, 16, 21, 16, 6, 1]',
+          ],
+          0,
+          'Each interior entry adds its two neighbors above: 1 + 5, 5 + 10, 10 + 10, and so on.',
+        ),
+        choose(
+          'C(5, 2) = C(4, 1) + C(4, 2). What does the C(4, 1) term count?',
+          [
+            'Selections that exclude the distinguished item',
+            'Selections that include the distinguished item, choosing 1 more from the other 4',
+            'Selections of exactly 1 item from 5',
+            'Orderings of 2 items',
+          ],
+          1,
+          'Including the item uses up one slot, leaving 1 to choose from the remaining 4.',
+        ),
+        choose(
+          'Which two entries of row 6 add up to C(7, 3)?',
+          [
+            'C(6, 3) and C(6, 4)',
+            'C(7, 2) and C(6, 3)',
+            'C(6, 2) and C(6, 3)',
+            'C(6, 3) twice',
+          ],
+          2,
+          'Excluding the item gives C(6, 3); including it gives C(6, 2).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def next_pascal_row(previous, modulus):
+    result = [1 % modulus]
+    for index in range(1, len(previous)):
+        result.append((previous[index - 1] + previous[index]) % modulus)
+    result.append(1 % modulus)
+    return result
+
+row = [1]
+for _ in range(4):
+    row = next_pascal_row(row, 1000)
+print(row)`,
+          [
+            '[1, 3, 3, 1]',
+            '[1, 5, 10, 10, 5, 1]',
+            '[1, 4, 4, 1]',
+            '[1, 4, 6, 4, 1]',
+          ],
+          3,
+          'Four steps from row 0 reach row 4, whose entries are C(4, 0) through C(4, 4).',
+        ),
+      ],
+    },
+    {
+      title: 'Reduce the sums modulo any positive modulus',
+      explanation: [
+        'Addition respects residues, so each new entry can be reduced modulo m as it is built, keeping numbers small. The ends use 1 % m, which is 0 when m = 1.',
+        'The method only adds, so it never needs an inverse. It works for composite moduli exactly as for primes.',
+      ],
+      example: {
+        code: `def next_pascal_row(previous, modulus):
+    result = [1 % modulus]
+    for index in range(1, len(previous)):
+        result.append((previous[index - 1] + previous[index]) % modulus)
+    result.append(1 % modulus)
+    return result
+
+print(next_pascal_row([1, 4, 6, 4, 1], 6))`,
+        output: '[1, 5, 4, 4, 5, 1]',
+        explanation:
+          'The true row is 1, 5, 10, 10, 5, 1; modulo 6, the tens become 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def next_pascal_row(previous, modulus):
+    result = [1 % modulus]
+    for index in range(1, len(previous)):
+        result.append((previous[index - 1] + previous[index]) % modulus)
+    result.append(1 % modulus)
+    return result
+
+print(next_pascal_row([1, 3, 3, 1], 4))`,
+          [
+            '[1, 4, 6, 4, 1]',
+            '[1, 0, 2, 0, 1]',
+            '[1, 0, 6, 0, 1]',
+            '[0, 0, 2, 0, 0]',
+          ],
+          1,
+          'Row 4 is 1, 4, 6, 4, 1, which leaves 1, 0, 2, 0, 1 modulo 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def next_pascal_row(previous, modulus):
+    result = [1 % modulus]
+    for index in range(1, len(previous)):
+        result.append((previous[index - 1] + previous[index]) % modulus)
+    result.append(1 % modulus)
+    return result
+
+print(next_pascal_row([0, 0], 1))`,
+          ['[1, 0, 1]', '[1, 1, 1]', '[0, 1, 0]', '[0, 0, 0]'],
+          3,
+          'Modulo 1 every value, including the boundary 1, is 0.',
+        ),
+        choose(
+          'Why does this method work for a composite modulus such as 12?',
+          [
+            'Composite moduli make every value invertible',
+            'It only adds and reduces; it never divides',
+            '12 is close to a prime',
+            'It works only for even moduli',
+          ],
+          1,
+          'Division modulo 12 can fail, but addition modulo any positive m is always valid.',
+        ),
+        choose(
+          'C(10, 5) = 252. If every row is reduced modulo 10, what is the entry for C(10, 5)?',
+          ['252', '2', '25', '5'],
+          1,
+          'Reducing during addition gives the same residue as reducing the exact count: 252 % 10 = 2.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-combination-descending-row': [
+    {
+      title: 'Update counts from the highest k down to 1',
+      explanation: [
+        'With one list for the row, adding an item sets dp[k] = dp[k] + dp[k - 1]. Updating k from high to low means dp[k - 1] still holds the previous row when it is read.',
+        'Updating upward would read a dp[k - 1] that already counts the new item, using it twice and overcounting, the same issue as reusing a 0/1 knapsack item.',
+      ],
+      example: {
+        code: `def add_counting_item(previous, modulus):
+    dp = previous[:]
+    for selected in range(len(dp) - 1, 0, -1):
+        dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp
+
+print(add_counting_item([1, 3, 3, 1], 100))`,
+        output: '[1, 4, 6, 4]',
+        explanation:
+          'Row 3 becomes the first four entries of row 4: each count adds the old count one position to its left.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def add_counting_item(previous, modulus):
+    dp = previous[:]
+    for selected in range(len(dp) - 1, 0, -1):
+        dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp
+
+print(add_counting_item([1, 2, 1, 0], 100))`,
+          ['[1, 3, 4, 4]', '[1, 2, 1, 0]', '[1, 3, 3, 1]', '[1, 4, 6, 4]'],
+          2,
+          'Downward: index 3 gets 0 + 1, index 2 gets 1 + 2, index 1 gets 2 + 1.',
+        ),
+        predictOutput(
+          'This loop updates upward. What does it print?',
+          `dp = [1, 2, 1, 0]
+for k in range(1, len(dp)):
+    dp[k] = dp[k] + dp[k - 1]
+print(dp)`,
+          ['[1, 3, 4, 4]', '[1, 3, 3, 1]', '[1, 2, 1, 0]', '[1, 4, 6, 4]'],
+          0,
+          'Index 2 reads the already updated 3 instead of 2, so the counts grow too fast.',
+        ),
+        choose(
+          'In a downward update, when k = 2 is processed, which row does dp[1] hold?',
+          [
+            'The new row',
+            'A mix of both rows',
+            'Zero',
+            'The previous row, since index 1 is processed after index 2',
+          ],
+          3,
+          'Index 1 has not been touched yet, so it still describes the row before the new item.',
+        ),
+        choose(
+          'Starting from [1, 0, 0] and adding an item n times, what do the three entries become?',
+          ['n, n, n', 'C(n, 0), C(n, 1), C(n, 2)', '1, n, n²', '1, 1, 1'],
+          1,
+          'Each item addition turns row i into row i + 1, truncated to its first three entries.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep entry zero fixed and the row truncated',
+      explanation: [
+        'The loop stops at index 1, so dp[0] never changes: C(n, 0) stays 1 (or 1 % m) for every n. The list keeps only the entries up to the k that is needed, so the row does not grow.',
+        'Copying with previous[:] leaves the caller’s row unchanged.',
+      ],
+      example: {
+        code: `def add_counting_item(previous, modulus):
+    dp = previous[:]
+    for selected in range(len(dp) - 1, 0, -1):
+        dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp
+
+row = [1, 0, 0]
+for _ in range(5):
+    row = add_counting_item(row, 1000)
+print(row)`,
+        output: '[1, 5, 10]',
+        explanation:
+          'After five items the entries are C(5, 0), C(5, 1), and C(5, 2), without storing the rest of row 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def add_counting_item(previous, modulus):
+    dp = previous[:]
+    for selected in range(len(dp) - 1, 0, -1):
+        dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp
+
+row = [1, 0, 0, 0]
+for _ in range(6):
+    row = add_counting_item(row, 1000)
+print(row)`,
+          [
+            '[1, 6, 15, 20]',
+            '[1, 6, 15, 20, 15, 6, 1]',
+            '[1, 6, 6, 6]',
+            '[6, 15, 20, 15]',
+          ],
+          0,
+          'Six items give C(6, 0) through C(6, 3); the list stays four entries long.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def add_counting_item(previous, modulus):
+    dp = previous[:]
+    for selected in range(len(dp) - 1, 0, -1):
+        dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp
+
+row = [1, 0, 0]
+for _ in range(5):
+    row = add_counting_item(row, 4)
+print(row)`,
+          ['[1, 5, 10]', '[0, 1, 2]', '[1, 1, 10]', '[1, 1, 2]'],
+          3,
+          'C(5, 1) = 5 and C(5, 2) = 10 leave 1 and 2 modulo 4.',
+        ),
+        choose(
+          'Why does dp[0] never change?',
+          [
+            'Python lists cannot change index 0',
+            'It is reset on each pass',
+            'The loop stops at index 1, and C(n, 0) = 1 for every n',
+            'The loop skips even indices',
+          ],
+          2,
+          'range(len(dp) - 1, 0, -1) excludes 0, which is correct because the empty selection always counts once.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def add_counting_item(previous, modulus):
+    dp = previous[:]
+    for selected in range(len(dp) - 1, 0, -1):
+        dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp
+
+a = [1, 4, 6]
+b = add_counting_item(a, 10)
+print(a, b)`,
+          [
+            '[1, 5, 0] [1, 5, 0]',
+            '[1, 4, 6] [1, 5, 10]',
+            '[1, 4, 6] [1, 5, 0]',
+            '[1, 4, 6] [1, 4, 6]',
+          ],
+          2,
+          'The copy is updated: 6 + 4 = 10 leaves 0 modulo 10, and 4 + 1 = 5. a is unchanged.',
+        ),
+      ],
+    },
+  ],
+
+  'cp-combinatorics': [
+    {
+      title: 'Build C(n, k) one item at a time',
+      explanation: [
+        'Start with dp = [1, 0, ..., 0] of length k + 1: with no items, only the empty selection exists. Adding items one by one with a downward update makes dp[r] equal C(i, r) after i items.',
+        'With only i items, no selection larger than i exists yet, so the update can start at min(i, k). After n items, dp[k] is C(n, k).',
+      ],
+      example: {
+        code: `def choose_trace(n, k):
+    dp = [1] + [0] * k
+    for count in range(1, n + 1):
+        for selected in range(min(count, k), 0, -1):
+            dp[selected] = dp[selected] + dp[selected - 1]
+        print(dp)
+    return dp[k]
+
+print(choose_trace(4, 2))`,
+        output: '[1, 1, 0]\n[1, 2, 1]\n[1, 3, 3]\n[1, 4, 6]\n6',
+        explanation:
+          'Each line is the start of the next Pascal row. After four items, dp[2] = C(4, 2) = 6.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def choose_mod(n, k, modulus):
+    if k < 0 or k > n:
+        return 0
+    k = min(k, n - k)
+    dp = [0] * (k + 1)
+    dp[0] = 1 % modulus
+    for count in range(1, n + 1):
+        for selected in range(min(count, k), 0, -1):
+            dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp[k]
+
+print(choose_mod(7, 3, 1000))`,
+          ['21', '210', '35', '7'],
+          2,
+          'C(7, 3) = 35. 210 counts ordered selections.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def choose_mod(n, k, modulus):
+    if k < 0 or k > n:
+        return 0
+    k = min(k, n - k)
+    dp = [0] * (k + 1)
+    dp[0] = 1 % modulus
+    for count in range(1, n + 1):
+        for selected in range(min(count, k), 0, -1):
+            dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp[k]
+
+print(choose_mod(10, 3, 7))`,
+          ['120', '1', '3', '0'],
+          1,
+          'C(10, 3) = 120 = 17 × 7 + 1.',
+        ),
+        choose(
+          'After processing i items, what does dp[r] hold?',
+          [
+            'C(n, r) already',
+            'The number of items left',
+            'C(i, i)',
+            'C(i, r) modulo the modulus',
+          ],
+          3,
+          'Each item turns row i - 1 into row i, so the table always describes the items processed so far.',
+        ),
+        choose(
+          'Why does the inner loop start at min(count, k)?',
+          [
+            'With only count items, no selection larger than count exists yet',
+            'To sort the table',
+            'To skip dp[0]',
+            'Because k is always smaller than count',
+          ],
+          0,
+          'Entries above count are still 0 and would stay 0, so they need no update.',
+        ),
+      ],
+    },
+    {
+      title: 'Use symmetry and the boundary cases',
+      explanation: [
+        'Choosing k items is the same as choosing the n - k to leave out, so C(n, k) = C(n, n - k). Replacing k with min(k, n - k) keeps the table short.',
+        'k outside 0..n returns 0 before any table is built. dp[0] starts at 1 % modulus, so modulus 1 gives 0 even for C(0, 0).',
+      ],
+      example: {
+        code: `def choose_mod(n, k, modulus):
+    if k < 0 or k > n:
+        return 0
+    k = min(k, n - k)
+    dp = [0] * (k + 1)
+    dp[0] = 1 % modulus
+    for count in range(1, n + 1):
+        for selected in range(min(count, k), 0, -1):
+            dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp[k]
+
+print(choose_mod(8, 6, 1000), choose_mod(5, 6, 7), choose_mod(0, 0, 7))`,
+        output: '28 0 1',
+        explanation:
+          'C(8, 6) is computed as C(8, 2) = 28 with a three-entry table. 6 of 5 is impossible, and C(0, 0) is the empty selection.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          `def choose_mod(n, k, modulus):
+    if k < 0 or k > n:
+        return 0
+    k = min(k, n - k)
+    dp = [0] * (k + 1)
+    dp[0] = 1 % modulus
+    for count in range(1, n + 1):
+        for selected in range(min(count, k), 0, -1):
+            dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp[k]
+
+print(choose_mod(9, 7, 1000), choose_mod(9, 2, 1000))`,
+          ['36 36', '36 72', '63 36', '7 2'],
+          0,
+          'Leaving out 2 of 9 is the same as choosing 7, so both are C(9, 2) = 36.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def choose_mod(n, k, modulus):
+    if k < 0 or k > n:
+        return 0
+    k = min(k, n - k)
+    dp = [0] * (k + 1)
+    dp[0] = 1 % modulus
+    for count in range(1, n + 1):
+        for selected in range(min(count, k), 0, -1):
+            dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp[k]
+
+print(choose_mod(4, -1, 5), choose_mod(4, 4, 5), choose_mod(0, 0, 1))`,
+          ['0 1 1', '1 1 0', '0 0 0', '0 1 0'],
+          3,
+          'k = -1 is impossible. C(4, 4) = 1. Modulo 1, even the empty selection’s count is 0.',
+        ),
+        choose(
+          'For C(1000, 997), how many entries does the table have after symmetry?',
+          ['998', '4', '1001', '3'],
+          1,
+          'min(997, 3) = 3, so the table holds dp[0] through dp[3].',
+        ),
+        choose(
+          'Why does choose_mod(0, 0, 1) return 0 instead of 1?',
+          [
+            'C(0, 0) is 0',
+            'k is outside the valid range',
+            'dp[0] starts at 1 % 1, and every residue modulo 1 is 0',
+            'The loop subtracts 1',
+          ],
+          2,
+          'The count is 1, but its residue modulo 1 is 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Avoid modular division for arbitrary moduli',
+      explanation: [
+        'The factorial formula n! / (k! (n - k)!) needs division, and modulo m that means multiplying by an inverse of k! (n - k)!. When that product shares a factor with m, no inverse exists, so the formula cannot be used.',
+        'Pascal’s rule only adds, so it works for every positive modulus. It costs O(n × min(k, n - k)) additions and O(min(k, n - k)) memory, which is fine for n in the hundreds.',
+      ],
+      example: {
+        code: `from math import gcd
+
+def choose_mod(n, k, modulus):
+    if k < 0 or k > n:
+        return 0
+    k = min(k, n - k)
+    dp = [0] * (k + 1)
+    dp[0] = 1 % modulus
+    for count in range(1, n + 1):
+        for selected in range(min(count, k), 0, -1):
+            dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp[k]
+
+fact = [1, 1, 2, 6, 24, 120, 720]
+print(fact[6] % 10, gcd(fact[2] * fact[4], 10))
+print(choose_mod(6, 2, 10))`,
+        output: '0 2\n5',
+        explanation:
+          'Modulo 10, 6! leaves 0 and the denominator 2! × 4! = 48 shares 2 with 10, so division fails. Pascal’s rule still gives C(6, 2) = 15, residue 5.',
+      },
+      questions: [
+        choose(
+          'Computing C(n, k) mod 12 as n! times an inverse of k!(n - k)! fails when...',
+          [
+            'n is even',
+            'k is 0',
+            'k!(n - k)! shares a factor with 12, so it has no inverse',
+            'The answer is greater than 12',
+          ],
+          2,
+          'An inverse modulo 12 exists only for values coprime to 12.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `def choose_mod(n, k, modulus):
+    if k < 0 or k > n:
+        return 0
+    k = min(k, n - k)
+    dp = [0] * (k + 1)
+    dp[0] = 1 % modulus
+    for count in range(1, n + 1):
+        for selected in range(min(count, k), 0, -1):
+            dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp[k]
+
+print(choose_mod(12, 6, 8))`,
+          ['924', '0', '6', '4'],
+          3,
+          'C(12, 6) = 924 = 115 × 8 + 4, computed without any division.',
+        ),
+        choose(
+          'Roughly how much work does choose_mod(500, 3, m) do?',
+          [
+            'About 500 × 3 additions',
+            'About 500² additions',
+            'About 3 additions',
+            'About 2^500 additions',
+          ],
+          0,
+          'Each of the 500 items updates at most 3 entries.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          `from math import comb
+
+def choose_mod(n, k, modulus):
+    if k < 0 or k > n:
+        return 0
+    k = min(k, n - k)
+    dp = [0] * (k + 1)
+    dp[0] = 1 % modulus
+    for count in range(1, n + 1):
+        for selected in range(min(count, k), 0, -1):
+            dp[selected] = (dp[selected] + dp[selected - 1]) % modulus
+    return dp[k]
+
+print(choose_mod(20, 10, 7), comb(20, 10) % 7)`,
+          ['184756 5', '5 5', '5 0', '0 5'],
+          1,
+          'Reducing during every addition gives the same residue as reducing the exact count 184756.',
+        ),
+      ],
+    },
+  ],
+};
+
 export const knowledgePoints: KnowledgePointModule = {
   ...dynamic,
   ...strategy,
+  ...numberTheory,
 };
