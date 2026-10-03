@@ -1,0 +1,46 @@
+---
+import Catalog from '../../layouts/Catalog.astro';
+import { courses, skills } from '../../lib/curriculum';
+import { catalogPath, siteDescription, siteUrl } from '../../lib/site';
+export const prerender = true;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'lessdumb course catalog',
+  itemListElement: courses.map((course, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    url: siteUrl(catalogPath(course.id)),
+    name: course.title,
+  })),
+};
+---
+
+<Catalog title="Course catalog — lessdumb" description={siteDescription}>
+  <h1>Learn a little better, every day.</h1>
+  <p>{siteDescription}</p>
+  <p>
+    Browse {courses.length} courses and {skills.length} connected skills.
+    Practice in the learning workspace; use this catalog to explore the public
+    curriculum.
+  </p>
+  <ul>
+    {courses.map((course) => (
+      <li>
+        <h2>
+          <a href={catalogPath(course.id)}>{course.title}</a>
+        </h2>
+        <p>{course.description}</p>
+        <p>{course.skillIds.length} skills</p>
+      </li>
+    ))}
+  </ul>
+  <p>
+    <a href="/courses">Open the learning workspace</a> ·{' '}
+    <a href="/catalog.md">Read this catalog as Markdown</a>
+  </p>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(schema).replace(/</g, '\\u003c')}
+  />
+</Catalog>

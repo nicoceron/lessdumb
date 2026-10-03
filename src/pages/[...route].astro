@@ -14,11 +14,28 @@ const routes = [
 if (!routes.includes(page)) Astro.response.status = 404;
 ---
 
-<Layout>
+<Layout
+  canonicalPath={page === 'today' ? '/' : Astro.url.pathname}
+  index={!Astro.params.route}
+>
   <App
     client:load
     transition:persist="lessdumb-app"
     page={routes.includes(page) ? page : '404'}
     routeKey={Astro.url.pathname + Astro.url.search}
   />
+  <footer class="catalog-link">
+    <a href="/catalog">Browse the public course catalog</a>
+  </footer>
 </Layout>
+
+<style>
+  .catalog-link {
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+  }
+  .catalog-link a {
+    text-decoration: underline;
+  }
+</style>
