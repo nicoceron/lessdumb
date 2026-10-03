@@ -1615,6 +1615,9 @@ code {
   border: 0;
 }
 .lesson-progress-bar .lesson-marker.is-current .lesson-marker-label {
+  /* Positioned so the truncation also clips its screen-reader status, which
+     would otherwise widen the page past a phone's viewport. */
+  position: relative;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

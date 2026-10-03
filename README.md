@@ -168,7 +168,7 @@ npm run verify
 
 The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python checks the foundation curriculum. Real Pyodide executes all 266 code solutions and 273 executable lesson examples, including scientific packages; all empty submissions must fail. Native compiler batches also run every Rust/C++ reference assessment and lesson example, reject unfinished starters and empty submissions, and verify their documented output. Scenario examples use explicit text presentation rather than code execution.
 
-For browser tests, install Chromium once, leave the development server running, and use another terminal:
+Browser tests are not part of CI for now; CI runs `npm run verify` and the Cloudflare build before deploying. To run them by hand, install Chromium once, leave the development server running, and use another terminal:
 
 ```sh
 npx playwright install chromium
