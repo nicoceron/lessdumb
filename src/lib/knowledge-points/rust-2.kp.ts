@@ -5637,4 +5637,1341 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'rust-raw-pointers': [
+    {
+      title: 'Create and compare raw pointers safely',
+      explanation: [
+        'A reference converts to a raw pointer: let p: *const i32 = &x;. A raw pointer is just an address, with no lifetime and no borrow tracking. Creating, copying, and comparing raw pointers is safe; only reading or writing through one needs unsafe.',
+        'Comparing pointers with == or std::ptr::eq compares addresses, not the values stored there. Two different variables holding equal values live at different addresses.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let a = 5;\n    let b = 5;\n    let pa: *const i32 = &a;\n    let pb: *const i32 = &b;\n    let pa_again: *const i32 = &a;\n    println!("{} {} {}", a == b, pa == pb, pa == pa_again);\n}',
+        output: 'true false true',
+        explanation:
+          'The values are equal, but a and b are separate variables. Two pointers to a hold the same address.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let x = 7;\n    let r1 = &x;\n    let r2 = &x;\n    let y = 7;\n    println!("{} {}", std::ptr::eq(r1, r2), std::ptr::eq(r1, &y));\n}',
+          ['true true', 'true false', 'false false', 'false true'],
+          1,
+          'r1 and r2 point to the same variable; y is a different variable that happens to hold 7.',
+        ),
+        choose(
+          'Which operation on p: *const i32 needs an unsafe block?',
+          [
+            'Creating it with let p: *const i32 = &x;',
+            'Reading the value with *p',
+            'Comparing it with another pointer using ==',
+            'Copying it into a second variable',
+          ],
+          1,
+          'Only dereferencing relies on the pointer being valid; the rest just handle an address.',
+        ),
+        choose(
+          'Two different i32 variables both hold 5. What does == report for raw pointers to them?',
+          [
+            'true, because the values are equal',
+            'false, because the addresses differ',
+            'A compile error: raw pointers cannot be compared',
+            'It depends on whether the values are mutable',
+          ],
+          1,
+          'Pointer equality is address equality, regardless of the stored values.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let values = [4, 4, 4];\n    let first: *const i32 = &values[0];\n    let second: *const i32 = &values[1];\n    let first_again: *const i32 = &values[0];\n    println!("{} {}", first == second, first == first_again);\n}',
+          ['true true', 'false true', 'false false', 'true false'],
+          1,
+          'Neighbouring elements have different addresses even though all of them hold 4.',
+        ),
+      ],
+    },
+    {
+      title: 'A raw pointer carries no borrow',
+      explanation: [
+        'Because a raw pointer has no lifetime, the compiler does not stop it from outliving its target. Storing a pointer to a variable that then goes out of scope compiles fine; the pointer simply dangles.',
+        'Holding, copying, or comparing such a pointer is still allowed, but reading through it would be undefined behavior. That is why dereferencing requires unsafe and a reason to believe the target is alive.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let saved: *const i32;\n    {\n        let temporary = 10;\n        saved = &temporary;\n    }\n    println!("{}", saved.is_null());\n}',
+        output: 'false',
+        explanation:
+          'The program compiles although temporary is gone. saved still holds an address, so it is not null, but it must never be read.',
+      },
+      questions: [
+        choose(
+          'In the example, why is saved = &temporary accepted although temporary goes out of scope?',
+          [
+            'The compiler extends temporary to the end of main',
+            'temporary is copied into saved',
+            'Raw pointers carry no lifetime, so no borrow is checked',
+            'Inner blocks do not end variable lifetimes',
+          ],
+          2,
+          'Only references are checked by the borrow checker; a raw pointer is an unchecked address.',
+        ),
+        choose(
+          'The same program declares let saved: &i32; instead. What happens?',
+          [
+            'It compiles and prints false',
+            'It compiles, but saved becomes null',
+            'It panics when the inner block ends',
+            'Rejected: temporary does not live long enough',
+          ],
+          3,
+          'With a reference, the compiler sees that the borrow is used after its target is dropped.',
+        ),
+        choose(
+          'What may safe code do with a raw pointer that might dangle?',
+          [
+            'Read through it, since creating it was safe',
+            'Nothing; the program is rejected',
+            'Read through it only inside the original block',
+            'Hold, copy, and compare it, but not read through it',
+          ],
+          3,
+          'Handling the address is harmless; dereferencing it is what needs a validity guarantee.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let x = 1;\n    let p: *const i32 = &x;\n    let q: *const i32 = std::ptr::null();\n    println!("{} {}", p.is_null(), q.is_null());\n}',
+          ['true false', 'false false', 'true true', 'false true'],
+          3,
+          'A pointer made from a reference is never null; std::ptr::null() is the null address.',
+        ),
+      ],
+    },
+  ],
+  'rust-raw-dereference': [
+    {
+      title: 'Dereference inside unsafe, with a reason',
+      explanation: [
+        'unsafe { *p } reads through a raw pointer, and with p: *mut T, unsafe { *p = v } writes. The unsafe block is a promise: p points to a live, properly aligned, initialized value of that type, and no conflicting reference is in use.',
+        'A pointer made from a reference meets these conditions for as long as the referenced value stays alive and is not accessed through some other &mut in the meantime.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let score = 42;\n    let p: *const i32 = &score;\n    let read = unsafe { *p };\n    println!("{}", read + 1);\n}',
+        output: '43',
+        explanation:
+          'p comes from a reference to score, which is still alive, so the read is valid.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn first(values: &[i32]) -> Option<i32> {\n    if values.is_empty() {\n        return None;\n    }\n    let p = values.as_ptr();\n    Some(unsafe { *p })\n}\n\nfn main() {\n    println!("{:?} {:?}", first(&[9, 4]), first(&[]));\n}',
+          ['Some(9) Some(0)', 'Some(9) None', 'Some(4) None', '9 None'],
+          1,
+          'The check returns early for an empty slice, so the raw read happens only when an element exists.',
+        ),
+        choose(
+          'Why does first check values.is_empty() before reading *values.as_ptr()?',
+          [
+            'as_ptr panics when the slice is empty',
+            'is_empty must be called before entering unsafe',
+            'An empty slice’s pointer is always null',
+            'An empty slice has no element to read',
+          ],
+          3,
+          'The pointer of an empty slice is not null, but there is no initialized value behind it.',
+        ),
+        choose(
+          'What does writing unsafe { *p } promise about p: *const i32?',
+          [
+            'It was created inside the same unsafe block',
+            'The value behind it is not zero',
+            'It was compared with another pointer first',
+            'It points to a live, aligned, initialized i32',
+          ],
+          3,
+          'These are the conditions under which reading through a raw pointer is defined.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let mut level = 3;\n    let p: *mut i32 = &mut level;\n    unsafe {\n        *p += 4;\n        *p *= 2;\n    }\n    println!("{}", level);\n}',
+          ['10', '14', '7', '11'],
+          1,
+          'Both writes go through the pointer to level: 3 + 4, then doubled.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep the target alive and unaliased while you use the pointer',
+      explanation: [
+        'A pointer is only as valid as its target. Reading through it after the target has gone out of scope, or been moved, is undefined behavior, and the compiler will not warn you.',
+        'Safe functions wrap the raw read with checks, for example returning None for an index past the end, and take the pointer from a borrow that lasts for the whole read.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn read_at(values: &[i32], index: usize) -> Option<i32> {\n    if index >= values.len() {\n        return None;\n    }\n    let p: *const i32 = &values[index];\n    Some(unsafe { *p })\n}\n\nfn main() {\n    let data = [5, 6, 7];\n    println!("{:?} {:?}", read_at(&data, 2), read_at(&data, 3));\n}',
+        output: 'Some(7) None',
+        explanation:
+          'The bounds check rejects index 3; for index 2 the pointer comes from a live element of data.',
+      },
+      questions: [
+        choose(
+          'A pointer is taken to a local inside a block. After the block ends, the program reads through it inside unsafe. What is the result?',
+          [
+            'The last value stored there, guaranteed',
+            'A compile error from the borrow checker',
+            'Undefined behavior: the target no longer exists',
+            'Zero, because dead locals are cleared',
+          ],
+          2,
+          'The unsafe block promised a live target, and that promise is false here.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn read_at(values: &[i32], index: usize) -> Option<i32> {\n    if index >= values.len() {\n        return None;\n    }\n    let p: *const i32 = &values[index];\n    Some(unsafe { *p })\n}\n\nfn main() {\n    let data = [1, 2];\n    println!("{:?} {:?}", read_at(&data, 1), read_at(&data, 2));\n}',
+          ['Some(1) None', 'Some(2) None', 'Some(2) Some(0)', 'None None'],
+          1,
+          'Index 1 is the last valid element; index 2 is past the end and is rejected before any raw read.',
+        ),
+        choose(
+          'Which use of p keeps the raw read valid?',
+          [
+            'Take p from &x, let x go out of scope, then read *p',
+            'Take p from &x, move x into a function, then read *p',
+            'Take p from &x and read *p while x is still in scope',
+            'Read *p from std::ptr::null()',
+          ],
+          2,
+          'Only the first reads while the target is alive and in place.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let mut total = 10;\n    {\n        let r = &mut total;\n        *r += 5;\n    }\n    let p: *const i32 = &total;\n    println!("{}", unsafe { *p } * 2);\n}',
+          ['20', '25', '30', '15'],
+          2,
+          'The &mut is finished before the pointer is created, so the read sees 15 without any aliasing conflict.',
+        ),
+      ],
+    },
+  ],
+  'rust-raw-slices': [
+    {
+      title: 'Rebuild a slice from a pointer and a length',
+      explanation: [
+        'std::slice::from_raw_parts(ptr, len) creates a &[T] from a pointer to the first element and a count of elements. p.add(n) moves a pointer forward by n elements.',
+        'The call is unsafe because you promise that ptr starts len consecutive, initialized elements inside one allocation. A safe use is a view that stays inside an existing slice.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let values = [2, 3, 7, 1];\n    let prefix = unsafe { std::slice::from_raw_parts(values.as_ptr(), 2) };\n    let total: i32 = prefix.iter().sum();\n    println!("{} {}", prefix.len(), total);\n}',
+        output: '2 5',
+        explanation:
+          'The new slice covers the first two elements of values: 2 and 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let values = [10, 20, 30, 40];\n    let tail = unsafe { std::slice::from_raw_parts(values.as_ptr().add(1), 3) };\n    println!("{} {}", tail[0], tail.len());\n}',
+          ['20 3', '10 3', '20 4', '30 3'],
+          0,
+          'add(1) starts at the second element, and the slice covers the three elements from there to the end.',
+        ),
+        choose(
+          'values has 3 elements. Why is from_raw_parts(values.as_ptr(), 5) undefined behavior?',
+          [
+            'from_raw_parts only accepts lengths up to 3',
+            'The pointer must point to the last element',
+            'It is fine; the extra elements read as zero',
+            'The slice would cover memory past the end of the array',
+          ],
+          3,
+          'The length promises five initialized elements, but only three exist.',
+        ),
+        choose(
+          'What does the len argument of from_raw_parts count?',
+          [
+            'Bytes, whatever the element type',
+            'The index of the last element',
+            'Elements of type T, not bytes',
+            'Elements plus one for a terminator',
+          ],
+          2,
+          'Like a slice’s own len, it counts elements.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn prefix_sum(values: &[i32], count: usize) -> i32 {\n    let count = count.min(values.len());\n    let view = unsafe { std::slice::from_raw_parts(values.as_ptr(), count) };\n    view.iter().sum()\n}\n\nfn main() {\n    println!("{} {}", prefix_sum(&[4, 5, 6], 2), prefix_sum(&[4, 5, 6], 10));\n}',
+          ['9 15', '9 0', '9 6', '15 15'],
+          0,
+          'The count is clamped to the slice length, so asking for 10 gives the whole slice.',
+        ),
+      ],
+    },
+    {
+      title: 'Tie the new slice to its source',
+      explanation: [
+        'from_raw_parts can return a slice with any lifetime the caller wants, so nothing stops it from outliving the data. Returning it from a function that takes &[T] and returns &[T] lets elision tie the result to the input, and the borrow checker protects it again.',
+        'While the slice is alive, the same elements must not be changed through a &mut; a shared slice and a mutable reference to the same memory may not coexist.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn first_half(values: &[u8]) -> &[u8] {\n    let len = values.len() / 2;\n    unsafe { std::slice::from_raw_parts(values.as_ptr(), len) }\n}\n\nfn main() {\n    let data = [1, 2, 3, 4, 5];\n    let half = first_half(&data);\n    println!("{} {}", half.len(), half[half.len() - 1]);\n}',
+        output: '2 2',
+        explanation:
+          'Five bytes halve to 2 elements; the returned slice is tied to data by the signature.',
+      },
+      questions: [
+        choose(
+          'Why does first_half take &[u8] and return &[u8]?',
+          [
+            'from_raw_parts only works inside functions',
+            'Returning a slice makes the unsafe block safe',
+            'Elision ties the result’s lifetime to the input',
+            'It lets the function free the input slice',
+          ],
+          2,
+          'The signature hands the lifetime question back to the compiler.',
+        ),
+        choose(
+          'A slice built with from_raw_parts is alive while code writes to the same elements through a &mut. What is the problem?',
+          [
+            'The writes are ignored until the slice is dropped',
+            'The slice and the &mut alias, which is undefined behavior',
+            'The slice sees the old values, which is allowed',
+            'The compiler rejects the &mut automatically',
+          ],
+          1,
+          'Shared and mutable access to the same memory at once breaks Rust’s aliasing rules.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn first_half(values: &[u8]) -> &[u8] {\n    let len = values.len() / 2;\n    unsafe { std::slice::from_raw_parts(values.as_ptr(), len) }\n}\n\nfn main() {\n    let a = first_half(&[9, 8, 7]);\n    let b = first_half(&[]);\n    println!("{} {}", a.len(), b.len());\n}',
+          ['2 0', '1 0', '1 1', '3 0'],
+          1,
+          'Integer division gives 1 for three bytes and 0 for none; a zero-length slice is valid.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn window(values: &[i32], start: usize, len: usize) -> Option<&[i32]> {\n    if start > values.len() || len > values.len() - start {\n        return None;\n    }\n    Some(unsafe { std::slice::from_raw_parts(values.as_ptr().add(start), len) })\n}\n\nfn main() {\n    let data = [1, 2, 3, 4];\n    println!("{:?} {:?}", window(&data, 1, 2), window(&data, 3, 2));\n}',
+          [
+            'Some([2, 3]) Some([4])',
+            'Some([1, 2]) None',
+            'Some([2, 3, 4]) None',
+            'Some([2, 3]) None',
+          ],
+          3,
+          'The second window would run past the end, so the checks reject it before any unsafe code runs.',
+        ),
+      ],
+    },
+  ],
+  'rust-unsafe-wrapper': [
+    {
+      title: 'Hide unsafe behind a function that checks its inputs',
+      explanation: [
+        'Safe Rust will not lend two &mut borrows of one slice at once, even to non-overlapping halves. A function can build both halves with from_raw_parts_mut inside unsafe, as std’s split_at_mut does.',
+        'Such a function is safe to call only if it checks everything the unsafe code relies on, for every possible input. Here, clamping mid keeps both halves inside the slice.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn split_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {\n    let mid = mid.min(values.len());\n    let len = values.len();\n    let p = values.as_mut_ptr();\n    unsafe {\n        (\n            std::slice::from_raw_parts_mut(p, mid),\n            std::slice::from_raw_parts_mut(p.add(mid), len - mid),\n        )\n    }\n}\n\nfn main() {\n    let mut data = [1, 2, 3, 4, 5];\n    let (left, right) = split_mut(&mut data, 2);\n    left[0] = 10;\n    right[0] = 30;\n    println!("{:?}", data);\n}',
+        output: '[10, 2, 30, 4, 5]',
+        explanation:
+          'left covers indexes 0 and 1, right covers 2 to 4, and both write into data.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn split_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {\n    let mid = mid.min(values.len());\n    let len = values.len();\n    let p = values.as_mut_ptr();\n    unsafe {\n        (\n            std::slice::from_raw_parts_mut(p, mid),\n            std::slice::from_raw_parts_mut(p.add(mid), len - mid),\n        )\n    }\n}\n\nfn main() {\n    let mut data = [1, 2, 3, 4];\n    let (left, right) = split_mut(&mut data, 3);\n    left[2] += right[0];\n    right[0] = 0;\n    println!("{:?}", data);\n}',
+          ['[1, 2, 3, 0]', '[1, 2, 7, 4]', '[1, 2, 7, 0]', '[4, 2, 3, 0]'],
+          2,
+          'left[2] is data[2] and right[0] is data[3]; both halves may be used at once.',
+        ),
+        choose(
+          'Why does split_mut clamp mid with mid.min(values.len())?',
+          [
+            'from_raw_parts_mut requires mid to be even',
+            'A larger mid would start the right half past the end',
+            'It keeps the left half shorter than the right',
+            'Only for speed; any mid would be safe',
+          ],
+          1,
+          'Without the clamp, a caller could make the unsafe code build an out-of-bounds slice.',
+        ),
+        choose(
+          'Why can’t safe Rust return (&mut values[..mid], &mut values[mid..]) directly?',
+          [
+            'Ranges cannot be used with &mut',
+            'It sees two &mut borrows of one slice',
+            'The two halves would be copies, not views',
+            'mid would have to be a constant',
+          ],
+          1,
+          'The compiler does not reason about index ranges, so it treats both as borrowing all of values.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn split_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {\n    let mid = mid.min(values.len());\n    let len = values.len();\n    let p = values.as_mut_ptr();\n    unsafe {\n        (\n            std::slice::from_raw_parts_mut(p, mid),\n            std::slice::from_raw_parts_mut(p.add(mid), len - mid),\n        )\n    }\n}\n\nfn main() {\n    let mut data = [5, 6];\n    let (left, right) = split_mut(&mut data, 9);\n    println!("{} {}", left.len(), right.len());\n}',
+          ['9 0', '2 7', '2 0', '0 2'],
+          2,
+          'mid is clamped to 2, so the left half is everything and the right half is empty.',
+        ),
+      ],
+    },
+    {
+      title: 'Prove the halves are disjoint and tied to the borrow',
+      explanation: [
+        'The proof behind split_mut has three parts: the halves cover [0, mid) and [mid, len), which never overlap; both lie inside the slice; and the signature ties both to the incoming &mut borrow, so the caller cannot touch the original while the halves live.',
+        'If any part fails for even one input, the function is unsound, however well it works in tests.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn split_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {\n    let mid = mid.min(values.len());\n    let len = values.len();\n    let p = values.as_mut_ptr();\n    unsafe {\n        (\n            std::slice::from_raw_parts_mut(p, mid),\n            std::slice::from_raw_parts_mut(p.add(mid), len - mid),\n        )\n    }\n}\n\nfn bump_halves(values: &mut [i32], mid: usize) {\n    let (left, right) = split_mut(values, mid);\n    for n in left.iter_mut() {\n        *n += 1;\n    }\n    for n in right.iter_mut() {\n        *n += 100;\n    }\n}\n\nfn main() {\n    let mut data = [0, 0, 0, 0];\n    bump_halves(&mut data, 1);\n    println!("{:?}", data);\n}',
+        output: '[1, 100, 100, 100]',
+        explanation:
+          'Each element belongs to exactly one half, so each is changed exactly once.',
+      },
+      questions: [
+        choose(
+          'A buggy version builds the right half from p.add(mid - 1). What is wrong?',
+          [
+            'The right half is one short, which is harmless',
+            'p.add cannot take a subtraction',
+            'The halves overlap, giving two &mut to one element',
+            'Nothing, as long as mid is at least 1',
+          ],
+          2,
+          'Two mutable slices covering the same element break the exclusivity that &mut promises.',
+        ),
+        choose(
+          'split_mut returns (&mut [i32], &mut [i32]) from values: &mut [i32]. What does that signature prevent?',
+          [
+            'Writing to both halves in one function',
+            'Using values directly while either half is alive',
+            'Calling split_mut twice on the same array',
+            'Reading the halves after changing them',
+          ],
+          1,
+          'Both halves borrow from the incoming &mut, so the original stays locked until they are done.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn split_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {\n    let mid = mid.min(values.len());\n    let len = values.len();\n    let p = values.as_mut_ptr();\n    unsafe {\n        (\n            std::slice::from_raw_parts_mut(p, mid),\n            std::slice::from_raw_parts_mut(p.add(mid), len - mid),\n        )\n    }\n}\n\nfn bump_halves(values: &mut [i32], mid: usize) {\n    let (left, right) = split_mut(values, mid);\n    for n in left.iter_mut() {\n        *n += 1;\n    }\n    for n in right.iter_mut() {\n        *n += 100;\n    }\n}\n\nfn main() {\n    let mut data = [1, 1, 1, 1, 1];\n    bump_halves(&mut data, 3);\n    println!("{:?}", data);\n}',
+          [
+            '[2, 2, 101, 101, 101]',
+            '[2, 2, 2, 2, 101]',
+            '[101, 101, 101, 2, 2]',
+            '[2, 2, 2, 101, 101]',
+          ],
+          3,
+          'The first three elements are in the left half and the last two in the right.',
+        ),
+        choose(
+          'What makes a function that contains unsafe code sound to offer as safe?',
+          [
+            'Its checks hold for every possible input',
+            'The inputs used in its tests all work correctly',
+            'Its unsafe block is shorter than five lines',
+            'Its name ends in the suffix _unchecked',
+          ],
+          0,
+          'Callers of a safe function may pass anything, so the proof must cover everything.',
+        ),
+      ],
+    },
+  ],
+  'rust-repr-c': [
+    {
+      title: 'repr(C) keeps fields in declared order',
+      explanation: [
+        'Without an attribute, the Rust compiler may reorder a struct’s fields to save space. #[repr(C)] makes it follow C’s rules instead: fields in declaration order, each at an offset aligned for its type, with padding inserted where needed.',
+        'C code that shares the struct relies on that layout. std::mem::size_of::<T>() reports the resulting size in bytes.',
+      ],
+      example: {
+        language: 'rust',
+        code: '#[repr(C)]\nstruct Pixel {\n    r: u8,\n    g: u8,\n    b: u8,\n    a: u8,\n}\n\n#[repr(C)]\nstruct Point {\n    x: i32,\n    y: i32,\n}\n\nfn main() {\n    println!("{} {}", std::mem::size_of::<Pixel>(), std::mem::size_of::<Point>());\n}',
+        output: '4 8',
+        explanation:
+          'Four bytes need no padding, and two i32 fields sit back to back.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          '#[repr(C)]\nstruct Record {\n    a: u8,\n    b: u32,\n    c: u8,\n}\n\nfn main() {\n    println!("{}", std::mem::size_of::<Record>());\n}',
+          ['6', '12', '8', '9'],
+          1,
+          'a is at 0, b must start at 4, c is at 8, and the total rounds up to a multiple of 4.',
+        ),
+        choose(
+          'Why mark a struct #[repr(C)] before passing it to a C library?',
+          [
+            'repr(C) always makes the struct smaller',
+            'Without it, Rust structs cannot hold integers',
+            'C expects fields in declared order with C’s padding rules',
+            'repr(C) turns the fields into C strings',
+          ],
+          2,
+          'Both sides must agree on where every field lives.',
+        ),
+        choose(
+          'Without any repr attribute, what may the Rust compiler do with a struct’s fields?',
+          [
+            'Nothing; Rust always keeps declaration order',
+            'Reorder them to reduce padding',
+            'Store each field in a separate allocation',
+            'Convert them to fixed-width types',
+          ],
+          1,
+          'The default layout is unspecified, which leaves the compiler free to optimize it.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          '#[repr(C)]\nstruct Packet {\n    a: u32,\n    b: u8,\n    c: u8,\n    d: u16,\n}\n\nfn main() {\n    println!("{}", std::mem::size_of::<Packet>());\n}',
+          ['12', '8', '16', '7'],
+          1,
+          'b and c fill offsets 4 and 5, and d is already aligned at 6, so no padding is needed.',
+        ),
+      ],
+    },
+    {
+      title: 'Match the other side with fixed-width fields',
+      explanation: [
+        'C’s int and long can differ in size between platforms, while Rust’s i32 and u64 never do. Using fixed-width fields, or the std::ffi aliases such as c_int, keeps both sides in agreement.',
+        'Field order matters in repr(C): swapping fields of different sizes moves their offsets and can change the total size. std::mem::offset_of!(Type, field) reports where a field starts.',
+      ],
+      example: {
+        language: 'rust',
+        code: '#[repr(C)]\nstruct Header {\n    kind: u8,\n    flags: u8,\n    length: u16,\n    id: u32,\n}\n\nfn main() {\n    println!(\n        "{} {} {}",\n        std::mem::offset_of!(Header, length),\n        std::mem::offset_of!(Header, id),\n        std::mem::size_of::<Header>()\n    );\n}',
+        output: '2 4 8',
+        explanation:
+          'The two bytes come first, so length starts at 2 and id at 4, with no padding anywhere.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          '#[repr(C)]\nstruct Header {\n    kind: u8,\n    id: u32,\n    flags: u8,\n    length: u16,\n}\n\nfn main() {\n    println!(\n        "{} {} {}",\n        std::mem::offset_of!(Header, id),\n        std::mem::offset_of!(Header, length),\n        std::mem::size_of::<Header>()\n    );\n}',
+          ['1 6 8', '4 9 12', '4 10 12', '4 10 11'],
+          2,
+          'id is padded to 4, flags sits at 8, length is aligned to 10, and the size rounds up to 12.',
+        ),
+        choose(
+          'Why prefer u32 over a type whose size varies by platform for a field shared with C?',
+          [
+            'u32 fields are faster for C to read',
+            'repr(C) only accepts unsigned fields',
+            'Variable-size fields cannot be printed',
+            'Both sides then agree on the field’s exact size',
+          ],
+          3,
+          'A mismatch in field size would shift every following field.',
+        ),
+        choose(
+          'Two repr(C) structs have the same fields in different orders. What can differ between them?',
+          [
+            'The field offsets, and possibly the total size',
+            'Nothing; repr(C) sorts fields by size',
+            'Only the field names that C sees',
+            'Only the alignment of the first field',
+          ],
+          0,
+          'repr(C) follows the declared order, so a different order means a different layout.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          '#[repr(C)]\nstruct Entry {\n    a: u16,\n    b: u8,\n    c: u32,\n}\n\nfn main() {\n    println!("{} {}", std::mem::offset_of!(Entry, b), std::mem::offset_of!(Entry, c));\n}',
+          ['2 3', '1 4', '2 4', '2 8'],
+          2,
+          'b follows the two-byte a, and c is padded up to the next multiple of 4.',
+        ),
+      ],
+    },
+  ],
+  'rust-extern-abi': [
+    {
+      title: 'extern "C" fn uses the C calling convention',
+      explanation: [
+        'An ABI fixes how a function receives its arguments and returns its result. Rust’s own ABI is unspecified, so C code cannot call an ordinary fn. extern "C" fn uses the platform’s C convention instead.',
+        'Rust code can still call such a function normally, without unsafe, because Rust wrote and checked its body.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'extern "C" fn add(a: i32, b: i32) -> i32 {\n    a + b\n}\n\nfn main() {\n    println!("{}", add(3, 4));\n}',
+        output: '7',
+        explanation:
+          'The body is ordinary Rust; only the calling convention differs, which this direct call does not notice.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'extern "C" fn scale(x: i32, k: i32) -> i32 {\n    x * k\n}\n\nextern "C" fn offset(x: i32) -> i32 {\n    x - 1\n}\n\nfn main() {\n    println!("{}", offset(scale(5, 3)));\n}',
+          ['15', '10', '12', '14'],
+          3,
+          'scale gives 15 and offset subtracts 1; both are plain safe calls.',
+        ),
+        choose(
+          'What does extern "C" on a Rust function change?',
+          [
+            'The language its body is compiled as',
+            'Whether Rust code may call it',
+            'How arguments and results are passed',
+            'Which types it is allowed to return',
+          ],
+          2,
+          'The body stays Rust; only the boundary convention changes.',
+        ),
+        choose(
+          'Why is an ordinary fn not handed to a C library as a callback?',
+          [
+            'Ordinary fns cannot take i32 parameters',
+            'Ordinary fns are always private',
+            'C cannot call functions that return values',
+            'Rust’s own convention is unspecified',
+          ],
+          3,
+          'C would pass arguments in a way the Rust function might not expect.',
+        ),
+        choose(
+          'What does calling an extern "C" fn defined in your own Rust code require?',
+          [
+            'An unsafe block around every call',
+            'A #[link] attribute naming a C library',
+            'Nothing special; it is an ordinary safe call',
+            'Converting the arguments to C strings',
+          ],
+          2,
+          'The function was written and type-checked in Rust, so the compiler can vouch for the call.',
+        ),
+      ],
+    },
+    {
+      title: 'Calling a declared foreign function is unsafe',
+      explanation: [
+        'extern "C" { fn abs(x: i32) -> i32; } declares a function implemented outside Rust, here the C library’s abs. The compiler takes the declared signature on trust.',
+        'If the declaration is wrong, calls are undefined behavior, so every call must be inside unsafe. Declare parameters with ABI-compatible types: C’s int is i32 on common platforms, and std::ffi::c_int names it portably.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'extern "C" {\n    fn abs(x: i32) -> i32;\n}\n\nfn main() {\n    let distance = unsafe { abs(-12) };\n    println!("{}", distance);\n}',
+        output: '12',
+        explanation:
+          'The call goes to the C library’s abs, through a declaration Rust cannot verify.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'extern "C" {\n    fn abs(x: i32) -> i32;\n}\n\nfn main() {\n    let total = unsafe { abs(3 - 10) + abs(4) };\n    println!("{}", total);\n}',
+          ['11', '-3', '3', '17'],
+          0,
+          'abs(-7) is 7 and abs(4) is 4.',
+        ),
+        choose(
+          'Why must a call to a function declared in an extern "C" block be inside unsafe?',
+          [
+            'C functions always modify global memory',
+            'Foreign functions may only be called once',
+            'Rust cannot verify the foreign signature',
+            'Their bodies are written in assembly',
+          ],
+          2,
+          'Rust only sees the declaration; whether it matches reality is your responsibility.',
+        ),
+        choose(
+          'A C function takes and returns int. Which declaration fits on common desktop platforms?',
+          [
+            'fn f(x: i64) -> i64;',
+            'fn f(x: &str) -> String;',
+            'fn f(x: i32) -> i32;',
+            'fn f(x: usize) -> isize;',
+          ],
+          2,
+          'int is 32 bits there; Rust types like String have no C equivalent at all.',
+        ),
+        choose(
+          'What happens if an extern declaration lists the wrong parameter type?',
+          [
+            'A compile error names the mismatch',
+            'Rust converts the argument automatically',
+            'Calls become undefined behavior',
+            'The linker picks a matching function',
+          ],
+          2,
+          'Nothing checks the declaration against the real function.',
+        ),
+      ],
+    },
+  ],
+  'rust-c-strings': [
+    {
+      title: 'A C string ends at its first nul byte',
+      explanation: [
+        'A C string has no length field: it is the bytes up to the first 0 byte, called nul. std::ffi::CStr::from_bytes_with_nul(bytes) checks that the bytes end with exactly one nul and contain no other, and returns a Result.',
+        'to_bytes() gives the content without the trailing nul. A byte string literal such as b"hi\\0" writes the nul explicitly.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let ok = std::ffi::CStr::from_bytes_with_nul(b"hi\\0");\n    let missing = std::ffi::CStr::from_bytes_with_nul(b"hi");\n    let inner = std::ffi::CStr::from_bytes_with_nul(b"h\\0i\\0");\n    println!("{} {} {}", ok.is_ok(), missing.is_ok(), inner.is_ok());\n}',
+        output: 'true false false',
+        explanation:
+          'Only the first input ends in a single nul. The second has no terminator, and the third has a nul inside.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn content_len(bytes: &[u8]) -> Option<usize> {\n    std::ffi::CStr::from_bytes_with_nul(bytes)\n        .ok()\n        .map(|s| s.to_bytes().len())\n}\n\nfn main() {\n    println!(\n        "{:?} {:?} {:?}",\n        content_len(b"rust\\0"),\n        content_len(b"\\0"),\n        content_len(b"ru\\0st\\0")\n    );\n}',
+          [
+            'Some(4) Some(0) None',
+            'Some(5) Some(1) None',
+            'Some(4) None None',
+            'Some(4) Some(0) Some(2)',
+          ],
+          0,
+          'The content excludes the nul, a lone nul is a valid empty string, and an interior nul is rejected.',
+        ),
+        choose(
+          'Why can’t a C string contain a nul byte inside its text?',
+          [
+            'C would stop reading at that byte',
+            'Nul bytes are invalid in every Rust string',
+            'CStr stores its length in the first byte',
+            'The nul would be printed as a space',
+          ],
+          0,
+          'The first nul marks the end, so anything after it would be lost.',
+        ),
+        choose(
+          'What does to_bytes() return for the C string made from b"ok\\0"?',
+          [
+            'The bytes o and k, without the nul',
+            'The bytes o, k, and the nul',
+            'An owned String containing ok',
+            'The number 2, its length',
+          ],
+          0,
+          'to_bytes leaves out the terminator; to_bytes_with_nul keeps it.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let buffer = b"name\\0garbage";\n    let text = std::ffi::CStr::from_bytes_until_nul(buffer)\n        .ok()\n        .map(|s| s.to_bytes().len());\n    println!("{:?} {}", text, buffer.len());\n}',
+          ['Some(4) 12', 'None 12', 'Some(12) 12', 'Some(5) 12'],
+          0,
+          'from_bytes_until_nul stops at the first nul and ignores the rest of the buffer.',
+        ),
+      ],
+    },
+    {
+      title: 'CString builds an owned C string from Rust text',
+      explanation: [
+        'std::ffi::CString::new(text) copies the bytes and appends the nul. It returns an Err if the text already contains a nul, since that could not be represented.',
+        'as_bytes() gives the content and as_bytes_with_nul() includes the terminator. as_ptr() gives the pointer C expects, and the CString must stay alive for as long as C uses that pointer.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let owned = std::ffi::CString::new("hello").ok();\n    let bad = std::ffi::CString::new("he\\0llo").ok();\n    println!("{:?} {}", owned.map(|c| c.as_bytes_with_nul().len()), bad.is_none());\n}',
+        output: 'Some(6) true',
+        explanation:
+          'hello gains a nul for 6 bytes; text with an interior nul is refused.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let name = std::ffi::CString::new("crab").ok();\n    let sizes = name.map(|c| (c.as_bytes().len(), c.as_bytes_with_nul().len()));\n    println!("{:?}", sizes);\n}',
+          ['Some((5, 5))', 'Some((4, 4))', 'Some((5, 6))', 'Some((4, 5))'],
+          3,
+          'The content is 4 bytes, and the terminator adds one more.',
+        ),
+        choose(
+          'Why does CString::new return a Result?',
+          [
+            'Allocating the copy might fail',
+            'The input must be plain ASCII',
+            'C strings are limited to 255 bytes',
+            'The input may contain a nul byte',
+          ],
+          3,
+          'An interior nul would end the C string early, so it is reported as an error.',
+        ),
+        choose(
+          'A single expression passes CString::new("x").unwrap().as_ptr() to C, and C keeps the pointer. What goes wrong?',
+          [
+            'as_ptr copies the bytes, so nothing goes wrong',
+            'C receives the text without its nul',
+            'The pointer stays null until unwrap runs',
+            'The temporary is dropped; C’s pointer dangles',
+          ],
+          3,
+          'The CString owns the bytes; once the temporary is dropped, the pointer refers to freed memory.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let inputs = ["ok", "", "a\\0b"];\n    for text in inputs {\n        println!("{}", std::ffi::CString::new(text).is_ok());\n    }\n}',
+          [
+            'true\nfalse\nfalse',
+            'true\ntrue\ntrue',
+            'false\ntrue\nfalse',
+            'true\ntrue\nfalse',
+          ],
+          3,
+          'An empty string is fine and becomes a lone nul; only the interior nul is rejected.',
+        ),
+      ],
+    },
+  ],
+  'rust-byte-order': [
+    {
+      title: 'Big-endian and little-endian reverse the bytes',
+      explanation: [
+        'A u32 occupies four bytes. Big-endian order stores the most significant byte first; little-endian stores the least significant byte first. u32::from_be_bytes and from_le_bytes decode an array in each order, and to_be_bytes and to_le_bytes encode.',
+        'The machine’s native order differs between platforms, so a file or network format must name its byte order rather than copy memory as it is.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let bytes = [0x00, 0x00, 0x01, 0x02];\n    println!("{} {}", u32::from_be_bytes(bytes), u32::from_le_bytes(bytes));\n}',
+        output: '258 33619968',
+        explanation:
+          'Big-endian reads 0x00000102. Little-endian reads the same bytes backwards as 0x02010000.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    println!("{} {}", u16::from_be_bytes([1, 0]), u16::from_le_bytes([1, 0]));\n}',
+          ['1 256', '256 1', '256 256', '1 1'],
+          1,
+          'Big-endian treats the first byte as the high byte; little-endian treats it as the low byte.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let n: u16 = 0x1234;\n    println!("{:?} {:?}", n.to_be_bytes(), n.to_le_bytes());\n}',
+          [
+            '[52, 18] [18, 52]',
+            '[18, 52] [18, 52]',
+            '[12, 34] [34, 12]',
+            '[18, 52] [52, 18]',
+          ],
+          3,
+          '0x12 is 18 and 0x34 is 52; big-endian puts 0x12 first.',
+        ),
+        choose(
+          'Why must a file format state its byte order instead of using the machine’s native order?',
+          [
+            'Native order is slower to read',
+            'Machines differ in their native order',
+            'Big-endian values take fewer bytes',
+            'Rust cannot read native-order integers',
+          ],
+          1,
+          'A file written on one machine must mean the same number when read on another.',
+        ),
+        choose(
+          'Where does big-endian order store the most significant byte of a u32?',
+          [
+            'First, at the lowest offset',
+            'Last, at the highest offset',
+            'In the middle two bytes',
+            'Wherever the host machine puts it',
+          ],
+          0,
+          'Big-endian writes numbers the way people do, biggest part first.',
+        ),
+      ],
+    },
+    {
+      title: 'Decode from a slice after checking its length',
+      explanation: [
+        'from_be_bytes needs a fixed array such as [u8; 4], but received data arrives as a &[u8]. bytes.try_into() converts a slice to an array only when the length matches, returning a Result.',
+        'In a function returning Option, .ok()? turns a wrong length into None. bytes.get(start..end)? first picks out a field without panicking when the range is out of bounds.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn read_u32_be(bytes: &[u8]) -> Option<u32> {\n    let array: [u8; 4] = bytes.try_into().ok()?;\n    Some(u32::from_be_bytes(array))\n}\n\nfn main() {\n    println!("{:?} {:?}", read_u32_be(&[0, 0, 1, 0]), read_u32_be(&[1, 2, 3]));\n}',
+        output: 'Some(256) None',
+        explanation:
+          'Four bytes convert to an array; three bytes fail the conversion, which becomes None.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn field(bytes: &[u8], start: usize) -> Option<u16> {\n    let array: [u8; 2] = bytes.get(start..start + 2)?.try_into().ok()?;\n    Some(u16::from_be_bytes(array))\n}\n\nfn main() {\n    let packet = [0x01, 0x00, 0x02, 0x00];\n    println!("{:?} {:?} {:?}", field(&packet, 0), field(&packet, 2), field(&packet, 3));\n}',
+          [
+            'Some(1) Some(2) None',
+            'Some(256) Some(512) Some(0)',
+            'Some(256) Some(512) None',
+            'Some(256) None None',
+          ],
+          2,
+          'Fields at 0 and 2 decode big-endian; a field at 3 would need a byte past the end, so get returns None.',
+        ),
+        choose(
+          'Why does read_u32_be use try_into instead of assuming the slice has four bytes?',
+          [
+            'try_into reverses the byte order',
+            'Slices cannot be read as u8 values',
+            'A short slice becomes None instead of a panic',
+            'from_be_bytes requires it for speed',
+          ],
+          2,
+          'Input from outside may be truncated, and the length check turns that into a normal result.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn read_u16_le(bytes: &[u8]) -> Option<u16> {\n    let array: [u8; 2] = bytes.try_into().ok()?;\n    Some(u16::from_le_bytes(array))\n}\n\nfn main() {\n    println!("{:?} {:?}", read_u16_le(&[0x10, 0x00]), read_u16_le(&[0x00, 0x10]));\n}',
+          [
+            'Some(4096) Some(16)',
+            'Some(16) Some(4096)',
+            'Some(16) Some(16)',
+            'Some(1) Some(256)',
+          ],
+          1,
+          'In little-endian the first byte is the low byte: 0x0010 is 16 and 0x1000 is 4096.',
+        ),
+        choose(
+          'A protocol says its 32-bit length field is big-endian. Which call decodes it?',
+          [
+            'u32::from_le_bytes(array)',
+            'u32::from_ne_bytes(array)',
+            'u32::from_be_bytes(array)',
+            'u32::from(array)',
+          ],
+          2,
+          'from_ne_bytes would use whatever order the current machine has.',
+        ),
+      ],
+    },
+  ],
+  'rust-capacity': [
+    {
+      title: 'len counts elements; capacity counts reserved space',
+      explanation: [
+        'A Vec keeps its elements in an allocation that may have room to spare. len() is the number of elements actually stored; capacity() is how many fit before the Vec must allocate again. capacity is always at least len.',
+        'Vec::with_capacity(n) reserves room for at least n elements but starts with len 0. Spare capacity holds no values: indexing past len panics.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let mut v: Vec<i32> = Vec::with_capacity(10);\n    println!("{} {}", v.len(), v.capacity() >= 10);\n    v.push(4);\n    v.push(5);\n    println!("{} {}", v.len(), v.capacity() >= 10);\n}',
+        output: '0 true\n2 true',
+        explanation:
+          'The reserved space is there from the start, but len only grows with each push.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let v: Vec<u8> = Vec::with_capacity(8);\n    println!("{} {:?}", v.len(), v.get(0));\n}',
+          ['8 None', '0 Some(0)', '0 None', '8 Some(0)'],
+          2,
+          'Reserved space is not an element, so there is nothing at index 0 yet.',
+        ),
+        choose(
+          'What does v[0] do right after let v: Vec<i32> = Vec::with_capacity(100);?',
+          [
+            'Returns 0 from the reserved space',
+            'Panics, because len is still 0',
+            'Returns whatever bytes were in memory',
+            'Fails to compile',
+          ],
+          1,
+          'Indexing checks against len, not capacity.',
+        ),
+        choose(
+          'Which is always true of a Vec?',
+          [
+            'capacity() >= len()',
+            'capacity() == len()',
+            'capacity() is a power of two',
+            'len() >= capacity()',
+          ],
+          0,
+          'The stored elements must fit in the allocation, which may have spare room.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let mut v = Vec::with_capacity(4);\n    v.push(1);\n    v.push(2);\n    v.push(3);\n    v.clear();\n    println!("{} {}", v.len(), v.capacity() >= 3);\n}',
+          ['3 true', '0 false', '0 true', '3 false'],
+          2,
+          'clear removes the elements but keeps the allocation for reuse.',
+        ),
+      ],
+    },
+    {
+      title: 'Reserve once instead of growing repeatedly',
+      explanation: [
+        'When a push finds no spare room, the Vec allocates a larger buffer and moves every element into it. If you know how many elements are coming, with_capacity or reserve(n) gets the space in one step.',
+        'v.reserve(n) guarantees room for at least n more elements beyond the current len. As long as pushes stay within capacity, the buffer does not move.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let mut v = Vec::new();\n    v.reserve(5);\n    let reserved = v.capacity();\n    for i in 0..5 {\n        v.push(i * i);\n    }\n    println!("{} {} {}", v.len(), v.capacity() == reserved, v[4]);\n}',
+        output: '5 true 16',
+        explanation:
+          'All five pushes fit in the reserved space, so the capacity never changes.',
+      },
+      questions: [
+        choose(
+          'You will push exactly 1000 items. Why call Vec::with_capacity(1000) first?',
+          [
+            'It avoids repeated reallocation',
+            'It makes len start at 1000',
+            'It fills the Vec with 1000 zeros',
+            'It limits the Vec to 1000 items',
+          ],
+          0,
+          'Capacity is only a reservation; it saves reallocations without adding elements.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let mut v = vec![1, 2, 3];\n    v.reserve(10);\n    println!("{} {}", v.len(), v.capacity() >= 13);\n}',
+          ['13 true', '3 false', '3 true', '10 true'],
+          2,
+          'reserve counts additional elements beyond the current 3, and adds none itself.',
+        ),
+        choose(
+          'What does v.reserve(n) guarantee?',
+          [
+            'capacity() becomes exactly n',
+            'len() grows by exactly n',
+            'n default elements are added',
+            'capacity() is at least len() + n',
+          ],
+          3,
+          'reserve is about room for future pushes, measured from the current length.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let mut v: Vec<u32> = Vec::with_capacity(3);\n    let before = v.as_ptr();\n    v.push(1);\n    v.push(2);\n    v.push(3);\n    println!("{} {}", v.len(), v.as_ptr() == before);\n}',
+          ['3 false', '3 true', '0 true', '4 false'],
+          1,
+          'Three pushes fit the reserved capacity, so the buffer stays at the same address.',
+        ),
+      ],
+    },
+  ],
+  'rust-layout': [
+    {
+      title: 'Measure size and alignment',
+      explanation: [
+        'std::mem::size_of::<T>() is the number of bytes a value of T occupies, including any padding. std::mem::align_of::<T>() is the number its address must be a multiple of.',
+        'For the basic integers, size equals alignment: 1 for u8, 2 for u16, 4 for u32, 8 for u64. An array has its element’s alignment, and a struct has the largest alignment among its fields.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    println!("{} {}", std::mem::size_of::<u16>(), std::mem::align_of::<u16>());\n    println!("{} {}", std::mem::size_of::<u64>(), std::mem::align_of::<u64>());\n}',
+        output: '2 2\n8 8',
+        explanation: 'Each integer is as large as its alignment requirement.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    println!(\n        "{} {}",\n        std::mem::size_of::<[u32; 5]>(),\n        std::mem::align_of::<[u32; 5]>()\n    );\n}',
+          ['20 4', '20 20', '5 4', '4 20'],
+          0,
+          'Five u32 values take 20 bytes, but the array only needs the alignment of one u32.',
+        ),
+        choose(
+          'What does align_of::<u32>() == 4 mean?',
+          [
+            'A u32 holds 4 separate values',
+            'A u32 is exactly 4 bits wide',
+            'Four u32 values fit in one cache line',
+            'Its address must be a multiple of 4',
+          ],
+          3,
+          'Alignment is a constraint on addresses, not a count of anything stored.',
+        ),
+        choose(
+          'What determines a struct’s alignment?',
+          [
+            'The alignment of its first field',
+            'How many fields it has',
+            'Nothing; it is always 1',
+            'Its most strictly aligned field',
+          ],
+          3,
+          'Every field must end up aligned, so the struct takes the strictest requirement.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          '#[repr(C)]\nstruct Two {\n    a: u8,\n    b: u8,\n}\n\n#[repr(C)]\nstruct Mixed {\n    a: u8,\n    b: u16,\n}\n\nfn main() {\n    println!("{} {}", std::mem::size_of::<Two>(), std::mem::size_of::<Mixed>());\n}',
+          ['2 4', '2 3', '2 2', '4 4'],
+          0,
+          'Two bytes need no padding. In Mixed, b must start at offset 2, so the struct is 4 bytes.',
+        ),
+      ],
+    },
+    {
+      title: 'Count padding, not just field sizes',
+      explanation: [
+        'In a repr(C) struct, each field starts at the next offset aligned for it, and the gaps are padding. The total is then rounded up to a multiple of the struct’s alignment, so arrays of it stay aligned.',
+        'Putting larger fields first often removes padding, but not always. Measure with size_of rather than adding up field sizes.',
+      ],
+      example: {
+        language: 'rust',
+        code: '#[repr(C)]\nstruct Loose {\n    a: u8,\n    b: u32,\n    c: u8,\n}\n\n#[repr(C)]\nstruct Tight {\n    b: u32,\n    a: u8,\n    c: u8,\n}\n\nfn main() {\n    println!("{} {}", std::mem::size_of::<Loose>(), std::mem::size_of::<Tight>());\n}',
+        output: '12 8',
+        explanation:
+          'Loose pads 3 bytes before b and 3 after c. Tight packs the two bytes after b and pads only 2 at the end.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          '#[repr(C)]\nstruct First {\n    a: u8,\n    b: u64,\n}\n\n#[repr(C)]\nstruct Last {\n    b: u64,\n    a: u8,\n}\n\nfn main() {\n    println!("{} {}", std::mem::size_of::<First>(), std::mem::size_of::<Last>());\n}',
+          ['16 9', '9 9', '16 8', '16 16'],
+          3,
+          'Either way the size rounds up to a multiple of 8, so moving the u8 to the end saves nothing here.',
+        ),
+        choose(
+          'A repr(C) struct has fields u8, u32, u8 in that order. Why is its size 12 rather than 6?',
+          [
+            'Each field takes 4 bytes whatever its type',
+            'repr(C) adds a hidden 6-byte header',
+            'The compiler stores every field twice',
+            'Padding aligns the u32 and rounds up the end',
+          ],
+          3,
+          '3 bytes of padding precede the u32, and 3 more follow the last u8.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          '#[repr(C)]\nstruct Loose {\n    a: u8,\n    b: u32,\n    c: u8,\n}\n\n#[repr(C)]\nstruct Tight {\n    b: u32,\n    a: u8,\n    c: u8,\n}\n\nfn main() {\n    println!(\n        "{} {}",\n        std::mem::size_of::<[Loose; 10]>(),\n        std::mem::size_of::<[Tight; 10]>()\n    );\n}',
+          ['120 80', '60 60', '120 120', '80 120'],
+          0,
+          'An array repeats each struct’s padded size: 10 * 12 and 10 * 8.',
+        ),
+        choose(
+          'How should you compare the memory cost of two struct designs?',
+          [
+            'Add up the sizes of their fields',
+            'Count the fields in each struct',
+            'Compare the lengths of the field names',
+            'Measure each with std::mem::size_of',
+          ],
+          3,
+          'Only size_of includes the padding that the layout actually needs.',
+        ),
+      ],
+    },
+  ],
+  'rust-checked-arithmetic': [
+    {
+      title: 'checked_mul and checked_add report overflow as None',
+      explanation: [
+        'Every integer type has a fixed range; a u8 holds 0 to 255. a.checked_mul(b) returns Some(product) when the result fits and None when it would overflow. checked_add and checked_sub work the same way.',
+        'Plain * panics on overflow in debug builds and silently wraps around in release builds, which can turn a huge size into a small, wrong one.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let a: u8 = 20;\n    println!("{:?} {:?}", a.checked_mul(10), a.checked_mul(13));\n}',
+        output: 'Some(200) None',
+        explanation: '200 fits in a u8, but 260 does not.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let a: u8 = 250;\n    println!("{:?} {:?}", a.checked_add(5), a.checked_add(6));\n}',
+          [
+            'Some(255) Some(0)',
+            'None None',
+            'Some(255) None',
+            'Some(256) None',
+          ],
+          2,
+          '255 is the largest u8, so 250 + 6 overflows.',
+        ),
+        choose(
+          'What does let n: u8 = 200; let m = n * 2; do in a debug build?',
+          [
+            'Panics with an overflow error',
+            'Gives 400, as a larger type',
+            'Gives 144 after wrapping',
+            'Gives 255, the maximum',
+          ],
+          0,
+          'Debug builds check arithmetic overflow and panic; release builds would wrap to 144.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let big = u32::MAX;\n    let half = u32::MAX / 2;\n    println!("{:?} {:?}", big.checked_mul(2), half.checked_mul(2));\n}',
+          [
+            'Some(0) Some(4294967294)',
+            'None Some(4294967294)',
+            'None None',
+            'None Some(4294967295)',
+          ],
+          1,
+          'u32::MAX is 4294967295, odd, so half is 2147483647 and doubling it fits.',
+        ),
+        choose(
+          'Why use checked_mul to compute a buffer size from a count read from a file?',
+          [
+            'checked_mul runs faster than *',
+            'A huge count could wrap to a small size',
+            'Plain * cannot multiply usize values',
+            'Counts in files are always negative',
+          ],
+          1,
+          'Untrusted input can be chosen to make the product wrap around.',
+        ),
+      ],
+    },
+    {
+      title: 'Check every step of a size calculation',
+      explanation: [
+        'A size computed in several steps, such as count * width + header, must check each step. One unchecked operation is enough to let an overflow through.',
+        'Returning Option<u32> makes failure explicit. A sentinel such as 0 would be ambiguous, because 0 can also be a genuine size.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn total_size(count: u32, width: u32, header: u32) -> Option<u32> {\n    match count.checked_mul(width) {\n        Some(body) => body.checked_add(header),\n        None => None,\n    }\n}\n\nfn main() {\n    println!("{:?} {:?}", total_size(10, 4, 8), total_size(u32::MAX, 2, 8));\n}',
+        output: 'Some(48) None',
+        explanation:
+          'Both steps fit for the first call; the multiplication overflows for the second.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn total_size(count: u32, width: u32, header: u32) -> Option<u32> {\n    match count.checked_mul(width) {\n        Some(body) => body.checked_add(header),\n        None => None,\n    }\n}\n\nfn main() {\n    println!(\n        "{:?} {:?}",\n        total_size(1000000, 4000, 1),\n        total_size(1000000, 4000, 300000000)\n    );\n}',
+          [
+            'Some(4000000001) Some(4300000000)',
+            'Some(4000000001) None',
+            'None None',
+            'Some(4000000000) None',
+          ],
+          1,
+          'The product 4000000000 fits in a u32, but adding 300000000 passes 4294967295.',
+        ),
+        choose(
+          'A function checks count * width with checked_mul but adds the header with a plain +. What can still go wrong?',
+          [
+            'Nothing; one check covers the formula',
+            'The addition can overflow',
+            'checked_mul will panic later',
+            'The result becomes negative',
+          ],
+          1,
+          'Each operation can overflow on its own, so each needs its own check.',
+        ),
+        choose(
+          'Why return Option<u32> from total_size instead of a u32 that is 0 on overflow?',
+          [
+            '0 could also be a real size',
+            'Option values are smaller than a u32',
+            'A u32 cannot represent overflow at all',
+            'Returning 0 would panic',
+          ],
+          0,
+          'None cannot be confused with any real size.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn remaining(capacity: u32, used: u32) -> Option<u32> {\n    capacity.checked_sub(used)\n}\n\nfn main() {\n    println!("{:?} {:?} {:?}", remaining(10, 3), remaining(10, 10), remaining(3, 10));\n}',
+          [
+            'Some(7) None None',
+            'Some(7) Some(0) None',
+            'Some(7) Some(0) Some(7)',
+            '7 0 None',
+          ],
+          1,
+          'Zero remaining is a valid answer; using more than the capacity would go below zero, which u32 cannot hold.',
+        ),
+      ],
+    },
+  ],
+  'rust-sort-dedup': [
+    {
+      title: 'dedup removes only neighbouring duplicates',
+      explanation: [
+        'v.dedup() removes consecutive repeated elements in place, keeping the first element of each run of equal neighbours.',
+        'Equal values separated by something else are not neighbours, so they all stay.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let mut v = vec![1, 1, 2, 1, 1, 3];\n    v.dedup();\n    println!("{:?}", v);\n}',
+        output: '[1, 2, 1, 3]',
+        explanation:
+          'Each run of 1s shrinks to one 1, but the two runs are separated by 2, so both remain.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let mut v = vec![5, 5, 5, 2, 5];\n    v.dedup();\n    println!("{:?}", v);\n}',
+          ['[5, 2]', '[2, 5]', '[5, 5, 2, 5]', '[5, 2, 5]'],
+          3,
+          'The first three 5s form one run; the last 5 follows a 2, so it is kept.',
+        ),
+        choose(
+          'After dedup on [3, 1, 3], what remains?',
+          [
+            '[3, 1]: the repeated 3 is removed',
+            '[3, 1, 3]: no equal values are adjacent',
+            '[1, 3]: the first 3 is removed',
+            '[3]: only the first value survives',
+          ],
+          1,
+          'dedup compares each element only with its neighbour.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let mut v = vec!["a", "a", "b", "b", "a"];\n    v.dedup();\n    println!("{} {}", v.len(), v[2]);\n}',
+          ['3 a', '2 b', '3 b', '5 a'],
+          0,
+          'The runs collapse to a, b, a; the last a is not next to the first.',
+        ),
+        choose(
+          'Which statement about dedup is true?',
+          [
+            'It sorts the vector before removing duplicates',
+            'It keeps the first element of each run of equal neighbours',
+            'It returns a new vector, leaving the original unchanged',
+            'It removes every value that appears more than once',
+          ],
+          1,
+          'dedup only looks at runs, and it changes the vector in place.',
+        ),
+      ],
+    },
+    {
+      title: 'Sort first so equal values become neighbours',
+      explanation: [
+        'Sorting places equal values next to each other, so v.sort() followed by v.dedup() leaves each distinct value exactly once, in ascending order.',
+        'The order matters: dedup before sort removes only the runs that happened to exist, and sorting afterwards brings the remaining duplicates together without removing them.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let mut v = vec![3, 1, 3, 2, 1];\n    v.sort();\n    v.dedup();\n    println!("{:?}", v);\n}',
+        output: '[1, 2, 3]',
+        explanation:
+          'Sorting gives [1, 1, 2, 3, 3], and dedup then collapses each run.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let mut v = vec![4, 2, 4, 9, 2, 2];\n    v.sort();\n    v.dedup();\n    println!("{:?}", v);\n}',
+          ['[2, 4, 9]', '[4, 2, 4, 9, 2]', '[2, 2, 4, 4, 9]', '[9, 4, 2]'],
+          0,
+          'After sorting, all equal values are adjacent, so each appears once.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let mut fruit = vec!["pear", "fig", "pear", "apple", "fig"];\n    fruit.sort();\n    fruit.dedup();\n    println!("{} {}", fruit.len(), fruit[0]);\n}',
+          ['3 pear', '5 apple', '3 apple', '4 apple'],
+          2,
+          'Three distinct words remain, sorted alphabetically with apple first.',
+        ),
+        choose(
+          'Why does dedup alone not give the distinct values of [2, 1, 2]?',
+          [
+            'dedup panics on input that is not sorted',
+            'dedup removes the first 2 and keeps the last',
+            'dedup always skips the first element',
+            'The two 2s are not neighbours, so neither is removed',
+          ],
+          3,
+          'Only sorting would bring the 2s together.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let mut v = vec![1, 2, 1, 2];\n    v.dedup();\n    v.sort();\n    println!("{:?}", v);\n}',
+          ['[1, 2]', '[1, 1, 2, 2]', '[1, 2, 1, 2]', '[2, 1]'],
+          1,
+          'dedup found no adjacent duplicates, and the later sort only reorders.',
+        ),
+      ],
+    },
+  ],
 };
