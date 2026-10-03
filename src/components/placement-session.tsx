@@ -15,6 +15,7 @@ import {
   type Diagnostic,
 } from '../lib/placement';
 import { type LearnerState } from '../lib/state';
+import { ChoiceText, InlineText } from './inline-text';
 import { Btn } from './shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -132,7 +133,9 @@ export default function PlacementSession({
         <span>{settled}% of the course placed</span>
       </div>
       <Card className="gap-0 question-paper">
-        <h1>{question.prompt}</h1>
+        <h1>
+          <InlineText text={question.prompt} />
+        </h1>
         {question.code && (
           <CodeBlock
             code={question.code}
@@ -154,7 +157,9 @@ export default function PlacementSession({
               <Badge variant="outline" className="shrink-0 font-mono">
                 {choiceLetter(position)}
               </Badge>
-              <pre>{question.choices[choice]}</pre>
+              <pre>
+                <ChoiceText question={question} index={choice} />
+              </pre>
             </Button>
           ))}
         </div>

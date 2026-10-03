@@ -1,6 +1,7 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import type { ChoiceQuestion, Question, Skill } from '../../src/lib/curriculum';
 import { lessonSteps, POINT_PASS_CORRECT } from '../../src/lib/lesson-plan';
+import { plainProse } from '../../src/lib/math-text';
 import { replaceCode } from './editor';
 
 /**
@@ -12,6 +13,37 @@ export function choiceButton(page: Page, index: number) {
   return page
     .getByRole('group', { name: 'Choices', exact: true })
     .locator(`[data-choice="${index}"]`);
+}
+
+const squashSpaces = (text: string) => text.replace(/\s+/g, ' ').trim();
+
+/**
+ * Rendered prose in authored form, to compare with `plainProse(text)`: math
+ * becomes `$TeX$` (from KaTeX's annotation, or the source shown while KaTeX
+ * loads) and inline code is wrapped in backticks.
+ */
+export async function proseText(locator: Locator): Promise<string> {
+  return squashSpaces(
+    await locator.evaluate((element) => {
+      const copy = element.cloneNode(true) as HTMLElement;
+      for (const math of copy.querySelectorAll('.math-inline, .math-display')) {
+        const delimiter = math.classList.contains('math-display') ? '$$' : '$';
+        const tex =
+          math.querySelector('annotation')?.textContent ?? math.textContent;
+        math.replaceWith(`${delimiter}${tex}${delimiter}`);
+      }
+      for (const code of copy.querySelectorAll('code.inline-code'))
+        code.replaceWith(`\`${code.textContent}\``);
+      return copy.textContent ?? '';
+    }),
+  );
+}
+
+/** Waits until the element shows the authored prose `text`. */
+export async function expectProse(locator: Locator, text: string) {
+  await expect
+    .poll(() => proseText(locator))
+    .toBe(squashSpaces(plainProse(text)));
 }
 
 /** The prompt of the question currently shown. */
@@ -29,8 +61,10 @@ export async function shownQuestion<T extends Question>(
   candidates: T[],
 ): Promise<T> {
   await expect(prompt(page)).toBeVisible();
-  const text = await prompt(page).textContent();
-  const matches = candidates.filter((question) => question.prompt === text);
+  const text = await proseText(prompt(page));
+  const matches = candidates.filter(
+    (question) => squashSpaces(plainProse(question.prompt)) === text,
+  );
   if (matches.length === 1) return matches[0];
   // Same prompt, different program: compare the displayed code, ignoring
   // the whitespace that highlighting may add or drop.
@@ -67,13 +101,16 @@ export async function answerChoice(
   question: ChoiceQuestion,
   correct = true,
 ) {
-  await expect(prompt(page)).toHaveText(question.prompt);
+  await expectProse(prompt(page), question.prompt);
   const index = correct
     ? question.answer
     : question.choices.findIndex((_, i) => i !== question.answer);
-  await expect(choiceButton(page, index)).toContainText(
-    question.choices[index].split('\n')[0],
-  );
+  const choice = question.choices[index];
+  if (question.checksOutput)
+    await expect(choiceButton(page, index)).toContainText(
+      choice.split('\n')[0],
+    );
+  else await expectProse(choiceButton(page, index).locator('pre'), choice);
   await choiceButton(page, index).click();
   await page.getByRole('button', { name: 'Submit', exact: true }).click();
 }

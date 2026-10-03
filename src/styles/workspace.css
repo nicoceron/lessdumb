@@ -58,6 +58,22 @@ code {
   background: var(--muted, #eef2f6);
   font-size: 0.9em;
 }
+/* Display math scrolls inside its own box instead of widening the page. */
+.math-display {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+/* TeX source stands in while KaTeX loads. */
+.math-pending {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+.math-display.math-pending {
+  margin: 1em 0;
+  text-align: center;
+}
 ::selection {
   background: #d9eafd;
 }

@@ -11,7 +11,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { InlineText } from './inline-text';
+import { ChoiceText, InlineText } from './inline-text';
 import {
   courses,
   skills,
@@ -713,7 +713,9 @@ function QuestionCard({
               <Badge variant="outline" className="shrink-0 font-mono">
                 {choiceLetter(position)}
               </Badge>
-              <pre>{question.choices[index]}</pre>
+              <pre>
+                <ChoiceText question={question} index={index} />
+              </pre>
               {feedback && question.answer === index && <Check size={18} />}
             </Button>
           ))}
