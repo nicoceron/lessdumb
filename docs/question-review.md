@@ -103,6 +103,24 @@ Reviewed October 3, 2026: every non-executed question in `data-analysis.kp.ts`, 
 - **`da-transforms-kp1-q4`** asks why to use `transform` "rather than mean()", meaning the grouped mean. The distractor "mean() gives one overall value, not one per group" is true of a plain `mean()`, but the prompt is about adding each row's group mean, and the key is the only reason that applies.
 - **Explanations that name a likely wrong answer** on typed questions, such as "The mean would be 4.5" (`da-aggregations-kp2-q2`) or "Pairing by position would give 18" (`da-label-alignment-kp1-q2`), are correct and useful, so they stay.
 
+## Machine Learning
+
+Reviewed October 3, 2026: every non-executed question in `machine-learning.kp.ts`, the course's only knowledge-point file. That is 256 conceptual `choose` questions in 29 skills. The 208 executed questions were not re-graded, but their explanations were read against their code. Claims about library behavior were checked with scikit-learn 1.9 and NumPy 2.5, and the one Keras claim in question with Keras 3 on the JAX backend.
+
+**Result:** one key named a cause that cannot produce the symptom in its prompt. No other marked answer is wrong and no distractor is also correct. 1 of 256 questions (0.4%) needed a fix.
+
+### Errors fixed
+
+| Question                      | Problem                                                                                                                                                                                                                                                                                                                                                                      | Fix                                                                                                                           |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `ml-transfer-learning-kp2-q4` | **Partly false key.** "The summary shows 0 trainable parameters… What is the likely cause?" expected "The flags were set on the wrong layers or not recompiled". `model.summary()` reads the trainable flags directly: in Keras 3, unfreezing a frozen base changed the trainable count from 9 to 121 with no recompile. Recompiling matters for `fit`, not for the summary. | "The trainable flags were set on the wrong layers". The explanation says the summary needs no recompile, and that `fit` does. |
+
+### Debatable, left alone
+
+- **`ml-keras-workflow-kp3-q3`.** With every positive row last and `validation_split=0.2`, the key says the validation rows are "almost all positive". That holds when positives are about 20% of the rows or more; with fewer, the validation slice also holds negatives. The point teaches exactly this failure, and no distractor is right.
+- **`ml-overfitting-kp2-q2`** calls curves that level off "near 7" high without a reference error. Its key, that more data changes little, holds for any curves that have levelled off with a small gap.
+- **Explanations that name a likely wrong answer** on typed questions, such as "Squaring instead would give the ridge value 7.5" (`ml-regularization-kp3-q1`), are correct and stay.
+
 ## Data Systems
 
 Reviewed October 3, 2026: every non-executed question in `data-systems.kp.ts`, the course's only knowledge-point file. That is 291 conceptual `choose` questions in 28 skills. The 45 executed questions were not re-graded, but their explanations were read against their code. Arithmetic keys (growth, write amplification, quorum overlap, queue backlog, keys moved by `key % N`) were recomputed, and the claims about consistency and isolation were checked against the standard definitions the points teach.
