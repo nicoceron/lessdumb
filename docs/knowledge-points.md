@@ -4,10 +4,10 @@ A lesson teaches a skill as a short sequence of knowledge points, in the Math Ac
 
 ## Authoring
 
-Knowledge points live in `src/lib/knowledge-points/*.kp.ts`, keyed by skill ID. Each file exports `knowledgePoints: KnowledgePointModule`; files are collected automatically, so authors never edit a shared registry. A skill may appear in only one file. IDs are assigned from position (`<skill>-kp<n>`, `<skill>-kp<n>-q<m>`), so append new points or questions rather than reordering published ones.
+Knowledge points live in `src/lib/knowledge-points/*.kp.ts`, keyed by skill ID. Each file exports `knowledgePoints: KnowledgePointModule`, imports its helpers from `./authoring`, and is registered with one import line in `src/lib/knowledge-points/index.ts` (a test fails if a file is not registered). Explicit imports keep the catalog loadable outside Vite, for example by Playwright. A skill may appear in only one file. IDs are assigned from position (`<skill>-kp<n>`, `<skill>-kp<n>-q<m>`), so append new points or questions rather than reordering published ones.
 
 ```ts
-import { choose, predictOutput, type KnowledgePointModule } from '.';
+import { choose, predictOutput, type KnowledgePointModule } from './authoring';
 
 export const knowledgePoints: KnowledgePointModule = {
   'skill-id': [
