@@ -8,6 +8,7 @@ import type {
   SkillOutline,
 } from './curriculum';
 import { assessmentPolicy, assessmentType } from './catalog-outline';
+import { partEvidencePoint } from './multistep';
 
 // A knowledge-point lesson is a fixed sequence of steps: each point in order,
 // then the skill's code exercise when its policy requires code. Skills without
@@ -100,6 +101,17 @@ function plan(skill: SkillOutline): Plan {
       questions.set(question.id, question);
       evidence.set(question.id, step.id);
     }
+  // A multistep part is servable too (CEN-163). It never counts toward a
+  // lesson step; in reviews it answers for the skill's own point it applies
+  // (see partEvidencePoint), so a missed part removes that point's evidence.
+  if (points.length)
+    for (const problem of skill.multistep ?? [])
+      for (const part of problem.parts) {
+        questions.set(part.id, part);
+        const point = partEvidencePoint(skill, problem, part);
+        if (point && points.some((item) => item.id === point))
+          evidence.set(part.id, point);
+      }
   const result: Plan = {
     steps,
     stepIds: steps.map((step) => step.id),

@@ -20,6 +20,13 @@ import {
 import { mathSpans, mathTextErrors, mathTextFields } from './math-text';
 import { synonymCollisionErrors, typedQuestionErrors } from './typed-answer';
 import {
+  MAX_PARTS,
+  MIN_PARTS,
+  partId,
+  pointSkillId,
+  problemId,
+} from './multistep';
+import {
   GENERATOR_SAMPLES,
   MIN_DISTINCT_VARIANTS,
   questionVariant,
@@ -178,6 +185,52 @@ export interface LessonExample {
   language?: CodeLanguage;
 }
 
+/**
+ * One part of a multistep problem: a chosen or typed question on one
+ * knowledge point, which may belong to the problem's skill or to one of its
+ * ancestors. Its ID is `<problem>#p<k>`, numbered from 1 in order.
+ */
+export type MultistepPart = AnswerQuestion & {
+  /** The knowledge point this part exercises, by ID (`<skill>-kp<n>`). */
+  point: string;
+};
+
+/** The scenario every part of a multistep problem refers to, shown once. */
+export interface MultistepSetup {
+  /** Paragraphs of prose, with `$…$` math. */
+  text: string[];
+  /** A program or listing the parts refer to. */
+  code?: string;
+  /** The language of `code`; omitted means the course's. */
+  language?: CodeLanguage;
+  /** Exactly what `code` prints, shown under it; catalog tests run it. */
+  output?: string;
+  /** A table, log, or other data shown as written. */
+  data?: string;
+}
+
+/**
+ * One scenario and two to four ordered parts, each needing a different
+ * earlier idea (CEN-163). Asked in due reviews and quizzes, never in lessons.
+ */
+export interface MultistepProblem {
+  /** `<skill>-ms<n>`, from its position in its skill's list. */
+  id: string;
+  /** A short plain-text name. */
+  title: string;
+  setup: MultistepSetup;
+  parts: MultistepPart[];
+}
+
+/** A multistep part's identity: what scheduling and evidence need. */
+export type MultistepPartRef = QuestionRef & { point: string };
+
+/** A multistep problem without its content, as the graph index keeps it. */
+export interface MultistepRef {
+  id: string;
+  parts: MultistepPartRef[];
+}
+
 /** A knowledge point without its teaching: its ID and question IDs. */
 export interface KnowledgePointRef {
   id: string;
@@ -236,6 +289,8 @@ export interface SkillOutline {
    * DEFAULT_ENCOMPASS_WEIGHT. Authored heuristics, not fitted to learners.
    */
   encompasses?: { id: string; weight: number }[];
+  /** Multistep problems its due reviews and quizzes ask (CEN-163). */
+  multistep?: MultistepRef[];
 }
 
 export interface Skill extends SkillOutline {
@@ -244,6 +299,7 @@ export interface Skill extends SkillOutline {
     example: LessonExample;
   };
   knowledgePoints?: KnowledgePoint[];
+  multistep?: MultistepProblem[];
   questions: Question[];
   flashcards: Flashcard[];
 }
@@ -286,6 +342,9 @@ export const defaultCatalog: CurriculumCatalog = { courses, units, skills };
 export const knowledgePointFiles = contents.flatMap(
   (c) => c.knowledgePointFiles,
 );
+
+/** Registered multistep problem files, checked against the folder by tests. */
+export const multistepFiles = contents.flatMap((c) => c.multistepFiles);
 
 /**
  * Each course's registered question generator files (`*.gen.ts` in
@@ -499,11 +558,13 @@ export function validateCurriculum(
         )
           errors.push(`${question.id}: needs four or more distinct choices.`);
     }
-    // A typed synonym must not accept a distractor of the same skill.
+    // A typed synonym must not accept a distractor of the same skill,
+    // multistep parts included.
     errors.push(
       ...synonymCollisionErrors([
         ...item.questions,
         ...points.flatMap((point) => point.questions),
+        ...(item.multistep ?? []).flatMap((problem) => problem.parts ?? []),
       ]),
     );
     for (const question of [
@@ -557,6 +618,7 @@ export function validateCurriculum(
         );
     for (const question of points.flatMap((point) => point.questions))
       errors.push(...generatedQuestionErrors(question, checkTex));
+    errors.push(...multistepErrors(item, questions, checkTex));
     // Prose marks math with $…$ or $$…$$; a literal dollar is written \$.
     for (const [location, text] of mathTextFields(item))
       for (const error of [
@@ -601,6 +663,24 @@ export function validateCurriculum(
     ancestors.set(id, result);
     return result;
   }
+  // A multistep part exercises a point of its problem's skill or of one of
+  // that skill's ancestors, never an unrelated skill's.
+  const pointIds = new Set(
+    registry.flatMap((item) =>
+      (item.knowledgePoints ?? []).map((point) => point.id),
+    ),
+  );
+  for (const item of registry)
+    for (const problem of item.multistep ?? [])
+      for (const part of problem.parts) {
+        const owner = pointSkillId(part.point ?? '');
+        if (!pointIds.has(part.point))
+          errors.push(`${part.id}: unknown knowledge point ${part.point}.`);
+        else if (owner !== item.id && !ancestorsOf(item.id).has(owner))
+          errors.push(
+            `${part.id}: point ${part.point} belongs to ${owner}, which is neither ${item.id} nor one of its ancestors.`,
+          );
+      }
   for (const item of registry) {
     if (new Set(item.prerequisites).size !== item.prerequisites.length)
       errors.push(`${item.id}: duplicate prerequisite.`);
@@ -620,6 +700,91 @@ export function validateCurriculum(
         );
     }
   }
+  return errors;
+}
+
+/**
+ * A skill's multistep problems (CEN-163): generated IDs, a titled setup with
+ * prose and optional code, output, or data, and two to four chosen or typed
+ * parts, each a well-formed question on one knowledge point. At least one
+ * part applies a point of the skill itself, which a missed part counts
+ * against, and the parts name at least two different points. Whether each
+ * point exists and belongs to the skill or an ancestor is checked once the
+ * whole graph is known.
+ */
+function multistepErrors(
+  item: Skill,
+  questions: Set<string>,
+  checkTex?: (tex: string, displayMode: boolean) => string | undefined,
+): string[] {
+  const problems = item.multistep;
+  if (problems === undefined) return [];
+  const errors: string[] = [];
+  if (!item.knowledgePoints?.length)
+    errors.push(`${item.id}: multistep problems need knowledge points.`);
+  if (!problems.length)
+    errors.push(`${item.id}: an empty multistep problem list.`);
+  problems.forEach((problem, index) => {
+    const at = problem.id;
+    if (problem.id !== problemId(item.id, index))
+      errors.push(`${at}: multistep problem IDs must be generated.`);
+    if (!problem.title?.trim() || /\$/.test(problem.title))
+      errors.push(`${at}: needs a plain-text title.`);
+    const setup = problem.setup;
+    if (
+      !setup ||
+      !Array.isArray(setup.text) ||
+      !setup.text.length ||
+      setup.text.some((paragraph) => !paragraph.trim())
+    )
+      errors.push(`${at}: the setup needs prose.`);
+    if (
+      setup?.language !== undefined &&
+      !['python', 'rust', 'cpp'].includes(setup.language)
+    )
+      errors.push(`${at}: unsupported setup language.`);
+    if (setup?.output !== undefined && !setup.code?.trim())
+      errors.push(`${at}: a setup output needs the code that prints it.`);
+    if (
+      setup?.data !== undefined &&
+      (typeof setup.data !== 'string' || !setup.data.trim())
+    )
+      errors.push(`${at}: setup data must be nonempty text.`);
+    const parts = problem.parts ?? [];
+    if (parts.length < MIN_PARTS || parts.length > MAX_PARTS)
+      errors.push(`${at}: needs ${MIN_PARTS} to ${MAX_PARTS} parts.`);
+    parts.forEach((part, partIndex) => {
+      if (part.id !== partId(problem.id, partIndex))
+        errors.push(`${at}: part IDs must be generated.`);
+      if (!['choice', 'numeric', 'text'].includes(part.type)) {
+        errors.push(
+          `${part.id}: a part is a choice, numeric, or text question.`,
+        );
+        return;
+      }
+      if (typeof part.point !== 'string' || !/-kp\d+$/.test(part.point))
+        errors.push(`${part.id}: needs the knowledge point it exercises.`);
+      if (part.generated || 'generate' in part)
+        errors.push(`${part.id}: parts cannot be generated.`);
+      if ('hint' in part)
+        errors.push(`${part.id}: questions have no hint; remove it.`);
+      if (questions.has(part.id))
+        errors.push(`Duplicate question ID ${part.id}.`);
+      questions.add(part.id);
+      // An output part runs its own code, or else the setup's.
+      errors.push(
+        ...answerQuestionErrors(
+          { ...part, code: part.code ?? setup?.code },
+          part.id,
+          checkTex,
+        ),
+      );
+    });
+    if (!parts.some((part) => pointSkillId(part.point ?? '') === item.id))
+      errors.push(`${at}: needs a part on a point of ${item.id} itself.`);
+    if (new Set(parts.map((part) => part.point)).size < 2)
+      errors.push(`${at}: its parts must name at least two different points.`);
+  });
   return errors;
 }
 

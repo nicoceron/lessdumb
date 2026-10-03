@@ -1,6 +1,7 @@
 import type {
   AnswerQuestion,
   GraphCatalog,
+  MultistepProblem,
   Skill,
   SkillOutline,
 } from './curriculum';
@@ -11,11 +12,15 @@ import {
   applyImplicitCredit,
   chooseVariant,
   coursePath,
+  creditSkills,
+  DAY_MS,
+  freshestProblem,
   freshQuestion,
   getSkillState,
   isMastered,
   isUnlocked,
   MAX_RECENT_ATTEMPTS,
+  partCreditWeight,
   seenCounts,
   timed,
   type Attempt,
@@ -28,6 +33,13 @@ import { legacyMemory } from './retention';
 import { earnedQuizXp, quizXp } from './xp';
 import { gradeAnswer } from './typed-answer';
 import { questionVariant } from './variants';
+import {
+  findPart,
+  ownPart,
+  ownPartIds,
+  parsePartId,
+  pointSkillId,
+} from './multistep';
 
 // Quizzes are timed, mixed retrieval checks in the Math Academy pattern. One
 // becomes available after QUIZ_XP_INTERVAL XP of other work. It draws fresh
@@ -62,6 +74,11 @@ const MISSED_PREREQUISITE_BONUS = 0.5;
 const DAY = 86_400_000;
 /** Older quizzes are dropped; their XP stays in the learner's totals. */
 export const MAX_SAVED_QUIZZES = 50;
+/**
+ * A quiz mixes in at most one multistep problem, never one the learner met
+ * in the last MULTISTEP_QUIZ_GAP_MS (CEN-163).
+ */
+export const MULTISTEP_QUIZ_GAP_MS = 3 * DAY_MS;
 
 export interface QuizQuestion {
   skillId: string;
@@ -134,10 +151,13 @@ function quizChoice(
 ): { skill: Skill; question: AnswerQuestion } | undefined {
   const outline = catalog.skills.find((item) => item.id === slot.skillId);
   const skill = outline && contentOf(outline);
-  const question = skill?.knowledgePoints
+  if (!skill) return undefined;
+  const part = findPart(skill, slot.questionId);
+  if (part) return { skill, question: part.part };
+  const question = skill.knowledgePoints
     ?.flatMap((point) => point.questions)
     .find((item) => item.id === slot.questionId);
-  return skill && question && question.type !== 'code'
+  return question && question.type !== 'code'
     ? { skill, question: questionVariant(question, slot.variant) }
     : undefined;
 }
@@ -308,9 +328,76 @@ export function planQuiz(
       if (picked.length >= QUIZ_MIN_QUESTIONS) break;
       pick(skill);
     }
-  return picked.length >= QUIZ_MIN_QUESTIONS
-    ? picked.slice(0, QUIZ_TARGET_QUESTIONS)
-    : [];
+  if (picked.length < QUIZ_MIN_QUESTIONS) return [];
+  return withProblem(
+    progress,
+    picked.slice(0, QUIZ_TARGET_QUESTIONS),
+    catalog,
+    at,
+  );
+}
+
+/**
+ * Mix one multistep problem into a planned quiz: the highest-priority skill
+ * with a problem the learner has not met in MULTISTEP_QUIZ_GAP_MS asks that
+ * problem, one slot per part, in place of its single question.
+ */
+function withProblem(
+  progress: Progress,
+  planned: QuizQuestion[],
+  catalog: GraphCatalog,
+  at: number,
+): QuizQuestion[] {
+  for (const [index, slot] of planned.entries()) {
+    const skill = catalog.skills.find((item) => item.id === slot.skillId);
+    const problem =
+      skill &&
+      freshestProblem(
+        progress,
+        skill,
+        (_, last) => at - last >= MULTISTEP_QUIZ_GAP_MS,
+      );
+    if (!problem) continue;
+    const counts = seenCounts(progress, slot.skillId);
+    return [
+      ...planned.slice(0, index),
+      ...problem.parts.map((part) => ({
+        skillId: slot.skillId,
+        questionId: part.id,
+        presentation: counts.get(part.id) ?? 0,
+      })),
+      ...planned.slice(index + 1),
+    ];
+  }
+  return planned;
+}
+
+/**
+ * The multistep problem a quiz slot asks a part of, with the part's index
+ * and the slots of the same presentation in the quiz, in order.
+ */
+export function quizProblem(
+  quiz: Pick<Quiz, 'questions'>,
+  index: number,
+  catalog: GraphCatalog = defaultCatalog,
+):
+  | { skill: Skill; problem: MultistepProblem; part: number; slots: number[] }
+  | undefined {
+  const slot = quiz.questions[index];
+  const outline =
+    slot && catalog.skills.find((item) => item.id === slot.skillId);
+  const skill = outline && contentOf(outline);
+  const found = skill && findPart(skill, slot.questionId);
+  if (!skill || !found) return undefined;
+  const start = index - found.index;
+  const slots = found.problem.parts.map((_, k) => start + k);
+  return slots.every(
+    (position, k) =>
+      quiz.questions[position]?.questionId === found.problem.parts[k].id &&
+      quiz.questions[position].skillId === slot.skillId,
+  )
+    ? { skill, problem: found.problem, part: found.index, slots }
+    : undefined;
 }
 
 /**
@@ -497,6 +584,21 @@ export function answerQuiz(
   if (!found) throw new Error('This quiz question is not in the catalog.');
   const { skill, question } = found;
   const correct = gradeAnswer(question, answer);
+  // A multistep part (CEN-163) counts for its skill only when it is the last
+  // part and every part of the problem in this quiz is right.
+  const part = findPart(skill, question.id);
+  const solved =
+    !!part &&
+    correct &&
+    part.index === part.problem.parts.length - 1 &&
+    quiz.questions
+      .slice(index - part.index, index)
+      .every(
+        (item, k) =>
+          item.skillId === skill.id &&
+          item.questionId === part.problem.parts[k].id &&
+          item.correct === true,
+      );
   const old = getSkillState(progress, skill.id);
   let state: SkillProgress = {
     ...old,
@@ -513,11 +615,24 @@ export function answerQuiz(
   };
   const mastered = isMastered(progress, skill.id, catalog);
   const due = mastered && old.dueAt !== null && old.dueAt <= at;
+  // A solved problem answers for the skill's own points its parts apply.
+  const reviewIds = part
+    ? solved
+      ? ownPartIds(skill, part.problem)
+      : []
+    : [question.id];
   if (!correct && mastered) state = remediate(state, at);
-  else if (correct && due && !state.reviewQuestionIds.includes(question.id))
+  else if (
+    correct &&
+    due &&
+    reviewIds.some((id) => !state.reviewQuestionIds.includes(id))
+  )
     state = {
       ...state,
-      reviewQuestionIds: [...state.reviewQuestionIds, question.id],
+      reviewQuestionIds: [
+        ...state.reviewQuestionIds,
+        ...reviewIds.filter((id) => !state.reviewQuestionIds.includes(id)),
+      ],
     };
   const attempt: Attempt = {
     id: crypto.randomUUID(),
@@ -546,10 +661,26 @@ export function answerQuiz(
     streak: day.streak,
     quizzes: replaceQuiz(progress, updated),
   };
-  // A correct answer also exercises the skills this one uses.
-  const credit = correct
-    ? applyImplicitCredit(answered, skill, at, catalog)
-    : { progress: answered, credited: [] };
+  // A correct part on a prerequisite's point reviews that skill a little.
+  const target = part && pointSkillId(part.part.point);
+  const partCredit =
+    part && correct && target && !ownPart(skill, part.part)
+      ? creditSkills(
+          answered,
+          skill.id,
+          [{ id: target, weight: partCreditWeight(skill, target) }],
+          at,
+          catalog,
+        )
+      : { progress: answered, credited: [] };
+  // A correct answer (a solved problem) also exercises the skills this one uses.
+  const taskCredit = (part ? solved : correct)
+    ? applyImplicitCredit(partCredit.progress, skill, at, catalog)
+    : { progress: partCredit.progress, credited: [] };
+  const credit = {
+    progress: taskCredit.progress,
+    credited: [...partCredit.credited, ...taskCredit.credited],
+  };
   const next: Progress = {
     ...credit.progress,
     attempts: [
@@ -575,6 +706,11 @@ function adaptQuizLength(
 ): Progress {
   const quiz = quizzesOf(progress).find((item) => item.id === quizId)!;
   const asked = quiz.questions.filter((item) => item.answer !== undefined);
+  // A multistep problem is answered to its last part before the quiz ends.
+  const last = parsePartId(asked.at(-1)?.questionId ?? '');
+  const following = parsePartId(quiz.questions[asked.length]?.questionId ?? '');
+  if (last && following && last.problemId === following.problemId)
+    return progress;
   const resize = (
     questions: QuizQuestion[],
     timeLimitMs: number,

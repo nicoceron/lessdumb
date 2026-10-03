@@ -9,6 +9,7 @@ import {
   courses,
   generatorFiles,
   knowledgePointFiles,
+  multistepFiles,
   skills,
   validateCurriculum,
   validateKnowledgePointRegistry,
@@ -112,6 +113,41 @@ for (const skill of skills)
             question,
           });
   }
+// Multistep problems (CEN-163): a setup's published output, and each output
+// part's answer. In Python a part's code runs after the setup's, as one
+// program; in Rust and C++ a part's code is a complete program, and a part
+// without code asks what the setup's program prints.
+for (const skill of skills)
+  for (const problem of skill.multistep ?? []) {
+    const { setup } = problem;
+    const language = languageOf(skill, setup.language);
+    if (setup.code && setup.output !== undefined)
+      programs.push({
+        id: `${problem.id}-setup`,
+        language,
+        code: setup.code,
+        expected: setup.output,
+      });
+    for (const part of problem.parts) {
+      if (!(part.type === 'choice' || part.type === 'text')) continue;
+      if (!part.checksOutput) continue;
+      const code =
+        language === 'python' && setup.code && part.code
+          ? `${setup.code}\n\n${part.code}`
+          : (part.code ?? setup.code!);
+      programs.push(
+        part.type === 'choice'
+          ? { id: part.id, language, code, expected: part.choices[part.answer] }
+          : {
+              id: part.id,
+              language,
+              code,
+              expected: part.answers[0],
+              typed: part,
+            },
+      );
+    }
+  }
 const inLanguage = <T extends { language: CodeLanguage }>(
   items: T[],
   language: CodeLanguage,
@@ -161,6 +197,13 @@ describe('knowledge point registry', () => {
       .filter((file) => file.endsWith('.kp.ts'))
       .sort();
     expect([...knowledgePointFiles].sort()).toEqual(files);
+  });
+
+  it('registers every multistep problem file in the folder', () => {
+    const files = readdirSync(resolve('src/lib/knowledge-points'))
+      .filter((file) => file.endsWith('.multistep.ts'))
+      .sort();
+    expect([...multistepFiles].sort()).toEqual(files);
   });
 
   it('names each catalog skill at most once and validates every point', () => {

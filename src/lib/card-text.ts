@@ -1,5 +1,5 @@
 import type { AnkiCard } from './anki';
-import type { Question } from './curriculum';
+import type { MultistepSetup, Question } from './curriculum';
 import { plainProse } from './math-text';
 import { acceptedAnswer } from './typed-answer';
 
@@ -110,8 +110,13 @@ function answerBlock(question: Question): CardBlock {
  */
 export function mistakeCardText(
   question: Question,
+  /** What the question builds on, shown first: a multistep problem's setup. */
+  context: CardBlock[] = [],
 ): Pick<AnkiCard, 'front' | 'back' | 'format'> {
-  const front: CardBlock[] = [{ kind: 'prose', text: question.prompt }];
+  const front: CardBlock[] = [
+    ...context,
+    { kind: 'prose', text: question.prompt },
+  ];
   if (question.type !== 'code' && question.code)
     front.push({ kind: 'code', text: question.code });
   const back: CardBlock[] = [
@@ -123,4 +128,17 @@ export function mistakeCardText(
     return { front: frontText, back: backText, format: 'prose' };
   // Unreachable for authored content; plain text is always readable.
   return { front: plainText(front), back: plainText(back) };
+}
+
+/**
+ * A multistep problem's setup as card blocks: its prose, its program, and
+ * its output or data, so a missed part's card stands alone.
+ */
+export function setupBlocks(setup: MultistepSetup): CardBlock[] {
+  return [
+    ...setup.text.map((text): CardBlock => ({ kind: 'prose', text })),
+    ...[setup.code, setup.output, setup.data]
+      .filter((text): text is string => !!text)
+      .map((text): CardBlock => ({ kind: 'code', text })),
+  ];
 }

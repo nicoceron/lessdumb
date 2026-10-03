@@ -152,5 +152,20 @@ export function mathTextFields(skill: Skill): [string, string][] {
         fields.push([`${question.id} choice ${index + 1}`, choice]),
       );
   }
+  for (const problem of skill.multistep ?? []) {
+    (problem.setup?.text ?? []).forEach((paragraph, index) =>
+      fields.push([`${problem.id} setup ${index + 1}`, paragraph]),
+    );
+    for (const part of problem.parts ?? []) {
+      fields.push(
+        [`${part.id} prompt`, part.prompt],
+        [`${part.id} explanation`, part.explanation],
+      );
+      if (part.type === 'choice' && !part.checksOutput)
+        part.choices.forEach((choice, index) =>
+          fields.push([`${part.id} choice ${index + 1}`, choice]),
+        );
+    }
+  }
   return fields;
 }

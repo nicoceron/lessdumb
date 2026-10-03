@@ -1,9 +1,10 @@
 import type { AnkiCard } from './anki';
-import { mistakeCardText } from './card-text';
+import { mistakeCardText, setupBlocks } from './card-text';
 import { skillById } from './catalog-index';
 import type { Skill, SkillOutline } from './curriculum';
 import { contentOf, loadSkills } from './content';
 import { findQuestion } from './lesson-plan';
+import { findPart } from './multistep';
 import type { QueuedCard } from './state';
 import { questionVariant } from './variants';
 
@@ -74,6 +75,9 @@ function derivedText(
     return flashcard && { front: flashcard.front, back: flashcard.back };
   }
   const questionId = mistakeQuestionId(card);
+  // A multistep part's card shows its problem's setup first.
+  const part = questionId ? findPart(skill, questionId) : undefined;
+  if (part) return mistakeCardText(part.part, setupBlocks(part.problem.setup));
   const question = questionId && findQuestion(skill, questionId);
   // A generated question's card shows the variant that was missed.
   return question

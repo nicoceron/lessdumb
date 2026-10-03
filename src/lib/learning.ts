@@ -1,6 +1,7 @@
 import type {
   CurriculumCatalog,
   GraphCatalog,
+  MultistepRef,
   Question,
   QuestionRef,
   SkillOutline,
@@ -13,7 +14,18 @@ import {
   questionVariant,
   variantKey,
 } from './variants';
-import { assessmentType, encompassings } from './catalog-outline';
+import {
+  assessmentType,
+  DEFAULT_ENCOMPASS_WEIGHT,
+  encompassings,
+} from './catalog-outline';
+import {
+  findPart,
+  ownPart,
+  ownPartIds,
+  pointSkillId,
+  problemsOf,
+} from './multistep';
 import {
   evidenceIdFor,
   findQuestion,
@@ -654,12 +666,122 @@ export function chooseVariant(
   return fallback ?? own.length;
 }
 
+/**
+ * A multistep presentation: the learner's answers, in order, on the first
+ * parts of one problem. Parts are answered in order on one card, so the
+ * presentation in progress ends with the learner's latest lesson or review
+ * answer on the skill, when that answer is a part (quiz answers live in
+ * their quiz).
+ */
+export interface Presentation {
+  problem: MultistepRef;
+  answers: Attempt[];
+}
+
+/** The skill's latest presentation, finished or not, if its latest answer is a part. */
+export function latestPresentation(
+  progress: Progress,
+  item: SkillOutline,
+): Presentation | undefined {
+  const own = progress.attempts.filter(
+    (attempt) => attempt.skillId === item.id && attempt.mode !== 'quiz',
+  );
+  const last = own.at(-1);
+  const found = last && findPart(item, last.questionId);
+  if (!found) return undefined;
+  const answers = own.slice(own.length - found.index - 1);
+  return answers.every(
+    (attempt, index) => attempt.questionId === found.problem.parts[index].id,
+  )
+    ? { problem: found.problem, answers }
+    : undefined;
+}
+
+/**
+ * The problem the learner is part-way through on this skill, with the index
+ * of the part to ask next. A missed part does not end it: every part is
+ * asked and graded.
+ */
+export function openProblem(
+  progress: Progress,
+  item: SkillOutline,
+): (Presentation & { next: number }) | undefined {
+  const presentation = latestPresentation(progress, item);
+  return presentation &&
+    presentation.answers.length < presentation.problem.parts.length
+    ? { ...presentation, next: presentation.answers.length }
+    : undefined;
+}
+
+/** How often each of a skill's problems was presented, and when last. */
+export function problemPresentations(
+  progress: Progress,
+  item: SkillOutline,
+): Map<string, { count: number; last: number }> {
+  const result = new Map<string, { count: number; last: number }>();
+  for (const problem of problemsOf(item)) {
+    const first = problem.parts[0].id;
+    for (const attempt of progress.attempts)
+      if (attempt.skillId === item.id && attempt.questionId === first) {
+        const entry = result.get(problem.id) ?? { count: 0, last: -Infinity };
+        result.set(problem.id, {
+          count: entry.count + 1,
+          last: Math.max(entry.last, Date.parse(attempt.at)),
+        });
+      }
+  }
+  return result;
+}
+
+/** The problem met least, then longest ago, then first authored. */
+export function freshestProblem(
+  progress: Progress,
+  item: SkillOutline,
+  eligible: (problem: MultistepRef, last: number) => boolean = () => true,
+): MultistepRef | undefined {
+  const seen = problemPresentations(progress, item);
+  const problems = problemsOf(item);
+  const stats = (problem: MultistepRef) =>
+    seen.get(problem.id) ?? { count: 0, last: -Infinity };
+  return problems
+    .filter((problem) => eligible(problem, stats(problem).last))
+    .sort(
+      (a, b) =>
+        stats(a).count - stats(b).count ||
+        stats(a).last - stats(b).last ||
+        problems.indexOf(a) - problems.indexOf(b),
+    )[0];
+}
+
+/**
+ * The multistep problem a review of a mastered skill asks: the one the
+ * learner has met least, unless they met one of the skill's problems since
+ * its last review or (re)learning, so a cycle asks at most one (CEN-163).
+ */
+export function reviewProblem(
+  progress: Progress,
+  item: SkillOutline,
+): MultistepRef | undefined {
+  if (!problemsOf(item).length) return undefined;
+  const state = getSkillState(progress, item.id);
+  if (!hasLessonEvidence(item, state.questionIds)) return undefined;
+  const since =
+    state.memory?.lastReviewAt ??
+    (state.learnedAt ? Date.parse(state.learnedAt) : 0);
+  const seen = problemPresentations(progress, item);
+  if ([...seen.values()].some((entry) => entry.last > since)) return undefined;
+  return freshestProblem(progress, item);
+}
+
 function selectKnowledgePointQuestion(
   progress: Progress,
   item: SkillOutline,
   mode: 'learn' | 'review',
 ): QuestionRef {
   const state = getSkillState(progress, item.id);
+  // A problem part-way through continues with its next part.
+  const open = mode === 'review' ? openProblem(progress, item) : undefined;
+  if (open) return open.problem.parts[open.next];
   if (mode === 'learn' && !hasLessonEvidence(item, state.questionIds)) {
     const { current, attempt } = lessonState(progress, item);
     if (current)
@@ -678,8 +800,24 @@ function selectKnowledgePointQuestion(
     answered.map((id) => evidenceIdFor(item, id)).filter(Boolean),
   );
   const points = reviewPointOrder(item, state.reviewCount);
-  const remaining = points.filter((point) => !covered.has(point.id));
+  // A review may ask one multistep problem in place of the questions on the
+  // skill's own points its parts apply. Single questions go to the other
+  // points first; the problem fills the cycle's last point slots.
+  const problem = mode === 'review' ? reviewProblem(progress, item) : undefined;
+  const applied = new Set(
+    problem?.parts.filter((part) => ownPart(item, part)).map((p) => p.point),
+  );
+  const pending = [...applied].filter((id) => !covered.has(id)).length;
+  const remaining = [
+    ...points.filter((point) => !applied.has(point.id)),
+    ...points.filter((point) => applied.has(point.id)),
+  ].filter((point) => !covered.has(point.id));
   const pointsCovered = points.length - remaining.length;
+  if (problem && pending > 0) {
+    if (pointsCovered + pending < requirement.points)
+      return freshQuestion(progress, item.id, remaining[0].questions);
+    if (pointsCovered < requirement.points) return problem.parts[0];
+  }
   if (remaining.length && pointsCovered < requirement.points)
     return freshQuestion(progress, item.id, remaining[0].questions);
   const code = item.questions.filter((question) => question.type === 'code');
@@ -864,11 +1002,38 @@ export function applyImplicitCredit(
   now: Now,
   catalog: GraphCatalog = defaultCatalog,
 ): { progress: Progress; credited: string[] } {
+  return creditSkills(progress, from.id, encompassings(from), now, catalog);
+}
+
+/**
+ * The weight a correct multistep part gives the skill of the point it
+ * exercises: that skill's encompassing weight when it is a direct
+ * prerequisite, and never less than DEFAULT_ENCOMPASS_WEIGHT, since the part
+ * asked about one of its points directly.
+ */
+export function partCreditWeight(from: SkillOutline, skillId: string): number {
+  return Math.max(
+    DEFAULT_ENCOMPASS_WEIGHT,
+    encompassings(from).find((entry) => entry.id === skillId)?.weight ?? 0,
+  );
+}
+
+/**
+ * Give implicit review credit from skill `from` to each target that can take
+ * it now (see creditable), each moving its due date by its weight.
+ */
+export function creditSkills(
+  progress: Progress,
+  from: string,
+  targets: { id: string; weight: number }[],
+  now: Now,
+  catalog: GraphCatalog = defaultCatalog,
+): { progress: Progress; credited: string[] } {
   const time = timestamp(now);
   const today = dateKey(time, progress.timeZone || 'UTC');
   const skills = { ...progress.skills };
   const credited: string[] = [];
-  for (const { id, weight } of encompassings(from)) {
+  for (const { id, weight } of targets) {
     if (!creditable(progress, id, today, time, catalog)) continue;
     const state = skills[id];
     const next = implicitDueAt(state, weight, time);
@@ -879,7 +1044,7 @@ export function applyImplicitCredit(
       implicitCredit: {
         at: time,
         day: today,
-        from: from.id,
+        from,
         weight,
         basis: next.basis,
         dueBefore: state.dueAt!,
@@ -961,7 +1126,13 @@ export function nextTask(
       );
     return coverageCache.get(item.id)!;
   };
+  // A multistep problem part-way through is finished first, on its card.
+  const resuming = due.find(
+    (item) => item.id === lastSkill && openProblem(progress, item),
+  )?.id;
   due.sort((a, b) => {
+    if (a.id === resuming || b.id === resuming)
+      return Number(b.id === resuming) - Number(a.id === resuming);
     // A refresh a failed lesson is waiting for goes first.
     const refreshing =
       Number(refreshPending(progress.skills[b.id])) -
@@ -1126,6 +1297,8 @@ export function applyAttempt(
   if (!item) throw new Error(`Unknown skill: ${input.skillId}`);
   const question = findQuestion(item, input.questionId);
   if (!question) throw new Error('This question does not belong to the skill.');
+  // A multistep part (CEN-163): graded on its own, never a lesson step.
+  const part = findPart(item, question.id);
   if (!isUnlocked(progress, item.id, catalog))
     throw new Error('Master the prerequisites before attempting this skill.');
   if (input.mode !== 'learn' && input.mode !== 'review')
@@ -1163,8 +1336,20 @@ export function applyAttempt(
     };
   const wasMastered = isMastered(progress, item.id, catalog);
   const knowledgePoints = hasKnowledgePoints(item);
-  const evidenceId = evidenceIdFor(item, question.id)!;
+  // A part answers for the skill's own point it applies (partEvidencePoint).
+  const evidenceId = evidenceIdFor(item, question.id) ?? question.id;
   const unassisted = input.correct && !input.usedHint;
+  // The problem counts for the skill only when every part, answered in
+  // order in one presentation, is right.
+  let problemSolved = false;
+  if (part && unassisted && part.index === part.problem.parts.length - 1) {
+    const before = latestPresentation(progress, item);
+    problemSolved =
+      part.index === 0 ||
+      (before?.problem.id === part.problem.id &&
+        before.answers.length === part.index &&
+        before.answers.every((answer) => answer.correct && !answer.usedHint));
+  }
   const reviewDue = wasMastered && old.dueAt !== null && old.dueAt <= time;
   let xp = 0;
   let outcome: AttemptOutcome | undefined;
@@ -1184,7 +1369,7 @@ export function applyAttempt(
   // Only the current step counts, so a stale screen cannot skip ahead.
   let step: LessonStepProgress | undefined;
   let stepKind: LessonStepRef['kind'] | undefined;
-  if (input.mode === 'learn' && !wasMastered) {
+  if (input.mode === 'learn' && !wasMastered && !part) {
     const lesson = lessonState(progress, item);
     if (lesson.current?.id === evidenceId) {
       const attempt = currentLessonAttempt(old);
@@ -1278,9 +1463,17 @@ export function applyAttempt(
     input.mode === 'review' &&
     reviewDue &&
     unassisted &&
-    !state.reviewQuestionIds.includes(question.id)
+    // A solved problem answers for the skill's own points its parts apply.
+    (part
+      ? problemSolved
+        ? ownPartIds(item, part.problem)
+        : []
+      : [question.id]
+    ).some((id) => !state.reviewQuestionIds.includes(id))
   ) {
-    state.reviewQuestionIds.push(question.id);
+    for (const id of part ? ownPartIds(item, part.problem) : [question.id])
+      if (!state.reviewQuestionIds.includes(id))
+        state.reviewQuestionIds.push(id);
     if (reviewCycleComplete(item, state.reviewQuestionIds)) {
       state.reviewCount += 1;
       state.memory = reviewMemory(
@@ -1372,11 +1565,27 @@ export function applyAttempt(
     lastActivityDate: today,
     streak,
   };
-  // A finished lesson or review also exercises the skills it uses.
-  const credit =
-    outcome === 'lesson-passed' || outcome === 'review-passed'
-      ? applyImplicitCredit(updated, item, time, catalog)
+  // A correct part on a prerequisite's point reviews that skill a little.
+  const target = part && pointSkillId(part.part.point);
+  const partCredit =
+    part && unassisted && target && !ownPart(item, part.part)
+      ? creditSkills(
+          updated,
+          item.id,
+          [{ id: target, weight: partCreditWeight(item, target) }],
+          time,
+          catalog,
+        )
       : { progress: updated, credited: [] };
+  // A finished lesson or review also exercises the skills it uses.
+  const taskCredit =
+    outcome === 'lesson-passed' || outcome === 'review-passed'
+      ? applyImplicitCredit(partCredit.progress, item, time, catalog)
+      : { progress: partCredit.progress, credited: [] };
+  const credit = {
+    progress: taskCredit.progress,
+    credited: [...partCredit.credited, ...taskCredit.credited],
+  };
   // A failed lesson brings its weakest prerequisites' reviews forward. This
   // failure is not in the log yet, so it adds one to the streak there.
   const refreshed =

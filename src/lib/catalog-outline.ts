@@ -3,11 +3,13 @@ import type {
   Course,
   CurriculumCatalog,
   GraphCatalog,
+  MultistepRef,
   Question,
   QuestionRef,
   SkillOutline,
   Unit,
 } from './curriculum';
+import { partId, problemId } from './multistep';
 
 // Pure helpers over skill outlines. Browser code may import this module: it
 // holds no catalog data.
@@ -85,6 +87,14 @@ function questionRef({ id, type, generated }: QuestionRef): QuestionRef {
   return generated ? { id, type, generated } : { id, type };
 }
 
+/** A multistep problem's IDs, part types, and part points. */
+function problemRef(problem: MultistepRef): MultistepRef {
+  return {
+    id: problem.id,
+    parts: problem.parts.map(({ id, type, point }) => ({ id, type, point })),
+  };
+}
+
 /** A skill without its lesson content: what the graph index keeps. */
 export function outlineSkill(skill: SkillOutline): SkillOutline {
   return {
@@ -113,6 +123,9 @@ export function outlineSkill(skill: SkillOutline): SkillOutline {
     flashcards: skill.flashcards.map(({ id }) => ({ id })),
     ...(skill.assessment ? { assessment: skill.assessment } : {}),
     ...(skill.encompasses ? { encompasses: skill.encompasses } : {}),
+    ...(skill.multistep?.length
+      ? { multistep: skill.multistep.map(problemRef) }
+      : {}),
   };
 }
 
@@ -153,7 +166,7 @@ function indexOf(
 // generated from their position, so counts recreate them exactly.
 type EncodedSkill = Omit<
   SkillOutline,
-  'knowledgePoints' | 'questions' | 'flashcards'
+  'knowledgePoints' | 'questions' | 'flashcards' | 'multistep'
 > & {
   /**
    * Each knowledge point's question types, one letter per question, in
@@ -162,6 +175,11 @@ type EncodedSkill = Omit<
   points?: string[];
   questions: [string, Question['type']][];
   cards: number;
+  /**
+   * Each multistep problem's parts as `<type letter><point ID>`; problem and
+   * part IDs are generated from position.
+   */
+  ms?: string[][];
 };
 
 const typeLetters: Record<Question['type'], string> = {
@@ -190,7 +208,17 @@ export function encodeIndex(index: CatalogIndex): EncodedIndex {
     courses: index.courses,
     units: index.units,
     skills: index.skills.map((skill) => {
-      const { knowledgePoints, questions, flashcards, ...rest } = skill;
+      const { knowledgePoints, questions, flashcards, multistep, ...rest } =
+        skill;
+      multistep?.forEach((problem, m) => {
+        if (
+          problem.id !== problemId(skill.id, m) ||
+          problem.parts.some((part, k) => part.id !== partId(problem.id, k))
+        )
+          throw new Error(
+            `${problem.id}: multistep problem IDs must be generated.`,
+          );
+      });
       knowledgePoints?.forEach((point, p) => {
         if (
           point.id !== pointId(skill.id, p) ||
@@ -223,6 +251,15 @@ export function encodeIndex(index: CatalogIndex): EncodedIndex {
           : {}),
         questions: questions.map(({ id, type }) => [id, type]),
         cards: flashcards.length,
+        ...(multistep?.length
+          ? {
+              ms: multistep.map((problem) =>
+                problem.parts.map(
+                  ({ type, point }) => `${typeLetters[type]}${point}`,
+                ),
+              ),
+            }
+          : {}),
       };
     }),
   };
@@ -232,7 +269,7 @@ export function decodeIndex(encoded: EncodedIndex): CatalogIndex {
   return indexOf(
     encoded.courses,
     encoded.units,
-    encoded.skills.map(({ points, questions, cards, ...skill }) =>
+    encoded.skills.map(({ points, questions, cards, ms, ...skill }) =>
       outlineSkill({
         ...skill,
         ...(points
@@ -253,6 +290,21 @@ export function decodeIndex(encoded: EncodedIndex): CatalogIndex {
         flashcards: Array.from({ length: cards }, (_, c) => ({
           id: cardId(skill.id, c),
         })),
+        ...(ms
+          ? {
+              multistep: ms.map((parts, m) => {
+                const id = problemId(skill.id, m);
+                return {
+                  id,
+                  parts: parts.map((encoded, k) => ({
+                    id: partId(id, k),
+                    type: letterTypes[encoded[0]],
+                    point: encoded.slice(1),
+                  })),
+                };
+              }),
+            }
+          : {}),
       }),
     ),
   );

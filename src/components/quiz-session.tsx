@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   ArrowRight,
   Check,
@@ -17,6 +17,7 @@ import {
   finishQuiz,
   planQuiz,
   quizDeadline,
+  quizProblem,
   quizQuestion,
   QUIZ_MAX_QUESTIONS,
   QUIZ_MIN_QUESTIONS,
@@ -38,9 +39,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { CodeBlock } from '@/components/reui/code-block/code-block';
+import { ProblemCard } from './multistep-problem';
+import type { CodeLanguage } from '../lib/curriculum';
 
 const languageOf = (courseId: string) =>
   codeLanguage(courses.find((course) => course.id === courseId)?.language);
+
+/** The language a multistep problem's setup and parts are written in. */
+const problemLanguage = (
+  found: NonNullable<ReturnType<typeof quizProblem>>,
+): CodeLanguage =>
+  codeLanguage(
+    found.problem.setup.language ?? languageOf(found.skill.courseId),
+  );
 
 function clock(ms: number) {
   const seconds = Math.max(0, Math.ceil(ms / 1000));
@@ -183,6 +194,11 @@ export default function QuizSession({
   const found = slot && quizQuestion(slot);
   if (!slot || !found) return <QuizResults quiz={quiz} />;
   const { skill, question } = found;
+  // A multistep part shows on its problem's card, under the parts before it.
+  const multistep = quizProblem(quiz, index);
+  const language = multistep
+    ? problemLanguage(multistep)
+    : languageOf(skill.courseId);
   const order =
     question.type === 'choice' ? choiceOrder(question, slot.presentation) : [];
   const remaining = quizDeadline(quiz) - now;
@@ -217,34 +233,15 @@ export default function QuizSession({
       ),
     }));
   }
-  return (
-    <div className="lesson-workspace lesson-page">
-      <div className="session-top">
-        <Button asChild variant="link" className="h-auto justify-start p-0">
-          <a href="/">
-            <X size={18} />
-            Leave quiz
-          </a>
-        </Button>
-        <span role="timer" aria-label="Time left">
-          <Timer size={16} />
-          {clock(remaining)} left
-        </span>
-      </div>
-      <QuizHeading title={`Quiz ${quiz.number}`} />
-      <Card className="gap-0 question-paper">
-        <div className="question-top">
-          <span className="page-eyebrow">
-            Question {index + 1} of {quiz.questions.length}
-          </span>
-        </div>
-        <h1>
-          <InlineText text={question.prompt} />
-        </h1>
+  /** The prompt, the question's code, the answer field, and Submit. */
+  function questionBody(prompt: ReactNode) {
+    return (
+      <>
+        {prompt}
         {question.code && (
           <CodeBlock
             code={question.code}
-            language={languageOf(skill.courseId)}
+            language={language}
             defaultWrap
             className="my-5"
           />
@@ -271,7 +268,7 @@ export default function QuizSession({
           </div>
         ) : (
           <TypedAnswerInput
-            key={`${quiz.id}-${index}`}
+            key={`${quiz!.id}-${index}`}
             question={question}
             value={response}
             error={invalid}
@@ -292,7 +289,96 @@ export default function QuizSession({
             Submit
           </Btn>
         </div>
-      </Card>
+      </>
+    );
+  }
+  return (
+    <div className="lesson-workspace lesson-page">
+      <div className="session-top">
+        <Button asChild variant="link" className="h-auto justify-start p-0">
+          <a href="/">
+            <X size={18} />
+            Leave quiz
+          </a>
+        </Button>
+        <span role="timer" aria-label="Time left">
+          <Timer size={16} />
+          {clock(remaining)} left
+        </span>
+      </div>
+      <QuizHeading title={`Quiz ${quiz.number}`} />
+      {multistep ? (
+        <ProblemCard
+          id={`problem-${quiz.id}-${multistep.slots[0]}`}
+          eyebrow={`Question ${index + 1} of ${quiz.questions.length} · Multistep problem`}
+          problem={multistep.problem}
+          language={language}
+        >
+          {multistep.slots
+            .filter((position) => position < index)
+            .map((position, part) => {
+              const earlier = quizQuestion(quiz.questions[position]);
+              const answer = quiz.questions[position].answer;
+              return earlier ? (
+                <li
+                  key={position}
+                  className="multistep-part"
+                  data-state="answered"
+                >
+                  <div className="question-top">
+                    <span className="page-eyebrow">
+                      Part {part + 1} of {multistep.problem.parts.length}
+                    </span>
+                  </div>
+                  <h4 className="question-prompt">
+                    <InlineText text={earlier.question.prompt} />
+                  </h4>
+                  {earlier.question.code && (
+                    <CodeBlock
+                      code={earlier.question.code}
+                      language={language}
+                      defaultWrap
+                      className="mb-4"
+                    />
+                  )}
+                  <p className="multistep-answer">
+                    Your answer:{' '}
+                    {answer === null || answer === undefined ? (
+                      'No answer'
+                    ) : (
+                      <AnswerText question={earlier.question} answer={answer} />
+                    )}
+                  </p>
+                </li>
+              ) : null;
+            })}
+          <li className="multistep-part" data-state="current">
+            <div className="question-top">
+              <span className="page-eyebrow">
+                Part {multistep.part + 1} of {multistep.problem.parts.length}
+              </span>
+            </div>
+            {questionBody(
+              <h4 className="question-prompt">
+                <InlineText text={question.prompt} />
+              </h4>,
+            )}
+          </li>
+        </ProblemCard>
+      ) : (
+        <Card className="gap-0 question-paper">
+          <div className="question-top">
+            <span className="page-eyebrow">
+              Question {index + 1} of {quiz.questions.length}
+            </span>
+          </div>
+          {questionBody(
+            <h1>
+              <InlineText text={question.prompt} />
+            </h1>,
+          )}
+        </Card>
+      )}
     </div>
   );
 }
@@ -354,46 +440,54 @@ function QuizResults({ quiz }: { quiz: Quiz }) {
           const found = quizQuestion(slot);
           if (!found) return null;
           const { question } = found;
+          // A multistep problem's parts are listed together on its card.
+          const multistep = quizProblem(quiz, index);
+          if (multistep && multistep.part > 0) return null;
+          if (multistep) {
+            const language = problemLanguage(multistep);
+            return (
+              <li key={`${slot.questionId}-${index}`}>
+                <ProblemCard
+                  id={`result-${quiz.id}-${index}`}
+                  eyebrow={`Questions ${index + 1} to ${index + multistep.slots.length} · Multistep problem`}
+                  problem={multistep.problem}
+                  language={language}
+                >
+                  {multistep.slots.map((position, part) => {
+                    const item = quiz.questions[position];
+                    const shown = quizQuestion(item);
+                    return shown ? (
+                      <li
+                        key={position}
+                        className={`multistep-part ${item.correct ? 'is-correct' : 'is-incorrect'}`}
+                        data-state="answered"
+                      >
+                        <SlotResult
+                          slot={item}
+                          question={shown.question}
+                          label={`Question ${position + 1}, part ${part + 1}`}
+                          language={language}
+                          Heading="h4"
+                        />
+                      </li>
+                    ) : null;
+                  })}
+                </ProblemCard>
+              </li>
+            );
+          }
           return (
             <li key={`${slot.questionId}-${index}`}>
               <Card
                 className={`lesson-paper quiz-result gap-0 ${slot.correct ? 'is-correct' : 'is-incorrect'}`}
               >
-                <p className="quiz-result-status">
-                  {slot.correct ? (
-                    <CheckCircle2 size={18} aria-hidden="true" />
-                  ) : (
-                    <CircleX size={18} aria-hidden="true" />
-                  )}
-                  Question {index + 1}: {slot.correct ? 'Correct' : 'Incorrect'}
-                </p>
-                <h3>
-                  <InlineText text={question.prompt} />
-                </h3>
-                {question.code && (
-                  <CodeBlock
-                    code={question.code}
-                    language={languageOf(found.skill.courseId)}
-                    defaultWrap
-                  />
-                )}
-                <p>
-                  Your answer:{' '}
-                  {slot.answer === null || slot.answer === undefined ? (
-                    'No answer (time ran out)'
-                  ) : (
-                    <AnswerText question={question} answer={slot.answer} />
-                  )}
-                </p>
-                {!slot.correct && (
-                  <p>
-                    <Check size={15} aria-hidden="true" /> Correct answer:{' '}
-                    <AnswerText question={question} />
-                  </p>
-                )}
-                <p className="lesson-teaching-text">
-                  <InlineText text={question.explanation} />
-                </p>
+                <SlotResult
+                  slot={slot}
+                  question={question}
+                  label={`Question ${index + 1}`}
+                  language={languageOf(found.skill.courseId)}
+                  Heading="h3"
+                />
               </Card>
             </li>
           );
@@ -425,5 +519,56 @@ function AnswerText({
       {text}
       {unit ? ` ${unit}` : ''}
     </code>
+  );
+}
+
+/** One answered quiz question: its result, prompt, answers, and explanation. */
+function SlotResult({
+  slot,
+  question,
+  label,
+  language,
+  Heading,
+}: {
+  slot: Quiz['questions'][number];
+  question: AnswerQuestion;
+  label: string;
+  language: CodeLanguage;
+  Heading: 'h3' | 'h4';
+}) {
+  return (
+    <>
+      <p className="quiz-result-status">
+        {slot.correct ? (
+          <CheckCircle2 size={18} aria-hidden="true" />
+        ) : (
+          <CircleX size={18} aria-hidden="true" />
+        )}
+        {label}: {slot.correct ? 'Correct' : 'Incorrect'}
+      </p>
+      <Heading className={Heading === 'h4' ? 'question-prompt' : undefined}>
+        <InlineText text={question.prompt} />
+      </Heading>
+      {question.code && (
+        <CodeBlock code={question.code} language={language} defaultWrap />
+      )}
+      <p>
+        Your answer:{' '}
+        {slot.answer === null || slot.answer === undefined ? (
+          'No answer (time ran out)'
+        ) : (
+          <AnswerText question={question} answer={slot.answer} />
+        )}
+      </p>
+      {!slot.correct && (
+        <p>
+          <Check size={15} aria-hidden="true" /> Correct answer:{' '}
+          <AnswerText question={question} />
+        </p>
+      )}
+      <p className="lesson-teaching-text">
+        <InlineText text={question.explanation} />
+      </p>
+    </>
   );
 }

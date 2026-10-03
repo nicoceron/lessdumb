@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { ChoiceText, InlineText } from './inline-text';
 import { TypedAnswerInput, TypedAnswerResult } from './typed-answer';
+import { ProblemCard } from './multistep-problem';
 import type {
   CodeLanguage,
   KnowledgePoint,
@@ -39,6 +40,7 @@ import {
   lessonRefreshes,
   lessonState,
   nextTask,
+  openProblem,
   selectQuestion,
   type Attempt,
   type LessonStepProgress,
@@ -59,6 +61,7 @@ import {
 import { choiceLetter, choiceOrder } from '../lib/choice-order';
 import { gradeTyped, isTyped } from '../lib/typed-answer';
 import { questionVariant } from '../lib/variants';
+import { findPart } from '../lib/multistep';
 import { type PythonResult } from '../lib/python';
 import { runCode } from '../lib/code-runner';
 import { codeLanguage, codeLanguageLabels } from '../lib/code-language';
@@ -140,6 +143,8 @@ const END_ID = 'lesson-end';
 const stepDomId = (stepId: string) => `step-${stepId}`;
 const stepTitleId = (stepId: string) => `step-${stepId}-title`;
 const promptId = (key: string) => `prompt-${key}`;
+/** A multistep problem's heading, keyed by its first part's entry. */
+const problemId = (key: string) => `problem-${key}`;
 const continueId = (key: string) => `continue-${key}`;
 
 /** How often a question has been answered; it seeds a fresh choice order. */
@@ -173,7 +178,10 @@ function buildEntry(
   previous?: Entry | null,
 ): Entry {
   const question = selectQuestion(progress, skill, mode);
-  const stepId = evidenceIdFor(skill, question.id) ?? question.id;
+  // A multistep part is shown on its problem's card, not under a point.
+  const stepId = findPart(skill, question.id)
+    ? question.id
+    : (evidenceIdFor(skill, question.id) ?? question.id);
   const answers =
     mode === 'learn'
       ? lessonState(progress, skill).attempt?.steps[stepId]
@@ -448,7 +456,9 @@ function LessonPage({
       : undefined,
     () => {
       const prompt = current && document.getElementById(promptId(current.key));
-      return prompt?.closest('.lesson-question') ?? prompt ?? null;
+      return (
+        prompt?.closest('.lesson-question, .multistep-part') ?? prompt ?? null
+      );
     },
   );
   const pointLesson = !!skill && hasKnowledgePoints(skill);
@@ -600,6 +610,20 @@ function LessonPage({
   }
   async function next() {
     if (!current?.feedback || !skill || failed || advancing.current) return;
+    // A multistep problem asks every part in order on its card, even after
+    // a missed part has ended the review.
+    const owner = loadedSkill(current.skillId);
+    if (
+      owner &&
+      findPart(owner, current.questionId) &&
+      openProblem(state.progress, owner)
+    ) {
+      const entry = buildEntry(state.progress, owner, current.mode, current);
+      setHistory((entries) => [...entries, current]);
+      setCurrent(entry);
+      pendingFocus.current = { id: promptId(entry.key) };
+      return;
+    }
     const p = getSkillState(state.progress, skillId);
     const mastered = isMastered(state.progress, skillId);
     if (
@@ -636,7 +660,11 @@ function LessonPage({
           setHistory((entries) => [...entries, current]);
           setSkillId(task.skillId);
           setCurrent(entry);
-          pendingFocus.current = { id: promptId(entry.key) };
+          pendingFocus.current = {
+            id: findPart(target, entry.questionId)
+              ? problemId(entry.key)
+              : promptId(entry.key),
+          };
         } else openTask(task.skillId, task.mode, entry);
         return;
       }
@@ -649,12 +677,15 @@ function LessonPage({
     const entry = buildEntry(state.progress, skill, mode, current);
     setHistory((entries) => [...entries, current]);
     setCurrent(entry);
-    // A passed point appends the next point's section; otherwise the next
-    // question is appended under the one just answered.
+    // A passed point appends the next point's section; a multistep problem
+    // starts with its card's heading; otherwise the next question is
+    // appended under the one just answered.
     pendingFocus.current =
       mode === 'learn' && entry.stepId !== current.stepId
         ? { id: stepTitleId(entry.stepId), scrollTo: stepDomId(entry.stepId) }
-        : { id: promptId(entry.key) };
+        : findPart(skill, entry.questionId)
+          ? { id: problemId(entry.key) }
+          : { id: promptId(entry.key) };
   }
 
   if (complete && !history.length && !current)
@@ -748,7 +779,13 @@ function LessonPage({
     }));
   }
 
-  function questionCard(entry: Entry, label: string, extra?: ReactNode) {
+  function questionCard(
+    entry: Entry,
+    label: string,
+    extra?: ReactNode,
+    /** A multistep part, nested in its problem's card, in its language. */
+    part?: { language: CodeLanguage },
+  ) {
     const owner = loadedSkill(entry.skillId);
     const item = owner ? entryQuestion(owner, entry) : undefined;
     if (!owner || !item) return null;
@@ -756,10 +793,11 @@ function LessonPage({
     const attempt = entry.feedback
       ? attemptById(state.progress, entry.feedback.attemptId)
       : undefined;
-    const ownerLanguage = courseLanguageOf(owner);
+    const ownerLanguage = part?.language ?? courseLanguageOf(owner);
     return (
       <QuestionCard
         key={entry.key}
+        nested={!!part}
         entry={entry}
         question={item}
         label={label}
@@ -933,6 +971,61 @@ function LessonPage({
       : courseLanguage;
   }
 
+  /** A multistep problem's card with the parts reached so far. */
+  function problemCard(entries: Entry[], label: string) {
+    const owner = loadedSkill(entries[0].skillId);
+    const found = owner && findPart(owner, entries[0].questionId);
+    if (!owner || !found) return null;
+    const language = codeLanguage(
+      found.problem.setup.language ?? courseLanguageOf(owner),
+    );
+    const count = found.problem.parts.length;
+    return (
+      <ProblemCard
+        key={entries[0].key}
+        id={problemId(entries[0].key)}
+        eyebrow={`${label} · Multistep problem`}
+        problem={found.problem}
+        language={language}
+      >
+        {entries.map((entry) =>
+          questionCard(
+            entry,
+            `Part ${(findPart(owner, entry.questionId)?.index ?? 0) + 1} of ${count}`,
+            undefined,
+            { language },
+          ),
+        )}
+      </ProblemCard>
+    );
+  }
+
+  /**
+   * The page's entries as review items: one question each, or every part
+   * of one multistep presentation together.
+   */
+  function reviewItems(): Entry[][] {
+    const items: Entry[][] = [];
+    for (const entry of pageEntries) {
+      const owner = loadedSkill(entry.skillId);
+      const found = owner && findPart(owner, entry.questionId);
+      const previous = items.at(-1)?.at(-1);
+      const before =
+        previous?.skillId === entry.skillId && owner
+          ? findPart(owner, previous.questionId)
+          : undefined;
+      if (
+        found &&
+        before &&
+        before.problem.id === found.problem.id &&
+        before.index === found.index - 1
+      )
+        items.at(-1)!.push(entry);
+      else items.push([entry]);
+    }
+    return items;
+  }
+
   function reviewContent() {
     const multiSkill =
       new Set(pageEntries.map((entry) => entry.skillId)).size > 1;
@@ -942,7 +1035,8 @@ function LessonPage({
           Answer from memory. After you answer, you can reread the point the
           question came from.
         </p>
-        {pageEntries.map((entry, index) => {
+        {reviewItems().map((group, index) => {
+          const entry = group[0];
           const owner = loadedSkill(entry.skillId);
           const point = owner ? stepFor(owner, entry.stepId)?.point : undefined;
           const label = `Question ${index + 1}${multiSkill && owner ? ` · ${owner.title}` : ''}`;
@@ -963,19 +1057,21 @@ function LessonPage({
                   {refreshMessage(lesson.title, [owner.title])}
                 </p>
               )}
-              {questionCard(
-                entry,
-                label,
-                entry.feedback && point && owner ? (
-                  <RereadPoint
-                    entryKey={entry.key}
-                    point={point}
-                    language={codeLanguage(
-                      point.example.language ?? courseLanguageOf(owner),
-                    )}
-                  />
-                ) : undefined,
-              )}
+              {owner && findPart(owner, entry.questionId)
+                ? problemCard(group, label)
+                : questionCard(
+                    entry,
+                    label,
+                    entry.feedback && point && owner ? (
+                      <RereadPoint
+                        entryKey={entry.key}
+                        point={point}
+                        language={codeLanguage(
+                          point.example.language ?? courseLanguageOf(owner),
+                        )}
+                      />
+                    ) : undefined,
+                  )}
             </Fragment>
           );
         })}
@@ -1228,6 +1324,7 @@ function RereadPoint({
 }
 
 function QuestionCard({
+  nested = false,
   entry,
   question,
   label,
@@ -1246,6 +1343,8 @@ function QuestionCard({
   onContinue,
   after,
 }: {
+  /** A part inside its multistep problem's card, rather than a card. */
+  nested?: boolean;
   entry: Entry;
   question: Question;
   label: string;
@@ -1278,12 +1377,15 @@ function QuestionCard({
           ? 'Correct'
           : 'Incorrect'
     : '';
+  // A multistep part is an item of its problem's card, not a card itself.
+  const Shell = nested ? 'li' : Card;
+  const Prompt = nested ? 'h4' : 'h3';
   return (
-    <Card
-      className={`gap-0 question-paper lesson-question${answered ? (feedback.correct ? ' is-correct' : ' is-incorrect') : ''}`}
+    <Shell
+      className={`gap-0 ${nested ? 'multistep-part' : 'question-paper lesson-question'}${answered ? (feedback.correct ? ' is-correct' : ' is-incorrect') : ''}`}
       data-state={live ? 'current' : 'answered'}
-      role="group"
-      aria-labelledby={promptId(entry.key)}
+      role={nested ? undefined : 'group'}
+      aria-labelledby={nested ? undefined : promptId(entry.key)}
     >
       <div className="question-top">
         <span className="page-eyebrow">{label}</span>
@@ -1300,9 +1402,13 @@ function QuestionCard({
           </span>
         )}
       </div>
-      <h3 id={promptId(entry.key)} className="question-prompt" tabIndex={-1}>
+      <Prompt
+        id={promptId(entry.key)}
+        className="question-prompt"
+        tabIndex={-1}
+      >
         <InlineText text={question.prompt} />
-      </h3>
+      </Prompt>
       {question.type !== 'code' && question.code && (
         <CodeBlock
           code={question.code}
@@ -1519,6 +1625,6 @@ function QuestionCard({
           )}
         </div>
       )}
-    </Card>
+    </Shell>
   );
 }

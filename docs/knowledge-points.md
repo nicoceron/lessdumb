@@ -119,6 +119,51 @@ How generators are checked:
 
 A generated question is asked as a variant number `k`: 0, 1, 2, … for each question, each seeding the generator with `variantSeed(id, k)`. The learner's attempt stores only that small number (`variant`), never the question, so states stay small; quiz questions and placement questions store it too. The lesson page, quiz results, and mistake cards rebuild what was asked from the question ID and the variant.
 
+### Multistep problems
+
+A knowledge-point question tests one idea. A **multistep problem** (CEN-163) gives one scenario and two to four ordered parts, each needing a different earlier idea, so the learner practices combining them, as in Math Academy's later lessons. Problems are asked in due reviews and in quizzes, never in lessons ([where they appear](learning-design.md#multistep-problems)).
+
+```ts
+// src/lib/knowledge-points/python-foundations.multistep.ts
+import { choose, part, typeNumber, typeOutput, type MultistepModule } from './authoring';
+
+export const multistepProblems: MultistepModule = {
+  'multiple-returns': [
+    {
+      title: 'Summarize a list in one call',
+      setup: { text: ['…'], code: 'def summary(values): …' },
+      parts: [
+        part('multiple-returns-kp2', typeNumber('What is `high - low`?', 7, '…')),
+        part('return-values-kp3', typeOutput('After the setup runs, what does this print?', 'print(summary([]))', '(None, None)', '…')),
+        part('unpacking-kp2', choose('What happens when …?', [ … ], 0, '…')),
+      ],
+    },
+  ],
+};
+```
+
+- **One file per course, keyed by skill.** Problems live in `src/lib/knowledge-points/<course>.multistep.ts`, keyed by the skill whose reviews ask them, and are registered in the course's content module with `withMultistep(withKnowledgePoints(…), { '<course>.multistep.ts': multistepProblems })`. They travel with that skill's content, so the browser downloads them with its unit; the graph index keeps only their IDs and each part's type and point. A test fails if a `*.multistep.ts` file is not registered.
+- **IDs come from position:** `<skill>-ms<n>` for a problem and `<skill>-ms<n>#p<k>` for a part. Append problems rather than reordering published ones.
+- **The setup** is shown once, above the parts: `text` (paragraphs of prose with `$…$` math), optional `code` with its `language` (the course's by default), optional `output` (exactly what `code` prints, run by the tests), and optional `data` (a table or log shown as written).
+- **Each part** is a `choice`, `numeric`, or `text` question built with the usual helpers, wrapped in `part(point, question)`, where `point` is the ID of the knowledge point it exercises. Every rule for questions above applies to parts: typed answers, choices, math, and giveaways. Parts are never generated.
+- **Points.** A part's point must exist and belong to the problem's own skill or to one of its ancestors. At least one part must apply a point of the skill itself (a missed part counts against it), and the parts must name at least two different points; the catalog tests also require every problem to combine at least two skills. Choose skills deep in the graph whose lessons build on several prerequisites.
+- **Output parts.** In Python, a part's `code` runs after the setup's code, as one program, so a part can be one line such as `print(ranked[:2])`; prompt it as "After the setup runs, what does this print?". In Rust and C++, a part's `code` is a complete program of its own, and a part without code asks what the setup's program prints: use `typeSetupOutput(prompt, output, explanation)`. Catalog tests run every output part and setup output in Pyodide, rustc, or clang++ and compare, as for other output questions.
+- Each part is answered on its own, after the earlier ones, so a prompt may build on the setup and on what earlier parts established, but not on an earlier part's answer being shown.
+
+The catalog validator (`multistepErrors` and the point checks in `validateCurriculum`) rejects malformed IDs, a missing title or setup prose, a setup output without code, fewer than two or more than four parts, a code part, a part without a valid point, an unknown point, a point outside the skill and its ancestors, a problem without a part on its own skill, and parts that all name one point. `tests/question-quality.test.ts` applies its giveaway checks to choice parts, and `tests/multistep.test.ts` checks the counts: at least 60 problems, at least 6 in every course.
+
+| Course                   | Problems |   Parts | Typed parts | Executed output parts |
+| ------------------------ | -------: | ------: | ----------: | --------------------: |
+| Python foundations       |        8 |      28 |          24 |                    13 |
+| Quantitative foundations |        8 |      32 |          26 |                     0 |
+| Python for Data Analysis |        7 |      28 |          25 |                    15 |
+| Machine Learning         |        8 |      32 |          27 |                     4 |
+| Data Systems             |        7 |      28 |          15 |                     4 |
+| Competitive Programming  |        8 |      32 |          27 |                    18 |
+| Rust                     |        8 |      28 |          15 |                    10 |
+| C++                      |        8 |      31 |          20 |                    10 |
+| **Total**                |   **62** | **239** |     **179** |                **74** |
+
 ### Complete programs
 
 - **Python:** ordinary scripts. `numpy`, `pandas`, and `scikit-learn` are available.
@@ -141,7 +186,7 @@ A lesson is one page that grows as the learner works through it:
 
 Points passed during an attempt are provisional (`lessonAttempt` in the learner's state). They become mastery evidence together when the last step passes, so a failed attempt keeps nothing from that attempt. A failure records `lessonFailedAt` and the learner sees "Lesson failed — you'll see it again later" with a link back to Today, at the bottom of the page under everything they read and answered. The scheduler then offers any other available work first. The lesson returns once the learner completes another lesson or review, or four hours after the failure (`LESSON_RETRY_DELAY_MS`), whichever comes first. If nothing else is available it is offered anyway. Opening it directly is always allowed. The retry starts from the first point. Passing every point (and the code exercise, where required) masters the skill and schedules its first review one day later, as before.
 
-A due review asks one fresh question from each of several points, rotating which point comes first each cycle, plus code where the skill's policy requires it. For these skills a policy's `reviewAnswers` is the number of points reviewed (at most the number of points), and the code exercise is asked in addition. Knowledge-point questions, chosen or typed, satisfy a `choice` requirement. A wrong review answer records a lapse and removes evidence for that point only; the learn task that follows re-teaches just the missing point.
+A due review asks one fresh question from each of several points, rotating which point comes first each cycle, plus code where the skill's policy requires it. A skill with multistep problems also asks one of them in each due cycle, in place of the questions on its own points that the problem applies ([multistep problems](learning-design.md#multistep-problems)). For these skills a policy's `reviewAnswers` is the number of points reviewed (at most the number of points), and the code exercise is asked in addition. Knowledge-point questions, chosen or typed, satisfy a `choice` requirement. A wrong review answer records a lapse and removes evidence for that point only; the learn task that follows re-teaches just the missing point.
 
 Questions are chosen so that a learner never meets the same concrete question of a point within their last three attempts at it (`RECENT_VARIANTS`), in any mode, as long as another question or variant can be asked (`freshQuestion` and `chooseVariant` in `src/lib/learning.ts`; a lesson never asks again a question already answered correctly in the attempt). This holds across lessons, retries, reviews, and quizzes. An authored question asked in those three attempts waits; a generated question never waits, because it brings a variant they did not show. Then unseen variants come first: an authored question not yet answered, or any generated question, whose next variant is the first one the learner has neither answered nor met in those three attempts. A variant is fixed when the question is shown, so a reload shows the same one until it is answered. A point's two correct answers must still be on two different questions.
 
