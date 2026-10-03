@@ -429,7 +429,9 @@ describe('shuffled choices', () => {
   });
 
   it('does not depend on the authored answer position', () => {
-    const question = p1.questions[0] as ChoiceQuestion;
+    const question = p1.questions.find(
+      (item) => item.type === 'choice',
+    ) as ChoiceQuestion;
     const moved = { ...question, answer: 3 };
     expect(choiceOrder(moved, 4)).toEqual(choiceOrder(question, 4));
   });

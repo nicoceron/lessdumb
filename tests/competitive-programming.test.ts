@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  assessmentType,
   courses,
   skillById,
   skills,
@@ -154,7 +155,8 @@ describe('competitive programming in the shared knowledge graph', () => {
       guard++
     ) {
       const question = selectQuestion(state.progress, skill, 'review');
-      answered.add(question.type);
+      // Typed questions meet the choice requirement, as choices do.
+      answered.add(assessmentType(question.type));
       state = recordLearningAnswer(state, {
         skillId: skill.id,
         questionId: question.id,
