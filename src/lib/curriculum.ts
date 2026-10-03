@@ -613,7 +613,7 @@ const curriculum = [
     ['comparisons'],
     [
       'and is True only when both conditions are true. or is True when at least one condition is true. not reverses a condition: not True is False, and not False is True.',
-      'Build a complex condition from small, readable comparisons. Parentheses help communicate the grouping. When a range has an upper and lower limit, both limits must hold, so combine them with and.',
+      'Build a complex condition from small, readable comparisons. Parentheses help communicate the grouping. When a range has an upper and lower limit, both limits must hold, so combine them with and. Python also lets you chain the two comparisons: 10 <= n <= 20 means 10 <= n and n <= 20.',
     ],
     {
       code: 'age = 21\nhas_ticket = True\ncan_enter = age >= 18 and has_ticket\nprint(can_enter)',
@@ -1434,7 +1434,7 @@ const curriculum = [
     [
       'An accumulator keeps a result as a loop progresses. Initialize it before the loop, then update it inside the body. For a sum or count, start at 0. Initializing inside the loop would reset it every iteration.',
       'A conditional accumulator updates only when an item meets a rule. For example, count how many temperatures are above a threshold. Test an empty input: a sum or count should usually remain 0.',
-      'For a numeric accumulator, total += number is shorthand for total = total + number. Similarly, count += 1 increases the count by one. The name must already have a value before either update.',
+      'For a numeric accumulator, total += number is shorthand for total = total + number. Similarly, count += 1 increases the count by one. The same shorthand works with other operators: total *= 2, n //= 10, and n %= 7. The name must already have a value before any such update.',
     ],
     {
       code: 'total = 0\nfor number in [2, 5, 3]:\n    total = total + number\nprint(total)',
@@ -1873,7 +1873,7 @@ const curriculum = [
     ['accumulators'],
     [
       'A dictionary maps unique keys to values. Create one with braces and key: value pairs, such as {"name": "Ada", "score": 10}. Retrieve a value with data[key] and assign a value with data[key] = new_value.',
-      'Accessing a missing key with brackets raises KeyError. data.get(key, default) returns a default instead. The in operator checks keys, not values. Dictionary keys must be hashable; strings and integers are common choices.',
+      'Accessing a missing key with brackets raises KeyError. data.get(key, default) returns a default instead. The in operator checks keys, not values. del data[key] removes a key and its value; deleting a missing key also raises KeyError. Dictionary keys must be hashable; strings and integers are common choices.',
     ],
     {
       code: 'scores = {"Ada": 10, "Lin": 8}\nscores["Ada"] = 12\nprint(scores["Ada"])\nprint(scores.get("Sam", 0))',
@@ -2574,7 +2574,7 @@ const curriculum = [
     ['return-values'],
     [
       'An exception reports a failure during execution. Read the final line of a traceback for the exception type and message, then locate the indicated line of your code. A ValueError often means a conversion received unsuitable content; a NameError often means a name is missing or misspelled.',
-      'Use try/except to handle an expected failure. Put the operation that can fail in try and catch the specific exception you know how to handle. Broadly catching every exception can hide programming errors that should be fixed.',
+      'Use try/except to handle an expected failure. Put the operation that can fail in try and catch the specific exception you know how to handle. Broadly catching every exception can hide programming errors that should be fixed. Your own code can report a failure with raise ValueError("message"), which stops the function just as a built-in error would.',
     ],
     {
       code: 'def parse_count(text):\n    try:\n        return int(text)\n    except ValueError:\n        return 0\n\nprint(parse_count("12"))\nprint(parse_count("oops"))',
