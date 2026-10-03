@@ -25,18 +25,19 @@ Engine functions are typed on `SkillOutline` and return content when given a ful
 
 Content chunks are content-addressed `/_astro/` static assets, served by Cloudflare's asset layer with a one-year immutable cache, and they import nothing, so a deploy that does not change a unit keeps its chunk URL and returning learners keep it cached. Editing a unit changes that unit's chunk only, among content chunks. The table of chunk URLs lives in the main shared chunk with the index, so that chunk and the application chunks that import it get new URLs on any content edit; moving the index into its own chunk would not avoid this, because the URL table changes with every content edit anyway.
 
-Gzipped JavaScript (gzip level 9), measured with `npm run build`: the dashboard's first visit (every chunk its entry scripts import), then what opening each course's first lesson downloads beyond it: the lesson session, the lesson's content, and the highlighter with the course language's grammar. None of these first lessons has math, so KaTeX's 76 KB chunk is not included. "Before" is `main` at a32586b; CEN-108 had cut the first visit from 1,596 KB.
+Gzipped JavaScript (gzip level 9), measured with `npm run build`: the dashboard's first visit (every chunk its entry scripts import), then what opening a lesson downloads beyond it: the lesson session, the lesson's content, and the highlighter with the course language's grammar. None of the first lessons below has math, so KaTeX's 76 KB chunk is not in their rows; the "any lesson" row adds it to each course's largest content download and reports the largest course. "Before" is `main` at af00b5d; CEN-108 had cut the first visit from 1,596 KB.
 
 | Download                                     |  Before |           After |
 | -------------------------------------------- | ------: | --------------: |
-| First visit to `/` (all JavaScript)          |  244 KB |          245 KB |
-| First Python foundations lesson              | +406 KB |          +99 KB |
-| First Competitive Programming lesson         | +640 KB |         +120 KB |
-| First C++ lesson                             | +645 KB |         +171 KB |
-| First Rust lesson                            | +559 KB |         +131 KB |
+| First visit to `/` (all JavaScript)          |  248 KB |          250 KB |
+| First Python foundations lesson              | +405 KB |         +100 KB |
+| First Competitive Programming lesson         | +631 KB |         +121 KB |
+| First C++ lesson                             | +649 KB |         +172 KB |
+| First Rust lesson                            | +550 KB |         +131 KB |
+| Any lesson, at most (C++, with KaTeX)        | +725 KB |         +273 KB |
 | Code editor, added when the exercise appears |  +22 KB | +156 to +171 KB |
 
-Before CEN-126, the 207 KB `code-block` chunk was mostly CodeMirror: `src/lib/code-language.ts` imported the Python, Rust, and C++ editor grammars statically, so every lesson downloaded them with the shared session code even before an editor appeared. Shiki itself already loaded lazily. Content chunks now range from 5 KB to 65 KB (Rust's Model values and failures unit); whole courses were 64 KB to 352 KB.
+Before CEN-126, the 207 KB `code-block` chunk was mostly CodeMirror: `src/lib/code-language.ts` imported the Python, Rust, and C++ editor grammars statically, so every lesson downloaded them with the shared session code even before an editor appeared. Shiki itself already loaded lazily. Unit chunks range from 5 KB to 63 KB (Rust's Model values and failures unit); course chunks were 62 KB to 342 KB.
 
 ## Before and after
 
