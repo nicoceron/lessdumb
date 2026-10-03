@@ -831,4 +831,1018 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'math-probability': [
+    {
+      title: 'Compute a probability from equally likely outcomes',
+      explanation: [
+        'When every outcome is equally likely, P(event) = favorable outcomes / total outcomes. A probability lies between 0, for an impossible event, and 1, for a certain one.',
+      ],
+      example: worked(
+        'fair die; event: roll at least 5\nfavorable outcomes: 5, 6\ntotal outcomes: 1, 2, 3, 4, 5, 6',
+        'P = 2/6 = 1/3',
+        'Two of the six equally likely faces satisfy the event.',
+      ),
+      questions: [
+        choose(
+          'A bag holds 3 red and 7 blue marbles. What is P(red) for one random draw?',
+          ['0.7', '3/7', '0.3', '0.03'],
+          2,
+          '3 favorable marbles out of 10 equally likely ones.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'favorable = 5\ntotal = 20\nprint(favorable / total)',
+          ['4.0', '0.25', '0.2', '25'],
+          1,
+          '5 / 20 = 0.25; the favorable count goes on top.',
+        ),
+        choose(
+          'Which value cannot be a probability?',
+          ['0', '1', '0.999', '1.5'],
+          3,
+          'Probabilities lie between 0 and 1.',
+        ),
+        choose(
+          'Two fair coins are flipped. What is P(exactly one head)?',
+          ['1/4', '1/3', '1/2', '3/4'],
+          2,
+          'Of the four equally likely outcomes HH, HT, TH, TT, two have exactly one head.',
+        ),
+      ],
+    },
+    {
+      title: 'Use the complement',
+      explanation: [
+        'The complement "not A" contains every outcome where A does not happen, so P(not A) = 1 − P(A). The complement is often easier to count: the chance of at least one success is 1 minus the chance of none.',
+      ],
+      example: {
+        code: 'p_rain = 0.35\nprint(1 - p_rain)',
+        output: '0.65',
+        explanation:
+          'Rain and no rain cover every outcome without overlap, so their probabilities sum to 1.',
+      },
+      questions: [
+        choose(
+          'P(defect) = 0.04. What is P(no defect)?',
+          ['0.04', '0.96', '0.6', '1.04'],
+          1,
+          '1 − 0.04 = 0.96.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'p = 0.2\nprint(1 - p)',
+          ['0.2', '-0.8', '1.2', '0.8'],
+          3,
+          'The complement of an event with probability 0.2 has probability 0.8.',
+        ),
+        choose(
+          'A fair die is rolled. What is P(not a 6)?',
+          ['1/6', '5/6', '6/5', '1/5'],
+          1,
+          '1 − 1/6 = 5/6.',
+        ),
+        choose(
+          'P(at least one alert today) = 0.7. What is P(no alerts today)?',
+          ['0.7', '1.7', '0.3', '0'],
+          2,
+          '"No alerts" is the complement of "at least one alert".',
+        ),
+      ],
+    },
+    {
+      title: 'Condition on a selected group',
+      explanation: [
+        'P(A | B) is the probability of A among only the outcomes where B holds: P(A and B) / P(B), or with counts, (count of A and B) / (count of B). Conditioning replaces the whole population with the selected group in the denominator.',
+      ],
+      example: {
+        code: 'emails = 200\nflagged = 40\nflagged_and_spam = 30\nprint(flagged_and_spam / flagged)',
+        output: '0.75',
+        explanation:
+          'Among the 40 flagged emails, 30 are spam. The other 160 emails are outside the condition and do not enter the denominator.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'customers = 500\nreturned = 50\nreturned_and_damaged = 20\nprint(returned_and_damaged / returned)',
+          ['0.04', '0.4', '2.5', '0.1'],
+          1,
+          'Within the 50 returns, 20 were damaged: 20 / 50 = 0.4.',
+        ),
+        choose(
+          'P(A and B) = 0.12 and P(B) = 0.4. What is P(A | B)?',
+          ['0.3', '0.048', '0.52', '3.33'],
+          0,
+          '0.12 / 0.4 = 0.3.',
+        ),
+        choose(
+          'Of 1,000 people, 100 smoke, and 30 of the smokers have a cough. What is P(cough | smoker)?',
+          ['0.03', '0.1', '0.3', '0.13'],
+          2,
+          'Restrict to the 100 smokers: 30 / 100 = 0.3.',
+        ),
+        choose(
+          'In P(A | B), which outcomes form the denominator?',
+          [
+            'All outcomes',
+            'Only the outcomes where A holds',
+            'Outcomes where neither holds',
+            'Only the outcomes where B holds',
+          ],
+          3,
+          'Conditioning on B restricts attention to the outcomes where B holds.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep P(A | B) and P(B | A) apart',
+      explanation: [
+        'P(A | B) and P(B | A) share the numerator P(A and B) but divide by different groups, so they usually differ. Among 1,000 patients, 10 are sick and 9 of them test positive, while 99 healthy patients also test positive: P(positive | sick) = 9/10, but P(sick | positive) = 9/108.',
+      ],
+      example: worked(
+        '1,000 patients: 10 sick (9 test positive), 990 healthy (99 test positive)\nP(positive | sick) = 9 / 10\nP(sick | positive) = 9 / (9 + 99)',
+        '0.9 versus about 0.083',
+        'Both use the 9 sick positives, but the second divides by all 108 positives, most of which are healthy.',
+      ),
+      questions: [
+        choose(
+          'In this example, why is P(sick | positive) much smaller than P(positive | sick)?',
+          [
+            'The test is broken',
+            'Probabilities cannot exceed 0.5',
+            'Healthy patients far outnumber sick ones, so many positives are false alarms',
+            'The two probabilities have different numerators',
+          ],
+          2,
+          'The denominator of P(sick | positive) is dominated by healthy patients who test positive.',
+        ),
+        choose(
+          'Of 100 students, 60 study math, 20 study art, and 15 study both. What is P(math | art)?',
+          ['0.25', '0.15', '0.6', '0.75'],
+          3,
+          'Among the 20 art students, 15 study math: 15 / 20 = 0.75.',
+        ),
+        choose(
+          'Of 100 students, 60 study math, 20 study art, and 15 study both. What is P(art | math)?',
+          ['0.75', '0.25', '0.2', '0.15'],
+          1,
+          'Among the 60 math students, 15 study art: 15 / 60 = 0.25.',
+        ),
+        choose(
+          'P(A and B) = 0.1, P(A) = 0.5, and P(B) = 0.2. What are P(A | B) and P(B | A)?',
+          ['0.5 and 0.2', '0.2 and 0.5', '0.1 and 0.1', '0.05 and 0.02'],
+          0,
+          'P(A | B) = 0.1 / 0.2 = 0.5 and P(B | A) = 0.1 / 0.5 = 0.2.',
+        ),
+      ],
+    },
+  ],
+  'math-random-variables': [
+    {
+      title: 'Describe a random variable by its distribution',
+      explanation: [
+        'A random variable turns each outcome of a random process into a number. Its distribution pairs each possible value with its probability; the probabilities are nonnegative and add up to 1. Different outcomes can map to the same value.',
+      ],
+      example: worked(
+        'two fair coin flips; X = number of heads\nHH → 2, HT → 1, TH → 1, TT → 0',
+        'P(X = 0) = 1/4, P(X = 1) = 1/2, P(X = 2) = 1/4',
+        'Two of the four equally likely outcomes give X = 1, so that value gets probability 1/2.',
+      ),
+      questions: [
+        choose(
+          'X is the number of heads in two fair coin flips. What is P(X = 1)?',
+          ['1/4', '1/3', '1/2', '2/3'],
+          2,
+          'HT and TH both give one head: 2 of 4 equally likely outcomes.',
+        ),
+        choose(
+          'A distribution has P(X = 0) = 0.5, P(X = 1) = 0.3, and one other value, 2. What is P(X = 2)?',
+          ['0.8', '0.2', '0.5', '0.3'],
+          1,
+          'The probabilities must sum to 1: 1 − 0.5 − 0.3 = 0.2.',
+        ),
+        choose(
+          'Which table is a valid distribution?',
+          [
+            '0: 0.6, 1: 0.6',
+            '0: −0.1, 1: 1.1',
+            '0: 0.5, 1: 0.4',
+            '0: 0.3, 1: 0.7',
+          ],
+          3,
+          'Only 0.3 and 0.7 are both nonnegative and sum to 1.',
+        ),
+        choose(
+          'X is 1 when a fair die shows an even number and 0 otherwise. What is P(X = 1)?',
+          ['1/2', '1/6', '1/3', '1'],
+          0,
+          'Three of the six faces are even.',
+        ),
+      ],
+    },
+    {
+      title: 'Compute an expected value',
+      explanation: [
+        'The expected value E[X] multiplies each value by its probability and adds the products. It is a weighted mean with the probabilities as weights, and it is the long-run average over many repetitions, even when X can never equal it.',
+      ],
+      example: worked(
+        'X = 0, 1, 2 with probabilities 0.5, 0.3, 0.2\nE[X] = 0 × 0.5 + 1 × 0.3 + 2 × 0.2',
+        'E[X] = 0.7',
+        'The products are 0, 0.3, and 0.4. The average 0.7 is not a value X can take.',
+      ),
+      questions: [
+        choose(
+          'X is the roll of a fair six-sided die. What is E[X]?',
+          ['3', '3.5', '6', '21'],
+          1,
+          'Each face has probability 1/6, so E[X] = 21 / 6 = 3.5.',
+        ),
+        choose(
+          'X is 10 with probability 0.1 and 0 otherwise. What is E[X]?',
+          ['10', '0.1', '1', '5'],
+          2,
+          '10 × 0.1 + 0 × 0.9 = 1.',
+        ),
+        predictOutput(
+          'This program computes E[X] for X = 0, 2, 4 with probabilities 0.25, 0.5, 0.25. What does it print?',
+          'print(0 * 0.25 + 2 * 0.5 + 4 * 0.25)',
+          ['6', '2', '1.5', '2.0'],
+          3,
+          'The products 0, 1.0, and 1.0 sum to the float 2.0.',
+        ),
+        choose(
+          'A bet wins 50 with probability 0.02 and loses 2 otherwise. What is its expected result?',
+          ['-0.96', '48', '1', '-2'],
+          0,
+          '50 × 0.02 − 2 × 0.98 = 1 − 1.96 = −0.96.',
+        ),
+      ],
+    },
+    {
+      title: 'Use linearity of expectation',
+      explanation: [
+        'Expectation passes through scaling and shifting: E[aX + b] = a E[X] + b. The expectation of a sum is the sum of the expectations, E[X + Y] = E[X] + E[Y], even when X and Y depend on each other. This gives the average of a total without listing every combined outcome.',
+      ],
+      example: worked(
+        'daily orders X with E[X] = 40\nprofit = 3X − 20\nE[profit] = 3 × 40 − 20',
+        'E[profit] = 100',
+        'Scaling by 3 and subtracting 20 act on the expectation the same way they act on each value.',
+      ),
+      questions: [
+        choose(
+          'E[X] = 5. What is E[2X + 3]?',
+          ['10', '13', '16', '8'],
+          1,
+          '2 × 5 + 3 = 13.',
+        ),
+        choose(
+          'E[X] = 2 and E[Y] = 7, and X and Y are dependent. What is E[X + Y]?',
+          ['14', '5', '9', 'Unknown without independence'],
+          2,
+          'Linearity of expectation holds with or without independence.',
+        ),
+        choose(
+          'Each of 30 transactions has an expected fee of 0.5. What is the expected total fee?',
+          ['0.5', '30', '60', '15'],
+          3,
+          'The expected total is the sum of the 30 expected fees.',
+        ),
+        choose(
+          'E[X] = −4. What is E[−X + 1]?',
+          ['-3', '5', '-5', '3'],
+          1,
+          '−(−4) + 1 = 5.',
+        ),
+      ],
+    },
+  ],
+  'math-rv-variance': [
+    {
+      title: 'Compute the variance of a random variable',
+      explanation: [
+        'Var(X) = E[(X − μ)²]: square each value’s distance from the mean μ, weight it by its probability, and add. The shortcut Var(X) = E[X²] − μ² gives the same number. The standard deviation is √Var(X).',
+      ],
+      example: worked(
+        'X = 0 or 4, each with probability 0.5\nμ = 2\nVar(X) = 0.5 × (0 − 2)² + 0.5 × (4 − 2)²',
+        'Var(X) = 4, standard deviation 2',
+        'Both values lie 2 from the mean, so the expected squared distance is 4.',
+      ),
+      questions: [
+        choose(
+          'X is 1 or 5, each with probability 1/2. What is Var(X)?',
+          ['2', '16', '4', '3'],
+          2,
+          'The mean is 3 and both values lie 2 away, so Var(X) = 4.',
+        ),
+        choose(
+          'E[X] = 2 and E[X²] = 7. What is Var(X)?',
+          ['5', '3', '9', '7'],
+          1,
+          'Var(X) = E[X²] − μ² = 7 − 4 = 3.',
+        ),
+        choose(
+          'X always equals 8. What is Var(X)?',
+          ['8', '64', '1', '0'],
+          3,
+          'A constant never deviates from its mean.',
+        ),
+        choose(
+          'Var(X) = 25. What is the standard deviation of X?',
+          ['5', '25', '625', '12.5'],
+          0,
+          'The standard deviation is √25 = 5.',
+        ),
+      ],
+    },
+    {
+      title: 'Scale and shift a random variable',
+      explanation: [
+        'Adding a constant moves every value and the mean together, so the spread stays the same. Multiplying by a constant a multiplies every distance from the mean by a, and therefore the variance by a²: Var(aX + b) = a² Var(X). The standard deviation becomes |a| times as large.',
+      ],
+      example: worked(
+        'temperature X in °C with Var(X) = 4\nF = 1.8X + 32\nVar(F) = 1.8² × 4',
+        'Var(F) = 12.96',
+        'The shift by 32 has no effect; the factor 1.8 enters squared.',
+      ),
+      questions: [
+        choose(
+          'Var(X) = 3. What is Var(X + 100)?',
+          ['103', '3', '300', '0'],
+          1,
+          'A shift does not change spread.',
+        ),
+        choose(
+          'Var(X) = 3. What is Var(4X)?',
+          ['48', '12', '7', '3'],
+          0,
+          '4² × 3 = 48.',
+        ),
+        choose(
+          'Var(X) = 2. What is Var(−X)?',
+          ['-2', '4', '0', '2'],
+          3,
+          '(−1)² × 2 = 2; variance is never negative.',
+        ),
+        choose(
+          'X has standard deviation 5. What is the standard deviation of 3X − 7?',
+          ['8', '225', '15', '45'],
+          2,
+          'The standard deviation scales by |3|, and the shift has no effect.',
+        ),
+      ],
+    },
+    {
+      title: 'Add independent variances and average them down',
+      explanation: [
+        'For independent X and Y, Var(X + Y) = Var(X) + Var(Y), and variances add even for a difference: Var(X − Y) = Var(X) + Var(Y). The mean of n independent copies, each with variance σ², has variance σ² / n, which is why averaging independent errors makes a result steadier.',
+      ],
+      example: worked(
+        '4 independent measurements, each with variance 8\nVar(sum) = 4 × 8 = 32\nVar(mean) = Var(sum / 4) = 32 / 4²',
+        'Var(mean) = 2',
+        'Dividing the sum by 4 divides its variance by 4² = 16, giving 8 / 4.',
+      ),
+      questions: [
+        choose(
+          'X and Y are independent with variances 3 and 4. What is Var(X − Y)?',
+          ['-1', '1', '7', '12'],
+          2,
+          'Subtracting an independent variable still adds its variance.',
+        ),
+        choose(
+          'Each of 25 independent readings has variance 50. What is the variance of their mean?',
+          ['50', '2', '1250', '10'],
+          1,
+          'σ² / n = 50 / 25 = 2.',
+        ),
+        choose(
+          "Several models' errors are strongly correlated. Why does averaging them reduce variance only a little?",
+          [
+            'Correlated errors have no variance',
+            'Averaging always removes bias',
+            'The mean of predictions is undefined',
+            'The rule Var(mean) = σ² / n assumes independent errors',
+          ],
+          3,
+          'When errors move together they do not cancel, so the σ² / n reduction does not apply.',
+        ),
+        choose(
+          'Averaging n independent copies cuts the variance to one tenth of a single copy. What is n?',
+          ['√10', '100', '10', '5'],
+          2,
+          'σ² / n = σ² / 10 when n = 10.',
+        ),
+      ],
+    },
+  ],
+  'math-bernoulli-binomial': [
+    {
+      title: 'Describe a Bernoulli trial',
+      explanation: [
+        'A Bernoulli variable records one yes/no trial: 1 with probability p and 0 with probability 1 − p. Its mean is p and its variance is p(1 − p), which is largest at p = 0.5 and shrinks toward 0 as the outcome becomes nearly certain.',
+      ],
+      example: worked(
+        'a visitor clicks with probability p = 0.1\nE[X] = 0.1\nVar(X) = 0.1 × 0.9',
+        'mean 0.1, variance 0.09',
+        'The mean is the success probability; the variance multiplies it by the failure probability.',
+      ),
+      questions: [
+        choose(
+          'X is Bernoulli with p = 0.25. What is E[X]?',
+          ['0.75', '0.25', '0.1875', '1'],
+          1,
+          'The mean of a Bernoulli variable is p.',
+        ),
+        choose(
+          'X is Bernoulli with p = 0.25. What is Var(X)?',
+          ['0.25', '0.0625', '0.1875', '0.75'],
+          2,
+          'p(1 − p) = 0.25 × 0.75 = 0.1875.',
+        ),
+        choose(
+          'Which p gives a Bernoulli variable its largest variance?',
+          ['0', '1', '0.25', '0.5'],
+          3,
+          'p(1 − p) peaks at p = 0.5, where the outcome is least predictable.',
+        ),
+        choose(
+          'A process succeeds with probability 0.99. Why is its variance small?',
+          [
+            'The outcome is nearly always 1, so there is little spread',
+            'Its mean is small',
+            'Bernoulli variances are always 0.01',
+            'Bernoulli variables have no variance',
+          ],
+          0,
+          'p(1 − p) = 0.99 × 0.01 ≈ 0.0099 because the result rarely varies.',
+        ),
+      ],
+    },
+    {
+      title: 'Multiply probabilities of independent trials',
+      explanation: [
+        'When trials are independent, the probability of a particular sequence is the product of the individual probabilities. With p = 0.3, the sequence 1, 1, 0 has probability 0.3 × 0.3 × 0.7 = 0.063. Different orders of the same numbers of successes and failures have the same probability.',
+      ],
+      example: {
+        code: 'p = 0.5\nprint(p * p * (1 - p))',
+        output: '0.125',
+        explanation:
+          'The sequence 1, 1, 0 multiplies p, p, and 1 − p: 0.5 × 0.5 × 0.5 = 0.125.',
+      },
+      questions: [
+        predictOutput(
+          'This program computes the probability of the sequence 1, 0, 0, 1. What does it print?',
+          'p = 0.5\nprint(p * (1 - p) * (1 - p) * p)',
+          ['0.25', '1.0', '0.0625', '0.5'],
+          2,
+          'Four independent factors of 0.5 multiply to 0.0625.',
+        ),
+        choose(
+          'A server fails on a given day with probability 0.1, independently across days. What is P(no failure on two days)?',
+          ['0.8', '0.81', '0.9', '0.01'],
+          1,
+          '0.9 × 0.9 = 0.81; probabilities multiply, they do not subtract.',
+        ),
+        choose(
+          'With p = 0.2, which sequence of three trials is most probable?',
+          ['1, 1, 1', '1, 0, 1', '0, 0, 0', '0, 1, 0'],
+          2,
+          '0.8³ = 0.512 is larger than any sequence containing a success factor of 0.2.',
+        ),
+        choose(
+          'With p = 0.4, how do P(1, 0) and P(0, 1) compare?',
+          [
+            'P(1, 0) is larger',
+            'P(0, 1) is larger',
+            'They sum to 1',
+            'They are equal',
+          ],
+          3,
+          'Both are 0.4 × 0.6 = 0.24; order does not change the product.',
+        ),
+      ],
+    },
+    {
+      title: 'Count arrangements with C(n, k)',
+      explanation: [
+        'C(n, k), read "n choose k", counts the ways to choose which k of n trials are the successes: C(n, k) = n! / (k! (n − k)!), where n! = n × (n − 1) × … × 1 and 0! = 1. Choosing the successes is the same as choosing the failures, so C(n, k) = C(n, n − k).',
+      ],
+      example: worked(
+        'C(5, 2) = 5! / (2! × 3!)\n= 120 / (2 × 6)',
+        '10',
+        'There are 10 ways to place 2 successes among 5 trials.',
+      ),
+      questions: [
+        choose(
+          'What is C(4, 1)?',
+          ['1', '4', '24', '3'],
+          1,
+          'The single success can be in any of the 4 positions.',
+        ),
+        choose(
+          'What is C(6, 2)?',
+          ['12', '30', '15', '36'],
+          2,
+          '6! / (2! × 4!) = 720 / 48 = 15.',
+        ),
+        choose(
+          'What is C(10, 10)?',
+          ['10', '0', '100', '1'],
+          3,
+          'There is exactly one way to make every trial a success.',
+        ),
+        choose(
+          'C(8, 3) = 56. What is C(8, 5)?',
+          ['56', '40', '336', '15'],
+          0,
+          'Choosing 3 successes is the same as choosing the 5 failures.',
+        ),
+      ],
+    },
+    {
+      title: 'Combine counts into binomial probabilities',
+      explanation: [
+        'The number of successes K in n independent Bernoulli(p) trials is binomial: P(K = k) = C(n, k) pᵏ (1 − p)ⁿ⁻ᵏ, the number of arrangements times the probability of each one. Because K adds n Bernoulli variables, its mean is np and its variance is np(1 − p).',
+      ],
+      example: {
+        code: 'p = 0.5\nprint(3 * p ** 2 * (1 - p))',
+        output: '0.375',
+        explanation:
+          'For exactly 2 successes in 3 trials there are C(3, 2) = 3 arrangements, each with probability 0.5² × 0.5.',
+      },
+      questions: [
+        choose(
+          'Three fair coins are flipped. What is P(exactly 2 heads)?',
+          ['1/8', '3/8', '1/2', '2/3'],
+          1,
+          'C(3, 2) = 3 arrangements, each with probability 1/8.',
+        ),
+        predictOutput(
+          'This program computes P(K = 3) for n = 4 fair trials. What does it print?',
+          'p = 0.5\nprint(4 * p ** 3 * (1 - p))',
+          ['0.0625', '0.125', '0.5', '0.25'],
+          3,
+          'C(4, 3) = 4 arrangements, each with probability 1/16.',
+        ),
+        choose(
+          'A test has 20 independent questions, each answered correctly with probability 0.8. What is the expected number correct?',
+          ['4', '20', '16', '3.2'],
+          2,
+          'np = 20 × 0.8 = 16.',
+        ),
+        choose(
+          'K is binomial with n = 50 and p = 0.2. What is Var(K)?',
+          ['8', '10', '0.16', '40'],
+          0,
+          'np(1 − p) = 50 × 0.2 × 0.8 = 8.',
+        ),
+      ],
+    },
+  ],
+  'math-normal-distribution': [
+    {
+      title: "Read the bell curve's parameters",
+      explanation: [
+        'A normal distribution N(μ, σ²) is symmetric around its mean μ, which is also its median and the center of its peak. The standard deviation σ sets the width: a larger σ spreads the same total probability over a wider range, so the peak is lower. Probabilities are areas under the curve, so P(X = a) = 0 for any exact value a, and P(X < μ) = 0.5.',
+      ],
+      example: worked(
+        'A ~ N(50, 2²)\nB ~ N(50, 10²)',
+        'same center 50; B is five times as wide, with a lower peak',
+        'The means match, so both curves are centered at 50; only σ differs.',
+      ),
+      questions: [
+        choose(
+          'X ~ N(30, 4²). What is P(X < 30)?',
+          ['0.3', '0.5', '0.68', '0'],
+          1,
+          'A normal distribution is symmetric about its mean.',
+        ),
+        choose(
+          'Which change makes a normal curve wider?',
+          [
+            'Increasing μ',
+            'Decreasing σ',
+            'Increasing σ',
+            'Adding a constant to every value',
+          ],
+          2,
+          'σ controls the width; μ and shifts only move the center.',
+        ),
+        choose(
+          'X ~ N(0, 1). What is P(X = 0) exactly?',
+          ['0.5', '1', '0.4', '0'],
+          3,
+          'A single exact value covers no area under the curve.',
+        ),
+        choose(
+          'X ~ N(100, 15²). What is the median of X?',
+          ['100', '85', '115', '15'],
+          0,
+          'Symmetry makes the median equal the mean.',
+        ),
+      ],
+    },
+    {
+      title: 'Apply the 68–95–99.7 rule',
+      explanation: [
+        'For any normal distribution, about 68% of values lie within one standard deviation of the mean, 95% within two, and 99.7% within three. Symmetry splits the remainder evenly between the two tails, so about 2.5% lie above μ + 2σ.',
+      ],
+      example: worked(
+        'scores ~ N(100, 15²)\n85 to 115 is μ ± σ\n70 to 130 is μ ± 2σ',
+        'about 68% between 85 and 115; about 95% between 70 and 130',
+        'Each interval counts whole standard deviations away from the mean.',
+      ),
+      questions: [
+        choose(
+          'Bulb lifetimes follow N(1000, 50²) hours. About what share lasts between 900 and 1100 hours?',
+          ['68%', '95%', '99.7%', '50%'],
+          1,
+          '900 and 1100 are two standard deviations from the mean.',
+        ),
+        choose(
+          'Heights follow N(170, 8²) cm. About what share is taller than 186 cm?',
+          ['16%', '5%', '0.15%', '2.5%'],
+          3,
+          '186 = μ + 2σ, and half of the 5% outside ±2σ lies above.',
+        ),
+        choose(
+          'Scores follow N(60, 10²). About what share lies between 50 and 70?',
+          ['95%', '50%', '68%', '34%'],
+          2,
+          '50 and 70 are one standard deviation from the mean.',
+        ),
+        choose(
+          'For a normal distribution, about what share lies below μ − σ?',
+          ['16%', '32%', '34%', '2.5%'],
+          0,
+          '32% lies outside ±1σ, split evenly: 16% in each tail.',
+        ),
+      ],
+    },
+    {
+      title: 'Standardize values with z-scores',
+      explanation: [
+        'A z-score z = (x − μ) / σ says how many standard deviations x lies above the mean (positive) or below it (negative). Standardizing puts values from different scales on one common scale, and under a normal model a value with |z| > 3 is rare.',
+      ],
+      example: {
+        code: 'mu = 70\nsigma = 8\nx = 50\nprint((x - mu) / sigma)',
+        output: '-2.5',
+        explanation:
+          '50 lies 20 below the mean, which is 2.5 standard deviations of size 8.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'mu = 200\nsigma = 25\nx = 250\nprint((x - mu) / sigma)',
+          ['50', '2.0', '-2.0', '0.5'],
+          1,
+          '(250 − 200) / 25 = 2.0 standard deviations above the mean.',
+        ),
+        choose(
+          'Ana scores 82 on a test with mean 70 and σ = 6; Ben scores 90 on a test with mean 80 and σ = 10. Who did relatively better?',
+          ['Ben', 'They tie', 'Ana', 'Different tests cannot be compared'],
+          2,
+          "Ana's z-score is 2 and Ben's is 1.",
+        ),
+        choose(
+          'A value has z = −1.5 under N(40, 4²). What is the value?',
+          ['46', '38.5', '-6', '34'],
+          3,
+          'x = μ + zσ = 40 − 1.5 × 4 = 34.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'mu = 12\nsigma = 3\nx = 3\nprint((x - mu) / sigma)',
+          ['3.0', '-3.0', '-9', '1.0'],
+          1,
+          '(3 − 12) / 3 = −3.0: three standard deviations below the mean.',
+        ),
+      ],
+    },
+  ],
+  'math-sampling': [
+    {
+      title: 'Separate a sample from its population',
+      explanation: [
+        'A population is every unit a question is about; a sample is the subset actually observed. A population value such as the true mean μ is fixed but usually unknown, while a sample statistic such as the sample mean x̄ changes from one random sample to the next. That change is sampling variation, not a mistake. A sample chosen in a biased way can miss the population no matter how large it is.',
+      ],
+      example: worked(
+        'population: all 50,000 customers, true mean spend μ unknown\nrandom sample A of 100: x̄ = 41.2\nrandom sample B of 100: x̄ = 39.8',
+        'both estimate the same μ; they differ because of sampling variation',
+        'Different random subsets contain different customers, so their means differ even though the population is unchanged.',
+      ),
+      questions: [
+        choose(
+          "A study measures 500 of a city's 2 million residents. What is the population?",
+          [
+            'The 500 measured residents',
+            'All 2 million residents',
+            'The average of the 500',
+            'The research team',
+          ],
+          1,
+          'The population is everyone the question is about, not just those measured.',
+        ),
+        choose(
+          'Two random samples from the same population have different means. What is the most likely reason?',
+          [
+            'The population changed between samples',
+            'One calculation is wrong',
+            'Sampling variation',
+            'Means cannot be estimated from samples',
+          ],
+          2,
+          'Different random samples naturally give different statistics.',
+        ),
+        choose(
+          'Which is a sample statistic rather than a population value?',
+          [
+            'The mean income of every household in the country',
+            'The true defect rate of a factory',
+            'The median age of every voter',
+            'The mean of the 200 surveyed households',
+          ],
+          3,
+          'Only the 200-household mean is computed from observed data.',
+        ),
+        choose(
+          'Only customers who reply to an email are surveyed. What problem is most likely?',
+          [
+            'Too little sampling variation',
+            'Selection bias',
+            'A zero standard error',
+            'An undefined mean',
+          ],
+          1,
+          'People who reply can differ systematically from those who do not.',
+        ),
+      ],
+    },
+    {
+      title: 'Compute the standard error of a mean',
+      explanation: [
+        'For n independent observations with standard deviation σ, the sample mean has standard deviation σ / √n, its standard error. Variation in the mean shrinks with the square root of n, so quadrupling the sample halves the standard error. By the central limit theorem the sample mean is approximately normal for large n, so about 95% of sample means fall within 2 standard errors of μ.',
+      ],
+      example: {
+        code: 'sigma = 30\nn = 225\nprint(sigma / n ** 0.5)',
+        output: '2.0',
+        explanation:
+          '√225 = 15, so the standard error is 30 / 15 = 2.0. ** binds before /, so n ** 0.5 is computed first.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'sigma = 12\nn = 16\nprint(sigma / n ** 0.5)',
+          ['0.75', '12', '3.0', '48.0'],
+          2,
+          '√16 = 4, and 12 / 4 = 3.0.',
+        ),
+        choose(
+          'σ = 8 and n = 64. What is the standard error of the sample mean?',
+          ['1', '0.125', '8', '64'],
+          0,
+          '8 / √64 = 8 / 8 = 1.',
+        ),
+        choose(
+          'A sample of 100 gives a standard error of 4. What sample size gives a standard error of 2?',
+          ['200', '50', '141', '400'],
+          3,
+          'Halving the standard error requires four times as many observations.',
+        ),
+        choose(
+          'μ = 50 and the standard error is 3. About 95% of sample means fall in which interval?',
+          ['47 to 53', '44 to 56', '41 to 59', '50 to 56'],
+          1,
+          'Two standard errors on each side: 50 ± 6.',
+        ),
+      ],
+    },
+    {
+      title: 'Resample with replacement',
+      explanation: [
+        'Sampling with replacement returns each drawn unit before the next draw, so a unit can appear more than once. A bootstrap sample draws n rows with replacement from the n observed rows; some rows repeat and others are left out. Computing a statistic on many bootstrap samples shows how much it would vary, and bagging trains one model on each bootstrap sample.',
+      ],
+      example: worked(
+        'observed rows: A, B, C, D\nbootstrap sample 1: B, A, B, D\nbootstrap sample 2: C, C, C, A',
+        'each sample has 4 rows; repeats are allowed; different rows are left out each time',
+        'Every draw picks from all four rows again, so the samples differ from the data and from each other.',
+      ),
+      questions: [
+        choose(
+          'Which is a valid bootstrap sample from the rows P, Q, R?',
+          ['P, Q', 'P, Q, R, S', 'R, P, R', 'Q, Q, Q, Q'],
+          2,
+          'It has the original size 3 and draws only from P, Q, and R.',
+        ),
+        choose(
+          'How does a bootstrap sample differ from a shuffle of the data?',
+          [
+            'It always keeps every row exactly once',
+            'It changes the values inside rows',
+            'It uses fewer columns',
+            'It can repeat some rows and omit others',
+          ],
+          3,
+          'A shuffle reorders the rows; a bootstrap sample redraws them with replacement.',
+        ),
+        choose(
+          'Why does bagging train each tree on its own bootstrap sample?',
+          [
+            'It guarantees every tree is identical',
+            'Different samples give different trees whose errors partly cancel',
+            'It removes the need for test data',
+            'It makes every row appear twice',
+          ],
+          1,
+          'Resampling creates diversity, and averaging diverse models reduces variance.',
+        ),
+        choose(
+          'Can a 10-row bootstrap sample contain only 9 distinct rows?',
+          [
+            'No, every row must appear',
+            'No, it must then have 9 rows',
+            'Only if a row is deleted first',
+            'Yes, when one row is drawn twice',
+          ],
+          3,
+          'With replacement, a repeat uses a draw that would otherwise pick another row.',
+        ),
+      ],
+    },
+  ],
+  'math-likelihood': [
+    {
+      title: 'Compute the likelihood of a parameter value',
+      explanation: [
+        'Given observed data and a model with parameter p, the likelihood L(p) is the probability of exactly those data if p were true. For independent Bernoulli observations, multiply p for each 1 and 1 − p for each 0. A larger likelihood means the parameter value explains the data better.',
+      ],
+      example: {
+        code: 'p = 0.5\nprint(p * p * (1 - p))\np = 0.75\nprint(p * p * (1 - p))',
+        output: '0.125\n0.140625',
+        explanation:
+          'For the data 1, 1, 0, the value p = 0.75 makes the observations more probable than p = 0.5.',
+      },
+      questions: [
+        choose(
+          'The data are 1, 0 from a Bernoulli(p) model. What is L(0.5)?',
+          ['0.5', '0.25', '1', '0'],
+          1,
+          '0.5 × (1 − 0.5) = 0.25.',
+        ),
+        predictOutput(
+          'This program computes L(0.25) for the data 1, 0, 0. What does it print?',
+          'p = 0.25\nprint(p * (1 - p) * (1 - p))',
+          ['0.25', '0.046875', '0.140625', '0.5625'],
+          2,
+          '0.25 × 0.75 × 0.75 = 0.140625.',
+        ),
+        choose(
+          'The data are 1, 1, 1, 0. Which value of p has the larger likelihood?',
+          [
+            'p = 0.25',
+            'p = 0.75',
+            'They are equal',
+            'Likelihoods cannot compare them',
+          ],
+          1,
+          '0.75³ × 0.25 ≈ 0.105 exceeds 0.25³ × 0.75 ≈ 0.012.',
+        ),
+        choose(
+          'Why is the likelihood of independent observations a product?',
+          [
+            'Likelihoods are always sums',
+            'Each observation has probability 1',
+            'It averages the data',
+            'Probabilities of independent events multiply',
+          ],
+          3,
+          'The probability of all observations together is the product of their probabilities.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose the maximum likelihood estimate',
+      explanation: [
+        'Maximum likelihood estimation chooses the parameter value with the largest likelihood. For k successes in n independent Bernoulli trials, the maximizer is p = k / n, the observed success rate. Values farther from k / n make the observed data less probable.',
+      ],
+      example: worked(
+        'data: 2 successes in 5 trials\nL(p) = p²(1 − p)³\nL(0.2) ≈ 0.0205, L(0.4) ≈ 0.0346, L(0.6) ≈ 0.0230',
+        'maximum at p = 2/5 = 0.4',
+        'The likelihood rises toward the observed rate 0.4 and falls after it.',
+      ),
+      questions: [
+        choose(
+          'A drug works for 18 of 24 independent patients. What is the maximum likelihood estimate of its success rate?',
+          ['0.5', '0.75', '18', '0.25'],
+          1,
+          'k / n = 18 / 24 = 0.75.',
+        ),
+        choose(
+          'A filter sees 3 spam messages among 60. What is the maximum likelihood estimate of the spam rate?',
+          ['0.3', '0.5', '0.05', '20'],
+          2,
+          '3 / 60 = 0.05.',
+        ),
+        choose(
+          'The data are 0, 0, 0, 0. What is the maximum likelihood estimate of p?',
+          ['0.5', '0.25', '1', '0'],
+          3,
+          'L(p) = (1 − p)⁴ is largest at p = 0, matching k / n = 0 / 4.',
+        ),
+        choose(
+          'With 4 successes in 10 trials, which candidate has the largest likelihood?',
+          ['p = 0.4', 'p = 0.5', 'p = 0.1', 'p = 0.9'],
+          0,
+          'The likelihood peaks at the observed rate 4 / 10.',
+        ),
+      ],
+    },
+    {
+      title: 'Work with log-likelihoods',
+      explanation: [
+        'Products of many probabilities shrink toward 0, so we take logs: ln L(p) adds the log-probabilities of the observations. Because ln is increasing, the parameter that maximizes the log-likelihood also maximizes the likelihood. Training usually minimizes the negative log-likelihood, which is the same goal.',
+      ],
+      example: worked(
+        'data 1, 1, 0\nL(p) = p × p × (1 − p)\nln L(p) = ln p + ln p + ln(1 − p) = 2 ln p + ln(1 − p)',
+        'a sum instead of a product; both peak at p = 2/3',
+        'The log of a product is the sum of the logs, and taking logs keeps the location of the maximum.',
+      ),
+      questions: [
+        choose(
+          'L(p) = p³(1 − p). Which expression is ln L(p)?',
+          [
+            'ln(3p) + ln(1 − p)',
+            '3 ln p + ln(1 − p)',
+            '3 ln p × ln(1 − p)',
+            '(ln p)³ + ln(1 − p)',
+          ],
+          1,
+          'ln turns the product into a sum and the power into a factor.',
+        ),
+        choose(
+          'On the same data, model A has log-likelihood −12.4 and model B has −15.1. Which explains the data better?',
+          ['B', 'They tie', 'A', 'Log-likelihoods cannot be compared'],
+          2,
+          '−12.4 is larger, and a larger log-likelihood means a larger likelihood.',
+        ),
+        choose(
+          'Minimizing the negative log-likelihood is equivalent to what?',
+          [
+            'Minimizing the likelihood',
+            'Maximizing the number of parameters',
+            'Setting p = 0.5',
+            'Maximizing the likelihood',
+          ],
+          3,
+          'Negating flips minimization into maximization, and ln preserves the maximizer.',
+        ),
+        choose(
+          'Why do programs add log-probabilities instead of multiplying thousands of probabilities?',
+          [
+            'The product becomes too small to represent',
+            'Logs make probabilities larger than 1',
+            'Sums change the maximizer',
+            'Multiplying probabilities is not allowed',
+          ],
+          0,
+          'A product of thousands of numbers below 1 underflows to 0; a sum of logs stays representable.',
+        ),
+      ],
+    },
+    {
+      title: 'Read binary cross-entropy as a negative log-likelihood',
+      explanation: [
+        'For a binary label y and a predicted probability p that y = 1, the likelihood of the label is p when y = 1 and 1 − p when y = 0. Its negative log is the binary cross-entropy −(y ln p + (1 − y) ln(1 − p)). Confident correct predictions cost little; confident wrong ones cost a lot, because the log of a number near 0 is very negative.',
+      ],
+      example: worked(
+        'y = 1, p = 0.9: −ln 0.9\ny = 1, p = 0.1: −ln 0.1\ny = 0, p = 0.1: −ln(1 − 0.1)',
+        '≈ 0.105, ≈ 2.303, ≈ 0.105',
+        'The loss depends on the probability given to the true label: 0.9 in the first and third cases, 0.1 in the second.',
+      ),
+      questions: [
+        choose(
+          'The label is y = 0 and the model predicts p = 0.8 for class 1. What is the loss?',
+          ['−ln(0.8) ≈ 0.223', '0.8', '−ln(0.2) ≈ 1.609', '−ln(1) = 0'],
+          2,
+          'With y = 0 only −ln(1 − p) remains, and the true label received probability 0.2.',
+        ),
+        choose(
+          'For a label y = 1, which prediction has the largest cross-entropy?',
+          ['p = 0.99', 'p = 0.6', 'p = 0.5', 'p = 0.01'],
+          3,
+          '−ln(0.01) ≈ 4.6 is far larger than the others.',
+        ),
+        choose(
+          'The label is y = 1 and p = e⁻¹. What is the cross-entropy?',
+          ['e', '1', '−1', '0.368'],
+          1,
+          '−ln(e⁻¹) = 1.',
+        ),
+        choose(
+          'A model predicts p = 0.5 for every example. What is its cross-entropy on each one?',
+          ['ln 2 ≈ 0.693', '0.5', '0', '1'],
+          0,
+          'Either label receives probability 0.5, and −ln(0.5) = ln 2.',
+        ),
+      ],
+    },
+  ],
 };
