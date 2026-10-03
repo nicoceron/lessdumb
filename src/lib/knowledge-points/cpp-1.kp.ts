@@ -3900,4 +3900,1842 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'cpp-reference-alias': [
+    {
+      title: 'Give an existing int a second name',
+      explanation: [
+        'int& points = score; declares points as a reference: another name for the object score. Reading or assigning through either name uses the same int.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int score = 10;\n  int& points = score;\n  points += 5;\n  std::cout << score << "\\n";\n}',
+        output: '15',
+        explanation:
+          'points and score name the same int, so adding through points changes score.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int a = 3;\n  int& r = a;\n  r = 8;\n  std::cout << a << "\\n";\n}',
+          ['3', '8', '11', '0'],
+          1,
+          'Assigning to r assigns to a, because r is another name for a.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 3;\n  int& r = a;\n  a = a * 4;\n  std::cout << r << "\\n";\n}',
+          ['3', '4', '12', '7'],
+          2,
+          'Changes made through a are visible through r, since both name one object.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int x = 1;\n  int& y = x;\n  int& z = y;\n  z += 9;\n  std::cout << x << y << "\\n";\n}',
+          ['110', '101', '1', '1010'],
+          3,
+          'z is bound to the object y names, which is x, so x and y both read 10.',
+        ),
+      ],
+    },
+    {
+      title: 'Tell a reference from a copy',
+      explanation: [
+        'int copy = value; makes a new int with the same value; later changes to either do not affect the other. int& ref = value; makes no new int at all, so the two names always agree.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int total = 4;\n  int copy = total;\n  int& ref = total;\n  total = 9;\n  std::cout << copy << " " << ref << "\\n";\n}',
+        output: '4 9',
+        explanation:
+          'copy kept the 4 it started with; ref names total, so it reads the new 9.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int a = 2;\n  int b = a;\n  int& c = a;\n  b += 10;\n  c += 100;\n  std::cout << a << " " << b << "\\n";\n}',
+          ['102 12', '112 12', '2 12', '102 112'],
+          0,
+          'b is a separate copy that becomes 12; c names a, so a becomes 102.',
+        ),
+        choose(
+          'After int& r = x;, what does r refer to?',
+          [
+            'A new int holding a copy of x',
+            'The value x had at that moment',
+            'The object x itself',
+            'Whichever int was declared last',
+          ],
+          2,
+          'A reference is bound to an existing object; it is not a new object with a copied value.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int n = 5;\n  int m = n;\n  int& k = m;\n  k = 0;\n  std::cout << n << m << "\\n";\n}',
+          ['00', '55', '50', '05'],
+          2,
+          'k names the copy m, so only m becomes 0; n keeps 5.',
+        ),
+      ],
+    },
+    {
+      title: 'Bind a reference when it is declared',
+      explanation: [
+        'A reference must be bound to an object in its declaration, and that object must stay alive for as long as the reference is used. int& r; alone does not compile, and a plain int& cannot bind to a literal such as 5.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int level = 1;\n  int& current = level;\n  ++current;\n  ++level;\n  std::cout << current << "\\n";\n}',
+        output: '3',
+        explanation: 'Both increments change the same int, so current reads 3.',
+      },
+      questions: [
+        choose(
+          'Why does int& r; on its own fail to compile?',
+          [
+            'References must be declared outside main',
+            'int& is not a valid type',
+            'A reference must be bound to an object when it is declared',
+            'r is a reserved name',
+          ],
+          2,
+          'There is no such thing as an unbound reference, so the initializer is required.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int stock = 10;\n  int& shelf = stock;\n  --shelf;\n  --stock;\n  std::cout << shelf << " " << stock << "\\n";\n}',
+          ['9 9', '9 8', '8 8', '10 8'],
+          2,
+          'Both decrements change the same object, which ends at 8.',
+        ),
+        choose(
+          'Which declaration binds a reference correctly?',
+          ['int& r = 5;', 'int& r;', 'int r& = total;', 'int& r = total;'],
+          3,
+          'A plain int& must bind to an existing int object such as total; a literal 5 is not one.',
+        ),
+      ],
+    },
+  ],
+  'cpp-reference-parameter': [
+    {
+      title: "Change the caller's variable through int&",
+      explanation: [
+        "A parameter declared int& binds to the caller's argument instead of copying it. Assignments inside the function therefore change the caller's variable.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nvoid add_bonus(int& score) {\n  score += 10;\n}\nint main() {\n  int score = 5;\n  add_bonus(score);\n  std::cout << score << "\\n";\n}',
+        output: '15',
+        explanation:
+          "The parameter is another name for main's score, so adding 10 changes it.",
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nvoid reset(int& n) {\n  n = 0;\n}\nint main() {\n  int count = 7;\n  reset(count);\n  std::cout << count << "\\n";\n}',
+          ['7', '0', '70', '-7'],
+          1,
+          "n refers to count, so assigning 0 changes the caller's variable.",
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nvoid twice(int& n) {\n  n *= 2;\n}\nint main() {\n  int a = 3;\n  twice(a);\n  twice(a);\n  std::cout << a << "\\n";\n}',
+          ['6', '3', '9', '12'],
+          3,
+          'Each call doubles the same a: 3 becomes 6, then 12.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nvoid copy_change(int n) {\n  n = 50;\n}\nvoid ref_change(int& n) {\n  n = 60;\n}\nint main() {\n  int a = 1;\n  int b = 2;\n  copy_change(a);\n  ref_change(b);\n  std::cout << a << " " << b << "\\n";\n}',
+          ['50 60', '1 2', '1 60', '50 2'],
+          2,
+          'Only the reference parameter reaches the caller; the by-value parameter changes a copy.',
+        ),
+      ],
+    },
+    {
+      title: 'Swap two variables through references',
+      explanation: [
+        "A function with two int& parameters can update two of the caller's variables. Swapping needs a temporary: save one value before overwriting it.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nvoid swap_ints(int& a, int& b) {\n  int temp = a;\n  a = b;\n  b = temp;\n}\nint main() {\n  int x = 1;\n  int y = 2;\n  swap_ints(x, y);\n  std::cout << x << y << "\\n";\n}',
+        output: '21',
+        explanation:
+          'temp keeps the old x while x receives y, and then y receives the saved value.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nvoid bad_swap(int& a, int& b) {\n  a = b;\n  b = a;\n}\nint main() {\n  int x = 1;\n  int y = 2;\n  bad_swap(x, y);\n  std::cout << x << y << "\\n";\n}',
+          ['21', '22', '12', '11'],
+          1,
+          'a = b overwrites x with 2 before it is saved, so b = a copies 2 back.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nvoid swap_copies(int a, int b) {\n  int t = a;\n  a = b;\n  b = t;\n}\nint main() {\n  int x = 4;\n  int y = 9;\n  swap_copies(x, y);\n  std::cout << x << y << "\\n";\n}',
+          ['94', '99', '44', '49'],
+          3,
+          'The parameters are copies, so the swap happens only inside the function.',
+        ),
+        choose(
+          "A function must update two of the caller's ints. Which signature allows that?",
+          [
+            'void update(int a, int b)',
+            'int update(int a, int b)',
+            'void update(const int a, int b)',
+            'void update(int& a, int& b)',
+          ],
+          3,
+          "Only reference parameters bind to the caller's variables.",
+        ),
+      ],
+    },
+    {
+      title: 'Make the mutation part of the contract',
+      explanation: [
+        'A function may both return a result and change an argument through a reference. Because callers cannot see that from a call alone, the function name and documentation should say so; a function that looks like a read-only query should not quietly modify its input.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint take(int& stock, int amount) {\n  stock -= amount;\n  return amount * 3;\n}\nint main() {\n  int stock = 10;\n  int cost = take(stock, 4);\n  std::cout << stock << " " << cost << "\\n";\n}',
+        output: '6 12',
+        explanation:
+          "take lowers the caller's stock to 6 and returns the cost, 12.",
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint next_ticket(int& counter) {\n  counter += 1;\n  return counter * 100;\n}\nint main() {\n  int c = 0;\n  next_ticket(c);\n  int t = next_ticket(c);\n  std::cout << c << " " << t << "\\n";\n}',
+          ['1 100', '2 100', '2 200', '1 200'],
+          2,
+          'Both calls increment c, and the second returns 2 * 100.',
+        ),
+        choose(
+          'A function named read_level(int& level) also sets level to 0. Why is that a problem?',
+          [
+            'int& parameters can never be changed',
+            'The change is lost when the function returns',
+            'Callers expect a read-only query, so the hidden change surprises them',
+            'The program will not compile',
+          ],
+          2,
+          'Nothing in the call shows the mutation, so it should be part of the stated contract or avoided.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nvoid bump(int& a, int b) {\n  a += b;\n  b += a;\n}\nint main() {\n  int a = 1;\n  int b = 2;\n  bump(a, b);\n  std::cout << a << b << "\\n";\n}',
+          ['35', '15', '12', '32'],
+          3,
+          "a is a reference and becomes 3; b is a copy, so the caller's b stays 2.",
+        ),
+      ],
+    },
+  ],
+  'cpp-reference-reseat': [
+    {
+      title: 'Assign through a reference to change its object',
+      explanation: [
+        'After int& alias = first;, the statement alias = second; does not make alias refer to second. It copies the value of second into first, the object alias was bound to.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int first = 1;\n  int second = 4;\n  int& alias = first;\n  alias = second;\n  std::cout << first << " " << second << "\\n";\n}',
+        output: '4 4',
+        explanation:
+          'The assignment wrote 4 into first. second is unchanged and still 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int a = 10;\n  int b = 20;\n  int& r = a;\n  r = b;\n  b = 30;\n  std::cout << a << " " << r << "\\n";\n}',
+          ['30 30', '20 20', '10 30', '20 30'],
+          1,
+          'r = b copied 20 into a. r still names a, so the later change to b does not show.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 1;\n  int b = 2;\n  int& r = a;\n  r = b;\n  r = 7;\n  std::cout << a << b << "\\n";\n}',
+          ['17', '77', '72', '12'],
+          2,
+          'Both assignments go to a, which ends at 7; b is never changed.',
+        ),
+        choose(
+          'r is a reference bound to a. What does r = b; do?',
+          [
+            'Makes r refer to b from now on',
+            'Copies the value of a into b',
+            'Swaps the values of a and b',
+            'Copies the value of b into a',
+          ],
+          3,
+          'Assignment through a reference assigns to the object it is bound to.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep a reference bound to its first object',
+      explanation: [
+        'A reference is bound once, when it is initialized, and can never be rebound. Code that needs to switch between objects uses a pointer instead.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int x = 5;\n  int y = 8;\n  int& r = x;\n  r = y;\n  y = 100;\n  std::cout << x << " " << r << " " << y << "\\n";\n}',
+        output: '8 8 100',
+        explanation:
+          'r = y copied 8 into x. r still names x, so it reads 8 even after y becomes 100.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int left = 3;\n  int right = 9;\n  int& r = left;\n  r = right;\n  r += 1;\n  std::cout << left << " " << right << "\\n";\n}',
+          ['3 10', '10 10', '10 9', '9 10'],
+          2,
+          'r stays bound to left: it receives 9 and then becomes 10, while right stays 9.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 0;\n  int b = 5;\n  int& r = a;\n  r = b;\n  b = r + 1;\n  std::cout << a << b << "\\n";\n}',
+          ['55', '56', '06', '66'],
+          1,
+          'a becomes 5 through r, and then b becomes a + 1, which is 6.',
+        ),
+        choose(
+          'How can code make an existing reference refer to a different object?',
+          [
+            'Assign the other object to it',
+            'Declare it again with the same name',
+            'Write r = &other;',
+            'It cannot; a reference is bound once, at initialization',
+          ],
+          3,
+          'Every later assignment goes to the original object, never rebinding the reference.',
+        ),
+      ],
+    },
+  ],
+  'cpp-pointer-address': [
+    {
+      title: 'Store an address and read through it',
+      explanation: [
+        '&value gives the address of value, and int* p = &value; stores it in a pointer. *p, the dereference, accesses the int that p points to.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int value = 7;\n  int* p = &value;\n  std::cout << *p << "\\n";\n}',
+        output: '7',
+        explanation:
+          'p holds the address of value, and *p reads the int stored there.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int stock = 12;\n  int* p = &stock;\n  std::cout << *p + 1 << "\\n";\n}',
+          ['12', '13', '14', '1'],
+          1,
+          '*p reads 12, and adding 1 gives 13; the pointer itself is not changed.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 3;\n  int b = 9;\n  int* p = &b;\n  std::cout << *p << "\\n";\n}',
+          ['3', '12', '9', '0'],
+          2,
+          'p holds the address of b, so *p reads 9.',
+        ),
+        choose(
+          'In int* p = &value;, what does p hold?',
+          [
+            'A copy of value',
+            'Another name for value',
+            'The size of value',
+            'The address of value',
+          ],
+          3,
+          'A pointer stores an address; *p is how you reach the int at that address.',
+        ),
+      ],
+    },
+    {
+      title: 'Write through a pointer',
+      explanation: [
+        '*p is the pointed-to object itself, so assigning to *p changes it. Changes made directly to the object are also visible through *p.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int count = 3;\n  int* p = &count;\n  *p += 4;\n  std::cout << count << "\\n";\n}',
+        output: '7',
+        explanation: '*p is count, so adding 4 through it makes count 7.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int a = 1;\n  int* p = &a;\n  *p = 50;\n  std::cout << a << "\\n";\n}',
+          ['1', '51', '50', '0'],
+          2,
+          'Assigning to *p assigns to a.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 2;\n  int* p = &a;\n  int b = *p;\n  *p = 8;\n  std::cout << a << " " << b << "\\n";\n}',
+          ['8 8', '2 2', '2 8', '8 2'],
+          3,
+          'b copied 2 before the write; the write through p changes only a.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int n = 5;\n  int* p = &n;\n  n = 6;\n  std::cout << *p * 2 << "\\n";\n}',
+          ['12', '10', '6', '5'],
+          0,
+          'p points to n, so *p reads its current value 6.',
+        ),
+      ],
+    },
+    {
+      title: 'Pass an address to a function',
+      explanation: [
+        "A function with an int* parameter receives an address and can read or write the caller's object through it. The pointed-to object must still be alive whenever the pointer is dereferenced.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nvoid bump(int* target) {\n  *target += 1;\n}\nint main() {\n  int hits = 9;\n  bump(&hits);\n  std::cout << hits << "\\n";\n}',
+        output: '10',
+        explanation:
+          'bump receives the address of hits and increments the int at that address.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nvoid triple(int* p) {\n  *p = *p * 3;\n}\nint main() {\n  int v = 4;\n  triple(&v);\n  triple(&v);\n  std::cout << v << "\\n";\n}',
+          ['12', '24', '4', '36'],
+          3,
+          'Each call triples the same v: 4, 12, 36.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint read(const int* p) {\n  return *p;\n}\nint main() {\n  int a = 7;\n  int b = 3;\n  std::cout << read(&a) - read(&b) << "\\n";\n}',
+          ['4', '10', '-4', '73'],
+          0,
+          'read returns the pointed-to values, 7 and 3.',
+        ),
+        choose(
+          'A pointer still holds the address of a local variable from a function that has returned. What happens if it is dereferenced?',
+          [
+            'It reads the last value stored there',
+            'It reads 0',
+            'Undefined behavior: that object no longer exists',
+            "The compiler extends the local's lifetime",
+          ],
+          2,
+          'The local was destroyed when its function returned; the address no longer names a live object.',
+        ),
+      ],
+    },
+  ],
+  'cpp-references': [
+    {
+      title: "Return a reference to the caller's object",
+      explanation: [
+        "A function that returns int& gives back a reference, not a value. When it returns a reference parameter, the call names the caller's own variable, so it can even appear on the left of an assignment.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint& self(int& value) {\n  return value;\n}\nint main() {\n  int score = 4;\n  self(score) += 3;\n  std::cout << score << "\\n";\n}',
+        output: '7',
+        explanation:
+          'self(score) names score itself, so adding 3 to the call changes score.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint& alias_of(int& v) {\n  return v;\n}\nint main() {\n  int a = 1;\n  int& r = alias_of(a);\n  r = 20;\n  std::cout << a << "\\n";\n}',
+          ['1', '20', '21', '0'],
+          1,
+          'The returned reference names a, so r is another name for a.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint copy_of(int& v) {\n  return v;\n}\nint main() {\n  int a = 1;\n  int r = copy_of(a);\n  r = 20;\n  std::cout << a << "\\n";\n}',
+          ['20', '21', '1', '0'],
+          2,
+          'copy_of returns int, a copy of the value, so changing r leaves a alone.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint& alias_of(int& v) {\n  return v;\n}\nint main() {\n  int a = 5;\n  alias_of(alias_of(a)) *= 2;\n  std::cout << a << "\\n";\n}',
+          ['5', '20', '25', '10'],
+          3,
+          'Each call passes the same reference through, so the multiplication changes a once.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep the returned reference or copy it',
+      explanation: [
+        'Storing a returned int& in an int& keeps an alias; storing it in a plain int copies the current value. The function decides what is returned, but the caller decides what to keep.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint& slot(int& v) {\n  return v;\n}\nint main() {\n  int level = 2;\n  int& live = slot(level);\n  int saved = slot(level);\n  level = 9;\n  std::cout << live << " " << saved << "\\n";\n}',
+        output: '9 2',
+        explanation:
+          'live is a reference and sees the new 9; saved copied 2 before the change.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint& slot(int& v) {\n  return v;\n}\nint main() {\n  int x = 3;\n  int copy = slot(x);\n  int& ref = slot(x);\n  ref += 1;\n  copy += 10;\n  std::cout << x << " " << copy << "\\n";\n}',
+          ['14 13', '3 13', '4 4', '4 13'],
+          3,
+          'ref changes x to 4; copy is independent and becomes 13.',
+        ),
+        choose(
+          'f returns int&. What is value after int value = f(x);?',
+          [
+            'Another name for x, bound by the call',
+            'An independent int copied from x',
+            'A pointer holding the address of x',
+            'An int left uninitialized',
+          ],
+          1,
+          'Initializing a plain int from a reference copies the referred value.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint& slot(int& v) {\n  return v;\n}\nint main() {\n  int a = 6;\n  slot(a) = 0;\n  std::cout << a << "\\n";\n}',
+          ['6', '60', '0', '-6'],
+          2,
+          'slot(a) names a, so assigning 0 to the call assigns to a.',
+        ),
+      ],
+    },
+    {
+      title: 'Never return a reference to a local',
+      explanation: [
+        'A returned reference is usable only while its object lives. A local variable, including a by-value parameter, is destroyed when the function returns, so a reference to it dangles. Return references only to objects the caller owns.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint& counter(int& storage) {\n  storage += 1;\n  return storage;\n}\nint main() {\n  int calls = 0;\n  counter(calls);\n  counter(calls) += 10;\n  std::cout << calls << "\\n";\n}',
+        output: '12',
+        explanation:
+          "storage refers to main's calls, which outlives every use: two increments and the added 10 give 12.",
+      },
+      questions: [
+        choose(
+          'What is wrong with this function?',
+          [
+            'It returns a copy, so changes are lost',
+            'Functions cannot return references',
+            'local dies at return, so the reference dangles',
+            'local must be declared const',
+          ],
+          2,
+          'The caller would receive a reference to an object that no longer exists.',
+          'int& make_value() {\n  int local = 5;\n  return local;\n}',
+        ),
+        choose(
+          'Which function can safely return int&?',
+          [
+            'int& f() { int x = 1; return x; }',
+            'int& f(int& x) { return x; }',
+            'int& f(int x) { return x; }',
+            'int& f() { int y = 2; int& r = y; return r; }',
+          ],
+          1,
+          'Only the reference parameter names an object owned by the caller; the others refer to locals or a copy.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint& counter(int& storage) {\n  storage += 1;\n  return storage;\n}\nint main() {\n  int calls = 5;\n  int& r = counter(calls);\n  r *= 2;\n  std::cout << calls << "\\n";\n}',
+          ['6', '10', '11', '12'],
+          3,
+          'counter makes calls 6 and returns a reference to it; doubling through r gives 12.',
+        ),
+      ],
+    },
+  ],
+  'cpp-nullptr-guard': [
+    {
+      title: 'Represent "no object" with nullptr',
+      explanation: [
+        'A pointer that points to nothing holds nullptr. Comparing with nullptr tells whether an object is present. Dereferencing a null pointer is undefined behavior, so it must never happen.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int* missing = nullptr;\n  int value = 4;\n  int* present = &value;\n  std::cout << (missing == nullptr) << (present == nullptr) << "\\n";\n}',
+        output: '10',
+        explanation:
+          'missing holds nullptr; present holds the address of value.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int* p = nullptr;\n  int x = 3;\n  p = &x;\n  std::cout << (p != nullptr) << "\\n";\n}',
+          ['0', '1', '3', 'nullptr'],
+          1,
+          'p was given the address of x, so it is no longer null.',
+        ),
+        choose(
+          'p equals nullptr. What does evaluating *p do?',
+          [
+            'It yields 0',
+            'It yields the last valid value',
+            'It throws an exception',
+            'It is undefined behavior',
+          ],
+          3,
+          'There is no object to access, so the language gives the program no meaning.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int* p = nullptr;\n  std::cout << (p == nullptr ? 1 : 2) << "\\n";\n}',
+          ['2', '0', '1', 'nullptr'],
+          2,
+          'p is null, so the comparison is true and the first value is chosen.',
+        ),
+      ],
+    },
+    {
+      title: 'Check before dereferencing',
+      explanation: [
+        'A function that accepts a pointer that may be null checks it first, for example p != nullptr ? *p : fallback. Only the selected operand is evaluated, so *p never runs for a null p.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint read_or(const int* p, int fallback) {\n  return p != nullptr ? *p : fallback;\n}\nint main() {\n  int x = 9;\n  std::cout << read_or(&x, -1) << " " << read_or(nullptr, -1) << "\\n";\n}',
+        output: '9 -1',
+        explanation:
+          'The first call has a real address and reads 9; the second gets nullptr and returns the fallback.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint read_or(const int* p, int fallback) {\n  return p != nullptr ? *p : fallback;\n}\nint main() {\n  int stock = 0;\n  std::cout << read_or(&stock, 50) << "\\n";\n}',
+          ['50', '0', '-1', '1'],
+          1,
+          'The pointer is not null, so the stored 0 is read; the fallback is only for a missing object.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint read_or(const int* p, int fallback) {\n  return p != nullptr ? *p : fallback;\n}\nint main() {\n  std::cout << read_or(nullptr, 7) + read_or(nullptr, 3) << "\\n";\n}',
+          ['0', '7', '3', '10'],
+          3,
+          'Both calls receive nullptr and return their fallbacks, 7 and 3.',
+        ),
+        choose(
+          'p may be null. Which expression is safe?',
+          [
+            '*p != 0 ? *p : 0',
+            '*p ? *p : 0',
+            'p != nullptr ? *p : 0',
+            '*p == nullptr ? 0 : *p',
+          ],
+          2,
+          'Only this one tests the pointer before any dereference; the others dereference p first.',
+        ),
+      ],
+    },
+    {
+      title: 'Use a pointer as a condition',
+      explanation: [
+        'A pointer converts to bool: true when it is non-null and false when it is nullptr. So p ? *p : -1 is a compact null check. The test is about the pointer, not about the value it points to.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int value = 6;\n  int* p = &value;\n  std::cout << (p ? *p : -1) << "\\n";\n}',
+        output: '6',
+        explanation: 'p is non-null, so the condition is true and *p is read.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int* p = nullptr;\n  std::cout << (p ? *p : -1) << "\\n";\n}',
+          ['0', '-1', '1', '6'],
+          1,
+          'A null pointer converts to false, so the fallback -1 is chosen.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 0;\n  int* p = &a;\n  std::cout << (p ? 10 : 20) << "\\n";\n}',
+          ['20', '0', '10', '30'],
+          2,
+          'The pointer is non-null, so the condition is true even though the int it points to is 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 5;\n  int* p = &a;\n  p = nullptr;\n  std::cout << (p ? *p : 0) << " " << a << "\\n";\n}',
+          ['5 5', '0 0', '5 0', '0 5'],
+          3,
+          'Setting p to nullptr changes the pointer only; a is still 5.',
+        ),
+      ],
+    },
+  ],
+  'cpp-pointer-reseat': [
+    {
+      title: 'Point a pointer at a different object',
+      explanation: [
+        'Unlike a reference, a pointer variable can be assigned a new address at any time: p = &second; makes p point to second. Writes through p then go to the new object.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int first = 1;\n  int second = 8;\n  int* p = &first;\n  p = &second;\n  std::cout << *p << "\\n";\n}',
+        output: '8',
+        explanation: 'After the assignment p holds the address of second.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int a = 3;\n  int b = 4;\n  int* p = &a;\n  *p = 10;\n  p = &b;\n  *p = 20;\n  std::cout << a << " " << b << "\\n";\n}',
+          ['20 20', '10 4', '10 20', '3 20'],
+          2,
+          'The first write goes to a; after reseating, the second write goes to b.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 1;\n  int b = 2;\n  int* p = &a;\n  int* q = p;\n  p = &b;\n  std::cout << *q << *p << "\\n";\n}',
+          ['22', '21', '11', '12'],
+          3,
+          'q copied the old address of a; only p was moved to b.',
+        ),
+        choose(
+          'p is a pointer and r is a reference to a. How does p = &b; differ from r = b;?',
+          [
+            'Both make the name refer to b',
+            "p = &b changes where p points; r = b copies b's value into a",
+            'Both copy the value of b',
+            'p = &b copies b into the object p pointed to',
+          ],
+          1,
+          'Assigning a pointer changes the address it holds; assigning through a reference changes the referenced object.',
+        ),
+      ],
+    },
+    {
+      title: 'Leave the old object alone when reseating',
+      explanation: [
+        "Moving a non-owning pointer to another object does nothing to the object it used to point at. The pointer only borrowed it; releasing or deleting it is not the pointer's job.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int x = 5;\n  int y = 7;\n  int* p = &x;\n  p = &y;\n  *p += 1;\n  std::cout << x << " " << y << "\\n";\n}',
+        output: '5 8',
+        explanation: 'x keeps 5 after p moves away; only y is incremented.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int a = 1;\n  int b = 1;\n  int* p = &a;\n  *p += 1;\n  p = &b;\n  *p += 5;\n  std::cout << a << b << "\\n";\n}',
+          ['66', '76', '26', '27'],
+          2,
+          'a received the first increment and keeps 2; b received the second and becomes 6.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint main() {\n  int a = 4;\n  int b = 6;\n  int* p = &a;\n  int* q = &b;\n  p = q;\n  *p = 0;\n  std::cout << a << " " << b << "\\n";\n}',
+          ['0 6', '4 0', '0 0', '4 6'],
+          1,
+          'p = q copies the address of b, so the write goes to b and a is untouched.',
+        ),
+        choose(
+          'A borrowed pointer is moved to point at another object. What should happen to the object it pointed at before?',
+          [
+            'It must be deleted',
+            'It is reset to zero',
+            'It is destroyed automatically',
+            'Nothing; the pointer never owned it',
+          ],
+          3,
+          'Reseating changes only the pointer; the old object belongs to whoever owns it.',
+        ),
+      ],
+    },
+    {
+      title: 'Read through a pointer to const',
+      explanation: [
+        'const int* p can be pointed at different ints, but it cannot be used to change them: *p = 5; does not compile. The ints themselves may still change through their own names.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nint main() {\n  int a = 2;\n  int b = 3;\n  const int* p = &a;\n  p = &b;\n  std::cout << *p << "\\n";\n}',
+        output: '3',
+        explanation:
+          'Reseating a pointer to const is allowed; reading through it gives b.',
+      },
+      questions: [
+        choose(
+          'What happens when this program is compiled?',
+          [
+            'a becomes 5',
+            'It does not compile: p points to const int',
+            'p is moved to address 5',
+            'It compiles but has no effect',
+          ],
+          1,
+          'Through a pointer to const the pointed-to int can be read but not assigned.',
+          '#include <iostream>\nint main() {\n  int a = 2;\n  const int* p = &a;\n  *p = 5;\n  std::cout << a << "\\n";\n}',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nint main() {\n  int a = 2;\n  const int* p = &a;\n  a = 9;\n  std::cout << *p << "\\n";\n}',
+          ['2', '11', '0', '9'],
+          3,
+          'const restricts writes through p, not through a; p reads the new value 9.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nint total(const int* x, const int* y) {\n  return *x + *y;\n}\nint main() {\n  int a = 4;\n  int b = 6;\n  const int* p = &a;\n  std::cout << total(p, &b);\n  p = &b;\n  std::cout << " " << total(p, &b) << "\\n";\n}',
+          ['10 10', '10 12', '12 12', '4 6'],
+          1,
+          'First p points to a (4 + 6); after reseating it points to b (6 + 6).',
+        ),
+      ],
+    },
+  ],
+  'cpp-pointers': [
+    {
+      title: 'Step a pointer through an array',
+      explanation: [
+        'a.data() returns a pointer to the first element of a std::array. Adding n to an element pointer moves it n elements forward (not n bytes), and ++p moves to the next element.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{10, 20, 30};\n  const int* p = a.data();\n  std::cout << *p << " " << *(p + 2) << "\\n";\n}',
+        output: '10 30',
+        explanation:
+          'p points to element 0, and p + 2 points two elements later, to 30.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{5, 6, 7, 8};\n  const int* p = a.data();\n  ++p;\n  std::cout << *p << "\\n";\n}',
+          ['5', '6', '7', '9'],
+          1,
+          '++p moves one element forward, from 5 to 6.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{5, 6, 7, 8};\n  const int* p = a.data() + 3;\n  std::cout << *(p - 1) << "\\n";\n}',
+          ['8', '6', '7', '5'],
+          2,
+          'p points to the last element, index 3; one element back is index 2, which holds 7.',
+        ),
+        choose(
+          'p points to the first element of an int array. What does p + 2 point to?',
+          [
+            'The address two bytes later',
+            'The value of element 0 plus 2',
+            'Element 1',
+            'The element at index 2',
+          ],
+          3,
+          'Pointer arithmetic counts whole elements of the pointed-to type.',
+        ),
+      ],
+    },
+    {
+      title: 'Stop at the one-past-the-end pointer',
+      explanation: [
+        'begin + size points just past the last element. That one-past-the-end pointer may be formed and compared, which makes it the natural stop marker for a loop, but it must never be dereferenced.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 3> a{1, 3, 5};\n  const int* begin = a.data();\n  const int* end = begin + a.size();\n  int total = 0;\n  for (const int* p = begin; p != end; ++p) total += *p;\n  std::cout << total << "\\n";\n}',
+        output: '9',
+        explanation:
+          'p visits the three elements and stops when it reaches end, which is never read.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{2, 2, 2, 2};\n  const int* end = a.data() + a.size();\n  int product = 1;\n  for (const int* p = a.data(); p != end; ++p) product *= *p;\n  std::cout << product << "\\n";\n}',
+          ['8', '16', '2', '32'],
+          1,
+          'The loop multiplies all four elements: 2 * 2 * 2 * 2 is 16.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 5> a{};\n  const int* end = a.data() + a.size();\n  int steps = 0;\n  for (const int* p = a.data(); p != end; ++p) ++steps;\n  std::cout << steps << "\\n";\n}',
+          ['4', '6', '0', '5'],
+          3,
+          'The pointer visits each of the 5 elements once before it equals end.',
+        ),
+        choose(
+          'end is a.data() + a.size(). Which use of end is valid?',
+          [
+            'Reading *end as the last element',
+            'Writing *end = 0',
+            'Comparing p != end to stop a loop',
+            'Reading *(end + 1)',
+          ],
+          2,
+          'The one-past-the-end pointer is for comparisons only; dereferencing it is undefined.',
+        ),
+      ],
+    },
+    {
+      title: 'Stay within the array',
+      explanation: [
+        'Pointer arithmetic is defined only from the first element through the one-past-the-end position of the same array. The last element is at begin + size - 1. Going outside that range, even without reading, is undefined behavior.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 4> a{4, 3, 2, 1};\n  const int* last = a.data() + a.size() - 1;\n  std::cout << *last << "\\n";\n}',
+        output: '1',
+        explanation: 'size - 1 is index 3, the last element.',
+      },
+      questions: [
+        choose(
+          'For std::array<int, 4> a, which pointer may be formed (though not dereferenced)?',
+          ['a.data() + 5', 'a.data() - 1', 'a.data() + 4', 'a.data() + 10'],
+          2,
+          'a.data() + 4 is the one-past-the-end position; anything further out is undefined.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\nint main() {\n  std::array<int, 5> a{1, 2, 3, 4, 5};\n  const int* p = a.data() + a.size();\n  --p;\n  --p;\n  std::cout << *p << "\\n";\n}',
+          ['5', '3', '4', '2'],
+          2,
+          'p starts one past the end; two steps back reach index 3, which holds 4.',
+        ),
+        choose(
+          'What happens if a loop dereferences the one-past-the-end pointer?',
+          [
+            'It reads the last element again',
+            'It reads 0',
+            'The loop stops automatically',
+            'Undefined behavior',
+          ],
+          3,
+          'There is no element at that position, so reading it has no defined result.',
+        ),
+      ],
+    },
+  ],
+  'cpp-span-size': [
+    {
+      title: 'View existing elements with std::span',
+      explanation: [
+        'std::span<const int> from <span> refers to a contiguous run of ints owned by something else, such as a std::array. It stores only a pointer and a count, so making one copies no elements. size() and [] work as on the array.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 4> a{2, 4, 6, 8};\n  std::span<const int> view = a;\n  std::cout << view.size() << " " << view[1] << "\\n";\n}',
+        output: '4 4',
+        explanation:
+          'The span covers all four elements of a, and view[1] is the second one, 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 3> a{7, 8, 9};\n  std::span<const int> s = a;\n  std::cout << s[0] + s[2] << "\\n";\n}',
+          ['16', '15', '24', '17'],
+          0,
+          'The span sees the array elements 7 and 9.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 3> a{1, 2, 3};\n  std::span<int> s = a;\n  s[0] = 50;\n  std::cout << a[0] << "\\n";\n}',
+          ['1', '51', '0', '50'],
+          3,
+          "A span of non-const int refers to the array's elements, so writing through it changes a.",
+        ),
+        choose(
+          'What does a std::span<const int> store?',
+          [
+            'A copy of each element',
+            'Only the first element',
+            'A pointer to the elements and a count',
+            'The elements together with a capacity',
+          ],
+          2,
+          'A span is a lightweight view: where the elements start and how many there are.',
+        ),
+      ],
+    },
+    {
+      title: 'Accept any contiguous ints with a span parameter',
+      explanation: [
+        "A function taking std::span<const int> accepts arrays of any length, and range-based for loops work on spans. The function reads the caller's elements directly.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\n#include <span>\nint sum(std::span<const int> values) {\n  int total = 0;\n  for (int x : values) total += x;\n  return total;\n}\nint main() {\n  std::array<int, 2> small{1, 2};\n  std::array<int, 4> big{1, 2, 3, 4};\n  std::cout << sum(small) << " " << sum(big) << "\\n";\n}',
+        output: '3 10',
+        explanation:
+          'One function serves both arrays, because each converts to a span of its own length.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\n#include <cstddef>\n#include <span>\nstd::size_t count(std::span<const int> values) {\n  return values.size();\n}\nint main() {\n  std::array<int, 6> a{};\n  std::cout << count(a) << "\\n";\n}',
+          ['0', '6', '5', '24'],
+          1,
+          'The span covers all six elements; their values being 0 does not matter.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\n#include <span>\nint sum(std::span<const int> values) {\n  int total = 0;\n  for (int x : values) total += x;\n  return total;\n}\nint main() {\n  std::array<int, 3> a{4, 5, 6};\n  std::cout << sum(a) << " " << sum({}) << "\\n";\n}',
+          ['15 15', '0 0', '456 0', '15 0'],
+          3,
+          'The second call passes an empty span, so the loop adds nothing.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\n#include <span>\nint first(std::span<const int> values) {\n  return values[0];\n}\nint main() {\n  std::array<int, 3> a{9, 8, 7};\n  a[0] = 1;\n  std::cout << first(a) << "\\n";\n}',
+          ['9', '7', '1', '0'],
+          2,
+          'The span reads the array as it is at the call, after a[0] became 1.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep the elements alive while the span is used',
+      explanation: [
+        'A span owns nothing. It sees later changes to the elements, and it becomes dangling if the array it views is destroyed, for example when a function returns a span over its own local array.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 3> a{1, 2, 3};\n  std::span<const int> view = a;\n  a[2] = 30;\n  int total = 0;\n  for (int x : view) total += x;\n  std::cout << total << "\\n";\n}',
+        output: '33',
+        explanation: 'The span reads the current elements 1, 2, and 30.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 2> a{5, 5};\n  std::span<const int> v = a;\n  a[0] = 0;\n  std::cout << v[0] + v[1] << "\\n";\n}',
+          ['10', '0', '5', '55'],
+          2,
+          'v views a, so it sees the 0 written into a[0].',
+        ),
+        choose(
+          'A function returns a std::span over a std::array that is a local variable of that function. What is wrong?',
+          [
+            'Nothing; the span keeps the array alive',
+            'The array is destroyed at return, so the span dangles',
+            'Spans cannot be returned from functions',
+            'The span copies the array, wasting memory',
+          ],
+          1,
+          'The span points into storage that no longer exists once the function returns.',
+        ),
+        choose(
+          'Who owns the elements that a std::span refers to?',
+          [
+            'The span',
+            'Every span that refers to them, jointly',
+            'Nobody, because spans copy elements',
+            'The array or container the span was made from',
+          ],
+          3,
+          'The span borrows; the owner must outlive every use of the span.',
+        ),
+      ],
+    },
+  ],
+  'cpp-span-subview': [
+    {
+      title: 'Take a tail with subspan(offset)',
+      explanation: [
+        's.subspan(offset) is a span of the elements from position offset to the end, so it has s.size() - offset elements. An offset equal to size() gives an empty span.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 5> a{1, 2, 3, 4, 5};\n  std::span<const int> all = a;\n  std::span<const int> tail = all.subspan(2);\n  std::cout << tail.size() << " " << tail[0] << "\\n";\n}',
+        output: '3 3',
+        explanation:
+          'Skipping two elements leaves 3, 4, 5: three elements starting with 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 4> a{10, 20, 30, 40};\n  std::span<const int> s = a;\n  std::span<const int> t = s.subspan(1);\n  std::cout << t[0] << " " << t.size() << "\\n";\n}',
+          ['10 4', '20 4', '20 3', '30 3'],
+          2,
+          'The tail starts at 20 and has 4 - 1 = 3 elements.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 3> a{1, 2, 3};\n  std::span<const int> s = a;\n  std::cout << s.subspan(3).size() << "\\n";\n}',
+          ['0', '1', '3', '-1'],
+          0,
+          'An offset equal to the size is allowed and leaves no elements.',
+        ),
+        choose(
+          'How many elements does s.subspan(k) contain when k <= s.size()?',
+          ['k', 's.size()', 's.size() + k', 's.size() - k'],
+          3,
+          'The first k elements are skipped and the rest are kept.',
+        ),
+      ],
+    },
+    {
+      title: 'Take a window with subspan(offset, count)',
+      explanation: [
+        's.subspan(offset, count) views count elements starting at offset. Like every span, it refers to the same storage: nothing is copied, and writes through a span of non-const elements reach the original array.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 6> a{1, 2, 3, 4, 5, 6};\n  std::span<const int> s = a;\n  std::span<const int> window = s.subspan(2, 3);\n  int total = 0;\n  for (int x : window) total += x;\n  std::cout << total << "\\n";\n}',
+        output: '12',
+        explanation: 'The window holds 3, 4, and 5, which add to 12.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 4> a{9, 8, 7, 6};\n  std::span<const int> s = a;\n  std::span<const int> w = s.subspan(1, 2);\n  std::cout << w[0] << " " << w[1] << "\\n";\n}',
+          ['9 8', '8 6', '7 6', '8 7'],
+          3,
+          'Two elements starting at index 1 are 8 and 7.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\n#include <span>\nint main() {\n  std::array<int, 4> a{1, 1, 1, 1};\n  std::span<int> s = a;\n  std::span<int> mid = s.subspan(1, 2);\n  mid[0] = 5;\n  std::cout << a[1] << "\\n";\n}',
+          ['1', '0', '5', '2'],
+          2,
+          'mid[0] is the same int as a[1], so the write changes the array.',
+        ),
+        choose(
+          'Does taking a subspan copy elements?',
+          [
+            'Yes, into a new array',
+            'Only when a count is given',
+            'Only for spans of const elements',
+            'No, it views part of the same storage',
+          ],
+          3,
+          'A subspan is just a narrower view of the same elements.',
+        ),
+      ],
+    },
+    {
+      title: 'Check the offset before calling subspan',
+      explanation: [
+        'Calling subspan with an offset larger than size() is undefined behavior; it does not clamp or throw. Compare the requested offset with size() first, and handle a bad request explicitly.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\n#include <cstddef>\n#include <span>\nint main() {\n  std::array<int, 3> a{4, 5, 6};\n  std::span<const int> s = a;\n  std::size_t offset = 5;\n  if (offset > s.size()) std::cout << "bad offset\\n";\n  else std::cout << s.subspan(offset).size() << "\\n";\n}',
+        output: 'bad offset',
+        explanation:
+          '5 is larger than the size 3, so the program reports it instead of calling subspan.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\n#include <cstddef>\n#include <span>\nint main() {\n  std::array<int, 3> a{4, 5, 6};\n  std::span<const int> s = a;\n  std::size_t offset = 1;\n  if (offset > s.size()) std::cout << "bad offset\\n";\n  else std::cout << s.subspan(offset).size() << "\\n";\n}',
+          ['bad offset', '3', '2', '1'],
+          2,
+          'The offset is valid, and 3 - 1 elements remain.',
+        ),
+        choose(
+          'What happens when s.subspan(offset) is called with offset > s.size()?',
+          [
+            'It returns an empty span',
+            'It clamps offset to size()',
+            'Undefined behavior',
+            'It throws an exception',
+          ],
+          2,
+          'subspan does not check its argument, so the caller must.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <cstddef>\n#include <span>\nint main() {\n  std::span<const int> empty;\n  std::size_t offset = 0;\n  if (offset > empty.size()) std::cout << "bad offset\\n";\n  else std::cout << empty.subspan(offset).size() << "\\n";\n}',
+          ['0', 'bad offset', '1', '-1'],
+          0,
+          'An offset of 0 is valid even for an empty span, and the result is also empty.',
+        ),
+      ],
+    },
+  ],
+  'cpp-string-view': [
+    {
+      title: 'View text without copying it',
+      explanation: [
+        'std::string_view from <string_view> refers to characters stored somewhere else, such as a string literal or a std::string, together with a length. Making one copies no characters, and size() and [] work as on a string.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view word = "lesson";\n  std::cout << word.size() << " " << word[0] << "\\n";\n}',
+        output: '6 l',
+        explanation:
+          'The view covers the six characters of the literal, starting with l.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view s = "C++20";\n  std::cout << s.size() << "\\n";\n}',
+          ['4', '6', '5', '2'],
+          2,
+          "C, +, +, 2, and 0 are five characters; the literal's terminating null is not counted.",
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string>\n#include <string_view>\nint main() {\n  std::string text = "hello";\n  std::string_view v = text;\n  std::cout << v[1] << v[4] << "\\n";\n}',
+          ['ho', 'el', 'eo', 'lo'],
+          2,
+          'Index 1 is e and index 4 is o.',
+        ),
+        choose(
+          'What does a std::string_view own?',
+          [
+            'A copy of the characters',
+            'A null-terminated buffer of its own',
+            'The std::string it was made from',
+            'Nothing; it refers to characters stored elsewhere',
+          ],
+          3,
+          'A view only borrows: it holds a pointer and a length.',
+        ),
+      ],
+    },
+    {
+      title: 'Trust the stored length',
+      explanation: [
+        'A string_view knows its length, so it can cover part of a longer text or include \\0 characters, and it need not end with a null character. Use size(), never a scan for a terminator such as strlen.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view v("a\\0b", 3);\n  std::cout << v.size() << "\\n";\n}',
+        output: '3',
+        explanation:
+          'The view was given length 3, so the embedded \\0 counts as one of its characters.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view full = "abcdef";\n  std::string_view part(full.data(), 3);\n  std::cout << part << " " << part.size() << "\\n";\n}',
+          ['abcdef 3', 'abc 6', 'abcdef 6', 'abc 3'],
+          3,
+          'part covers only the first 3 characters, and printing a view prints exactly those.',
+        ),
+        choose(
+          'Why can strlen(view.data()) give the wrong length for a std::string_view?',
+          [
+            'strlen counts bytes, not characters',
+            'data() returns a copy of the text',
+            'The view need not end with a null character',
+            'strlen does not accept pointers',
+          ],
+          2,
+          "strlen searches for a terminator, but the view's length is stored separately.",
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view v("x\\0yz", 4);\n  std::cout << v.size() << "\\n";\n}',
+          ['1', '3', '4', '2'],
+          2,
+          'The view has the length it was given, 4, including the \\0.',
+        ),
+      ],
+    },
+    {
+      title: 'Narrow a view with substr',
+      explanation: [
+        'v.substr(pos, count) returns another string_view of count characters starting at pos; v.substr(pos) runs to the end. No characters are copied.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view date = "2026-10-02";\n  std::string_view year = date.substr(0, 4);\n  std::string_view day = date.substr(8);\n  std::cout << year << " " << day << "\\n";\n}',
+        output: '2026 02',
+        explanation:
+          'year covers characters 0 through 3, and day covers everything from position 8.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view s = "monday";\n  std::cout << s.substr(0, 3) << "\\n";\n}',
+          ['mon', 'mond', 'day', 'onda'],
+          0,
+          'Three characters starting at position 0 are m, o, n.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view s = "lesson";\n  std::cout << s.substr(3) << " " << s.substr(3).size() << "\\n";\n}',
+          ['sson 4', 'les 3', 'son 3', 'son 6'],
+          2,
+          'From position 3 to the end is son, three characters.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string_view>\nint main() {\n  std::string_view s = "abcdef";\n  std::string_view mid = s.substr(2, 2);\n  std::cout << mid << mid.size() << "\\n";\n}',
+          ['bc2', 'cde3', 'cd4', 'cd2'],
+          3,
+          'Two characters starting at position 2 are c and d.',
+        ),
+      ],
+    },
+  ],
+  'cpp-views': [
+    {
+      title: 'Copy a view into an owning std::string',
+      explanation: [
+        'std::string owned(view); copies the viewed characters into a new string that owns them. From then on the string is independent of whatever the view referred to.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string>\n#include <string_view>\nint main() {\n  std::string_view view = "label";\n  std::string owned(view);\n  std::cout << owned << " " << owned.size() << "\\n";\n}',
+        output: 'label 5',
+        explanation: 'owned holds its own copy of the five characters.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string>\n#include <string_view>\nint main() {\n  std::string original = "alpha";\n  std::string_view v = original;\n  std::string copy(v);\n  original = "beta";\n  std::cout << copy << "\\n";\n}',
+          ['beta', 'alphabeta', 'alpha', 'al'],
+          2,
+          'copy took its own characters while original still said alpha.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string>\n#include <string_view>\nint main() {\n  std::string_view v = "abcdef";\n  std::string part(v.substr(1, 3));\n  std::cout << part << part.size() << "\\n";\n}',
+          ['bcd3', 'abc3', 'bcd6', 'bcde4'],
+          0,
+          'The view b, c, d is copied into a three-character string.',
+        ),
+        choose(
+          'After std::string owned(view);, what happens to owned if the characters the view refers to change later?',
+          [
+            'owned changes along with them',
+            'owned becomes an empty string',
+            'owned keeps its own copy and is unaffected',
+            'owned dangles like the view',
+          ],
+          2,
+          'Constructing a std::string copies the characters into storage the string owns.',
+        ),
+      ],
+    },
+    {
+      title: 'Return an owning string, not a view of a temporary',
+      explanation: [
+        'A view is only valid while its characters exist. A std::string temporary dies at the end of the full expression that created it, so a view initialized from one dangles. When text must outlive its source, keep or return a std::string.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string>\n#include <string_view>\nstd::string make_label(std::string_view name) {\n  return std::string(name);\n}\nint main() {\n  std::string label = make_label("north");\n  std::cout << label << "\\n";\n}',
+        output: 'north',
+        explanation:
+          'The function returns an owning copy, so label stays valid after the call.',
+      },
+      questions: [
+        choose(
+          'What is wrong with reading v after this line?',
+          [
+            'v copies the string, wasting memory',
+            'The temporary string dies at the end of the statement, so v dangles',
+            'string_view cannot be made from a std::string',
+            'Nothing; v keeps the string alive',
+          ],
+          1,
+          'A view does not extend the life of the string it refers to.',
+          'std::string_view v = std::string("temp");',
+        ),
+        choose(
+          'A function builds a local std::string and must give the text to its caller. What should it return?',
+          [
+            'A std::string_view of the local',
+            "A pointer to the local's characters",
+            'A reference to the local string',
+            'A std::string',
+          ],
+          3,
+          'Only a returned std::string owns its characters; the others would dangle once the local is destroyed.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string>\n#include <string_view>\nstd::string keep(std::string_view v) {\n  return std::string(v);\n}\nint main() {\n  std::string a = keep("one");\n  std::string b = keep(a);\n  a = "two";\n  std::cout << b << "\\n";\n}',
+          ['two', 'one', 'onetwo', 'o'],
+          1,
+          'b owns its own copy made while a said one.',
+        ),
+      ],
+    },
+  ],
+  'cpp-duration-count': [
+    {
+      title: 'Make a duration and read its count',
+      explanation: [
+        '<chrono> provides duration types such as std::chrono::seconds and std::chrono::milliseconds. A duration stores a number of ticks of its unit, and count() returns that number. Durations of the same unit add and subtract like numbers.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds wait{250};\n  std::cout << wait.count() << "\\n";\n}',
+        output: '250',
+        explanation: 'wait holds 250 ticks of one millisecond each.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::seconds s{90};\n  std::cout << s.count() << "\\n";\n}',
+          ['1', '90', '1.5', '90000'],
+          1,
+          "count() returns the ticks in the duration's own unit, seconds.",
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::minutes m{3};\n  std::chrono::minutes more = m + std::chrono::minutes{2};\n  std::cout << more.count() << "\\n";\n}',
+          ['300', '32', '5', '2'],
+          2,
+          'Adding two minute durations gives 5 minutes.',
+        ),
+        choose(
+          'What does count() return for std::chrono::milliseconds d{1500};?',
+          [
+            '1.5, the value in seconds',
+            '1, the whole seconds',
+            '1500000, the microseconds',
+            '1500, the number of millisecond ticks',
+          ],
+          3,
+          "count() never converts; it reports the ticks of the duration's own unit.",
+        ),
+      ],
+    },
+    {
+      title: 'Combine units without losing precision',
+      explanation: [
+        'Adding durations of different units produces the finer unit: seconds plus milliseconds is milliseconds. Converting to a finer unit is exact, so it happens implicitly.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds total = std::chrono::seconds{2} + std::chrono::milliseconds{300};\n  std::cout << total.count() << "\\n";\n}',
+        output: '2300',
+        explanation: '2 seconds are 2000 milliseconds, plus 300.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds t = std::chrono::seconds{1} + std::chrono::milliseconds{1};\n  std::cout << t.count() << "\\n";\n}',
+          ['2', '1.001', '11', '1001'],
+          3,
+          '1 second is 1000 milliseconds; adding 1 gives 1001.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::seconds s = std::chrono::minutes{2};\n  std::cout << s.count() << "\\n";\n}',
+          ['2', '0', '120', '7200'],
+          2,
+          'Two minutes convert exactly to 120 seconds.',
+        ),
+        choose(
+          'Why is adding seconds.count() to millis.count() as plain numbers a bug?',
+          [
+            'count() values cannot be added together',
+            'The sum is rounded to whole seconds',
+            'The result is always zero',
+            'The counts are in different units',
+          ],
+          3,
+          'Plain numbers have lost their units; adding the durations themselves converts correctly.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep tick counts in long long',
+      explanation: [
+        'Tick counts grow quickly: one day is 86,400,000 milliseconds. The standard duration types use a wide signed integer, and long long, the widest standard integer type (64 bits here), is the natural place to keep a count. Durations may also be negative.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::seconds day{86400};\n  std::chrono::milliseconds ms = day;\n  long long ticks = ms.count();\n  std::cout << ticks << "\\n";\n}',
+        output: '86400000',
+        explanation: 'One day converted to milliseconds is 86,400,000 ticks.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::hours h{2};\n  std::chrono::seconds s = h;\n  long long n = s.count();\n  std::cout << n << "\\n";\n}',
+          ['120', '2', '7200', '720'],
+          2,
+          'Two hours are 7200 seconds.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds a{400};\n  std::chrono::milliseconds b{-150};\n  std::cout << (a + b).count() << "\\n";\n}',
+          ['550', '-250', '400', '250'],
+          3,
+          'A negative duration subtracts: 400 + (-150) is 250.',
+        ),
+        choose(
+          'Why is long long a good type for a millisecond count?',
+          [
+            'count() always returns a double',
+            'Counts grow fast and can exceed a 32-bit int after a few weeks',
+            'long long is required for negative durations',
+            'int values cannot be printed',
+          ],
+          1,
+          'About 2.1 billion milliseconds, under 25 days, already exceed a 32-bit int.',
+        ),
+      ],
+    },
+  ],
+  'cpp-duration-cast': [
+    {
+      title: 'Convert to a coarser unit with duration_cast',
+      explanation: [
+        'Converting milliseconds to seconds can lose information, so it does not happen implicitly. std::chrono::duration_cast<std::chrono::seconds>(d) performs it explicitly and drops the fraction.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds ms{2700};\n  std::chrono::seconds s = std::chrono::duration_cast<std::chrono::seconds>(ms);\n  std::cout << s.count() << "\\n";\n}',
+        output: '2',
+        explanation:
+          '2700 milliseconds are 2.7 seconds, and the cast keeps the whole 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds ms{5999};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(ms).count() << "\\n";\n}',
+          ['6', '5', '5.999', '5999'],
+          1,
+          'The cast does not round: 5.999 seconds become 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::seconds s{150};\n  std::cout << std::chrono::duration_cast<std::chrono::minutes>(s).count() << "\\n";\n}',
+          ['2', '3', '2.5', '150'],
+          0,
+          '150 seconds are 2.5 minutes, and the cast keeps 2.',
+        ),
+        choose(
+          'What happens when this code is compiled?',
+          [
+            's becomes 2 seconds, truncated',
+            's becomes 3 seconds, rounded',
+            's becomes 2.7 seconds, exactly',
+            'It does not compile without duration_cast',
+          ],
+          3,
+          'Implicit conversion is allowed only when it is exact, as when going to a finer unit.',
+          'std::chrono::milliseconds ms{2700};\nstd::chrono::seconds s = ms;',
+        ),
+      ],
+    },
+    {
+      title: 'Expect truncation toward zero',
+      explanation: [
+        'duration_cast to an integer-based unit truncates toward zero, just like integer division: -1500 milliseconds become -1 second, not -2.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds late{-1500};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(late).count() << "\\n";\n}',
+        output: '-1',
+        explanation: '-1.5 seconds truncate toward zero to -1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds d{-2999};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(d).count() << "\\n";\n}',
+          ['-3', '-2.999', '-2', '2'],
+          2,
+          '-2.999 seconds truncate toward zero to -2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::seconds s{-90};\n  std::cout << std::chrono::duration_cast<std::chrono::minutes>(s).count() << "\\n";\n}',
+          ['-1', '-2', '-1.5', '1'],
+          0,
+          '-1.5 minutes truncate toward zero to -1.',
+        ),
+        choose(
+          'Which rounding does duration_cast use when converting to whole seconds?',
+          [
+            'To the nearest second',
+            'Always down, toward negative infinity',
+            'Toward zero, like integer division',
+            'Always up',
+          ],
+          2,
+          'The fraction is simply discarded.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep the remainder when it matters',
+      explanation: [
+        'To report whole seconds and leftover milliseconds, cast once and subtract: total - whole converts whole back to milliseconds exactly and leaves the remainder. Casting early and discarding the rest loses time.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds total{7250};\n  std::chrono::seconds whole = std::chrono::duration_cast<std::chrono::seconds>(total);\n  std::chrono::milliseconds rest = total - whole;\n  std::cout << whole.count() << " s " << rest.count() << " ms\\n";\n}',
+        output: '7 s 250 ms',
+        explanation: '7 whole seconds are 7000 milliseconds, leaving 250.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::milliseconds total{3999};\n  std::chrono::seconds whole = std::chrono::duration_cast<std::chrono::seconds>(total);\n  std::chrono::milliseconds rest = total - whole;\n  std::cout << whole.count() << " s " << rest.count() << " ms\\n";\n}',
+          ['4 s 0 ms', '3 s 1 ms', '3 s 3999 ms', '3 s 999 ms'],
+          3,
+          'The cast keeps 3 seconds, and 3999 - 3000 leaves 999 milliseconds.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::seconds total{125};\n  std::chrono::minutes m = std::chrono::duration_cast<std::chrono::minutes>(total);\n  std::chrono::seconds rest = total - m;\n  std::cout << m.count() << ":" << rest.count() << "\\n";\n}',
+          ['2:05', '2:5', '2:125', '3:5'],
+          1,
+          'Two whole minutes leave 5 seconds, and count() prints 5 without a leading zero.',
+        ),
+        choose(
+          'A report casts every duration to whole seconds before adding them up. What can go wrong?',
+          [
+            'duration_cast rounds up, so the total is too large',
+            'Each cast drops its fraction, so the total can be too small',
+            'Durations cannot be added after a cast',
+            'Nothing; the total is exact',
+          ],
+          1,
+          'Many dropped fractions add up; summing first and casting once loses at most one fraction.',
+        ),
+      ],
+    },
+  ],
+  'cpp-time-points': [
+    {
+      title: 'Subtract time points to get a duration',
+      explanation: [
+        "A std::chrono::steady_clock::time_point marks an instant on that clock. Subtracting two of them gives the duration between them. Real programs read time points with now(); these examples build them at fixed offsets from the clock's starting point so their output is predictable.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::milliseconds{100}};\n  std::chrono::steady_clock::time_point end{std::chrono::milliseconds{145}};\n  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "\\n";\n}',
+        output: '45',
+        explanation:
+          'The two instants are 45 milliseconds apart; the cast expresses the difference in milliseconds.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::seconds{2}};\n  std::chrono::steady_clock::time_point end{std::chrono::seconds{5}};\n  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "\\n";\n}',
+          ['3', '3000', '5000', '7000'],
+          1,
+          'The instants are 3 seconds apart, which is 3000 milliseconds.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::milliseconds{500}};\n  std::chrono::steady_clock::time_point end{std::chrono::milliseconds{200}};\n  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "\\n";\n}',
+          ['300', '700', '0', '-300'],
+          3,
+          'end is earlier than start, so the difference is a negative duration.',
+        ),
+        choose(
+          'What kind of value does end - start produce for two steady_clock time points?',
+          [
+            'Another time_point',
+            'A plain long long',
+            'A duration',
+            'A double number of seconds',
+          ],
+          2,
+          'The distance between two instants is a duration.',
+        ),
+      ],
+    },
+    {
+      title: 'Move a time point by adding a duration',
+      explanation: [
+        "A time point plus or minus a duration is another time point, such as a deadline. time_since_epoch() gives the duration from the clock's starting point to the time point. Adding two time points does not compile, because instants cannot be added.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::seconds{10}};\n  std::chrono::steady_clock::time_point deadline = start + std::chrono::seconds{5};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(deadline.time_since_epoch()).count() << "\\n";\n}',
+        output: '15',
+        explanation:
+          'The deadline lies 5 seconds after an instant 10 seconds past the epoch.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::milliseconds{1000}};\n  std::chrono::steady_clock::time_point later = start + std::chrono::milliseconds{250};\n  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(later.time_since_epoch()).count() << "\\n";\n}',
+          ['250', '750', '1250', '1000'],
+          2,
+          'Moving 250 milliseconds past an instant at 1000 milliseconds gives 1250.',
+        ),
+        choose(
+          'a and b are steady_clock time points and d is a duration. Which expression does not compile?',
+          ['a - b', 'a + d', 'a - d', 'a + b'],
+          3,
+          'An instant plus a duration is meaningful; an instant plus an instant is not.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::seconds{20}};\n  std::chrono::steady_clock::time_point later = start + std::chrono::minutes{1};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(later - start).count() << "\\n";\n}',
+          ['60', '1', '80', '21'],
+          0,
+          'The two points are one minute apart, which is 60 seconds.',
+        ),
+      ],
+    },
+    {
+      title: 'Express a difference in the unit you need',
+      explanation: [
+        'The same difference can be reported in several units: cast to seconds for whole seconds, or to milliseconds to keep more detail. Subtract time points only when both come from the same clock; each clock has its own starting point.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point a{std::chrono::milliseconds{1500}};\n  std::chrono::steady_clock::time_point b = a + std::chrono::milliseconds{2250};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(b - a).count() << " " << std::chrono::duration_cast<std::chrono::milliseconds>(b - a).count() << "\\n";\n}',
+        output: '2 2250',
+        explanation:
+          'The difference is 2250 milliseconds, which is 2 whole seconds.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point a{std::chrono::milliseconds{3000}};\n  std::chrono::steady_clock::time_point b = a + std::chrono::milliseconds{999};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(b - a).count() << " " << std::chrono::duration_cast<std::chrono::milliseconds>(b - a).count() << "\\n";\n}',
+          ['1 999', '3 999', '0 3999', '0 999'],
+          3,
+          'The difference is 999 milliseconds, which is 0 whole seconds.',
+        ),
+        choose(
+          'Why must both time points in end - start come from the same clock?',
+          [
+            'Only steady_clock time points can be subtracted',
+            'Subtraction requires the two values to be equal',
+            'Each clock counts from its own starting point',
+            'The result would always be negative',
+          ],
+          2,
+          'A difference is meaningful only when both instants are measured from the same origin; C++ does not even let the types mix.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point a{std::chrono::seconds{1}};\n  std::chrono::steady_clock::time_point b{std::chrono::milliseconds{1}};\n  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(a - b).count() << "\\n";\n}',
+          ['0', '999', '1001', '-999'],
+          1,
+          'a is 1000 milliseconds past the epoch and b is 1, so they are 999 milliseconds apart.',
+        ),
+      ],
+    },
+  ],
+  'cpp-chrono': [
+    {
+      title: 'Read steady_clock::now() and compare readings',
+      explanation: [
+        'std::chrono::steady_clock::now() returns the current time point. Its value changes from run to run, so programs compare or subtract readings instead of printing them. steady_clock::is_steady is true: its readings never decrease.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point first = std::chrono::steady_clock::now();\n  std::chrono::steady_clock::time_point second = std::chrono::steady_clock::now();\n  std::cout << (second >= first) << "\\n";\n}',
+        output: '1',
+        explanation:
+          'The second reading is taken later on a clock that never goes backward, so it is not earlier.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point a = std::chrono::steady_clock::now();\n  std::chrono::steady_clock::time_point b = std::chrono::steady_clock::now();\n  std::cout << (b - a >= std::chrono::nanoseconds{0}) << "\\n";\n}',
+          ['0', '1', '-1', 'It varies'],
+          1,
+          'A later steady_clock reading minus an earlier one is never negative.',
+        ),
+        choose(
+          'Why do these lessons never print the value of steady_clock::now() itself?',
+          [
+            'It is always 0 at startup',
+            'Printing it resets the clock',
+            'It differs on every run of the program',
+            'It is measured in an unknown unit',
+          ],
+          2,
+          'Only relationships between readings, such as their order or difference, are reproducible.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::cout << std::chrono::steady_clock::is_steady << "\\n";\n}',
+          ['0', 'true', 'steady', '1'],
+          3,
+          'is_steady is a bool constant, and a true bool prints as 1.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose steady_clock for intervals',
+      explanation: [
+        'system_clock follows the wall clock, which can be adjusted forward or backward, for example when the computer synchronizes its time. An interval measured with it can come out negative or too large. steady_clock is monotonic, so it is the clock for measuring how long something took.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();\n  long long work = 1;\n  work = work * 1000 + 7;\n  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();\n  std::cout << (end - start >= std::chrono::steady_clock::duration::zero()) << " " << work << "\\n";\n}',
+        output: '1 1007',
+        explanation:
+          'The measured interval is never negative on steady_clock, whatever happens to the wall clock.',
+      },
+      questions: [
+        choose(
+          'A program times an operation with system_clock and sometimes gets a negative duration. Why?',
+          [
+            'Subtracting time points is unreliable on every clock',
+            'system_clock follows the wall clock, which can be set backward',
+            'Durations overflow after one second',
+            'The operation finished before it started',
+          ],
+          1,
+          'Adjusting the wall clock between the readings moves system_clock, not the operation.',
+        ),
+        choose(
+          'What does steady_clock guarantee that system_clock does not?',
+          [
+            'Its readings match the time of day',
+            'It has nanosecond precision',
+            'It starts at zero when the program starts',
+            'Its readings never decrease',
+          ],
+          3,
+          'Monotonic readings are exactly what interval measurement needs.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point a = std::chrono::steady_clock::now();\n  std::chrono::steady_clock::time_point b = a + std::chrono::seconds{2};\n  std::cout << (b > a) << (b - a == std::chrono::seconds{2}) << "\\n";\n}',
+          ['10', '01', '11', '00'],
+          2,
+          'Whatever a is, b lies exactly 2 seconds after it.',
+        ),
+      ],
+    },
+    {
+      title: 'Report an interval with an explicit unit',
+      explanation: [
+        'Before printing an interval, cast the difference to the unit you want and print the unit next to the number. A bare count() hides whether it means seconds, milliseconds, or clock ticks.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::microseconds{2000}};\n  std::chrono::steady_clock::time_point end{std::chrono::microseconds{5750}};\n  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\\n";\n}',
+        output: '3 ms',
+        explanation:
+          'The interval is 3750 microseconds, which is 3 whole milliseconds.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::microseconds{2000}};\n  std::chrono::steady_clock::time_point end{std::chrono::microseconds{5750}};\n  std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us\\n";\n}',
+          ['3 us', '3750 us', '3.75 us', '5750 us'],
+          1,
+          'In microseconds the full interval, 3750, is kept.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <chrono>\nint main() {\n  std::chrono::steady_clock::time_point start{std::chrono::seconds{10}};\n  std::chrono::steady_clock::time_point end = start + std::chrono::milliseconds{1500};\n  std::cout << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " s\\n";\n}',
+          ['2 s', '1.5 s', '1500 s', '1 s'],
+          3,
+          'Casting 1.5 seconds to whole seconds truncates to 1.',
+        ),
+        choose(
+          'A log line prints elapsed.count() with no unit. What is the problem?',
+          [
+            'count() is always in nanoseconds',
+            'count() rounds the value',
+            'A reader cannot tell what unit the number is in',
+            'Nothing, because count() is in seconds',
+          ],
+          2,
+          'The unit belongs to the duration type, which the printed number no longer shows.',
+        ),
+      ],
+    },
+  ],
 };

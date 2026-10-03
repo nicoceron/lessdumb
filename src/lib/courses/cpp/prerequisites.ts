@@ -294,7 +294,7 @@ export const cppPrerequisites: Record<string, string[]> = {
   'cpp-duration-count': ['cpp-integer-values'],
   'cpp-duration-cast': ['cpp-duration-count', 'cpp-arithmetic'],
   'cpp-time-points': ['cpp-duration-cast'],
-  'cpp-chrono': ['cpp-time-points'],
+  'cpp-chrono': ['cpp-time-points', 'cpp-bool-values'],
   'cpp-elapsed-duration': ['cpp-arithmetic', 'cpp-conditional-operator'],
   'cpp-median-samples': ['cpp-explicit-casts', 'cpp-sort-order'],
   'cpp-nearest-rank-percentile': ['cpp-median-samples'],
