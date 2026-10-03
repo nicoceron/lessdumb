@@ -3,7 +3,7 @@ import { migrateState, type LearnerState } from '../state';
 import { MAX_SAVED_QUIZZES } from '../quiz';
 import { activityTotals, type ActivityState } from '../activity';
 import { TYPED_RESPONSE_MAX_LENGTH } from '../typed-answer';
-import { MAX_VARIANT_SEED } from '../variants';
+import { MAX_VARIANT } from '../variants';
 
 /** The full current catalog plus every mastery/mistake card fits with headroom. */
 export const MAX_STATE_BODY_BYTES = 4 * 1024 * 1024;
@@ -441,7 +441,7 @@ function validateDiagnosticQuestion(
   string(question.questionId, `${path}.questionId`);
   number(question.presentation, `${path}.presentation`);
   if (question.variant !== undefined)
-    number(question.variant, `${path}.variant`, 0, MAX_VARIANT_SEED);
+    number(question.variant, `${path}.variant`, 0, MAX_VARIANT);
   if (answered) {
     answer(question.answer, `${path}.answer`);
     boolean(question.correct, `${path}.correct`);
@@ -520,7 +520,7 @@ function validateQuiz(value: unknown, path: string): string {
     string(question.questionId, `${at}.questionId`);
     number(question.presentation, `${at}.presentation`);
     if (question.variant !== undefined)
-      number(question.variant, `${at}.variant`, 0, MAX_VARIANT_SEED);
+      number(question.variant, `${at}.variant`, 0, MAX_VARIANT);
     if (question.answer !== undefined && question.answer !== null)
       answer(question.answer, `${at}.answer`);
     if (question.correct !== undefined)
@@ -568,7 +568,7 @@ function validateAttempt(value: unknown, path: string): string {
   if (attempt.response !== undefined)
     string(attempt.response, `${path}.response`, TYPED_RESPONSE_MAX_LENGTH);
   if (attempt.variant !== undefined)
-    number(attempt.variant, `${path}.variant`, 0, MAX_VARIANT_SEED);
+    number(attempt.variant, `${path}.variant`, 0, MAX_VARIANT);
   if (attempt.credited !== undefined)
     strings(attempt.credited, `${path}.credited`, 100);
   isoTimestamp(attempt.at, `${path}.at`);

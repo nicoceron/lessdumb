@@ -9,10 +9,9 @@ import { defaultCatalog } from './catalog-index';
 import { contentOf, hasContent } from './content';
 import {
   isGenerated,
-  isVariantSeed,
+  isVariant,
   questionVariant,
   variantKey,
-  variantSeed,
 } from './variants';
 import { assessmentType, encompassings } from './catalog-outline';
 import {
@@ -550,14 +549,14 @@ export function freshQuestion<Q extends QuestionRef>(
 }
 
 /**
- * The seed of the variant a generated question asks next, or undefined for
- * an authored question. Seeds follow the question's own sequence from the
- * number of times the learner has answered it, so a reload shows the same
- * variant until it is answered. With the skill's content loaded, the first
- * variant in that sequence the learner has neither answered nor met in
- * their last RECENT_VARIANTS attempts at the point is chosen, and failing
- * that the first not met recently. Without content, seeds alone keep
- * variants apart.
+ * The variant a generated question asks next, or undefined for an authored
+ * question. Variants are numbered 0, 1, 2, … per question (each number seeds
+ * the generator); the search starts at the number of times the learner has
+ * answered the question, so a reload shows the same variant until it is
+ * answered. With the skill's content loaded, the first variant the learner
+ * has neither answered nor met in their last RECENT_VARIANTS attempts at the
+ * point is chosen, and failing that the first not met recently. Without
+ * content, variant numbers alone keep variants apart.
  */
 export function chooseVariant(
   progress: Progress,
@@ -589,14 +588,13 @@ export function chooseVariant(
     own.map((attempt) => keyOf(attempt.questionId, attempt.variant)),
   );
   let fallback: number | undefined;
-  for (let k = 0; k < VARIANT_TRIES; k++) {
-    const seed = variantSeed(questionId, own.length + k);
-    const key = keyOf(questionId, seed);
+  for (let k = own.length; k < own.length + VARIANT_TRIES; k++) {
+    const key = keyOf(questionId, k);
     if (recent.has(key)) continue;
-    if (!seen.has(key)) return seed;
-    fallback ??= seed;
+    if (!seen.has(key)) return k;
+    fallback ??= k;
   }
-  return fallback ?? variantSeed(questionId, own.length);
+  return fallback ?? own.length;
 }
 
 function selectKnowledgePointQuestion(
@@ -1273,7 +1271,7 @@ export function applyAttempt(
     ...(input.response !== undefined && isTypedType(question.type)
       ? { response: input.response.slice(0, TYPED_RESPONSE_MAX_LENGTH) }
       : {}),
-    ...(isGenerated(question) && isVariantSeed(input.variant)
+    ...(isGenerated(question) && isVariant(input.variant)
       ? { variant: input.variant }
       : {}),
   };

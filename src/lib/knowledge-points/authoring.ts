@@ -117,23 +117,36 @@ export function typeText(
   };
 }
 
-type AnswerDraft =
+/** A choice or typed question as authored, before its ID is assigned. */
+export type AnswerDraft =
   | Omit<ChoiceQuestion, 'id'>
   | Omit<NumericQuestion, 'id'>
   | Omit<TextQuestion, 'id'>;
 
 /**
- * Turn an authored question into a generator: every presentation asks a
- * fresh variant that `generate` builds from a seeded random source, with the
- * same helpers (`typeNumber`, `typeOutput`, `choose`, …) and the same type.
- * The authored question stays: attempts saved before it became a generator
- * name it without a variant, and it documents what the generator asks.
- * Draw every number from `r`, never from Math.random, so a seed always
- * rebuilds the same question.
+ * A question generator: one concrete question of the same type as the
+ * authored question it varies, built with the same helpers (`typeNumber`,
+ * `typeOutput`, `choose`, …). Draw every number from `r`, never from
+ * Math.random, so a seed always rebuilds the same question.
  */
-export function vary<Q extends AnswerDraft>(
+export type QuestionGenerator = (r: Rng) => AnswerDraft;
+
+/**
+ * One `*.gen.ts` file: generators keyed by the ID of the authored question
+ * each one varies (`<skill>-kp<n>-q<m>`). They live apart from the points
+ * because the browser downloads lesson content as JSON and generators as
+ * code; both sides attach them by these IDs.
+ */
+export type GeneratorModule = Record<string, QuestionGenerator>;
+
+/**
+ * Turn an authored question into a generated one: every presentation asks a
+ * fresh variant from `generate`. The authored fields stay: attempts saved
+ * before the question became a generator name it without a variant.
+ */
+export function vary<Q extends AnswerDraft & { id?: string }>(
   authored: Q,
-  generate: (r: Rng) => Q,
+  generate: QuestionGenerator,
 ): Q {
   return {
     ...authored,

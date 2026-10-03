@@ -82,20 +82,24 @@ export function rng(seed: number): Rng {
   };
 }
 
-/** A seed is an unsigned 32-bit integer. */
-export const MAX_VARIANT_SEED = 0xffff_ffff;
+/**
+ * The largest variant number accepted. A variant is a small integer `k`, the
+ * learner's `k`-th variant of a question, whose seed is `variantSeed(id, k)`.
+ * States store this number, never the seed or the question, to stay small.
+ */
+export const MAX_VARIANT = 1_000_000;
 
-export function isVariantSeed(value: unknown): value is number {
+export function isVariant(value: unknown): value is number {
   return (
     typeof value === 'number' &&
     Number.isInteger(value) &&
     value >= 0 &&
-    value <= MAX_VARIANT_SEED
+    value <= MAX_VARIANT
   );
 }
 
 /**
- * The seed of a generated question's `k`-th variant. Every learner walks the
+ * The seed of a generated question's variant `k`. Every learner walks the
  * same sequence; each question has its own, so two generators on one page
  * never move in lockstep.
  */
@@ -106,14 +110,14 @@ export function variantSeed(questionId: string, k: number): number {
 /** Variants the catalog validator checks per generator: the first ones served. */
 export const GENERATOR_SAMPLES = 50;
 /**
- * Distinct variants a generator must produce among its samples, so that a
+ * Distinct questions a generator must produce among its samples, so that a
  * learner's recent variants can always be avoided and numbers stay fresh.
  */
 export const MIN_DISTINCT_VARIANTS = 12;
 
-/** The seeds the validator and the executed tests sample for a generator. */
-export function sampleSeeds(questionId: string, count = GENERATOR_SAMPLES) {
-  return Array.from({ length: count }, (_, k) => variantSeed(questionId, k));
+/** Variant numbers the validator and the executed tests sample: 0, 1, 2, … */
+export function sampleVariants(count = GENERATOR_SAMPLES): number[] {
+  return Array.from({ length: count }, (_, k) => k);
 }
 
 /** Whether the question draws a fresh variant each time it is asked. */
@@ -124,9 +128,9 @@ export function isGenerated(question: Pick<QuestionRef, 'generated'>): boolean {
 const instances = new WeakMap<Question, Map<number, Question>>();
 
 /**
- * The concrete question asked for a variant. An authored question is itself;
+ * The concrete question asked as variant `k`. An authored question is itself;
  * so is a generated question without a recorded variant: that is the authored
- * question shown before it became a generator, which older attempts name.
+ * question, shown before it became a generator, which older attempts name.
  */
 export function questionVariant<Q extends Question>(
   question: Q,
@@ -145,7 +149,7 @@ export function questionVariant<Q extends Question>(
   const generate = question.generate as ((seed: number) => object) | undefined;
   if (!generate) return question;
   const instance = {
-    ...generate(variant),
+    ...generate(variantSeed(question.id, variant)),
     id: question.id,
     generated: true,
     generate,

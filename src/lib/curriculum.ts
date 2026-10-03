@@ -23,8 +23,9 @@ import {
   GENERATOR_SAMPLES,
   MIN_DISTINCT_VARIANTS,
   questionVariant,
-  sampleSeeds,
+  sampleVariants,
   variantKey,
+  variantSeed,
 } from './variants';
 export {
   assessmentPolicy,
@@ -273,6 +274,17 @@ export const defaultCatalog: CurriculumCatalog = { courses, units, skills };
 /** Registered knowledge-point files, checked against the folder by tests. */
 export const knowledgePointFiles = contents.flatMap(
   (c) => c.knowledgePointFiles,
+);
+
+/**
+ * Each course's registered question generator files (`*.gen.ts` in
+ * `src/lib/knowledge-points/`). The browser build attaches them to the
+ * course's downloaded units, whose content arrives as JSON.
+ */
+export const generatorFiles: Record<string, string[]> = Object.fromEntries(
+  contents
+    .filter((c) => c.generatorFiles.length)
+    .map((c) => [c.courses[0].id, c.generatorFiles]),
 );
 
 /** Skills whose practice also exercises `skillId`, in catalog order. */
@@ -662,12 +674,13 @@ export function generatedQuestionErrors(
     return [`${question.id}: a generator needs both generated and generate.`];
   const errors: string[] = [];
   const keys = new Set<string>();
-  for (const seed of sampleSeeds(question.id)) {
-    const location = `${question.id} variant ${seed}`;
+  for (const variant of sampleVariants()) {
+    const location = `${question.id} variant ${variant}`;
     let instance: AnswerQuestion;
     try {
-      instance = questionVariant(question, seed);
+      instance = questionVariant(question, variant);
       const call = generate as (seed: number) => object;
+      const seed = variantSeed(question.id, variant);
       if (JSON.stringify(call(seed)) !== JSON.stringify(call(seed)))
         errors.push(`${location}: the same seed must give the same question.`);
     } catch (error) {

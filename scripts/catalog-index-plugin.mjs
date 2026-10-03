@@ -24,6 +24,7 @@ const indexFile = file('src/lib/catalog-index.ts');
 const partsFile = file('src/lib/content/parts.ts');
 const outlineFile = file('src/lib/catalog-outline.ts');
 const curriculumFile = file('src/lib/curriculum.ts');
+const knowledgePointsFile = file('src/lib/knowledge-points/index.ts');
 const catalogSources = [
   file('src/lib/curriculum.ts'),
   file('src/lib/catalog-outline.ts'),
@@ -63,15 +64,34 @@ export function catalogIndexModule(encoded) {
   ].join('\n');
 }
 
-/** Every unit with skills, in catalog order, holding its skills' content. */
+const generated = (skill) =>
+  (skill.knowledgePoints ?? []).some((point) =>
+    point.questions.some((question) => question.generated),
+  );
+
+/**
+ * Every unit with skills, in catalog order, holding its skills' content and,
+ * when they have generated questions, the paths of their course's question
+ * generator modules.
+ */
 export async function contentUnits(catalog) {
   const { curriculum } = await (catalog ?? loadCatalog());
   return curriculum.units
-    .map((unit) => ({
-      id: unit.id,
-      courseId: unit.courseId,
-      skills: curriculum.skills.filter((skill) => skill.unitId === unit.id),
-    }))
+    .map((unit) => {
+      const skills = curriculum.skills.filter(
+        (skill) => skill.unitId === unit.id,
+      );
+      return {
+        id: unit.id,
+        courseId: unit.courseId,
+        skills,
+        generators: skills.some(generated)
+          ? (curriculum.generatorFiles[unit.courseId] ?? []).map((name) =>
+              file(`src/lib/knowledge-points/${name}`),
+            )
+          : [],
+      };
+    })
     .filter((unit) => unit.skills.length);
 }
 
@@ -95,9 +115,24 @@ export function contentPartsModule(units) {
   ].join('\n');
 }
 
-/** One unit's content module: its skills as JSON, which parses fastest. */
+/**
+ * One unit's content module: its skills as JSON, which parses fastest. JSON
+ * has no functions, so a unit with generated questions also imports its
+ * course's generator modules and attaches them by question ID, as the
+ * server's curriculum does.
+ */
 export function contentUnitModule(unit) {
-  return `export default JSON.parse(${JSON.stringify(JSON.stringify(unit.skills))});\n`;
+  const skills = `JSON.parse(${JSON.stringify(JSON.stringify(unit.skills))})`;
+  if (!unit.generators?.length) return `export default ${skills};\n`;
+  return [
+    `import { attachGenerators } from ${JSON.stringify(knowledgePointsFile)};`,
+    ...unit.generators.map(
+      (path, index) =>
+        `import { generators as g${index} } from ${JSON.stringify(path)};`,
+    ),
+    `export default attachGenerators(${skills}, [${unit.generators.map((_, index) => `g${index}`).join(', ')}]);`,
+    '',
+  ].join('\n');
 }
 
 export function catalogIndexPlugin() {
