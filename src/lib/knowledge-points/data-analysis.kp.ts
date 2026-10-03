@@ -2537,4 +2537,1302 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+
+  'da-groupby': [
+    {
+      title: 'Total a column per group',
+      explanation: [
+        'table.groupby("site")["count"].sum() splits the rows by site, adds the count values within each group, and returns a Series with one value per group, labelled by the group keys in sorted order. Other reductions work the same way: .mean(), .max(), .min().',
+        'groupby on its own only describes the groups; nothing is computed until you call a reduction.',
+      ],
+      example: {
+        code: 'import pandas as pd\nvisits = pd.DataFrame({"site": ["B", "A", "B", "A", "B"], "count": [3, 4, 5, 2, 1]})\ntotals = visits.groupby("site")["count"].sum()\nprint(totals.to_dict())\nprint(visits.groupby("site")["count"].mean().to_dict())',
+        output: "{'A': 6, 'B': 9}\n{'A': 3.0, 'B': 3.0}",
+        explanation:
+          'A’s rows hold 4 and 2; B’s hold 3, 5 and 1. The result lists A before B, sorted by key, not by first appearance.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"team": ["x", "y", "x"], "pts": [4, 7, 6]})\nprint(df.groupby("team")["pts"].sum().to_dict())',
+          ["{'x': 4, 'y': 7}", '17', "{'x': 6, 'y': 7}", "{'x': 10, 'y': 7}"],
+          3,
+          'Team x’s two rows add to 10; team y has one row of 7.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"day": ["sat", "sun", "sat", "sun"], "temp": [20, 14, 24, 18]})\nprint(df.groupby("day")["temp"].max().to_dict())',
+          [
+            "{'sat': 24, 'sun': 18}",
+            "{'sat': 44, 'sun': 32}",
+            "{'sat': 20, 'sun': 14}",
+            '24',
+          ],
+          0,
+          'max is taken within each day’s rows.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"c": ["b", "a", "b"], "v": [1, 2, 3]})\nprint(df.groupby("c")["v"].sum().index.tolist())',
+          ["['b', 'a']", "['b', 'a', 'b']", "['a', 'b']", '[0, 1]'],
+          2,
+          'Each distinct key appears once, and the keys are sorted.',
+        ),
+        choose(
+          'sales has region and amount columns. Which expression gives the average amount per region?',
+          [
+            'sales.groupby("amount")["region"].mean()',
+            'sales.groupby("region")["amount"].mean()',
+            'sales["amount"].mean()',
+            'sales.groupby("region")',
+          ],
+          1,
+          'Group by the key, select the measured column, then reduce. groupby alone computes nothing.',
+        ),
+      ],
+    },
+    {
+      title: 'Count rows or count values',
+      explanation: [
+        '.size() counts the rows in each group. .count() on a selected column counts that column’s non-missing values. They differ exactly when the column has missing entries: a group of 3 orders with 1 missing rating has size 3 and count 2.',
+        'A grouped .mean() also skips missing values, so it averages over the count, not the size.',
+      ],
+      example: {
+        code: 'import pandas as pd\nr = pd.DataFrame({"shop": ["A", "A", "A", "B"], "rating": [4.0, None, 5.0, 3.0]})\nprint(r.groupby("shop").size().to_dict())\nprint(r.groupby("shop")["rating"].count().to_dict())\nprint(r.groupby("shop")["rating"].mean().to_dict())',
+        output: "{'A': 3, 'B': 1}\n{'A': 2, 'B': 1}\n{'A': 4.5, 'B': 3.0}",
+        explanation:
+          'Shop A has three rows but only two ratings, and its mean uses those two: (4 + 5) / 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "x", "y"], "v": [None, 2.0, None]})\nprint(df.groupby("g").size().to_dict())\nprint(df.groupby("g")["v"].count().to_dict())',
+          [
+            "{'x': 1, 'y': 0}\n{'x': 2, 'y': 1}",
+            "{'x': 2, 'y': 1}\n{'x': 2, 'y': 1}",
+            "{'x': 2, 'y': 1}\n{'x': 1, 'y': 0}",
+            "{'x': 1, 'y': 1}\n{'x': 1, 'y': 0}",
+          ],
+          2,
+          'size counts rows (2 and 1); count counts present values (1 and 0).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"k": ["a", "a", "a"], "v": [6.0, None, 0.0]})\nprint(df.groupby("k")["v"].mean().to_dict())',
+          ["{'a': 2.0}", "{'a': nan}", "{'a': 6.0}", "{'a': 3.0}"],
+          3,
+          'The missing value is skipped, so the mean is (6 + 0) / 2. The 0 is a real value and counts.',
+        ),
+        choose(
+          'Each row is a support ticket, and resolution_hours is blank while a ticket is open. Which expression gives the number of tickets per agent, open or closed?',
+          [
+            't.groupby("agent")["resolution_hours"].count()',
+            't.groupby("agent")["resolution_hours"].sum()',
+            't.groupby("agent").size()',
+            't["agent"].count()',
+          ],
+          2,
+          'size counts every row; count on resolution_hours would skip the open tickets.',
+        ),
+        choose(
+          'A group has size 50 but its score count is 12. What should you note before comparing its mean score with other groups?',
+          [
+            'The mean includes 38 zeros',
+            'The mean rests on only 12 observed scores',
+            'The group has 12 duplicate rows',
+            'size and count always differ',
+          ],
+          1,
+          'Missing scores are skipped, so the mean describes just 12 of the 50 rows.',
+        ),
+      ],
+    },
+    {
+      title: 'Decide whether missing keys form a group',
+      explanation: [
+        'Rows whose grouping key is missing are left out of the groups by default, so their values disappear from every group total. groupby("site", dropna=False) keeps them as one more group, labelled NaN and listed last.',
+        'Comparing the sum of the group totals with the overall total reveals excluded rows. Decide, and state in the report, whether those rows belong.',
+      ],
+      example: {
+        code: 'import pandas as pd\nv = pd.DataFrame({"site": ["A", None, "A", "B"], "count": [3, 4, 5, 2]})\nprint(v.groupby("site")["count"].sum().sum())\nprint(v["count"].sum())\nprint(v.groupby("site", dropna=False)["count"].sum().tolist())',
+        output: '10\n14\n[8, 2, 4]',
+        explanation:
+          'The row without a site (count 4) is missing from the grouped total of 10. With dropna=False it forms its own group after A and B.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"k": ["x", None, "x"], "v": [1, 5, 2]})\nprint(df.groupby("k")["v"].sum().to_dict())',
+          ["{'x': 3, None: 5}", "{'x': 3}", "{'x': 8}", "{'x': 3, 'nan': 5}"],
+          1,
+          'By default the row with a missing key belongs to no group.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"k": ["x", None, "x"], "v": [1, 5, 2]})\nprint(len(df.groupby("k", dropna=False)["v"].sum()))',
+          ['1', '3', '0', '2'],
+          3,
+          'dropna=False adds a group for the missing key next to x.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"team": ["r", None, None, "b"], "pts": [2, 3, 4, 1]})\nprint(df["pts"].sum() - df.groupby("team")["pts"].sum().sum())',
+          ['7', '0', '3', '10'],
+          0,
+          'The overall total is 10 and the grouped totals add to 3, so 7 points sit in rows without a team.',
+        ),
+        choose(
+          'A sales report grouped by region totals 9,200, but the raw amount column totals 10,000. What is the most likely cause?',
+          [
+            'groupby rounds each region’s amounts',
+            'Some regions had no sales',
+            'Rows with a missing region were left out of the groups',
+            'The grouped sum counted some rows twice',
+          ],
+          2,
+          'Missing keys are dropped by default, so their 800 never reaches any region.',
+        ),
+      ],
+    },
+  ],
+
+  'da-aggregations': [
+    {
+      title: 'Name several summaries at once',
+      explanation: [
+        '.agg(total=("amount", "sum"), orders=("amount", "size")) computes several summaries per group. Each keyword names an output column, and its tuple gives the input column and the reduction. The result is a table with one row per group.',
+        'Named outputs make the summary’s contract readable: anyone can see which column and operation produced each number.',
+      ],
+      example: {
+        code: 'import pandas as pd\no = pd.DataFrame({"shop": ["A", "B", "A"], "amount": [10, 25, 30]})\ns = o.groupby("shop").agg(total=("amount", "sum"), biggest=("amount", "max"), orders=("amount", "size"))\nprint(s.columns.tolist())\nprint(s.loc["A"].tolist())',
+        output: "['total', 'biggest', 'orders']\n[40, 30, 2]",
+        explanation:
+          'The keywords become the column names. Shop A’s amounts are 10 and 30: total 40, biggest 30, from 2 orders.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "x", "y"], "v": [1, 5, 4]})\nr = df.groupby("g").agg(low=("v", "min"), high=("v", "max"))\nprint(r.loc["x"].tolist())',
+          ['[1, 4]', '[5, 1]', '[6, 4]', '[1, 5]'],
+          3,
+          'Group x holds 1 and 5, and the columns are in the order low, high.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "x", "y"], "v": [1, 5, 4]})\nr = df.groupby("g").agg(n=("v", "size"), avg=("v", "mean"))\nprint(r.columns.tolist())\nprint(r["avg"].tolist())',
+          [
+            "['v', 'v']\n[3.0, 4.0]",
+            "['n', 'avg']\n[3.0, 4.0]",
+            "['size', 'mean']\n[3.0, 4.0]",
+            "['n', 'avg']\n[2.0, 4.0]",
+          ],
+          1,
+          'The keywords name the columns. x averages (1 + 5) / 2 and y is 4.',
+        ),
+        choose(
+          'In agg(revenue=("price", "sum")), which part names the column that appears in the result?',
+          ['"price"', '"sum"', 'revenue', 'The group key'],
+          2,
+          'The keyword is the output name; the tuple gives the input column and reduction.',
+        ),
+        choose(
+          'result is 1 for a win and 0 otherwise. Which call returns per-team columns named wins and games?',
+          [
+            't.groupby("team").agg(wins=("result", "sum"), games=("result", "size"))',
+            't.groupby("team")["result"].sum()',
+            't.groupby("result").agg(team=("wins", "sum"))',
+            't.agg(wins=("team", "sum"), games=("team", "size"))',
+          ],
+          0,
+          'Summing the 1s counts wins and size counts games, each named by its keyword.',
+        ),
+      ],
+    },
+    {
+      title: 'Pick statistics that fit the question',
+      explanation: [
+        'The median is the middle value once the values are sorted, or the average of the two middle values when the count is even. Unlike the mean, it barely moves when one value is extreme, so a group with one huge order can have a high mean but an ordinary median.',
+        'A sum grows with group size, and a mean of 2 rows is weaker evidence than a mean of 200. Report a count next to means and totals so readers can judge the support.',
+      ],
+      example: {
+        code: 'import pandas as pd\no = pd.DataFrame({"shop": ["A", "A", "A", "B", "B"], "amount": [10, 12, 98, 20, 22]})\ns = o.groupby("shop").agg(mean=("amount", "mean"), median=("amount", "median"), n=("amount", "size"))\nprint(s["mean"].tolist())\nprint(s["median"].tolist())',
+        output: '[40.0, 21.0]\n[12.0, 21.0]',
+        explanation:
+          'Shop A’s 98 pulls its mean to 40, while its median stays at the middle value 12. B has no extreme value, so both agree.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([2, 4, 99])\nprint(s.median())\nprint(s.mean())',
+          ['35.0\n4.0', '4.0\n4.0', '4.0\n35.0', '2.0\n35.0'],
+          2,
+          'The middle of 2, 4, 99 is 4; the mean is 105 / 3 = 35.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nprint(pd.Series([9, 1, 5, 3]).median())',
+          ['4.5', '3.0', '5.0', '4.0'],
+          3,
+          'Sorted, the values are 1, 3, 5, 9, so the median averages the middle two: 4.0. The mean would be 4.5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"g": ["a", "a", "a", "b"], "v": [1, 2, 30, 5]})\nr = df.groupby("g").agg(med=("v", "median"), n=("v", "size"))\nprint(r["med"].tolist())',
+          ['[2.0, 5.0]', '[11.0, 5.0]', '[1.0, 5.0]', '[30.0, 5.0]'],
+          0,
+          'Group a sorted is 1, 2, 30, so its median is 2; b has the single value 5.',
+        ),
+        choose(
+          'Shop A’s mean order is 300 from 2 orders; shop B’s is 120 from 400 orders. Which statement is fair?',
+          [
+            'A clearly attracts bigger customers',
+            'A’s mean rests on only 2 orders, so it is weak evidence',
+            'B is failing',
+            'Counts do not matter when comparing means',
+          ],
+          1,
+          'Two orders cannot support a strong claim, which is why counts belong beside means.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep keys as columns and order the result',
+      explanation: [
+        'By default the group keys become the result’s index. groupby("shop", as_index=False) keeps them as an ordinary column instead, so the summary is a regular table that is easy to export or combine with others.',
+        '.sort_values("total", ascending=False) orders the summary by a measure, largest first. Sorting changes only the presentation, not the groups.',
+      ],
+      example: {
+        code: 'import pandas as pd\no = pd.DataFrame({"shop": ["A", "B", "C", "B"], "amount": [5, 7, 9, 4]})\ns = o.groupby("shop", as_index=False).agg(total=("amount", "sum"))\nprint(s.columns.tolist())\nprint(s.sort_values("total", ascending=False)["shop"].tolist())',
+        output: "['shop', 'total']\n['B', 'C', 'A']",
+        explanation:
+          'shop stays a column next to total. Sorting by total, descending, puts B (11) before C (9) and A (5).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"k": ["p", "q", "p"], "v": [1, 2, 3]})\nr = df.groupby("k", as_index=False).agg(s=("v", "sum"))\nprint(r.to_dict("list"))',
+          [
+            "{'s': [4, 2]}",
+            "{'k': ['p', 'q'], 's': [4, 2]}",
+            "{'k': ['p', 'q', 'p'], 's': [1, 2, 3]}",
+            "{'k': ['p', 'q'], 's': [1, 2]}",
+          ],
+          1,
+          'as_index=False keeps k as a column beside the summary.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"k": ["p", "q", "p"], "v": [1, 2, 3]})\nr = df.groupby("k").agg(s=("v", "sum"))\nprint(r.columns.tolist())\nprint(r.index.tolist())',
+          [
+            "['k', 's']\n[0, 1]",
+            "['s']\n[0, 1]",
+            "['k', 's']\n['p', 'q']",
+            "['s']\n['p', 'q']",
+          ],
+          3,
+          'By default the keys move into the index, leaving s as the only column.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"city": ["x", "y", "z", "x"], "n": [1, 8, 3, 1]})\nr = df.groupby("city", as_index=False).agg(total=("n", "sum"))\nprint(r.sort_values("total", ascending=False)["city"].tolist())',
+          [
+            "['x', 'y', 'z']",
+            "['x', 'z', 'y']",
+            "['y', 'z', 'x']",
+            "['z', 'y', 'x']",
+          ],
+          2,
+          'Totals are x 2, y 8 and z 3, so descending order is y, z, x.',
+        ),
+        choose(
+          'You will export a per-store summary to CSV, and a colleague expects a store column in the file. Which option helps?',
+          ['as_index=False', 'dropna=False', 'ascending=False', 'keep="last"'],
+          0,
+          'With as_index=False the store keys stay an ordinary column of the table.',
+        ),
+      ],
+    },
+  ],
+
+  'da-transforms': [
+    {
+      title: 'Repeat a group result on every row',
+      explanation: [
+        'A grouped reduction returns one value per group. .transform("mean") computes the same group summary but returns it once for every original row, aligned with the table’s index, so it can be stored as a new column.',
+        'Any reduction name works: transform("sum"), transform("max"), transform("size").',
+      ],
+      example: {
+        code: 'import pandas as pd\ns = pd.DataFrame({"team": ["A", "B", "A", "B"], "score": [2, 9, 6, 5]})\nprint(s.groupby("team")["score"].mean().tolist())\ns["team_mean"] = s.groupby("team")["score"].transform("mean")\nprint(s["team_mean"].tolist())',
+        output: '[4.0, 7.0]\n[4.0, 7.0, 4.0, 7.0]',
+        explanation:
+          'mean gives one value per team; transform repeats each team’s value on that team’s rows, in the original row order.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "y", "x"], "v": [1, 10, 3]})\nprint(df.groupby("g")["v"].transform("sum").tolist())',
+          ['[4, 10]', '[1, 10, 3]', '[14, 14, 14]', '[4, 10, 4]'],
+          3,
+          'Each row receives its own group’s total: x rows get 4, the y row gets 10.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "y", "x"], "v": [1, 10, 3]})\nprint(len(df.groupby("g")["v"].sum()))\nprint(len(df.groupby("g")["v"].transform("sum")))',
+          ['3\n2', '2\n3', '2\n2', '3\n3'],
+          1,
+          'The reduction has one value per group; transform has one per row.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"k": ["a", "a", "b"], "v": [5, 1, 7]})\ndf["top"] = df.groupby("k")["v"].transform("max")\nprint(df["top"].tolist())',
+          ['[5, 7]', '[5, 1, 7]', '[5, 5, 7]', '[7, 7, 7]'],
+          2,
+          'Both a rows get a’s maximum 5, and the b row gets 7.',
+        ),
+        choose(
+          'Why use transform rather than mean() when adding each row’s group mean as a column?',
+          [
+            'mean() cannot follow groupby',
+            'transform is always faster',
+            'transform removes missing values',
+            'transform returns one value per row, matching the table',
+          ],
+          3,
+          'A column needs one value per row; the grouped mean has only one per group.',
+        ),
+      ],
+    },
+    {
+      title: 'Compare each row with its own group',
+      explanation: [
+        'With the group value on every row, ordinary column arithmetic compares each observation with its own group. value minus group mean is a centered value: positive means above its group’s mean, which is not the same as above the overall mean.',
+        'Because transform keeps the original index, the subtraction lines up row by row automatically.',
+      ],
+      example: {
+        code: 'import pandas as pd\ns = pd.DataFrame({"class": ["A", "A", "B", "B"], "score": [60, 80, 85, 95]})\ncentered = s["score"] - s.groupby("class")["score"].transform("mean")\nprint(centered.tolist())\nprint((s["score"] - s["score"].mean()).tolist())',
+        output: '[-10.0, 10.0, -5.0, 5.0]\n[-20.0, 0.0, 5.0, 15.0]',
+        explanation:
+          'Class means are 70 and 90. The 85 is below its class mean but above the overall mean of 80.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"g": ["x", "x", "y", "y"], "v": [2, 4, 10, 30]})\nprint((df["v"] - df.groupby("g")["v"].transform("mean")).tolist())',
+          [
+            '[-9.5, -7.5, -1.5, 18.5]',
+            '[3.0, 3.0, 20.0, 20.0]',
+            '[-1.0, 1.0, -10.0, 10.0]',
+            '[-1.0, 1.0]',
+          ],
+          2,
+          'Group means are 3 and 20, so each row differs from its own mean by 1 or 10.',
+        ),
+        choose(
+          'A student’s centered score is +5 within class B. What does that tell you?',
+          [
+            'They scored 5 above every other student',
+            'They scored 5 above the school mean',
+            'Class B’s mean is 5',
+            'They scored 5 above class B’s mean',
+          ],
+          3,
+          'The reference point is the student’s own class mean.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"store": ["s1", "s2", "s1"], "sales": [100, 40, 60]})\ndf["gap"] = df["sales"] - df.groupby("store")["sales"].transform("max")\nprint(df["gap"].tolist())',
+          ['[0, -60, -40]', '[0, 0, -40]', '[-100, -40, -60]', '[0, 60, 40]'],
+          1,
+          's1’s best is 100 and s2’s is 40, so only the 60 falls short of its store’s maximum.',
+        ),
+        choose(
+          'Two runners in different age groups both have centered times of −3 minutes. Which conclusion is justified?',
+          [
+            'They ran equally fast in absolute terms',
+            'Both beat the overall mean by 3 minutes',
+            'Each was 3 minutes faster than their own group’s mean',
+            'Their groups have the same mean time',
+          ],
+          2,
+          'Centering compares each runner with their own group, not with each other.',
+        ),
+      ],
+    },
+    {
+      title: 'Compute shares within a group',
+      explanation: [
+        'A share is a row’s value divided by its group total: value / transform("sum"). The shares in each group add up to 1, which makes groups of different sizes comparable.',
+        'A group whose total is 0 has no meaningful shares: 0 / 0 gives NaN. Decide how to report such groups before publishing.',
+      ],
+      example: {
+        code: 'import pandas as pd\nd = pd.DataFrame({"region": ["N", "N", "S", "S"], "units": [30, 10, 0, 0]})\nshare = d["units"] / d.groupby("region")["units"].transform("sum")\nprint(share.tolist())',
+        output: '[0.75, 0.25, nan, nan]',
+        explanation:
+          'Region N’s total is 40, so its rows hold 75% and 25%. Region S sold nothing, so its shares are undefined.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"g": ["a", "a", "b"], "v": [1, 3, 5]})\nprint((df["v"] / df.groupby("g")["v"].transform("sum")).tolist())',
+          [
+            '[1.0, 3.0, 5.0]',
+            '[0.25, 0.75]',
+            '[0.5, 0.5, 1.0]',
+            '[0.25, 0.75, 1.0]',
+          ],
+          3,
+          'Group a totals 4, so its rows are 1/4 and 3/4; group b’s only row is all of its total.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ndf = pd.DataFrame({"team": ["x", "x", "x"], "goals": [2, 2, 4]})\nshare = df["goals"] / df.groupby("team")["goals"].transform("sum")\nprint(share.sum())',
+          ['8', '3.0', '1.0', '0.5'],
+          2,
+          'Shares within one group always add up to 1.',
+        ),
+        choose(
+          'A shop’s share of its region’s sales is 0.4. What does that mean?',
+          [
+            'Its sales grew by 40%',
+            'It made 40% of its region’s sales',
+            'It made 40% of all sales',
+            'Its region has 0.4 shops',
+          ],
+          1,
+          'The denominator is the region’s total, not the overall total.',
+        ),
+        choose(
+          'One region sold nothing this week, so its total is 0. What happens to its rows’ shares?',
+          [
+            'They become 0, which is accurate',
+            'They become 1',
+            'pandas raises ZeroDivisionError',
+            'They become NaN, so the report needs a rule for that region',
+          ],
+          3,
+          '0 / 0 is undefined, which pandas shows as NaN rather than raising an error.',
+        ),
+      ],
+    },
+  ],
+
+  'da-window': [
+    {
+      title: 'Average a trailing window',
+      explanation: [
+        'values.rolling(3).mean() gives, at each row, the mean of that row and the two rows before it, in row order. Each row gets its own local reference, unlike a group mean that one value describes a whole group. .rolling(3).sum() and .rolling(3).max() work the same way.',
+        'The first two rows do not have three rows to use yet, so their results are missing.',
+      ],
+      example: {
+        code: 'import pandas as pd\ntemps = pd.Series([10, 12, 17, 13, 18])\nprint(temps.rolling(3).mean().tolist())',
+        output: '[nan, nan, 13.0, 14.0, 16.0]',
+        explanation:
+          'Row 2 averages 10, 12, 17; row 3 averages 12, 17, 13; row 4 averages 17, 13, 18.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([2, 4, 6, 8])\nprint(s.rolling(2).mean().tolist())',
+          [
+            '[3.0, 5.0, 7.0]',
+            '[3.0, 5.0, 7.0, nan]',
+            '[2.0, 3.0, 5.0, 7.0]',
+            '[nan, 3.0, 5.0, 7.0]',
+          ],
+          3,
+          'Each result uses the row and the one before; row 0 has no earlier row, so it is missing.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([1, 5, 2, 8, 3])\nprint(s.rolling(3).max().tolist())',
+          [
+            '[nan, nan, 5.0, 8.0, 8.0]',
+            '[5.0, 8.0, 8.0]',
+            '[nan, nan, 8.0, 8.0, 8.0]',
+            '[1.0, 5.0, 5.0, 8.0, 8.0]',
+          ],
+          0,
+          'The windows are (1, 5, 2), (5, 2, 8) and (2, 8, 3), and the result keeps one entry per row.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([3, 3, 9, 0])\nprint(s.rolling(3).sum().iloc[3])',
+          ['15.0', '9.0', '12.0', 'nan'],
+          2,
+          'Row 3’s window holds rows 1 to 3: 3 + 9 + 0.',
+        ),
+        choose(
+          'In rolling(4).mean(), which rows does the result at row 10 use?',
+          [
+            'Rows 10, 11, 12 and 13',
+            'Rows 7, 8, 9 and 10',
+            'Rows 8 to 12',
+            'Every row from 0 to 10',
+          ],
+          1,
+          'A default window trails: the current row and the three before it.',
+        ),
+      ],
+    },
+    {
+      title: 'Control incomplete windows with min_periods',
+      explanation: [
+        'By default a window needs all its rows, so the first window − 1 results are NaN. min_periods sets how many rows are enough: with min_periods=1, the first result is just the first value, the second averages two values, and so on.',
+        'That fills the gap but changes the evidence: early results rest on fewer observations than later ones. Choose min_periods deliberately and say so when reporting.',
+      ],
+      example: {
+        code: 'import pandas as pd\ns = pd.Series([3, 9, 6, 12])\nprint(s.rolling(3).mean().fillna(-1).tolist())\nprint(s.rolling(3, min_periods=1).mean().tolist())\nprint(s.rolling(3, min_periods=2).mean().fillna(-1).tolist())',
+        output:
+          '[-1.0, -1.0, 6.0, 9.0]\n[3.0, 6.0, 6.0, 9.0]\n[-1.0, 6.0, 6.0, 9.0]',
+        explanation:
+          'The full windows give 6 and 9. min_periods=1 also accepts one and two rows; min_periods=2 accepts two rows but not one. The -1 only makes missing entries visible.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([10, 20, 30])\nprint(s.rolling(2, min_periods=1).mean().tolist())',
+          [
+            '[nan, 15.0, 25.0]',
+            '[15.0, 25.0]',
+            '[10.0, 15.0, 25.0]',
+            '[5.0, 15.0, 25.0]',
+          ],
+          2,
+          'The first window holds only 10, and min_periods=1 accepts it; its mean is 10, not 10 / 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([1, 2, 3, 4, 5])\nprint(s.rolling(4).sum().isna().sum())',
+          ['4', '1', '0', '3'],
+          3,
+          'A full window of 4 first exists at row 3, so rows 0, 1 and 2 are missing.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([6, 2, 4])\nprint(s.rolling(3, min_periods=2).mean().fillna(0).tolist())',
+          [
+            '[6.0, 4.0, 4.0]',
+            '[0.0, 4.0, 4.0]',
+            '[0.0, 0.0, 4.0]',
+            '[0.0, 2.0, 4.0]',
+          ],
+          1,
+          'Row 0 has one value, fewer than 2, so it is missing; row 1 averages 6 and 2.',
+        ),
+        choose(
+          'A 7-day rolling average uses min_periods=1. What is true of the value on day 2?',
+          [
+            'It averages only 2 days, so it rests on less evidence than later values',
+            'It averages 7 days like every other value',
+            'It is missing',
+            'It equals the day-2 value exactly',
+          ],
+          0,
+          'With min_periods=1, early windows contain only the days seen so far.',
+        ),
+      ],
+    },
+    {
+      title: 'Put rows in time order first',
+      explanation: [
+        'rolling follows row order, not dates. If the rows are out of time order, “the previous rows” mixes unrelated days. Sort by the time column first, for example t.sort_values("day"), then roll.',
+        'A three-row window is three observations, not three days; with gaps it can span a week. A centered window (center=True) also uses later rows, which a prediction made at that moment could not have known.',
+      ],
+      example: {
+        code: 'import pandas as pd\nt = pd.DataFrame({"day": [3, 1, 2, 4], "sales": [9, 1, 5, 7]})\nprint(t["sales"].rolling(2).sum().tolist())\nordered = t.sort_values("day")\nprint(ordered["sales"].rolling(2).sum().tolist())',
+        output: '[nan, 10.0, 6.0, 12.0]\n[nan, 6.0, 14.0, 16.0]',
+        explanation:
+          'Unsorted, the second sum pairs day 3 with day 1. After sorting, each window pairs consecutive days: 1 + 5, 5 + 9, 9 + 7.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"week": [2, 1, 3], "n": [4, 10, 6]})\nprint(t.sort_values("week")["n"].rolling(2).mean().tolist())',
+          [
+            '[nan, 7.0, 8.0]',
+            '[nan, 7.0, 5.0]',
+            '[nan, 5.0, 7.0]',
+            '[7.0, 5.0]',
+          ],
+          1,
+          'In week order the values are 10, 4, 6, so the means are 7 and 5.',
+        ),
+        predictOutput(
+          'The rows are not sorted by day. What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"day": [2, 3, 1], "v": [5, 0, 10]})\nprint(t["v"].rolling(2).sum().tolist())',
+          [
+            '[nan, 15.0, 5.0]',
+            '[5.0, 10.0]',
+            '[nan, 10.0, 15.0]',
+            '[nan, 5.0, 10.0]',
+          ],
+          3,
+          'rolling uses row order as given: 5 + 0, then 0 + 10. Sorting by day first would give 15 and 5.',
+        ),
+        choose(
+          'Readings arrive at 09:00, 09:05 and 13:00. What does a 3-row rolling mean at 13:00 cover?',
+          [
+            'Exactly the last three hours',
+            'Three readings from the same minute',
+            'The last three readings, spanning four hours',
+            'Every reading of the day',
+          ],
+          2,
+          'A row-based window counts observations, whatever time they span.',
+        ),
+        choose(
+          'Why is a centered rolling mean unfair as a feature for predicting tomorrow’s demand?',
+          [
+            'It ignores the current value',
+            'It uses values from after the prediction time',
+            'It requires text data',
+            'It always returns NaN',
+          ],
+          1,
+          'A centered window includes later rows, which would not exist when the prediction is made.',
+        ),
+      ],
+    },
+  ],
+
+  'da-datetime': [
+    {
+      title: 'Parse dates with a declared format',
+      explanation: [
+        'pd.to_datetime(text, format="%d/%m/%Y") turns strings into timestamps using codes: %d is the day, %m the month and %Y the four-digit year. The text 03/04/2024 is 3 April with %d/%m/%Y but 4 March with %m/%d/%Y, so declare the format instead of letting pandas guess.',
+        'Parsed values have a .dt accessor: .dt.year, .dt.month, .dt.day, .dt.hour, and .dt.strftime("%Y-%m-%d") to format them as text. A string that does not fit the format, or names an impossible date, raises an error.',
+      ],
+      example: {
+        code: 'import pandas as pd\nraw = pd.Series(["03/04/2024", "25/12/2024"])\ndates = pd.to_datetime(raw, format="%d/%m/%Y")\nprint(dates.dt.month.tolist())\nprint(dates.dt.strftime("%Y-%m-%d").tolist())',
+        output: "[4, 12]\n['2024-04-03', '2024-12-25']",
+        explanation:
+          'The declared format reads the first number as the day, so 03/04 is in April.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nd = pd.to_datetime(pd.Series(["05/06/2024"]), format="%m/%d/%Y")\nprint(d.dt.month.tolist())\nprint(d.dt.day.tolist())',
+          ['[6]\n[5]', '[5]\n[5]', '[2024]\n[6]', '[5]\n[6]'],
+          3,
+          'With %m first, 05 is the month and 06 the day.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nd = pd.to_datetime(pd.Series(["2024-02-29", "2023-11-05"]), format="%Y-%m-%d")\nprint(d.dt.strftime("%d/%m/%Y").tolist())',
+          [
+            "['29/02/2024', '05/11/2023']",
+            "['02/29/2024', '11/05/2023']",
+            "['2024-02-29', '2023-11-05']",
+            "['29/02/2024', '11/05/2023']",
+          ],
+          0,
+          'strftime writes the day, then the month, then the year, as its format string says.',
+        ),
+        choose(
+          'A UK supplier writes 07/08/2024 for 7 August. Which format parses it correctly?',
+          ['"%m/%d/%Y"', '"%Y/%m/%d"', '"%d/%m/%Y"', '"%d/%Y/%m"'],
+          2,
+          'The day comes first, then the month, then the year.',
+        ),
+        choose(
+          'pd.to_datetime(pd.Series(["31/02/2024"]), format="%d/%m/%Y") is called. What happens?',
+          [
+            'It returns 2 March 2024',
+            'It raises an error because 31 February does not exist',
+            'It returns 29 February 2024',
+            'It swaps the day and month',
+          ],
+          1,
+          'Parsing validates the date, and by default an invalid one raises an error.',
+        ),
+      ],
+    },
+    {
+      title: 'Normalise offsets to UTC',
+      explanation: [
+        'A timestamp such as 2024-01-02T00:30:00+02:00 carries an offset: that clock reading is 2 hours ahead of UTC, so the same instant is 2024-01-01 22:30 in UTC. Subtract the offset to get UTC.',
+        'pd.to_datetime(values, utc=True) converts every value to UTC, so comparisons and sorting use real instants. Sorting the original text instead sorts characters, which can put a later instant first.',
+      ],
+      example: {
+        code: 'import pandas as pd\nraw = pd.Series(["2024-01-02T00:30:00+02:00", "2024-01-01T23:30:00+00:00"])\ntimes = pd.to_datetime(raw, utc=True)\nprint(times.dt.strftime("%Y-%m-%d %H:%M").tolist())\nprint(times.iloc[0] < times.iloc[1])',
+        output: "['2024-01-01 22:30', '2024-01-01 23:30']\nTrue",
+        explanation:
+          'The first text shows a later date, but in UTC it happened an hour before the second.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.to_datetime(pd.Series(["2024-05-01T09:00:00+03:00"]), utc=True)\nprint(t.dt.hour.tolist())',
+          ['[9]', '[12]', '[6]', '[3]'],
+          2,
+          '09:00 at UTC+3 is 3 hours ahead of UTC, so the UTC hour is 6.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.to_datetime(pd.Series(["2024-05-01T01:00:00+05:00"]), utc=True)\nprint(t.dt.strftime("%Y-%m-%d %H:%M").tolist())',
+          [
+            "['2024-05-01 06:00']",
+            "['2024-05-01 01:00']",
+            "['2024-05-01 20:00']",
+            "['2024-04-30 20:00']",
+          ],
+          3,
+          'Subtracting 5 hours from 01:00 crosses midnight into the previous day.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nraw = pd.Series(["2024-03-01T10:00:00-05:00", "2024-03-01T12:00:00+00:00"])\nt = pd.to_datetime(raw, utc=True)\nprint(t.dt.hour.tolist())',
+          ['[15, 12]', '[10, 12]', '[5, 12]', '[12, 15]'],
+          0,
+          'A negative offset means behind UTC, so 10:00−05:00 is 15:00 UTC.',
+        ),
+        choose(
+          'Event A is at 10:00+02:00 and event B at 09:30+00:00 on the same date. Which happened first?',
+          [
+            'B, at 09:30 UTC',
+            'A, at 08:00 UTC',
+            'They happened at the same instant',
+            'A, because its offset is larger',
+          ],
+          1,
+          'A is 08:00 in UTC, which is earlier than B’s 09:30.',
+        ),
+      ],
+    },
+    {
+      title: 'Know what utc=True assumes',
+      explanation: [
+        'A naive timestamp such as 2024-01-01 23:30 has no offset. utc=True does not discover where it was recorded; it simply declares it to be UTC. If the source clock showed local time, every instant is now off by the local offset.',
+        'Calendar dates depend on the zone: 23:30 UTC on 1 January is already 2 January in Tokyo (UTC+9). Choose the reporting zone before extracting dates or grouping by day.',
+      ],
+      example: {
+        code: 'import pandas as pd\nnaive = pd.to_datetime(pd.Series(["2024-01-01 23:30"]), utc=True)\naware = pd.to_datetime(pd.Series(["2024-01-01 23:30+09:00"]), utc=True)\nprint(naive.dt.strftime("%H:%M").tolist())\nprint(aware.dt.strftime("%Y-%m-%d %H:%M").tolist())',
+        output: "['23:30']\n['2024-01-01 14:30']",
+        explanation:
+          'The naive value keeps its clock reading and is simply labelled UTC. The value with an offset is converted, moving 9 hours earlier.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.to_datetime(pd.Series(["2024-06-01 08:00"]), utc=True)\nprint(t.dt.hour.tolist())',
+          ['[6]', '[10]', '[8]', '[0]'],
+          2,
+          'Without an offset, the clock reading is taken as UTC unchanged.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.to_datetime(pd.Series(["2024-12-31T22:00:00-03:00"]), utc=True)\nprint(t.dt.strftime("%Y-%m-%d").tolist())',
+          [
+            "['2024-12-31']",
+            "['2024-12-30']",
+            "['2025-12-31']",
+            "['2025-01-01']",
+          ],
+          3,
+          '22:00 at UTC−3 is 01:00 UTC the next day, which is in a new year.',
+        ),
+        choose(
+          'A log written in New York local time (UTC−5) has naive timestamps, and you parse them with utc=True. What is wrong with the result?',
+          [
+            'Each instant is labelled 5 hours earlier than it really happened',
+            'Nothing, because pandas detects the zone',
+            'Each instant is labelled 5 hours later than it really happened',
+            'The dates become missing',
+          ],
+          0,
+          '10:00 in New York is really 15:00 UTC, but the naive 10:00 was labelled 10:00 UTC.',
+        ),
+        choose(
+          'A café in Lima (UTC−5) wants sales per local business day from UTC timestamps. What must happen before extracting the date?',
+          [
+            'Nothing, because UTC dates equal local dates',
+            'Convert the timestamps to Lima time',
+            'Drop every sale after 19:00',
+            'Sort the timestamps',
+          ],
+          1,
+          'Sales after 19:00 Lima time fall on the next UTC date, so dates must come from local time.',
+        ),
+      ],
+    },
+  ],
+
+  'da-resampling': [
+    {
+      title: 'Group by calendar intervals with resample',
+      explanation: [
+        'With timestamps as the index, series.resample("D").sum() groups observations into calendar days and sums each day. Other frequencies include "h" for hours, "W" for weeks and "MS" for calendar months. For a table, name the timestamp column: table.resample("D", on="time")["amount"].sum().',
+        'Frequency and reduction are separate choices: daily sums answer “how much in total?”, daily means answer “how large on average?”.',
+      ],
+      example: {
+        code: 'import pandas as pd\ntimes = pd.to_datetime(["2024-01-01 08:00", "2024-01-01 18:00", "2024-01-02 09:00"])\nsales = pd.Series([2, 5, 4], index=times)\ndaily = sales.resample("D").sum()\nprint(daily.tolist())\nprint(daily.index.strftime("%m-%d").tolist())',
+        output: "[7, 4]\n['01-01', '01-02']",
+        explanation:
+          'The two January 1 readings share a bin and add to 7; January 2 has one reading. Each bin is labelled by its day.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ntimes = pd.to_datetime(["2024-03-01 01:00", "2024-03-01 23:00", "2024-03-02 12:00", "2024-03-02 13:00"])\ns = pd.Series([1, 2, 3, 4], index=times)\nprint(s.resample("D").sum().tolist())',
+          ['[1, 2, 3, 4]', '[10]', '[3, 3, 4]', '[3, 7]'],
+          3,
+          'Both March 1 readings fall in one day (1 + 2) and both March 2 readings in the next (3 + 4).',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ntimes = pd.to_datetime(["2024-01-01 09:15", "2024-01-01 09:45", "2024-01-01 10:05"])\ns = pd.Series([5, 1, 2], index=times)\nprint(s.resample("h").sum().tolist())',
+          ['[5, 1, 2]', '[6, 2]', '[8]', '[5, 3]'],
+          1,
+          'The 9 o’clock hour holds 5 and 1; the 10 o’clock hour holds 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"time": pd.to_datetime(["2024-05-01 10:00", "2024-05-01 11:00", "2024-05-02 10:00"]), "n": [1, 1, 5]})\nprint(t.resample("D", on="time")["n"].mean().tolist())',
+          [
+            '[1.0, 5.0]',
+            '[2.0, 5.0]',
+            '[1.0, 1.0, 5.0]',
+            '[2.3333333333333335]',
+          ],
+          0,
+          'May 1 averages its two readings of 1; May 2 has the single reading 5.',
+        ),
+        choose(
+          'A table has a time column and an amount column. Which expression gives the total amount per calendar day?',
+          [
+            't.groupby("amount")["time"].sum()',
+            't.resample("amount").sum()',
+            't.resample("D", on="time")["amount"].sum()',
+            't["amount"].rolling(1).sum()',
+          ],
+          2,
+          'resample with on= bins rows by the time column; the reduction then sums each day.',
+        ),
+      ],
+    },
+    {
+      title: 'Tell an empty interval from a measured zero',
+      explanation: [
+        'resample creates every interval from the first observation to the last, including days with no rows. .sum() on an empty interval returns 0, which reads as “nothing happened”. sum(min_count=1) requires at least one value and returns NaN instead; .mean() already gives NaN there, and .count() gives 0.',
+        'A missing interval is not proof of zero activity: an outage may have stopped data collection. Keep empty bins visible until you know which it is.',
+      ],
+      example: {
+        code: 'import pandas as pd\ntimes = pd.to_datetime(["2024-01-01 08:00", "2024-01-03 09:00"])\nv = pd.Series([2, 4], index=times)\nprint(v.resample("D").sum().tolist())\nprint(v.resample("D").sum(min_count=1).tolist())\nprint(v.resample("D").count().tolist())',
+        output: '[2, 0, 4]\n[2.0, nan, 4.0]\n[1, 0, 1]',
+        explanation:
+          'January 2 has no rows. Plain sum reports 0, min_count=1 reports it as missing, and count shows it had no observations.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ntimes = pd.to_datetime(["2024-02-01", "2024-02-04"])\nv = pd.Series([3, 6], index=times)\nprint(len(v.resample("D").sum()))',
+          ['2', '3', '1', '4'],
+          3,
+          'Bins run from February 1 to February 4, including the two empty days between.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ntimes = pd.to_datetime(["2024-02-01", "2024-02-04"])\nv = pd.Series([3, 6], index=times)\nprint(v.resample("D").sum(min_count=1).isna().sum())',
+          ['0', '1', '2', '4'],
+          2,
+          'February 2 and 3 have no values, so with min_count=1 both are missing.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ntimes = pd.to_datetime(["2024-02-01 10:00", "2024-02-03 10:00"])\nv = pd.Series([5, 1], index=times)\nprint(v.resample("D").mean().tolist())',
+          [
+            '[5.0, nan, 1.0]',
+            '[5.0, 0.0, 1.0]',
+            '[5.0, 1.0]',
+            '[3.0, 3.0, 3.0]',
+          ],
+          0,
+          'An empty day has no values to average, so its mean is missing.',
+        ),
+        choose(
+          'A daily rainfall series has no rows for 3 May because the gauge was offline. Which aggregation keeps that day honest?',
+          [
+            'resample("D").sum()',
+            'resample("D").sum(min_count=1)',
+            'resample("D").count()',
+            'Dropping 3 May before resampling',
+          ],
+          1,
+          'min_count=1 leaves the offline day missing instead of reporting 0 mm of rain.',
+        ),
+      ],
+    },
+    {
+      title: 'Bin days in the reporting zone',
+      explanation: [
+        'Daily bins start at midnight in the timestamps’ own zone. Timestamps parsed with a shared offset, such as -05:00, and without utc=True keep that local zone; with utc=True the same instants are binned by UTC midnight.',
+        'Midnight UTC is 19:00 the previous evening at UTC−5, so evening sales can land on different days. Convert to the business’s reporting zone before resampling, and state the zone in the report.',
+      ],
+      example: {
+        code: 'import pandas as pd\nraw = ["2024-03-01T20:00:00-05:00", "2024-03-01T22:00:00-05:00", "2024-03-02T09:00:00-05:00"]\nlocal = pd.Series([1, 1, 1], index=pd.to_datetime(raw))\nutc = pd.Series([1, 1, 1], index=pd.to_datetime(raw, utc=True))\nprint(local.resample("D").sum().tolist())\nprint(utc.resample("D").sum().tolist())',
+        output: '[2, 1]\n[3]',
+        explanation:
+          'In local time, two sales are on March 1 and one on March 2. In UTC, all three are on March 2, because 20:00−05:00 is already 01:00 UTC.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nraw = ["2024-07-01T23:00:00+00:00", "2024-07-02T01:00:00+00:00"]\nv = pd.Series([4, 6], index=pd.to_datetime(raw))\nprint(v.resample("D").sum().tolist())',
+          ['[10]', '[4, 6]', '[6, 4]', '[4, 0, 6]'],
+          1,
+          'In UTC the readings are on July 1 and July 2, one per day.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nraw = ["2024-07-01T23:00:00+00:00", "2024-07-02T01:00:00+00:00"]\nv = pd.Series([4, 6], index=pd.to_datetime(raw))\nlocal = pd.Series([4, 6], index=pd.to_datetime(["2024-07-02T08:00:00+09:00", "2024-07-02T10:00:00+09:00"]))\nprint(local.resample("D").sum().tolist())',
+          ['[4, 6]', '[6, 4]', '[10]', '[4, 0, 6]'],
+          2,
+          'At UTC+9 the same two instants are 08:00 and 10:00 on July 2, so they share one day.',
+        ),
+        choose(
+          'A Tokyo shop (UTC+9) makes a sale at 08:00 local time on 5 June, which is 23:00 UTC on 4 June. Which day does a report binned by UTC days put it in?',
+          ['5 June', '4 June', '6 June', 'Neither; it is dropped'],
+          1,
+          'UTC bins use UTC midnight, and the sale happened before it.',
+        ),
+        choose(
+          'When should timestamps be converted to the business’s zone in a daily report?',
+          [
+            'After resampling into days',
+            'Only for weekly reports',
+            'Before resampling into days',
+            'Never, because days are the same everywhere',
+          ],
+          2,
+          'The bins’ midnight boundaries come from the zone the timestamps are in at resampling time.',
+        ),
+      ],
+    },
+  ],
+
+  'da-exploration': [
+    {
+      title: 'Count categories with value_counts',
+      explanation: [
+        'value_counts() counts each distinct value and lists them from most to least frequent. normalize=True returns proportions instead of counts. Missing values are left out unless you pass dropna=False.',
+        'Check counts before comparing groups: a category with 3 rows cannot support the same conclusions as one with 300.',
+      ],
+      example: {
+        code: 'import pandas as pd\nplan = pd.Series(["free", "pro", "free", "team", "free", "pro", "free", "free"])\nprint(plan.value_counts().to_dict())\nprint(plan.value_counts(normalize=True).to_dict())',
+        output:
+          "{'free': 5, 'pro': 2, 'team': 1}\n{'free': 0.625, 'pro': 0.25, 'team': 0.125}",
+        explanation:
+          'free appears 5 times out of 8, so it comes first with a proportion of 0.625.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(["b", "a", "b", "c", "b", "a"])\nprint(s.value_counts().to_dict())',
+          [
+            "{'a': 2, 'b': 3, 'c': 1}",
+            "{'b': 3, 'a': 2, 'c': 1}",
+            "{'b': 1, 'a': 1, 'c': 1}",
+            "{'c': 1, 'a': 2, 'b': 3}",
+          ],
+          1,
+          'Values are counted and listed from most to least frequent, not alphabetically.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(["y", "n", "y", "y"])\nprint(s.value_counts(normalize=True).to_dict())',
+          [
+            "{'y': 3, 'n': 1}",
+            "{'n': 0.25, 'y': 0.75}",
+            "{'y': 75, 'n': 25}",
+            "{'y': 0.75, 'n': 0.25}",
+          ],
+          3,
+          'normalize=True divides each count by 4 and keeps the most frequent first.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(["x", None, "x", None, None])\nprint(s.value_counts().to_dict())',
+          ["{'x': 2}", "{None: 3, 'x': 2}", "{'x': 2, None: 3}", "{'x': 5}"],
+          0,
+          'Missing values are excluded by default, even when they are the most common entry.',
+        ),
+        choose(
+          'A churn rate per plan shows 0% for the enterprise plan, and value_counts shows only 2 enterprise customers. What should the report say?',
+          [
+            'Enterprise customers never churn',
+            'Enterprise should be removed from the analysis',
+            'The 0% rests on 2 customers and is weak evidence',
+            'Churn is impossible on the enterprise plan',
+          ],
+          2,
+          'Two customers are far too few to support a claim about the whole plan.',
+        ),
+      ],
+    },
+    {
+      title: 'Compare mean and median with describe',
+      explanation: [
+        '.describe() summarises a numeric column: count, mean, std (a measure of spread), min, the values 25%, 50% and 75% of the way through the sorted data, and max. The 50% value is the median, and count includes only present values.',
+        'When the mean sits far from the median, a few extreme values are pulling it. That is a reason to inspect those observations and their source, not to delete them automatically.',
+      ],
+      example: {
+        code: 'import pandas as pd\nvalues = pd.Series([2, 3, 4, 51])\nd = values.describe()\nprint(d["mean"])\nprint(d["50%"])\nprint(d[["count", "min", "max"]].tolist())',
+        output: '15.0\n3.5\n[4.0, 2.0, 51.0]',
+        explanation:
+          'The single 51 lifts the mean to 15, while the median stays between 3 and 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([1, 2, 3, 4, 90])\nprint(s.mean())\nprint(s.median())',
+          ['3.0\n20.0', '20.0\n3.0', '20.0\n20.0', '22.5\n3.0'],
+          1,
+          'The mean is 100 / 5 = 20; the middle value of the sorted five is 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([5, 1, 9])\nprint(s.describe()["50%"])',
+          ['1.0', '9.0', '15.0', '5.0'],
+          3,
+          'Sorted, the values are 1, 5, 9, so the 50% value (the median) is 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nd = pd.Series([3.0, None, 7.0]).describe()\nprint(d["count"])\nprint(d["max"])',
+          ['3.0\n7.0', '2.0\nnan', '2.0\n7.0', '3.0\nnan'],
+          2,
+          'count includes only the two present values, and max ignores the missing one.',
+        ),
+        choose(
+          'Delivery times have a mean of 9 days and a median of 3 days. What is the sound next step?',
+          [
+            'Report 9 days as the typical delivery',
+            'Inspect the slow deliveries and their source before summarising',
+            'Delete the slowest deliveries',
+            'Report the median and never mention the gap',
+          ],
+          1,
+          'The gap shows a few very slow deliveries; whether they are real or errors decides how to report.',
+        ),
+      ],
+    },
+    {
+      title: 'Read a correlation without claiming a cause',
+      explanation: [
+        'x.corr(y) measures how closely two columns follow a straight-line pattern across paired rows. It is 1.0 when the points lie exactly on a rising line, −1.0 on a falling line, and near 0 when there is no straight-line pattern.',
+        'Correlation is association, not causation. Ice-cream sales and drownings both rise in summer because of a third factor, heat. Shared trends, selected samples and confounding variables can all create correlation.',
+      ],
+      example: {
+        code: 'import pandas as pd\nhours = pd.Series([1, 2, 3, 4])\nscore = pd.Series([52, 60, 68, 76])\nfatigue = pd.Series([9, 7, 5, 3])\nprint(hours.corr(score))\nprint(hours.corr(fatigue))',
+        output: '1.0\n-1.0',
+        explanation:
+          'Score rises by exactly 8 per hour and fatigue falls by exactly 2, so both lie on straight lines, one rising and one falling.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nx = pd.Series([1, 2, 3])\ny = pd.Series([30, 20, 10])\nprint(x.corr(y))',
+          ['1.0', '-10.0', '-1.0', '0.0'],
+          2,
+          'y falls by the same amount at each step, a perfect falling line.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nx = pd.Series([2, 4, 6, 8])\ny = pd.Series([5, 9, 13, 17])\nprint(x.corr(y))',
+          ['2.0', '0.5', '-1.0', '1.0'],
+          3,
+          'Correlation measures how straight the pattern is, not its slope; any exact rising line gives 1.0.',
+        ),
+        choose(
+          'Across many fires, the number of firefighters sent correlates strongly with the damage. What is the best explanation?',
+          [
+            'Bigger fires bring both more firefighters and more damage',
+            'Firefighters cause the damage',
+            'The correlation must be a calculation error',
+            'Damage attracts firefighters after the fire',
+          ],
+          0,
+          'Fire size is a confounding variable that drives both measurements.',
+        ),
+        choose(
+          'Two columns have a correlation of 0.0. Which statement is justified?',
+          [
+            'They are unrelated in every way',
+            'One causes the other',
+            'The data must contain missing values',
+            'They show no straight-line relationship in this data',
+          ],
+          3,
+          'Correlation only measures linear association; a curved relationship can still exist.',
+        ),
+      ],
+    },
+  ],
+
+  'da-pipeline': [
+    {
+      title: 'Wrap the analysis in a function',
+      explanation: [
+        'A pipeline takes source data in and returns a result: def report(text): parse, clean, summarise, return. Everything it needs comes from its parameter, so calling it again with the same text gives the same answer, and calling it with new text analyses the new data.',
+        'Code that depends on variables left over from earlier runs can silently use stale data. A function makes the inputs explicit.',
+      ],
+      example: {
+        code: 'from io import StringIO\nimport pandas as pd\n\ndef total_units(text):\n    data = pd.read_csv(StringIO(text))\n    return int(data["units"].sum())\n\nprint(total_units("units\\n3\\n4\\n"))\nprint(total_units("units\\n10\\n"))\nprint(total_units("units\\n3\\n4\\n"))',
+        output: '7\n10\n7',
+        explanation:
+          'Each call parses its own text. The first and third calls receive the same input, so they return the same result.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from io import StringIO\nimport pandas as pd\n\ndef shops(text):\n    data = pd.read_csv(StringIO(text))\n    return len(data)\n\nprint(shops("shop\\nA\\nB\\nC\\n"))\nprint(shops("shop\\nD\\n"))',
+          ['4\n2', '3\n4', '3\n1', '1\n3'],
+          2,
+          'Each call counts the data rows of its own input; the header is not a row.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'calls = []\n\ndef report(value):\n    calls.append(value)\n    return len(calls)\n\nprint(report("a"))\nprint(report("a"))',
+          ['1\n1', 'a\na', '2\n2', '1\n2'],
+          3,
+          'The function depends on the list outside it, so the same input gives a different result the second time.',
+        ),
+        choose(
+          'A notebook’s final total changes depending on which earlier cells were run. What fixes the root cause?',
+          [
+            'Put the steps in a function that takes the source data and returns the result',
+            'Run the cells in a different order',
+            'Add print statements to each cell',
+            'Copy the final total by hand',
+          ],
+          0,
+          'With explicit inputs and a returned result, the total no longer depends on leftover state.',
+        ),
+        choose(
+          'Which design best fits a reusable cleaning step?',
+          [
+            'def clean(): edits a table stored in a global variable',
+            'def clean(text): prints the cleaned table and returns nothing',
+            'def clean(text): parses text and returns a cleaned DataFrame',
+            'A cell that edits the table in place each time it runs',
+          ],
+          2,
+          'Taking the source as a parameter and returning a result makes the step repeatable and testable.',
+        ),
+      ],
+    },
+    {
+      title: 'Make broken assumptions fail loudly',
+      explanation: [
+        'assert condition, "message" does nothing when the condition is True and raises AssertionError with the message when it is False. Use it to state what a pipeline relies on: keys are unique, required columns exist, quantities are numeric.',
+        'A failed check stops the pipeline before it produces a plausible-looking but wrong number. A caller can catch the error with try/except and report what broke.',
+      ],
+      example: {
+        code: 'import pandas as pd\n\ndef check(data):\n    assert data["id"].is_unique, "duplicate id"\n    return len(data)\n\nprint(check(pd.DataFrame({"id": [1, 2, 3]})))\ntry:\n    check(pd.DataFrame({"id": [1, 1]}))\nexcept AssertionError as error:\n    print("rejected:", error)',
+        output: '3\nrejected: duplicate id',
+        explanation:
+          'The first table passes the check. The second repeats id 1, so the assertion raises and the caller prints its message.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def validate(units):\n    assert units >= 0, "negative units"\n    return units * 2\n\ntry:\n    print(validate(4))\n    print(validate(-1))\nexcept AssertionError as error:\n    print(error)',
+          ['8\n-2', 'negative units', '8\nnegative units', '8'],
+          2,
+          '4 passes and prints 8; −1 fails the assertion, so its message is printed instead of a result.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from io import StringIO\nimport pandas as pd\n\ndef load(text):\n    data = pd.read_csv(StringIO(text))\n    assert "qty" in data.columns, "missing qty column"\n    return int(data["qty"].sum())\n\nfor text in ["qty\\n2\\n5\\n", "amount\\n9\\n"]:\n    try:\n        print(load(text))\n    except AssertionError as error:\n        print("error:", error)',
+          [
+            '7\n9',
+            'error: missing qty column',
+            '7\nKeyError',
+            '7\nerror: missing qty column',
+          ],
+          3,
+          'The first source has qty and sums to 7. The second lacks the column, so the check fails before any sum.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\n\ndef parse(values):\n    return pd.to_numeric(pd.Series(values), errors="raise").sum()\n\ntry:\n    print(parse(["3", "4"]))\n    print(parse(["3", "four"]))\nexcept ValueError:\n    print("bad quantity")',
+          ['7\nbad quantity', '7\n3', '7\nnan', 'bad quantity'],
+          0,
+          'The second call meets an invalid token, and errors="raise" stops it instead of skipping four.',
+        ),
+        choose(
+          'Why does a pipeline assert that event_id is unique before summing?',
+          [
+            'assert makes the sum faster',
+            'Repeated ids would count the same event twice in the total',
+            'Unique ids remove missing values',
+            'pandas cannot sum a column unless ids are unique',
+          ],
+          1,
+          'The check protects the meaning of a row, and so the meaning of the total.',
+        ),
+      ],
+    },
+    {
+      title: 'Order the steps so each can trust the last',
+      explanation: [
+        'Steps depend on each other: convert types before checking numeric rules, deduplicate before aggregating, and validate the key after deduplicating. Swapping the order can make a check meaningless or count observations twice.',
+        'Write the policy choices, such as which version wins and how missing quantities are handled, inside the function, so the same rules run every time.',
+      ],
+      example: {
+        code: 'from io import StringIO\nimport pandas as pd\n\ndef units_by_shop(text):\n    data = pd.read_csv(StringIO(text))\n    data["units"] = pd.to_numeric(data["units"], errors="raise")\n    data = data.sort_values("version").drop_duplicates("event_id", keep="last")\n    assert data["event_id"].is_unique\n    return data.groupby("shop")["units"].sum().to_dict()\n\ntext = "event_id,version,shop,units\\n1,1,west,2\\n1,2,west,5\\n2,1,east,4\\n"\nprint(units_by_shop(text))',
+        output: "{'east': 4, 'west': 5}",
+        explanation:
+          'Event 1 has two versions; only version 2 (5 units) survives, so west totals 5 rather than 7.',
+      },
+      questions: [
+        predictOutput(
+          'This version skips deduplication. What does it print?',
+          'from io import StringIO\nimport pandas as pd\n\ntext = "event_id,version,shop,units\\n1,1,west,2\\n1,2,west,5\\n2,1,east,4\\n"\ndata = pd.read_csv(StringIO(text))\nprint(data.groupby("shop")["units"].sum().to_dict())',
+          [
+            "{'east': 4, 'west': 5}",
+            "{'east': 4, 'west': 7}",
+            "{'west': 7, 'east': 4}",
+            "{'east': 4, 'west': 2}",
+          ],
+          1,
+          'Both versions of event 1 are counted, so west double-counts to 7.',
+        ),
+        predictOutput(
+          'This version keeps the last row without sorting by version. What does it print?',
+          'from io import StringIO\nimport pandas as pd\n\ntext = "event_id,version,shop,units\\n1,2,west,5\\n1,1,west,2\\n2,1,east,4\\n"\ndata = pd.read_csv(StringIO(text))\nlatest = data.drop_duplicates("event_id", keep="last")\nprint(latest.groupby("shop")["units"].sum().to_dict())',
+          [
+            "{'east': 4, 'west': 5}",
+            "{'east': 4, 'west': 7}",
+            "{'east': 4, 'west': 2}",
+            "{'west': 2}",
+          ],
+          2,
+          'The last row for event 1 is the older version 1, so the outdated 2 units win.',
+        ),
+        choose(
+          'Where should the uniqueness assertion on event_id go in a pipeline that removes old versions?',
+          [
+            'Before reading the CSV',
+            'Before converting units to numbers',
+            'Right after deduplication, before aggregating',
+            'After printing the report',
+          ],
+          2,
+          'Asserting before deduplication would always fail; after aggregating it is too late to protect the totals.',
+        ),
+        choose(
+          'A pipeline fills missing units with 0 and only then checks that every quantity is present. What goes wrong?',
+          [
+            'The check can never fail, so missing quantities slip through as zeros',
+            'The fill raises an error',
+            'Nothing, because the order of these steps does not matter',
+            'groupby loses its keys',
+          ],
+          0,
+          'After filling, nothing is missing, so the check cannot detect the original gaps.',
+        ),
+      ],
+    },
+  ],
 };
