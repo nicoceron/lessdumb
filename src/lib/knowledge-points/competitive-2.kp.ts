@@ -426,6 +426,188 @@ const eventSizes = (children: string, onReady = '', onPop = '') =>
     '            stack.append((child, False))',
   );
 
+const addDirected = lines(
+  'def add_directed(graph, u, v):',
+  '    result = [neighbors.copy() for neighbors in graph]',
+  '    result[u].append(v)',
+  '    return result',
+  '',
+);
+
+const addUndirected = lines(
+  'def add_undirected(graph, u, v):',
+  '    result = [neighbors.copy() for neighbors in graph]',
+  '    result[u].append(v)',
+  '    result[v].append(u)',
+  '    return result',
+  '',
+);
+
+const undirectedBuild = (n: number, edges: string) =>
+  lines(
+    `graph = [[] for _ in range(${n})]`,
+    `for u, v in ${edges}:`,
+    '    graph[u].append(v)',
+    '    graph[v].append(u)',
+  );
+
+const makeNeighbors = lines(
+  'def make_neighbors(n, edges, directed):',
+  '    neighbors = [[] for _ in range(n)]',
+  '    for u, v in edges:',
+  '        neighbors[u].append(v)',
+  '        if not directed:',
+  '            neighbors[v].append(u)',
+  '    return neighbors',
+  '',
+);
+
+const discoverLoop = (seen: string, pending: string, vertices: string) =>
+  lines(
+    `seen = ${seen}`,
+    `pending = ${pending}`,
+    `for vertex in ${vertices}:`,
+    '    if vertex not in seen:',
+    '        seen.add(vertex)',
+    '        pending.append(vertex)',
+  );
+
+/** Marks only when a vertex is popped, so pending can hold duplicates. */
+const popTimeMarking = (graph: string) =>
+  lines(
+    `graph = ${graph}`,
+    'seen = set()',
+    'pending = [0]',
+    'pushed = []',
+    'while pending:',
+    '    vertex = pending.pop()',
+    '    if vertex not in seen:',
+    '        seen.add(vertex)',
+    '        for neighbor in graph[vertex]:',
+    '            if neighbor not in seen:',
+    '                pending.append(neighbor)',
+    '                pushed.append(neighbor)',
+  );
+
+const takeDepthFirst = lines(
+  'def take_depth_first(pending):',
+  '    remaining = pending.copy()',
+  '    if not remaining:',
+  '        return None, remaining',
+  '    return remaining.pop(), remaining',
+  '',
+);
+
+const depthLabels = (graph: string) =>
+  lines(
+    `graph = ${graph}`,
+    'depth = [-1] * len(graph)',
+    'depth[0] = 0',
+    'stack = [0]',
+    'while stack:',
+    '    vertex = stack.pop()',
+    '    for neighbor in graph[vertex]:',
+    '        if depth[neighbor] == -1:',
+    '            depth[neighbor] = depth[vertex] + 1',
+    '            stack.append(neighbor)',
+  );
+
+const unseenNeighbors = lines(
+  'def unseen_neighbors(neighbors, seen):',
+  '    discovered = seen.copy()',
+  '    result = []',
+  '    for vertex in neighbors:',
+  '        if vertex not in discovered:',
+  '            discovered.add(vertex)',
+  '            result.append(vertex)',
+  '    return result',
+  '',
+);
+
+/** Iterative DFS from `start`; `onPop` and `onScan` add trace lines. */
+const dfsLoop = (graph: string, start = 0, onPop = '', onScan = '') =>
+  lines(
+    `graph = ${graph}`,
+    `seen = {${start}}`,
+    `stack = [${start}]`,
+    'while stack:',
+    '    vertex = stack.pop()',
+    ...(onPop ? [`    ${onPop}`] : []),
+    '    for neighbor in graph[vertex]:',
+    ...(onScan ? [`        ${onScan}`] : []),
+    '        if neighbor not in seen:',
+    '            seen.add(neighbor)',
+    '            stack.append(neighbor)',
+  );
+
+const takeBreadthFirst = lines(
+  'from collections import deque',
+  '',
+  'def take_breadth_first(pending):',
+  '    queue = deque(pending)',
+  '    if not queue:',
+  '        return None, []',
+  '    vertex = queue.popleft()',
+  '    return vertex, list(queue)',
+  '',
+);
+
+const queueNeighbors = lines(
+  'def queue_neighbors(pending, seen, neighbors):',
+  '    queue = pending.copy()',
+  '    discovered = seen.copy()',
+  '    for vertex in neighbors:',
+  '        if vertex not in discovered:',
+  '            discovered.add(vertex)',
+  '            queue.append(vertex)',
+  '    return queue, discovered',
+  '',
+);
+
+const bfsOrder = (graph: string) =>
+  lines(
+    'from collections import deque',
+    `graph = ${graph}`,
+    'seen = {0}',
+    'queue = deque([0])',
+    'order = []',
+    'while queue:',
+    '    vertex = queue.popleft()',
+    '    order.append(vertex)',
+    '    for neighbor in graph[vertex]:',
+    '        if neighbor not in seen:',
+    '            seen.add(neighbor)',
+    '            queue.append(neighbor)',
+  );
+
+const assignNextLayer = lines(
+  'def assign_next_layer(distances, vertex, neighbors):',
+  '    result = distances.copy()',
+  '    for neighbor in neighbors:',
+  '        if result[neighbor] == -1:',
+  '            result[neighbor] = result[vertex] + 1',
+  '    return result',
+  '',
+);
+
+/** Breadth-first distances; `onPop` and `onScan` add trace lines. */
+const bfsDistances = (graph: string, source = 0, onPop = '', onScan = '') =>
+  lines(
+    'from collections import deque',
+    `graph = ${graph}`,
+    'distance = [-1] * len(graph)',
+    `distance[${source}] = 0`,
+    `queue = deque([${source}])`,
+    'while queue:',
+    '    vertex = queue.popleft()',
+    ...(onPop ? [`    ${onPop}`] : []),
+    '    for neighbor in graph[vertex]:',
+    ...(onScan ? [`        ${onScan}`] : []),
+    '        if distance[neighbor] == -1:',
+    '            distance[neighbor] = distance[vertex] + 1',
+    '            queue.append(neighbor)',
+  );
+
 export const knowledgePoints: KnowledgePointModule = {
   // ---------------------------------------------------------------- stacks
   'cp-stack-push': [
@@ -5245,6 +5427,1703 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           0,
           'Expanding 0 pushes 1, and expanding 1 pushes 0 again, so new events appear forever.',
+        ),
+      ],
+    },
+  ],
+  // ---------------------------------------------------------- graph models
+  'cp-vertex-lists': [
+    {
+      title: 'Give every vertex its own neighbor list',
+      explanation: [
+        'An adjacency list for vertices 0 through n − 1 is a list of n neighbor lists: graph[v] lists v’s neighbors. Every vertex gets a list, even one with no edges, so len(graph) is the number of vertices.',
+        'An isolated vertex is represented by an empty list at its own index, not by leaving it out.',
+      ],
+      example: {
+        code: lines(
+          'n = 4',
+          'graph = [[] for _ in range(n)]',
+          'print(graph)',
+          'print(len(graph), graph[3])',
+        ),
+        output: '[[], [], [], []]\n4 []',
+        explanation:
+          'Four vertices give four lists before any edge exists; vertex 3’s list is simply empty.',
+      },
+      questions: [
+        choose(
+          'A graph has vertices 0 through 6 and only two edges. How many neighbor lists does its adjacency list contain?',
+          ['2', '4', '6', '7'],
+          3,
+          'There is one list per vertex, and 0 through 6 is seven vertices, whatever the edges are.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'graph = [[] for _ in range(3)]',
+            'graph[1].append(2)',
+            'print(graph)',
+            'print(len(graph[0]), len(graph[1]))',
+          ),
+          [
+            '[[], [2], []]\n0 1',
+            '[[2]]\n1 1',
+            '[[], [2], []]\n1 1',
+            '[[2], [], []]\n0 1',
+          ],
+          0,
+          'Only vertex 1’s list receives the neighbor; the other lists stay empty but present.',
+        ),
+        choose(
+          'Vertex 4 has no edges. How is it represented in graph?',
+          [
+            'It is left out of graph',
+            'graph[4] is None',
+            'graph[4] is an empty list',
+            'graph[4] is [4]',
+          ],
+          2,
+          'Every vertex keeps its own index; having no neighbors just means an empty list.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            'graph = [[] for _ in range(4)]',
+            'graph[0].append(1)',
+            'graph[0].append(3)',
+            'graph[2].append(0)',
+            'print([len(neighbors) for neighbors in graph])',
+          ),
+          ['[2, 1]', '[2, 0, 1, 0]', '[1, 1, 1]', '[2, 0, 1]'],
+          1,
+          'There is one length per vertex, including the empty lists of vertices 1 and 3.',
+        ),
+      ],
+    },
+    {
+      title: 'Create independent inner lists',
+      explanation: [
+        '[[] for _ in range(n)] evaluates the inner [] once per vertex, creating n separate lists. [[]] * n instead repeats one list object n times, so every index names the same list.',
+        'With the shared version, appending a neighbor to one vertex makes it appear at every vertex.',
+      ],
+      example: {
+        code: lines(
+          'shared = [[]] * 3',
+          'shared[0].append(2)',
+          'fresh = [[] for _ in range(3)]',
+          'fresh[0].append(2)',
+          'print(shared)',
+          'print(fresh)',
+        ),
+        output: '[[2], [2], [2]]\n[[2], [], []]',
+        explanation:
+          'All three entries of shared are one list, so the single append shows up three times.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines('graph = [[]] * 2', 'graph[1].append(0)', 'print(graph)'),
+          ['[[], [0]]', '[[0], [0]]', '[[0], []]', '[[], []]'],
+          1,
+          'Both entries are the same list, so appending through graph[1] changes graph[0] too.',
+        ),
+        choose(
+          'Which construction gives n independent empty lists?',
+          ['[[]] * n', '[] * n', '[[] for _ in range(n)]', 'list([] * n)'],
+          2,
+          'The comprehension creates a new list on every iteration; [] * n is just an empty list.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            'graph = [[] for _ in range(3)]',
+            'graph[2].append(1)',
+            'graph[2].append(0)',
+            'print(graph[0], graph[2])',
+          ),
+          ['[1, 0] [1, 0]', '[] [0, 1]', '[1] [0]', '[] [1, 0]'],
+          3,
+          'The lists are independent, so only vertex 2 changes, keeping its neighbors in append order.',
+        ),
+        choose(
+          'After graph = [[]] * 4 and graph[0].append(3), how many vertices appear to have neighbor 3?',
+          ['4', '1', '0', '3'],
+          0,
+          'All four indices name one shared list, so every vertex appears to have neighbor 3.',
+        ),
+      ],
+    },
+  ],
+  'cp-directed-edge': [
+    {
+      title: 'Record u → v at u only',
+      explanation: [
+        'A directed edge u → v means v can be reached from u in one step. Store it by appending v to graph[u]. Nothing is added to graph[v], because the edge cannot be followed backward.',
+        'Parallel edges and self-loops are kept as given: two copies of 0 → 1 put 1 into graph[0] twice, and 2 → 2 puts 2 into graph[2].',
+      ],
+      example: {
+        code: lines(
+          'graph = [[] for _ in range(3)]',
+          'for u, v in [(0, 1), (2, 0), (0, 1)]:',
+          '    graph[u].append(v)',
+          'print(graph)',
+        ),
+        output: '[[1, 1], [], [0]]',
+        explanation:
+          'The repeated edge 0 → 1 is stored twice, and 2 → 0 adds 0 only to vertex 2’s list.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'graph = [[] for _ in range(3)]',
+            'for u, v in [(1, 2), (2, 1), (1, 0)]:',
+            '    graph[u].append(v)',
+            'print(graph)',
+          ),
+          [
+            '[[1], [2, 0], [1]]',
+            '[[], [2, 0], [1]]',
+            '[[], [0, 2], [1]]',
+            '[[1], [0, 2], [1]]',
+          ],
+          1,
+          'Each edge adds only its destination to its source’s list, in input order; nothing is added to vertex 0.',
+        ),
+        choose(
+          'Which list receives a new entry for the directed edge 3 → 5?',
+          [
+            'graph[5] gets 3',
+            'Both lists get the other vertex',
+            'graph[3] gets 5',
+            'graph[3] gets 3',
+          ],
+          2,
+          'The edge is followed from 3, so 3’s outgoing list records the destination 5.',
+        ),
+        choose(
+          'A graph has only the directed edge 0 → 1. Can vertex 1 reach vertex 0 in one step?',
+          [
+            'No, the edge leads only from 0 to 1',
+            'Yes, edges work both ways',
+            'Only if 0 → 1 is listed twice',
+            'Only when the graph has two vertices',
+          ],
+          0,
+          'A directed edge is one-way; reaching 0 from 1 would need a separate edge 1 → 0.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            'graph = [[] for _ in range(2)]',
+            'for u, v in [(1, 1), (0, 1)]:',
+            '    graph[u].append(v)',
+            'print(graph, len(graph[1]))',
+          ),
+          ['[[1], [1, 1]] 2', '[[1], []] 0', '[[], [1, 0]] 2', '[[1], [1]] 1'],
+          3,
+          'The self-loop 1 → 1 adds 1 once to graph[1]; 0 → 1 adds 1 to graph[0].',
+        ),
+      ],
+    },
+    {
+      title: 'Return a changed copy of the graph',
+      explanation: [
+        'A function that adds an edge but must leave its input unchanged needs a copy of every inner list: [neighbors.copy() for neighbors in graph]. graph.copy() alone copies only the outer list, so the inner lists are still shared.',
+        'After copying, append to the copy’s list for u; the original graph keeps its old neighbors.',
+      ],
+      example: {
+        code: lines(
+          addDirected,
+          'original = [[1], []]',
+          'changed = add_directed(original, 1, 0)',
+          'print(original)',
+          'print(changed)',
+        ),
+        output: '[[1], []]\n[[1], [0]]',
+        explanation:
+          'The append goes into the copy of vertex 1’s list, so original is unchanged.',
+      },
+      questions: [
+        predictOutput(
+          'This version copies only the outer list. What does it print?',
+          lines(
+            'def add_directed(graph, u, v):',
+            '    result = graph.copy()',
+            '    result[u].append(v)',
+            '    return result',
+            '',
+            'original = [[], []]',
+            'add_directed(original, 0, 1)',
+            'print(original)',
+          ),
+          ['[[], []]', '[[1], []]', '[[1], [1]]', '[[], [1]]'],
+          1,
+          'result[0] is the same inner list as original[0], so the append changes the caller’s graph.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            addDirected,
+            'original = [[2], [], []]',
+            'a = add_directed(original, 0, 2)',
+            'b = add_directed(original, 2, 1)',
+            'print(a, b)',
+          ),
+          [
+            '[[2, 2], [], []] [[2, 2], [], [1]]',
+            '[[2], [], []] [[2], [], [1]]',
+            '[[2, 2], [], []] [[2], [], [1]]',
+            '[[2], [], []] [[2], [], []]',
+          ],
+          2,
+          'Each call copies the unchanged original, so a keeps the parallel edge and b does not see it.',
+        ),
+        choose(
+          'Why does graph.copy() not protect the caller’s graph when an edge is appended?',
+          [
+            'It copies only the outer list; inner lists stay shared',
+            'It reverses every edge',
+            'It removes duplicate edges',
+            'It raises an error on nested lists',
+          ],
+          0,
+          'The new outer list still holds the original inner lists, and append changes one of them.',
+        ),
+        choose(
+          'Parallel edges must be kept. The graph already has 0 → 1, and 0 → 1 is added again. What is result[0]?',
+          ['[1]', '[0, 1]', '[1, 0]', '[1, 1]'],
+          3,
+          'Each copy of the edge is stored, so vertex 0 lists 1 twice.',
+        ),
+      ],
+    },
+  ],
+  'cp-undirected-edge': [
+    {
+      title: 'Store both incidences of an undirected edge',
+      explanation: [
+        'An undirected edge {u, v} can be crossed in either direction, so it is stored twice: v in graph[u] and u in graph[v]. Each endpoint then lists the other as a neighbor.',
+        'The length of graph[v] is v’s degree, the number of edge ends at v.',
+      ],
+      example: {
+        code: lines(
+          undirectedBuild(4, '[(0, 1), (1, 2)]'),
+          'print(graph)',
+          'print(len(graph[1]))',
+        ),
+        output: '[[1], [0, 2], [1], []]\n2',
+        explanation:
+          'Vertex 1 touches both edges, so its degree is 2; vertex 3 touches none.',
+      },
+      questions: [
+        choose(
+          'How many entries does one undirected edge between different vertices add to the adjacency lists?',
+          ['1', '2', '0', 'n'],
+          1,
+          'One entry at each endpoint.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(undirectedBuild(3, '[(2, 0), (0, 1)]'), 'print(graph)'),
+          [
+            '[[2, 1], [0], [0]]',
+            '[[1], [], [0]]',
+            '[[2, 1], [], [0]]',
+            '[[1, 2], [0], [0]]',
+          ],
+          0,
+          'Vertex 0 gains 2 and then 1, in edge order; vertices 1 and 2 each gain 0.',
+        ),
+        predictOutput(
+          'What are the degrees?',
+          lines(
+            undirectedBuild(4, '[(0, 1), (0, 2), (0, 3)]'),
+            'print([len(neighbors) for neighbors in graph])',
+          ),
+          ['[3, 0, 0, 0]', '[1, 1, 1, 1]', '[6, 1, 1, 1]', '[3, 1, 1, 1]'],
+          3,
+          'Vertex 0 is an endpoint of all three edges, and each other vertex of one.',
+        ),
+        choose(
+          'An undirected graph has 5 edges between distinct vertices. What is the total length of all neighbor lists?',
+          ['5', '25', '10', '4'],
+          2,
+          'Each edge contributes two entries, one per endpoint.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep self-loops and repeated edges',
+      explanation: [
+        'Under this course’s contract, an undirected self-loop {v, v} appends v to graph[v] twice, once for each end, and a repeated edge appends another pair. Nothing is deduplicated.',
+        'So the total length of all neighbor lists is always twice the number of undirected edges, counting every copy.',
+      ],
+      example: {
+        code: lines(
+          addUndirected,
+          'print(add_undirected([[]], 0, 0))',
+          'print(add_undirected([[1], [0]], 0, 1))',
+        ),
+        output: '[[0, 0]]\n[[1, 1], [0, 0]]',
+        explanation:
+          'The self-loop puts both of its ends in vertex 0’s list. The repeated edge adds a second pair beside the first.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(addUndirected, 'print(add_undirected([[], []], 1, 1))'),
+          ['[[], [1]]', '[[1], [1]]', '[[], [1, 1]]', '[[], []]'],
+          2,
+          'Both appends target vertex 1’s list, so 1 appears there twice.',
+        ),
+        choose(
+          'An undirected graph has edges {0, 1}, {0, 1} and {2, 2}. What is the total length of all neighbor lists?',
+          ['3', '4', '5', '6'],
+          3,
+          'Three edges, each counted with two ends, give 6 entries.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            undirectedBuild(2, '[(0, 1), (1, 0)]'),
+            'print(len(graph[0]), len(graph[1]))',
+          ),
+          ['1 1', '2 2', '2 0', '4 4'],
+          1,
+          '(1, 0) is the same undirected edge again, so it adds a second pair rather than being merged.',
+        ),
+        choose(
+          'Why does a self-loop add two entries to the same list under this contract?',
+          [
+            'Both of the edge’s ends are at that vertex',
+            'Self-loops are directed edges',
+            'The vertex is its own parent',
+            'Python duplicates every append',
+          ],
+          0,
+          'Each undirected edge contributes one entry per end, and here both ends are the same vertex.',
+        ),
+      ],
+    },
+  ],
+  'cp-graph-models': [
+    {
+      title: 'Build adjacency lists from n and an edge list',
+      explanation: [
+        'A graph input usually gives n and a list of edges. Allocate n independent lists first, then add each edge in input order: v at u for a directed edge, both directions for an undirected one.',
+        'n is part of the input because an edge list cannot show isolated vertices: a vertex that touches no edge would otherwise be missing.',
+      ],
+      example: {
+        code: lines(
+          makeNeighbors,
+          'edges = [(0, 1), (1, 2)]',
+          'print(make_neighbors(4, edges, False))',
+          'print(make_neighbors(4, edges, True))',
+        ),
+        output: '[[1], [0, 2], [1], []]\n[[1], [2], [], []]',
+        explanation:
+          'The same edges give symmetric lists when undirected and one-way lists when directed; isolated vertex 3 exists in both.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            makeNeighbors,
+            'edges = [(2, 0), (2, 1)]',
+            'print(make_neighbors(3, edges, True))',
+            'print(make_neighbors(3, edges, False))',
+          ),
+          [
+            '[[], [], [0, 1]]\n[[2], [2], [0, 1]]',
+            '[[2], [2], [0, 1]]\n[[], [], [0, 1]]',
+            '[[], [], [0, 1]]\n[[2], [2], []]',
+            '[[2], [2], []]\n[[2], [2], [0, 1]]',
+          ],
+          0,
+          'Directed, only vertex 2 has outgoing entries. Undirected, 0 and 1 also list 2.',
+        ),
+        choose(
+          'The input is n = 5 with the single edge (0, 1). Which vertices must the adjacency list include?',
+          [
+            'Only 0',
+            'Only 0 and 1',
+            'All five, including 2, 3 and 4',
+            'Only vertices of odd degree',
+          ],
+          2,
+          'n says the graph has five vertices; three of them are isolated but still exist.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            makeNeighbors,
+            'graph = make_neighbors(6, [(1, 2)], False)',
+            'print(len(graph), graph[5])',
+          ),
+          ['2 []', '6 []', '3 None', '6 [5]'],
+          1,
+          'Six lists are allocated from n, and vertex 5 touches no edge, so its list is empty.',
+        ),
+        choose(
+          'A directed input lists (4, 1) and then (4, 3). What is neighbors[4]?',
+          ['[3, 1]', '[]', '[4, 1, 4, 3]', '[1, 3]'],
+          3,
+          'Both edges leave 4, and their destinations are appended in input order.',
+        ),
+      ],
+    },
+    {
+      title: 'State direction and multiplicity before counting',
+      explanation: [
+        'The same edge list gives different graphs under different contracts. With directed edges, len(neighbors[v]) is v’s out-degree. With undirected edges kept with multiplicity, it is v’s degree, and an undirected self-loop counts 2.',
+        'Totals follow: a directed graph’s lists hold m entries in all, an undirected graph’s hold 2m. Deciding these rules before counting avoids answers that are off by a factor of two.',
+      ],
+      example: {
+        code: lines(
+          makeNeighbors,
+          'edges = [(0, 1), (0, 1), (2, 2)]',
+          'directed = make_neighbors(3, edges, True)',
+          'undirected = make_neighbors(3, edges, False)',
+          'print([len(x) for x in directed])',
+          'print([len(x) for x in undirected])',
+        ),
+        output: '[2, 0, 1]\n[2, 2, 2]',
+        explanation:
+          'Directed, vertex 1 has no outgoing edges and the self-loop counts once. Undirected, each copy of {0, 1} reaches 1, and the self-loop counts twice.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            makeNeighbors,
+            'graph = make_neighbors(3, [(0, 2), (1, 2), (2, 2)], False)',
+            'print([len(x) for x in graph])',
+          ),
+          ['[1, 1, 3]', '[1, 1, 4]', '[1, 1, 1]', '[1, 1, 2]'],
+          1,
+          'Vertex 2 is an end of both ordinary edges and both ends of its self-loop: 4 entries.',
+        ),
+        choose(
+          'An undirected graph has m edges, kept with multiplicity. How many entries do all neighbor lists hold together?',
+          ['m', 'm − 1', '2m', 'm²'],
+          2,
+          'Every edge, including a self-loop, contributes two entries.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            makeNeighbors,
+            'edges = [(0, 1), (1, 2), (2, 0)]',
+            'directed = make_neighbors(3, edges, True)',
+            'undirected = make_neighbors(3, edges, False)',
+            'print(sum([len(x) for x in directed]), sum([len(x) for x in undirected]))',
+          ),
+          ['3 3', '6 3', '6 6', '3 6'],
+          3,
+          'Three directed edges give 3 entries; as undirected edges they give twice that.',
+        ),
+        choose(
+          'Which representation answers “is (u, v) an edge?” in O(1) but needs O(n²) space?',
+          [
+            'An adjacency matrix',
+            'Adjacency lists',
+            'An edge list',
+            'A list of degrees',
+          ],
+          0,
+          'A matrix has a cell for every vertex pair, which allows direct lookup at a quadratic space cost.',
+        ),
+      ],
+    },
+    {
+      title: 'Build in O(n + m) without aliasing',
+      explanation: [
+        'Allocating n lists costs O(n), and each of the m edges is one or two appends, so construction takes O(n + m) time and the lists use O(n + m) space. An n × n matrix would use O(n²) space even for a sparse graph.',
+        'The inner lists must be independent. Built with [[]] * n, every vertex shares one list, so each edge seems to touch every vertex.',
+      ],
+      example: {
+        code: lines(
+          'bad = [[]] * 3',
+          'good = [[] for _ in range(3)]',
+          'for u, v in [(0, 1)]:',
+          '    bad[u].append(v)',
+          '    bad[v].append(u)',
+          '    good[u].append(v)',
+          '    good[v].append(u)',
+          'print(bad)',
+          'print(good)',
+        ),
+        output: '[[1, 0], [1, 0], [1, 0]]\n[[1], [0], []]',
+        explanation:
+          'Both appends to bad go into its one shared list, which every vertex then shows.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'bad = [[]] * 2',
+            'for u, v in [(0, 1)]:',
+            '    bad[u].append(v)',
+            'print(bad, len(bad[1]))',
+          ),
+          ['[[1], []] 0', '[[1], [1]] 1', '[[1], [1]] 2', '[[], [1]] 1'],
+          1,
+          'The directed edge is appended once, but both indices show the same list.',
+        ),
+        choose(
+          'A graph has n = 100,000 vertices and m = 200,000 edges. Why prefer adjacency lists over a matrix?',
+          [
+            'Lists use O(n + m) space instead of O(n²)',
+            'Lists answer every edge query in O(1)',
+            'A matrix cannot store directed edges',
+            'Lists keep edges sorted automatically',
+          ],
+          0,
+          'A matrix would need 10¹⁰ cells, while the lists hold only a few hundred thousand entries.',
+        ),
+        choose(
+          'What is the time to build adjacency lists for n vertices and m edges?',
+          ['O(n · m)', 'O(n²)', 'O(m log m)', 'O(n + m)'],
+          3,
+          'Allocating the lists is O(n), and each edge costs a constant number of appends.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            'good = [[] for _ in range(5)]',
+            'for v in range(1, 5):',
+            '    good[0].append(v)',
+            '    good[v].append(0)',
+            'print(len(good[0]), len(good[4]))',
+          ),
+          ['4 4', '1 1', '4 1', '5 1'],
+          2,
+          'Vertex 0 is joined to four vertices; vertex 4 only to 0.',
+        ),
+      ],
+    },
+  ],
+  // ------------------------------------------------------ depth-first search
+  'cp-discover-once': [
+    {
+      title: 'Mark a vertex when it is scheduled',
+      explanation: [
+        'A search keeps seen, a set of discovered vertices, and pending, the work still to do. Add a vertex to seen at the moment it is pushed onto pending, not later when it is processed.',
+        'Then a second edge to the same vertex finds it already in seen and schedules nothing, even if the first copy has not been processed yet.',
+      ],
+      example: {
+        code: lines(
+          discoverLoop('{0}', '[0]', '[1, 2, 1]'),
+          'print(pending)',
+          'print(len(seen))',
+        ),
+        output: '[0, 1, 2]\n3',
+        explanation: 'The second 1 is already in seen, so it adds no work.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(discoverLoop('{0}', '[0]', '[3, 3, 0, 4]'), 'print(pending)'),
+          ['[0, 3, 3, 0, 4]', '[0, 3, 4]', '[3, 4]', '[0, 3, 3, 4]'],
+          1,
+          'The repeated 3 and the start 0 are already in seen, so only 3 and 4 are added once.',
+        ),
+        choose(
+          'When should this search add a neighbor to seen?',
+          [
+            'When it is pushed onto pending',
+            'When it is popped from pending',
+            'After the whole search ends',
+            'Only if it has no neighbors',
+          ],
+          0,
+          'Marking at push time stops any later edge from scheduling the same vertex again.',
+        ),
+        choose(
+          'Vertex 4 is already in seen, and another edge reaches it. What does discovery do?',
+          [
+            'Pushes 4 again',
+            'Removes 4 from seen',
+            'Adds no new work',
+            'Clears pending',
+          ],
+          2,
+          'A seen vertex has already been scheduled once, which is all it needs.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            'seen = set()',
+            'pending = []',
+            'pushes = 0',
+            'for vertex in [5, 2, 5, 2, 7]:',
+            '    if vertex not in seen:',
+            '        seen.add(vertex)',
+            '        pending.append(vertex)',
+            '        pushes += 1',
+            'print(pushes, len(seen))',
+          ),
+          ['5 3', '3 5', '2 3', '3 3'],
+          3,
+          'Only the first occurrence of each of 5, 2 and 7 is pushed.',
+        ),
+      ],
+    },
+    {
+      title: 'Marking at pop time schedules duplicates',
+      explanation: [
+        'If seen is updated only when a vertex is popped, several edges can push the same vertex before its first copy is popped. pending then holds duplicate work.',
+        'Each duplicate must later be popped and skipped, and in a dense graph pending can grow with the number of edges instead of the number of vertices.',
+      ],
+      example: {
+        code: lines(popTimeMarking('[[1, 2], [], [1]]'), 'print(pushed)'),
+        output: '[1, 2, 1]',
+        explanation:
+          'Vertex 1 is still waiting when 2 is processed, and it is not in seen yet, so it is pushed a second time.',
+      },
+      questions: [
+        predictOutput(
+          'This version marks on push. What does it print?',
+          lines(
+            'graph = [[1, 2], [], [1]]',
+            'seen = {0}',
+            'pending = [0]',
+            'pushed = []',
+            'while pending:',
+            '    vertex = pending.pop()',
+            '    for neighbor in graph[vertex]:',
+            '        if neighbor not in seen:',
+            '            seen.add(neighbor)',
+            '            pending.append(neighbor)',
+            '            pushed.append(neighbor)',
+            'print(pushed)',
+          ),
+          ['[1, 2, 1]', '[1, 2]', '[2, 1]', '[1]'],
+          1,
+          '1 is marked when it is first pushed, so the edge from 2 finds it in seen.',
+        ),
+        choose(
+          'Vertices 4, 5 and 6 all have an edge to 9, and seen is updated only at pop time. If 4, 5 and 6 are expanded before 9 is popped, how many copies of 9 can be pending?',
+          ['1', '0', '3', '9'],
+          2,
+          'Each of the three expansions sees 9 as unseen and pushes it.',
+        ),
+        predictOutput(
+          'How many pushes does pop-time marking make here?',
+          lines(popTimeMarking('[[1, 1, 1], []]'), 'print(len(pushed))'),
+          ['1', '0', '2', '3'],
+          3,
+          'The three parallel edges are scanned before 1 is popped, so 1 is pushed three times.',
+        ),
+        choose(
+          'With marking at push time, how many times can one vertex enter pending during the whole search?',
+          [
+            'At most once',
+            'Once per incoming edge',
+            'Once per neighbor it has',
+            'Twice',
+          ],
+          0,
+          'After its first push it is in seen, and every later check skips it.',
+        ),
+      ],
+    },
+  ],
+  'cp-dfs-frontier': [
+    {
+      title: 'Take the newest pending vertex',
+      explanation: [
+        'Depth-first search keeps its pending work on a stack and always takes the newest entry with pop(). The most recently discovered branch is continued before older pending branches.',
+        'An empty stack means no work remains; check it before popping.',
+      ],
+      example: {
+        code: lines(
+          takeDepthFirst,
+          'print(take_depth_first([0, 3, 1]))',
+          'print(take_depth_first([]))',
+        ),
+        output: '(1, [0, 3])\n(None, [])',
+        explanation:
+          '1 was pushed last, so it is taken first. An empty stack has no next vertex.',
+      },
+      questions: [
+        choose(
+          'Pending is [0, 4, 2], oldest first. Which vertex does a depth-first stack take next?',
+          ['0', '4', '2', 'The smallest label'],
+          2,
+          'A stack takes the newest entry, which is at the right end.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(
+            takeDepthFirst,
+            'print(take_depth_first([5]))',
+            'print(take_depth_first([7, 0]))',
+          ),
+          [
+            '(5, [])\n(0, [7])',
+            '(5, [5])\n(0, [7])',
+            '(None, [])\n(7, [0])',
+            '(5, [])\n(7, [0])',
+          ],
+          0,
+          'The newest entry is removed each time; vertex 0 is a real vertex, not an empty marker.',
+        ),
+        predictOutput(
+          'In what order is work taken?',
+          lines(
+            'pending = [1]',
+            'order = []',
+            'pending.append(2)',
+            'pending.append(3)',
+            'order.append(pending.pop())',
+            'pending.append(4)',
+            'order.append(pending.pop())',
+            'order.append(pending.pop())',
+            'print(order)',
+          ),
+          ['[1, 2, 3]', '[3, 4, 2]', '[3, 2, 4]', '[3, 4, 1]'],
+          1,
+          '3 is newest, then the newly pushed 4, then 2, which was waiting below it.',
+        ),
+        choose(
+          'Which operation selects the next vertex from a depth-first frontier stored as a list?',
+          ['pending.pop(0)', 'pending[0]', 'min(pending)', 'pending.pop()'],
+          3,
+          'pop() removes the newest entry; pop(0) would make the frontier a queue.',
+        ),
+      ],
+    },
+    {
+      title: 'Depth-first order is not distance order',
+      explanation: [
+        'The stack’s next vertex depends only on when it was pushed, not on how far it is from the start. DFS can reach a vertex along a long path before it ever expands a shorter one.',
+        'So DFS answers whether a vertex is reachable, but the path by which it first reaches a vertex need not have the fewest edges.',
+      ],
+      example: {
+        code: lines(depthLabels('[[1, 2], [3], [4], [], [3]]'), 'print(depth)'),
+        output: '[0, 1, 1, 3, 2]',
+        explanation:
+          'DFS reaches 3 through 0, 2, 4 before it expands 1, so it records 3 edges even though 0 → 1 → 3 uses only 2.',
+      },
+      questions: [
+        choose(
+          'A depth-first search first reaches vertex 7 along a 5-edge path. What can you conclude about 7’s fewest-edge distance?',
+          ['It is exactly 5', 'It is at most 5', 'It is at least 5', 'It is 1'],
+          1,
+          'A 5-edge path exists, but DFS gives no guarantee that no shorter path exists.',
+        ),
+        predictOutput(
+          'What depth does DFS record for vertex 4?',
+          lines(depthLabels('[[1, 2], [4], [3], [4], []]'), 'print(depth[4])'),
+          ['2', '1', '3', '4'],
+          2,
+          'The stack expands 2 and then 3 before 1, so 4 is first reached by 0, 2, 3, 4, although 0, 1, 4 is shorter.',
+        ),
+        choose(
+          'What does DFS from one start vertex reliably determine?',
+          [
+            'Which vertices are reachable from it',
+            'The fewest edges to each vertex',
+            'The cheapest weighted route',
+            'A topological order of the graph',
+          ],
+          0,
+          'Every reachable vertex is eventually discovered, but the discovery paths carry no distance guarantee.',
+        ),
+        choose(
+          'Pending holds a vertex discovered from the start and, on top, one discovered three edges deep. Which does a depth-first stack take next?',
+          [
+            'The one at depth 1',
+            'Whichever has the smaller label',
+            'Both at once',
+            'The deeper one, pushed last',
+          ],
+          3,
+          'Depth does not matter to a stack; the most recently pushed entry comes off first.',
+        ),
+      ],
+    },
+  ],
+  'cp-dfs-cycle-guard': [
+    {
+      title: 'Skip neighbors that were already discovered',
+      explanation: [
+        'While scanning a vertex’s neighbors, schedule only those not yet in seen. An edge back to a discovered vertex, a self-loop, or a second copy of a parallel edge then creates no new work.',
+        'Mark each new neighbor immediately, so a repeated entry later in the same neighbor list is skipped too.',
+      ],
+      example: {
+        code: lines(
+          unseenNeighbors,
+          'print(unseen_neighbors([4, 1, 4, 5, 1], {1}))',
+        ),
+        output: '[4, 5]',
+        explanation:
+          '1 was already seen, and the second 4 is skipped because 4 was marked at its first occurrence.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            unseenNeighbors,
+            'print(unseen_neighbors([2, 2], set()))',
+            'print(unseen_neighbors([3], {3}))',
+          ),
+          ['[2, 2]\n[]', '[2]\n[3]', '[2]\n[]', '[]\n[]'],
+          2,
+          'The parallel edge yields 2 once; 3 is already discovered, so it yields nothing.',
+        ),
+        choose(
+          'Vertex 6 is being expanded, and its neighbor list contains 6 itself. Why is no new work scheduled for it?',
+          [
+            'Self-loops are deleted from the input',
+            '6 was put in seen when it was scheduled',
+            'A vertex cannot be its own neighbor',
+            'The check skips the last neighbor',
+          ],
+          1,
+          'A vertex is marked before it is expanded, so its own self-loop finds it already seen.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            unseenNeighbors,
+            'print(unseen_neighbors([5, 0, 5, 0, 6], {6}))',
+          ),
+          ['[5, 0, 6]', '[0, 5]', '[5, 5, 0, 0]', '[5, 0]'],
+          3,
+          'First occurrences of 5 and 0 are kept in order; repeats and the seen 6 are skipped.',
+        ),
+        choose(
+          'Which entries in a neighbor scan create new pending work?',
+          [
+            'First occurrences of vertices not yet in seen',
+            'Every entry, in order',
+            'Only vertices with smaller labels',
+            'Only entries that appear twice',
+          ],
+          0,
+          'Everything else points to a vertex that is already scheduled.',
+        ),
+      ],
+    },
+    {
+      title: 'The check makes cycles terminate',
+      explanation: [
+        'In a cycle such as 0 → 1 → 2 → 0, following edges without a check would return to 0 and repeat forever. With the check, the edge back to 0 is scanned but ignored, because 0 is already in seen.',
+        'Every vertex enters pending at most once, so the search ends after each reachable vertex has been expanded once.',
+      ],
+      example: {
+        code: lines(
+          'expanded = []',
+          dfsLoop('[[1], [2], [0]]', 0, 'expanded.append(vertex)'),
+          'print(expanded)',
+        ),
+        output: '[0, 1, 2]',
+        explanation:
+          'When 2 is expanded, its edge to 0 is ignored, the stack empties, and the search stops.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'expanded = []',
+            dfsLoop('[[1, 0], [0, 1]]', 0, 'expanded.append(vertex)'),
+            'print(expanded)',
+          ),
+          ['[0, 1]', '[0, 1, 0, 1]', '[0]', '[0, 0, 1, 1]'],
+          0,
+          'The self-loops and the edge back to 0 all point to seen vertices, so each vertex is expanded once.',
+        ),
+        predictOutput(
+          'How many neighbor entries are scanned, and how many vertices are seen?',
+          lines(
+            'scanned = 0',
+            dfsLoop('[[1, 2], [2, 0], [0, 1]]', 0, '', 'scanned += 1'),
+            'print(scanned, len(seen))',
+          ),
+          ['3 3', '6 6', '6 3', '2 3'],
+          2,
+          'Every vertex is expanded once and scans its two entries, but only three distinct vertices exist.',
+        ),
+        choose(
+          'Without the seen check, what happens on the cycle 0 → 1 → 0?',
+          [
+            'The search ends after two vertices',
+            'Vertices are pushed again and again forever',
+            'Python removes the cycle',
+            'Only vertex 0 is expanded',
+          ],
+          1,
+          'Each expansion pushes the other vertex again, so the stack never empties.',
+        ),
+        choose(
+          'With the check, how many times is each reachable vertex expanded?',
+          [
+            'Once per incoming edge',
+            'Twice',
+            'Once per cycle it lies on',
+            'Exactly once',
+          ],
+          3,
+          'It is pushed once, so it is popped and expanded once.',
+        ),
+      ],
+    },
+  ],
+  'cp-dfs': [
+    {
+      title: 'Search reachable vertices with a stack and a seen set',
+      explanation: [
+        'Iterative DFS starts with the source in seen and on the stack. It repeatedly pops a vertex and pushes every outgoing neighbor not yet seen, marking each as it is pushed. When the stack is empty, seen holds exactly the vertices reachable from the source.',
+        'Edges are followed only in their stored direction, and vertices in other components are never reached.',
+      ],
+      example: {
+        code: lines(
+          dfsLoop('[[1], [2], [0, 3], [], [3]]'),
+          'print(len(seen), 4 in seen)',
+        ),
+        output: '4 False',
+        explanation:
+          'The cycle 0 → 1 → 2 → 0 ends because 0 is already seen. Vertex 4 points into 3, but nothing reachable points to 4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(dfsLoop('[[1], [], [1]]'), 'print(len(seen), 2 in seen)'),
+          ['3 True', '2 False', '2 True', '1 False'],
+          1,
+          'From 0 only 1 is reachable; the edge 2 → 1 cannot be followed backward.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            dfsLoop('[[2], [0], [1], [0]]', 1),
+            'print(len(seen), 3 in seen)',
+          ),
+          ['4 True', '3 True', '2 False', '3 False'],
+          3,
+          'From 1 the search reaches 0 and 2; vertex 3 only has an edge out, so nothing leads to it.',
+        ),
+        choose(
+          'An undirected graph has two separate components, and DFS starts in the first. What does seen hold at the end?',
+          [
+            'Every vertex of both components',
+            'Only the source and its neighbors',
+            'Exactly the vertices of the first component',
+            'The vertices on one longest path',
+          ],
+          2,
+          'DFS reaches everything connected to the source and nothing else.',
+        ),
+        choose(
+          'A graph has the directed edge 4 → 3. Why does DFS from 3 not reach 4 through it?',
+          [
+            'DFS follows edges only from their stored source',
+            'Vertex 4 has a larger label',
+            'Edges into a vertex are skipped',
+            'DFS stops at vertices without neighbors',
+          ],
+          0,
+          'The edge is listed in graph[4], so it can only be followed when 4 is expanded.',
+        ),
+      ],
+    },
+    {
+      title: 'Trace the order DFS expands vertices',
+      explanation: [
+        'Because pending work is a stack, the most recently pushed neighbor is expanded next. With neighbors pushed in list order, the last neighbor in a list is explored first, and its whole branch finishes before earlier siblings are popped.',
+        'Recording the expansion order makes a trace concrete: pop, record, then push unseen neighbors in list order.',
+      ],
+      example: {
+        code: lines(
+          'order = []',
+          dfsLoop('[[1, 2], [3], [4], [], []]', 0, 'order.append(vertex)'),
+          'print(order)',
+        ),
+        output: '[0, 2, 4, 1, 3]',
+        explanation:
+          '2 was pushed after 1, so 2 and its branch through 4 finish before 1 is popped.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'order = []',
+            dfsLoop('[[1, 2, 3], [], [], []]', 0, 'order.append(vertex)'),
+            'print(order)',
+          ),
+          ['[0, 1, 2, 3]', '[0, 3, 2, 1]', '[3, 2, 1, 0]', '[0, 1, 3, 2]'],
+          1,
+          'All three neighbors are pushed in order, so they come off newest first: 3, 2, 1.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            'order = []',
+            dfsLoop('[[2, 1], [3], [], [0]]', 0, 'order.append(vertex)'),
+            'print(order)',
+          ),
+          ['[0, 2, 1, 3]', '[0, 1, 2, 3]', '[0, 1, 3, 2]', '[0, 2, 3, 1]'],
+          2,
+          '1 is pushed last, so its branch through 3 runs first; 3’s edge to 0 is ignored, then 2 is popped.',
+        ),
+        choose(
+          'Vertex 0’s neighbors are [5, 6], pushed in that order. Which is expanded first?',
+          [
+            '5, because it comes first in the list',
+            'The one with fewer neighbors',
+            'Both at once',
+            '6, because it was pushed last',
+          ],
+          3,
+          'The stack returns the most recently pushed entry.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'order = []',
+            dfsLoop('[[1, 4], [2], [], [], [3]]', 0, 'order.append(vertex)'),
+            'print(order)',
+          ),
+          [
+            '[0, 4, 3, 1, 2]',
+            '[0, 1, 2, 4, 3]',
+            '[0, 1, 4, 2, 3]',
+            '[0, 4, 1, 3, 2]',
+          ],
+          0,
+          '4 is on top, and its branch to 3 finishes before 1 and its child 2 are expanded.',
+        ),
+      ],
+    },
+    {
+      title: 'Bound the work and the stack',
+      explanation: [
+        'Each reachable vertex is pushed once and popped once, and each of its outgoing entries is scanned once when it is expanded. Reachable search therefore costs O(Vᵣ + Eᵣ) for Vᵣ reached vertices and Eᵣ scanned entries, with O(Vᵣ) extra space for seen and the stack.',
+        'An explicit stack also avoids Python’s recursion limit: a 100,000-vertex path is fine with a loop but would overflow a recursive DFS.',
+      ],
+      example: {
+        code: lines(
+          'scanned = 0',
+          dfsLoop('[[1, 1, 2], [2], [0], [0]]', 0, '', 'scanned += 1'),
+          'print(len(seen), scanned)',
+        ),
+        output: '3 5',
+        explanation:
+          'Three reachable vertices are pushed once each, and their five outgoing entries are scanned once each. Vertex 3 is unreachable, so its edge is never scanned.',
+      },
+      questions: [
+        choose(
+          'DFS from s reaches Vᵣ vertices whose adjacency lists hold Eᵣ entries in total. What is its running time?',
+          ['O(Vᵣ · Eᵣ)', 'O(Vᵣ + Eᵣ)', 'O(Vᵣ²)', 'O(Eᵣ log Vᵣ)'],
+          1,
+          'Each reached vertex is handled once and each of its entries scanned once.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'scanned = 0',
+            dfsLoop('[[1, 2], [2], [1], []]', 0, '', 'scanned += 1'),
+            'print(len(seen), scanned)',
+          ),
+          ['3 4', '4 4', '3 3', '4 3'],
+          0,
+          'Vertices 0, 1 and 2 are reached, and their four entries are each scanned once; 3 is never reached.',
+        ),
+        choose(
+          'Why use an explicit stack instead of recursion for DFS on a path of 100,000 vertices?',
+          [
+            'Recursion reaches a different set of vertices',
+            'The stack version needs no seen set',
+            'A loop does not hit Python’s recursion limit',
+            'Recursion cannot follow directed edges',
+          ],
+          2,
+          'A recursive DFS would nest one call per vertex on the path, far past the default limit.',
+        ),
+        choose(
+          'Marking on push, at most how many entries can the DFS stack hold at once?',
+          [
+            'The number of edges',
+            'Twice the number of edges',
+            'The square of the vertex count',
+            'The number of reachable vertices',
+          ],
+          3,
+          'Each vertex is pushed at most once in the whole search, so the stack never holds more.',
+        ),
+      ],
+    },
+  ],
+  // ---------------------------------------------------- breadth-first search
+  'cp-fifo-frontier': [
+    {
+      title: 'Take the oldest pending vertex',
+      explanation: [
+        'Breadth-first search keeps pending work in a queue: new work joins at the right, and the oldest work leaves from the left. First in, first out.',
+        'With pending = [0, 3, 1], oldest first, the next vertex is 0; a stack would take 1 instead.',
+      ],
+      example: {
+        code: lines(
+          'pending = [0, 3, 1]',
+          'first = pending.pop(0)',
+          'pending.append(5)',
+          'print(first)',
+          'print(pending)',
+        ),
+        output: '0\n[3, 1, 5]',
+        explanation:
+          'pop(0) takes the oldest entry from the left, and the new 5 waits at the right behind 3 and 1.',
+      },
+      questions: [
+        choose(
+          'Pending is [6, 2, 9], oldest first. Which vertex does a queue take next?',
+          ['6', '2', '9', 'The smallest, 2'],
+          0,
+          'A queue takes the oldest entry, at the left.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'pending = [4]',
+            'pending.append(7)',
+            'pending.append(1)',
+            'order = [pending.pop(0), pending.pop(0)]',
+            'pending.append(8)',
+            'order.append(pending.pop(0))',
+            'print(order)',
+          ),
+          ['[1, 7, 4]', '[4, 7, 1]', '[4, 7, 8]', '[1, 8, 7]'],
+          1,
+          'Entries leave in arrival order: 4, 7, and then 1, which arrived before 8.',
+        ),
+        choose(
+          'In what order does a queue return pending work?',
+          [
+            'Newest first',
+            'Smallest label first',
+            'Oldest first',
+            'Random order',
+          ],
+          2,
+          'First in, first out.',
+        ),
+        predictOutput(
+          'A queue takes pending[0], and a stack would take pending[-1]. What is printed?',
+          lines('pending = [5, 8, 2]', 'print(pending[0], pending[-1])'),
+          ['2 5', '5 8', '8 2', '5 2'],
+          3,
+          'The queue’s next vertex is the oldest, 5; a stack’s would be the newest, 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Use deque for constant-time removal from the left',
+      explanation: [
+        'list.pop(0) shifts every remaining entry one place left, so it costs time proportional to the list’s length. collections.deque supports append on the right and popleft on the left, each in O(1).',
+        'list(queue) turns the remainder back into a list when a function promises one. Check that the queue is nonempty before popleft, which raises IndexError on an empty deque.',
+      ],
+      example: {
+        code: lines(
+          takeBreadthFirst,
+          'print(take_breadth_first([0, 3, 1]))',
+          'print(take_breadth_first([]))',
+        ),
+        output: '(0, [3, 1])\n(None, [])',
+        explanation:
+          'popleft removes the oldest vertex 0. The empty queue is detected before popleft is called.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'from collections import deque',
+            'queue = deque([2, 9])',
+            'queue.append(4)',
+            'print(queue.popleft(), list(queue))',
+          ),
+          ['4 [2, 9]', '2 [9, 4]', '9 [2, 4]', '2 [4, 9]'],
+          1,
+          'popleft removes the oldest entry 2; the rest stay in arrival order.',
+        ),
+        choose(
+          'Which deque operation removes the oldest entry?',
+          ['pop()', 'append()', 'popleft()', 'appendleft()'],
+          2,
+          'Entries join at the right with append and leave from the left with popleft.',
+        ),
+        choose(
+          'Why use deque rather than repeated list.pop(0) for a long queue?',
+          [
+            'popleft does not shift the remaining entries',
+            'deque keeps its entries sorted',
+            'pop(0) removes the newest entry',
+            'deque cannot hold duplicates',
+          ],
+          0,
+          'Each pop(0) moves every remaining entry, while popleft takes constant time.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(takeBreadthFirst, 'print(take_breadth_first([7]))'),
+          ['(7, [7])', '(None, [])', '(7, None)', '(7, [])'],
+          3,
+          'The only vertex is removed, leaving an empty remainder.',
+        ),
+      ],
+    },
+  ],
+  'cp-bfs-discovery': [
+    {
+      title: 'Queue a neighbor only on first discovery',
+      explanation: [
+        'When BFS scans a vertex’s neighbors, it appends a neighbor to the queue only if the neighbor is not in seen, and it adds the neighbor to seen at that same moment.',
+        'Marking on enqueue keeps one queued copy per vertex, even when several parents or parallel edges reach it before it is dequeued.',
+      ],
+      example: {
+        code: lines(
+          queueNeighbors,
+          'pending, seen = queue_neighbors([4], {0, 4}, [5, 0, 5, 6])',
+          'print(pending)',
+          'print(len(seen))',
+        ),
+        output: '[4, 5, 6]\n4',
+        explanation:
+          '0 is already seen, and the second 5 is skipped because the first 5 was marked when it was queued.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            queueNeighbors,
+            'pending, seen = queue_neighbors([], {0}, [1, 1, 1])',
+            'print(pending)',
+          ),
+          ['[1, 1, 1]', '[1]', '[]', '[0, 1]'],
+          1,
+          'The first 1 is queued and marked; the parallel copies find it already seen.',
+        ),
+        choose(
+          'When does BFS add a newly found neighbor to seen?',
+          [
+            'Immediately when it is enqueued',
+            'When it is dequeued',
+            'After every vertex is processed',
+            'Only if it has outgoing edges',
+          ],
+          0,
+          'Marking at enqueue time stops other edges from queuing it again while it waits.',
+        ),
+        predictOutput(
+          'Which vertices are enqueued, in order?',
+          lines(
+            'from collections import deque',
+            'graph = [[1, 2], [3], [3], []]',
+            'seen = {0}',
+            'queue = deque([0])',
+            'enqueued = [0]',
+            'while queue:',
+            '    vertex = queue.popleft()',
+            '    for neighbor in graph[vertex]:',
+            '        if neighbor not in seen:',
+            '            seen.add(neighbor)',
+            '            queue.append(neighbor)',
+            '            enqueued.append(neighbor)',
+            'print(enqueued)',
+          ),
+          ['[0, 1, 2, 3, 3]', '[0, 1, 3, 2]', '[0, 1, 2, 3]', '[0, 3]'],
+          2,
+          'Both 1 and 2 point to 3, but 3 is marked when 1 queues it, so 2 adds nothing.',
+        ),
+        choose(
+          'Vertices 1 and 2 both have an edge to 3, and both are expanded before 3 is dequeued. If BFS marked vertices only at dequeue time, what would happen?',
+          [
+            '3 is queued once',
+            '3 is never queued',
+            'The search stops early',
+            '3 is queued twice',
+          ],
+          3,
+          'Neither expansion would see 3 as discovered, so each would append it.',
+        ),
+      ],
+    },
+    {
+      title: 'New discoveries wait behind older work',
+      explanation: [
+        'Newly discovered neighbors join the right end of the queue, behind every vertex already waiting. Existing pending entries keep their order.',
+        'So vertices discovered while expanding one vertex are processed after the vertices that were queued before them, which is what makes BFS proceed layer by layer.',
+      ],
+      example: {
+        code: lines(
+          queueNeighbors,
+          'pending, seen = queue_neighbors([7, 8], {0, 7, 8}, [9, 7, 10])',
+          'print(pending)',
+        ),
+        output: '[7, 8, 9, 10]',
+        explanation:
+          '7 and 8 keep their places at the front; the new 9 and 10 join behind them.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            queueNeighbors,
+            'pending, seen = queue_neighbors([3], {0, 3}, [1, 2])',
+            'print(pending)',
+          ),
+          ['[1, 2, 3]', '[3, 1, 2]', '[1, 2]', '[3, 2, 1]'],
+          1,
+          'The waiting 3 stays first, and the new neighbors follow in their supplied order.',
+        ),
+        choose(
+          'The queue holds [4, 6], and expanding a vertex discovers 9. Where does 9 go?',
+          ['Before 4', 'Between 4 and 6', 'After 6', 'It replaces 4'],
+          2,
+          'New work always joins the back of the queue.',
+        ),
+        predictOutput(
+          'In what order does BFS process the vertices?',
+          lines(bfsOrder('[[1, 2], [3], [4], [], []]'), 'print(order)'),
+          [
+            '[0, 1, 2, 3, 4]',
+            '[0, 1, 3, 2, 4]',
+            '[0, 2, 4, 1, 3]',
+            '[0, 1, 2, 4, 3]',
+          ],
+          0,
+          '3 and 4 are discovered after 2 was already waiting, so both children of 0 come first.',
+        ),
+        choose(
+          'Why must new discoveries go behind the vertices already waiting?',
+          [
+            'So the queue stays sorted by label',
+            'So duplicates are removed',
+            'So the newest vertex is expanded next',
+            'So vertices nearer the source are processed first',
+          ],
+          3,
+          'Waiting vertices were found earlier from closer vertices, so they must be handled first.',
+        ),
+      ],
+    },
+  ],
+  'cp-bfs-layer-distance': [
+    {
+      title: 'A first-discovered neighbor is one layer further',
+      explanation: [
+        'In an unweighted graph each edge adds 1 to a path’s length. When BFS expands a vertex at distance d, every neighbor it discovers for the first time gets distance d + 1.',
+        'A distance list can double as the seen set: −1 means undiscovered, and any other value is the vertex’s assigned distance.',
+      ],
+      example: {
+        code: lines(
+          assignNextLayer,
+          'print(assign_next_layer([0, -1, -1, -1], 0, [1, 3]))',
+        ),
+        output: '[0, 1, -1, 1]',
+        explanation:
+          'The source has distance 0, so its newly found neighbors 1 and 3 get 1; vertex 2 stays undiscovered.',
+      },
+      questions: [
+        choose(
+          'A vertex at distance 4 discovers a neighbor for the first time. What distance does the neighbor get?',
+          ['4', '8', '5', '3'],
+          2,
+          'One more edge than the vertex it was found from: 4 + 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(
+            assignNextLayer,
+            'print(assign_next_layer([0, 1, -1, -1], 1, [2, 0, 3]))',
+          ),
+          ['[0, 1, 2, 2]', '[2, 1, 2, 2]', '[0, 1, 2, 3]', '[0, 1, 1, 1]'],
+          0,
+          '2 and 3 are new and get 1 + 1; the source 0 is already assigned and keeps 0.',
+        ),
+        choose(
+          'In this distance list, what does −1 mean?',
+          [
+            'A negative edge weight',
+            'The vertex is undiscovered',
+            'The source vertex',
+            'An unreachable cycle',
+          ],
+          1,
+          'Real distances are never negative, so −1 safely marks vertices not yet reached.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            assignNextLayer,
+            'print(assign_next_layer([-1, 0, -1], 1, [1, 2, 2]))',
+          ),
+          ['[-1, 1, 1]', '[-1, 0, 2]', '[1, 0, 1]', '[-1, 0, 1]'],
+          3,
+          'The self-loop finds vertex 1 already at 0; 2 gets 1 the first time, and the repeat is skipped.',
+        ),
+      ],
+    },
+    {
+      title: 'Never overwrite an assigned distance',
+      explanation: [
+        'BFS expands vertices in order of distance, so the first time a vertex is discovered it is reached by a shortest path. A later route, found while expanding a vertex in the same or a deeper layer, can only be as long or longer.',
+        'So an assigned distance is never replaced: check that the neighbor’s distance is −1 before assigning.',
+      ],
+      example: {
+        code: lines(
+          assignNextLayer,
+          'def careless(distances, vertex, neighbors):',
+          '    result = distances.copy()',
+          '    for neighbor in neighbors:',
+          '        result[neighbor] = result[vertex] + 1',
+          '    return result',
+          '',
+          'print(assign_next_layer([0, 1, 2, 1], 2, [3]))',
+          'print(careless([0, 1, 2, 1], 2, [3]))',
+        ),
+        output: '[0, 1, 2, 1]\n[0, 1, 2, 3]',
+        explanation:
+          'Vertex 3 already has its shortest distance 1. The careless version replaces it with 3, the length of a longer route.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            assignNextLayer,
+            'print(assign_next_layer([0, 1, 1, -1], 2, [1, 3]))',
+          ),
+          ['[0, 2, 1, 2]', '[0, 1, 1, 2]', '[0, 1, 1, -1]', '[0, 2, 1, -1]'],
+          1,
+          'Vertex 1 keeps its distance 1; only the undiscovered 3 is assigned 1 + 1.',
+        ),
+        choose(
+          'Vertex 5 already has distance 2. Later, a vertex at distance 3 has an edge to 5. What should happen?',
+          [
+            '5 keeps distance 2',
+            '5 gets distance 4',
+            '5 gets distance 3',
+            '5 is queued again',
+          ],
+          0,
+          'The route through a distance-3 vertex is longer than the one already found.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            'def careless(distances, vertex, neighbors):',
+            '    result = distances.copy()',
+            '    for neighbor in neighbors:',
+            '        result[neighbor] = result[vertex] + 1',
+            '    return result',
+            '',
+            'print(careless([0, 1, -1], 1, [0, 2]))',
+          ),
+          ['[0, 1, 2]', '[0, 2, 2]', '[2, 1, 2]', '[1, 1, 2]'],
+          2,
+          'Without the check, the edge back to the source overwrites its distance 0 with 2.',
+        ),
+        choose(
+          'Why is a vertex’s first BFS distance already its fewest number of edges?',
+          [
+            'Its neighbors are scanned in sorted order',
+            'Every edge is scanned twice',
+            'The graph has no cycles',
+            'BFS finishes each layer before the next',
+          ],
+          3,
+          'All closer vertices are expanded before any farther one, so the first discovery comes from the closest layer possible.',
+        ),
+      ],
+    },
+  ],
+  'cp-bfs': [
+    {
+      title: 'Compute fewest-edge distances with a queue',
+      explanation: [
+        'Start with distance[source] = 0, every other distance −1, and the source in a deque. Repeatedly popleft a vertex; for each neighbor still at −1, set its distance to the vertex’s distance plus 1 and append it.',
+        'Vertices that are never reached keep −1, so the result covers every vertex.',
+      ],
+      example: {
+        code: lines(
+          bfsDistances('[[1, 3], [2], [4], [2], [], [0]]'),
+          'print(distance)',
+        ),
+        output: '[0, 1, 2, 1, 3, -1]',
+        explanation:
+          '1 and 3 are one edge away, 2 is two, and 4 is three. Vertex 5 has an edge to 0 but none leading to it.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(bfsDistances('[[1], [2], [0], [1]]'), 'print(distance)'),
+          ['[0, 1, 2, 1]', '[0, 1, 2, -1]', '[0, 1, 2, 3]', '[0, 1, 1, -1]'],
+          1,
+          'The cycle 0 → 1 → 2 → 0 gives distances 0, 1, 2; vertex 3 only has an edge out.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(bfsDistances('[[1, 2], [3], [3], [4], []]'), 'print(distance)'),
+          [
+            '[0, 1, 1, 2, 3]',
+            '[0, 1, 2, 3, 4]',
+            '[0, 1, 1, 3, 4]',
+            '[0, 1, 1, 2, 2]',
+          ],
+          0,
+          '3 is first reached from 1 at distance 2, and 4 from 3 at distance 3.',
+        ),
+        choose(
+          'Edges have travel times 1, 5 and 2. Why are BFS distances not travel times here?',
+          [
+            'BFS ignores edges with odd weights',
+            'BFS needs the graph to be undirected',
+            'BFS counts edges, as if each cost the same',
+            'BFS adds weights in the wrong order',
+          ],
+          2,
+          'The fewest-edge guarantee assumes unit costs; unequal weights need a different algorithm.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(bfsDistances('[[1], [2], [], [0]]', 3), 'print(distance)'),
+          ['[0, 1, 2, -1]', '[3, 2, 1, 0]', '[1, 2, 3, -1]', '[1, 2, 3, 0]'],
+          3,
+          'The source is 3, at distance 0; then 0, 1 and 2 follow at 1, 2 and 3.',
+        ),
+      ],
+    },
+    {
+      title: 'Trace the queue layer by layer',
+      explanation: [
+        'The queue always holds at most two consecutive layers: some vertices at distance d still waiting, followed by vertices already given d + 1. Every distance-d vertex leaves before any distance-(d + 1) vertex.',
+        'Printing each dequeued vertex with its distance shows the layers in order, even when edges point backward or form cycles.',
+      ],
+      example: {
+        code: lines(
+          bfsDistances(
+            '[[1, 2], [2, 3], [0, 4], [], [1]]',
+            0,
+            'print(vertex, distance[vertex])',
+          ),
+        ),
+        output: '0 0\n1 1\n2 1\n3 2\n4 2',
+        explanation:
+          'Both distance-1 vertices leave before the distance-2 vertices 3 and 4, and the backward edges to 0 and 1 change nothing.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          lines(
+            bfsDistances(
+              '[[2, 1], [3], [3], [0]]',
+              0,
+              'print(vertex, distance[vertex])',
+            ),
+          ),
+          [
+            '0 0\n1 1\n2 1\n3 2',
+            '0 0\n2 1\n1 1\n3 2',
+            '0 0\n2 1\n3 2\n1 1',
+            '0 0\n2 1\n1 2\n3 3',
+          ],
+          1,
+          '2 was queued before 1, so it leaves first; 3 is discovered from 2 at distance 2 and leaves after 1.',
+        ),
+        choose(
+          'The queue currently holds vertices with distances [3, 3, 4], front first. What distance can the next newly appended vertex have?',
+          ['3', '5', '4', '2'],
+          2,
+          'The next vertex expanded has distance 3, so anything it discovers gets 4.',
+        ),
+        choose(
+          'Can a vertex at distance 2 be dequeued before one at distance 1?',
+          [
+            'Yes, if it has a smaller label',
+            'Yes, if it was discovered from the source',
+            'Only in a graph with cycles',
+            'No, every distance-1 vertex leaves first',
+          ],
+          3,
+          'Distance-2 vertices are appended only after the distance-1 vertices are already queued.',
+        ),
+        predictOutput(
+          'What is printed?',
+          lines(
+            bfsDistances(
+              '[[1], [2], [0, 3], [1]]',
+              0,
+              'print(vertex, distance[vertex])',
+            ),
+          ),
+          [
+            '0 0\n1 1\n2 2\n3 3',
+            '0 0\n1 1\n2 2\n0 3\n3 3',
+            '0 0\n1 1\n2 2\n3 1',
+            '0 0\n1 1\n2 2',
+          ],
+          0,
+          'Each vertex is dequeued once; the edges back to 0 and 1 find assigned distances and are ignored.',
+        ),
+      ],
+    },
+    {
+      title: 'Mark on enqueue and count the cost',
+      explanation: [
+        'Setting a distance when the vertex is appended, not when it is dequeued, keeps one queue entry per vertex despite cycles, self-loops and parallel edges. Each reachable vertex is then dequeued once and its list scanned once.',
+        'Initialization plus scanning costs O(V + E) time, with O(V) extra space for the distances and the queue. Using list.pop(0) instead of popleft would add a shift of the whole queue at every step.',
+      ],
+      example: {
+        code: lines(
+          'scanned = 0',
+          bfsDistances('[[1, 1, 0], [2, 2], [0]]', 0, '', 'scanned += 1'),
+          'print(len([d for d in distance if d >= 0]), scanned)',
+        ),
+        output: '3 6',
+        explanation:
+          'Three vertices are queued once each, while all six entries, including the parallel edges and the self-loop, are scanned once.',
+      },
+      questions: [
+        choose(
+          'What is the running time of BFS over adjacency lists with V vertices and E edges?',
+          ['O(V · E)', 'O(V + E)', 'O(V²)', 'O(E log V)'],
+          1,
+          'Each vertex is queued at most once, and each list entry is scanned once.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          lines(
+            'scanned = 0',
+            bfsDistances('[[1, 2, 2], [2], [1]]', 0, '', 'scanned += 1'),
+            'print(len([d for d in distance if d >= 0]), scanned)',
+          ),
+          ['3 5', '4 5', '5 5', '3 3'],
+          0,
+          'Three vertices are reached, and their five entries are each scanned once.',
+        ),
+        choose(
+          'BFS sets a vertex’s distance only when it is dequeued. What can go wrong when two queued vertices both have edges to v?',
+          [
+            'v is never reached',
+            'v gets distance 0',
+            'v is appended twice',
+            'The queue empties early',
+          ],
+          2,
+          'Neither expansion sees v as discovered, so both append it.',
+        ),
+        choose(
+          'Why does a long BFS run slowly when its queue is a list using pop(0)?',
+          [
+            'pop(0) returns the newest vertex',
+            'Lists cannot hold more than 1,000 vertices',
+            'pop(0) skips discovered vertices',
+            'pop(0) shifts every remaining entry each time',
+          ],
+          3,
+          'Each removal from the front moves the rest of the list, adding work proportional to the queue length.',
         ),
       ],
     },
