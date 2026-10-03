@@ -4,6 +4,7 @@ import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite';
 import cloudflare from '@astrojs/cloudflare';
 import { fileURLToPath } from 'node:url';
+import { catalogIndexPlugin } from './scripts/catalog-index-plugin.mjs';
 
 const edge = process.env.LESSDUMB_PLATFORM === 'cloudflare';
 
@@ -28,7 +29,7 @@ export default defineConfig({
         ),
       },
     },
-    plugins: [tailwindcss()],
+    plugins: [catalogIndexPlugin(), tailwindcss()],
     optimizeDeps: {
       include: [
         'lucide-react',

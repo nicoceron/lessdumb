@@ -1,5 +1,4 @@
 import type {
-  ChoiceQuestion,
   CodeQuestion,
   CurriculumCatalog,
   Skill,
@@ -7,6 +6,7 @@ import type {
 } from '../curriculum';
 import { rustDefinitions, rustTopics } from './rust/content';
 import { rustPrerequisites } from './rust/prerequisites';
+import { exerciseId } from './exercise';
 import { withTeachingOrder } from './teaching-order';
 
 const courseId = 'rust';
@@ -75,30 +75,6 @@ export const rustTopicStages = Object.fromEntries(
   }),
 ) as Record<string, string[]>;
 
-function choice(
-  id: string,
-  prompt: string,
-  correct: string,
-  distractors: string[],
-  explanation: string,
-  hint: string,
-  position: number,
-  code?: string,
-): ChoiceQuestion {
-  const choices = [...distractors];
-  choices.splice(position, 0, correct);
-  return {
-    id,
-    type: 'choice',
-    prompt,
-    choices,
-    answer: position,
-    explanation,
-    hint,
-    ...(code ? { code } : {}),
-  };
-}
-
 const authored: Skill[] = rustDefinitions.map((definition, index) => {
   const id = `rust-${definition.slug}`;
   const topic = rustTopics.find((item) => item.slug === definition.topic)!;
@@ -113,14 +89,10 @@ const authored: Skill[] = rustDefinitions.map((definition, index) => {
     (debugPrinted
       ? "The complete program prints the returned value using Rust's Debug format, so strings retain quotes and compound values show their structure."
       : 'The complete program prints the returned value with the {} placeholder.');
-  const outputNote =
-    definition.printNote ??
-    (debugPrinted
-      ? 'Its returned value is printed with Debug formatting.'
-      : 'Its returned value is printed with {}.');
   const tests = definition.testCode;
+  // Choice practice lives in knowledge points; this is the code exercise.
   const exercise: CodeQuestion = {
-    id: `${id}-q4`,
+    id: exerciseId(id),
     type: 'code',
     language: 'rust',
     prompt: `Implement ${definition.signature}. ${definition.rule} ${definition.decision} Match the required behavior shown below.`,
@@ -158,37 +130,7 @@ const authored: Skill[] = rustDefinitions.map((definition, index) => {
         explanation: `${definition.rule} ${exampleNote}`,
       },
     },
-    questions: [
-      choice(
-        `${id}-q1`,
-        `Which rule explains ${definition.title.toLowerCase()}?`,
-        definition.rule,
-        definition.badRule,
-        definition.rule,
-        definition.decision,
-        index % 3,
-      ),
-      choice(
-        `${id}-q2`,
-        'What does this complete Rust program print?',
-        definition.output,
-        definition.outputDistractors,
-        `${definition.rule} ${outputNote}`,
-        'Follow the helper call and then the println! formatting.',
-        (index + 1) % 3,
-        exampleCode,
-      ),
-      choice(
-        `${id}-q3`,
-        `Which decision respects the contract for ${definition.title.toLowerCase()}?`,
-        definition.decision,
-        definition.badDecision,
-        definition.decision,
-        definition.rule,
-        (index + 2) % 3,
-      ),
-      exercise,
-    ],
+    questions: [exercise],
     flashcards: [
       {
         id: `${id}-card1`,

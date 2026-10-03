@@ -1,5 +1,5 @@
+import { withExerciseId } from './exercise';
 import type {
-  ChoiceQuestion,
   CurriculumCatalog,
   LessonExample,
   Skill,
@@ -8,19 +8,6 @@ import type {
 import { withTeachingOrder } from './teaching-order';
 
 const courseId = 'quantitative-foundations';
-const q = (
-  prompt: string,
-  choices: string[],
-  answer: number,
-  explanation: string,
-): Omit<ChoiceQuestion, 'id'> => ({
-  type: 'choice',
-  prompt,
-  choices,
-  answer,
-  explanation,
-  hint: explanation,
-});
 /** A worked calculation shown without running code. */
 const worked = (
   code: string,
@@ -42,7 +29,6 @@ interface Definition {
   summary: string;
   paragraphs: string[];
   example: LessonExample;
-  questions: Omit<ChoiceQuestion, 'id'>[];
   /** A Python exercise; skills without one are assessed with choices only. */
   exercise?: {
     prompt: string;
@@ -106,31 +92,6 @@ const definitions: Definition[] = [
       explanation:
         'Summarize a collection while keeping track of what each observation contributes.',
     },
-    questions: [
-      q(
-        'What is the mean of 2, 4, and 9?',
-        ['5', '4', '15', '3'],
-        0,
-        'The sum is 15 and the count is 3, giving 5.',
-      ),
-      q(
-        'A group of 10 scores averages 4; a group of 30 averages 8. What is the combined mean?',
-        ['6', '7', '12', '8'],
-        1,
-        '(10 × 4 + 30 × 8) / 40 = 7.',
-      ),
-      q(
-        'Which change raises the mean most?',
-        [
-          'Adding a value equal to the mean',
-          'Reordering observations',
-          'Adding a very large observation',
-          'Duplicating every observation',
-        ],
-        2,
-        'A large observation adds more to the sum than a typical observation.',
-      ),
-    ],
     exercise: {
       prompt: 'Set mean_value to the arithmetic mean of values = [3, 5, 10].',
       starter: 'values = [3, 5, 10]\nmean_value = 0',
@@ -163,31 +124,6 @@ const definitions: Definition[] = [
       output: '2.67',
       explanation: 'Measure spread with squared distances from the mean.',
     },
-    questions: [
-      q(
-        'Why square deviations when measuring spread?',
-        [
-          'To preserve their signs',
-          'To prevent cancellation',
-          'To sort the values',
-          'To remove the mean',
-        ],
-        1,
-        'Squaring makes each deviation nonnegative.',
-      ),
-      q(
-        'Population variance of [2, 2, 2] is:',
-        ['2', '6', '1', '0'],
-        3,
-        'Every observation equals the mean, so every squared deviation is zero.',
-      ),
-      q(
-        'Which quantity has the same units as the original observations?',
-        ['Variance', 'Squared mean', 'Standard deviation', 'Sample count'],
-        2,
-        'Taking the square root converts squared units back to the original units.',
-      ),
-    ],
     exercise: {
       prompt:
         'Calculate population_variance for values = [2, 4, 6], dividing by the number of observations.',
@@ -223,37 +159,6 @@ const definitions: Definition[] = [
       'median 40, mean 150',
       'Sorting puts 40 in the middle. The single value 600 adds so much to the sum that the mean exceeds four of the five incomes.',
     ),
-    questions: [
-      q(
-        'What is the median of [6, 1, 9, 2]?',
-        ['4', '4.5', '5', '6'],
-        0,
-        'Sorted, the values are 1, 2, 6, 9; the two middle values average to 4.',
-      ),
-      q(
-        'The largest value in a dataset is multiplied by 10. Which summary typically changes less?',
-        ['The mean', 'The median', 'The sum', 'Both change equally'],
-        1,
-        'Only the order matters for the median, and the largest value stays largest.',
-      ),
-      q(
-        'What is the median of [5, 5, 9, 1, 20]?',
-        ['9', '8', '5', '20'],
-        2,
-        'Sorted, the values are 1, 5, 5, 9, 20, and the middle one is 5.',
-      ),
-      q(
-        "A dataset's mean is far above its median. What does that suggest?",
-        [
-          'The median was computed incorrectly',
-          'The values were not sorted',
-          'Every value equals the mean',
-          'Some large values pull the mean up',
-        ],
-        3,
-        'Large values raise the sum, and therefore the mean, without moving the middle value much.',
-      ),
-    ],
     cards: [
       [
         'How do you find the median of an even number of values?',
@@ -281,37 +186,6 @@ const definitions: Definition[] = [
       'Q1 = 6, median = 10, Q3 = 14, IQR = 8',
       'All three positions are whole numbers, so each quartile is the value stored at that position, counting from 0.',
     ),
-    questions: [
-      q(
-        'A score is at the 90th percentile. What does that mean?',
-        [
-          'About 90% of scores are at or below it',
-          'It is 90% of the highest score',
-          'It is worth 90 points',
-          'Exactly 90 scores are below it',
-        ],
-        0,
-        'A percentile describes the share of data at or below a value, not the value itself.',
-      ),
-      q(
-        'Q1 = 20 and Q3 = 50. What is the interquartile range?',
-        ['70', '35', '30', '15'],
-        2,
-        'IQR = Q3 − Q1 = 50 − 20 = 30.',
-      ),
-      q(
-        'With Q1 = 20 and Q3 = 50, which value does the 1.5 × IQR rule flag?',
-        ['90', '-20', '60', '100'],
-        3,
-        'The fences are 20 − 45 = −25 and 50 + 45 = 95, so only 100 lies outside.',
-      ),
-      q(
-        'Sorted values are 1, 3, 5, 7, 9. Using position (p / 100) × (n − 1), what is the 25th percentile?',
-        ['2', '3', '1.25', '5'],
-        1,
-        'The position is 0.25 × 4 = 1, and the value at position 1 is 3.',
-      ),
-    ],
     cards: [
       [
         'What is the interquartile range?',
@@ -339,31 +213,6 @@ const definitions: Definition[] = [
       explanation:
         'The deviation pairs are (−2, −2), (0, 1), and (2, 1). Their products 4, 0, and 2 sum to 6, and 6 / 3 = 2.0: x and y tend to rise together.',
     },
-    questions: [
-      q(
-        'x = [1, 2, 3] and y = [6, 4, 2]. What is the sign of cov(x, y)?',
-        ['Positive', 'Negative', 'Zero', 'It depends on the units'],
-        1,
-        'Above-average x pairs with below-average y, so the deviation products are negative.',
-      ),
-      q(
-        'What is cov(x, x)?',
-        ['0', '1', 'The variance of x', 'The mean of x'],
-        2,
-        'The paired deviations are identical, so their products are the squared deviations.',
-      ),
-      q(
-        'Heights change from meters to centimeters. What happens to cov(height, weight)?',
-        [
-          'It is multiplied by 100',
-          'It is unchanged',
-          'It is divided by 100',
-          'It becomes a correlation',
-        ],
-        0,
-        'Every height deviation is multiplied by 100, so every product, and their mean, is too.',
-      ),
-    ],
     exercise: {
       prompt:
         'Set covariance to the population covariance of x = [1, 3, 5] and y = [2, 2, 8], dividing by the number of pairs.',
@@ -400,31 +249,6 @@ const definitions: Definition[] = [
       explanation:
         'sxy = −4, sxx = 2, and syy = 8, so r = −4 / √16 = −1: the points lie exactly on a falling line.',
     },
-    questions: [
-      q(
-        'Which correlation describes the strongest linear relationship?',
-        ['0.6', '-0.9', '0.1', '-0.3'],
-        1,
-        'Strength is the distance from 0; the sign only gives the direction.',
-      ),
-      q(
-        'y = x² for x = [−2, −1, 0, 1, 2]. What is the correlation of x and y?',
-        ['1', '-1', '0.5', '0'],
-        3,
-        'The symmetric curve has no linear trend, so the positive and negative deviation products cancel.',
-      ),
-      q(
-        'Temperatures convert from Celsius to Fahrenheit. What happens to their correlation with ice-cream sales?',
-        [
-          'It is unchanged',
-          'It is multiplied by 1.8',
-          'It increases by 32',
-          'It changes sign',
-        ],
-        0,
-        'A positive rescaling and shift leave correlation unchanged because units cancel.',
-      ),
-    ],
     exercise: {
       prompt:
         'Set r to the correlation coefficient of x = [1, 2, 3, 4] and y = [2, 1, 4, 3].',
@@ -461,31 +285,6 @@ const definitions: Definition[] = [
       explanation:
         'Distinguish an event probability from a probability within a selected group.',
     },
-    questions: [
-      q(
-        'A fair six-sided die has probability of rolling an even number:',
-        ['1/6', '1/3', '1/2', '1'],
-        2,
-        'Three of the six equally likely outcomes are even.',
-      ),
-      q(
-        '12 of 20 positive tests correspond to the condition. What fraction of positives have it?',
-        ['12/100', '20/12', '12/20', '20/100'],
-        2,
-        'Conditioning on positive tests changes the denominator to 20.',
-      ),
-      q(
-        'Which equality holds for complementary events?',
-        [
-          'P(A) + P(not A) = 1',
-          'P(A) = P(not A)',
-          'P(A | B) = P(B | A)',
-          'P(A and B) = 1',
-        ],
-        0,
-        'An event and its complement cover every possible outcome without overlap.',
-      ),
-    ],
     exercise: {
       prompt:
         'Among 50 selected observations, 15 have the event. Set conditional_probability to the event fraction within the selected group.',
@@ -519,32 +318,6 @@ const definitions: Definition[] = [
       'E[reward] = 2 + 0 − 0.6 = 1.4',
       'Multiply each value by its probability and add the products: 10 × 0.2 = 2, 0 × 0.5 = 0, and −2 × 0.3 = −0.6.',
     ),
-    questions: [
-      q(
-        'X is 1 with probability 0.4 and 5 with probability 0.6. What is E[X]?',
-        ['3', '3.4', '2.6', '6'],
-        1,
-        '1 × 0.4 + 5 × 0.6 = 0.4 + 3 = 3.4.',
-      ),
-      q(
-        'Which list can be the probabilities of a distribution over three values?',
-        ['0.5, 0.5, 0.5', '0.6, 0.6, −0.2', '1, 1, 1', '0.2, 0.3, 0.5'],
-        3,
-        'Probabilities must be nonnegative and sum to 1; only 0.2, 0.3, 0.5 does both.',
-      ),
-      q(
-        'E[X] = 4. What is E[3X − 2]?',
-        ['10', '12', '14', '4'],
-        0,
-        'Expectation is linear: 3 × 4 − 2 = 10.',
-      ),
-      q(
-        'A game costs 1 to play and pays 6 with probability 1/6, otherwise nothing. What is the expected net gain?',
-        ['1', '5', '0', '-1'],
-        2,
-        'The expected payout is 6 × 1/6 = 1, and subtracting the cost of 1 leaves 0.',
-      ),
-    ],
     cards: [
       [
         'What is the expected value of a discrete random variable?',
@@ -572,32 +345,6 @@ const definitions: Definition[] = [
       'Var(X) = 1, Var(5X + 7) = 25',
       'Each value lies 1 from the mean, so the expected squared distance is 1. Adding 7 changes nothing; multiplying by 5 multiplies the variance by 25.',
     ),
-    questions: [
-      q(
-        'Var(X) = 4. What is Var(−3X + 10)?',
-        ['-12', '22', '36', '12'],
-        2,
-        'Shifting by 10 does nothing, and scaling by −3 multiplies the variance by 9.',
-      ),
-      q(
-        'X and Y are independent with variances 2 and 5. What is Var(X + Y)?',
-        ['7', '10', '3', '√7'],
-        0,
-        'Variances of independent variables add.',
-      ),
-      q(
-        'Ten independent models each have prediction-error variance 9. What is the variance of their average error?',
-        ['9', '3', '90', '0.9'],
-        3,
-        'The average of n independent copies has variance σ² / n = 9 / 10.',
-      ),
-      q(
-        'E[X] = 3 and E[X²] = 13. What is Var(X)?',
-        ['10', '4', '2', '16'],
-        1,
-        'Var(X) = E[X²] − μ² = 13 − 9 = 4.',
-      ),
-    ],
     cards: [
       [
         'What is Var(aX + b)?',
@@ -625,32 +372,6 @@ const definitions: Definition[] = [
       'P(K = 2) = 6/16 = 0.375, E[K] = 2, Var(K) = 1',
       'The six sequences are 1100, 1010, 1001, 0110, 0101, and 0011. The mean is np = 2 and the variance is np(1 − p) = 1.',
     ),
-    questions: [
-      q(
-        'A Bernoulli variable has p = 0.3. What is its variance?',
-        ['0.3', '0.09', '0.21', '0.7'],
-        2,
-        'p(1 − p) = 0.3 × 0.7 = 0.21.',
-      ),
-      q(
-        'A coin with P(heads) = 0.6 is flipped twice independently. What is P(both heads)?',
-        ['0.36', '1.2', '0.6', '0.24'],
-        0,
-        'Independent probabilities multiply: 0.6 × 0.6 = 0.36.',
-      ),
-      q(
-        'How many sequences of 5 trials contain exactly 2 successes?',
-        ['20', '7', '3', '10'],
-        3,
-        'C(5, 2) = 5! / (2! 3!) = 10.',
-      ),
-      q(
-        'Each of 100 independent emails is spam with probability 0.1. What are the mean and variance of the spam count?',
-        ['10 and 10', '10 and 9', '0.1 and 0.09', '90 and 9'],
-        1,
-        'np = 10 and np(1 − p) = 100 × 0.1 × 0.9 = 9.',
-      ),
-    ],
     cards: [
       [
         'What are the mean and variance of a Bernoulli(p) variable?',
@@ -678,32 +399,6 @@ const definitions: Definition[] = [
       'z = 2.5',
       'The height is 2.5 standard deviations above the mean. Since 95% of values lie within 2σ, fewer than 2.5% of people are at least this tall.',
     ),
-    questions: [
-      q(
-        'Test scores follow N(60, 8²). What is the z-score of 76?',
-        ['16', '0.5', '-2', '2'],
-        3,
-        '(76 − 60) / 8 = 2.',
-      ),
-      q(
-        'About what share of a normal distribution lies within 2σ of its mean?',
-        ['68%', '95%', '99.7%', '50%'],
-        1,
-        'The 68–95–99.7 rule gives 95% within two standard deviations.',
-      ),
-      q(
-        'X ~ N(0, 1). What is P(X = 1.3) exactly?',
-        ['0', '0.5', '0.903', '1.3'],
-        0,
-        'A continuous variable has probability 0 at any single exact value; probabilities are areas over intervals.',
-      ),
-      q(
-        'Sensor readings follow N(100, 5²). Which reading is most unusual?',
-        ['112', '104', '86', '91'],
-        2,
-        'The z-scores are 2.4, 0.8, −2.8, and −1.8; 86 lies farthest from the mean.',
-      ),
-    ],
     cards: [
       [
         'What is a z-score?',
@@ -731,37 +426,6 @@ const definitions: Definition[] = [
       'standard error = 12 / 6 = 2',
       'Sample means cluster around the population mean with standard deviation 2, so about 95% of them fall within 4 of it.',
     ),
-    questions: [
-      q(
-        'σ = 20 and n = 100. What is the standard error of the sample mean?',
-        ['0.2', '2', '20', '200'],
-        1,
-        '20 / √100 = 2.',
-      ),
-      q(
-        'By what factor must the sample size grow to halve the standard error?',
-        ['2', '√2', '0.5', '4'],
-        3,
-        'The standard error shrinks with √n, so halving it needs 4 times as many observations.',
-      ),
-      q(
-        'Which could be a bootstrap sample drawn from the five rows A, B, C, D, E?',
-        ['B, B, D, E, A', 'A, B, C, D, E, F', 'A, C', 'A, A, A, B, B, C'],
-        0,
-        'A bootstrap sample has the same size as the data, drawn from those rows with replacement.',
-      ),
-      q(
-        'A survey reaches only people who answer phone calls at noon. What happens if the sample doubles in size?',
-        [
-          'The selection bias disappears',
-          'The standard error doubles',
-          'The bias remains; only random variation shrinks',
-          'The population becomes everyone',
-        ],
-        2,
-        'More data from the same biased process reduces noise but not the systematic error.',
-      ),
-    ],
     cards: [
       [
         'What is the standard error of a sample mean?',
@@ -789,37 +453,6 @@ const definitions: Definition[] = [
       'f(0) = −2, f(4) = 10, slope 3',
       'Substitute each input for x. The graph passes through (0, −2) and (4, 10); the output rises 12 over a run of 4, so the slope is 3.',
     ),
-    questions: [
-      q(
-        'For g(x) = x² − 1, what is g(−3)?',
-        ['-10', '8', '10', '-7'],
-        1,
-        '(−3)² − 1 = 9 − 1 = 8.',
-      ),
-      q(
-        'A line passes through (1, 5) and (3, 11). What is its slope?',
-        ['6', '2', '8', '3'],
-        3,
-        'The output rises 11 − 5 = 6 over a run of 3 − 1 = 2, so the slope is 3.',
-      ),
-      q(
-        'Which rule does not define y as a function of x?',
-        ['y = 2x + 1', 'y = x²', 'y is any number whose square is x', 'y = 7'],
-        2,
-        'For x = 4, y could be 2 or −2, so one input has two outputs.',
-      ),
-      q(
-        'h(x) = −2x + 4. As x increases by 1, what happens to h(x)?',
-        [
-          'It decreases by 2',
-          'It increases by 2',
-          'It stays at 4',
-          'It decreases by 4',
-        ],
-        0,
-        'The slope is −2, so each unit step in x lowers the output by 2.',
-      ),
-    ],
     cards: [
       ['What does f(a) mean?', 'The output of the rule f when the input is a.'],
       [
@@ -844,37 +477,6 @@ const definitions: Definition[] = [
       '128, 0.04, 1',
       'Multiplying powers of the same base adds the exponents; a negative exponent is a reciprocal; any nonzero base to the power 0 is 1.',
     ),
-    questions: [
-      q(
-        'Which expression equals 3⁴ × 3²?',
-        ['3⁸', '9⁶', '3⁶', '6⁶'],
-        2,
-        'Multiplying powers of the same base adds the exponents: 4 + 2 = 6.',
-      ),
-      q(
-        'What is 10⁻³?',
-        ['0.001', '-1000', '-30', '0.003'],
-        0,
-        'A negative exponent is a reciprocal: 1 / 10³ = 0.001.',
-      ),
-      q(
-        'f(x) = 0.5ˣ. What happens as x increases?',
-        [
-          'f grows without bound',
-          'f reaches 0 at x = 2',
-          'f alternates in sign',
-          'f halves with each unit step and stays positive',
-        ],
-        3,
-        'Each step multiplies by 0.5, so the output shrinks toward 0 but never reaches it.',
-      ),
-      q(
-        'Which value is e⁻¹ closest to?',
-        ['-2.718', '$0.368$', '1', '-0.368'],
-        1,
-        'e⁻¹ = 1 / e ≈ 1 / 2.718 ≈ 0.368, a positive number.',
-      ),
-    ],
     cards: [
       ['How do you multiply aᵐ by aⁿ?', 'Add the exponents: aᵐ × aⁿ = aᵐ⁺ⁿ.'],
       ['What is a⁻ⁿ?', 'The reciprocal 1 / aⁿ, for nonzero a.'],
@@ -896,37 +498,6 @@ const definitions: Definition[] = [
       '3, 5, 2',
       'Each log asks for an exponent: e³, 2⁵ = 32, and 10² = 100. Adding two logs multiplies their inputs.',
     ),
-    questions: [
-      q(
-        'What is log₃(81)?',
-        ['27', '3', '4', '243'],
-        2,
-        '3⁴ = 81, so the exponent is 4.',
-      ),
-      q(
-        'ln(a) = 2 and ln(b) = 5. What is ln(ab)?',
-        ['7', '10', '3', '2.5'],
-        0,
-        'The log of a product is the sum of the logs: 2 + 5 = 7.',
-      ),
-      q(
-        'Why is ln(−4) undefined?',
-        [
-          'ln accepts only whole numbers',
-          'ln(−4) equals ln(4)',
-          'Negative inputs always give 0',
-          'e raised to any power is positive',
-        ],
-        3,
-        'No exponent k makes eᵏ negative, so no logarithm of −4 exists.',
-      ),
-      q(
-        'Which expression equals ln(x³)?',
-        ['3 + ln(x)', '3 ln(x)', '(ln x)³', 'ln(3x)'],
-        1,
-        'The power rule for logs brings the exponent down as a factor.',
-      ),
-    ],
     cards: [
       [
         'What does log_b(x) = k mean?',
@@ -954,42 +525,6 @@ const definitions: Definition[] = [
       'σ(2) ≈ 0.881, σ(−2) ≈ 0.119',
       'e^(−2) ≈ 0.135, so σ(2) ≈ 1 / 1.135. The symmetry rule gives σ(−2) without a second exponential.',
     ),
-    questions: [
-      q(
-        'σ(3) ≈ 0.953. What is σ(−3)?',
-        ['-0.953', '0.5', '0.953', '0.047'],
-        3,
-        'σ(−z) = 1 − σ(z) = 1 − 0.953.',
-      ),
-      q(
-        'Which value can the sigmoid never output?',
-        ['0.001', '0.5', '1.2', '0.999'],
-        2,
-        'Every sigmoid output lies strictly between 0 and 1.',
-      ),
-      q(
-        'Scores z₁ = 4 and z₂ = 1. Which statement is true?',
-        [
-          'σ(z₁) > σ(z₂)',
-          'σ(z₁) < σ(z₂)',
-          'σ(z₁) = 4σ(z₂)',
-          'σ(z₁) = σ(z₂) + 3',
-        ],
-        0,
-        'The sigmoid is increasing, but it is not proportional or shifted like its input.',
-      ),
-      q(
-        'Why does increasing z from 8 to 9 barely change σ(z)?',
-        [
-          'The sigmoid decreases there',
-          'The curve has saturated near 1',
-          'e^(−z) grows with z',
-          'σ(9) is undefined',
-        ],
-        1,
-        'e^(−8) and e^(−9) are both tiny, so both outputs are almost exactly 1.',
-      ),
-    ],
     cards: [
       [
         'What is the sigmoid function?',
@@ -1014,47 +549,6 @@ const definitions: Definition[] = [
       'probabilities ≈ 0.787, 0.107, 0.107',
       'Divide each exponential by the total. The tied scores receive equal probability, and the three probabilities sum to 1.',
     ),
-    questions: [
-      q(
-        'What is the softmax of the scores 1, 1, 1, 1?',
-        [
-          '1, 1, 1, 1',
-          '0, 0, 0, 1',
-          '0.25, 0.25, 0.25, 0.25',
-          '0.1, 0.2, 0.3, 0.4',
-        ],
-        2,
-        'Equal scores have equal exponentials, so each class receives 1/4.',
-      ),
-      q(
-        'Scores 3 and 1 become 5 and 3 after adding 2. What happens to their softmax probabilities?',
-        [
-          'They stay the same',
-          'Both increase',
-          'They no longer sum to 1',
-          'Their gap doubles',
-        ],
-        0,
-        'The common factor e² cancels between numerator and denominator.',
-      ),
-      q(
-        'With e² ≈ 7.39, what probability does softmax give the first of the scores 2 and 0?',
-        ['1.00', '0.74', '0.50', '0.88'],
-        3,
-        '7.39 / (7.39 + 1) ≈ 0.88, which is also σ(2 − 0).',
-      ),
-      q(
-        'Why exponentiate before normalizing instead of dividing raw scores by their sum?',
-        [
-          'Exponentials turn the scores into integers',
-          'Raw scores can be negative or sum to zero',
-          'Division is undefined for lists',
-          'It makes the largest probability exactly 1',
-        ],
-        1,
-        'Exponentials are always positive, so the normalized values are valid probabilities.',
-      ),
-    ],
     cards: [
       [
         'How does softmax turn scores into probabilities?',
@@ -1081,37 +575,6 @@ const definitions: Definition[] = [
       'f′(3) = 6',
       'As h shrinks, the slopes of the short secant lines approach 6, the slope of the tangent at x = 3.',
     ),
-    questions: [
-      q(
-        'f(x) = x³. What is its average rate of change from x = 0 to x = 2?',
-        ['8', '4', '2', '6'],
-        1,
-        '(2³ − 0³) / (2 − 0) = 8 / 2 = 4.',
-      ),
-      q(
-        'f′(5) = −2. What does f do near x = 5?',
-        [
-          'It rises about 2 per unit of x',
-          'Its value is −2 there',
-          'It falls about 2 per unit of x',
-          'It has a minimum there',
-        ],
-        2,
-        'A negative derivative means decreasing, at a rate of about 2 output units per input unit.',
-      ),
-      q(
-        'Difference quotients for f at x = 1 are 4.1, 4.01, and 4.001 for h = 0.1, 0.01, and 0.001. What is f′(1)?',
-        ['4.1', '4.001', '0', '4'],
-        3,
-        'The derivative is the value the quotients approach as h shrinks toward 0.',
-      ),
-      q(
-        'For f(x) = 7x − 3, what is f′(x)?',
-        ['7', '$7x$', '−3', '0'],
-        0,
-        'A line has the same slope everywhere, here 7.',
-      ),
-    ],
     cards: [
       [
         'What is the average rate of change of f from a to b?',
@@ -1138,32 +601,6 @@ const definitions: Definition[] = [
       'f′(x) = 20x³, slope 20 at x = 1',
       'Apply the power rule to x⁴, keep the constant factor 5, then substitute x = 1.',
     ),
-    questions: [
-      q(
-        'What is the derivative of x⁷?',
-        ['x⁶', '7x⁷', '6x⁷', '7x⁶'],
-        3,
-        'Bring down the exponent 7 and lower it to 6.',
-      ),
-      q(
-        'f(x) = 3x². What is f′(4)?',
-        ['48', '24', '6', '12'],
-        1,
-        'f′(x) = 6x, so f′(4) = 24.',
-      ),
-      q(
-        'What is the derivative of the constant function f(x) = 9?',
-        ['9', '9x', '0', '1'],
-        2,
-        'A constant function is flat, so its slope is 0 everywhere.',
-      ),
-      q(
-        'g(x) = −2x³. Which is g′(x)?',
-        ['−6x²', '−2x²', '−6x³', '$6x^2$'],
-        0,
-        'Keep the factor −2 and differentiate x³ to 3x²: −2 × 3x² = −6x².',
-      ),
-    ],
     cards: [
       ['What is the derivative of xⁿ?', 'n xⁿ⁻¹.'],
       [
@@ -1188,32 +625,6 @@ const definitions: Definition[] = [
       'p′(x) = 3x² + 10x',
       'Differentiate the first factor and keep the second, then keep the first and differentiate the second. Expanding gives 2x² + 10x + x² = 3x² + 10x.',
     ),
-    questions: [
-      q(
-        'What is the derivative of x⁴ + 3x² − 5x + 8?',
-        ['4x³ + 3x² − 5', '4x³ + 6x − 5', '4x³ + 6x', 'x³ + 6x − 5'],
-        1,
-        'Differentiate term by term: 4x³, 6x, −5, and 0 for the constant.',
-      ),
-      q(
-        'What is the derivative of x · x?',
-        ['1', 'x', '0', '$2x$'],
-        3,
-        'The product rule gives 1 · x + x · 1 = 2x, matching (x²)′. Multiplying the factor derivatives would wrongly give 1.',
-      ),
-      q(
-        'h(x) = (2x)(x² + 1). Which is h′(x)?',
-        ['2(x² + 1) + 2x · 2x', '2 · 2x', '(2x)(2x)', '$2(x^2 + 1)$'],
-        0,
-        'f′g + fg′ with f = 2x and g = x² + 1.',
-      ),
-      q(
-        'q(x) = 3x² − 12x. At which x is q′(x) = 0?',
-        ['$x = 0$', '$x = 4$', '$x = 2$', '$x = -2$'],
-        2,
-        'q′(x) = 6x − 12, which is 0 at x = 2.',
-      ),
-    ],
     cards: [
       ['What is (f + g)′?', 'f′ + g′: differentiate term by term.'],
       ['What is the product rule?', '(fg)′ = f′g + fg′.'],
@@ -1235,32 +646,6 @@ const definitions: Definition[] = [
       'L′(w) = 4(2w − 6), so L′(4) = 8',
       'Multiply the outer derivative 2u by the inner derivative 2. At w = 4, u = 2, so L′(4) = 2 × 2 × 2 = 8.',
     ),
-    questions: [
-      q(
-        'What is the derivative of (x − 5)²?',
-        ['$2x$', '2(x − 5)', '(x − 5)', '2(x − 5)²'],
-        1,
-        'Outer derivative 2(x − 5) times inner derivative 1.',
-      ),
-      q(
-        'What is the derivative of (4x + 1)³?',
-        ['3(4x + 1)²', '12x²', '4(4x + 1)³', '12(4x + 1)²'],
-        3,
-        'Outer derivative 3(4x + 1)² times inner derivative 4.',
-      ),
-      q(
-        'dL/dp = −6 and dp/dw = 2. What is dL/dw?',
-        ['−12', '−4', '−3', '−8'],
-        0,
-        'The chain rule multiplies the links: −6 × 2 = −12.',
-      ),
-      q(
-        'For L(p(w)), which factor of dL/dw comes from the inner step?',
-        ['dL/dp', 'L(w)', 'dp/dw', 'p(L)'],
-        2,
-        'p is the inner function of w, so its local rate is dp/dw.',
-      ),
-    ],
     cards: [
       [
         'What does the chain rule state?',
@@ -1288,37 +673,6 @@ const definitions: Definition[] = [
       '∂f/∂x = 12, ∂f/∂y = 15',
       'Hold the other input fixed, differentiate, then substitute x = 1 and y = 2.',
     ),
-    questions: [
-      q(
-        'f(x, y) = 5x + xy². What is ∂f/∂x?',
-        ['5 + y²', '5 + 2xy', 'y²', '5x + y²'],
-        0,
-        'Treat y as a constant: 5x gives 5 and xy² gives y².',
-      ),
-      q(
-        'g(a, b) = a²b. What is ∂g/∂b at (3, 4)?',
-        ['24', '12', '36', '9'],
-        3,
-        'Holding a fixed, ∂g/∂b = a², which is 9 at a = 3.',
-      ),
-      q(
-        'L(w, b) = (wx + b − y)² with x = 2, y = 1, w = 1, and b = 0. What is ∂L/∂w?',
-        ['2', '1', '4', '8'],
-        2,
-        'The residual is 2 + 0 − 1 = 1, so ∂L/∂w = 2 × 1 × 2 = 4.',
-      ),
-      q(
-        '∂f/∂x = 0 at a point. Can f still change there?',
-        [
-          'No, f is constant everywhere',
-          'Yes, when another input changes',
-          'Only if x becomes negative',
-          'No, every partial must then be 0',
-        ],
-        1,
-        'A partial derivative measures change along one input only.',
-      ),
-    ],
     cards: [
       [
         'How do you compute ∂f/∂x for f(x, y)?',
@@ -1345,37 +699,6 @@ const definitions: Definition[] = [
       '∇f(3, −1) = [4, −4]',
       'Raising w₁ increases f there, and raising w₂ decreases it. To go downhill, move against the gradient: decrease w₁ and increase w₂.',
     ),
-    questions: [
-      q(
-        'f(x, y) = x² + y². What is ∇f at (3, −4)?',
-        ['[3, −4]', '[9, 16]', '[6, −8]', '[6, 8]'],
-        2,
-        '∇f = [2x, 2y] = [6, −8].',
-      ),
-      q(
-        '∇f at a point is [5, 0]. Which move decreases f fastest?',
-        ['Increase x', 'Decrease x', 'Increase y', 'Decrease y'],
-        1,
-        'Steepest decrease is opposite the gradient, which points along +x.',
-      ),
-      q(
-        'What does a zero gradient mean at a point?',
-        [
-          'Every partial derivative is zero there',
-          'The function value is zero there',
-          'Every input is zero there',
-          'f is undefined there',
-        ],
-        0,
-        'The gradient is the vector of partials; it is zero only when all of them are.',
-      ),
-      q(
-        'f(a, b) = 3a + ab. What is ∇f at (2, 5)?',
-        ['[3, 2]', '[2, 8]', '[8, 5]', '[8, 2]'],
-        3,
-        '∂f/∂a = 3 + b = 8 and ∂f/∂b = a = 2.',
-      ),
-    ],
     cards: [
       [
         'What is the gradient of f(x, y)?',
@@ -1403,36 +726,6 @@ const definitions: Definition[] = [
       explanation:
         'Use local rates of change to reduce a differentiable objective.',
     },
-    questions: [
-      q(
-        'For (w − 3)², the derivative at w = 0 is:',
-        ['-6', '6', '0', '9'],
-        0,
-        '2 × (0 − 3) = −6.',
-      ),
-      q(
-        'Gradient descent subtracts the gradient because:',
-        [
-          'The gradient points toward local increase',
-          'The gradient is always negative',
-          'Every objective is linear',
-          'It removes the learning rate',
-        ],
-        0,
-        'The gradient gives the direction of steepest local increase; its negative points toward decrease.',
-      ),
-      q(
-        'A very large learning rate can:',
-        [
-          'Guarantee the minimum',
-          'Overshoot and diverge',
-          'Make all derivatives zero',
-          'Remove the need for iterations',
-        ],
-        1,
-        'A step can leave the region where the local approximation is useful.',
-      ),
-    ],
     exercise: {
       prompt:
         'Starting at w = 1.0, take one gradient step on $(w - 5)^2$ using learning_rate = 0.25. Store the new value in w.',
@@ -1468,42 +761,6 @@ const definitions: Definition[] = [
       'x = −1 is a local maximum; x = 1 is a local minimum',
       'The derivative is positive, then negative, then positive again, so f rises into x = −1, falls until x = 1, and rises after it.',
     ),
-    questions: [
-      q(
-        'g(x) = x² + 4x. Where is its critical point?',
-        ['$x = 4$', '$x = 2$', '$x = 0$', '$x = -2$'],
-        3,
-        'g′(x) = 2x + 4, which is 0 at x = −2.',
-      ),
-      q(
-        'f′ is negative just left of x = 5 and positive just right of it. What is x = 5?',
-        [
-          'A local maximum',
-          'A point where f(5) = 0',
-          'A local minimum',
-          'Neither a minimum nor a maximum',
-        ],
-        2,
-        'f decreases into x = 5 and increases after it.',
-      ),
-      q(
-        'f(x) = x³ has f′(0) = 0. Why is x = 0 not a minimum?',
-        [
-          'f′ is positive on both sides, so f keeps increasing',
-          'f(0) is not zero',
-          'x³ has no derivative at 0',
-          'Every critical point is a maximum',
-        ],
-        0,
-        'Without a sign change, the flat point is neither a minimum nor a maximum.',
-      ),
-      q(
-        'h(x) = −x² + 8x. What is its maximum value?',
-        ['4', '16', '8', '32'],
-        1,
-        'h′(x) = −2x + 8 = 0 at x = 4, and h(4) = −16 + 32 = 16.',
-      ),
-    ],
     cards: [
       ['What is a critical point?', 'An input where f′(x) = 0.'],
       [
@@ -1528,47 +785,6 @@ const definitions: Definition[] = [
       'not convex: x = 0 is a flat local maximum between two minima',
       'The chord from (−1, −1) to (1, −1) passes below the graph point (0, 0), which a convex function never allows.',
     ),
-    questions: [
-      q(
-        'Which function is convex?',
-        ['−x² + 1', '$x^3$', '(x − 2)² + 7', '$x^4 - 2x^2$'],
-        2,
-        'A shifted parabola opening upward is bowl-shaped everywhere.',
-      ),
-      q(
-        'f is convex and differentiable, and ∇f = 0 at w*. What can you conclude?',
-        [
-          'w* may be a saddle point',
-          'w* is a maximum',
-          'f(w*) = 0',
-          'w* is a global minimum',
-        ],
-        3,
-        'For a convex differentiable function, every flat point is a global minimum.',
-      ),
-      q(
-        'f(x, y) = x² − y² has a zero gradient at (0, 0). What kind of point is it?',
-        [
-          'A saddle point',
-          'A global minimum',
-          'A global maximum',
-          'Not a critical point',
-        ],
-        0,
-        'f increases along x and decreases along y from that point.',
-      ),
-      q(
-        'Gradient descent on a nonconvex loss stops where the gradient is zero. Why might that not be the best solution?',
-        [
-          'Zero gradients occur only at global minima',
-          'It may be a local minimum or a saddle point',
-          'The loss must be negative there',
-          'Gradients are never exactly zero',
-        ],
-        1,
-        'Nonconvex functions can be flat at points that are not the lowest overall.',
-      ),
-    ],
     cards: [
       [
         'What does convexity guarantee about flat points?',
@@ -1597,36 +813,6 @@ const definitions: Definition[] = [
       explanation:
         'Represent features as ordered coordinates and combine them with weights.',
     },
-    questions: [
-      q(
-        'The dot product of [1, 2] and [3, 4] is:',
-        ['7', '11', '[3, 8]', '10'],
-        1,
-        '1 × 3 + 2 × 4 = 11.',
-      ),
-      q(
-        'What must hold for an ordinary dot product?',
-        [
-          'Both vectors are sorted',
-          'Both vectors have equal length',
-          'All coordinates are positive',
-          'Both vectors have mean zero',
-        ],
-        1,
-        'Every coordinate needs a corresponding coordinate in the other vector.',
-      ),
-      q(
-        'Swapping only two feature coordinates while keeping weights fixed:',
-        [
-          'Always preserves a prediction',
-          'Makes the vector longer',
-          'Can change the weighted sum',
-          'Normalizes the inputs',
-        ],
-        2,
-        'Weights are attached to specific coordinate positions.',
-      ),
-    ],
     exercise: {
       prompt: 'Compute dot_value for x = [2, -1, 3] and w = [4, 2, 1].',
       starter: 'x = [2, -1, 3]\nw = [4, 2, 1]\ndot_value = 0',
@@ -1661,26 +847,6 @@ const definitions: Definition[] = [
       explanation:
         'The squares 9 and 16 sum to 25, and its square root is 5.0.',
     },
-    questions: [
-      q(
-        'What is the Euclidean norm of [1, 2, 2]?',
-        ['5', '3', '9', '√5'],
-        1,
-        '√(1 + 4 + 4) = √9 = 3.',
-      ),
-      q(
-        '‖v‖ = 4. What is ‖−3v‖?',
-        ['12', '−12', '1', '7'],
-        0,
-        'Scaling by −3 multiplies the length by |−3| = 3; a length is never negative.',
-      ),
-      q(
-        'Which vector is a unit vector?',
-        ['[1, 1]', '[0.5, 0.5]', '[0.6, 0.8]', '$[2, 0]$'],
-        2,
-        '0.36 + 0.64 = 1, so its length is 1.',
-      ),
-    ],
     exercise: {
       prompt: 'Set norm_value to the Euclidean norm of v = [2, -3, 6].',
       starter: 'v = [2, -3, 6]\nnorm_value = 0',
@@ -1713,31 +879,6 @@ const definitions: Definition[] = [
       explanation:
         'The squared differences 9 and 16 sum to 25, the squared distance; the distance is its square root, 5.0.',
     },
-    questions: [
-      q(
-        'What is the distance between [0, 0, 0] and [2, 3, 6]?',
-        ['11', '49', '7', '√11'],
-        2,
-        '√(4 + 9 + 36) = √49 = 7.',
-      ),
-      q(
-        "A point's squared distances to centers A, B, and C are 10, 4, and 9. Which center is nearest?",
-        ['C', 'A', 'Take square roots first', 'B'],
-        3,
-        'The square root preserves order, so the smallest squared distance identifies the nearest center.',
-      ),
-      q(
-        'One feature ranges over thousands and another between 0 and 1. What happens to unscaled distances?',
-        [
-          'The large-scale feature dominates them',
-          'The small-scale feature dominates them',
-          'Both features count equally',
-          'Distances become negative',
-        ],
-        0,
-        'Squared differences in the large-scale feature dwarf those in the small one.',
-      ),
-    ],
     exercise: {
       prompt:
         'Set distance to the Euclidean distance between a = [2, -1, 4] and b = [5, 3, 4].',
@@ -1774,31 +915,6 @@ const definitions: Definition[] = [
       explanation:
         'b = 2a points the same way, so a · b = 50 equals ‖a‖ ‖b‖ = 5 × 10 and the cosine similarity is 1.0.',
     },
-    questions: [
-      q(
-        'What is the cosine similarity of [1, 2] and [−2, 1]?',
-        ['1', '$-1$', '0.5', '0'],
-        3,
-        'The dot product is −2 + 2 = 0, so the vectors are orthogonal.',
-      ),
-      q(
-        'Which pair of vectors is orthogonal?',
-        [
-          '[1, 1] and [1, −1]',
-          '[1, 2] and [2, 4]',
-          '[3, 0] and [1, 1]',
-          '[1, 1] and [2, 2]',
-        ],
-        0,
-        '1 × 1 + 1 × (−1) = 0.',
-      ),
-      q(
-        'Doubling a gives 2a. How does the cosine similarity of 2a and b compare with that of a and b?',
-        ['It doubles', 'It halves', 'It is unchanged', 'It becomes 1'],
-        2,
-        'The factor 2 appears in both the dot product and ‖2a‖, so it cancels.',
-      ),
-    ],
     exercise: {
       prompt:
         'Set similarity to the cosine similarity of a = [1, 2, 2] and b = [0, 3, 4].',
@@ -1831,37 +947,6 @@ const definitions: Definition[] = [
       'shape 2 × 3, A₂₃ = 6, Aᵀ = [[1, 4], [2, 5], [3, 6]]',
       'Row 2, column 3 holds 6. Each row of Aᵀ is a column of A, so Aᵀ has 3 rows and 2 columns.',
     ),
-    questions: [
-      q(
-        'A dataset has 250 observations of 4 features. What is the shape of its data matrix X?',
-        ['4 × 250', '250 × 4', '254 × 1', '1000 × 1'],
-        1,
-        'One row per observation and one column per feature.',
-      ),
-      q(
-        'B has shape 3 × 5. What is the shape of Bᵀ?',
-        ['$3 \\times 5$', '15 × 1', '5 × 5', '$5 \\times 3$'],
-        3,
-        'Transposing swaps the numbers of rows and columns.',
-      ),
-      q(
-        'In Python, A = [[7, 8], [9, 10], [11, 12]]. What is A[2][0]?',
-        ['8', '9', '11', '12'],
-        2,
-        'A[2] is the third row [11, 12], and position 0 of it is 11.',
-      ),
-      q(
-        'A square matrix satisfies A = Aᵀ. What must hold?',
-        [
-          'A_ij = A_ji for every i and j',
-          'All entries are equal',
-          'Every entry is zero',
-          'A has a single row',
-        ],
-        0,
-        'Equality with the transpose means the matrix mirrors across its diagonal.',
-      ),
-    ],
     cards: [
       [
         'What is the shape of a data matrix?',
@@ -1888,37 +973,6 @@ const definitions: Definition[] = [
       'Xw = [0, −3, 7], Xw + b = [5, 2, 12]',
       'Each prediction is one row of X dotted with w, then shifted by the intercept 5.',
     ),
-    questions: [
-      q(
-        'What is [[2, 0], [1, 3]] times [4, 5]?',
-        ['[8, 15]', '[8, 19]', '[13, 15]', '[6, 8]'],
-        1,
-        'Row dot products: 2 × 4 + 0 × 5 = 8 and 1 × 4 + 3 × 5 = 19.',
-      ),
-      q(
-        'A has shape 4 × 3. What length must x have for Ax to be defined?',
-        ['4', '7', '12', '3'],
-        3,
-        'Each row of A has 3 entries, so x needs 3 coordinates.',
-      ),
-      q(
-        'X has shape 50 × 6 and w has 6 coordinates. What does Xw contain?',
-        [
-          '50 numbers, one per observation',
-          '6 numbers, one per feature',
-          '300 numbers',
-          'One number',
-        ],
-        0,
-        'Each of the 50 rows produces one dot product with w.',
-      ),
-      q(
-        'The rows of A are [1, 1] and [1, −1]. What is A times [3, 1]?',
-        ['[3, 1]', '$[4, -2]$', '[4, 2]', '[2, 4]'],
-        2,
-        '1 × 3 + 1 × 1 = 4 and 1 × 3 − 1 × 1 = 2.',
-      ),
-    ],
     cards: [
       [
         'How is Ax computed?',
@@ -1946,37 +1000,6 @@ const definitions: Definition[] = [
       'AB = [[2, 1], [4, 3]], BA = [[3, 4], [1, 2]]',
       'Multiplying by B on the right swaps the columns of A; on the left it swaps the rows, so AB ≠ BA.',
     ),
-    questions: [
-      q(
-        'A is 2 × 3 and B is 3 × 4. What is the shape of AB?',
-        ['$3 \\times 3$', '4 × 2', '2 × 4', 'Undefined'],
-        2,
-        'The inner 3s match; the outer sizes 2 and 4 give the shape.',
-      ),
-      q(
-        'A is 2 × 3 and B is 3 × 4. What about BA?',
-        ['4 × 3', 'Undefined, because 4 ≠ 2', '3 × 2', '2 × 4'],
-        1,
-        'B has 4 columns but A has only 2 rows, so the inner sizes differ.',
-      ),
-      q(
-        'What is [[1, 0], [2, 1]] times [[3, 1], [0, 2]]?',
-        [
-          '[[3, 1], [6, 4]]',
-          '[[3, 0], [0, 2]]',
-          '[[3, 1], [6, 2]]',
-          '[[5, 3], [2, 2]]',
-        ],
-        0,
-        'Row [2, 1] dotted with the columns [3, 0] and [1, 2] gives 6 and 4.',
-      ),
-      q(
-        'What is (AB)ᵀ?',
-        ['$A^\\top B^\\top$', '$BA$', 'AB', '$B^\\top A^\\top$'],
-        3,
-        'Transposing a product reverses the order of the factors.',
-      ),
-    ],
     cards: [
       [
         'What is the shape rule for AB?',
@@ -2004,37 +1027,6 @@ const definitions: Definition[] = [
       'A⁻¹A = [[1, 0], [0, 1]]',
       'Swap the diagonal entries, negate the off-diagonal entries, and divide by the determinant 1. Check one entry: [3, −1] · [2, 5] = 6 − 5 = 1.',
     ),
-    questions: [
-      q(
-        'What is the 2 × 2 identity matrix times [7, −2]?',
-        ['[1, 1]', '[7, −2]', '[0, 0]', '[−2, 7]'],
-        1,
-        'The identity leaves every vector unchanged.',
-      ),
-      q(
-        'What is the determinant of [[4, 6], [2, 3]]?',
-        ['24', '6', '12', '0'],
-        3,
-        '4 × 3 − 6 × 2 = 0, so this matrix has no inverse.',
-      ),
-      q(
-        'Which matrix has no inverse?',
-        [
-          '$[[1, 0], [0, 1]]$',
-          '[[2, 0], [0, 5]]',
-          '[[1, 2], [2, 4]]',
-          '$[[0, 1], [1, 0]]$',
-        ],
-        2,
-        'Its determinant is 1 × 4 − 2 × 2 = 0; the second row is twice the first.',
-      ),
-      q(
-        'A is invertible and Ax = b. Which expression gives x?',
-        ['A⁻¹b', 'bA⁻¹', 'Ab', 'AᵀA'],
-        0,
-        'Multiply both sides on the left by A⁻¹: A⁻¹Ax = x.',
-      ),
-    ],
     cards: [
       [
         'What does the identity matrix do?',
@@ -2062,32 +1054,6 @@ const definitions: Definition[] = [
       'eigenvalues 4 and 2; the first component explains 4 / 6 ≈ 67% of the variance',
       'The data vary most along [1, 1], with variance 4; the perpendicular direction [1, −1] carries variance 2.',
     ),
-    questions: [
-      q(
-        'For A = [[4, 0], [0, 1]], which vector is an eigenvector with eigenvalue 4?',
-        ['[0, 1]', '[1, 1]', '[1, 0]', '[4, 1]'],
-        2,
-        'A[1, 0] = [4, 0] = 4[1, 0].',
-      ),
-      q(
-        'A covariance matrix has eigenvalues 6, 3, and 1. What share of the variance does the first principal component explain?',
-        ['6%', '30%', '90%', '60%'],
-        3,
-        '6 / (6 + 3 + 1) = 0.6.',
-      ),
-      q(
-        'For v = [1, −2], Av = [−2, 4]. What is the eigenvalue of v?',
-        ['−2', '2', '4', '−4'],
-        0,
-        '[−2, 4] = −2 × [1, −2].',
-      ),
-      q(
-        'A covariance matrix is [[5, 2], [2, 1]]. What is the variance of the first feature?',
-        ['2', '5', '1', '7'],
-        1,
-        'Diagonal entries are variances; the off-diagonal 2 is the covariance.',
-      ),
-    ],
     cards: [
       [
         'What is an eigenvector of A?',
@@ -2115,37 +1081,6 @@ const definitions: Definition[] = [
       'maximum likelihood estimate p = 3/4',
       'p = 0.75 makes the observed data more probable than p = 0.5, and k / n = 3/4 is the value that makes it most probable.',
     ),
-    questions: [
-      q(
-        'A coin shows 7 heads in 10 independent flips. What is the maximum likelihood estimate of P(heads)?',
-        ['0.5', '0.7', '0.3', '7'],
-        1,
-        'For Bernoulli trials the estimate is k / n = 7 / 10.',
-      ),
-      q(
-        'Why maximize the log-likelihood instead of the likelihood?',
-        [
-          'It always equals the likelihood',
-          'It makes probabilities larger than 1',
-          'It removes the need for data',
-          'It has the same maximizer and turns products into sums',
-        ],
-        3,
-        'log is increasing, so the maximizer is unchanged, and log(xy) = log x + log y.',
-      ),
-      q(
-        'A classifier predicts p = 0.9 for a label y = 1. What is its binary cross-entropy?',
-        ['0.9', '−ln(0.1) ≈ 2.303', '−ln(0.9) ≈ 0.105', '0.1'],
-        2,
-        'With y = 1 only the term −ln p remains.',
-      ),
-      q(
-        'A Bernoulli(p) model observes 0, 0, 1. Which expression is the likelihood L(p)?',
-        ['(1 − p)²p', 'p²(1 − p)', '(1 − p) + (1 − p) + p', '1/3'],
-        0,
-        'Independent observations multiply: (1 − p)(1 − p)p.',
-      ),
-    ],
     cards: [
       [
         'What is the likelihood of a parameter value?',
@@ -2175,13 +1110,12 @@ const mathSkills: Skill[] = withTeachingOrder(
       reviewAnswers: 2,
     },
     lesson: { paragraphs: d.paragraphs, example: d.example },
-    questions: [
-      ...d.questions.map((x, i) => ({ ...x, id: `${d.id}-q${i + 1}` })),
-      ...(d.exercise
+    questions: withExerciseId(
+      d.id,
+      d.exercise
         ? [
             {
-              id: `${d.id}-q${d.questions.length + 1}`,
-              type: 'code' as const,
+              type: 'code',
               prompt: d.exercise.prompt,
               starterCode: d.exercise.starter,
               solution: d.exercise.solution,
@@ -2190,8 +1124,8 @@ const mathSkills: Skill[] = withTeachingOrder(
               hint: d.paragraphs[1],
             },
           ]
-        : []),
-    ],
+        : [],
+    ),
     flashcards: d.cards.map(([front, back], i) => ({
       id: `${d.id}-card${i + 1}`,
       skillId: d.id,

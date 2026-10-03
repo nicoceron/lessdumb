@@ -20,17 +20,16 @@ import {
   Zap,
 } from 'lucide-react';
 import { ChoiceText, InlineText } from './inline-text';
-import {
-  courses,
-  skills,
-  skillById,
-  units,
-  type CodeLanguage,
-  type KnowledgePoint,
-  type LessonExample,
-  type Question,
-  type Skill,
+import type {
+  CodeLanguage,
+  KnowledgePoint,
+  LessonExample,
+  Question,
+  Skill,
 } from '../lib/curriculum';
+import { courses, skills, skillById, units } from '../lib/catalog-index';
+import { loadedSkill, loadSkill } from '../lib/content';
+import { useCourseContent } from './use-content';
 import {
   getSkillState,
   isMastered,
@@ -63,7 +62,7 @@ import {
   editorLanguage,
 } from '../lib/code-language';
 import { recordLearningAnswer, type LearnerState } from '../lib/state';
-import { Btn } from './shared';
+import { Btn, ContentLoading } from './shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -281,47 +280,76 @@ function PointTeaching({
   );
 }
 
-export default function LearningSession({
-  state,
-  update,
-  userId,
-}: {
+type SessionProps = {
   state: LearnerState;
   update: (fn: (s: LearnerState) => LearnerState) => void;
   userId?: string;
-}) {
-  const params = new URLSearchParams(window.location.search);
-  const goal =
+};
+
+function sessionGoal(state: LearnerState, params: URLSearchParams) {
+  return (
     courses.find((c) => c.id === params.get('course'))?.id ??
     skillById[params.get('skill') ?? '']?.courseId ??
     courses.find((c) => c.id === state.activeCourseId)?.id ??
-    courses[0].id;
+    courses[0].id
+  );
+}
+
+/** The task the page opens on: the requested skill or the scheduler's next. */
+function openingTask(state: LearnerState, params: URLSearchParams) {
+  const suggested = nextTask(
+    state.progress,
+    new Date(),
+    sessionGoal(state, params),
+    undefined,
+    { reviewsOnly: params.get('mode') === 'review' && !params.get('skill') },
+  );
+  const id = params.get('skill') ?? suggested?.skillId ?? skills[0].id;
+  const mode: Mode =
+    params.get('mode') === 'review'
+      ? 'review'
+      : !params.get('skill') || suggested?.skillId === params.get('skill')
+        ? (suggested?.mode ?? 'learn')
+        : 'learn';
+  const complete =
+    !params.get('skill') &&
+    (!suggested ||
+      (params.get('mode') === 'review' && suggested.mode !== 'review'));
+  return { skillId: id, mode, complete };
+}
+
+/**
+ * Loads the opening skill's course content, then shows the page. Lesson
+ * content is downloaded per course; the scheduler only needs the graph index.
+ */
+export default function LearningSession(props: SessionProps) {
+  const [opening] = useState(() =>
+    openingTask(props.state, new URLSearchParams(window.location.search)),
+  );
+  const content = useCourseContent([skillById[opening.skillId]?.courseId]);
+  if (skillById[opening.skillId] && !content.ready)
+    return <ContentLoading error={content.error} retry={content.retry} />;
+  return <LessonPage {...props} opening={opening} />;
+}
+
+function LessonPage({
+  state,
+  update,
+  userId,
+  opening,
+}: SessionProps & { opening: ReturnType<typeof openingTask> }) {
+  const params = new URLSearchParams(window.location.search);
+  const goal = sessionGoal(state, params);
   // /learn?mode=review is a review session: it never switches to a lesson.
   // Elsewhere reviews interleave with lessons, as on Learn.
   const reviewSession = params.get('mode') === 'review' && !params.get('skill');
-  const [initial] = useState(() => {
-    const suggested = nextTask(state.progress, new Date(), goal, undefined, {
-      reviewsOnly: reviewSession,
-    });
-    const id = params.get('skill') ?? suggested?.skillId ?? skills[0].id;
-    const mode: Mode =
-      params.get('mode') === 'review'
-        ? 'review'
-        : !params.get('skill') || suggested?.skillId === params.get('skill')
-          ? (suggested?.mode ?? 'learn')
-          : 'learn';
-    const complete =
-      !params.get('skill') &&
-      (!suggested ||
-        (params.get('mode') === 'review' && suggested.mode !== 'review'));
-    return { skillId: id, mode, complete };
-  });
+  const [initial] = useState(opening);
   const [skillId, setSkillId] = useState(initial.skillId);
   const [mode, setMode] = useState<Mode>(initial.mode);
   const [complete, setComplete] = useState(initial.complete);
   // The live question, then everything answered on this page before it.
   const [current, setCurrent] = useState<Entry | null>(() => {
-    const first = skillById[initial.skillId];
+    const first = loadedSkill(initial.skillId);
     return first && !initial.complete && isUnlocked(state.progress, first.id)
       ? buildEntry(state.progress, first, initial.mode)
       : null;
@@ -329,7 +357,7 @@ export default function LearningSession({
   const [history, setHistory] = useState<Entry[]>([]);
   const [resumed, setResumed] = useState<Resumed>(() =>
     initial.mode === 'learn'
-      ? resumedAnswers(state.progress, skillById[initial.skillId])
+      ? resumedAnswers(state.progress, loadedSkill(initial.skillId))
       : {},
   );
   const [running, setRunning] = useState(false);
@@ -344,6 +372,9 @@ export default function LearningSession({
   const activeRun = useRef<symbol | null>(null);
   const activeController = useRef<AbortController | null>(null);
   const pendingFocus = useRef<FocusRequest | null>(null);
+  // Continue waits while the next task's course content downloads.
+  const advancing = useRef(false);
+  const [advanceError, setAdvanceError] = useState(false);
   const endAnnounced = useRef<string | null>(null);
   useEffect(() => {
     live.current = true;
@@ -358,10 +389,10 @@ export default function LearningSession({
     gradingGeneration.current++;
   }, [skillId, current?.key]);
 
-  const skill = skillById[skillId];
+  const skill = loadedSkill(skillId);
   const courseLanguage = skill ? courseLanguageOf(skill) : 'python';
   const available = !!skill && isUnlocked(state.progress, skillId);
-  const currentSkill = current ? skillById[current.skillId] : undefined;
+  const currentSkill = current ? loadedSkill(current.skillId) : undefined;
   const question =
     current && currentSkill
       ? (findQuestion(currentSkill, current.questionId) ?? null)
@@ -483,13 +514,15 @@ export default function LearningSession({
     setSkillId(id);
     setMode(nextMode);
     setResumed(
-      nextMode === 'learn' ? resumedAnswers(state.progress, skillById[id]) : {},
+      nextMode === 'learn'
+        ? resumedAnswers(state.progress, loadedSkill(id))
+        : {},
     );
     setCurrent(entry);
     pendingFocus.current = { id: TITLE_ID, top: true };
   }
-  function next() {
-    if (!current?.feedback || !skill || failed) return;
+  async function next() {
+    if (!current?.feedback || !skill || failed || advancing.current) return;
     const p = getSkillState(state.progress, skillId);
     const mastered = isMastered(state.progress, skillId);
     if (
@@ -505,12 +538,22 @@ export default function LearningSession({
         reviewsOnly: reviewSession,
       });
       if (task && !(reviewSession && task.mode !== 'review')) {
-        const entry = buildEntry(
-          state.progress,
-          skillById[task.skillId],
-          task.mode,
-          current,
-        );
+        // The next task may come from another course: load its content first.
+        let target = loadedSkill(task.skillId);
+        if (!target) {
+          advancing.current = true;
+          try {
+            target = await loadSkill(skillById[task.skillId]);
+          } catch {
+            setAdvanceError(true);
+            return;
+          } finally {
+            advancing.current = false;
+          }
+          if (!live.current) return;
+          setAdvanceError(false);
+        }
+        const entry = buildEntry(state.progress, target, task.mode, current);
         if (mode === 'review' && task.mode === 'review') {
           // Reviews keep stacking on the same page, whichever skill is next.
           setHistory((entries) => [...entries, current]);
@@ -629,7 +672,7 @@ export default function LearningSession({
   }
 
   function questionCard(entry: Entry, label: string, extra?: ReactNode) {
-    const owner = skillById[entry.skillId];
+    const owner = loadedSkill(entry.skillId);
     const item = owner ? findQuestion(owner, entry.questionId) : undefined;
     if (!owner || !item) return null;
     const isLive = entry.key === current?.key;
@@ -818,7 +861,7 @@ export default function LearningSession({
           question came from.
         </p>
         {pageEntries.map((entry, index) => {
-          const owner = skillById[entry.skillId];
+          const owner = loadedSkill(entry.skillId);
           const point = owner ? stepFor(owner, entry.stepId)?.point : undefined;
           const label = `Question ${index + 1}${multiSkill && owner ? ` · ${owner.title}` : ''}`;
           return questionCard(
@@ -907,6 +950,14 @@ export default function LearningSession({
         </span>
       </div>
       {mode === 'learn' ? learnContent() : reviewContent()}
+      {advanceError && (
+        <Alert variant="destructive" role="alert">
+          <AlertDescription>
+            The next lesson could not be downloaded. Check your connection, then
+            press Continue again.
+          </AlertDescription>
+        </Alert>
+      )}
       {failed && (
         <Card
           id={END_ID}

@@ -7,7 +7,14 @@ import {
   StateConflictError,
   type AccountSessionState,
 } from '../lib/account';
-import { createState, mergeStates, type LearnerState } from '../lib/state';
+import {
+  createState,
+  mergeStates,
+  missingMasteryCards,
+  queueMasteryCards,
+  type LearnerState,
+} from '../lib/state';
+import { loadSkills } from '../lib/content';
 import {
   MAX_STATE_BODY_BYTES,
   parseStateUpdate,
@@ -20,6 +27,11 @@ interface Snapshot {
   needsSave: boolean;
   hasDeviceState: boolean;
   guestMigrationRaw?: string;
+  /**
+   * A merge with account progress may have completed a skill's mastery whose
+   * cards wait for that course's content to load.
+   */
+  mergedCards?: boolean;
 }
 export interface Learner {
   state: LearnerState;
@@ -130,6 +142,7 @@ export function useLearner(): Learner {
         setSnapshot((current) => {
           if (current.owner !== userId) return current;
           const hasLocalProgress = current.hasDeviceState || current.needsSave;
+          const merged = !!result.state && hasLocalProgress;
           const value = result.state
             ? hasLocalProgress
               ? mergeStates(current.value, result.state)
@@ -147,6 +160,7 @@ export function useLearner(): Learner {
               !result.state && !hasLocalProgress
                 ? guest?.raw
                 : current.guestMigrationRaw,
+            mergedCards: merged || current.mergedCards,
           };
         });
         setSync('Account connected');
@@ -291,6 +305,7 @@ export function useLearner(): Learner {
                     : value.value,
                   revision: error.latest.revision,
                   needsSave: true,
+                  mergedCards: !!error.latest.state || value.mergedCards,
                 },
           );
           setSync('Combining progress from your devices…');
@@ -322,6 +337,35 @@ export function useLearner(): Learner {
     snapshot.needsSave,
     retry,
   ]);
+
+  // Merging can complete a skill's mastery, which earns its cards. Card text
+  // is lesson content: load the courses it belongs to, then queue the cards.
+  useEffect(() => {
+    if (!ready || !snapshot.mergedCards) return;
+    const owner = snapshot.owner;
+    const settle = () =>
+      setSnapshot((value) =>
+        value.owner === owner ? { ...value, mergedCards: false } : value,
+      );
+    const missing = missingMasteryCards(latest.current.value);
+    if (!missing.length) {
+      settle();
+      return;
+    }
+    let current = true;
+    loadSkills(missing).then(
+      () => {
+        if (!current) return;
+        settle();
+        update((state) => queueMasteryCards(state));
+      },
+      // Offline: the next merge tries again.
+      () => {},
+    );
+    return () => {
+      current = false;
+    };
+  }, [ready, snapshot.owner, snapshot.mergedCards]);
 
   function retrySync() {
     setSnapshot((value) => ({ ...value, revision: null }));

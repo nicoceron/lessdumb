@@ -1,5 +1,5 @@
+import { withExerciseId } from './exercise';
 import type {
-  ChoiceQuestion,
   CodeQuestion,
   CurriculumCatalog,
   Skill,
@@ -7,22 +7,6 @@ import type {
 } from '../curriculum';
 
 const courseId = 'python-data-analysis';
-const choice = (
-  prompt: string,
-  choices: string[],
-  answer: number,
-  explanation: string,
-  hint: string,
-  code?: string,
-): Omit<ChoiceQuestion, 'id'> => ({
-  type: 'choice',
-  prompt,
-  choices,
-  answer,
-  explanation,
-  hint,
-  ...(code ? { code } : {}),
-});
 const exercise = (
   prompt: string,
   starterCode: string,
@@ -49,7 +33,8 @@ function skill(
   code: string,
   output: string,
   explanation: string,
-  questions: (Omit<ChoiceQuestion, 'id'> | Omit<CodeQuestion, 'id'>)[],
+  /** The code exercise; choice practice lives in knowledge points. */
+  exercises: Omit<CodeQuestion, 'id'>[],
   cards: [string, string][],
 ): Skill {
   return {
@@ -64,10 +49,7 @@ function skill(
     estimatedMinutes: 10,
     assessment: { requiredTypes: ['code', 'choice'], reviewAnswers: 2 },
     lesson: { paragraphs, example: { code, output, explanation } },
-    questions: questions.map((question, index) => ({
-      ...question,
-      id: id + '-q' + (index + 1),
-    })),
+    questions: withExerciseId(id, exercises),
     flashcards: cards.map(([front, back], index) => ({
       id: id + '-card' + (index + 1),
       skillId: id,
@@ -133,37 +115,6 @@ const skills: Skill[] = [
     '(2, 3)\n6\n[[12, 18, 24], [15, 21, 27]]',
     'Two equally sized inner lists become two rows and three columns.',
     [
-      choice(
-        'An array has shape (4, 2). How many entries does it contain?',
-        ['4', '2', '8', '6'],
-        2,
-        'There are four rows of two values, so size is 4 × 2 = 8.',
-        'Multiply the axis lengths.',
-      ),
-      choice(
-        'What does ndim count?',
-        [
-          'The number of axes',
-          'The largest value',
-          'The number of missing values',
-          'Bytes per entry',
-        ],
-        0,
-        'A one-dimensional array has one axis; a matrix has two.',
-        'It describes the structure of the grid.',
-      ),
-      choice(
-        'Which construction explicitly supports decimal values?',
-        [
-          'np.array([1, 2], dtype=int)',
-          'np.array([1, 2], dtype=float)',
-          '[1, 2].shape',
-          'np.shape(float)',
-        ],
-        1,
-        'dtype=float chooses a floating-point representation for every entry.',
-        'Look for the requested dtype.',
-      ),
       exercise(
         'Create an array called readings containing two rows: [3, 5, 7] and [4, 6, 8]. Store its shape in dimensions and its entry count in count.',
         'import numpy as np\n# Create readings, dimensions, and count.\n',
@@ -200,28 +151,6 @@ const skills: Skill[] = [
     '[[6, 12], [18, 24]]\n[8, 12]\n[3.0, 7.0]',
     'Arithmetic keeps the grid; each reduction removes one axis.',
     [
-      choice(
-        'What does np.array([2, 5]) * 2 produce?',
-        ['[2, 5, 2, 5]', 'An error', '[4, 10]', '[2, 10]'],
-        2,
-        'Array multiplication scales entries rather than repeating a sequence.',
-        'NumPy numeric arithmetic is element-wise.',
-      ),
-      choice(
-        'Rows are branches and columns are months. Which operation totals each branch?',
-        ['sales.sum(axis=0)', 'sales.sum(axis=1)', 'sales.shape', 'sales.ndim'],
-        1,
-        'axis=1 reduces the month columns within each branch row.',
-        'Keep one result per row.',
-      ),
-      choice(
-        'What is the output?',
-        ['[8, 12]', '[6, 14]', '20', '[2, 4, 6, 8]'],
-        0,
-        'axis=0 combines corresponding column entries: 2+6 and 4+8.',
-        'Reduce downward through the rows.',
-        'import numpy as np\na = np.array([[2, 4], [6, 8]])\nprint(a.sum(axis=0).tolist())',
-      ),
       exercise(
         'The rows of sales are stores, and its columns are days. Make doubled by doubling every entry, and daily_totals containing the total for each day.',
         'import numpy as np\nsales = np.array([[3, 7, 5], [8, 2, 4]])\n# Create doubled and daily_totals.\n',
@@ -258,37 +187,6 @@ const skills: Skill[] = [
     '[9, 8, 15]\n[[12, 8], [7, 15]]',
     'Select a column to form the row condition, then use its boolean mask to select rows.',
     [
-      choice(
-        'Which expression selects the first column of every row?',
-        ['a[0, :]', 'a[:, 0]', 'a[1]', 'a[:, 1]'],
-        1,
-        'The colon spans rows; column position zero selects the first column.',
-        'The row selector comes first.',
-      ),
-      choice(
-        'What does a[a > 4] select from a one-dimensional array?',
-        [
-          'Its first four entries',
-          'All entries greater than four',
-          'Four random entries',
-          'The position numbered four',
-        ],
-        1,
-        'The comparison generates a mask, and True positions are retained.',
-        'The brackets receive booleans, not a count.',
-      ),
-      choice(
-        'You will modify a basic slice without changing the source. What should you do?',
-        [
-          'Use .copy() on the slice',
-          'Use a larger slice',
-          'Rename the variable',
-          'Print it first',
-        ],
-        0,
-        'A basic slice can be a view; an explicit copy owns independent data.',
-        'Changing a name does not copy the storage.',
-      ),
       exercise(
         'Create selected containing rows whose first value is at least 10. Also create independent as a copy of the second column. Leave values unchanged.',
         'import numpy as np\nvalues = np.array([[8, 2], [14, 5], [10, 7]])\n# Create selected and independent.\n',
@@ -325,37 +223,6 @@ const skills: Skill[] = [
     '[[12, 24, 36], [13, 25, 37]]\n[[102, 104, 106], [203, 205, 207]]',
     'A column-length vector adjusts columns; a reshaped row-length vector adjusts rows.',
     [
-      choice(
-        'Which shapes can be added directly by broadcasting?',
-        [
-          '(2, 3) and (2,)',
-          '(2, 3) and (3,)',
-          '(2, 3) and (4,)',
-          '(2,) and (3,)',
-        ],
-        1,
-        'The trailing dimension three matches; the leading missing dimension behaves as one.',
-        'Compare from the right.',
-      ),
-      choice(
-        'What shape results from (3, 1) plus (3,)?',
-        ['(3,)', '(3, 1)', '(1, 3)', '(3, 3)'],
-        3,
-        'The vector acts as (1, 3), so broadcasting expands both singleton axes.',
-        'Write the second shape as (1, 3).',
-      ),
-      choice(
-        'A row offset vector has shape (4,). How can you add it to a (4, 2) matrix by row?',
-        [
-          'matrix + offsets',
-          'matrix + offsets[:, None]',
-          'matrix + offsets[None, :]',
-          'matrix * 0',
-        ],
-        1,
-        'offsets[:, None] has shape (4, 1), compatible with (4, 2).',
-        'The trailing dimension must be one or two.',
-      ),
       exercise(
         'Each row is a day and each column is a sensor. Add the sensor calibration [1, -2, 3] to every row, storing calibrated.',
         'import numpy as np\nreadings = np.array([[10, 20, 30], [15, 25, 35]])\ncalibration = np.array([1, -2, 3])\n# Create calibrated using array arithmetic.\n',
@@ -392,32 +259,6 @@ const skills: Skill[] = [
     '22\n14\n45',
     'Label selection and positional selection can name the same value in different ways.',
     [
-      choice(
-        'In pd.Series([4, 7], index=[10, 20]), what does .iloc[0] return?',
-        ['10', '20', '4', '7'],
-        2,
-        'iloc selects position zero, which holds the value four.',
-        'Ignore the index labels for positional selection.',
-      ),
-      choice(
-        'Which selection explicitly looks up the label north?',
-        ['s.iloc["north"]', 's.loc["north"]', 's.shape["north"]', 's.index(0)'],
-        1,
-        'loc selects by index label.',
-        'Use the label-oriented accessor.',
-      ),
-      choice(
-        'When constructing a Series from a dictionary, what becomes its index?',
-        [
-          'Dictionary values',
-          'Only the first key',
-          'Dictionary keys',
-          'A random sequence',
-        ],
-        2,
-        'Each dictionary key labels its associated value.',
-        'A mapping already has named entries.',
-      ),
       exercise(
         'Create stock as a Series with labels pen and notebook and values 12 and 7. Store the notebook value in notebooks and the first value by position in first.',
         'import pandas as pd\n# Create stock, notebooks, and first.\n',
@@ -454,42 +295,6 @@ const skills: Skill[] = [
     '(2, 4)\n[6, 18]',
     'Each row describes an order; the derived total column contains its units multiplied by its price.',
     [
-      choice(
-        'What does table["amount"] normally return?',
-        [
-          'A Series',
-          'A list of column names',
-          'A tuple',
-          'A scalar for the whole table',
-        ],
-        0,
-        'A single named column is a Series indexed by the table rows.',
-        'One column is one-dimensional.',
-      ),
-      choice(
-        'How do you select two columns while keeping a DataFrame?',
-        [
-          'table["a", "b"]',
-          'table[["a", "b"]]',
-          'table.iloc["a", "b"]',
-          'table.shape[0]',
-        ],
-        1,
-        'Pass a list of column names inside the selection brackets.',
-        'The inner brackets construct the list of names.',
-      ),
-      choice(
-        'A DataFrame has shape (5, 3). What does one row represent in a tidy observational table?',
-        [
-          'All columns of one observation',
-          'All observations of one variable',
-          'A column name only',
-          'A NumPy data type',
-        ],
-        0,
-        'Rows represent observations, and columns describe their variables.',
-        'Separate observation count from variable count.',
-      ),
       exercise(
         'Create orders from the supplied columns. Add revenue as units times price and save just item and revenue as summary.',
         'import pandas as pd\ncolumns = {"item": ["book", "lamp"], "units": [4, 2], "price": [6, 11]}\n# Create orders, then summary.\n',
@@ -526,42 +331,6 @@ const skills: Skill[] = [
     '[11, 11]\n[8, 4]',
     'The red values add to 11, and the blue values add to 11, despite different input orders.',
     [
-      choice(
-        'Series a has labels [x, y], and b has [y, x]. How does a + b match entries?',
-        [
-          'By their positions only',
-          'By matching index labels',
-          'By the smaller value',
-          'It always raises an error',
-        ],
-        1,
-        'pandas pairs values sharing the same index label.',
-        'The index carries identity.',
-      ),
-      choice(
-        'What does reindex(["b", "a"]) do to labels ["a", "b"]?',
-        [
-          'Sorts values ascending',
-          'Renames both labels',
-          'Returns rows ordered b then a',
-          'Deletes the index',
-        ],
-        2,
-        'reindex specifies the desired label order.',
-        'The list describes the result index.',
-      ),
-      choice(
-        'One Series lacks label z. When is add(..., fill_value=0) appropriate?',
-        [
-          'Whenever data is missing',
-          'When an absent contribution genuinely means zero',
-          'Only for strings',
-          'To prove the measurement was observed',
-        ],
-        1,
-        'Zero filling is a semantic decision: absence of a contribution can mean zero, but an unobserved measurement need not.',
-        'Think about what absence means in the dataset.',
-      ),
       exercise(
         'Combine counts from two channels by matching product labels. An absent channel contribution means zero. Store totals ordered pen, bag, mug.',
         'import pandas as pd\nshop = pd.Series([5, 2], index=["pen", "bag"])\nweb = pd.Series([4, 3], index=["mug", "pen"])\n# Create totals with an explicit index order.\n',
@@ -598,37 +367,6 @@ const skills: Skill[] = [
     "['pen', 'mug']",
     'Each row must satisfy both conditions; the middle row fails both.',
     [
-      choice(
-        'Which operator combines two boolean Series using logical and?',
-        ['and', '&', '&&', '+'],
-        1,
-        'Use element-wise & with parenthesized conditions.',
-        'A Series contains many truth values.',
-      ),
-      choice(
-        'Which selection returns named columns only for True rows in mask?',
-        [
-          'table.loc[mask, ["a", "b"]]',
-          'table.iloc["a", "b"]',
-          'table["mask", "a"]',
-          'table.shape[mask]',
-        ],
-        0,
-        'loc accepts a row mask and a list of column labels.',
-        'The two loc selectors describe rows, then columns.',
-      ),
-      choice(
-        'Which update explicitly changes the original table in one selection?',
-        [
-          'table[mask]["flag"] = 1',
-          'table.loc[mask, "flag"] = 1',
-          'table.head()["flag"] = 1',
-          'table.columns = 1',
-        ],
-        1,
-        'A single loc assignment clearly identifies the original table cells to update.',
-        'Avoid selecting an intermediate table before assigning.',
-      ),
       exercise(
         'Select products costing at most 10 with positive stock. Store a DataFrame eligible containing only name and price, keeping the source order.',
         'import pandas as pd\nproducts = pd.DataFrame({"name": ["clip", "desk", "cup", "pad"], "price": [3, 80, 8, 5], "stock": [4, 2, 0, 7]})\n# Create eligible.\n',
@@ -665,37 +403,6 @@ const skills: Skill[] = [
     "['007', '012']\n10",
     'Explicit string parsing keeps identifier formatting, while quantity remains numeric.',
     [
-      choice(
-        'Why use a CSV parser instead of splitting each line on commas?',
-        [
-          'To ignore headers',
-          'To handle quoting and delimiters correctly',
-          'To sort every value',
-          'To guarantee clean measurements',
-        ],
-        1,
-        'A quoted field can contain a comma; a real parser knows where the field ends.',
-        'A comma may be part of a quoted value.',
-      ),
-      choice(
-        'A customer code is 004. Which dtype preserves its identity?',
-        ['int', 'float', 'string', 'bool'],
-        2,
-        'String parsing preserves leading zeros that numeric parsing would discard.',
-        'An identifier is not a number to calculate with.',
-      ),
-      choice(
-        'What does StringIO provide to read_csv?',
-        [
-          'An in-memory file-like text object',
-          'A database connection',
-          'A random array',
-          'A list of missing markers',
-        ],
-        0,
-        'StringIO gives a string a file-reading interface without using an external file.',
-        'The dataset can stay embedded in the exercise.',
-      ),
       exercise(
         'Read the semicolon-separated text into events. Preserve code as a string, and store the sum of count in total.',
         'from io import StringIO\nimport pandas as pd\ntext = "code;count\\n003;5\\n009;8\\n"\n# Create events and total.\n',
@@ -732,37 +439,6 @@ const skills: Skill[] = [
     '[False, True, False]\n[4.0, 0.0, 7.0]\n[4.0, 7.0]',
     'Detection, filling, and removal are distinct actions with distinct effects.',
     [
-      choice(
-        'Which operation reliably detects missing Series values?',
-        ['s == float("nan")', 's.isna()', 's == 0', 's.sort_values()'],
-        1,
-        'isna recognizes the missing-value representations pandas supports.',
-        'Missingness has a dedicated predicate.',
-      ),
-      choice(
-        'A blank sensor measurement means unknown. What does replacing it with zero do?',
-        [
-          'Proves the sensor measured zero',
-          'Changes unknown into an assumed zero',
-          'Preserves the original information exactly',
-          'Fixes all sampling bias',
-        ],
-        1,
-        'Zero filling introduces a value that was not observed.',
-        'Distinguish an absent reading from a measured zero.',
-      ),
-      choice(
-        'How can you drop rows only when the score column is missing?',
-        [
-          'table.dropna(subset=["score"])',
-          'table.fillna("score")',
-          'table.drop("score")',
-          'table.isna("score")',
-        ],
-        0,
-        'subset limits the missingness rule to required columns.',
-        'Other optional columns can remain missing.',
-      ),
       exercise(
         'The source contract says a blank events value means zero events. Create cleaned with that column filled with zero and keep other values unchanged. Store the original missing count in missing_count.',
         'import pandas as pd\nraw = pd.DataFrame({"site": ["A", "B", "C"], "events": [3.0, None, 8.0]})\n# Create missing_count and cleaned without changing raw.\n',
@@ -799,32 +475,6 @@ const skills: Skill[] = [
     '[12.0, -1.0, 7.0]\n1',
     'The temporary -1 display makes the rejected token visible; it is not a cleaning recommendation.',
     [
-      choice(
-        'What does errors="coerce" do when to_numeric encounters "bad"?',
-        [
-          'Changes it to zero',
-          'Treats it as one',
-          'Marks it missing',
-          'Keeps it as valid numeric text',
-        ],
-        2,
-        'Invalid numeric text becomes a missing value.',
-        'Coercion does not invent a numeric observation.',
-      ),
-      choice(
-        'Which pandas dtype can hold integer counts and missing values?',
-        ['"Int64"', '"int64" only', '"floatless"', '"missingint"'],
-        0,
-        'The nullable Int64 extension dtype supports missing integer values.',
-        'Capitalization matters for this dtype name.',
-      ),
-      choice(
-        'You expect every token to be numeric and want invalid input to stop the pipeline. Which setting fits?',
-        ['errors="coerce"', 'errors="raise"', 'errors="hide"', 'fill_value=0'],
-        1,
-        'errors="raise" makes a violated numeric contract visible as an error.',
-        'Choose strict validation, not silent missing values.',
-      ),
       exercise(
         'Convert raw counts to numeric values with invalid tokens made missing, then store them using nullable Int64 in counts. Store the number of newly invalid inputs in invalid_count.',
         'import pandas as pd\nraw = pd.Series(["4", "oops", None, "9"], dtype="string")\n# Create counts and invalid_count.\n',
@@ -861,42 +511,6 @@ const skills: Skill[] = [
     '[6, 5]\nTrue',
     'The higher version of id 1 is retained under an explicit latest-version policy.',
     [
-      choice(
-        'Two rows share event_id but have different counts. Which subset finds the repeated event identity?',
-        [
-          '["count"]',
-          '["event_id"]',
-          'Every column, necessarily',
-          'No subset can detect it',
-        ],
-        1,
-        'The event identifier defines the intended observation key.',
-        'Duplicates are relative to a chosen identity.',
-      ),
-      choice(
-        'What does keep="last" mean in drop_duplicates?',
-        [
-          'Keep the largest numeric value',
-          'Keep the last row in the current order for each key',
-          'Keep all repeated rows',
-          'Keep only missing values',
-        ],
-        1,
-        'It uses current row order, so order must encode your policy.',
-        'The method does not infer a timestamp policy.',
-      ),
-      choice(
-        'Which check confirms that every id value appears once after cleaning?',
-        [
-          'table["id"].is_unique',
-          'table.shape[1] == 1',
-          'table["id"].sum()',
-          'table.head()',
-        ],
-        0,
-        'is_unique checks whether the column has repeated values.',
-        'Validate the key directly.',
-      ),
       exercise(
         'For each id, retain the greatest version. Create latest ordered by id, then store how many source rows were removed in removed.',
         'import pandas as pd\nrecords = pd.DataFrame({"id": [2, 1, 2, 3], "version": [1, 1, 2, 1], "value": [5, 8, 9, 4]})\n# Create latest and removed.\n',
@@ -933,37 +547,6 @@ const skills: Skill[] = [
     "['north', 'south', 'missing']\n[True, False, False]",
     'The operations clean formatting while preserving the missing entry until the display step.',
     [
-      choice(
-        'Which expression removes surrounding spaces and lowercases a string Series?',
-        [
-          's.strip().lower()',
-          's.str.strip().str.lower()',
-          's.astype(int)',
-          's.str.sum()',
-        ],
-        1,
-        'The .str accessor applies string methods to each nonmissing element.',
-        'Use vectorized methods at both stages.',
-      ),
-      choice(
-        'You want to search for a literal dot. Which contains setting avoids regular-expression interpretation?',
-        ['regex=False', 'regex=True', 'na=True', 'axis=1'],
-        0,
-        'regex=False treats the pattern as literal text.',
-        'A dot has special meaning in a regular expression.',
-      ),
-      choice(
-        'Why keep the original text when normalizing identifiers?',
-        [
-          'To make every row unique',
-          'To audit whether normalization merged distinct source values',
-          'To remove missingness automatically',
-          'To guarantee all matches are correct',
-        ],
-        1,
-        'Normalization can collapse different source values, so the original is evidence for reviewing that choice.',
-        'Case rules depend on the source contract.',
-      ),
       exercise(
         'The site contract ignores case and surrounding spaces. Create normalized using those rules. Create is_north selecting literal north anywhere in the normalized text, with missing values treated as False.',
         'import pandas as pd\nraw = pd.Series([" NORTH ", "South", None, "north-east"], dtype="string")\n# Create normalized and is_north.\n',
@@ -1000,42 +583,6 @@ const skills: Skill[] = [
     "['low', 'medium', 'high']\n[1, 0, 0]",
     'Ordering and one-hot membership encode different aspects of a categorical variable.',
     [
-      choice(
-        'What determines sorting for an ordered Categorical?',
-        [
-          'Alphabetical order only',
-          'The explicit categories order',
-          'The number of letters',
-          'The original row index only',
-        ],
-        1,
-        'An ordered categorical uses its declared scale.',
-        'You supply the sequence of allowed categories.',
-      ),
-      choice(
-        'A category code is 2. What can you infer without more information?',
-        [
-          'It is twice category 1',
-          'It is an internal identifier, not a numeric distance',
-          'It is a measured quantity',
-          'It is always missing',
-        ],
-        1,
-        'Encoding identifiers does not create meaningful arithmetic distances.',
-        'A code represents a label.',
-      ),
-      choice(
-        'What does get_dummies(..., dtype=int) create?',
-        [
-          'One integer membership column per category',
-          'A single sorted label',
-          'A date index',
-          'Random category names',
-        ],
-        0,
-        'Each column flags membership with one or zero.',
-        'Think of a separate yes/no question for every category.',
-      ),
       exercise(
         'Create sizes as an ordered categorical Series with order small, medium, large. Store sorted_sizes as a sorted Python list and indicators as integer dummy columns.',
         'import pandas as pd\nvalues = ["large", "small", "medium", "small"]\n# Create sizes, sorted_sizes, and indicators.\n',
@@ -1072,32 +619,6 @@ const skills: Skill[] = [
     "['east', 'west', 'east']\n3",
     'Repeated event keys are expected, but each site has exactly one region description.',
     [
-      choice(
-        'Which join keeps every left-side observation key, including unmatched ones?',
-        ['inner', 'left', 'cross', 'None'],
-        1,
-        'A left join retains left observations and places missing values in unmatched right columns.',
-        'Name the side whose observations you preserve.',
-      ),
-      choice(
-        'Why can a left join produce more rows than its left input?',
-        [
-          'All left joins delete the index',
-          'Repeated matching right keys create multiple matches',
-          'Strings cannot be joined',
-          'validate always duplicates rows',
-        ],
-        1,
-        'Each matching pair becomes a row, so repeated right-side keys can multiply observations.',
-        'Preserving left keys does not imply preserving exactly one row per key.',
-      ),
-      choice(
-        'Many orders should reference one product description. Which validation fits?',
-        ['many_to_many', 'one_to_many', 'many_to_one', 'none_to_one'],
-        2,
-        'The left has many orders per product, and the right must have one description per product.',
-        'Read the relationship from left input to right input.',
-      ),
       exercise(
         'Enrich events with region using a left many-to-one join on site. Keep unmatched site C and include an indicator. Store the number of unmatched rows in unmatched.',
         'import pandas as pd\nevents = pd.DataFrame({"site": ["A", "C", "A"], "count": [4, 2, 6]})\nsites = pd.DataFrame({"site": ["A", "B"], "region": ["east", "west"]})\n# Create enriched and unmatched.\n',
@@ -1134,37 +655,6 @@ const skills: Skill[] = [
     '(4, 3)\n[3, 5, 4, 6]',
     'Two sites with two measured periods become four site-period observations.',
     [
-      choice(
-        'A wide table has five identifiers and three measurement columns. How many rows does melting those measurements produce?',
-        ['5', '3', '8', '15'],
-        3,
-        'Each of five identifiers contributes one row per measurement: 5 × 3.',
-        'Melting increases rows while reducing measurement columns.',
-      ),
-      choice(
-        'What does id_vars specify in melt?',
-        [
-          'Columns that remain observation identifiers',
-          'Columns to average',
-          'Random row numbers',
-          'Allowed data types only',
-        ],
-        0,
-        'Identifier columns are repeated as measurement columns become long rows.',
-        'Which information should stay attached to every measurement?',
-      ),
-      choice(
-        'Why does pivot fail when the same index/column pair appears twice?',
-        [
-          'Long tables cannot be reshaped',
-          'There is no single value for the target cell',
-          'It requires CSV input',
-          'The labels must be numbers',
-        ],
-        1,
-        'Multiple measurements compete for the same output cell, requiring an explicit resolution policy.',
-        'One wide cell needs one value.',
-      ),
       exercise(
         'Melt morning and evening measurements into a table long with columns site, period, count. Then pivot it back into restored, using site as index and period as columns.',
         'import pandas as pd\nwide = pd.DataFrame({"site": ["A", "B"], "morning": [2, 7], "evening": [5, 9]})\n# Create long and restored.\n',
@@ -1201,37 +691,6 @@ const skills: Skill[] = [
     "{'A': 8, 'B': 6}",
     'Each site becomes one group, and its count values are added.',
     [
-      choice(
-        'What does df.groupby("region")["sales"].sum() return?',
-        [
-          'One total per region',
-          'One row per sale unchanged',
-          'The number of columns',
-          'Only the first sale',
-        ],
-        0,
-        'The region key partitions rows; sum reduces sales within each partition.',
-        'A group reduction produces one value per group.',
-      ),
-      choice(
-        'What is the difference between GroupBy count and size?',
-        [
-          'Both always count missing values',
-          'count excludes missing values; size counts rows',
-          'size counts columns; count counts rows',
-          'count calculates an average',
-        ],
-        1,
-        'count measures nonmissing observations per selected column; size measures group row count.',
-        'Missing measurements can still occupy rows.',
-      ),
-      choice(
-        'How can a missing grouping key remain visible as its own group?',
-        ['dropna=False', 'dropna=True', 'fill_value=True', 'axis="missing"'],
-        0,
-        'dropna=False includes a missing-key group instead of excluding those rows.',
-        'Make exclusion of unidentified observations explicit.',
-      ),
       exercise(
         'Calculate units sold per shop from sales. Store totals as a Series with shop labels sorted alphabetically, and row_counts as the number of rows per shop.',
         'import pandas as pd\nsales = pd.DataFrame({"shop": ["west", "east", "west", "east", "west"], "units": [2, 4, 5, 1, 3]})\n# Create totals and row_counts.\n',
@@ -1268,42 +727,6 @@ const skills: Skill[] = [
     "{'shop': ['A', 'B'], 'total': [40, 25], 'average': [20.0, 25.0], 'orders': [2, 1]}",
     'Explicitly named columns distinguish the total, average, and number of source rows.',
     [
-      choice(
-        'In agg(total=("amount", "sum")), what does total name?',
-        [
-          'The input column',
-          'The output column',
-          'The grouping key',
-          'A missing marker',
-        ],
-        1,
-        'The keyword total is the resulting summary column name.',
-        'The tuple names the source and operation.',
-      ),
-      choice(
-        'Why compare group means together with group counts?',
-        [
-          'Counts prove causation',
-          'A mean alone hides how many observations support it',
-          'Counts remove all outliers',
-          'Every group must have equal counts',
-        ],
-        1,
-        'A mean based on one row has different support from a mean based on hundreds.',
-        'A summary value does not reveal its sample size.',
-      ),
-      choice(
-        'What does as_index=False do in a grouped aggregation?',
-        [
-          'Keeps grouping keys as ordinary columns',
-          'Removes every grouping key',
-          'Makes the result a list',
-          'Disables grouping',
-        ],
-        0,
-        'Group labels remain available as columns for export or joins.',
-        'The result can stay a regular observation table.',
-      ),
       exercise(
         'Build summary with columns team, total, average, and records. Group by team, sum and average points, and count rows. Sort teams alphabetically.',
         'import pandas as pd\nscores = pd.DataFrame({"team": ["B", "A", "B", "A"], "points": [8, 3, 12, 7]})\n# Create summary using named aggregation.\n',
@@ -1340,42 +763,6 @@ const skills: Skill[] = [
     '[4.0, 4.0, 10.0]\n[-2.0, 2.0, 0.0]',
     'Each observation keeps its row while gaining the context of its own group.',
     [
-      choice(
-        'How many values does a group transform normally return?',
-        [
-          'One per group only',
-          'One per original row',
-          'One for the whole table',
-          'One per column name',
-        ],
-        1,
-        'Transform broadcasts each group result back to its original rows.',
-        'It is designed for aligned row-level calculations.',
-      ),
-      choice(
-        'A centered score is value minus group mean. What does a positive result mean?',
-        [
-          "Above that group's mean",
-          "Above every other group's values",
-          'The group total is positive',
-          'The score was missing',
-        ],
-        0,
-        "The reference is the observation's own group average.",
-        'Name the reference population.',
-      ),
-      choice(
-        "Before computing each row's share of its group total, what condition matters?",
-        [
-          'The group total is nonzero',
-          'Every label is uppercase',
-          'The table has no index',
-          'The sum must equal the mean',
-        ],
-        0,
-        'A zero denominator makes a ratio undefined, so it needs an explicit policy.',
-        'A share is a division.',
-      ),
       exercise(
         "Compute each row's team mean as means and its deviation from that mean as centered. Keep the original row order.",
         'import pandas as pd\ndata = pd.DataFrame({"team": ["A", "B", "A", "B"], "value": [4, 10, 8, 14]})\n# Create means and centered as Series.\n',
@@ -1412,42 +799,6 @@ const skills: Skill[] = [
     '[2.0, 3.0, 6.5, 8.0]\n[-1.0, 3.0, 6.5, 8.0]',
     'The first full two-row window appears at position one; allowing one observation fills the leading result.',
     [
-      choice(
-        'What does rolling(3).mean() use at a row after a full window exists?',
-        [
-          'The next three rows',
-          'The current and preceding two rows',
-          'Every row in the dataset',
-          'Only rows equal to the current value',
-        ],
-        1,
-        'The default trailing window uses current and previous observations.',
-        'The default is not centered.',
-      ),
-      choice(
-        'Why are leading results missing for rolling(3) by default?',
-        [
-          'The values must be strings',
-          'A complete three-observation window is not yet available',
-          'All rolling windows delete early rows',
-          'The index starts at zero',
-        ],
-        1,
-        'The default min_periods requires three observations for the result.',
-        'Count how many observations exist at the first row.',
-      ),
-      choice(
-        'Why sort timestamps before a rolling analysis?',
-        [
-          'Rolling respects row order, which must match time order',
-          'Sorting removes every missing value',
-          'A mean requires alphabetical order',
-          'Timestamps cannot be indices',
-        ],
-        0,
-        'An unsorted table gives a neighborhood that does not represent consecutive time observations.',
-        'The window follows the order of the supplied rows.',
-      ),
       exercise(
         'Compute a trailing three-observation mean for values, requiring all three observations. Store it as moving. Keep the first two results missing.',
         'import pandas as pd\nvalues = pd.Series([3, 6, 9, 12, 15])\n# Create moving.\n',
@@ -1484,42 +835,6 @@ const skills: Skill[] = [
     "['2024-01-01 22:30', '2024-01-01 23:30']",
     'Different offsets become comparable UTC instants before formatting.',
     [
-      choice(
-        'Why specify format when parsing strings like 03/04/2024?',
-        [
-          'It settles whether the first number is a day or a month',
-          'It removes all invalid dates',
-          'It changes every date to today',
-          'It discards the year',
-        ],
-        0,
-        'A declared format avoids ambiguous interpretations.',
-        'The same text can mean two different dates.',
-      ),
-      choice(
-        'What does utc=True do for timestamps carrying explicit offsets?',
-        [
-          'Keeps their displayed clock times unchanged',
-          'Converts them to a shared UTC basis',
-          'Deletes their time components',
-          'Sorts them automatically',
-        ],
-        1,
-        'The instant is preserved while its representation changes to UTC.',
-        'Normalize offsets before comparing instants.',
-      ),
-      choice(
-        'A naive timestamp is parsed with utc=True. What assumption was made?',
-        [
-          'Its actual local zone was discovered',
-          'The input was treated as UTC',
-          'It became missing',
-          'It was treated as every zone at once',
-        ],
-        1,
-        'Without an offset, pandas cannot infer the original zone from the text.',
-        'No time-zone metadata exists in a naive value.',
-      ),
       exercise(
         'Parse the ISO timestamp strings into UTC in events["time"]. Create ordered sorted by time ascending, and store the UTC hours in hours.',
         'import pandas as pd\nevents = pd.DataFrame({"id": ["late", "early"], "text": ["2024-02-01T15:00:00+00:00", "2024-02-01T10:00:00+02:00"]})\n# Create time, ordered, and hours.\n',
@@ -1556,42 +871,6 @@ const skills: Skill[] = [
     '[7.0, -1.0, 4.0]',
     'Two readings combine on January 1; January 2 remains missing because no reading was observed.',
     [
-      choice(
-        'Which operation produces daily totals from a datetime-indexed Series?',
-        [
-          's.resample("D").sum()',
-          's.sort_values("D")',
-          's.groupby(1).head()',
-          's.astype("day")',
-        ],
-        0,
-        'resample creates daily bins and sum reduces the observations in each bin.',
-        'Define time bins first, then a reduction.',
-      ),
-      choice(
-        'Why use sum(min_count=1) for intervals with no measurements?',
-        [
-          'To turn all values into one',
-          'To keep empty intervals missing rather than assuming zero',
-          'To remove all time zones',
-          'To demand one whole month',
-        ],
-        1,
-        'A minimum of one valid measurement avoids inventing an observed zero for an empty bin.',
-        'No reading and a measured zero are different.',
-      ),
-      choice(
-        'When reporting by local calendar day, when should you convert the timestamps to the reporting zone?',
-        [
-          'Before resampling into days',
-          'Only after deleting timestamps',
-          'It never affects daily bins',
-          'After aggregating UTC days, with no change',
-        ],
-        0,
-        'Converting first ensures midnight boundaries refer to the intended local zone.',
-        'An instant can have different calendar dates in different zones.',
-      ),
       exercise(
         'Create daily totals of amount by UTC day. Keep empty days missing rather than zero. Store the result as a Series daily using the time column for resampling.',
         'import pandas as pd\nrecords = pd.DataFrame({"time": pd.to_datetime(["2024-03-01T08:00Z", "2024-03-01T18:00Z", "2024-03-03T10:00Z"], utc=True), "amount": [4, 7, 9]})\n# Create daily.\n',
@@ -1633,37 +912,6 @@ const skills: Skill[] = [
     '15.0\n3.5\n[4.0, 2.0, 51.0]',
     'One large measurement strongly affects the mean while the median stays near the middle observations.',
     [
-      choice(
-        'An extreme value makes the mean much larger than the median. What is a sound next step?',
-        [
-          'Delete the extreme value automatically',
-          'Inspect its source and the distribution',
-          'Declare the median false',
-          'Hide the sample size',
-        ],
-        1,
-        'An extreme value may be real or erroneous; inspect evidence before deciding.',
-        'A statistical surprise is a question, not a deletion policy.',
-      ),
-      choice(
-        'Two measured variables are strongly correlated. What is established by correlation alone?',
-        [
-          'One caused the other',
-          'A linear association in the measured data',
-          'No confounding exists',
-          'All future values are predictable',
-        ],
-        1,
-        'Correlation measures association without establishing a causal explanation.',
-        'The statistic does not identify an intervention.',
-      ),
-      choice(
-        'Which summary reveals the frequency of category labels?',
-        ['value_counts()', 'astype(float)', 'iloc[0]', 'ndim'],
-        0,
-        'value_counts counts observations for each distinct label.',
-        'You want a distribution over named categories.',
-      ),
       exercise(
         'Create a dictionary report containing count, missing, mean, and median for measurements. Count only nonmissing observations in count, and count missing entries separately.',
         'import pandas as pd\nmeasurements = pd.Series([2.0, 3.0, None, 4.0, 51.0])\n# Create report with the four requested keys.\n',
@@ -1707,42 +955,6 @@ const skills: Skill[] = [
     '11',
     'The function owns parsing and validation, so the result is independent of previous interactive runs.',
     [
-      choice(
-        'Why put an analysis pipeline in a function accepting source data?',
-        [
-          'To rely on hidden notebook variables',
-          'To make inputs and transformations explicit and repeatable',
-          'To skip validation',
-          'To make every source valid',
-        ],
-        1,
-        'An explicit input and returned result reduce dependence on unrelated interactive state.',
-        'The same input should reproduce the same output.',
-      ),
-      choice(
-        'A required event_id stops being unique. What should a validation check do?',
-        [
-          'Silently count duplicates twice',
-          'Expose the violated contract before reporting totals',
-          'Rename the output column',
-          'Assume duplicate rows are always correct',
-        ],
-        1,
-        'A key violation changes observation meaning and should be resolved before reporting.',
-        'A successful-looking number can still represent invalid data.',
-      ),
-      choice(
-        'Which item belongs in the documentation of a reproducible cleaning pipeline?',
-        [
-          'Only the final total',
-          'The missing-value and duplicate-resolution policies',
-          'A claim that all errors are impossible',
-          "The author's favorite color",
-        ],
-        1,
-        'These policies determine which observations contribute to the result.',
-        'Another analyst should be able to explain the transformations.',
-      ),
       exercise(
         'Write summarize(text). Parse CSV columns event_id, version, shop, units. Validate units with errors="raise" and reject missing quantities. Retain the greatest version per event_id, then return a Series of total units per shop sorted alphabetically. Repeated event ids have unique versions. Invalid or missing quantities must raise an error.',
         'from io import StringIO\nimport pandas as pd\n\ndef summarize(text):\n    # Parse, validate, deduplicate, and summarize.\n    pass\n',

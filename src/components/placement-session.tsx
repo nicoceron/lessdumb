@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Compass, X } from 'lucide-react';
-import { courses } from '../lib/curriculum';
+import { courses } from '../lib/catalog-index';
+import { coursePath } from '../lib/learning';
 import { choiceLetter, choiceOrder } from '../lib/choice-order';
 import { codeLanguage } from '../lib/code-language';
 import { formatMonthYear } from '../lib/dashboard';
@@ -16,7 +17,8 @@ import {
 } from '../lib/placement';
 import { type LearnerState } from '../lib/state';
 import { ChoiceText, InlineText } from './inline-text';
-import { Btn } from './shared';
+import { Btn, ContentLoading } from './shared';
+import { useCourseContent } from './use-content';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -52,6 +54,15 @@ export default function PlacementSession({
     : running?.courseId === course.id
       ? running
       : undefined;
+  // The test asks questions from the whole course path, across courses, so
+  // it loads their content before it starts.
+  const content = useCourseContent(
+    diagnostic?.completedAt === undefined
+      ? coursePath(diagnostic?.courseId ?? course.id).map(
+          (skill) => skill.courseId,
+        )
+      : [],
+  );
   // Keep showing this test once it ends, for its report.
   useEffect(() => {
     if (!diagnosticId && diagnostic) setDiagnosticId(diagnostic.id);
@@ -91,6 +102,7 @@ export default function PlacementSession({
               <a href="/">Skip: start from the beginning</a>
             </Button>
             <Btn
+              disabled={!content.ready}
               onClick={() =>
                 update((s) => ({
                   ...s,
@@ -108,6 +120,8 @@ export default function PlacementSession({
 
   if (diagnostic.completedAt !== undefined)
     return <PlacementResult state={state} diagnostic={diagnostic} />;
+  if (!content.ready)
+    return <ContentLoading error={content.error} retry={content.retry} />;
 
   const found = diagnostic.current && diagnosticQuestion(diagnostic.current);
   if (!found) return <PlacementResult state={state} diagnostic={diagnostic} />;

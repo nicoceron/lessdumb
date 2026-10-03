@@ -162,7 +162,9 @@ describe('curriculum integrity', () => {
   it('provides a complete original Python graph with executable exercises', () => {
     expect(validateCurriculum()).toEqual([]);
     expect(skills).toHaveLength(48);
-    expect(skills.flatMap((skill) => skill.questions)).toHaveLength(192);
+    // One exercise per skill; choice practice lives in knowledge points,
+    // whose output questions tests/knowledge-points.test.ts runs.
+    expect(skills.flatMap((skill) => skill.questions)).toHaveLength(48);
     expect(allFlashcards).toHaveLength(96);
     expect(
       skills.every(
@@ -245,42 +247,6 @@ sys.exit(1 if failures else 0)
     });
     expect(result.status, result.stdout + result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toEqual([]);
-  });
-
-  it('verifies executable multiple-choice output predictions', () => {
-    const questions = skills.flatMap((skill) =>
-      skill.questions.filter(
-        (question) => question.type === 'choice' && question.code,
-      ),
-    );
-    const runner = `import contextlib, io, json, sys
-questions = json.load(sys.stdin)
-failures = []
-checked = 0
-for question in questions:
-    # This is an intentional infinite-loop diagnosis, not an output-prediction item.
-    if question['id'] == 'while-loops-q3':
-        continue
-    output = io.StringIO()
-    with contextlib.redirect_stdout(output):
-        exec(question['code'], {})
-    actual = output.getvalue().strip()
-    if question['id'] == 'for-loops-q1':
-        actual = str(len(actual.splitlines()))
-    expected = question['choices'][question['answer']]
-    if actual != expected:
-        failures.append({'id': question['id'], 'actual': actual, 'expected': expected})
-    checked += 1
-print(json.dumps({'checked': checked, 'failures': failures}))
-sys.exit(1 if failures else 0)
-`;
-    const result = spawnSync('python3', ['-c', runner], {
-      input: JSON.stringify(questions),
-      encoding: 'utf8',
-      timeout: 10_000,
-    });
-    expect(result.status, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toEqual({ checked: 66, failures: [] });
   });
 });
 

@@ -1,15 +1,17 @@
-import {
-  defaultCatalog,
-  encompassings,
-  type CurriculumCatalog,
-  type Question,
-  type Skill,
+import type {
+  CurriculumCatalog,
+  GraphCatalog,
+  QuestionRef,
+  SkillOutline,
 } from './curriculum';
+import { defaultCatalog } from './catalog-index';
+import { encompassings } from './catalog-outline';
 import {
   evidenceIdFor,
   findQuestion,
   hasKnowledgePoints,
   hasLessonEvidence,
+  legacyQuestionIds,
   lessonSteps,
   masteryFraction,
   POINT_FAIL_INCORRECT,
@@ -17,7 +19,9 @@ import {
   reviewCycleComplete,
   reviewPointOrder,
   reviewRequirement,
-  type LessonStep,
+  type LessonStepRef,
+  type QuestionOf,
+  type StepOf,
 } from './lesson-plan';
 import { earnedXp, lessonXp, REVIEW_XP } from './xp';
 import type { Quiz } from './quiz';
@@ -206,7 +210,7 @@ const calendarFormatters = new Map<string, Intl.DateTimeFormat>();
 const defaultIndex = new Map(
   defaultCatalog.skills.map((item) => [item.id, item]),
 );
-function skillIndex(catalog: CurriculumCatalog) {
+function skillIndex(catalog: GraphCatalog) {
   return catalog === defaultCatalog
     ? defaultIndex
     : new Map(catalog.skills.map((item) => [item.id, item]));
@@ -299,7 +303,7 @@ export function getSkillState(
 export function isMastered(
   progress: Progress,
   skillId: string,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): boolean {
   const item = skillIndex(catalog).get(skillId);
   if (!item) return false;
@@ -321,7 +325,7 @@ export function currentLessonAttempt(
   return attempt;
 }
 
-function stepPassed(step: LessonStep, progress?: LessonStepProgress) {
+function stepPassed(step: LessonStepRef, progress?: LessonStepProgress) {
   if (!progress) return false;
   return step.kind === 'point'
     ? progress.correct.length >= POINT_PASS_CORRECT
@@ -334,10 +338,13 @@ export type LessonStepStatus = 'done' | 'passed' | 'current' | 'todo';
  * Where a learner is in a skill's lesson: evidence already earned ("done"),
  * steps passed in this attempt ("passed"), the current step, and what remains.
  */
-export function lessonState(progress: Progress, item: Skill) {
+export function lessonState<S extends SkillOutline>(
+  progress: Progress,
+  item: S,
+) {
   const state = getSkillState(progress, item.id);
   const attempt = currentLessonAttempt(state);
-  let current: LessonStep | undefined;
+  let current: StepOf<S> | undefined;
   const steps = lessonSteps(item).map((step) => {
     const answers = attempt?.steps[step.id];
     let status: LessonStepStatus;
@@ -394,13 +401,13 @@ export function lessonCoolingDown(
 export function isUnlocked(
   progress: Progress,
   skillId: string,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): boolean {
   return unlockChecker(progress, catalog)(skillId);
 }
 
 /** Reuse one traversal across a scheduling pass; cycles and missing nodes fail closed. */
-function unlockChecker(progress: Progress, catalog: CurriculumCatalog) {
+function unlockChecker(progress: Progress, catalog: GraphCatalog) {
   const byId = skillIndex(catalog);
   const checked = new Map<string, boolean>();
   const visiting = new Set<string>();
@@ -423,20 +430,20 @@ function unlockChecker(progress: Progress, catalog: CurriculumCatalog) {
   return prerequisitesReady;
 }
 
-function courseSkills(
+function courseSkills<S extends SkillOutline>(
   courseId: string | undefined,
-  catalog: CurriculumCatalog,
-): Skill[] {
+  catalog: CurriculumCatalog<S>,
+): S[] {
   return courseId
     ? catalog.skills.filter((item) => item.courseId === courseId)
     : catalog.skills;
 }
 
 /** A course goal includes its prerequisite ancestors, even when they live in another subject. */
-export function coursePath(
+export function coursePath<S extends SkillOutline = SkillOutline>(
   courseId: string | undefined,
-  catalog: CurriculumCatalog = defaultCatalog,
-): Skill[] {
+  catalog: CurriculumCatalog<S> = defaultCatalog as CurriculumCatalog<S>,
+): S[] {
   if (!courseId) return catalog.skills;
   const ids = new Set<string>();
   const byId = new Map(catalog.skills.map((item) => [item.id, item]));
@@ -461,12 +468,12 @@ export function seenCounts(progress: Progress, skillId: string) {
 }
 
 /** Unseen variants first, then the least seen; never the same question twice in a row when avoidable. */
-function freshest(
-  questions: Question[],
+function freshest<Q extends QuestionRef>(
+  questions: Q[],
   counts: Map<string, number>,
   lastQuestionId: string | null,
   exclude: string[] = [],
-): Question {
+): Q {
   const candidates = questions.filter((q) => !exclude.includes(q.id));
   const pool = candidates.length ? candidates : questions;
   return [...pool].sort(
@@ -479,9 +486,9 @@ function freshest(
 
 function selectKnowledgePointQuestion(
   progress: Progress,
-  item: Skill,
+  item: SkillOutline,
   mode: 'learn' | 'review',
-): Question {
+): QuestionRef {
   const state = getSkillState(progress, item.id);
   const counts = seenCounts(progress, item.id);
   if (mode === 'learn' && !hasLessonEvidence(item, state.questionIds)) {
@@ -516,11 +523,23 @@ function selectKnowledgePointQuestion(
   return freshest(points[0].questions, counts, state.lastQuestionId);
 }
 
-export function selectQuestion(
+/**
+ * The question to ask next. Scheduling needs only the outline; given a skill
+ * with its content, the question comes back with its content too.
+ */
+export function selectQuestion<S extends SkillOutline>(
   progress: Progress,
-  item: Skill,
+  item: S,
   mode: 'learn' | 'review',
-): Question {
+): QuestionOf<S> {
+  return pickQuestion(progress, item, mode) as QuestionOf<S>;
+}
+
+function pickQuestion(
+  progress: Progress,
+  item: SkillOutline,
+  mode: 'learn' | 'review',
+): QuestionRef {
   if (hasKnowledgePoints(item))
     return selectKnowledgePointQuestion(progress, item, mode);
   const state = getSkillState(progress, item.id);
@@ -605,7 +624,7 @@ function creditable(
   id: string,
   today: string,
   time: number,
-  catalog: CurriculumCatalog,
+  catalog: GraphCatalog,
   unlocked: (id: string) => boolean = (skillId) =>
     isUnlocked(progress, skillId, catalog),
 ): boolean {
@@ -658,9 +677,9 @@ export function implicitDueAt(
  */
 export function applyImplicitCredit(
   progress: Progress,
-  from: Skill,
+  from: SkillOutline,
   now: Now,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): { progress: Progress; credited: string[] } {
   const time = timestamp(now);
   const today = dateKey(time, progress.timeZone || 'UTC');
@@ -697,9 +716,9 @@ export function applyImplicitCredit(
  */
 export function reviewCoverage(
   progress: Progress,
-  skill: Skill,
+  skill: SkillOutline,
   now: Now,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
   unlocked = unlockChecker(progress, catalog),
 ): number {
   const time = timestamp(now);
@@ -719,7 +738,7 @@ export function nextTask(
   progress: Progress,
   now: Now = new Date(),
   courseId?: string,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
   /** A review session asks only for reviews, so it never switches to a lesson. */
   options: { reviewsOnly?: boolean } = {},
 ): NextTask | null {
@@ -735,7 +754,7 @@ export function nextTask(
       getSkillState(progress, item.id).dueAt! <= time,
   );
   const coverageCache = new Map<string, number>();
-  const coverage = (item: Skill) => {
+  const coverage = (item: SkillOutline) => {
     if (!coverageCache.has(item.id))
       coverageCache.set(
         item.id,
@@ -839,7 +858,7 @@ export function recordLesson(
   progress: Progress,
   skillId: string,
   now: Now = new Date(),
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): Progress {
   if (!catalog.skills.some((skill) => skill.id === skillId))
     throw new Error(`Unknown skill: ${skillId}`);
@@ -855,15 +874,30 @@ export function recordLesson(
   };
 }
 
-/** XP from per-question rewards earned before lessons awarded XP per task. */
-function legacyLessonCredit(item: Skill, rewarded: string[]): number {
-  return item.questions
-    .filter((question) => rewarded.includes(question.id))
-    .reduce((sum, question) => sum + (question.type === 'code' ? 15 : 10), 0);
+/**
+ * XP from per-question rewards earned before lessons awarded XP per task: 10
+ * per choice question and 15 for the code exercise, including the retired
+ * choice questions of the four-question lessons.
+ */
+function legacyLessonCredit(item: SkillOutline, rewarded: string[]): number {
+  const code = new Set(
+    item.questions.filter((q) => q.type === 'code').map((q) => q.id),
+  );
+  return [
+    ...new Set([
+      ...legacyQuestionIds(item),
+      ...item.questions.map((question) => question.id),
+    ]),
+  ]
+    .filter((id) => rewarded.includes(id))
+    .reduce((sum, id) => sum + (code.has(id) ? 15 : 10), 0);
 }
 
 /** Base XP a lesson can still pay; zero once its reward has been earned. */
-export function lessonXpAvailable(progress: Progress, item: Skill): number {
+export function lessonXpAvailable(
+  progress: Progress,
+  item: SkillOutline,
+): number {
   const state = getSkillState(progress, item.id);
   if (state.lessonRewarded) return 0;
   return Math.max(
@@ -876,7 +910,7 @@ export function applyAttempt(
   progress: Progress,
   input: AttemptInput,
   now: Now = new Date(),
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ): Progress {
   if (
     input.attemptId &&
@@ -944,7 +978,7 @@ export function applyAttempt(
   // Learning a skill is one task: its attempt tracks answers per lesson step.
   // Only the current step counts, so a stale screen cannot skip ahead.
   let step: LessonStepProgress | undefined;
-  let stepKind: LessonStep['kind'] | undefined;
+  let stepKind: LessonStepRef['kind'] | undefined;
   if (input.mode === 'learn' && !wasMastered) {
     const lesson = lessonState(progress, item);
     if (lesson.current?.id === evidenceId) {
@@ -1142,7 +1176,7 @@ export function getStats(
   progress: Progress,
   now: Now = new Date(),
   courseId?: string,
-  catalog: CurriculumCatalog = defaultCatalog,
+  catalog: GraphCatalog = defaultCatalog,
 ) {
   const time = timestamp(now);
   const registry = courseSkills(courseId, catalog);
@@ -1227,11 +1261,11 @@ export function getStats(
 }
 
 /** Cards are earned by actual mastery; the export layer can add explicit preview support. */
-export function earnedFlashcards(
+export function earnedFlashcards<S extends SkillOutline = SkillOutline>(
   progress: Progress,
   courseId?: string,
-  catalog: CurriculumCatalog = defaultCatalog,
-) {
+  catalog: CurriculumCatalog<S> = defaultCatalog as CurriculumCatalog<S>,
+): S['flashcards'] {
   return courseSkills(courseId, catalog)
     .filter((item) => isMastered(progress, item.id, catalog))
     .flatMap((item) => item.flashcards);
