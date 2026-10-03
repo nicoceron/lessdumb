@@ -28,7 +28,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 ## What you can do
 
 - **Learn:** see your active course with its progress and estimated completion date (remaining lesson XP ÷ your daily XP goal), total, today's, and this week's XP, up to five next tasks in scheduler order (due reviews and ready lessons, including prerequisites from other courses), and a dated history of completed lessons and reviews with earned/possible XP.
-- **Courses:** choose your active course from eight courses and 609 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
+- **Courses:** choose your active course from eight courses and 641 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
 - **Lessons:** move through introduction slides and worked examples, follow labelled subgoals, then practice with a visible evidence checklist. Revisit the teaching material while keeping your pending choice or code; assisted answers remain separate from independent mastery.
 - **Account menu:** the avatar menu opens the knowledge graph, flashcards, code lab, and settings, and signs you in or out.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
@@ -43,14 +43,14 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 | Course                   |  Skills | Questions | Executable exercises | Anki cards |
 | ------------------------ | ------: | --------: | -------------------: | ---------: |
 | Python foundations       |      24 |        96 |                   24 |         48 |
-| Quantitative foundations |       5 |        20 |                    5 |         10 |
+| Quantitative foundations |      36 |       144 |                   10 |         72 |
 | Python for Data Analysis |      24 |        96 |                   24 |         48 |
-| Machine Learning         |      28 |       112 |                   21 |         56 |
+| Machine Learning         |      29 |       116 |                   21 |         58 |
 | Data Systems             |      28 |       112 |                    0 |         56 |
 | Competitive Programming  |     192 |       768 |                  192 |        384 |
 | Rust                     |     128 |       512 |                  128 |        256 |
 | C++                      |     180 |       720 |                  180 |        360 |
-| **Total**                | **609** | **2,436** |              **574** |  **1,218** |
+| **Total**                | **641** | **2,564** |              **579** |  **1,282** |
 
 Choosing a course on the Courses page makes it your active course. The scheduler includes its prerequisite ancestors across courses, so missing foundations become real tasks rather than a dead end. The graph offers course paths with supporting prerequisites and an all-course view. Each node retains a domain and course identity, and its detail panel navigates both prerequisite and dependent edges.
 

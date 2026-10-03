@@ -26,7 +26,13 @@ const worked = (
   code: string,
   output: string,
   explanation: string,
-): LessonExample => ({ kind: 'text', code, output, explanation });
+): LessonExample => ({
+  kind: 'text',
+  label: 'WORKED CALCULATION',
+  code,
+  output,
+  explanation,
+});
 
 interface Definition {
   id: string;
