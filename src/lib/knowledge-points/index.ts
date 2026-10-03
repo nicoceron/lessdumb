@@ -1,37 +1,21 @@
-import type {
-  ChoiceQuestion,
-  CodeQuestion,
-  KnowledgePoint,
-  LessonExample,
-  Skill,
-} from '../curriculum';
+import type { KnowledgePoint, Skill } from '../curriculum';
+import type { KnowledgePointDraft, KnowledgePointModule } from './authoring';
+import { knowledgePoints as cpp1 } from './cpp-1.kp';
+import { knowledgePoints as pythonFoundations } from './python-foundations.kp';
+import { knowledgePoints as rust1 } from './rust-1.kp';
 
-export type QuestionDraft =
-  Omit<ChoiceQuestion, 'id'> | Omit<CodeQuestion, 'id'>;
+export * from './authoring';
 
-export interface KnowledgePointDraft {
-  title: string;
-  explanation: string[];
-  example: LessonExample;
-  questions: QuestionDraft[];
-}
+// Each course keeps its knowledge points in its own `*.kp.ts` file. Register
+// every file here; a catalog test fails if a file in this folder is missing.
+const modules: Record<string, KnowledgePointModule> = {
+  'cpp-1.kp.ts': cpp1,
+  'python-foundations.kp.ts': pythonFoundations,
+  'rust-1.kp.ts': rust1,
+};
 
-/** One authored file: knowledge points keyed by the skill they teach. */
-export type KnowledgePointModule = Record<string, KnowledgePointDraft[]>;
-
-// Each course keeps its knowledge points in `*.kp.ts` files beside this one,
-// so independently authored courses never edit a shared registry.
-let modules: Record<string, KnowledgePointModule> = {};
-try {
-  modules = import.meta.glob<KnowledgePointModule>('./*.kp.ts', {
-    eager: true,
-    import: 'knowledgePoints',
-  });
-} catch {
-  // Vite (app, Vitest) expands the glob at build time. Other TypeScript
-  // loaders, such as Playwright's for browser specs that import the catalog,
-  // have no glob and see skills without knowledge points.
-}
+/** Registered file names, checked against the folder by the catalog tests. */
+export const knowledgePointFiles = Object.keys(modules);
 
 const registry = new Map<
   string,
@@ -69,43 +53,4 @@ export function attachKnowledgePoints(skill: Skill): Skill {
     },
   );
   return { ...skill, knowledgePoints };
-}
-
-/** Authoring helper for a choice question whose answer is the program output. */
-export function predictOutput(
-  prompt: string,
-  code: string,
-  choices: string[],
-  answer: number,
-  explanation: string,
-): Omit<ChoiceQuestion, 'id'> {
-  return {
-    type: 'choice',
-    prompt,
-    code,
-    choices,
-    answer,
-    explanation,
-    hint: explanation,
-    checksOutput: true,
-  };
-}
-
-/** Authoring helper for a conceptual choice question. */
-export function choose(
-  prompt: string,
-  choices: string[],
-  answer: number,
-  explanation: string,
-  code?: string,
-): Omit<ChoiceQuestion, 'id'> {
-  return {
-    type: 'choice',
-    prompt,
-    choices,
-    answer,
-    explanation,
-    hint: explanation,
-    ...(code ? { code } : {}),
-  };
 }
