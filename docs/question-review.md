@@ -2,6 +2,19 @@
 
 Correctness review of the generated knowledge-point questions (CEN-110), one section per course. The automated checks cover every course and come first.
 
+| Course                   | Reviewed | Fixed | Debatable, left alone |
+| ------------------------ | -------: | ----: | --------------------: |
+| Python foundations       |      214 |     0 |                     3 |
+| Quantitative foundations |      406 |     2 |                     3 |
+| Python for Data Analysis |      101 |     1 |                     2 |
+| Machine Learning         |      256 |     1 |                     3 |
+| Data Systems             |      291 |     3 |                     3 |
+| Competitive Programming  |      804 |     9 |                    11 |
+| Rust                     |      664 |    11 |                     3 |
+| C++                      |      698 |    19 |                     4 |
+
+"Reviewed" counts the non-executed questions of each course; "Fixed" counts those that needed a correctness fix, not counting point explanations, executed questions' explanations, or prompts made self-contained in the earlier Rust and C++ passes. "Debatable" counts the entries in each section's list. The first five courses were reviewed together, and a seeded random re-check of 25 of their questions afterwards found nothing new.
+
 ## Automated checks
 
 `tests/question-quality.test.ts` runs with `npm test` and checks knowledge-point questions for giveaways that the executed-output tests cannot see. The choice checks apply to `choice` questions; the prompt checks (duplicates and missing context) also apply to typed `text` and `numeric` questions:
@@ -53,6 +66,93 @@ Outside the Rust and C++ review, these edits also fixed:
 - `unpacking-kp2-q2` and `cp-stack-pop-kp2-q2`: position-dependent explanations ("the third line", "the second … the last").
 - `ml-overfitting-kp1-q4` and `kp2-q2`: prompts that pointed at "the previous table" and "the previous curve" now state the numbers.
 - Four distractors written during this work were replaced on review because they were defensibly correct or too close to the key: "A, B, C, D and E" as the nodes reachable from A (A reaches itself by a path of length 0), "Count all users who have an email" as a query an email index cannot help, "301 writes" for 300 embedded copies (the supplier's own record would make 301), and `O((V + E) log V)` for lazy-heap Dijkstra with parallel edges (equal to the key whenever E is polynomial in V).
+
+## Python foundations
+
+Reviewed October 3, 2026: every non-executed question in `python-foundations.kp.ts`, the course's only knowledge-point file. That is 214 conceptual `choose` questions in 49 skills. The 480 executed questions (`typeOutput` and `predictOutput`) were not re-graded, since the catalog tests run them, but their explanations were read against their code. Each question was checked against its point's explanation and worked example: the marked answer, every distractor, the explanation, and whether the point teaches enough to answer. Disputed behavior was settled in CPython 3.14, for example the `heapify` result quoted in `heapq-module-kp2-q2` and the call counts in the `decorators-kp3` explanation (177 body runs for an uncached `fib(10)`, over two million for `fib(30)`).
+
+**Result:** no errors. No marked answer is wrong, no distractor is also correct, and no explanation contradicts its point or code. 0 of 214 questions needed a fix.
+
+### Debatable, left alone
+
+- **`print-output-kp2-q4`.** "A program has two print() calls. How many lines does it output?" expects two. A call such as `print("a\nb")` would print more, but the first lesson has not taught escape sequences, and the point states the rule the question tests.
+- **`problem-solving-kp1-q1`, `kp1-q3`, `kp1-q4` and `kp3-q4`** name `count_words` without showing it. The name says what it does, and the choices make each question answerable alone.
+- **`key-functions-kp4-q4`.** The explanation says `max(words)` "picks the last word alphabetically". Strictly it compares code points, so capitals sort first, as `sorting-kp2` teaches. No choice depends on it.
+
+## Quantitative foundations
+
+Reviewed October 3, 2026: every non-executed question in `quantitative-foundations.kp.ts`, the course's only knowledge-point file. That is 406 questions in 37 skills: 238 conceptual `choose` questions and 168 `typeNumber` questions. The 70 executed questions were not re-graded, but their explanations were read against their code. For each numeric question the answer was recomputed and the tolerance checked: integer and terminating answers have none, and rounded ones (`math-sigmoid`, `math-softmax`, $e^{-3}$) use half the last digit with "to 3 decimals". Percentiles were checked against NumPy's default rule, and the sigmoid, softmax and likelihood values in Python.
+
+**Result:** no marked or typed answer is wrong, no tolerance accepts a wrong answer or rejects a right one, and no distractor is also correct. Two prompts relied on context a review does not show. 2 of 406 questions (0.5%) needed a fix.
+
+### Errors fixed
+
+| Question                  | Problem                                                                                                                                                                                                                              | Fix                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `math-probability-kp4-q1` | "In this example, why is $P(\text{sick} \mid \text{positive})$ much smaller…" pointed at the worked example's patient counts, which a review does not show.                                                                          | The prompt states the counts: 10 sick of 1,000, 9 of them positive, 99 healthy positives. |
+| `math-percentiles-kp3-q2` | "The maximum value 60 is replaced by 600" referred to the worked example's nine values. Without them the key is not unique: with four values, $Q_3$ interpolates toward the maximum, so the IQR changes too (NumPy: 17.25 → 152.25). | "In a dataset of nine values, the maximum, 60, is replaced by 600."                       |
+
+### Debatable, left alone
+
+- **`math-probability-kp2-q3`** stores its answer as `5 / 6` with tolerance 0.0005, while the authoring guide asks for the rounded value. Grading is right (`5/6`, `0.833` and `0.8333` all pass), and the accepted answer is shown as 0.833333333333.
+- **`math-distance-kp3-q1`** expects millimeters to dominate kilometers in an unscaled distance. That assumes features of similar physical size, which the explanation says ("the same physical change").
+- **Typed prompts phrased as "Which …?"** (`math-mean-kp2-q2`, `math-bernoulli-binomial-kp1-q3`, `math-gradients-kp3-q3`) or "For which $k$ …?" (`math-cosine-similarity-kp2-q3`, `math-identity-inverse-kp3-q2`). Each has one numeric answer, so only the style differs from the guide.
+
+## Python for Data Analysis
+
+Reviewed October 3, 2026: every non-executed question in `data-analysis.kp.ts`, the course's only knowledge-point file. That is 101 conceptual `choose` questions in 24 skills. The 191 executed questions were not re-graded, but their explanations were read against their code. Library behavior the keys depend on was checked with NumPy 2.5 and pandas 3.0: `astype("Int64")` on 2.5 raises `TypeError`, a `Categorical` stores an undeclared label as missing (with a deprecation warning, as the lesson says), chained assignment through a boolean mask never reaches the original table, `pd.to_numeric` raises `ValueError` by default, and `Series == None` matches nothing.
+
+**Result:** no marked answer is wrong and no distractor is also correct. One prompt depended on its neighbour, which is 1 of the 101 conceptual questions (1.0%), and one executed question's explanation described choices that no longer exist.
+
+### Errors fixed
+
+| Question                  | Problem                                                                                                                                                                          | Fix                                                                               |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `da-vectorization-kp4-q2` | "With the same $40 \times 24$ readings…" relied on `kp4-q1` to say that rows are patients and columns are hours. Reviews show one question alone.                                | "readings has one row per patient and one column per hour, shape $40 \times 24$." |
+| `da-vectorization-kp2-q3` | The explanation ended "The lists are per-column and per-row means", left over from the choices it had before CEN-111 made it a typed output question. The learner sees no lists. | "With no axis, mean averages every entry."                                        |
+
+### Debatable, left alone
+
+- **`da-transforms-kp1-q4`** asks why to use `transform` "rather than mean()", meaning the grouped mean. The distractor "mean() gives one overall value, not one per group" is true of a plain `mean()`, but the prompt is about adding each row's group mean, and the key is the only reason that applies.
+- **Explanations that name a likely wrong answer** on typed questions, such as "The mean would be 4.5" (`da-aggregations-kp2-q2`) or "Pairing by position would give 18" (`da-label-alignment-kp1-q2`), are correct and useful, so they stay.
+
+## Machine Learning
+
+Reviewed October 3, 2026: every non-executed question in `machine-learning.kp.ts`, the course's only knowledge-point file. That is 256 conceptual `choose` questions in 29 skills. The 208 executed questions were not re-graded, but their explanations were read against their code. Claims about library behavior were checked with scikit-learn 1.9 and NumPy 2.5, and the one Keras claim in question with Keras 3 on the JAX backend.
+
+**Result:** one key named a cause that cannot produce the symptom in its prompt. No other marked answer is wrong and no distractor is also correct. 1 of 256 questions (0.4%) needed a fix.
+
+### Errors fixed
+
+| Question                      | Problem                                                                                                                                                                                                                                                                                                                                                                      | Fix                                                                                                                           |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `ml-transfer-learning-kp2-q4` | **Partly false key.** "The summary shows 0 trainable parameters… What is the likely cause?" expected "The flags were set on the wrong layers or not recompiled". `model.summary()` reads the trainable flags directly: in Keras 3, unfreezing a frozen base changed the trainable count from 9 to 121 with no recompile. Recompiling matters for `fit`, not for the summary. | "The trainable flags were set on the wrong layers". The explanation says the summary needs no recompile, and that `fit` does. |
+
+### Debatable, left alone
+
+- **`ml-keras-workflow-kp3-q3`.** With every positive row last and `validation_split=0.2`, the key says the validation rows are "almost all positive". That holds when positives are about 20% of the rows or more; with fewer, the validation slice also holds negatives. The point teaches exactly this failure, and no distractor is right.
+- **`ml-overfitting-kp2-q2`** calls curves that level off "near 7" high without a reference error. Its key, that more data changes little, holds for any curves that have levelled off with a small gap.
+- **Explanations that name a likely wrong answer** on typed questions, such as "Squaring instead would give the ridge value 7.5" (`ml-regularization-kp3-q1`), are correct and stay.
+
+## Data Systems
+
+Reviewed October 3, 2026: every non-executed question in `data-systems.kp.ts`, the course's only knowledge-point file. That is 291 conceptual `choose` questions in 28 skills. The 45 executed questions were not re-graded, but their explanations were read against their code. Arithmetic keys (growth, write amplification, quorum overlap, queue backlog, keys moved by `key % N`) were recomputed, and the claims about consistency and isolation were checked against the standard definitions the points teach.
+
+**Result:** no marked answer is wrong once each prompt says what it assumes. One point taught an off-by-one count of B-tree pages, one prompt depended on its neighbour, and one left out the isolation level its key needs. 3 questions and one point explanation needed a fix (1.0%).
+
+### Errors fixed
+
+| Question                                                       | Problem                                                                                                                                                                                                                                                                                                                                                              | Fix                                                                                                                                                                                                                           |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ds-btrees-kp2` (point, worked example) and `ds-btrees-kp2-q3` | **Off by one.** The point said a tree of depth d "reaches up to b \*\* d leaf pages", and the example concluded that 500 \*\* 4 leaves need only four page reads. With levels counted as `kp1` counts them (3 levels, 3 page reads), d levels reach b \*\* (d − 1) leaf pages. So `kp2-q3`'s 5,000,000 leaf pages at fan-out 200 need 4 page reads, not the key's 3. | The point, the example and the explanations of `kp2-q1` to `kp2-q3` count keys instead: d levels hold up to b \*\* d keys, since each leaf page holds about b keys. `kp2-q3` asks about 5,000,000 keys, for which 3 is right. |
+| `ds-isolation-kp2-q2`                                          | "The same sequence runs under snapshot isolation" referred to `kp2-q1`'s sequence of reads and commits. Reviews show one question alone.                                                                                                                                                                                                                             | The prompt states the sequence.                                                                                                                                                                                               |
+| `ds-serializable-kp1-q1`                                       | **Second defensible answer.** Two transactions check for a 3pm booking and both insert. The key, "two bookings: write skew", holds under snapshot isolation or read committed. Under serializable isolation the distractor "One booking, because the second waits" is right, and the prompt named no level.                                                          | "Under snapshot isolation, two transactions each check…"                                                                                                                                                                      |
+
+### Debatable, left alone
+
+- **`ds-lsm-kp1-q3`.** "A key is updated three times before the memtable is flushed. What does the memtable hold?" expects only the latest value, matching the lesson's model of the memtable as a map. Engines such as LevelDB and RocksDB keep every version with a sequence number, to serve snapshots. No distractor says that.
+- **`ds-materialized-kp2-q1`** assumes that each refresh reads the data as of its start, which the point's worked example states, not the prompt.
+- **`ds-requirements-kp2-q1`**'s explanation ends "64.7 is the mean", naming a likely wrong answer to the typed question. It is correct.
 
 ## Competitive Programming
 

@@ -205,7 +205,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What does this program print?',
           'import numpy as np\ngrid = np.array([[2, 2], [4, 8]])\nprint(grid.mean())',
           '4.0',
-          'The four entries add to 16, and $16 / 4 = 4.0$. The lists are per-column and per-row means.',
+          'The four entries add to 16, and $16 / 4 = 4.0$. With no axis, mean averages every entry.',
         ),
         choose(
           'A $3 \\times 4$ array of daily step counts is reduced with .sum() and no axis. What do you get?',
@@ -284,7 +284,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Averaging across the hour columns (axis=1) leaves one mean per patient row.',
         ),
         choose(
-          'With the same $40 \\times 24$ readings, how many values does readings.mean(axis=0) return, and what does each describe?',
+          'readings has one row per patient and one column per hour, shape $40 \\times 24$. How many values does readings.mean(axis=0) return, and what does each describe?',
           [
             '40, one per patient',
             '24, one per hour',

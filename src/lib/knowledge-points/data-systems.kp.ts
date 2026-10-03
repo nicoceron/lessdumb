@@ -1716,33 +1716,33 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Keep the tree shallow with high fan-out',
       explanation: [
-        'Each page can point to hundreds of children; this branching factor is the fan-out. With fan-out b, a tree of depth d reaches up to b ** d leaf pages, so depth grows very slowly as data grows.',
+        'Each page can point to hundreds of children; this branching factor is the fan-out. With fan-out b, a tree with d levels holds up to b ** d keys: each level multiplies the reach by b, and each leaf page holds about b keys. So depth grows very slowly as data grows.',
         'Large pages hold more keys, which raises fan-out and keeps lookups to a few page reads even for billions of keys.',
       ],
       example: {
         code: 'fanout = 500\ndepth = 4\nprint(fanout ** depth)',
         output: '62500000000',
         explanation:
-          'Four levels of 500-way pages address 62.5 billion leaves, so a lookup reads only four pages.',
+          'Four levels of 500-way pages reach 62.5 billion keys, so a lookup reads only four pages.',
       },
       questions: [
         typeOutput(
           'What does this program print?',
           'fanout = 100\ndepth = 3\nprint(fanout ** depth)',
           '1000000',
-          '100 × 100 × 100 leaves are reachable in three levels.',
+          '100 × 100 × 100 keys are reachable in three levels.',
         ),
         typeOutput(
           'What does this program print?',
           'fanout = 200\nprint(fanout ** 2)\nprint(fanout ** 3)',
           '40000\n8000000',
-          'Each extra level multiplies the reachable leaves by 200.',
+          'Each extra level multiplies the reachable keys by 200.',
         ),
         choose(
-          'With fan-out 200, two levels reach 40,000 leaves and three levels reach 8,000,000. A table needs 5,000,000 leaf pages. How many page reads does a lookup need?',
+          'With fan-out 200, two levels reach 40,000 keys and three levels reach 8,000,000. A table holds 5,000,000 keys. How many page reads does a lookup need?',
           ['2', '3', '5', '200'],
           1,
-          'Two levels are not enough, and three cover 8 million leaves.',
+          'Two levels are not enough, and three cover 8 million keys.',
         ),
         choose(
           'Why do B-trees use pages of several kilobytes rather than one key per page?',
@@ -4122,7 +4122,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each statement sees the latest committed value.',
         ),
         choose(
-          'The same sequence runs under snapshot isolation. What does the second read show?',
+          'Under snapshot isolation, a report reads item X’s stock (20); another transaction commits X = 15; the report reads X again. What does the second read show?',
           ['15', '20', '35', 'An error'],
           1,
           'The transaction keeps reading its snapshot from when it started.',
@@ -4375,7 +4375,7 @@ export const knowledgePoints: KnowledgePointModule = {
       ),
       questions: [
         choose(
-          'A room holds one booking per hour. Two transactions each check that no booking exists at 3pm, then each inserts one. What is the result?',
+          'A room holds one booking per hour. Under snapshot isolation, two transactions each check that no booking exists at 3pm, then each inserts one. What is the result?',
           [
             'One booking, because the second waits',
             'A lost update',

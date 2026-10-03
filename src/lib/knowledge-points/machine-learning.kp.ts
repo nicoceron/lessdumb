@@ -5059,13 +5059,13 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'The summary shows 0 trainable parameters after you meant to unfreeze the top layers. What is the likely cause?',
           [
-            'The flags were set on the wrong layers or not recompiled',
+            'The trainable flags were set on the wrong layers',
             'The base has no parameters',
             'Summary counts only change after the next fit',
             'The learning rate is too small',
           ],
           0,
-          'Check which layers have trainable = True and recompile so training uses them.',
+          'The summary reads the trainable flags directly, even before a recompile, so 0 means every layer is still frozen. Set trainable = True on the intended layers, then recompile before fit.',
         ),
       ],
     },
