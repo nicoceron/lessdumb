@@ -512,19 +512,19 @@ const definitions: Definition[] = [
   {
     id: 'math-exp-log',
     unitId: 'math-functions-growth',
-    title: 'Compute eˣ and ln x in Python',
+    title: 'Exponentials and logarithms in Python',
     prerequisites: ['math-logarithms', 'imports'],
     summary:
       'Evaluate exponentials and natural logarithms with math.exp and math.log.',
     paragraphs: [
-      'The math module computes the two functions behind most machine-learning formulas. math.exp(x) returns eˣ as a float, and math.e is the constant e ≈ 2.718281828459045, so math.exp(1) equals math.e. math.log(x) is the natural logarithm ln x, which undoes math.exp: math.log(math.exp(3)) gives back 3.0. math.log(x, b) uses base b, and math.log2 and math.log10 are shortcuts for bases 2 and 10.',
-      'math.log accepts only positive numbers: math.log(0) and math.log(-1) raise ValueError, matching the rule that eᵏ is always positive. Floats have limits too. A product of many small probabilities underflows to 0.0, but the sum of their logs stays an ordinary number, which is why models compare and maximize sums of logs.',
+      'The math module computes the two functions behind most machine-learning formulas. math.exp(x) returns $e^x$ as a float, and math.e is the constant $e \\approx 2.718281828459045$, so math.exp(1) equals math.e. math.log(x) is the natural logarithm $\\ln x$, which undoes math.exp: math.log(math.exp(3)) gives back 3.0. math.log(x, b) uses base $b$, and math.log2 and math.log10 are shortcuts for bases 2 and 10.',
+      'math.log accepts only positive numbers: math.log(0) and math.log(-1) raise ValueError, matching the rule that $e^k$ is always positive. Floats have limits too. A product of many small probabilities underflows to 0.0, but the sum of their logs stays an ordinary number, which is why models compare and maximize sums of logs.',
     ],
     example: {
       code: 'import math\nprint(math.exp(0), math.exp(1))\nprint(math.log(math.exp(3)))\nprint(math.log2(32), math.log10(0.01))',
       output: '1.0 2.718281828459045\n3.0\n5.0 -2.0',
       explanation:
-        'e⁰ is 1 and e¹ is e. math.log undoes math.exp, returning the exponent 3. 2⁵ = 32 and 10⁻² = 0.01, so the base-2 and base-10 logs are 5 and −2.',
+        '$e^0 = 1$ and $e^1 = e$. math.log undoes math.exp, returning the exponent 3. $2^5 = 32$ and $10^{-2} = 0.01$, so the base-2 and base-10 logs are 5 and $-2$.',
     },
     exercise: {
       prompt:
