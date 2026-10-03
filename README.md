@@ -28,7 +28,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 ## What you can do
 
 - **Learn:** see your active course with its progress and estimated completion date (remaining lesson XP ÷ your daily XP goal), total, today's, and this week's XP, up to five next tasks in scheduler order (due reviews and ready lessons, including prerequisites from other courses), and a dated history of completed lessons and reviews with earned/possible XP.
-- **Courses:** choose your active course from eight courses and 609 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
+- **Courses:** choose your active course from eight courses and 633 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
 - **Lessons:** move through introduction slides and worked examples, follow labelled subgoals, then practice with a visible evidence checklist. Revisit the teaching material while keeping your pending choice or code; assisted answers remain separate from independent mastery.
 - **Account menu:** the avatar menu opens the knowledge graph, flashcards, code lab, and settings, and signs you in or out.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
@@ -42,7 +42,7 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 
 | Course                   |  Skills | Questions | Executable exercises | Anki cards |
 | ------------------------ | ------: | --------: | -------------------: | ---------: |
-| Python foundations       |      24 |        96 |                   24 |         48 |
+| Python foundations       |      48 |       192 |                   48 |         96 |
 | Quantitative foundations |       5 |        20 |                    5 |         10 |
 | Python for Data Analysis |      24 |        96 |                   24 |         48 |
 | Machine Learning         |      28 |       112 |                   21 |         56 |
@@ -50,7 +50,7 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 | Competitive Programming  |     192 |       768 |                  192 |        384 |
 | Rust                     |     145 |       580 |                  145 |        290 |
 | C++                      |     180 |       720 |                  180 |        360 |
-| **Total**                | **626** | **2,504** |              **591** |  **1,252** |
+| **Total**                | **650** | **2,600** |              **615** |  **1,300** |
 
 Choosing a course on the Courses page makes it your active course. The scheduler includes its prerequisite ancestors across courses, so missing foundations become real tasks rather than a dead end. The graph offers course paths with supporting prerequisites and an all-course view. Each node retains a domain and course identity, and its detail panel navigates both prerequisite and dependent edges.
 
@@ -64,16 +64,19 @@ The Learn and Courses pages follow the compact course/XP/task/history and course
 
 ## Python foundations
 
-The curriculum contains **24 original skills, 96 questions, 24 runnable code exercises, and 48 mastery flashcards**, plus correction cards generated from mistakes. Each skill has three choice/prediction questions and one executable exercise.
+The curriculum contains **48 original skills, 192 questions, 48 runnable code exercises, and 96 mastery flashcards**, plus correction cards generated from mistakes. Each skill has three choice/prediction questions and one executable exercise.
 
-| Unit                | Skills                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------ |
-| First programs      | Your first output; Names and variables; Numbers and arithmetic; Build strings              |
-| Make decisions      | Types and conversion; Compare values; Combine conditions; Choose a branch                  |
-| Work with sequences | Collect values in lists; Access by index; Repeat with for; Count with range                |
-| Build with loops    | Accumulate a result; Repeat while a condition holds; Change a list; Take a slice           |
-| Organize your code  | Map keys to values; Loop through mappings; Define a function; Return a result              |
-| Solve real problems | Design useful inputs; Transform and filter; Handle expected failures; Build a word counter |
+| Unit                     | Skills                                                                                                                                                                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First programs           | Your first output; Names and variables; Numbers and arithmetic; Build strings                                                                                                                                                                              |
+| Make decisions           | Types and conversion; Compare values; Combine conditions; Choose a branch; Choose a value inline                                                                                                                                                           |
+| Work with sequences      | Collect values in lists; Test for empty or missing values; Summarize numbers with built-ins; Clean and split text; Access by index; Group values in a tuple; Repeat with for; Unpack several values at once; Count with range; Loop with enumerate and zip |
+| Build with loops         | Accumulate a result; Repeat while a condition holds; Stop or skip inside a loop; Change a list; Make a list of repeated values; Work with lists of lists; Take a slice                                                                                     |
+| Organize your code       | Map keys to values; Loop through mappings; Keep unique values in a set; Define a function; Return a result; Return several values; Call a function from itself                                                                                             |
+| Solve real problems      | Design useful inputs; Transform and filter; Build grids safely; Feed a loop into sum, any, and all; Handle expected failures; Build a word counter                                                                                                         |
+| Sort and use bits        | Sort a list; Sort by a key; Work with bits                                                                                                                                                                                                                 |
+| Use the standard library | Import a module; Queue and count with collections; Take the smallest item with heapq; Search a sorted list with bisect                                                                                                                                     |
+| Model data with classes  | Define a class; Give objects methods                                                                                                                                                                                                                       |
 
 Skills unlock through their graph prerequisites rather than an arbitrary calendar. Mastery requires a correct answer to **all four distinct questions without a hint**, including a passing Python exercise. Repeating one question cannot unlock a skill or farm learn XP. Hints support practice but do not count as independent mastery evidence.
 

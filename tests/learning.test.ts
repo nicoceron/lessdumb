@@ -161,9 +161,9 @@ function subjectCatalog(): CurriculumCatalog {
 describe('curriculum integrity', () => {
   it('provides a complete original Python graph with executable exercises', () => {
     expect(validateCurriculum()).toEqual([]);
-    expect(skills).toHaveLength(24);
-    expect(skills.flatMap((skill) => skill.questions)).toHaveLength(96);
-    expect(allFlashcards).toHaveLength(48);
+    expect(skills).toHaveLength(48);
+    expect(skills.flatMap((skill) => skill.questions)).toHaveLength(192);
+    expect(allFlashcards).toHaveLength(96);
     expect(
       skills.every(
         (skill) =>
@@ -220,7 +220,7 @@ sys.exit(1 if failures else 0)
       'Native Python is required to verify curriculum solutions.',
     ).toBeUndefined();
     expect(result.status, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toEqual({ exercises: 24, failures: [] });
+    expect(JSON.parse(result.stdout)).toEqual({ exercises: 48, failures: [] });
   });
 
   it('verifies every displayed example produces its documented output', () => {
@@ -280,7 +280,7 @@ sys.exit(1 if failures else 0)
       timeout: 10_000,
     });
     expect(result.status, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toEqual({ checked: 26, failures: [] });
+    expect(JSON.parse(result.stdout)).toEqual({ checked: 66, failures: [] });
   });
 });
 
@@ -341,7 +341,7 @@ describe('mastery and the prerequisite frontier', () => {
         progress,
         {
           skillId: 'variables',
-          questionId: 'variables-q1',
+          questionId: 'variables-kp1-q1',
           correct: true,
           mode: 'learn',
         },
@@ -415,7 +415,8 @@ describe('mastery and the prerequisite frontier', () => {
       progress,
       {
         skillId: 'variables',
-        questionId: 'variables-q1',
+        questionId: selectQuestion(progress, skillById['variables'], 'review')
+          .id,
         correct: false,
         mode: 'review',
       },
@@ -433,16 +434,7 @@ describe('mastery and the prerequisite frontier', () => {
     expect(nextTask(progress, NOW + DAY_MS)?.skillId).toBe('variables');
     expect(nextTask(progress, NOW + DAY_MS)?.mode).toBe('learn');
     const xpBefore = progress.totalXp;
-    progress = applyAttempt(
-      progress,
-      {
-        skillId: 'variables',
-        questionId: 'variables-q1',
-        correct: true,
-        mode: 'learn',
-      },
-      NOW + DAY_MS,
-    );
+    progress = masterSkill(progress, 'variables', NOW + DAY_MS);
     expect(progress.totalXp).toBe(xpBefore);
     expect(isMastered(progress, 'variables')).toBe(true);
   });
@@ -480,7 +472,7 @@ describe('mastery and the prerequisite frontier', () => {
         lapse,
         {
           skillId: 'numbers',
-          questionId: 'numbers-q1',
+          questionId: 'numbers-kp1-q1',
           correct: true,
           mode: 'learn',
         },
@@ -542,17 +534,17 @@ describe('mastery and the prerequisite frontier', () => {
   it('can reach every skill from the graph without manually unlocking nodes', () => {
     let progress = fresh();
     let answers = 0;
-    for (; answers < 200; answers++) {
+    for (; answers < 1000; answers++) {
       const task = nextTask(progress, NOW, 'python-foundations');
       if (!task) break;
       progress = applyAttempt(progress, { ...task, correct: true }, NOW);
     }
-    expect(getStats(progress, NOW).mastered).toBe(24);
+    expect(getStats(progress, NOW).mastered).toBe(48);
     expect(nextTask(progress, NOW, 'python-foundations')).toBeNull();
     expect(answers).toBe(
       skills.reduce((sum, skill) => sum + lessonAnswerIds(skill.id).length, 0),
     );
-    expect(earnedFlashcards(progress)).toHaveLength(48);
+    expect(earnedFlashcards(progress)).toHaveLength(96);
   });
 });
 
@@ -722,7 +714,7 @@ describe('subject-specific catalogs and assessment policies', () => {
     expect(nextTask(fresh(), NOW, undefined, catalog)?.skillId).toBe(
       'fixture-addition',
     );
-    expect(skills).toHaveLength(24);
+    expect(skills).toHaveLength(48);
     const cyclic = {
       ...catalog,
       skills: [

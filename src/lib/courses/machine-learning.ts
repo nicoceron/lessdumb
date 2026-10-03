@@ -156,7 +156,7 @@ const curriculum = [
     'ml-project',
     'Choose the learning task',
     'Separate inputs, targets, and the type of prediction you need.',
-    ['dictionaries', 'return-values'],
+    ['dictionaries', 'multiple-returns'],
     [
       'A supervised dataset contains features available at prediction time and a target you want to predict. Predicting a numeric delivery time is regression. Predicting whether a delivery is late is classification. The same records can support different tasks depending on how you define the target.',
       'Unsupervised learning looks for structure without labeled targets, such as grouping similar deliveries. Reinforcement learning chooses actions to improve accumulated reward through interaction. Before selecting an algorithm, name the decision, the observation unit, and the information that will actually be available when that decision is made.',
@@ -302,7 +302,7 @@ const curriculum = [
     'ml-project',
     'Build a baseline and loss',
     'Compare a trained model with a simple reference prediction.',
-    ['ml-data-splits', 'math-variance'],
+    ['ml-data-splits', 'math-variance', 'zip-enumerate'],
     [
       'A baseline is a simple rule evaluated with the same split and metric as the proposed model. A constant regression predictor can use the training target mean. A majority-class classifier always predicts the most common training class. A complicated model that does not beat an appropriate baseline has not earned its complexity.',
       'Mean squared error averages squared differences between predictions and actual targets. It penalizes large errors strongly and uses squared target units. Root mean squared error takes its square root to restore the target units. Choose a metric tied to the real cost of errors, and never use test targets to choose the baseline prediction.',
@@ -364,7 +364,7 @@ const curriculum = [
     'ml-project',
     'Fit preprocessing without leakage',
     'Learn transformations on training data and reuse them on new rows.',
-    ['ml-data-splits', 'math-variance', 'da-categories'],
+    ['ml-data-splits', 'math-variance', 'da-categories', 'methods'],
     [
       'Imputation, scaling, and category encoding turn raw features into usable model inputs. A standard scaler subtracts a training feature mean and divides by its training standard deviation. Learning those statistics from the test set leaks information, even when no target labels are involved.',
       'A scikit-learn Pipeline joins preprocessing to an estimator. Calling fit on the training set fits each transformation and then the predictor. Calling predict on test data applies the already-fitted transformations. During cross-validation, putting the transformer inside the pipeline lets each fold learn its own statistics from its training portion.',
@@ -437,7 +437,7 @@ const curriculum = [
     'ml-models',
     'Fit a linear regression',
     'Connect feature coefficients, intercepts, and least-squares predictions.',
-    ['ml-baselines', 'math-vectors', 'da-exploration'],
+    ['ml-baselines', 'math-vectors', 'da-exploration', 'methods'],
     [
       'A linear model predicts an intercept plus a weighted sum of input features: prediction = b + w1*x1 + ... . The model is linear in its learned coefficients; you can still supply transformed features such as a squared input. Least squares chooses coefficients to minimize the sum of squared training residuals.',
       'scikit-learn LinearRegression expects a two-dimensional feature matrix with one row per observation and one column per feature. fit(X, y) estimates coefficients; predict(new_X) applies them. A coefficient describes a conditional relationship inside the model and is not automatically a causal effect.',
@@ -714,7 +714,7 @@ const curriculum = [
     'ml-evaluation',
     'Read classification errors',
     'Distinguish precision, recall, and accuracy when classes are uneven.',
-    ['ml-logistic-regression'],
+    ['ml-logistic-regression', 'conditional-expressions'],
     [
       'For a chosen positive class, a true positive is correctly predicted positive. A false positive is predicted positive but actually negative. A false negative is actually positive but missed. Precision = TP/(TP+FP) asks how many positive predictions were correct. Recall = TP/(TP+FN) asks how many actual positives were found.',
       'Accuracy counts correct predictions across both classes. It can hide failure on a rare class: always predicting negative yields 99% accuracy when only 1% are positive. Report metrics that reflect the decision costs, inspect a confusion matrix, and consider multiple thresholds. The F1 score is the harmonic mean of precision and recall; it does not encode every possible business cost.',
@@ -845,7 +845,7 @@ const curriculum = [
     'ml-evaluation',
     'Select hyperparameters fairly',
     'Separate learned parameters from choices about the learning algorithm.',
-    ['ml-cross-validation', 'ml-decision-trees'],
+    ['ml-cross-validation', 'ml-decision-trees', 'key-functions'],
     [
       'Parameters such as regression weights are learned during fitting. Hyperparameters such as penalty strength, tree depth, or number of neighbors configure the fitting process. Grid search evaluates a predefined combination set; randomized search samples configurations from chosen distributions or lists.',
       'Compare configurations using the same appropriate validation strategy and metric. Searching more settings gives more opportunities to overfit validation results; the best observed score is not a guarantee of future performance. After selection, refit the chosen configuration on the available training data and evaluate once on the untouched test set. Nested cross-validation adds an outer evaluation loop when estimating the full selection procedure.',
@@ -1205,7 +1205,7 @@ const curriculum = [
     'ml-structure',
     'Group similar observations',
     'Understand centroids, cluster assignments, and geometric assumptions.',
-    ['ml-preprocessing', 'math-vectors'],
+    ['ml-preprocessing', 'math-vectors', 'zip-enumerate', 'key-functions'],
     [
       'K-means alternates between assigning each observation to its nearest centroid and updating each centroid to the mean of its assigned observations. Its objective is the sum of squared within-cluster distances. The number of clusters k is supplied before fitting, and different initializations can lead to different local solutions.',
       'Cluster numbers are arbitrary identifiers, not known class names. Feature scaling changes distances, and k-means works best for roughly compact groups under its chosen geometry. A silhouette score compares within-cluster closeness with separation from other clusters, but it does not prove that the groups are useful for a real decision. Density-based methods can handle different shapes and mark some observations as noise.',
@@ -2007,7 +2007,12 @@ const curriculum = [
     'ml-architectures',
     'Reason about actions and rewards',
     'Separate a policy, delayed return, and exploration.',
-    ['ml-learning-tasks', 'math-probability', 'comprehensions'],
+    [
+      'ml-learning-tasks',
+      'math-probability',
+      'zip-enumerate',
+      'generator-expressions',
+    ],
     [
       'A reinforcement-learning agent observes an environment, chooses an action according to a policy, and receives a reward and a new observation. It tries to maximize expected accumulated return, not merely the next immediate reward. A discounted return sums rewards with powers of a discount factor gamma between 0 and 1, placing progressively less weight on distant rewards.',
       'Exploration tries actions to learn about their consequences; exploitation uses current knowledge to choose a promising action. A value function estimates expected future return. A Q-value conditions that estimate on both state and action. Reward design matters because an agent can optimize the stated proxy in a way that misses the intended goal. This browser lesson computes a short discounted return in Python; it does not run an external simulator or train a deep RL agent.',
@@ -2078,7 +2083,7 @@ const curriculum = [
     'ml-production',
     'Keep deployed predictions reliable',
     'Version the full prediction pipeline and monitor real outcomes.',
-    ['ml-preprocessing', 'da-pipeline'],
+    ['ml-preprocessing', 'da-pipeline', 'sorting', 'sets'],
     [
       'Serving a model requires the same feature definitions and fitted preprocessing used during training. Store the model together with its schema, transformation state, package versions, and training-data lineage. Validate required fields and input types at the boundary. A reproducible prediction is more than a saved weight file.',
       'Monitor input quality, latency, failures, prediction distributions, and eventual outcomes when labels arrive. Covariate shift changes input distributions; concept drift changes the relationship between inputs and targets. An input-distribution change is a warning to investigate, not automatic proof that accuracy fell. Re-evaluate with new representative labels, compare subgroup performance, and keep a rollback path for a bad release.',

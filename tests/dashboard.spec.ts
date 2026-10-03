@@ -13,6 +13,8 @@ import {
   estimateCompletion,
   formatDayHeading,
   formatMonthYear,
+  taskHistory,
+  taskQueue,
 } from '../src/lib/dashboard';
 import { createState, type LearnerState } from '../src/lib/state';
 import { REVIEW_XP } from '../src/lib/xp';
@@ -55,6 +57,16 @@ test('Learn shows the active course, XP, frontier tasks, and dated history', asy
       due + 60_000,
     );
   master(state, 'variables', now - 60_000);
+  // Keep learning along the scheduler's path until several lessons are ready.
+  let latest = 'variables';
+  for (
+    let i = 1;
+    taskQueue(state.progress, 'machine-learning', now).length < 3;
+    i++
+  ) {
+    latest = nextTask(state.progress, now, 'machine-learning')!.skillId;
+    master(state, latest, now - 60_000 + i * 1_000);
+  }
   await asGuest(page, state);
   await page.goto('/');
   await ready(page);
@@ -140,8 +152,8 @@ test('Learn shows the active course, XP, frontier tasks, and dated history', asy
     }),
   ).toBeVisible();
   const items = history.locator('.ma-history-item');
-  await expect(items).toHaveCount(3);
-  await expect(items.nth(0)).toContainText('Names and variables');
+  await expect(items).toHaveCount(taskHistory(state.progress).length);
+  await expect(items.nth(0)).toContainText(skillById[latest].title);
   await expect(items.nth(0)).toContainText(/Completed @ \d{1,2}:\d{2} [AP]M/);
   const reviewItem = items.filter({ hasText: 'Review' });
   await expect(reviewItem).toContainText('Your first output');

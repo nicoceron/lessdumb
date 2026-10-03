@@ -16,19 +16,21 @@ Rust and C++ keep their edges in one explicit map each (`src/lib/courses/rust/pr
 
 "Ready" is the median number of available skills in a course when a learner always takes the lowest-order ready skill, with supporting courses already complete.
 
-| Course                   | Edges before → after | Longest in-course chain | Median ready |
-| ------------------------ | -------------------: | ----------------------: | -----------: |
-| Python foundations       |              45 → 30 |                  10 → 9 |        3 → 3 |
-| Quantitative foundations |                7 → 8 |                   3 → 2 |        2 → 2 |
-| Python for Data Analysis |              48 → 39 |                  15 → 8 |        2 → 3 |
-| Machine Learning         |              89 → 56 |                  10 → 9 |        3 → 6 |
-| Data Systems             |              42 → 33 |                   7 → 7 |        3 → 3 |
-| Competitive Programming  |            683 → 373 |                  20 → 9 |       9 → 28 |
-| Rust                     |            145 → 261 |                124 → 18 |       1 → 17 |
-| C++                      |            200 → 296 |                116 → 12 |       3 → 30 |
-| **Catalog**              |    **1,259 → 1,096** |                         |              |
+| Course                   | Edges before → after → now | Longest in-course chain | Median ready |
+| ------------------------ | -------------------------: | ----------------------: | -----------: |
+| Python foundations       |               45 → 30 → 74 |             10 → 9 → 12 |    3 → 3 → 6 |
+| Quantitative foundations |                  7 → 8 → 9 |               3 → 2 → 2 |    2 → 2 → 2 |
+| Python for Data Analysis |               48 → 39 → 41 |              15 → 8 → 8 |    2 → 3 → 3 |
+| Machine Learning         |               89 → 56 → 66 |              10 → 9 → 9 |    3 → 6 → 6 |
+| Data Systems             |               42 → 33 → 33 |               7 → 7 → 7 |    3 → 3 → 3 |
+| Competitive Programming  |            683 → 373 → 443 |              20 → 9 → 9 |  9 → 28 → 28 |
+| Rust                     |            145 → 227 → 261 |           124 → 15 → 18 |  1 → 17 → 17 |
+| C++                      |            200 → 296 → 296 |           116 → 12 → 12 |  3 → 30 → 30 |
+| **Catalog**              |  **1,259 → 1,062 → 1,223** |                         |              |
 
-Rust's figures include the 17 basics added afterwards (CEN-84), which every lesson using them now depends on. Redundant edges fell from 523 to 0. Rust and C++ gained edges because the old generators chained each skill to the previous one and omitted most real uses: 55% of Rust's and 52% of C++'s previous-skill edges were false, and dozens of skills used constructs taught only later. Competitive Programming no longer injects `parameters` into every node or chains every concept to its sibling; 231 of its removed edges named skills that are no longer ancestors at all.
+"Now" adds the Python foundations idiom nodes (CEN-81) and the Rust basics (CEN-84). For Python: 24 skills for constructs that lessons used without teaching, such as tuples, unpacking, built-ins, truthiness, sorting keys, sets, imports, heaps, and classes. Every skill whose lesson, example, questions, or solution uses one of them now names it directly, and prerequisites that became implied were removed. Writing knowledge points for every foundation skill also exposed three missing edges, now added: `strings` repeats text with `*` from `numbers`, `lists` relies on `==` from `comparisons` for membership and equality, and `parameters` uses the `is None` default idiom from `truthiness`.
+
+For Rust, 17 basics were added, and every lesson using them now depends on them. Redundant edges fell from 523 to 0. Rust and C++ gained edges because the old generators chained each skill to the previous one and omitted most real uses: 55% of Rust's and 52% of C++'s previous-skill edges were false, and dozens of skills used constructs taught only later. Competitive Programming no longer injects `parameters` into every node or chains every concept to its sibling; 231 of its removed edges named skills that are no longer ancestors at all.
 
 ## Known gaps
 
@@ -36,7 +38,7 @@ Edges cannot fix content. These items are the backlog for new concept nodes and 
 
 **Constructs used but taught nowhere** (number of skills that first use them):
 
-- Python: tuples (32), `min`/`max` (15), truthiness (12), `[x] * n` (11), conditional expressions (9), `zip`/`enumerate`/generator expressions (19 combined), sorting and `key=`/`lambda` (10), imports and standard-library modules (11), classes and objects (4), `break`/`continue` (4), sets, recursion, bitwise operators.
+- Python: decorators (`@cache` in `cp-memoization`, whose lesson describes `functools.cache` but not decorator syntax), argument unpacking with `zip(*rows)` (`ml-ensembles`), and set operations on `dict.keys()` (`ml-deployment-monitoring`).
 - Mathematics for ML: exponentials and logarithms, softmax, derivative definition and rules, partial derivatives, expected value, correlation, percentiles.
 - C++: `&&`/`||`/`!` (28), `?:` (26), range-for (13), `std::array` (8), const member functions, type traits, structured bindings, `break`/`continue`, bit shifts, fixed-width integers.
 

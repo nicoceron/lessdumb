@@ -7,7 +7,7 @@ describe('worked lesson examples', () => {
     const foundations = skills.filter(
       (skill) => skill.courseId === 'python-foundations',
     );
-    expect(foundations).toHaveLength(24);
+    expect(foundations).toHaveLength(48);
     for (const skill of foundations) {
       const steps = workedExampleSteps(skill);
       expect(steps.length, skill.id).toBeGreaterThanOrEqual(3);

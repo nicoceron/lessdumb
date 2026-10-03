@@ -102,7 +102,9 @@ for (const language of ['rust', 'cpp'] as const) {
       .poll(async () => (await cloud(page))?.activeCourseId)
       .toBe(course.id);
     await page.goto(`/learn?skill=${first.id}`);
-    await expect(page.getByText('Step 1 of 4', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(`Step 1 of ${first.stageCount}`, { exact: true }),
+    ).toBeVisible();
     await page
       .getByRole('button', { name: 'Start lesson', exact: true })
       .click();
