@@ -19,7 +19,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { InlineText } from './inline-text';
+import { ChoiceText, InlineText } from './inline-text';
 import type {
   CodeLanguage,
   KnowledgePoint,
@@ -1199,7 +1199,9 @@ function QuestionCard({
                 <Badge variant="outline" className="shrink-0 font-mono">
                   {choiceLetter(position)}
                 </Badge>
-                <pre>{question.choices[index]}</pre>
+                <pre>
+                  <ChoiceText question={question} index={index} />
+                </pre>
                 {answered && (chosen || right) && (
                   <span className="answer-marks">
                     {chosen && <span className="answer-tag">Your answer</span>}

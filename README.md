@@ -202,6 +202,8 @@ src/components/ui/              shadcn/ui source components
 src/components/reui/            Free ReUI Stepper and CodeBlock
 src/components/useLearner.ts    Device persistence and account synchronization
 src/lib/curriculum.ts           Catalog types and the full curriculum (server, tests, build only)
+src/lib/math-text.ts            $…$ and $$…$$ math in prose: parsing and validation
+src/lib/katex-render.ts         KaTeX renderer, loaded only on pages whose text has math
 src/lib/catalog-index.ts        Graph index: every skill outline, without lesson content
 src/lib/content/                Per-course lesson content, loaded on demand in the browser
 src/lib/courses/                Course, unit, skill, exercise, and card definitions

@@ -32,6 +32,21 @@ Every skill with knowledge points needs **two to five points**, and every point 
 - Explanations say why the answer is right, in one or two sentences. There are no hints: the worked example is the support.
 - Prompts are plain questions. Do not template them from the skill title.
 
+### Math notation
+
+Lesson prose is typeset with [KaTeX](https://katex.org/docs/supported): lesson paragraphs, point explanations, worked-example explanations, question prompts, the choices of `choose` questions, and answer explanations.
+
+- Write inline math as `$…$` and display math as `$$…$$`: `'The standard error is $\\sigma / \\sqrt{n}$.'` In a TypeScript string, double each backslash.
+- Typeset formulas, variables, and worked arithmetic (`$12 \times 5 = 60$`). Plain standalone numbers, counts, percentages, and times stay plain text.
+- Keep code as code: backtick spans, `code`, worked-example code and output, and the choices of `predictOutput` questions are never parsed for math. Python syntax that teaches Python (`x ** 0.5`, `len(values)`) is code, not math.
+- Write a literal dollar sign as `\$` (`'\\$20'` in source), inside or outside math.
+- Inline math cannot start or end with a space, and only ASCII belongs inside it: use `\times`, `\le`, `\sigma`, `\bar{x}`, and `\text{mean}` rather than Unicode symbols or bare words.
+- Use display math only for a long standalone formula in an explanation, never in choices. It scrolls inside its own box on narrow screens.
+- If one choice is a formula, write the comparable choices in TeX too, so formatting never hints at the answer.
+- Titles, summaries, and authored flashcards are plain text everywhere; keep math out of them. A mistake card copies the question's prose, so it shows the TeX source.
+
+The catalog validator rejects unclosed, empty, or space-padded `$` delimiters, and a test renders every math span with KaTeX in strict mode, so a TeX typo fails CI. Competitive Programming keeps complexity notation such as O(n log n) as plain text.
+
 ### Complete programs
 
 - **Python:** ordinary scripts. `numpy`, `pandas`, and `scikit-learn` are available.

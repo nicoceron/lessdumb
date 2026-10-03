@@ -22,6 +22,7 @@ import {
   type Quiz,
 } from '../lib/quiz';
 import { type LearnerState } from '../lib/state';
+import { ChoiceText, InlineText } from './inline-text';
 import { Btn, ContentLoading } from './shared';
 import { useCourseContent } from './use-content';
 import { Button } from '@/components/ui/button';
@@ -172,7 +173,9 @@ export default function QuizSession({
             Question {index + 1} of {quiz.questions.length}
           </span>
         </div>
-        <h1>{question.prompt}</h1>
+        <h1>
+          <InlineText text={question.prompt} />
+        </h1>
         {question.code && (
           <CodeBlock
             code={question.code}
@@ -194,7 +197,9 @@ export default function QuizSession({
               <Badge variant="outline" className="shrink-0 font-mono">
                 {choiceLetter(position)}
               </Badge>
-              <pre>{question.choices[choice]}</pre>
+              <pre>
+                <ChoiceText question={question} index={choice} />
+              </pre>
             </Button>
           ))}
         </div>
@@ -281,7 +286,9 @@ function QuizResults({ quiz }: { quiz: Quiz }) {
                   )}
                   Question {index + 1}: {slot.correct ? 'Correct' : 'Incorrect'}
                 </p>
-                <h3>{question.prompt}</h3>
+                <h3>
+                  <InlineText text={question.prompt} />
+                </h3>
                 {question.code && (
                   <CodeBlock
                     code={question.code}
@@ -291,17 +298,21 @@ function QuizResults({ quiz }: { quiz: Quiz }) {
                 )}
                 <p>
                   Your answer:{' '}
-                  {slot.answer === null || slot.answer === undefined
-                    ? 'No answer (time ran out)'
-                    : question.choices[slot.answer]}
+                  {slot.answer === null || slot.answer === undefined ? (
+                    'No answer (time ran out)'
+                  ) : (
+                    <ChoiceText question={question} index={slot.answer} />
+                  )}
                 </p>
                 {!slot.correct && (
                   <p>
                     <Check size={15} aria-hidden="true" /> Correct answer:{' '}
-                    {question.choices[question.answer]}
+                    <ChoiceText question={question} index={question.answer} />
                   </p>
                 )}
-                <p className="lesson-teaching-text">{question.explanation}</p>
+                <p className="lesson-teaching-text">
+                  <InlineText text={question.explanation} />
+                </p>
               </Card>
             </li>
           );

@@ -84,7 +84,7 @@ const definitions: Definition[] = [
       'Summarize a collection while keeping track of what each observation contributes.',
     paragraphs: [
       'The arithmetic mean is the sum of observations divided by their count. It is sensitive to unusually large or small values, so a mean alone cannot describe a distribution.',
-      'A weighted mean divides the sum of value × weight by the sum of weights. Counts can be weights when combining group averages; averaging the group averages without counts can give the wrong result.',
+      'A weighted mean divides the sum of $\\text{value} \\times \\text{weight}$ by the sum of weights. Counts can be weights when combining group averages; averaging the group averages without counts can give the wrong result.',
     ],
     example: {
       code: 'values = [2, 4, 9]\nprint(sum(values) / len(values))',
@@ -117,7 +117,7 @@ const definitions: Definition[] = [
     summary: 'Measure spread with squared distances from the mean.',
     paragraphs: [
       'Population variance averages the squared distance of each observation from the population mean. Squaring prevents positive and negative deviations from cancelling.',
-      'Standard deviation is the square root of variance, returning the measurement to the original units. Sample variance divides by n − 1 when estimating a population variance from a sample; state which convention you use.',
+      'Standard deviation is the square root of variance, returning the measurement to the original units. Sample variance divides by $n - 1$ when estimating a population variance from a sample; state which convention you use.',
     ],
     example: {
       code: 'values = [1, 3, 5]\nmean = sum(values) / len(values)\nvariance = sum((x - mean) ** 2 for x in values) / len(values)\nprint(round(variance, 2))',
@@ -151,7 +151,7 @@ const definitions: Definition[] = [
     summary:
       'Find the middle value and see why it resists extreme observations.',
     paragraphs: [
-      'The median is the middle of the sorted values. With an odd count it is the single middle value: [7, 1, 4] sorts to [1, 4, 7], so the median is 4. With an even count it is the mean of the two middle values: [2, 9, 3, 6] sorts to [2, 3, 6, 9], so the median is (3 + 6) / 2 = 4.5.',
+      'The median is the middle of the sorted values. With an odd count it is the single middle value: [7, 1, 4] sorts to [1, 4, 7], so the median is 4. With an even count it is the mean of the two middle values: [2, 9, 3, 6] sorts to [2, 3, 6, 9], so the median is $(3 + 6) / 2 = 4.5$.',
       'The median depends only on order, so it barely moves when an extreme value grows. Changing [2, 3, 4] to [2, 3, 400] leaves the median at 3 while the mean jumps from 3 to 135. When the mean and median differ a lot, the data are skewed or contain extreme observations worth inspecting.',
     ],
     example: worked(
@@ -178,8 +178,8 @@ const definitions: Definition[] = [
     summary:
       'Locate values by the share of data at or below them and summarize spread with quartiles.',
     paragraphs: [
-      'The p-th percentile is a value with about p% of the data at or below it. The median is the 50th percentile; the first quartile Q1 is the 25th percentile and the third quartile Q3 is the 75th. A common rule, the default in NumPy and pandas, sorts the n values, computes the position (p / 100) × (n − 1) counting from 0, and interpolates between neighbors when that position is not a whole number.',
-      'The interquartile range IQR = Q3 − Q1 spans the middle half of the data and, like the median, ignores extreme values. A common outlier screen flags values below Q1 − 1.5 × IQR or above Q3 + 1.5 × IQR. The five-number summary (minimum, Q1, median, Q3, maximum) describes location and spread without assuming a distribution shape.',
+      'The $p$-th percentile is a value with about $p\\%$ of the data at or below it. The median is the 50th percentile; the first quartile $Q_1$ is the 25th percentile and the third quartile $Q_3$ is the 75th. A common rule, the default in NumPy and pandas, sorts the $n$ values, computes the position $(p / 100) \\times (n - 1)$ counting from 0, and interpolates between neighbors when that position is not a whole number.',
+      'The interquartile range $\\text{IQR} = Q_3 - Q_1$ spans the middle half of the data and, like the median, ignores extreme values. A common outlier screen flags values below $Q_1 - 1.5 \\times \\text{IQR}$ or above $Q_3 + 1.5 \\times \\text{IQR}$. The five-number summary (minimum, $Q_1$, median, $Q_3$, maximum) describes location and spread without assuming a distribution shape.',
     ],
     example: worked(
       'sorted: 2, 4, 6, 8, 10, 12, 14, 16, 18 (n = 9)\nQ1 position 0.25 × 8 = 2\nmedian position 0.5 × 8 = 4\nQ3 position 0.75 × 8 = 6',
@@ -204,8 +204,8 @@ const definitions: Definition[] = [
     prerequisites: ['math-variance', 'math-vectors'],
     summary: 'Measure whether two variables move together around their means.',
     paragraphs: [
-      'Population covariance averages the products of paired deviations: cov(x, y) is the mean of (x_i − x̄)(y_i − ȳ). When large x values tend to pair with large y values, most products are positive and the covariance is positive; when large x pairs with small y, it is negative; with no linear tendency it is near 0. It equals the dot product of the two centered vectors divided by n.',
-      'cov(x, x) is the variance of x. Covariance carries the product of both units, such as centimeter-kilograms, so its size depends on scale: measuring x in millimeters instead of centimeters multiplies the covariance by 10. Its sign is meaningful, but its size alone does not say how strong the relationship is.',
+      'Population covariance averages the products of paired deviations: $\\operatorname{cov}(x, y)$ is the mean of $(x_i - \\bar{x})(y_i - \\bar{y})$. When large $x$ values tend to pair with large $y$ values, most products are positive and the covariance is positive; when large $x$ pairs with small $y$, it is negative; with no linear tendency it is near 0. It equals the dot product of the two centered vectors divided by $n$.',
+      '$\\operatorname{cov}(x, x)$ is the variance of $x$. Covariance carries the product of both units, such as centimeter-kilograms, so its size depends on scale: measuring $x$ in millimeters instead of centimeters multiplies the covariance by 10. Its sign is meaningful, but its size alone does not say how strong the relationship is.',
     ],
     example: {
       code: 'x = [0, 2, 4]\ny = [1, 4, 4]\nmean_x = 2\nmean_y = 3\ntotal = 0\nfor i in range(len(x)):\n    total += (x[i] - mean_x) * (y[i] - mean_y)\nprint(total / len(x))',
@@ -240,8 +240,8 @@ const definitions: Definition[] = [
     summary:
       'Rescale covariance to a unitless measure of linear association between −1 and 1.',
     paragraphs: [
-      'The correlation coefficient r = cov(x, y) / (σ_x σ_y) divides covariance by both standard deviations. The units cancel, so r is unchanged when either variable is rescaled by a positive factor, and it always lies between −1 and 1. r = 1 or −1 means the points lie exactly on a line with positive or negative slope; r near 0 means no linear trend. Because the 1 / n factors cancel, r can be computed from sums of products and squares of deviations.',
-      'Correlation measures only linear association. For x = [−2, −1, 0, 1, 2] and y = x², y is completely determined by x, yet r = 0 because the relationship is curved and symmetric. A strong correlation also does not establish causation: a third variable, selection, or a shared trend can produce it.',
+      'The correlation coefficient $r = \\operatorname{cov}(x, y) / (\\sigma_x \\sigma_y)$ divides covariance by both standard deviations. The units cancel, so $r$ is unchanged when either variable is rescaled by a positive factor, and it always lies between −1 and 1. $r = 1$ or $-1$ means the points lie exactly on a line with positive or negative slope; $r$ near 0 means no linear trend. Because the $1 / n$ factors cancel, $r$ can be computed from sums of products and squares of deviations.',
+      'Correlation measures only linear association. For $x = [-2, -1, 0, 1, 2]$ and $y = x^2$, $y$ is completely determined by $x$, yet $r = 0$ because the relationship is curved and symmetric. A strong correlation also does not establish causation: a third variable, selection, or a shared trend can produce it.',
     ],
     example: {
       code: 'x = [1, 2, 3]\ny = [7, 5, 3]\nmean_x = 2\nmean_y = 5\nsxy = 0\nsxx = 0\nsyy = 0\nfor i in range(len(x)):\n    sxy += (x[i] - mean_x) * (y[i] - mean_y)\n    sxx += (x[i] - mean_x) ** 2\n    syy += (y[i] - mean_y) ** 2\nprint(sxy / (sxx * syy) ** 0.5)',
@@ -277,7 +277,7 @@ const definitions: Definition[] = [
       'Distinguish an event probability from a probability within a selected group.',
     paragraphs: [
       'A probability lies between 0 and 1. For equally likely outcomes, an event probability is the number of favorable outcomes divided by the total number of outcomes.',
-      'Conditional probability P(A | B) restricts attention to the outcomes where B holds. It equals P(A and B) / P(B) when P(B) > 0. Conditioning can change the denominator drastically, and P(A | B) generally differs from P(B | A).',
+      'Conditional probability $P(A \\mid B)$ restricts attention to the outcomes where $B$ holds. It equals $P(A \\text{ and } B) / P(B)$ when $P(B) > 0$. Conditioning can change the denominator drastically, and $P(A \\mid B)$ generally differs from $P(B \\mid A)$.',
     ],
     example: {
       code: 'total = 100\npositive = 20\npositive_and_condition = 12\nprint(positive_and_condition / positive)',
@@ -310,8 +310,8 @@ const definitions: Definition[] = [
     summary:
       'Describe an uncertain number by its distribution and its probability-weighted mean.',
     paragraphs: [
-      'A random variable X assigns a number to each outcome of a random process, such as the number of heads in two coin flips or the reward from an action. Its distribution lists each possible value with its probability; the probabilities are nonnegative and sum to 1.',
-      'The expected value E[X] = Σ x × P(X = x) is the probability-weighted mean of the values: the long-run average over many repetitions. A fair die has E[X] = (1 + 2 + … + 6) / 6 = 3.5, a value it never shows. Expectation is linear: E[aX + b] = a E[X] + b, and E[X + Y] = E[X] + E[Y] even when X and Y are dependent.',
+      'A random variable $X$ assigns a number to each outcome of a random process, such as the number of heads in two coin flips or the reward from an action. Its distribution lists each possible value with its probability; the probabilities are nonnegative and sum to 1.',
+      'The expected value $E[X] = \\sum x \\times P(X = x)$ is the probability-weighted mean of the values: the long-run average over many repetitions. A fair die has $E[X] = (1 + 2 + \\dots + 6) / 6 = 3.5$, a value it never shows. Expectation is linear: $E[aX + b] = a E[X] + b$, and $E[X + Y] = E[X] + E[Y]$ even when $X$ and $Y$ are dependent.',
     ],
     example: worked(
       'reward 10 with probability 0.2\nreward 0 with probability 0.5\nreward −2 with probability 0.3',
@@ -337,8 +337,8 @@ const definitions: Definition[] = [
     summary:
       'Measure the spread of a random variable and how scaling and averaging change it.',
     paragraphs: [
-      'The variance of X is the expected squared distance from its mean: Var(X) = E[(X − μ)²], where μ = E[X]. An equivalent shortcut is Var(X) = E[X²] − μ². Its square root is the standard deviation. For X equal to 0 or 2 with probability 1/2 each, μ = 1 and Var(X) = 1.',
-      'Shifting does not change spread, but scaling does: Var(aX + b) = a² Var(X). For independent X and Y, variances add: Var(X + Y) = Var(X) + Var(Y). So the average of n independent copies, each with variance σ², has variance σ² / n: averaging independent noisy quantities makes the result less variable.',
+      'The variance of $X$ is the expected squared distance from its mean: $\\operatorname{Var}(X) = E[(X - \\mu)^2]$, where $\\mu = E[X]$. An equivalent shortcut is $\\operatorname{Var}(X) = E[X^2] - \\mu^2$. Its square root is the standard deviation. For $X$ equal to 0 or 2 with probability 1/2 each, $\\mu = 1$ and $\\operatorname{Var}(X) = 1$.',
+      'Shifting does not change spread, but scaling does: $\\operatorname{Var}(aX + b) = a^2 \\operatorname{Var}(X)$. For independent $X$ and $Y$, variances add: $\\operatorname{Var}(X + Y) = \\operatorname{Var}(X) + \\operatorname{Var}(Y)$. So the average of $n$ independent copies, each with variance $\\sigma^2$, has variance $\\sigma^2 / n$: averaging independent noisy quantities makes the result less variable.',
     ],
     example: worked(
       'X = 1 or 3, each with probability 0.5\nμ = 2\nE[(X − 2)²] = 0.5 × 1 + 0.5 × 1',
@@ -364,8 +364,8 @@ const definitions: Definition[] = [
     summary:
       'Model yes/no trials and count successes across independent repetitions.',
     paragraphs: [
-      'A Bernoulli variable is 1 (success) with probability p and 0 otherwise. Its mean is p and its variance is p(1 − p), largest at p = 0.5. For independent trials, probabilities multiply: three independent trials with p = 0.2 produce the sequence 1, 0, 1 with probability 0.2 × 0.8 × 0.2 = 0.032.',
-      'The binomial distribution counts successes K in n independent Bernoulli(p) trials. The number of sequences with exactly k successes is C(n, k) = n! / (k! (n − k)!), so P(K = k) = C(n, k) pᵏ (1 − p)ⁿ⁻ᵏ. Because K is a sum of n independent Bernoulli variables, its mean is np and its variance is np(1 − p).',
+      'A Bernoulli variable is 1 (success) with probability $p$ and 0 otherwise. Its mean is $p$ and its variance is $p(1 - p)$, largest at $p = 0.5$. For independent trials, probabilities multiply: three independent trials with $p = 0.2$ produce the sequence 1, 0, 1 with probability $0.2 \\times 0.8 \\times 0.2 = 0.032$.',
+      'The binomial distribution counts successes $K$ in $n$ independent $\\text{Bernoulli}(p)$ trials. The number of sequences with exactly $k$ successes is $C(n, k) = n! / (k! (n - k)!)$, so $P(K = k) = C(n, k) p^k (1 - p)^{n - k}$. Because $K$ is a sum of $n$ independent Bernoulli variables, its mean is $np$ and its variance is $np(1 - p)$.',
     ],
     example: worked(
       'n = 4 trials, p = 0.5, exactly 2 successes\nC(4, 2) = 6 sequences, each with probability 0.5⁴ = 1/16',
@@ -391,8 +391,8 @@ const definitions: Definition[] = [
     summary:
       "Use the bell curve's mean, standard deviation, and z-scores to judge how unusual a value is.",
     paragraphs: [
-      'The normal distribution N(μ, σ²) is a continuous, symmetric, bell-shaped distribution centered at its mean μ, with spread set by its standard deviation σ. For a continuous variable, probabilities are areas under the density curve, so any single exact value has probability 0. About 68% of values lie within 1σ of μ, 95% within 2σ, and 99.7% within 3σ.',
-      'A z-score z = (x − μ) / σ counts how many standard deviations x lies from the mean. If X is normal, Z = (X − μ) / σ is standard normal, N(0, 1), so z-scores compare values measured in different units. A value with |z| > 3 is rare under a normal model, which is why it is often flagged as unusual. Many measurements are only approximately normal; check the shape before relying on these percentages.',
+      'The normal distribution $N(\\mu, \\sigma^2)$ is a continuous, symmetric, bell-shaped distribution centered at its mean $\\mu$, with spread set by its standard deviation $\\sigma$. For a continuous variable, probabilities are areas under the density curve, so any single exact value has probability 0. About 68% of values lie within $1\\sigma$ of $\\mu$, 95% within $2\\sigma$, and 99.7% within $3\\sigma$.',
+      'A z-score $z = (x - \\mu) / \\sigma$ counts how many standard deviations $x$ lies from the mean. If $X$ is normal, $Z = (X - \\mu) / \\sigma$ is standard normal, $N(0, 1)$, so z-scores compare values measured in different units. A value with $|z| > 3$ is rare under a normal model, which is why it is often flagged as unusual. Many measurements are only approximately normal; check the shape before relying on these percentages.',
     ],
     example: worked(
       'heights ~ N(170, 10²); one person is 195 cm\nz = (195 − 170) / 10',
@@ -418,8 +418,8 @@ const definitions: Definition[] = [
     summary:
       'Distinguish a sample from its population and predict how much sample statistics vary.',
     paragraphs: [
-      'A population is every unit you care about; a sample is the part you observe. A statistic such as the sample mean changes from sample to sample. For n independent observations with standard deviation σ, the sample mean has standard deviation σ / √n, called its standard error, so quadrupling n halves it. By the central limit theorem, the sample mean is approximately normal for large n even when individual values are not.',
-      'Sampling with replacement allows a unit to be drawn more than once. A bootstrap sample draws n rows with replacement from n observed rows, so some rows repeat and others are left out; repeating that process approximates how a statistic would vary across new samples. A biased sampling process, such as surveying only customers who reply, is not fixed by collecting more of the same.',
+      'A population is every unit you care about; a sample is the part you observe. A statistic such as the sample mean changes from sample to sample. For $n$ independent observations with standard deviation $\\sigma$, the sample mean has standard deviation $\\sigma / \\sqrt{n}$, called its standard error, so quadrupling $n$ halves it. By the central limit theorem, the sample mean is approximately normal for large $n$ even when individual values are not.',
+      'Sampling with replacement allows a unit to be drawn more than once. A bootstrap sample draws $n$ rows with replacement from $n$ observed rows, so some rows repeat and others are left out; repeating that process approximates how a statistic would vary across new samples. A biased sampling process, such as surveying only customers who reply, is not fixed by collecting more of the same.',
     ],
     example: worked(
       'population standard deviation σ = 12\nsample size n = 36\nstandard error = σ / √n',
@@ -445,8 +445,8 @@ const definitions: Definition[] = [
     summary:
       'Read a function as a rule from inputs to outputs and connect it to its graph.',
     paragraphs: [
-      'A function assigns exactly one output to each allowed input. Writing f(x) = 3x − 2 names the rule f; f(4) means substitute 4 for x, giving 3 × 4 − 2 = 10. The allowed inputs form the domain. A rule that could give two different outputs for the same input is not a function.',
-      'The graph of f is the set of points (x, f(x)). A linear function f(x) = mx + b has a straight-line graph: b is the output at x = 0 (the intercept), and m is the slope, the change in output for each one-unit increase in input. A positive slope means the function increases from left to right; a negative slope means it decreases.',
+      'A function assigns exactly one output to each allowed input. Writing $f(x) = 3x - 2$ names the rule $f$; $f(4)$ means substitute 4 for $x$, giving $3 \\times 4 - 2 = 10$. The allowed inputs form the domain. A rule that could give two different outputs for the same input is not a function.',
+      'The graph of $f$ is the set of points $(x, f(x))$. A linear function $f(x) = mx + b$ has a straight-line graph: $b$ is the output at $x = 0$ (the intercept), and $m$ is the slope, the change in output for each one-unit increase in input. A positive slope means the function increases from left to right; a negative slope means it decreases.',
     ],
     example: worked(
       'f(x) = 3x − 2\nf(0) = 3 × 0 − 2\nf(4) = 3 × 4 − 2',
@@ -469,8 +469,8 @@ const definitions: Definition[] = [
     summary:
       'Apply exponent rules and recognize growth by repeated multiplication, including base e.',
     paragraphs: [
-      'An exponent counts repeated multiplication: 2⁵ = 2 × 2 × 2 × 2 × 2 = 32. The rules follow from counting factors: aᵐ × aⁿ = aᵐ⁺ⁿ, aᵐ / aⁿ = aᵐ⁻ⁿ, and (aᵐ)ⁿ = aᵐⁿ. They also force a⁰ = 1 and a⁻ⁿ = 1 / aⁿ for any nonzero a.',
-      'An exponential function f(x) = bˣ with b > 0 multiplies its output by b for every unit step in x. With b > 1 it grows ever faster; with 0 < b < 1 it decays toward 0 without reaching it. The constant e ≈ 2.718 is the base used throughout machine learning: eˣ is always positive, e⁰ = 1, and e⁻ˣ = 1 / eˣ.',
+      'An exponent counts repeated multiplication: $2^5 = 2 \\times 2 \\times 2 \\times 2 \\times 2 = 32$. The rules follow from counting factors: $a^m \\times a^n = a^{m+n}$, $a^m / a^n = a^{m-n}$, and $(a^m)^n = a^{mn}$. They also force $a^0 = 1$ and $a^{-n} = 1 / a^n$ for any nonzero $a$.',
+      'An exponential function $f(x) = b^x$ with $b > 0$ multiplies its output by $b$ for every unit step in $x$. With $b > 1$ it grows ever faster; with $0 < b < 1$ it decays toward 0 without reaching it. The constant $e \\approx 2.718$ is the base used throughout machine learning: $e^x$ is always positive, $e^0 = 1$, and $e^{-x} = 1 / e^x$.',
     ],
     example: worked(
       '2³ × 2⁴ = 2⁷\n5⁻² = 1 / 5²\ne⁰',
@@ -490,8 +490,8 @@ const definitions: Definition[] = [
     summary:
       'Undo exponentials with logarithms and use log rules to turn products into sums.',
     paragraphs: [
-      'A logarithm answers "which exponent?": log_b(x) = k exactly when bᵏ = x. So log₂(8) = 3 and log₁₀(0.01) = −2. The natural logarithm ln uses base e, so ln(eᵏ) = k and ln(1) = 0. Logarithms are defined only for positive inputs, because bᵏ is always positive.',
-      'Exponent rules become log rules: log(xy) = log(x) + log(y), log(x / y) = log(x) − log(y), and log(xᵏ) = k log(x). Because log is increasing, x < y exactly when log(x) < log(y), so taking logs preserves which value is largest. This is why products of many probabilities are compared through sums of their logs.',
+      'A logarithm answers "which exponent?": $\\log_b(x) = k$ exactly when $b^k = x$. So $\\log_2(8) = 3$ and $\\log_{10}(0.01) = -2$. The natural logarithm $\\ln$ uses base $e$, so $\\ln(e^k) = k$ and $\\ln(1) = 0$. Logarithms are defined only for positive inputs, because $b^k$ is always positive.',
+      'Exponent rules become log rules: $\\log(xy) = \\log(x) + \\log(y)$, $\\log(x / y) = \\log(x) - \\log(y)$, and $\\log(x^k) = k \\log(x)$. Because $\\log$ is increasing, $x < y$ exactly when $\\log(x) < \\log(y)$, so taking logs preserves which value is largest. This is why products of many probabilities are compared through sums of their logs.',
     ],
     example: worked(
       'ln(e³)\nlog₂(32)\nlog₁₀(20) + log₁₀(5) = log₁₀(20 × 5)',
@@ -517,8 +517,8 @@ const definitions: Definition[] = [
     summary:
       'Squash any real score into a value between 0 and 1 with the logistic sigmoid.',
     paragraphs: [
-      'The sigmoid is σ(z) = 1 / (1 + e^(−z)). For a large positive z, e^(−z) is tiny, so σ(z) is close to 1; for a large negative z, e^(−z) is huge, so σ(z) is close to 0. At z = 0, e⁰ = 1 and σ(0) = 1 / 2. Every output lies strictly between 0 and 1.',
-      'The sigmoid is increasing: a larger score always gives a larger output. It is symmetric around 0, σ(−z) = 1 − σ(z), so a score of −2 gives the complement of a score of 2. Far from 0 the curve flattens (saturates), so changing z there barely changes σ(z).',
+      'The sigmoid is $\\sigma(z) = 1 / (1 + e^{-z})$. For a large positive $z$, $e^{-z}$ is tiny, so $\\sigma(z)$ is close to 1; for a large negative $z$, $e^{-z}$ is huge, so $\\sigma(z)$ is close to 0. At $z = 0$, $e^0 = 1$ and $\\sigma(0) = 1 / 2$. Every output lies strictly between 0 and 1.',
+      'The sigmoid is increasing: a larger score always gives a larger output. It is symmetric around 0, $\\sigma(-z) = 1 - \\sigma(z)$, so a score of −2 gives the complement of a score of 2. Far from 0 the curve flattens (saturates), so changing $z$ there barely changes $\\sigma(z)$.',
     ],
     example: worked(
       'σ(2) = 1 / (1 + e^(−2)) ≈ 1 / (1 + 0.135)\nσ(−2) = 1 − σ(2)',
@@ -541,8 +541,8 @@ const definitions: Definition[] = [
     summary:
       'Turn a list of scores into probabilities that are positive and sum to 1.',
     paragraphs: [
-      'Softmax maps scores z₁, …, z_k to p_i = e^(z_i) / (e^(z_1) + … + e^(z_k)). Each exponential is positive and the denominator is their total, so every p_i lies between 0 and 1 and the p_i sum to 1: a probability distribution over k mutually exclusive classes. A larger score always receives a larger probability.',
-      'Adding the same constant c to every score leaves softmax unchanged, because e^(z_i + c) = e^(z_i) × e^c and the factor e^c cancels. Implementations subtract the largest score first so that no exponential overflows. With two classes, softmax gives the first class σ(z₁ − z₂): the sigmoid of the score difference.',
+      'Softmax maps scores $z_1, \\ldots, z_k$ to $p_i = e^{z_i} / (e^{z_1} + \\cdots + e^{z_k})$. Each exponential is positive and the denominator is their total, so every $p_i$ lies between 0 and 1 and the $p_i$ sum to 1: a probability distribution over $k$ mutually exclusive classes. A larger score always receives a larger probability.',
+      'Adding the same constant $c$ to every score leaves softmax unchanged, because $e^{z_i + c} = e^{z_i} \\times e^c$ and the factor $e^c$ cancels. Implementations subtract the largest score first so that no exponential overflows. With two classes, softmax gives the first class $\\sigma(z_1 - z_2)$: the sigmoid of the score difference.',
     ],
     example: worked(
       'scores 2, 0, 0\nexponentials ≈ 7.389, 1, 1 (total ≈ 9.389)',
@@ -567,8 +567,8 @@ const definitions: Definition[] = [
     prerequisites: ['math-functions'],
     summary: 'Read a derivative as the slope of a function at one point.',
     paragraphs: [
-      'The average rate of change of f between x = a and x = b is (f(b) − f(a)) / (b − a): the slope of the straight line through those two points of the graph. For f(x) = x² from x = 1 to x = 3, it is (9 − 1) / 2 = 4.',
-      'The derivative f′(a) is the rate of change at the single point a: the value that (f(a + h) − f(a)) / h approaches as h shrinks toward 0, which is the slope of the tangent line there. For x² at a = 3, h = 0.1 gives 6.1 and h = 0.01 gives 6.01, approaching f′(3) = 6. A positive derivative means f is increasing at that point, a negative one means decreasing, and zero means locally flat.',
+      'The average rate of change of $f$ between $x = a$ and $x = b$ is $(f(b) - f(a)) / (b - a)$: the slope of the straight line through those two points of the graph. For $f(x) = x^2$ from $x = 1$ to $x = 3$, it is $(9 - 1) / 2 = 4$.',
+      "The derivative $f'(a)$ is the rate of change at the single point $a$: the value that $(f(a + h) - f(a)) / h$ approaches as $h$ shrinks toward 0, which is the slope of the tangent line there. For $x^2$ at $a = 3$, $h = 0.1$ gives 6.1 and $h = 0.01$ gives 6.01, approaching $f'(3) = 6$. A positive derivative means $f$ is increasing at that point, a negative one means decreasing, and zero means locally flat.",
     ],
     example: worked(
       'f(x) = x², a = 3\nh = 0.1: (3.1² − 3²) / 0.1 = 6.1\nh = 0.01: (3.01² − 3²) / 0.01 = 6.01',
@@ -593,8 +593,8 @@ const definitions: Definition[] = [
     prerequisites: ['math-derivative-rate'],
     summary: 'Differentiate powers of x, constants, and constant multiples.',
     paragraphs: [
-      'The power rule says the derivative of xⁿ is n xⁿ⁻¹: bring the exponent down as a factor and lower it by one. So (x²)′ = 2x, (x⁵)′ = 5x⁴, and (x)′ = 1. A constant has derivative 0 because its graph is flat.',
-      'A constant multiple passes through: (c f(x))′ = c f′(x). So (4x³)′ = 4 × 3x² = 12x². The derivative is itself a function; evaluate it at a point to get the slope there. For 4x³ at x = 2, the slope is 12 × 2² = 48.',
+      "The power rule says the derivative of $x^n$ is $n x^{n-1}$: bring the exponent down as a factor and lower it by one. So $(x^2)' = 2x$, $(x^5)' = 5x^4$, and $(x)' = 1$. A constant has derivative 0 because its graph is flat.",
+      "A constant multiple passes through: $(c f(x))' = c f'(x)$. So $(4x^3)' = 4 \\times 3x^2 = 12x^2$. The derivative is itself a function; evaluate it at a point to get the slope there. For $4x^3$ at $x = 2$, the slope is $12 \\times 2^2 = 48$.",
     ],
     example: worked(
       'f(x) = 5x⁴\nf′(x) = 5 × 4x³ = 20x³\nf′(1) = 20 × 1³',
@@ -617,8 +617,8 @@ const definitions: Definition[] = [
     summary:
       'Differentiate polynomials term by term and products of two functions.',
     paragraphs: [
-      'The derivative of a sum is the sum of the derivatives: (f + g)′ = f′ + g′. So a polynomial is differentiated term by term: (x³ − 4x² + 7x − 2)′ = 3x² − 8x + 7.',
-      'A product is not differentiated factor by factor. The product rule is (fg)′ = f′g + fg′: change one factor at a time and add the effects. For x²(3x + 1), the derivative is 2x(3x + 1) + x² × 3 = 9x² + 2x, which matches differentiating the expanded form 3x³ + x².',
+      "The derivative of a sum is the sum of the derivatives: $(f + g)' = f' + g'$. So a polynomial is differentiated term by term: $(x^3 - 4x^2 + 7x - 2)' = 3x^2 - 8x + 7$.",
+      "A product is not differentiated factor by factor. The product rule is $(fg)' = f'g + fg'$: change one factor at a time and add the effects. For $x^2(3x + 1)$, the derivative is $2x(3x + 1) + x^2 \\times 3 = 9x^2 + 2x$, which matches differentiating the expanded form $3x^3 + x^2$.",
     ],
     example: worked(
       'p(x) = x²(x + 5)\np′(x) = 2x(x + 5) + x² × 1',
@@ -638,8 +638,8 @@ const definitions: Definition[] = [
     summary:
       'Differentiate a function of a function by multiplying local rates.',
     paragraphs: [
-      "A composition feeds one function's output into another: for h(x) = (3x + 1)², the inner function is u = 3x + 1 and the outer function is u². The chain rule says h′(x) = (outer derivative at u) × (inner derivative) = 2u × 3 = 6(3x + 1). Rates multiply: if u changes 3 times as fast as x, and h changes 2u times as fast as u, then h changes 2u × 3 times as fast as x.",
-      'Longer chains multiply every link. If a loss L depends on a prediction p, and p depends on a weight w, then dL/dw = dL/dp × dp/dw. Each factor is computed locally from its own step. This is the calculation backpropagation repeats through a network.',
+      "A composition feeds one function's output into another: for $h(x) = (3x + 1)^2$, the inner function is $u = 3x + 1$ and the outer function is $u^2$. The chain rule says $h'(x) = (\\text{outer derivative at } u) \\times (\\text{inner derivative}) = 2u \\times 3 = 6(3x + 1)$. Rates multiply: if $u$ changes 3 times as fast as $x$, and $h$ changes $2u$ times as fast as $u$, then $h$ changes $2u \\times 3$ times as fast as $x$.",
+      'Longer chains multiply every link. If a loss $L$ depends on a prediction $p$, and $p$ depends on a weight $w$, then $\\frac{dL}{dw} = \\frac{dL}{dp} \\times \\frac{dp}{dw}$. Each factor is computed locally from its own step. This is the calculation backpropagation repeats through a network.',
     ],
     example: worked(
       'L(w) = (2w − 6)²\nu = 2w − 6, L = u²\ndL/du = 2u, du/dw = 2',
@@ -665,8 +665,8 @@ const definitions: Definition[] = [
     summary:
       'Measure how a function of several inputs changes when only one input moves.',
     paragraphs: [
-      'A function such as f(x, y) = x²y + 3y has two inputs. The partial derivative ∂f/∂x treats y as a constant and differentiates with respect to x: ∂f/∂x = 2xy. Likewise ∂f/∂y treats x as a constant: ∂f/∂y = x² + 3. Each partial is a rate of change along one input direction.',
-      'Model losses depend on several parameters at once. For one example with input x and target y, L(w, b) = (wx + b − y)². By the chain rule, ∂L/∂w = 2(wx + b − y) × x and ∂L/∂b = 2(wx + b − y) × 1. The two partials share the residual factor and differ only in the inner derivative.',
+      'A function such as $f(x, y) = x^2y + 3y$ has two inputs. The partial derivative $\\frac{\\partial f}{\\partial x}$ treats $y$ as a constant and differentiates with respect to $x$: $\\frac{\\partial f}{\\partial x} = 2xy$. Likewise $\\frac{\\partial f}{\\partial y}$ treats $x$ as a constant: $\\frac{\\partial f}{\\partial y} = x^2 + 3$. Each partial is a rate of change along one input direction.',
+      'Model losses depend on several parameters at once. For one example with input $x$ and target $y$, $L(w, b) = (wx + b - y)^2$. By the chain rule, $\\frac{\\partial L}{\\partial w} = 2(wx + b - y) \\times x$ and $\\frac{\\partial L}{\\partial b} = 2(wx + b - y) \\times 1$. The two partials share the residual factor and differ only in the inner derivative.',
     ],
     example: worked(
       'f(x, y) = 3x²y + y³ at (1, 2)\n∂f/∂x = 6xy\n∂f/∂y = 3x² + 3y²',
@@ -691,8 +691,8 @@ const definitions: Definition[] = [
     prerequisites: ['math-partial-derivatives', 'math-vectors'],
     summary: 'Collect partial derivatives into a vector that points uphill.',
     paragraphs: [
-      'The gradient ∇f collects every partial derivative into one vector: for f(x, y), ∇f = [∂f/∂x, ∂f/∂y]. For f(x, y) = x² + 3y², ∇f = [2x, 6y], and at (1, 2) it is [2, 12]. Its coordinates are in the same order as the inputs.',
-      'At a point, the gradient points in the direction of steepest increase of f, and its negative points in the direction of steepest decrease. The sign of a coordinate says whether increasing that input raises or lowers f, and its size says how sensitive f is to that input. Where every partial is zero, the gradient is the zero vector and the function is locally flat.',
+      'The gradient $\\nabla f$ collects every partial derivative into one vector: for $f(x, y)$, $\\nabla f = [\\frac{\\partial f}{\\partial x}, \\frac{\\partial f}{\\partial y}]$. For $f(x, y) = x^2 + 3y^2$, $\\nabla f = [2x, 6y]$, and at $(1, 2)$ it is $[2, 12]$. Its coordinates are in the same order as the inputs.',
+      'At a point, the gradient points in the direction of steepest increase of $f$, and its negative points in the direction of steepest decrease. The sign of a coordinate says whether increasing that input raises or lowers $f$, and its size says how sensitive $f$ is to that input. Where every partial is zero, the gradient is the zero vector and the function is locally flat.',
     ],
     example: worked(
       'f(w₁, w₂) = (w₁ − 1)² + 2w₂²\n∇f = [2(w₁ − 1), 4w₂]\nevaluate at (3, −1)',
@@ -717,8 +717,8 @@ const definitions: Definition[] = [
     prerequisites: ['math-gradient-vector'],
     summary: 'Use local rates of change to reduce a differentiable objective.',
     paragraphs: [
-      'A derivative describes how a function changes near a point. For f(w) = (w − 3)², f′(w) = 2(w − 3). The derivative is zero at the minimum w = 3.',
-      'For several parameters, the gradient collects the partial derivatives in a vector. Gradient descent updates parameters with w_new = w − learning_rate × gradient. A step that is too large may increase the objective or diverge.',
+      "A derivative describes how a function changes near a point. For $f(w) = (w - 3)^2$, $f'(w) = 2(w - 3)$. The derivative is zero at the minimum $w = 3$.",
+      'For several parameters, the gradient collects the partial derivatives in a vector. Gradient descent updates parameters with $w_{\\text{new}} = w - \\text{learning\\_rate} \\times \\text{gradient}$. A step that is too large may increase the objective or diverge.',
     ],
     example: {
       code: 'w = 0.0\nlearning_rate = 0.1\ngradient = 2 * (w - 3)\nw -= learning_rate * gradient\nprint(round(w, 2))',
@@ -728,7 +728,7 @@ const definitions: Definition[] = [
     },
     exercise: {
       prompt:
-        'Starting at w = 1.0, take one gradient step on (w − 5)² using learning_rate = 0.25. Store the new value in w.',
+        'Starting at w = 1.0, take one gradient step on $(w - 5)^2$ using learning_rate = 0.25. Store the new value in w.',
       starter: 'w = 1.0\nlearning_rate = 0.25\n# Update w.',
       solution:
         'w = 1.0\nlearning_rate = 0.25\nw -= learning_rate * 2 * (w - 5)',
@@ -753,8 +753,8 @@ const definitions: Definition[] = [
     summary:
       'Find where a derivative is zero and decide whether it is a minimum or a maximum.',
     paragraphs: [
-      'A critical point is an input where f′(x) = 0: the tangent line is flat. For f(x) = x² − 6x + 10, f′(x) = 2x − 6, so the only critical point is x = 3, where f(3) = 1. Local minima and maxima of a smooth function occur at critical points.',
-      'The sign of the derivative on each side classifies the point. If f′ changes from negative to positive, f decreases and then increases: a local minimum. Positive to negative means a local maximum. If the sign does not change, as for x³ at x = 0, the flat point is neither. A local minimum is the lowest value nearby; the global minimum is the lowest value anywhere.',
+      "A critical point is an input where $f'(x) = 0$: the tangent line is flat. For $f(x) = x^2 - 6x + 10$, $f'(x) = 2x - 6$, so the only critical point is $x = 3$, where $f(3) = 1$. Local minima and maxima of a smooth function occur at critical points.",
+      "The sign of the derivative on each side classifies the point. If $f'$ changes from negative to positive, $f$ decreases and then increases: a local minimum. Positive to negative means a local maximum. If the sign does not change, as for $x^3$ at $x = 0$, the flat point is neither. A local minimum is the lowest value nearby; the global minimum is the lowest value anywhere.",
     ],
     example: worked(
       'f(x) = x³ − 3x\nf′(x) = 3x² − 3 = 0 at x = −1 and x = 1\nf′(−2) = 9, f′(0) = −3, f′(2) = 9',
@@ -777,8 +777,8 @@ const definitions: Definition[] = [
     summary:
       'Recognize bowl-shaped functions whose flat points are global minima.',
     paragraphs: [
-      'A function is convex when every chord lies on or above its graph: the straight segment between any two points of the graph never dips below the curve. For a one-input function with a second derivative (the derivative of f′), convexity means f″ is never negative. x², eˣ, and (w − 3)² are convex; −x² and x³ are not.',
-      'Convexity makes minimizing reliable. For a convex differentiable function, any point where the gradient is zero is a global minimum, so moving downhill cannot get trapped. A nonconvex function can have several local minima, maxima, and saddle points; at a saddle the gradient is zero but the point is a minimum in one direction and a maximum in another, as for f(x, y) = x² − y² at (0, 0).',
+      "A function is convex when every chord lies on or above its graph: the straight segment between any two points of the graph never dips below the curve. For a one-input function with a second derivative (the derivative of $f'$), convexity means $f''$ is never negative. $x^2$, $e^x$, and $(w - 3)^2$ are convex; $-x^2$ and $x^3$ are not.",
+      'Convexity makes minimizing reliable. For a convex differentiable function, any point where the gradient is zero is a global minimum, so moving downhill cannot get trapped. A nonconvex function can have several local minima, maxima, and saddle points; at a saddle the gradient is zero but the point is a minimum in one direction and a maximum in another, as for $f(x, y) = x^2 - y^2$ at $(0, 0)$.',
     ],
     example: worked(
       'f(x) = x⁴ − 2x²\nf′(x) = 4x³ − 4x = 0 at x = −1, 0, 1\nf(−1) = −1, f(0) = 0, f(1) = −1',
@@ -805,7 +805,7 @@ const definitions: Definition[] = [
       'Represent features as ordered coordinates and combine them with weights.',
     paragraphs: [
       'A vector is an ordered collection of numbers. In a model, its coordinates might represent age, distance, and price. The position and units of each coordinate matter.',
-      'The dot product multiplies corresponding coordinates and sums the products. For x = [2, 3] and w = [4, 1], x · w = 2 × 4 + 3 × 1 = 11. Vectors must have the same length; silently truncating an input loses information.',
+      'The dot product multiplies corresponding coordinates and sums the products. For $x = [2, 3]$ and $w = [4, 1]$, $x \\cdot w = 2 \\times 4 + 3 \\times 1 = 11$. Vectors must have the same length; silently truncating an input loses information.',
     ],
     example: {
       code: 'x = [2, 3]\nw = [4, 1]\nprint(sum(x[i] * w[i] for i in range(len(x))))',
@@ -838,8 +838,8 @@ const definitions: Definition[] = [
     prerequisites: ['math-vectors', 'accumulators'],
     summary: "Measure a vector's length with the Euclidean norm.",
     paragraphs: [
-      "The Euclidean norm ‖v‖ is the length of v: the square root of the sum of its squared coordinates. For v = [3, 4], ‖v‖ = √(9 + 16) = 5. It equals √(v · v), the square root of v's dot product with itself. Only the zero vector has norm 0. In Python, x ** 0.5 is the square root of x.",
-      'Scaling a vector scales its length: ‖cv‖ = |c| ‖v‖. Dividing a nonzero vector by its norm gives a unit vector, with length 1, pointing the same way. The L1 norm, the sum of absolute coordinates, is another length: for [3, −4] it is 7, while the Euclidean (L2) norm is 5. Ridge regularization penalizes the squared L2 norm of the weights; lasso penalizes their L1 norm.',
+      "The Euclidean norm $\\lVert v \\rVert$ is the length of $v$: the square root of the sum of its squared coordinates. For $v = [3, 4]$, $\\lVert v \\rVert = \\sqrt{9 + 16} = 5$. It equals $\\sqrt{v \\cdot v}$, the square root of $v$'s dot product with itself. Only the zero vector has norm 0. In Python, x ** 0.5 is the square root of x.",
+      'Scaling a vector scales its length: $\\lVert cv \\rVert = |c| \\lVert v \\rVert$. Dividing a nonzero vector by its norm gives a unit vector, with length 1, pointing the same way. The L1 norm, the sum of absolute coordinates, is another length: for $[3, -4]$ it is 7, while the Euclidean (L2) norm is 5. Ridge regularization penalizes the squared L2 norm of the weights; lasso penalizes their L1 norm.',
     ],
     example: {
       code: 'v = [3, -4]\ntotal = 0\nfor x in v:\n    total += x * x\nprint(total ** 0.5)',
@@ -870,7 +870,7 @@ const definitions: Definition[] = [
     summary:
       'Measure how far apart two observations are as the norm of their difference.',
     paragraphs: [
-      'The Euclidean distance between a and b is ‖a − b‖: subtract coordinate by coordinate, square, sum, and take the square root. For a = [1, 5] and b = [4, 1], the differences are −3 and 4, so the distance is 5. Distance is symmetric, and it is 0 only when the two points are equal.',
+      'The Euclidean distance between $a$ and $b$ is $\\lVert a - b \\rVert$: subtract coordinate by coordinate, square, sum, and take the square root. For $a = [1, 5]$ and $b = [4, 1]$, the differences are −3 and 4, so the distance is 5. Distance is symmetric, and it is 0 only when the two points are equal.',
       'To find the nearest of several points, comparing squared distances is enough: the square root is increasing, so it never changes which distance is smallest. Distances depend on units. If one feature is measured in meters and another in thousands of dollars, the larger-scaled feature dominates, so distance-based methods usually standardize features first.',
     ],
     example: {
@@ -906,8 +906,8 @@ const definitions: Definition[] = [
     summary:
       'Compare the directions of two vectors regardless of their lengths.',
     paragraphs: [
-      'The cosine similarity of nonzero vectors a and b is (a · b) / (‖a‖ ‖b‖), the cosine of the angle between them. It is 1 when they point the same way, 0 when they are perpendicular (orthogonal), and −1 when they point in opposite directions. For [1, 0] and [1, 1], it is 1 / √2 ≈ 0.707: an angle of 45°.',
-      'Two vectors are orthogonal exactly when their dot product is 0, as for [2, 1] and [−1, 2]. Cosine similarity ignores length: scaling either vector by a positive number leaves it unchanged, while the dot product grows with length. Text embeddings and recommenders use it to compare direction, such as a mix of topics, rather than magnitude.',
+      'The cosine similarity of nonzero vectors $a$ and $b$ is $(a \\cdot b) / (\\lVert a \\rVert \\lVert b \\rVert)$, the cosine of the angle between them. It is 1 when they point the same way, 0 when they are perpendicular (orthogonal), and −1 when they point in opposite directions. For $[1, 0]$ and $[1, 1]$, it is $1 / \\sqrt{2} \\approx 0.707$: an angle of 45°.',
+      'Two vectors are orthogonal exactly when their dot product is 0, as for $[2, 1]$ and $[-1, 2]$. Cosine similarity ignores length: scaling either vector by a positive number leaves it unchanged, while the dot product grows with length. Text embeddings and recommenders use it to compare direction, such as a mix of topics, rather than magnitude.',
     ],
     example: {
       code: 'a = [3, 4]\nb = [6, 8]\ndot = 0\naa = 0\nbb = 0\nfor i in range(len(a)):\n    dot += a[i] * b[i]\n    aa += a[i] * a[i]\n    bb += b[i] * b[i]\nprint(dot / (aa ** 0.5 * bb ** 0.5))',
@@ -939,8 +939,8 @@ const definitions: Definition[] = [
     summary:
       'Store observations as rows of a matrix and swap rows with columns.',
     paragraphs: [
-      'A matrix is a rectangular array of numbers with m rows and n columns; its shape is m × n. The entry A_ij sits in row i and column j, counting from 1 in math notation. A data matrix X conventionally stores one observation per row and one feature per column, so 100 observations of 3 features form a 100 × 3 matrix whose rows are feature vectors.',
-      'The transpose Aᵀ turns rows into columns: (Aᵀ)_ij = A_ji, so a 2 × 3 matrix becomes 3 × 2, and transposing twice returns the original. A square matrix equal to its own transpose is symmetric. In Python a matrix can be a list of row lists, where A[1][2] is the entry in the second row and third column because positions start at 0.',
+      'A matrix is a rectangular array of numbers with $m$ rows and $n$ columns; its shape is $m \\times n$. The entry $A_{ij}$ sits in row $i$ and column $j$, counting from 1 in math notation. A data matrix $X$ conventionally stores one observation per row and one feature per column, so 100 observations of 3 features form a $100 \\times 3$ matrix whose rows are feature vectors.',
+      'The transpose $A^\\top$ turns rows into columns: $(A^\\top)_{ij} = A_{ji}$, so a $2 \\times 3$ matrix becomes $3 \\times 2$, and transposing twice returns the original. A square matrix equal to its own transpose is symmetric. In Python a matrix can be a list of row lists, where A[1][2] is the entry in the second row and third column because positions start at 0.',
     ],
     example: worked(
       'A = [[1, 2, 3],\n     [4, 5, 6]]',
@@ -965,8 +965,8 @@ const definitions: Definition[] = [
     prerequisites: ['math-matrices'],
     summary: 'Multiply a matrix by a vector as a stack of dot products.',
     paragraphs: [
-      'For an m × n matrix A and a vector x with n coordinates, Ax is the vector of m dot products: entry i is row i of A dotted with x. For A = [[1, 2], [3, 4]] and x = [5, 6], Ax = [1 × 5 + 2 × 6, 3 × 5 + 4 × 6] = [17, 39]. The number of columns of A must equal the length of x.',
-      "This is how a linear model predicts for many observations at once. With data matrix X (one row per observation) and weight vector w, Xw lists every observation's weighted sum, and Xw + b adds the intercept to each. A 100 × 3 data matrix times a 3-coordinate weight vector gives 100 predictions.",
+      'For an $m \\times n$ matrix $A$ and a vector $x$ with $n$ coordinates, $Ax$ is the vector of $m$ dot products: entry $i$ is row $i$ of $A$ dotted with $x$. For $A = [[1, 2], [3, 4]]$ and $x = [5, 6]$, $$Ax = \\begin{bmatrix} 1 & 2 \\\\ 3 & 4 \\end{bmatrix} \\begin{bmatrix} 5 \\\\ 6 \\end{bmatrix} = \\begin{bmatrix} 1 \\times 5 + 2 \\times 6 \\\\ 3 \\times 5 + 4 \\times 6 \\end{bmatrix} = \\begin{bmatrix} 17 \\\\ 39 \\end{bmatrix}.$$ The number of columns of $A$ must equal the length of $x$.',
+      "This is how a linear model predicts for many observations at once. With data matrix $X$ (one row per observation) and weight vector $w$, $Xw$ lists every observation's weighted sum, and $Xw + b$ adds the intercept to each. A $100 \\times 3$ data matrix times a 3-coordinate weight vector gives 100 predictions.",
     ],
     example: worked(
       'X = [[1, 2], [0, 3], [4, 1]], w = [2, −1], b = 5\nrow dot products: 1×2 + 2×(−1), 0×2 + 3×(−1), 4×2 + 1×(−1)',
@@ -992,8 +992,8 @@ const definitions: Definition[] = [
     summary:
       'Multiply matrices by combining rows of the first with columns of the second.',
     paragraphs: [
-      'For A of shape m × n and B of shape n × p, AB has shape m × p. Its entry in row i and column j is row i of A dotted with column j of B. The inner sizes must match and the outer sizes give the result. Each column of AB is A times the matching column of B.',
-      'Order matters: AB and BA usually differ, and one may not even be defined. A dense neural layer computes XW, with X of shape batch × inputs and W of shape inputs × outputs, giving batch × outputs. The transpose of a product reverses the order: (AB)ᵀ = BᵀAᵀ.',
+      'For $A$ of shape $m \\times n$ and $B$ of shape $n \\times p$, $AB$ has shape $m \\times p$. Its entry in row $i$ and column $j$ is row $i$ of $A$ dotted with column $j$ of $B$. The inner sizes must match and the outer sizes give the result. Each column of $AB$ is $A$ times the matching column of $B$.',
+      'Order matters: $AB$ and $BA$ usually differ, and one may not even be defined. A dense neural layer computes $XW$, with $X$ of shape $\\text{batch} \\times \\text{inputs}$ and $W$ of shape $\\text{inputs} \\times \\text{outputs}$, giving $\\text{batch} \\times \\text{outputs}$. The transpose of a product reverses the order: $(AB)^\\top = B^\\top A^\\top$.',
     ],
     example: worked(
       'A = [[1, 2], [3, 4]], B = [[0, 1], [1, 0]]\n(AB)₁₁ = [1, 2] · [0, 1] = 2',
@@ -1019,8 +1019,8 @@ const definitions: Definition[] = [
     summary:
       'Recognize the matrix that changes nothing and the matrix that undoes another.',
     paragraphs: [
-      'The identity matrix I has 1s on its diagonal and 0s elsewhere. Multiplying by it changes nothing: AI = IA = A and Ix = x. A scalar multiple λI multiplies every vector by λ.',
-      'A square matrix A is invertible when some A⁻¹ satisfies A⁻¹A = AA⁻¹ = I; then Ax = b has the single solution x = A⁻¹b. For a 2 × 2 matrix [[a, b], [c, d]], the determinant is ad − bc. The inverse exists exactly when the determinant is nonzero, and it is (1 / (ad − bc)) [[d, −b], [−c, a]]. A zero determinant means A sends some nonzero vector to 0, so its effect cannot be undone.',
+      'The identity matrix $I$ has 1s on its diagonal and 0s elsewhere. Multiplying by it changes nothing: $AI = IA = A$ and $Ix = x$. A scalar multiple $\\lambda I$ multiplies every vector by $\\lambda$.',
+      'A square matrix $A$ is invertible when some $A^{-1}$ satisfies $A^{-1}A = AA^{-1} = I$; then $Ax = b$ has the single solution $x = A^{-1}b$. For a $2 \\times 2$ matrix $[[a, b], [c, d]]$, the determinant is $ad - bc$. The inverse exists exactly when the determinant is nonzero, and it is $$\\frac{1}{ad - bc} \\begin{bmatrix} d & -b \\\\ -c & a \\end{bmatrix}.$$ A zero determinant means $A$ sends some nonzero vector to 0, so its effect cannot be undone.',
     ],
     example: worked(
       'A = [[2, 1], [5, 3]]\ndet = 2 × 3 − 1 × 5 = 1\nA⁻¹ = [[3, −1], [−5, 2]]',
@@ -1046,7 +1046,7 @@ const definitions: Definition[] = [
     summary:
       'Find the directions a matrix only stretches and read them as PCA directions.',
     paragraphs: [
-      'A nonzero vector v is an eigenvector of a square matrix A when Av = λv: A only stretches v, by the eigenvalue λ, without turning it. For A = [[2, 1], [1, 2]], A[1, 1] = [3, 3] = 3[1, 1] and A[1, −1] = [1, −1], so the eigenvalues are 3 and 1. Eigenvalues solve det(A − λI) = 0; here (2 − λ)² − 1 = 0 gives λ = 3 or λ = 1.',
+      'A nonzero vector $v$ is an eigenvector of a square matrix $A$ when $Av = \\lambda v$: $A$ only stretches $v$, by the eigenvalue $\\lambda$, without turning it. For $A = [[2, 1], [1, 2]]$, $A[1, 1] = [3, 3] = 3[1, 1]$ and $A[1, -1] = [1, -1]$, so the eigenvalues are 3 and 1. Eigenvalues solve $\\det(A - \\lambda I) = 0$; here $(2 - \\lambda)^2 - 1 = 0$ gives $\\lambda = 3$ or $\\lambda = 1$.',
       "A covariance matrix holds each feature's variance on its diagonal and each pair's covariance off it, so it is symmetric. Its eigenvectors are perpendicular directions, and each eigenvalue is the variance of the data along its eigenvector. PCA keeps the eigenvectors with the largest eigenvalues; an eigenvalue divided by the sum of all eigenvalues is that component's share of the total variance.",
     ],
     example: worked(
@@ -1073,8 +1073,8 @@ const definitions: Definition[] = [
     summary:
       'Score parameter values by how probable they make the observed data.',
     paragraphs: [
-      'The likelihood of a parameter value is the probability of the observed data, computed as if that value were true. For independent observations it is a product. After observing 1, 1, 0 from Bernoulli trials, L(p) = p × p × (1 − p), so L(0.5) = 0.125 and L(2/3) ≈ 0.148: p = 2/3 explains the data better. Maximum likelihood estimation picks the value with the largest likelihood; for k successes in n trials it is p = k / n.',
-      'Products of many probabilities become tiny, so we work with the log-likelihood: log turns the product into a sum, and because log is increasing, the same p maximizes both. Maximizing the log-likelihood is the same as minimizing the negative log-likelihood. For one binary label y and predicted probability p, the negative log-likelihood is −(y ln p + (1 − y) ln(1 − p)), the binary cross-entropy loss used to train classifiers.',
+      'The likelihood of a parameter value is the probability of the observed data, computed as if that value were true. For independent observations it is a product. After observing 1, 1, 0 from Bernoulli trials, $L(p) = p \\times p \\times (1 - p)$, so $L(0.5) = 0.125$ and $L(2/3) \\approx 0.148$: $p = 2/3$ explains the data better. Maximum likelihood estimation picks the value with the largest likelihood; for $k$ successes in $n$ trials it is $p = k / n$.',
+      'Products of many probabilities become tiny, so we work with the log-likelihood: log turns the product into a sum, and because log is increasing, the same $p$ maximizes both. Maximizing the log-likelihood is the same as minimizing the negative log-likelihood. For one binary label $y$ and predicted probability $p$, the negative log-likelihood is $-(y \\ln p + (1 - y) \\ln(1 - p))$, the binary cross-entropy loss used to train classifiers.',
     ],
     example: worked(
       'data 1, 0, 1, 1 (k = 3 successes in n = 4)\nL(0.5) = 0.5⁴ = 0.0625\nL(0.75) = 0.75³ × 0.25 ≈ 0.105',
