@@ -222,6 +222,7 @@ src/lib/server/compiled-code.ts  Canonical assessment and free sandbox adapter
 public/python-worker.mjs       Real Pyodide execution and exercise assertions
 src/lib/anki.ts                 Documented AnkiConnect client and note identity
 src/lib/card-text.ts            Mistake card text: prose with math, code kept apart
+src/lib/cards.ts                Cards stored by reference; their text from loaded content
 src/lib/state.ts                Versioned learner state and conflict merging
 src/lib/server/                SQLite auth, state storage, API validation
 src/pages/api/                 Auth, learner-state, and compiled-code endpoints
