@@ -209,6 +209,8 @@ src/lib/content/                Per-course lesson content, loaded on demand in t
 src/lib/courses/                Course, unit, skill, exercise, and card definitions
 src/lib/knowledge-points/       Knowledge points and their practice questions
 src/lib/learning.ts             Mastery evidence, task selection, review, XP, streaks
+src/lib/remediation.ts          Weak-prerequisite refreshes after a failed lesson
+src/lib/quiz.ts                 Quizzes: weakest and stalest skills first, 8–14 questions
 src/lib/dashboard.ts            Task queue, XP summaries, completion estimate, history
 src/lib/xp.ts                   XP scale for lessons and reviews
 src/lib/retention.ts            Per-learner FSRS memory and recall estimates
