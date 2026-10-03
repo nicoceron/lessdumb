@@ -1,5 +1,8 @@
 name: Verify MVP
 on: [push, pull_request]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -45,6 +48,7 @@ jobs:
 
   cloudflare:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,19 +56,19 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Prepare isolated Workers bindings before building
+        run: |
+          cat > .dev.vars <<'VARS'
+          BETTER_AUTH_URL=http://127.0.0.1:4333
+          BETTER_AUTH_SECRET=ci-worker-test-secret-at-least-32-characters
+          VARS
       - run: npm run build:cloudflare
       - run: npx wrangler d1 migrations apply lessdumb --local
       - run: npx playwright install --with-deps chromium
       - name: Verify Workers runtime and D1 in the browser
         env:
           LESSDUMB_E2E_URL: http://127.0.0.1:4333
-        run: |
-          cat > .dev.vars <<'VARS'
-          BETTER_AUTH_URL=http://127.0.0.1:4333
-          BETTER_AUTH_SECRET=ci-worker-test-secret-at-least-32-characters
-          VARS
-          npm run preview:cloudflare
-          npm run test:e2e
+        run: npm run test:e2e -- --config playwright.cloudflare.config.ts
       - name: Preserve failed Workers browser traces and screenshots
         if: failure()
         uses: actions/upload-artifact@v7

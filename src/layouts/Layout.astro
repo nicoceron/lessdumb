@@ -1,7 +1,14 @@
 ---
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
-const { title = 'lessdumb — A little better, every day.' } = Astro.props;
+import { siteDescription, siteUrl } from '../lib/site';
+const {
+  title = 'lessdumb — A little better, every day.',
+  description = siteDescription,
+  canonicalPath = Astro.url.pathname,
+  index = true,
+} = Astro.props;
+const canonical = siteUrl(canonicalPath);
 ---
 
 <!doctype html>
@@ -9,10 +16,23 @@ const { title = 'lessdumb — A little better, every day.' } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
     <meta
-      name="description"
-      content="Learn Python, data analysis, machine learning, and data systems through a connected knowledge graph, deliberate practice, and automatic Anki cards. A little better, every day."
+      name="robots"
+      content={
+        index ? 'index, follow, max-image-preview:large' : 'noindex, follow'
+      }
     />
+    <link rel="canonical" href={canonical} />
+    <link rel="describedby" href="/llms.txt" type="text/markdown" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="lessdumb" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
     <meta name="theme-color" content="#326bbc" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
