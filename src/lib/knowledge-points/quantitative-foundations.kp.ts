@@ -2494,4 +2494,1236 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'math-derivative-rate': [
+    {
+      title: 'Compute an average rate of change',
+      explanation: [
+        'The average rate of change of f from x = a to x = b is (f(b) − f(a)) / (b − a): how much the output changed per unit of input. It is the slope of the secant line through the graph points (a, f(a)) and (b, f(b)).',
+      ],
+      example: {
+        code: 'a = 1\nb = 4\nprint((b ** 2 - a ** 2) / (b - a))',
+        output: '5.0',
+        explanation:
+          'For f(x) = x², the output rises from 1 to 16 while x rises by 3, so the average rate is 15 / 3 = 5.0.',
+      },
+      questions: [
+        choose(
+          'f(x) = x² + 1. What is its average rate of change from x = 2 to x = 5?',
+          ['21', '7', '3', '10'],
+          1,
+          '(26 − 5) / (5 − 2) = 21 / 3 = 7.',
+        ),
+        predictOutput(
+          'This program computes the average rate of change of x³ from 0 to 2. What does it print?',
+          'a = 0\nb = 2\nprint((b ** 3 - a ** 3) / (b - a))',
+          ['8.0', '4', '4.0', '2.0'],
+          2,
+          'The output rises by 8 over a run of 2, and / gives the float 4.0.',
+        ),
+        choose(
+          "A car's odometer reads 120 km at 2 pm and 300 km at 5 pm. What is its average rate of change?",
+          ['180 km/h', '90 km/h', '100 km/h', '60 km/h'],
+          3,
+          '(300 − 120) / (5 − 2) = 60 km per hour.',
+        ),
+        choose(
+          'f(1) = 10 and f(3) = 4. What is the average rate of change from x = 1 to x = 3?',
+          ['−3', '3', '−6', '7'],
+          0,
+          '(4 − 10) / (3 − 1) = −3; the function fell on average.',
+        ),
+      ],
+    },
+    {
+      title: 'Approach the derivative with shrinking steps',
+      explanation: [
+        'The derivative f′(a) is the instantaneous rate of change at a: the value the difference quotient (f(a + h) − f(a)) / h approaches as h shrinks toward 0. Setting h = 0 directly would give 0 / 0, so we watch where the quotients head instead. Geometrically, f′(a) is the slope of the tangent line at (a, f(a)).',
+      ],
+      example: {
+        code: 'a = 3\nh = 0.5\nprint(((a + h) ** 2 - a ** 2) / h)\nh = 0.25\nprint(((a + h) ** 2 - a ** 2) / h)',
+        output: '6.5\n6.25',
+        explanation:
+          'For f(x) = x² at a = 3, halving h moves the quotient from 6.5 to 6.25, closing in on f′(3) = 6.',
+      },
+      questions: [
+        predictOutput(
+          'This program computes a difference quotient of x² at a = 1. What does it print?',
+          'a = 1\nh = 0.5\nprint(((a + h) ** 2 - a ** 2) / h)',
+          ['2.0', '2.5', '1.25', '0.5'],
+          1,
+          '(1.5² − 1²) / 0.5 = 1.25 / 0.5 = 2.5, on its way toward f′(1) = 2.',
+        ),
+        choose(
+          'For f(x) = x² at x = 2, the quotients are 4.5, 4.1, and 4.01 for h = 0.5, 0.1, and 0.01. What is f′(2)?',
+          ['4.5', '4.01', '4', '2'],
+          2,
+          'The derivative is the value the quotients approach as h shrinks.',
+        ),
+        choose(
+          'What does f′(a) represent on the graph of f?',
+          [
+            'The height of the graph at x = a',
+            'The area under the graph up to a',
+            'The x-intercept of the graph',
+            'The slope of the tangent line at x = a',
+          ],
+          3,
+          'The derivative is a rate of change: the slope where the graph is touched at a.',
+        ),
+        choose(
+          'Why not simply set h = 0 in (f(a + h) − f(a)) / h?',
+          [
+            'The quotient becomes 0 / 0',
+            'The result is always 1',
+            'f is undefined at a',
+            'h must be negative',
+          ],
+          0,
+          'With h = 0 both the top and the bottom are 0, so the derivative is defined by the trend as h shrinks.',
+        ),
+      ],
+    },
+    {
+      title: 'Read the sign and size of a derivative',
+      explanation: [
+        'The sign of f′(a) says how f behaves near a: positive means increasing, negative means decreasing, and zero means locally flat. Its size says how fast: f′(a) = 3 means the output changes by about 3 units per unit of input near a, so a small step Δx changes f by about f′(a) × Δx.',
+      ],
+      example: worked(
+        'f′(1) = 4, f′(2) = 0, f′(3) = −2',
+        'rising at x = 1, flat at x = 2, falling at x = 3',
+        'Near x = 3, increasing x by 0.1 lowers f by about 2 × 0.1 = 0.2.',
+      ),
+      questions: [
+        choose(
+          'f′(4) = −3. What does f do near x = 4?',
+          [
+            'It increases',
+            'It decreases',
+            'It stays constant',
+            'Its value is −3',
+          ],
+          1,
+          'A negative derivative means the function is falling there.',
+        ),
+        choose(
+          'f(2) = 10 and f′(2) = 5. About what is f(2.1)?',
+          ['15', '10.1', '10.5', '5.5'],
+          2,
+          'A step of 0.1 changes f by about 5 × 0.1 = 0.5.',
+        ),
+        choose(
+          'Where is the graph of f flat?',
+          [
+            'Where f(x) = 0',
+            'Where x = 0',
+            'Where f′(x) = 1',
+            'Where f′(x) = 0',
+          ],
+          3,
+          'A zero derivative means a horizontal tangent line.',
+        ),
+        choose(
+          'f′(a) = 0.1 and g′(a) = 8. Which function is changing faster at a?',
+          ['g', 'f', 'Neither', 'It cannot be told'],
+          0,
+          'g changes about 8 units per unit of input, f only 0.1.',
+        ),
+      ],
+    },
+  ],
+  'math-power-rule': [
+    {
+      title: 'Differentiate powers of x',
+      explanation: [
+        'The power rule: the derivative of xⁿ is n xⁿ⁻¹. Bring the exponent down as a factor and reduce it by one. Because x = x¹, its derivative is 1 × x⁰ = 1.',
+      ],
+      example: worked(
+        '(x⁴)′ = 4x³\n(x²)′ = 2x\n(x)′ = 1',
+        'at x = 2 the slopes are 32, 4, and 1',
+        'Substitute x = 2 after differentiating: 4 × 2³ = 32 and 2 × 2 = 4.',
+      ),
+      questions: [
+        choose(
+          'What is the derivative of x⁹?',
+          ['x⁸', '9x⁸', '9x⁹', '8x⁹'],
+          1,
+          'Bring down the 9 and lower the exponent to 8.',
+        ),
+        choose(
+          'f(x) = x³. What is f′(2)?',
+          ['8', '6', '12', '3'],
+          2,
+          'f′(x) = 3x², so f′(2) = 12.',
+        ),
+        choose(
+          'f(x) = x. What is f′(x)?',
+          ['x', '0', 'x²/2', '1'],
+          3,
+          'x = x¹, so the derivative is 1 × x⁰ = 1: a line of slope 1.',
+        ),
+        choose(
+          'f(x) = x⁵. Where does f′(x) equal 5?',
+          ['At x = 1 and x = −1', 'At x = 5', 'At x = 0', 'Nowhere'],
+          0,
+          'f′(x) = 5x⁴ = 5 when x⁴ = 1.',
+        ),
+      ],
+    },
+    {
+      title: 'Handle constants and constant multiples',
+      explanation: [
+        'A constant function is flat, so its derivative is 0. A constant factor stays in front: (c xⁿ)′ = c n xⁿ⁻¹, because multiplying a function by c multiplies every slope by c.',
+      ],
+      example: worked(
+        '(7x²)′ = 7 × 2x\n(−3x⁴)′ = −3 × 4x³\n(12)′',
+        '14x, −12x³, 0',
+        'The constant factor rides along; a standalone constant contributes no slope.',
+      ),
+      questions: [
+        choose(
+          'What is the derivative of 6x³?',
+          ['6x²', '18x²', '18x³', '3x²'],
+          1,
+          '6 × 3x² = 18x².',
+        ),
+        choose(
+          'What is the derivative of the constant 42?',
+          ['42', '1', '0', '42x'],
+          2,
+          'A constant never changes, so its rate of change is 0.',
+        ),
+        choose(
+          'g(x) = 0.5x². What is g′(6)?',
+          ['18', '3', '36', '6'],
+          3,
+          'g′(x) = 0.5 × 2x = x, so g′(6) = 6.',
+        ),
+        choose(
+          'f′(x) = 2x. What is the derivative of 5f(x)?',
+          ['10x', '2x + 5', '5', '7x'],
+          0,
+          'A constant multiple multiplies the derivative: 5 × 2x.',
+        ),
+      ],
+    },
+    {
+      title: 'Evaluate a derivative to get a slope',
+      explanation: [
+        'The derivative f′(x) is itself a function. To find the slope at a particular point, differentiate first and then substitute the point. Substituting first produces a number, and the derivative of a number is always 0.',
+      ],
+      example: {
+        code: 'x = 3\nprint(4 * 3 * x ** 2)',
+        output: '108',
+        explanation:
+          'For f(x) = 4x³, f′(x) = 12x², and at x = 3 the slope is 12 × 9 = 108.',
+      },
+      questions: [
+        predictOutput(
+          'f(x) = 2x⁴, so f′(x) = 8x³. What does this program print?',
+          'x = 2\nprint(2 * 4 * x ** 3)',
+          ['32', '128', '64', '16'],
+          2,
+          '8 × 2³ = 64.',
+        ),
+        choose(
+          'f(x) = 3x². What is the slope of its graph at x = −1?',
+          ['6', '−6', '3', '−3'],
+          1,
+          'f′(x) = 6x, so the slope at −1 is −6.',
+        ),
+        choose(
+          'A learner substitutes x = 2 into x³ to get 8, then differentiates 8 and reports a slope of 0. What went wrong?',
+          [
+            'The power rule does not apply to x³',
+            'The slope at 2 really is 0',
+            'They forgot to square 8',
+            'They substituted before differentiating',
+          ],
+          3,
+          'Differentiate first: f′(x) = 3x², so the slope at 2 is 12.',
+        ),
+        choose(
+          'f(x) = x⁴. What is f′(−1)?',
+          ['−4', '4', '1', '−1'],
+          0,
+          'f′(x) = 4x³, and 4 × (−1)³ = −4.',
+        ),
+      ],
+    },
+  ],
+  'math-sum-product-rules': [
+    {
+      title: 'Differentiate a polynomial term by term',
+      explanation: [
+        'The derivative of a sum is the sum of the derivatives, and differences work the same way. So differentiate a polynomial one term at a time with the power and constant rules; constant terms disappear.',
+      ],
+      example: worked(
+        'p(x) = 2x³ − 5x² + 4x − 9\np′(x) = 6x² − 10x + 4',
+        'p′(1) = 0',
+        'Each term is differentiated separately and the constant −9 vanishes. At x = 1: 6 − 10 + 4 = 0.',
+      ),
+      questions: [
+        choose(
+          'What is the derivative of 3x⁴ − x² + 7?',
+          ['12x³ − 2x + 7', '12x³ − 2x', '3x³ − 2x', '12x⁴ − 2x²'],
+          1,
+          'Differentiate each term: 12x³, −2x, and 0 for the constant.',
+        ),
+        choose(
+          'f(x) = x² + 6x. What is f′(−3)?',
+          ['−3', '9', '0', '12'],
+          2,
+          'f′(x) = 2x + 6, which is 0 at x = −3.',
+        ),
+        choose(
+          'Which term disappears when you differentiate 5x² + 8x + 11?',
+          ['5x²', '8x', 'None of them', '11'],
+          3,
+          'The constant 11 has derivative 0; 8x becomes 8.',
+        ),
+        predictOutput(
+          'f(x) = x³ − 4x, so f′(x) = 3x² − 4. What does this program print?',
+          'x = 2\nprint(3 * x ** 2 - 4)',
+          ['8', '0', '12', '4'],
+          0,
+          '3 × 4 − 4 = 8.',
+        ),
+      ],
+    },
+    {
+      title: 'Apply the product rule',
+      explanation: [
+        'For a product of two functions, (fg)′ = f′g + fg′: differentiate one factor while keeping the other, then swap roles and add. Multiplying the two derivatives, f′g′, is a common mistake that gives the wrong answer.',
+      ],
+      example: worked(
+        'h(x) = x²(x + 3)\nf = x², f′ = 2x; g = x + 3, g′ = 1\nh′(x) = 2x(x + 3) + x² × 1',
+        'h′(x) = 3x² + 6x',
+        'Each factor gets its turn to change while the other is held fixed.',
+      ),
+      questions: [
+        choose(
+          'h(x) = x(x + 4). What is h′(x)?',
+          ['1', '2x + 4', 'x + 4', 'x'],
+          1,
+          '1 × (x + 4) + x × 1 = 2x + 4.',
+        ),
+        choose(
+          'f(2) = 3, f′(2) = 1, g(2) = 5, and g′(2) = 4. What is (fg)′ at x = 2?',
+          ['4', '15', '17', '20'],
+          2,
+          'f′g + fg′ = 1 × 5 + 3 × 4 = 17.',
+        ),
+        choose(
+          'Why is (fg)′ = f′g′ wrong for f = x and g = x?',
+          [
+            'It happens to give the correct 2x',
+            'Products cannot be differentiated',
+            'It gives 0',
+            'It gives 1, but (x²)′ = 2x',
+          ],
+          3,
+          'f′g′ = 1 × 1 = 1, while the product x · x = x² has derivative 2x.',
+        ),
+        choose(
+          'h(x) = 3x(x² − 1). Which expression is h′(x)?',
+          ['3(x² − 1) + 3x(2x)', '3 × 2x', '3x(2x)', '3(x² − 1)'],
+          0,
+          'f = 3x and g = x² − 1, so f′g + fg′ = 3(x² − 1) + 3x(2x).',
+        ),
+      ],
+    },
+    {
+      title: 'Check a derivative by expanding',
+      explanation: [
+        'When a product is a polynomial, you can also expand it first and differentiate term by term. Both routes must give the same derivative, which makes expanding a good check on the product rule.',
+      ],
+      example: worked(
+        'expand: (x + 1)(x − 1) = x² − 1, derivative 2x\nproduct rule: 1 × (x − 1) + (x + 1) × 1',
+        'both routes give 2x',
+        'The product rule result simplifies to x − 1 + x + 1 = 2x.',
+      ),
+      questions: [
+        choose(
+          'Expand (x + 2)² and differentiate. What is the derivative?',
+          ['2x + 2', '2x + 4', '2(x + 2)²', 'x + 2'],
+          1,
+          '(x + 2)² = x² + 4x + 4, whose derivative is 2x + 4.',
+        ),
+        choose(
+          'What is the derivative of x²(x + 1)?',
+          ['2x', '2x(x + 1)', '3x² + 2x', '3x² + 1'],
+          2,
+          'x²(x + 1) = x³ + x², whose derivative is 3x² + 2x.',
+        ),
+        choose(
+          'Expanding gives f(x) = x³ − 2x². What is f′(2)?',
+          ['0', '8', '12', '4'],
+          3,
+          'f′(x) = 3x² − 4x, so f′(2) = 12 − 8 = 4.',
+        ),
+        predictOutput(
+          'h(x) = 2x(x + 5). This program applies the product rule at x = 3. What does it print?',
+          'x = 3\nprint(2 * (x + 5) + 2 * x * 1)',
+          ['22', '16', '48', '2'],
+          0,
+          'f′g + fg′ = 2 × 8 + 6 × 1 = 22, matching the expanded derivative 4x + 10.',
+        ),
+      ],
+    },
+  ],
+  'math-chain-rule': [
+    {
+      title: 'Split a function into inner and outer parts',
+      explanation: [
+        'A composition applies one function to the output of another. In h(x) = (5x − 2)³, the inner function u = 5x − 2 is computed first and the outer function u³ is applied to its result. Naming the inner expression u is the first step of the chain rule.',
+      ],
+      example: worked(
+        'h(x) = (x² + 1)⁴\ninner: u = x² + 1\nouter: u⁴',
+        'h(2) = (2² + 1)⁴ = 5⁴ = 625',
+        'Evaluation follows the same order: the inner value 5 first, then the outer power.',
+      ),
+      questions: [
+        choose(
+          'In h(x) = (3x + 7)², what is the inner function?',
+          ['u²', '3x + 7', '3x', '7'],
+          1,
+          'The expression inside the square is computed first.',
+        ),
+        choose(
+          'In h(x) = e^(2x), what is the outer function?',
+          ['2x', 'x', 'eᵘ', 'e²'],
+          2,
+          'The exponential is applied to the inner value u = 2x.',
+        ),
+        choose(
+          'When evaluating L(w) = (w − 4)² at w = 6, which step comes first?',
+          [
+            'Squaring 6',
+            'Squaring 4',
+            'Multiplying 6 by 2',
+            'Computing the inner value 6 − 4 = 2',
+          ],
+          3,
+          'The inner function is evaluated before the outer square.',
+        ),
+        predictOutput(
+          'This program evaluates h(x) = (3x − 4)² at x = 2. What does it print?',
+          'x = 2\nu = 3 * x - 4\nprint(u ** 2)',
+          ['4', '2', '12', '36'],
+          0,
+          'The inner value is u = 2, and the outer square gives 4.',
+        ),
+      ],
+    },
+    {
+      title: 'Multiply the outer and inner derivatives',
+      explanation: [
+        'Chain rule: for h(x) = f(u) with u = g(x), h′(x) = f′(u) × u′(x). Differentiate the outer function as if u were the variable, keep u inside, then multiply by the derivative of u. Forgetting the inner factor is the most common error.',
+      ],
+      example: worked(
+        'h(x) = (4x + 1)³\nouter derivative: 3u² = 3(4x + 1)²\ninner derivative: 4',
+        'h′(x) = 12(4x + 1)²',
+        'Multiplying by the inner rate 4 accounts for u changing four times as fast as x.',
+      ),
+      questions: [
+        choose(
+          'What is the derivative of (2x + 5)⁴?',
+          ['4(2x + 5)³', '8(2x + 5)³', '8x³', '2(2x + 5)⁴'],
+          1,
+          'Outer derivative 4(2x + 5)³ times inner derivative 2.',
+        ),
+        choose(
+          'What is the derivative of (x² + 1)²?',
+          ['2(x² + 1)', '2x', '4x(x² + 1)', '(2x)²'],
+          2,
+          'Outer derivative 2(x² + 1) times inner derivative 2x.',
+        ),
+        choose(
+          'What is the derivative of (5 − x)²?',
+          ['2(5 − x)', '−2x', '2x − 5', '−2(5 − x)'],
+          3,
+          'The inner derivative of 5 − x is −1, which flips the sign.',
+        ),
+        choose(
+          'What is the derivative of (3x)⁵ at x = 1/3?',
+          ['15', '5', '45', '1'],
+          0,
+          '5(3x)⁴ × 3; at x = 1/3, 3x = 1, giving 5 × 1 × 3 = 15.',
+        ),
+      ],
+    },
+    {
+      title: 'Chain several local rates',
+      explanation: [
+        'When a quantity passes through several steps, its overall rate multiplies every local rate along the way: if L depends on p, p on z, and z on w, then dL/dw = dL/dp × dp/dz × dz/dw. Each factor is computed at its own step from values already known. Backpropagation applies exactly this product, layer by layer.',
+      ],
+      example: {
+        code: 'dL_dp = -4\ndp_dz = 0.5\ndz_dw = 3\nprint(dL_dp * dp_dz * dz_dw)',
+        output: '-6.0',
+        explanation:
+          'The three local rates multiply to −6: a small increase in w lowers L about 6 times as much.',
+      },
+      questions: [
+        choose(
+          'dL/dp = 2, dp/dz = −3, and dz/dw = 0.5. What is dL/dw?',
+          ['−0.5', '−3', '3', '−1'],
+          1,
+          '2 × (−3) × 0.5 = −3; the local rates multiply rather than add.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'dL_dp = 6\ndp_dw = -2\nprint(dL_dp * dp_dw)',
+          ['4', '-3', '-12', '12'],
+          2,
+          'The chain rule multiplies the two local rates: 6 × (−2) = −12.',
+        ),
+        choose(
+          'L = (p − 1)² and p = 3w. What is dL/dw at w = 1?',
+          ['4', '3', '7', '12'],
+          3,
+          'At w = 1, p = 3, so dL/dp = 2(3 − 1) = 4, and dp/dw = 3; their product is 12.',
+        ),
+        choose(
+          'One local rate in a chain is 0. What is the overall derivative?',
+          ['0', 'The product of the other rates', '1', 'Undefined'],
+          0,
+          'A product with a zero factor is zero: a change cannot pass through a flat link.',
+        ),
+      ],
+    },
+  ],
+  'math-partial-derivatives': [
+    {
+      title: 'Hold the other inputs fixed',
+      explanation: [
+        'For a function of several inputs, the partial derivative ∂f/∂x treats every other input as a constant and differentiates with respect to x alone. A term without x has partial derivative 0, and a factor such as y in front of x stays as a constant multiplier.',
+      ],
+      example: worked(
+        'f(x, y) = 4x²y + 3y² + x\n∂f/∂x = 8xy + 0 + 1\n∂f/∂y = 4x² + 6y + 0',
+        '∂f/∂x = 8xy + 1, ∂f/∂y = 4x² + 6y',
+        'Each partial ignores the terms that do not contain its variable.',
+      ),
+      questions: [
+        choose(
+          'f(x, y) = x³ + 2y. What is ∂f/∂x?',
+          ['3x² + 2', '3x²', '2', 'x³'],
+          1,
+          '2y is constant when only x moves.',
+        ),
+        choose(
+          'f(x, y) = x³ + 2y. What is ∂f/∂y?',
+          ['3x² + 2', '2y', '2', '0'],
+          2,
+          'x³ is constant when only y moves, and 2y has derivative 2.',
+        ),
+        choose(
+          'f(a, b) = 5ab. What is ∂f/∂a?',
+          ['5a', '5', 'ab', '5b'],
+          3,
+          'With b held fixed, 5b is the constant multiplying a.',
+        ),
+        choose(
+          'f(x, y) = x²y³. What is ∂f/∂y?',
+          ['2xy³', '3x²y²', '6xy²', 'x²'],
+          1,
+          'x² is a constant factor, and y³ differentiates to 3y².',
+        ),
+      ],
+    },
+    {
+      title: 'Evaluate partial derivatives at a point',
+      explanation: [
+        'A partial derivative is itself a function of all the inputs. To get the rate at a point, differentiate first, then substitute every coordinate. ∂f/∂x at (1, 2) says how fast f changes when x moves away from 1 while y stays at 2.',
+      ],
+      example: {
+        code: 'x = 2\ny = 5\nprint(2 * x * y, x ** 2 + 3)',
+        output: '20 7',
+        explanation:
+          'For f(x, y) = x²y + 3y, ∂f/∂x = 2xy and ∂f/∂y = x² + 3; at (2, 5) they are 20 and 7.',
+      },
+      questions: [
+        choose(
+          'f(x, y) = 3x + xy². What is ∂f/∂x at (1, 3)?',
+          ['6', '12', '30', '9'],
+          1,
+          '∂f/∂x = 3 + y², which is 12 at y = 3.',
+        ),
+        predictOutput(
+          'For f(x, y) = x²y, this program prints ∂f/∂x and then ∂f/∂y at (3, 4). What does it print?',
+          'x = 3\ny = 4\nprint(2 * x * y, x ** 2)',
+          ['9 24', '36 9', '24 9', '24 16'],
+          2,
+          '∂f/∂x = 2xy = 24 and ∂f/∂y = x² = 9.',
+        ),
+        choose(
+          'g(u, v) = u² + v². At (0, 5), which partial derivative is larger?',
+          ['∂g/∂u', 'They are equal', 'Neither exists', '∂g/∂v'],
+          3,
+          '∂g/∂u = 2u = 0 and ∂g/∂v = 2v = 10.',
+        ),
+        choose(
+          '∂f/∂y = −2 at a point. What happens to f if y increases slightly while x stays fixed?',
+          ['f decreases', 'f increases', 'f stays the same', 'x decreases'],
+          0,
+          'A negative partial means f falls as that input rises.',
+        ),
+      ],
+    },
+    {
+      title: 'Take partial derivatives of a squared-error loss',
+      explanation: [
+        'For one example with input x and target y, the squared error of the prediction wx + b is L(w, b) = (wx + b − y)². The chain rule gives ∂L/∂w = 2(wx + b − y) × x and ∂L/∂b = 2(wx + b − y). Both share the residual factor; the weight’s partial also multiplies by the input x.',
+      ],
+      example: {
+        code: 'x = 3\ny = 10\nw = 2\nb = 1\nresidual = w * x + b - y\nprint(2 * residual * x, 2 * residual)',
+        output: '-18 -6',
+        explanation:
+          'The prediction 7 is 3 below the target, so the residual is −3; the partials are 2 × (−3) × 3 and 2 × (−3).',
+      },
+      questions: [
+        predictOutput(
+          'This program prints ∂L/∂w and then ∂L/∂b. What does it print?',
+          'x = 2\ny = 3\nw = 1\nb = 0\nresidual = w * x + b - y\nprint(2 * residual * x, 2 * residual)',
+          ['-2 -4', '-4 -2', '4 2', '-1 -1'],
+          1,
+          'The residual is 2 − 3 = −1, so ∂L/∂w = −4 and ∂L/∂b = −2.',
+        ),
+        choose(
+          'The prediction equals the target exactly. What are ∂L/∂w and ∂L/∂b?',
+          ['Both 1', 'x and 1', 'Both 0', '2x and 2'],
+          2,
+          'The shared residual factor is 0, so both partials vanish.',
+        ),
+        choose(
+          'For x = 4, the residual wx + b − y is 0.5. What is ∂L/∂w?',
+          ['1', '2', '0.5', '4'],
+          3,
+          '2 × 0.5 × 4 = 4.',
+        ),
+        choose(
+          'Why does ∂L/∂w contain the factor x while ∂L/∂b does not?',
+          [
+            'The inner derivative of wx + b is x for w and 1 for b',
+            'x is the target value',
+            'b is always zero',
+            'Squared error ignores b',
+          ],
+          0,
+          'The chain rule multiplies by the derivative of the prediction with respect to each parameter.',
+        ),
+      ],
+    },
+  ],
+  'math-gradient-vector': [
+    {
+      title: 'Collect partial derivatives into a gradient',
+      explanation: [
+        'The gradient ∇f lists every partial derivative in the order of the inputs: for f(x, y), ∇f = [∂f/∂x, ∂f/∂y]. It is a vector with one coordinate per input, so a model with 1,000 parameters has a gradient with 1,000 coordinates.',
+      ],
+      example: {
+        code: 'x = 1\ny = 2\ngradient = [2 * x, 6 * y]\nprint(gradient)',
+        output: '[2, 12]',
+        explanation:
+          'For f(x, y) = x² + 3y², the partials are 2x and 6y; at (1, 2) the gradient is [2, 12].',
+      },
+      questions: [
+        choose(
+          'f(x, y) = 4x + y². What is ∇f?',
+          ['[4x, y²]', '[4, 2y]', '[2y, 4]', '[4, y²]'],
+          1,
+          '∂f/∂x = 4 and ∂f/∂y = 2y, listed in input order.',
+        ),
+        predictOutput(
+          'For f(x, y) = x²y, this program builds ∇f at (3, 2). What does it print?',
+          'x = 3\ny = 2\nprint([2 * x * y, x ** 2])',
+          ['[9, 12]', '[6, 9]', '[12, 9]', '[12, 4]'],
+          2,
+          '∂f/∂x = 2xy = 12 and ∂f/∂y = x² = 9.',
+        ),
+        choose(
+          'A loss depends on 5 weights and 1 bias. How many coordinates does its gradient have?',
+          ['1', '5', '2', '6'],
+          3,
+          'There is one partial derivative per parameter.',
+        ),
+        choose(
+          'f(a, b, c) = a + 2b + 3c. What is ∇f?',
+          ['[1, 2, 3]', '[a, 2b, 3c]', '[6]', '[0, 0, 0]'],
+          0,
+          'Each partial is the constant coefficient of its input.',
+        ),
+      ],
+    },
+    {
+      title: 'Read direction from the gradient',
+      explanation: [
+        "At a point, the gradient points in the direction of steepest increase, and the negative gradient points in the direction of steepest decrease. Each coordinate's sign says whether raising that input raises or lowers f, and its size says how sensitive f is to that input there.",
+      ],
+      example: worked(
+        '∇f = [3, −0.5] at a point',
+        'raising x increases f quickly; raising y decreases f slowly; f decreases fastest along [−3, 0.5]',
+        'Reverse every coordinate of the gradient to point downhill.',
+      ),
+      questions: [
+        choose(
+          '∇f = [−2, 4] at a point. Which direction decreases f fastest?',
+          ['[−2, 4]', '[2, −4]', '[4, −2]', '[−4, 2]'],
+          1,
+          'Steepest decrease is the negative gradient.',
+        ),
+        choose(
+          '∇L = [0.1, −7] for the weights (w₁, w₂). To which weight is L more sensitive here?',
+          ['w₂', 'w₁', 'Both equally', 'Neither'],
+          0,
+          'The second coordinate is much larger in size, whatever its sign.',
+        ),
+        choose(
+          '∇f = [5, 0] at a point. What happens to f if only y changes slightly?',
+          [
+            'f increases quickly',
+            'f decreases quickly',
+            'f barely changes',
+            'f becomes 0',
+          ],
+          2,
+          'The y-coordinate of the gradient is 0, so f is flat in that direction.',
+        ),
+        choose(
+          'Which statement about the gradient is true?',
+          [
+            'It always points toward the minimum',
+            'It is a single number',
+            'It is zero everywhere on a slope',
+            'It points uphill, toward steepest increase',
+          ],
+          3,
+          'The gradient gives the locally steepest uphill direction.',
+        ),
+      ],
+    },
+    {
+      title: 'Recognize a zero gradient',
+      explanation: [
+        'Where every partial derivative is 0, the gradient is the zero vector and the function is flat in every input direction. Minima, maxima, and saddle points all have zero gradients, so a zero gradient says the point is flat, not which kind of point it is.',
+      ],
+      example: worked(
+        'f(x, y) = (x − 1)² + (y + 2)²\n∇f = [2(x − 1), 2(y + 2)]',
+        '∇f = [0, 0] only at (1, −2), the minimum',
+        'Both partials must vanish together.',
+      ),
+      questions: [
+        choose(
+          'f(x, y) = (x − 3)² + y². Where is ∇f the zero vector?',
+          ['(0, 0)', '(3, 0)', '(−3, 0)', '(3, 3)'],
+          1,
+          '2(x − 3) = 0 needs x = 3, and 2y = 0 needs y = 0.',
+        ),
+        choose(
+          '∇f = [0, 0] at a point. What can you conclude?',
+          [
+            'f has its global minimum there',
+            'f equals 0 there',
+            'f is flat in every input direction there',
+            'Every input is 0 there',
+          ],
+          2,
+          'A zero gradient means flat, which minima, maxima, and saddles all share.',
+        ),
+        choose(
+          '∇f = [0, 3] at a point. Is the gradient zero there?',
+          [
+            'Yes, because one coordinate is 0',
+            'Only if x = 0',
+            'It depends on the value of f',
+            'No, because one partial derivative is not 0',
+          ],
+          3,
+          'The zero vector needs every coordinate to be 0.',
+        ),
+        choose(
+          'f(x, y) = x² − y². What is ∇f at (0, 0)?',
+          ['[0, 0]', '[2, −2]', '[1, −1]', '[0, −2]'],
+          0,
+          '∇f = [2x, −2y], which is [0, 0] at the origin.',
+        ),
+      ],
+    },
+  ],
+  'math-gradients': [
+    {
+      title: 'Take one gradient descent step',
+      explanation: [
+        'Gradient descent moves a parameter against its derivative: w_new = w − learning_rate × f′(w). For f(w) = (w − 3)², f′(w) = 2(w − 3). Left of the minimum the derivative is negative, so subtracting it moves w to the right, toward 3.',
+      ],
+      example: {
+        code: 'w = 0.0\nlearning_rate = 0.25\ngradient = 2 * (w - 3)\nw = w - learning_rate * gradient\nprint(gradient, w)',
+        output: '-6.0 1.5',
+        explanation:
+          'The derivative −6.0 points left, so the step moves right by 0.25 × 6 = 1.5.',
+      },
+      questions: [
+        predictOutput(
+          'This program takes one step on f(w) = (w − 3)². What does it print?',
+          'w = 5.0\nlearning_rate = 0.25\ngradient = 2 * (w - 3)\nw = w - learning_rate * gradient\nprint(w)',
+          ['6.0', '4.0', '1.0', '3.0'],
+          1,
+          'The derivative is 4.0, so w moves from 5.0 to 5.0 − 1.0 = 4.0.',
+        ),
+        choose(
+          'f′(w) = 8 at the current w and the learning rate is 0.1. How does w change?',
+          [
+            'It increases by 0.8',
+            'It decreases by 8',
+            'It decreases by 0.8',
+            'It becomes 0.8',
+          ],
+          2,
+          'The step subtracts 0.1 × 8 = 0.8.',
+        ),
+        choose(
+          'The derivative at the current w is negative. Which way does a gradient descent step move w?',
+          [
+            'Toward smaller w',
+            'It stays put',
+            'Straight to 0',
+            'Toward larger w',
+          ],
+          3,
+          'Subtracting a negative derivative increases w.',
+        ),
+        choose(
+          'At w = 3 the derivative of (w − 3)² is 0. What does a step do?',
+          [
+            'Leaves w at 3',
+            'Moves w to 0',
+            'Doubles w',
+            'Moves w by the learning rate',
+          ],
+          0,
+          'The step size is learning_rate × 0 = 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Update every parameter with the gradient vector',
+      explanation: [
+        'With several parameters, one step updates all of them together: new parameters = parameters − learning_rate × gradient, coordinate by coordinate. Compute the whole gradient at the current point before changing any parameter.',
+      ],
+      example: {
+        code: 'w = [1.0, -2.0]\ngradient = [4.0, -2.0]\nlearning_rate = 0.5\nw = [w[i] - learning_rate * gradient[i] for i in range(len(w))]\nprint(w)',
+        output: '[-1.0, -1.0]',
+        explanation:
+          'Each coordinate moves against its own partial derivative: 1 − 2 = −1 and −2 + 1 = −1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'w = [2.0, 0.0]\ngradient = [1.0, -4.0]\nlearning_rate = 0.5\nw = [w[i] - learning_rate * gradient[i] for i in range(len(w))]\nprint(w)',
+          ['[2.5, -2.0]', '[1.5, -2.0]', '[1.5, 2.0]', '[1.0, 4.0]'],
+          2,
+          '2.0 − 0.5 = 1.5 and 0.0 + 2.0 = 2.0.',
+        ),
+        choose(
+          'Parameters [3, 3], gradient [2, −6], learning rate 0.5. What are the new parameters?',
+          ['[4, 0]', '[1, 9]', '[2, 0]', '[2, 6]'],
+          3,
+          '[3 − 1, 3 + 3] = [2, 6].',
+        ),
+        choose(
+          'Why compute the full gradient before updating any parameter?',
+          [
+            'Every partial must be evaluated at the same current point',
+            'Parameters must be updated in alphabetical order',
+            'Otherwise the gradient changes its length',
+            'It makes the learning rate smaller',
+          ],
+          0,
+          'Updating one parameter first would change the point where the others are evaluated.',
+        ),
+        choose(
+          'f(x, y) = x² + y² at (2, −1) with learning rate 0.25. Where does one step land?',
+          ['(3, −1.5)', '(1, −0.5)', '(1, −1)', '(0, 0)'],
+          1,
+          '∇f = [4, −2], so the step is (2 − 1, −1 + 0.5).',
+        ),
+      ],
+    },
+    {
+      title: 'Choose a learning rate',
+      explanation: [
+        'The learning rate sets the step size. Too small and progress is slow; too large and a step jumps past the minimum, so the loss bounces or grows. For f(w) = w², one step gives w − r × 2w = (1 − 2r)w: with r = 0.1 the parameter shrinks by 20% per step, while with r = 1.5 it flips sign and doubles in size.',
+      ],
+      example: {
+        code: 'w = 1.0\nw = w - 1.5 * 2 * w\nprint(w)\nw = w - 1.5 * 2 * w\nprint(w)',
+        output: '-2.0\n4.0',
+        explanation:
+          'With learning rate 1.5 on w², each step overshoots the minimum at 0 and lands twice as far away.',
+      },
+      questions: [
+        predictOutput(
+          'This program takes one step on f(w) = w² with learning rate 0.25. What does it print?',
+          'w = 4.0\nw = w - 0.25 * 2 * w\nprint(w)',
+          ['-4.0', '3.5', '2.0', '6.0'],
+          2,
+          'The derivative is 8.0, and 4.0 − 0.25 × 8.0 = 2.0.',
+        ),
+        choose(
+          'Training loss grows larger and larger after the learning rate was increased. What is the most likely cause?',
+          [
+            'The loss is convex',
+            'Steps overshoot the minimum and diverge',
+            'The gradient is zero',
+            'The learning rate is now too small',
+          ],
+          1,
+          'Oversized steps jump past the minimum to points with higher loss.',
+        ),
+        choose(
+          'For f(w) = w², which learning rate makes one step land exactly on the minimum from any w?',
+          ['0.1', '1', '2', '0.5'],
+          3,
+          'The step gives (1 − 2r)w, which is 0 when r = 0.5.',
+        ),
+        choose(
+          'The loss decreases steadily but extremely slowly. Which change is most likely to help?',
+          [
+            'A negative learning rate',
+            'Turning off gradient computation',
+            'A somewhat larger learning rate',
+            'A learning rate of 100',
+          ],
+          2,
+          'Moderately larger steps speed progress without necessarily overshooting.',
+        ),
+      ],
+    },
+  ],
+  'math-critical-points': [
+    {
+      title: 'Find critical points',
+      explanation: [
+        "A critical point is an input where f′(x) = 0, so the tangent line is flat. To find critical points, differentiate, set the derivative equal to 0, and solve. A smooth function's local minima and maxima can occur only at critical points, because anywhere else the function is still rising or falling.",
+      ],
+      example: worked(
+        'f(x) = x² − 10x + 3\nf′(x) = 2x − 10 = 0',
+        'x = 5',
+        'Solving 2x − 10 = 0 gives the only flat point of the graph.',
+      ),
+      questions: [
+        choose(
+          'f(x) = 3x² − 12x + 1. Where is its critical point?',
+          ['x = 4', 'x = 2', 'x = −2', 'x = 12'],
+          1,
+          'f′(x) = 6x − 12 = 0 at x = 2.',
+        ),
+        choose(
+          'f(x) = x³ − 12x. What are its critical points?',
+          ['x = 2 only', 'x = 0 and x = 12', 'x = −2 and x = 2', 'x = 4'],
+          2,
+          'f′(x) = 3x² − 12 = 0 when x² = 4.',
+        ),
+        choose(
+          'Why must a local minimum of a smooth function be a critical point?',
+          [
+            'Every point is a minimum',
+            'The function value is 0 there',
+            'Critical points are where f is largest',
+            'If f′ were not 0, a small step one way would lower f',
+          ],
+          3,
+          'A nonzero slope always offers a nearby lower point.',
+        ),
+        choose(
+          'f(x) = 2x² + 8x. What is the value of f at its critical point?',
+          ['−2', '−8', '0', '8'],
+          1,
+          'f′(x) = 4x + 8 = 0 at x = −2, and f(−2) = 8 − 16 = −8.',
+        ),
+      ],
+    },
+    {
+      title: 'Classify a critical point by sign changes',
+      explanation: [
+        'Check the sign of f′ just left and just right of a critical point. Negative then positive means f falls then rises: a local minimum. Positive then negative means a local maximum. If the sign does not change, as for x³ at 0, the point is neither.',
+      ],
+      example: worked(
+        'f(x) = x³ − 3x²\nf′(x) = 3x² − 6x = 3x(x − 2), zero at x = 0 and x = 2\nf′(−1) = 9, f′(1) = −3, f′(3) = 9',
+        'x = 0 is a local maximum; x = 2 is a local minimum',
+        'The derivative changes from + to − at 0 and from − to + at 2.',
+      ),
+      questions: [
+        choose(
+          'f′(x) = 2x − 6. What kind of point is x = 3?',
+          [
+            'A local maximum',
+            'A local minimum',
+            'Neither',
+            'Not a critical point',
+          ],
+          1,
+          'f′(2) = −2 and f′(4) = 2: falling, then rising.',
+        ),
+        choose(
+          'f′(x) = −4x. What kind of point is x = 0?',
+          [
+            'A local minimum',
+            'Neither',
+            'A local maximum',
+            'Not a critical point',
+          ],
+          2,
+          'f′ is positive for x < 0 and negative for x > 0: rising, then falling.',
+        ),
+        choose(
+          'f′(x) = 3x². Is x = 0 a minimum of f?',
+          [
+            'Yes',
+            'No, it is a maximum',
+            'Yes, because f′(0) = 0',
+            'No: f′ is positive on both sides, so f keeps rising',
+          ],
+          3,
+          'Without a sign change the flat point is neither a minimum nor a maximum.',
+        ),
+        choose(
+          'f′ is positive for x < 1 and negative for x > 1. What is x = 1?',
+          ['A local maximum', 'A local minimum', 'Neither', 'A zero of f'],
+          0,
+          'f rises up to x = 1 and falls after it.',
+        ),
+      ],
+    },
+    {
+      title: 'Distinguish local from global minima',
+      explanation: [
+        'A local minimum is lower than every nearby point; the global minimum is the lowest value anywhere. A function can have several local minima of different heights. To find the global minimum, compare f at the candidates, and check the ends of the allowed inputs when the domain is limited.',
+      ],
+      example: worked(
+        'f(x) = x⁴ − 8x²\nf′(x) = 4x³ − 16x = 0 at x = −2, 0, 2\nf(−2) = −16, f(0) = 0, f(2) = −16',
+        'global minimum −16 at x = ±2; x = 0 is a local maximum',
+        'Comparing the values at all critical points identifies the lowest ones.',
+      ),
+      questions: [
+        choose(
+          'A function has local minima with values 3, −1, and 5 and grows without bound in both directions. What is its global minimum value?',
+          ['3', '−1', '5', '0'],
+          1,
+          'The global minimum is the lowest of the local minima here.',
+        ),
+        choose(
+          'Which statement is true?',
+          [
+            'Every local minimum is the global minimum',
+            'A function has exactly one local minimum',
+            'Every global minimum is also a local minimum',
+            'Local minima have the value 0',
+          ],
+          2,
+          'The lowest point overall is also lowest among its neighbors.',
+        ),
+        choose(
+          'f(x) = x² is restricted to 1 ≤ x ≤ 3. Where is its minimum?',
+          ['x = 0', 'x = 3', 'x = 2', 'x = 1'],
+          3,
+          'The critical point x = 0 lies outside the domain, and f increases on it, so the minimum is at the left end.',
+        ),
+        choose(
+          'f(x) = (x − 2)² + 7. What is its global minimum value?',
+          ['7', '2', '0', '9'],
+          0,
+          'The square is at least 0 and equals 0 at x = 2, leaving 7.',
+        ),
+      ],
+    },
+  ],
+  'math-convexity': [
+    {
+      title: 'Recognize a convex function',
+      explanation: [
+        'A function is convex when the straight segment (chord) between any two points of its graph lies on or above the graph: the graph is bowl-shaped and never bends downward. Lines, x², (x − 5)², and eˣ are convex. −x² and x³ are not, because each has a chord that passes below the graph.',
+      ],
+      example: worked(
+        'f(x) = x²: the chord from (−1, 1) to (3, 9) has height 5 at x = 1, and f(1) = 1\ng(x) = −x²: the chord from (−1, −1) to (1, −1) has height −1 at x = 0, and g(0) = 0',
+        'f stays below its chord, so it can be convex; g rises above its chord, so it is not convex',
+        'One chord dipping below the graph is enough to rule out convexity.',
+      ),
+      questions: [
+        choose(
+          'Which function is convex?',
+          ['−x²', '(x + 4)²', 'x³', '−eˣ'],
+          1,
+          'An upward parabola is bowl-shaped everywhere.',
+        ),
+        choose(
+          'The chord between two points of a graph dips below the curve between them. What follows?',
+          [
+            'The function is convex',
+            'The function is linear',
+            'The function is not convex',
+            'The function has no minimum',
+          ],
+          2,
+          'Convexity requires every chord to stay on or above the graph.',
+        ),
+        choose(
+          'Is f(x) = 3x + 2 convex?',
+          [
+            'No, because a line has no minimum',
+            'No, because it is increasing',
+            'Only for x > 0',
+            'Yes, because every chord lies on the graph',
+          ],
+          3,
+          'Chords of a line coincide with the line, which satisfies "on or above".',
+        ),
+        choose(
+          'f is convex. Its chord from (0, 4) to (4, 12) has height 8 at x = 2. What can f(2) be?',
+          [
+            'Any value above 8',
+            'Any value up to 8, such as 5',
+            'Exactly 8 only',
+            'Any value at all',
+          ],
+          1,
+          'For a convex function the graph lies on or below each chord.',
+        ),
+      ],
+    },
+    {
+      title: 'Test convexity with the second derivative',
+      explanation: [
+        'The second derivative f″ is the derivative of f′, so it measures how the slope changes. For a function of one input with a second derivative, f″(x) ≥ 0 everywhere means the slope never decreases, which is exactly convexity. For f(x) = x⁴, f′ = 4x³ and f″ = 12x² ≥ 0, so x⁴ is convex.',
+      ],
+      example: worked(
+        'f(x) = x³ − 6x\nf′(x) = 3x² − 6\nf″(x) = 6x',
+        'f″ is negative for x < 0, so f is not convex',
+        'Wherever f″ is negative, the slope is decreasing and the graph bends downward.',
+      ),
+      questions: [
+        choose(
+          'f(x) = 5x². What is f″(x)?',
+          ['10x', '10', '5', '0'],
+          1,
+          'f′(x) = 10x, and its derivative is 10.',
+        ),
+        choose(
+          'f(x) = x³. Where is f″(x) negative?',
+          ['For x > 0', 'Nowhere', 'For x < 0', 'Everywhere'],
+          2,
+          'f″(x) = 6x, which is negative for negative x.',
+        ),
+        choose(
+          'f″(x) = 2 for every x. What can you conclude?',
+          ['f is decreasing', 'f has no minimum', 'f is linear', 'f is convex'],
+          3,
+          'A positive second derivative everywhere means the slope keeps increasing.',
+        ),
+        choose(
+          'f(x) = x⁴ − 2x². What is f″(0)?',
+          ['−4', '0', '4', '12'],
+          0,
+          'f′ = 4x³ − 4x and f″ = 12x² − 4, which is −4 at 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Trust the flat points of convex functions',
+      explanation: [
+        'For a convex differentiable function, every point where the derivative or gradient is zero is a global minimum, so gradient descent with a suitable step cannot get stuck in a worse dip. When the derivative is positive, every minimizer lies to the left; when negative, to the right. Squared-error loss for linear regression is convex in its weights, which is why its minimizer is reliable.',
+      ],
+      example: worked(
+        'f(w) = (w − 4)² + 1 is convex\nf′(w) = 2(w − 4) = 0 at w = 4',
+        'w = 4 is the global minimum, with f(4) = 1',
+        'Because f is convex, the single flat point is guaranteed to be the lowest point overall.',
+      ),
+      questions: [
+        choose(
+          'f is convex and f′(7) = 0. Which statement is true?',
+          [
+            'f(7) is a maximum',
+            'f(7) = 0',
+            'f(7) ≤ f(x) for every x',
+            'There may be a lower dip elsewhere',
+          ],
+          2,
+          'A flat point of a convex differentiable function is a global minimum.',
+        ),
+        choose(
+          'Why is it reassuring when a loss is convex?',
+          [
+            'Its minimum value is always 0',
+            'Any flat point found is the global minimum',
+            'It needs no learning rate',
+            'Its gradient is never zero',
+          ],
+          1,
+          'Descent cannot settle in a worse local dip because there is none.',
+        ),
+        choose(
+          'f(w) = (w + 2)². At which w does gradient descent settle?',
+          ['w = 2', 'w = 0', 'w = 4', 'w = −2'],
+          3,
+          'f′(w) = 2(w + 2) is 0 only at w = −2.',
+        ),
+        choose(
+          'A convex function has f′(1) = 3. Where can its minimizer be?',
+          ['To the left of 1', 'To the right of 1', 'At x = 1', 'At x = 3'],
+          0,
+          'The function is rising at 1, and a convex function keeps rising to the right.',
+        ),
+      ],
+    },
+    {
+      title: 'Recognize where nonconvex functions can stall descent',
+      explanation: [
+        'A nonconvex function can have several local minima of different heights, local maxima, and saddle points. At a saddle point the gradient is zero, yet the function rises in some directions and falls in others: f(x, y) = x² − y² at (0, 0) rises along x and falls along y. Neural-network losses are nonconvex, so a zero gradient does not prove the best solution was found.',
+      ],
+      example: worked(
+        'f(x, y) = x² − y²\n∇f = [2x, −2y] = [0, 0] at (0, 0)\nf(1, 0) = 1 and f(0, 1) = −1',
+        '(0, 0) is a saddle point',
+        'Moving along x raises f and moving along y lowers it, although the gradient is zero.',
+      ),
+      questions: [
+        choose(
+          'f(x, y) = y² − x². What kind of point is (0, 0)?',
+          [
+            'A global minimum',
+            'A saddle point',
+            'A global maximum',
+            'Not a critical point',
+          ],
+          1,
+          'The gradient is zero, but f rises along y and falls along x.',
+        ),
+        choose(
+          'Gradient descent stops at a point with zero gradient on a nonconvex loss. What do you know?',
+          [
+            'It is the global minimum',
+            'The loss is 0 there',
+            'The point is flat, but it may not be the global minimum',
+            'The learning rate was too large',
+          ],
+          2,
+          'Local minima and saddle points are also flat.',
+        ),
+        choose(
+          'Which function has two separate local minima?',
+          ['(x − 1)²', '3x + 1', 'eˣ', 'x⁴ − 2x²'],
+          3,
+          'Its minima at x = −1 and x = 1 are separated by a local maximum at 0.',
+        ),
+        choose(
+          'What is the gradient at a saddle point?',
+          [
+            'The zero vector',
+            'Largest in every direction',
+            'Positive in every coordinate',
+            'Undefined',
+          ],
+          0,
+          'A saddle point is a critical point, so every partial derivative is 0.',
+        ),
+      ],
+    },
+  ],
 };
