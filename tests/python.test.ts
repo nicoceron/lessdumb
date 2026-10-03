@@ -917,6 +917,9 @@ describe('real production worker isolation and termination', () => {
 
   it('isolates modified modules and written files between actual runs', async () => {
     expect(
+      await runPython('import sys\nprint("numpy" in sys.modules)'),
+    ).toMatchObject({ output: 'False\n', passed: true });
+    expect(
       await runPython(
         'import builtins\nbuiltins.lessdumb_leak = 99\nwith open("lessdumb_leak.txt", "w") as file:\n    file.write("test")',
       ),
@@ -973,15 +976,19 @@ describe('real production worker isolation and termination', () => {
   it('runs in a warm spare that preloaded the exercise packages, isolated from earlier runs', async () => {
     vi.resetModules();
     const pool = await import('../src/lib/python');
-    const release = pool.warmPython('import numpy as np');
+    // The spare imports packages the exercise names, not the standard library.
+    const source = 'import numpy as np\nimport wave';
+    const imported =
+      'import sys\nprint([name for name in ("numpy", "wave") if name in sys.modules])';
+    const release = pool.warmPython(source);
     const [spare] = RealNodeBrowserWorker.instances;
-    expect(spare.sent).toEqual([{ preload: 'import numpy as np' }]);
+    expect(spare.sent).toEqual([{ preload: source }]);
     expect(
       await pool.runPython(
-        'import builtins\nbuiltins.lessdumb_leak = 1\nimport numpy as np\nprint(int(np.arange(4).sum()))',
+        `${imported}\nimport builtins\nbuiltins.lessdumb_leak = 1\nimport numpy as np\nprint(int(np.arange(4).sum()))`,
       ),
     ).toEqual({
-      output: '6\n',
+      output: "['numpy']\n6\n",
       passed: true,
       error: null,
       infrastructure: false,
@@ -989,7 +996,7 @@ describe('real production worker isolation and termination', () => {
     await spare.terminated;
     await afterRun();
     const next = RealNodeBrowserWorker.instances[1];
-    expect(next.sent).toEqual([{ preload: 'import numpy as np' }]);
+    expect(next.sent).toEqual([{ preload: source }]);
     expect(
       await pool.runPython(
         'import builtins\nassert not hasattr(builtins, "lessdumb_leak")\nprint("isolated")',
