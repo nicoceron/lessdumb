@@ -67,11 +67,15 @@ function pointSection(page: Page, title: string) {
 }
 
 async function noHorizontalScroll(page: Page) {
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
+  const fits = () =>
+    page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+  expect(await fits()).toBe(true);
+  // Linux CI fonts are wider than macOS ones; checking a narrower phone too
+  // catches overflow that only shows up on another platform's fonts.
+  const viewport = page.viewportSize()!;
+  await page.setViewportSize({ width: 320, height: viewport.height });
+  expect(await fits()).toBe(true);
+  await page.setViewportSize(viewport);
 }
 
 const print = skillById['print-output'];
@@ -180,9 +184,15 @@ test('answered questions and teaching stay on the page; a passed point appends t
     second.getByText(secondPoint.explanation[0], { exact: true }),
   ).toBeVisible();
   await expect(second.locator('[data-state="current"]')).toHaveCount(1);
-  const firstBox = await first.boundingBox();
-  const secondBox = await second.boundingBox();
-  expect(secondBox!.y).toBeGreaterThan(firstBox!.y + firstBox!.height - 1);
+  // Measure both sections in one frame: the page may still be scrolling to
+  // the new point, so two separate measurements can disagree.
+  const appendedBelow = await page.evaluate(
+    ([above, below]) =>
+      below.getBoundingClientRect().top >=
+      above.getBoundingClientRect().bottom - 1,
+    [(await first.elementHandle())!, (await second.elementHandle())!],
+  );
+  expect(appendedBelow).toBe(true);
   await expect(markers(page).getByRole('listitem').first()).toContainText(
     'complete',
   );
