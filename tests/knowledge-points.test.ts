@@ -103,8 +103,10 @@ describe('knowledge point registry', () => {
         expect(program.code, program.id).toMatch(/fn main\(\)/);
       if (program.language === 'cpp') {
         expect(program.code, program.id).toMatch(/int main\(\)/);
-        // Batched programs run as void functions, so main cannot return a value.
-        expect(program.code, program.id).not.toMatch(/return\s+[^;\s]/);
+        // Batched programs run main as a void function, so main cannot return
+        // a value. Helper functions defined before main may.
+        const main = program.code.slice(program.code.search(/\bint main\(\)/));
+        expect(main, program.id).not.toMatch(/return\s+[^;\s]/);
       }
     }
   });
