@@ -40,7 +40,12 @@ const CodeLab = lazy(() =>
 const AccountModal = lazy(() =>
   import('./secondary-pages').then((m) => ({ default: m.AccountModal })),
 );
+const ResetPassword = lazy(() =>
+  import('./secondary-pages').then((m) => ({ default: m.ResetPassword })),
+);
+type AccountView = 'register' | 'sign-in' | 'forgot';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import {
   ArrowRight,
@@ -49,6 +54,7 @@ import {
   LoaderCircle,
   LockKeyhole,
   RotateCcw,
+  X,
 } from 'lucide-react';
 import {
   courses,
@@ -59,7 +65,13 @@ import {
   encompassedBy,
 } from '../lib/curriculum';
 import { getSkillState, isUnlocked, coursePath } from '../lib/learning';
-import { authClient } from '../lib/account';
+import {
+  ACCOUNT_DELETED_NOTICE,
+  authClient,
+  EMAIL_VERIFIED_NOTICE,
+  NOTICE_PARAM,
+  PASSWORD_RESET_NOTICE,
+} from '../lib/account';
 import { createAnkiClient, type AnkiClient } from '../lib/anki';
 import { type LearnerState } from '../lib/state';
 import { legacyMemory, recallProbability } from '../lib/retention';
@@ -74,12 +86,47 @@ function masteryStatus(state: LearnerState, skill: Skill) {
       ? 'In progress'
       : 'Ready to learn';
 }
+interface Notice {
+  text: string;
+  failed?: boolean;
+  action?: { label: string; view: AccountView };
+}
+/** Reads and removes a one-time `?notice=` left by a redirect. */
+function takeNotice(): Notice | null {
+  const url = new URL(window.location.href);
+  const kind = url.searchParams.get(NOTICE_PARAM);
+  if (!kind) return null;
+  const failed = url.searchParams.has('error');
+  url.searchParams.delete(NOTICE_PARAM);
+  url.searchParams.delete('error');
+  history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+  if (kind === EMAIL_VERIFIED_NOTICE)
+    return failed
+      ? {
+          text: 'That verification link is invalid or has expired. Send a new one from your account.',
+          failed,
+          action: { label: 'Account', view: 'sign-in' },
+        }
+      : { text: 'Your email is verified.' };
+  if (kind === PASSWORD_RESET_NOTICE)
+    return {
+      text: 'Your password is changed. Sign in with your new password.',
+      action: { label: 'Sign in', view: 'sign-in' },
+    };
+  if (kind === ACCOUNT_DELETED_NOTICE)
+    return { text: 'Your account and its saved progress were deleted.' };
+  return null;
+}
+
 export default function App({
   page,
   routeKey,
+  emailEnabled = false,
 }: {
   page: string;
   routeKey: string;
+  /** Server flag: without email, reset and verification stay hidden. */
+  emailEnabled?: boolean;
 }) {
   const learner = useLearner();
   const { state, update, ready, session, sync } = learner;
@@ -87,6 +134,13 @@ export default function App({
     (course) => course.id === state.activeCourseId,
   )?.language;
   const [accountOpen, setAccountOpen] = useState(false);
+  const [accountView, setAccountView] = useState<AccountView>('register');
+  const openAccount = (view: AccountView = 'register') => {
+    setAccountView(view);
+    setAccountOpen(true);
+  };
+  const [notice, setNotice] = useState<Notice | null>(null);
+  useEffect(() => setNotice(takeNotice()), []);
   const [ankiMessage, setAnkiMessage] = useState('');
   const [ankiBusy, setAnkiBusy] = useState(false);
   const [ankiLive, setAnkiLive] = useState(false);
@@ -236,7 +290,10 @@ export default function App({
   }, [session.data?.user.id]);
 
   return (
-    <div className="app-shell">
+    <div
+      className="app-shell"
+      data-email={emailEnabled ? 'enabled' : 'disabled'}
+    >
       <a className="skip-link" href="#main">
         Skip to content
       </a>
@@ -246,7 +303,7 @@ export default function App({
         email={session.data?.user.email}
         sync={ready ? sync : 'Loading your workspace…'}
         pending={pendingCards.length}
-        accountOpen={() => setAccountOpen(true)}
+        accountOpen={() => openAccount()}
         signOut={signOut}
       />
       <div className="main-shell">
@@ -254,6 +311,37 @@ export default function App({
           id="main"
           className={`main-content ${page === 'learn' ? 'learning-content' : ''}`}
         >
+          {notice && (
+            <Alert
+              role={notice.failed ? 'alert' : 'status'}
+              variant={notice.failed ? 'destructive' : 'default'}
+              className="mx-auto mb-4 max-w-xl has-data-[slot=alert-action]:pr-28"
+            >
+              <AlertDescription>{notice.text}</AlertDescription>
+              <AlertAction className="flex items-center gap-1">
+                {notice.action && (
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => {
+                      openAccount(notice.action!.view);
+                      setNotice(null);
+                    }}
+                  >
+                    {notice.action.label}
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Dismiss"
+                  onClick={() => setNotice(null)}
+                >
+                  <X />
+                </Button>
+              </AlertAction>
+            </Alert>
+          )}
           {!ready ? (
             session.error && !session.data ? (
               <Card role="alert" className="mx-auto max-w-xl">
@@ -313,6 +401,12 @@ export default function App({
                   />
                 )}
               {page === 'courses' && <Courses state={state} update={update} />}
+              {page === 'reset-password' && (
+                <ResetPassword
+                  emailEnabled={emailEnabled}
+                  openAccount={openAccount}
+                />
+              )}
               {page === 'graph' && (
                 <KnowledgeGraph key={routeKey} state={state} />
               )}
@@ -349,7 +443,7 @@ export default function App({
                   live={ankiLive}
                   busy={ankiBusy}
                   message={ankiMessage}
-                  accountOpen={() => setAccountOpen(true)}
+                  accountOpen={() => openAccount()}
                   retrySync={learner.retrySync}
                   sync={sync}
                   signedIn={!!session.data}
@@ -385,6 +479,8 @@ export default function App({
           <AccountModal
             close={() => setAccountOpen(false)}
             user={session.data?.user}
+            emailEnabled={emailEnabled}
+            initialView={accountView}
           />
         </Suspense>
       )}

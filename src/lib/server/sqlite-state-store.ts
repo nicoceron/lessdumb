@@ -19,6 +19,11 @@ export function sqliteStateStore(database: Database.Database): StateStore {
   }
   return {
     read,
+    remove(userId) {
+      database
+        .prepare('DELETE FROM learner_state WHERE user_id = ?')
+        .run(userId);
+    },
     write(userId, state, revision) {
       return database
         .transaction(() => {

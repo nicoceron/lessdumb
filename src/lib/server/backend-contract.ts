@@ -23,6 +23,8 @@ export interface StateStore {
     state: LearnerState,
     revision: number,
   ) => StateWriteResult | Promise<StateWriteResult>;
+  /** Deletes the learner's saved progress (account deletion). */
+  remove: (userId: string) => void | Promise<void>;
 }
 
 export interface Backend {
