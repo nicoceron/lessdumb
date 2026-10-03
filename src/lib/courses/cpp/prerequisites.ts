@@ -142,6 +142,7 @@ export const cppPrerequisites: Record<string, string[]> = {
     'cpp-structured-bindings',
     'cpp-pair-ordering',
     'cpp-if-branches',
+    'cpp-return-values',
   ],
   'cpp-map-find': ['cpp-iterator-range', 'cpp-pair-members'],
   'cpp-map-insert': ['cpp-map-find'],

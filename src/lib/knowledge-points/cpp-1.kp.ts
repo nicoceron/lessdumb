@@ -8666,4 +8666,1892 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'cpp-vector-elements': [
+    {
+      title: 'Index a vector from 0 to size() - 1',
+      explanation: [
+        'std::vector<int> from <vector> holds a sequence of ints in one contiguous block. Elements are numbered from 0, v[i] reads element i, and v.size() is the number of elements, so the last one is v[v.size() - 1].',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> prices{7, 4, 9};\n  std::cout << prices[0] << " " << prices[2] << " " << prices.size() << "\\n";\n}',
+        output: '7 9 3',
+        explanation:
+          'Index 0 is the first price and index 2 the last of the three.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 6, 9, 12};\n  std::cout << v[1] + v[3] << "\\n";\n}',
+          ['15', '18', '9', '21'],
+          1,
+          'Index 1 holds 6 and index 3 holds 12.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{5, 8};\n  std::cout << v[v.size() - 1] << "\\n";\n}',
+          ['5', '2', '0', '8'],
+          3,
+          'size() is 2, so the last element is at index 1.',
+        ),
+        choose(
+          'Which expression reads the last element of a vector v that has 5 elements?',
+          ['v[5]', 'v[6]', 'v[4]', 'v[-1]'],
+          2,
+          'Five elements occupy indices 0 through 4.',
+        ),
+      ],
+    },
+    {
+      title: 'Write elements through operator[]',
+      explanation: [
+        'v[i] is the element itself, so v[i] = x; replaces it. operator[] does not check i: an index outside 0 to size() - 1 is undefined behavior, not an error message.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> scores{1, 2, 3};\n  scores[1] = 20;\n  std::cout << scores[0] + scores[1] << "\\n";\n}',
+        output: '21',
+        explanation: 'The second element is replaced by 20, and 1 + 20 is 21.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{0, 0, 0};\n  v[2] = 5;\n  v[0] = v[2] * 2;\n  std::cout << v[0] << v[1] << v[2] << "\\n";\n}',
+          ['1005', '505', '0510', '1050'],
+          0,
+          'v becomes 10, 0, 5, printed without separators.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{4, 4};\n  int x = v[0];\n  v[0] = 9;\n  std::cout << x << v[0] << "\\n";\n}',
+          ['99', '44', '49', '94'],
+          2,
+          'x copied 4 before the element was replaced with 9.',
+        ),
+        choose(
+          'What does v[10] do when v has 3 elements?',
+          [
+            'Returns 0 for a missing element',
+            'Throws an out-of-range exception',
+            'Grows the vector to 11 elements',
+            'Undefined behavior, with no check',
+          ],
+          3,
+          'Only indices below size() may be used with operator[].',
+        ),
+      ],
+    },
+    {
+      title: 'Check index < size() before indexing',
+      explanation: [
+        'Indices and sizes are std::size_t, an unsigned type, so a valid index i satisfies i < v.size(). Check that first and choose a fallback otherwise, for example i < v.size() ? v[i] : -1.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v{7, 4};\n  std::size_t index = 5;\n  std::cout << (index < v.size() ? v[index] : -1) << "\\n";\n}',
+        output: '-1',
+        explanation:
+          '5 is not below the size 2, so the fallback is used and v[5] is never touched.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v{7, 4};\n  std::size_t i = 1;\n  std::cout << (i < v.size() ? v[i] : -1) << "\\n";\n}',
+          ['7', '4', '-1', '2'],
+          1,
+          'Index 1 is valid and holds 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  std::size_t i = 0;\n  std::cout << (i < v.size() ? v[i] : -1) << " " << v.size() << "\\n";\n}',
+          ['0 0', '-1 1', '0 1', '-1 0'],
+          3,
+          'An empty vector has no index 0, so the fallback is chosen.',
+        ),
+        choose(
+          'Why is the check i <= v.size() wrong?',
+          [
+            'It rejects index 0',
+            'size() cannot be compared with an index',
+            'It is correct as written',
+            'It allows i == v.size(), one past the last element',
+          ],
+          3,
+          'The last valid index is size() - 1.',
+        ),
+      ],
+    },
+  ],
+  'cpp-string-size': [
+    {
+      title: 'Store text in std::string and count it',
+      explanation: [
+        'std::string from <string> owns a sequence of characters in memory it manages, and size() returns how many characters it holds. Spaces count like any other character.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string>\nint main() {\n  std::string word = "hello";\n  std::cout << word.size() << " " << word << "\\n";\n}',
+        output: '5 hello',
+        explanation: 'The string holds five characters.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "C++ 20";\n  std::cout << s.size() << "\\n";\n}',
+          ['5', '6', '4', '7'],
+          1,
+          'C, +, +, space, 2, 0: the space counts too.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string empty = "";\n  std::string space = " ";\n  std::cout << empty.size() << space.size() << "\\n";\n}',
+          ['00', '11', '10', '01'],
+          3,
+          'The empty string holds nothing; the other holds one space.',
+        ),
+        choose(
+          'What does a std::string own?',
+          [
+            'Only a pointer to a string literal',
+            'A fixed buffer of 16 characters',
+            'A copy of its characters, in memory it manages',
+            'Nothing; it borrows its characters',
+          ],
+          2,
+          'A std::string has its own storage, which grows as needed.',
+        ),
+      ],
+    },
+    {
+      title: 'Read characters by position',
+      explanation: [
+        's[i] is the character at position i, counting from 0, so the last character is s[s.size() - 1]. Copying a string copies its characters, so the copy can change independently.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string>\nint main() {\n  std::string name = "Ada";\n  std::cout << name[0] << name[name.size() - 1] << "\\n";\n}',
+        output: 'Aa',
+        explanation: 'Position 0 is A and the last position, 2, is a.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "stack";\n  std::cout << s[1] << s[4] << "\\n";\n}',
+          ['sa', 'ta', 'tk', 'sk'],
+          2,
+          'Position 1 is t and position 4 is k.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "abc";\n  std::string t = s;\n  t[0] = s[2];\n  std::cout << s << " " << t << "\\n";\n}',
+          ['cbc cbc', 'abc abc', 'cba cbc', 'abc cbc'],
+          3,
+          't is a separate copy; only its first character becomes c.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "hello";\n  std::cout << static_cast<int>(s.size()) * 2 << "\\n";\n}',
+          ['10', '5', '52', '25'],
+          0,
+          'size() is 5, converted to int and doubled.',
+        ),
+      ],
+    },
+    {
+      title: 'Count embedded zero characters',
+      explanation: [
+        'A std::string stores its length, so it can hold \\0 characters. std::string("a\\0b", 3) has three characters. Building a string from a plain literal stops at the first \\0, because a literal is read up to its terminator.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string>\nint main() {\n  std::string full("a\\0b", 3);\n  std::string cut = "a\\0b";\n  std::cout << full.size() << " " << cut.size() << "\\n";\n}',
+        output: '3 1',
+        explanation:
+          'full was given the length 3; cut stopped at the embedded \\0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s("x\\0\\0y", 4);\n  std::cout << s.size() << "\\n";\n}',
+          ['1', '2', '3', '4'],
+          3,
+          'The string was built with an explicit length of 4.',
+        ),
+        choose(
+          'Why does std::string cut = "a\\0b"; hold only one character?',
+          [
+            'std::string cannot store \\0',
+            'The compiler removes \\0 from literals',
+            'Building from a plain literal stops at the first \\0',
+            'size() skips \\0 characters',
+          ],
+          2,
+          'Without a length, the literal is read only up to its first null character.',
+        ),
+        choose(
+          'Which tells how many characters a std::string really holds, including any \\0?',
+          [
+            'The position of the first \\0',
+            's.size()',
+            'strlen(s.c_str())',
+            'sizeof(s)',
+          ],
+          1,
+          'The stored length counts every character; strlen stops at \\0, and sizeof measures the string object.',
+        ),
+      ],
+    },
+  ],
+  'cpp-string-append': [
+    {
+      title: 'Append one character with push_back',
+      explanation: [
+        "s.push_back('c') adds one character to the end of s, so size() grows by one.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string>\nint main() {\n  std::string word = "ab";\n  word.push_back(\'c\');\n  std::cout << word << " " << word.size() << "\\n";\n}',
+        output: 'abc 3',
+        explanation: 'c is added after b, and the size grows from 2 to 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "go";\n  s.push_back(\'!\');\n  s.push_back(\'!\');\n  std::cout << s << "\\n";\n}',
+          ['go!', 'go!!', '!!go', 'go'],
+          1,
+          'Each push_back adds one ! at the end.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s;\n  s.push_back(\'x\');\n  std::cout << s.size() << s << "\\n";\n}',
+          ['0x', 'x1', '1', '1x'],
+          3,
+          'An empty string gains one character.',
+        ),
+        choose(
+          "What does s.push_back('z') change?",
+          [
+            'It replaces the last character with z',
+            'It adds z at the front',
+            'It adds z at the end and size() grows by 1',
+            'It adds the text "z" twice',
+          ],
+          2,
+          'push_back always appends exactly one character.',
+        ),
+      ],
+    },
+    {
+      title: 'Append text with +=',
+      explanation: [
+        's += "ing" appends several characters at once, and s += \'c\' appends one. Appending to a copy leaves the original unchanged.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string>\nint main() {\n  std::string verb = "jump";\n  verb += "ing";\n  std::cout << verb << "\\n";\n}',
+        output: 'jumping',
+        explanation: 'ing is added after jump.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string path = "dir";\n  path += \'/\';\n  path += "file";\n  std::cout << path << " " << path.size() << "\\n";\n}',
+          ['dir/file 8', 'dir/file 7', 'dirfile 7', '/dirfile 8'],
+          0,
+          'The slash and the four letters of file follow dir: 3 + 1 + 4 characters.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string a = "ab";\n  std::string b = a;\n  b += "cd";\n  std::cout << a << " " << b << "\\n";\n}',
+          ['abcd abcd', 'ab ab', 'ab abcd', 'abcd ab'],
+          2,
+          'b is a copy, so appending to it leaves a as it was.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "1";\n  s += s;\n  s += s;\n  std::cout << s << "\\n";\n}',
+          ['111', '11', '4', '1111'],
+          3,
+          'Each += doubles the string: 1, 11, 1111.',
+        ),
+      ],
+    },
+    {
+      title: 'Re-read the string after appending',
+      explanation: [
+        'Appending may need more room than the string has, in which case it moves its characters to new, larger storage. Pointers or views saved earlier then refer to freed memory. Positions stay meaningful, so keep an index and read s[index] again.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "abc";\n  int index = 1;\n  s += "defghijklmnopqrstuvwxyz";\n  std::cout << s[index] << s.size() << "\\n";\n}',
+        output: 'b26',
+        explanation:
+          'Wherever the characters now live, position 1 still holds b.',
+      },
+      questions: [
+        choose(
+          'A program saves s.data() in a pointer and then appends many characters to s. Why is the saved pointer unsafe?',
+          [
+            'data() returns a copy of the text',
+            'The append may move the characters elsewhere',
+            'Appending clears the string first',
+            'Pointers into strings are never allowed',
+          ],
+          1,
+          'After a reallocation the pointer refers to storage that was freed.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "xy";\n  int index = 0;\n  s += "0123456789012345678901234567890123456789";\n  std::cout << s[index] << s[index + 1] << "\\n";\n}',
+          ['01', 'xy', 'x0', 'y0'],
+          1,
+          'The first two characters are still x and y after the append.',
+        ),
+        choose(
+          'After appending to a string, what is the safe way to reach its second character?',
+          [
+            'Reuse a pointer saved before the append',
+            'Reuse a string_view made before the append',
+            'Read s[1] again',
+            'Assume it moved to the end',
+          ],
+          2,
+          'Indexing goes through the string itself, so it always finds the current storage.',
+        ),
+      ],
+    },
+  ],
+  'cpp-string-find': [
+    {
+      title: 'Find a character or substring',
+      explanation: [
+        's.find(\'n\') returns the position of the first n in s, and s.find("na") the position where the first na begins. Positions count from 0.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string>\nint main() {\n  std::string text = "banana";\n  std::cout << text.find(\'n\') << " " << text.find("na") << "\\n";\n}',
+        output: '2 2',
+        explanation: 'The first n, and the first na, both start at position 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "hello";\n  std::cout << s.find(\'l\') << "\\n";\n}',
+          ['3', '2', '1', '23'],
+          1,
+          'The first l is at position 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "a,b,c";\n  std::cout << s.find(\',\') << " " << s.find("b,c") << "\\n";\n}',
+          ['2 3', '1 3', '2 2', '1 2'],
+          3,
+          'The first comma is at 1, and b,c starts at 2.',
+        ),
+        choose(
+          'A character occurs several times in a string. Which position does find return?',
+          ['The last one', 'The first one', 'All of them', 'The middle one'],
+          1,
+          'find searches from the start and stops at the first match.',
+        ),
+      ],
+    },
+    {
+      title: 'Compare with npos when nothing is found',
+      explanation: [
+        'When there is no match, find returns the special value std::string::npos. It is not a valid position, so compare the result with npos before using it. Do not test the result as a bool: a match at position 0 would count as false.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "abc";\n  auto pos = s.find(\'z\');\n  std::cout << (pos == std::string::npos) << "\\n";\n}',
+        output: '1',
+        explanation: 'There is no z, so find returns npos.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "abc";\n  auto pos = s.find(\'c\');\n  std::cout << (pos == std::string::npos) << pos << "\\n";\n}',
+          ['12', '03', '02', '0-1'],
+          2,
+          'c is found at position 2, so the result is not npos.',
+        ),
+        choose(
+          'What does find return when there is no match?',
+          ['0', '-1', 'The length of the string', 'std::string::npos'],
+          3,
+          'npos is the documented "not found" value.',
+        ),
+        choose(
+          'Why is if (s.find(\'x\')) a wrong test for "s contains x"?',
+          [
+            'find already returns a bool',
+            'find cannot be used in a condition',
+            'It is correct as written',
+            'A match at 0 reads as false and npos as true',
+          ],
+          3,
+          'The position converts to bool, which says nothing about whether a match exists.',
+        ),
+      ],
+    },
+    {
+      title: 'Turn the result into an index or a sentinel',
+      explanation: [
+        "Convert a found position to int only after checking for npos, for example pos == std::string::npos ? -1 : static_cast<int>(pos). find also takes a starting position: s.find('l', 1) searches from position 1.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "hello";\n  auto pos = s.find(\'e\');\n  int index = pos == std::string::npos ? -1 : static_cast<int>(pos);\n  std::cout << index << "\\n";\n}',
+        output: '1',
+        explanation: 'e is found at position 1, so the index is 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "hello";\n  auto pos = s.find(\'q\');\n  int index = pos == std::string::npos ? -1 : static_cast<int>(pos);\n  std::cout << index << "\\n";\n}',
+          ['0', '5', '-1', 'npos'],
+          2,
+          'There is no q, so the sentinel -1 is chosen.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "level";\n  auto first = s.find(\'l\');\n  auto second = s.find(\'l\', first + 1);\n  std::cout << first << " " << second << "\\n";\n}',
+          ['0 4', '0 0', '4 0', '1 4'],
+          0,
+          'The second search starts after the first l and finds the last one at 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <string>\nint main() {\n  std::string s = "";\n  auto pos = s.find(\'a\');\n  std::cout << (pos == std::string::npos ? -1 : static_cast<int>(pos)) << "\\n";\n}',
+          ['0', '1', 'npos', '-1'],
+          3,
+          'An empty string contains nothing, so find returns npos.',
+        ),
+      ],
+    },
+  ],
+  'cpp-strings': [
+    {
+      title: 'Parse digits with std::from_chars',
+      explanation: [
+        'std::from_chars(first, last, value) from <charconv> reads an integer from the characters in [first, last) into value, without allocating. It returns a result with ec, an error code that equals std::errc{} on success, and ptr, which points to the first character it did not use.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = "42";\n  int value = 0;\n  auto result = std::from_chars(text.data(), text.data() + text.size(), value);\n  std::cout << value << " " << (result.ec == std::errc{}) << "\\n";\n}',
+        output: '42 1',
+        explanation:
+          'The two digits parse to 42, and the error code reports success.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = "-17";\n  int value = 0;\n  auto result = std::from_chars(text.data(), text.data() + text.size(), value);\n  std::cout << value << " " << (result.ec == std::errc{}) << "\\n";\n}',
+          ['17 1', '-17 0', '-17 1', '0 0'],
+          2,
+          'A leading minus sign is accepted, and parsing succeeds.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = "abc";\n  int value = 0;\n  auto result = std::from_chars(text.data(), text.data() + text.size(), value);\n  std::cout << value << " " << (result.ec == std::errc{}) << "\\n";\n}',
+          ['0 1', 'abc 0', '-1 0', '0 0'],
+          3,
+          'No digits are found, so ec reports an error and value keeps its 0.',
+        ),
+        choose(
+          'How does std::from_chars report a failure?',
+          [
+            'It throws a std::invalid_argument',
+            'It sets value to -1 as a marker',
+            'It sets result.ec and leaves value unchanged',
+            'It prints an error message to std::cerr',
+          ],
+          2,
+          'from_chars never throws; the result object carries the outcome.',
+        ),
+      ],
+    },
+    {
+      title: 'Check that the whole input was used',
+      explanation: [
+        'from_chars succeeds as soon as it reads at least one digit, and it stops at the first character that does not belong to the number. Compare result.ptr with the end of the input to know whether anything was left over.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <charconv>\n#include <string_view>\nint main() {\n  std::string_view text = "12x";\n  int value = 0;\n  auto result = std::from_chars(text.data(), text.data() + text.size(), value);\n  std::cout << value << " " << (result.ptr == text.data() + text.size()) << "\\n";\n}',
+        output: '12 0',
+        explanation:
+          'The prefix 12 parses, but ptr stops at x, before the end.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <charconv>\n#include <string_view>\nint main() {\n  std::string_view text = "77";\n  int value = 0;\n  auto result = std::from_chars(text.data(), text.data() + text.size(), value);\n  std::cout << value << " " << (result.ptr == text.data() + text.size()) << "\\n";\n}',
+          ['77 0', '77 1', '0 1', '7 1'],
+          1,
+          'Both digits are used, so ptr reaches the end.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <charconv>\n#include <string_view>\nint main() {\n  std::string_view text = "3.5";\n  int value = 0;\n  auto result = std::from_chars(text.data(), text.data() + text.size(), value);\n  std::cout << value << " " << (result.ptr == text.data() + text.size()) << "\\n";\n}',
+          ['3.5 1', '3 1', '0 0', '3 0'],
+          3,
+          'Parsing an int stops at the dot, so value is 3 and input is left over.',
+        ),
+        choose(
+          'Why check result.ptr as well as result.ec?',
+          [
+            'ec is always zero after parsing',
+            'ptr holds the parsed value itself',
+            'A numeric prefix parses fine even with junk after it',
+            'It is never needed for integers',
+          ],
+          2,
+          'Only ptr reveals trailing characters that were not part of the number.',
+        ),
+      ],
+    },
+    {
+      title: 'Accept only a clean, complete number',
+      explanation: [
+        'A strict parser accepts the input only if ec reports success and ptr reached the end. Anything else, including empty input or a leading space, is rejected.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = "250";\n  int value = 0;\n  auto r = std::from_chars(text.data(), text.data() + text.size(), value);\n  if (r.ec != std::errc{} || r.ptr != text.data() + text.size()) std::cout << "invalid\\n";\n  else std::cout << value * 2 << "\\n";\n}',
+        output: '500',
+        explanation:
+          'The whole input is a valid number, so it is accepted and doubled.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = "";\n  int value = 0;\n  auto r = std::from_chars(text.data(), text.data() + text.size(), value);\n  if (r.ec != std::errc{} || r.ptr != text.data() + text.size()) std::cout << "invalid\\n";\n  else std::cout << value * 2 << "\\n";\n}',
+          ['0', 'invalid', '500', '-999'],
+          1,
+          'There are no digits at all, so ec reports an error.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = " 5";\n  int value = 0;\n  auto r = std::from_chars(text.data(), text.data() + text.size(), value);\n  if (r.ec != std::errc{} || r.ptr != text.data() + text.size()) std::cout << "invalid\\n";\n  else std::cout << value * 2 << "\\n";\n}',
+          ['5', '10', 'invalid', '0'],
+          2,
+          'from_chars does not skip leading spaces, so it finds no number.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <charconv>\n#include <string_view>\n#include <system_error>\nint main() {\n  std::string_view text = "007";\n  int value = 0;\n  auto r = std::from_chars(text.data(), text.data() + text.size(), value);\n  if (r.ec != std::errc{} || r.ptr != text.data() + text.size()) std::cout << "invalid\\n";\n  else std::cout << value * 2 << "\\n";\n}',
+          ['14', 'invalid', '7', '0'],
+          0,
+          'Leading zeros are ordinary digits, so 007 parses to 7.',
+        ),
+      ],
+    },
+  ],
+  'cpp-vector-push': [
+    {
+      title: 'Append with push_back',
+      explanation: [
+        'v.push_back(x) adds x as a new last element, so size() grows by one. v.back() reads the last element.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2};\n  v.push_back(4);\n  std::cout << v.size() << " " << v[2] << "\\n";\n}',
+        output: '3 4',
+        explanation: '4 becomes the third element, at index 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.push_back(5);\n  v.push_back(6);\n  std::cout << v[0] << v[1] << v.size() << "\\n";\n}',
+          ['652', '562', '56', '5620'],
+          1,
+          'Elements are appended in order: 5, then 6, for a size of 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{9};\n  v.push_back(v[0] + 1);\n  std::cout << v.back() << "\\n";\n}',
+          ['9', '1', '91', '10'],
+          3,
+          'The new last element is 9 + 1.',
+        ),
+        choose(
+          'What does push_back do to size()?',
+          [
+            'Leaves it unchanged',
+            'Doubles it',
+            'Increases it by one',
+            'Sets it to capacity()',
+          ],
+          2,
+          'Exactly one element is added.',
+        ),
+      ],
+    },
+    {
+      title: 'Tell size from capacity',
+      explanation: [
+        'size() counts the elements; capacity() counts how many fit before the vector must find more memory, so capacity() >= size(). The exact capacity depends on the library. Only indices below size() hold elements.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3};\n  v.push_back(4);\n  std::cout << v.size() << " " << (v.capacity() >= v.size()) << "\\n";\n}',
+        output: '4 1',
+        explanation:
+          'There are 4 elements, and the capacity is always at least that.',
+      },
+      questions: [
+        choose(
+          'A vector has size() 3 and capacity() 8. Which indices hold elements?',
+          ['0 to 7', '1 to 3', '3 to 7', '0 to 2'],
+          3,
+          'Capacity is spare room; only the first size() positions hold elements.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.push_back(1);\n  v.push_back(2);\n  v.push_back(3);\n  std::cout << (v.capacity() >= 3) << v.size() << "\\n";\n}',
+          ['13', '03', '18', '14'],
+          0,
+          'The capacity covers the 3 elements; their count is 3.',
+        ),
+        choose(
+          'Which value says how many elements a vector holds?',
+          ['capacity()', 'sizeof(v)', 'size()', 'The last index'],
+          2,
+          'size() is the element count; the last index is one less.',
+        ),
+      ],
+    },
+    {
+      title: 'Know that push_back stores a copy',
+      explanation: [
+        'push_back copies the value into the vector. Changing the original variable afterwards does not change the element, and the element does not change the variable.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  int x = 5;\n  std::vector<int> v;\n  v.push_back(x);\n  x = 9;\n  std::cout << v[0] << "\\n";\n}',
+        output: '5',
+        explanation: 'The vector stored its own copy of 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1};\n  int last = v[0];\n  v.push_back(last * 10);\n  last = 0;\n  std::cout << v[1] << last << "\\n";\n}',
+          ['00', '010', '100', '1010'],
+          2,
+          'The element 10 was copied in before last became 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> a{1};\n  std::vector<int> b;\n  b.push_back(a[0]);\n  a[0] = 7;\n  std::cout << b[0] << "\\n";\n}',
+          ['7', '0', '8', '1'],
+          3,
+          'b received a copy of 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.push_back(3);\n  v.push_back(v[0]);\n  v[0] = 8;\n  std::cout << v[0] + v[1] << "\\n";\n}',
+          ['16', '6', '11', '8'],
+          2,
+          'v[1] copied 3 before v[0] became 8.',
+        ),
+      ],
+    },
+  ],
+  'cpp-vector-reserve': [
+    {
+      title: 'Reserve room without adding elements',
+      explanation: [
+        'v.reserve(n) makes capacity() at least n, but it adds no elements: size() is unchanged. Reserving less than the current capacity does nothing.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.reserve(20);\n  std::cout << v.size() << " " << (v.capacity() >= 20) << "\\n";\n}',
+        output: '0 1',
+        explanation: 'There is room for 20, but still no elements.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2};\n  v.reserve(100);\n  std::cout << v.size() << v[1] << "\\n";\n}',
+          ['1002', '100', '22', '02'],
+          2,
+          'reserve keeps the two elements and the size of 2.',
+        ),
+        choose(
+          'What does v.reserve(5) change on an empty vector?',
+          [
+            'size() becomes 5, with zeros',
+            'Five zeros are added at the end',
+            'Nothing at all until the next push',
+            'capacity() becomes at least 5, and size() stays 0',
+          ],
+          3,
+          'reserve affects room, not contents.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3};\n  v.reserve(1);\n  std::cout << v.size() << (v.capacity() >= 3) << "\\n";\n}',
+          ['11', '30', '31', '13'],
+          2,
+          'Reserving less than is already available changes nothing.',
+        ),
+      ],
+    },
+    {
+      title: 'Write only to elements that exist',
+      explanation: [
+        'Reserved room holds no elements, so v[0] = 1 after reserve on an empty vector is undefined behavior. Add elements with push_back, or use resize(n), which makes size() equal n by adding zeros.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.reserve(4);\n  v.push_back(10);\n  v.push_back(20);\n  std::cout << v[1] << " " << v.size() << "\\n";\n}',
+        output: '20 2',
+        explanation:
+          'The elements were added with push_back, so indices 0 and 1 are valid.',
+      },
+      questions: [
+        choose(
+          'std::vector<int> v; v.reserve(10); v[0] = 1; What is wrong?',
+          [
+            'Nothing; the room is reserved',
+            'reserve must be called twice',
+            'v has no elements yet, so v[0] is out of range',
+            'v[0] must be read before it is written',
+          ],
+          2,
+          'size() is still 0, so there is no element 0.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.reserve(2);\n  v.resize(2);\n  v[1] = 4;\n  std::cout << v[0] << v[1] << v.size() << "\\n";\n}',
+          ['042', '402', '44', '04'],
+          0,
+          'resize adds two zeros, and then the second one is replaced with 4.',
+        ),
+        choose(
+          'Which call makes v[2] valid on an empty vector?',
+          ['v.reserve(3)', 'v.capacity()', 'v.reserve(2)', 'v.resize(3)'],
+          3,
+          'Only resize creates elements.',
+        ),
+      ],
+    },
+    {
+      title: 'Reserve when the count is known',
+      explanation: [
+        'While size() stays within the capacity, push_back does not need new memory. Reserving the expected count up front therefore avoids repeated reallocations, and capacity() does not change while the vector fills up.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.reserve(3);\n  std::size_t before = v.capacity();\n  v.push_back(1);\n  v.push_back(2);\n  v.push_back(3);\n  std::cout << (v.capacity() == before) << "\\n";\n}',
+        output: '1',
+        explanation:
+          'Three elements fit in the reserved room, so no reallocation was needed.',
+      },
+      questions: [
+        choose(
+          'Why reserve before pushing back 1000 elements whose count is known?',
+          [
+            'It is required before push_back',
+            'It avoids repeated reallocations while the vector grows',
+            'It sets every element to zero',
+            'It makes size() return 1000 immediately',
+          ],
+          1,
+          'One allocation up front replaces several as the vector grows.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.reserve(2);\n  std::size_t cap = v.capacity();\n  v.push_back(5);\n  std::cout << (v.capacity() == cap) << v.size() << "\\n";\n}',
+          ['01', '12', '11', '10'],
+          2,
+          'One element fits in the reserved room, so the capacity is unchanged.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.reserve(4);\n  v.push_back(7);\n  v.push_back(8);\n  std::cout << v.size() << (v.capacity() >= 4) << "\\n";\n}',
+          ['41', '21', '20', '42'],
+          1,
+          'Two elements were added, and the reserved room is still at least 4.',
+        ),
+      ],
+    },
+  ],
+  'cpp-iterator-range': [
+    {
+      title: 'Walk from begin() to end()',
+      explanation: [
+        'v.begin() is an iterator to the first element and v.end() an iterator one past the last. Like a pointer, *it reads the element and ++it moves to the next one, so a loop runs while it != v.end().',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{4, 5, 6};\n  for (auto it = v.begin(); it != v.end(); ++it) std::cout << *it;\n  std::cout << "\\n";\n}',
+        output: '456',
+        explanation:
+          'The iterator visits each element in order and stops when it reaches end().',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{2, 4, 6};\n  int sum = 0;\n  for (auto it = v.begin(); it != v.end(); ++it) sum += *it;\n  std::cout << sum << "\\n";\n}',
+          ['12', '6', '246', '10'],
+          0,
+          'All three elements are added.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3};\n  auto it = v.begin();\n  ++it;\n  std::cout << *it << "\\n";\n}',
+          ['1', '3', '0', '2'],
+          3,
+          'One step from the first element reaches the second, 2.',
+        ),
+        choose(
+          'What does v.end() refer to?',
+          [
+            'The last element',
+            'The first element',
+            'The position one past the last element',
+            'The end of the reserved capacity',
+          ],
+          2,
+          'end() is a sentinel that marks where the range stops.',
+        ),
+      ],
+    },
+    {
+      title: 'Never dereference end()',
+      explanation: [
+        'end() does not refer to an element, so *v.end() is undefined behavior. The last element is at end() - 1, and an empty vector has begin() == end().',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> empty;\n  std::cout << (empty.begin() == empty.end()) << "\\n";\n}',
+        output: '1',
+        explanation: 'With no elements, the range starts where it ends.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{8};\n  auto it = v.begin();\n  ++it;\n  std::cout << (it == v.end()) << "\\n";\n}',
+          ['0', '8', '1', '2'],
+          2,
+          'Moving past the only element reaches end().',
+        ),
+        choose(
+          'Which expression reads the last element of a non-empty vector v?',
+          ['*v.end()', '*v.begin()', 'v.end()[0]', '*(v.end() - 1)'],
+          3,
+          'end() is one past the last element, so one step back is the last one.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  int count = 0;\n  for (auto it = v.begin(); it != v.end(); ++it) ++count;\n  std::cout << count << "\\n";\n}',
+          ['1', '-1', '2', '0'],
+          3,
+          'begin() already equals end(), so the loop body never runs.',
+        ),
+      ],
+    },
+    {
+      title: 'Change elements through an iterator',
+      explanation: [
+        'For a non-const vector, *it is the element itself, so assigning to *it changes the vector. --it steps backward.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3};\n  for (auto it = v.begin(); it != v.end(); ++it) *it *= 10;\n  std::cout << v[0] << " " << v[2] << "\\n";\n}',
+        output: '10 30',
+        explanation: 'Each element is multiplied in place.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{5, 5};\n  auto it = v.begin();\n  *it = 0;\n  std::cout << v[0] << v[1] << "\\n";\n}',
+          ['55', '05', '00', '50'],
+          1,
+          'Only the first element is changed through the iterator.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 1, 2};\n  auto it = v.end();\n  --it;\n  *it += 7;\n  std::cout << v[2] << "\\n";\n}',
+          ['2', '10', '9', '3'],
+          2,
+          'One step back from end() is the last element, which becomes 9.',
+        ),
+        choose(
+          'How is a vector iterator like a pointer into an array?',
+          [
+            'It stores a copy of the element',
+            'It owns the element it refers to',
+            '*it reaches the element and ++it moves to the next one',
+            'It can only move backward, never forward',
+          ],
+          2,
+          'Iterators generalize pointers to all standard containers.',
+        ),
+      ],
+    },
+  ],
+  'cpp-vectors': [
+    {
+      title: 'Erase an element and close the gap',
+      explanation: [
+        'v.erase(v.begin() + i) removes the element at index i. The later elements shift down by one, and size() decreases by one.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 7, 9};\n  v.erase(v.begin() + 1);\n  std::cout << v.size() << " " << v[1] << "\\n";\n}',
+        output: '2 9',
+        explanation: '7 is removed, and 9 moves down to index 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3, 4};\n  v.erase(v.begin());\n  for (int x : v) std::cout << x;\n  std::cout << "\\n";\n}',
+          ['134', '234', '123', '1234'],
+          1,
+          'The first element is removed and the rest keep their order.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{5, 6, 7};\n  v.erase(v.begin() + 2);\n  std::cout << v.size() << v[v.size() - 1] << "\\n";\n}',
+          ['37', '27', '36', '26'],
+          3,
+          'Removing the last element leaves 5, 6.',
+        ),
+        choose(
+          'What happens to the elements after an erased one?',
+          [
+            'A hole is left at that index',
+            'They are erased too',
+            'They shift down to fill the gap',
+            'They move to the front',
+          ],
+          2,
+          'A vector stays contiguous, so later elements move down.',
+        ),
+      ],
+    },
+    {
+      title: 'Check the position before erasing',
+      explanation: [
+        'erase needs an iterator to a real element; an out-of-range position is undefined behavior. Check the index against size() first. v.begin() + i needs a signed offset, so convert a std::size_t index with static_cast<std::ptrdiff_t>.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 7, 9};\n  std::size_t index = 5;\n  if (index >= v.size()) std::cout << "no such element\\n";\n  else v.erase(v.begin() + static_cast<std::ptrdiff_t>(index));\n}',
+        output: 'no such element',
+        explanation:
+          'Index 5 is out of range, so the program reports it instead of erasing.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 7, 9};\n  std::size_t index = 0;\n  if (index >= v.size()) std::cout << "no such element\\n";\n  else {\n    v.erase(v.begin() + static_cast<std::ptrdiff_t>(index));\n    int sum = 0;\n    for (int x : v) sum += x;\n    std::cout << sum << "\\n";\n  }\n}',
+          ['19', '16', '12', '10'],
+          1,
+          'The 3 is removed, and 7 + 9 is 16.',
+        ),
+        choose(
+          'What does v.erase(v.begin() + 5) do when v has 3 elements?',
+          [
+            'Erases the last element instead',
+            'Nothing; the call is ignored',
+            'Throws an out-of-range exception',
+            'Undefined behavior: the position is out of range',
+          ],
+          3,
+          'erase does not check its argument.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  std::size_t index = 0;\n  std::cout << (index >= v.size() ? "empty" : "ok") << "\\n";\n}',
+          ['ok', '0', 'empty', '-1'],
+          2,
+          'An empty vector has no element at index 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Use the iterator that erase returns',
+      explanation: [
+        'Erasing invalidates iterators at and after the erased position. erase returns a valid iterator to the element that followed the erased one (or end()), so continue from that.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3, 4};\n  auto it = v.erase(v.begin() + 1);\n  std::cout << *it << " " << v.size() << "\\n";\n}',
+        output: '3 3',
+        explanation: 'After 2 is erased, the returned iterator points at 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{10, 20, 30};\n  auto it = v.erase(v.begin());\n  std::cout << *it << "\\n";\n}',
+          ['10', '30', '20', '0'],
+          2,
+          'The element after the erased 10 is 20.',
+        ),
+        choose(
+          'An iterator pointed at v[2] when v[1] was erased. What is it now?',
+          [
+            'It still points at the same value',
+            'Invalid; it must not be used',
+            'It points one element later',
+            'It points at v[1]',
+          ],
+          1,
+          'Elements after the erased one moved, so iterators to them are invalidated.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{4, 5, 6};\n  auto it = v.erase(v.begin() + 2);\n  std::cout << (it == v.end()) << v.size() << "\\n";\n}',
+          ['02', '13', '03', '12'],
+          3,
+          'Erasing the last element returns end().',
+        ),
+      ],
+    },
+  ],
+  'cpp-iterator-distance': [
+    {
+      title: 'Count steps with std::distance',
+      explanation: [
+        'std::distance(first, last) from <iterator> returns how many ++ steps lead from first to last in the same range. From begin() to end() that is the number of elements.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{2, 3, 5, 7};\n  std::cout << std::distance(v.begin(), v.end()) << "\\n";\n}',
+        output: '4',
+        explanation:
+          'Four steps lead from the first element to one past the last.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3, 4, 5};\n  auto it = v.begin() + 3;\n  std::cout << std::distance(v.begin(), it) << "\\n";\n}',
+          ['4', '3', '2', '5'],
+          1,
+          'it is three steps after begin().',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  std::cout << std::distance(v.begin(), v.end()) << "\\n";\n}',
+          ['1', '-1', '0', '2'],
+          2,
+          'An empty range has no steps.',
+        ),
+        choose(
+          'What does std::distance(first, last) count?',
+          [
+            'The bytes between the two iterators',
+            'The elements equal to *first',
+            'The capacity of the container',
+            'The increments needed to get from first to last',
+          ],
+          3,
+          'It counts positions, not bytes or values.',
+        ),
+      ],
+    },
+    {
+      title: 'Turn an iterator into an index',
+      explanation: [
+        "The distance from begin() to an iterator is that element's index. For vector iterators, b - a gives the same number as std::distance(a, b). Both iterators must come from the same vector.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{4, 8, 15};\n  auto it = v.begin() + 2;\n  int index = static_cast<int>(std::distance(v.begin(), it));\n  std::cout << index << " " << v[index] << "\\n";\n}',
+        output: '2 15',
+        explanation:
+          'The iterator is two steps from begin(), so it refers to index 2.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{9, 8, 7};\n  auto it = v.end() - 1;\n  std::cout << std::distance(v.begin(), it) << "\\n";\n}',
+          ['3', '7', '1', '2'],
+          3,
+          'The last element of three is at index 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3, 4};\n  auto a = v.begin() + 1;\n  auto b = v.begin() + 3;\n  std::cout << std::distance(a, b) << " " << b - a << "\\n";\n}',
+          ['2 2', '3 3', '2 3', '1 1'],
+          0,
+          'Both ways count the two steps from index 1 to index 3.',
+        ),
+        choose(
+          'Why not subtract iterators that come from two different vectors?',
+          [
+            'Subtraction of iterators is never allowed',
+            'They belong to different ranges, so the result is undefined',
+            'It returns a distance in bytes',
+            'It always returns 0',
+          ],
+          1,
+          'A distance is meaningful only within one range.',
+        ),
+      ],
+    },
+    {
+      title: 'Expect a signed result',
+      explanation: [
+        'For vector iterators, distance returns a signed integer, std::ptrdiff_t, so going backward gives a negative number. Convert it with static_cast<int> when an int index is needed.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3};\n  std::cout << std::distance(v.end(), v.begin()) << "\\n";\n}',
+        output: '-3',
+        explanation: 'From end() back to begin() is three steps backward.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3, 4};\n  auto a = v.begin() + 2;\n  std::cout << std::distance(a, v.begin()) << "\\n";\n}',
+          ['2', '0', '-2', '4'],
+          2,
+          'Going from index 2 back to index 0 is two steps backward.',
+        ),
+        choose(
+          'What type does std::distance return for vector iterators?',
+          [
+            'std::size_t, an unsigned type',
+            'A signed integer type, std::ptrdiff_t',
+            'bool, true when they differ',
+            'Another iterator of the vector',
+          ],
+          1,
+          'It must be able to represent backward distances.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <iterator>\n#include <vector>\nint main() {\n  std::vector<int> v{5, 6, 7, 8};\n  int middle = static_cast<int>(std::distance(v.begin(), v.end())) / 2;\n  std::cout << v[middle] << "\\n";\n}',
+          ['6', '2', '8', '7'],
+          3,
+          'There are 4 elements, so middle is 2, and v[2] is 7.',
+        ),
+      ],
+    },
+  ],
+  'cpp-reallocation-invalidation': [
+    {
+      title: 'Know when a vector reallocates',
+      explanation: [
+        'When push_back finds size() equal to capacity(), the vector allocates a larger block, moves the elements there, and frees the old block. capacity() then grows. Within the existing capacity, no reallocation happens.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v{1};\n  std::size_t before = v.capacity();\n  for (std::size_t i = v.size(); i < before; ++i) v.push_back(0);\n  v.push_back(2);\n  std::cout << (v.capacity() > before) << "\\n";\n}',
+        output: '1',
+        explanation:
+          'The loop fills the vector to capacity, so the final push_back must reallocate.',
+      },
+      questions: [
+        choose(
+          'When must push_back reallocate?',
+          [
+            'On every call',
+            'When size() already equals capacity()',
+            'Never; vectors grow in place',
+            'When capacity() exceeds size()',
+          ],
+          1,
+          'Only a full vector needs a larger block.',
+        ),
+        choose(
+          'What happens to the old storage when a vector reallocates?',
+          [
+            'It is kept as a backup copy',
+            'It is shared by the old and new block',
+            'The elements move to new storage and the old block is freed',
+            'Nothing happens to it',
+          ],
+          2,
+          'That is why anything pointing into the old block becomes invalid.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v;\n  v.reserve(3);\n  std::size_t cap = v.capacity();\n  v.push_back(1);\n  v.push_back(2);\n  std::cout << (v.capacity() == cap) << "\\n";\n}',
+          ['0', '3', '2', '1'],
+          3,
+          'Two elements fit in the reserved room, so no reallocation occurs.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep an index across growth',
+      explanation: [
+        "A reallocation invalidates every pointer, reference, and iterator to the vector's elements. An index is just a position, so it still finds the same element after the vector grows.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v{7};\n  std::size_t index = 0;\n  for (int i = 0; i < 100; ++i) v.push_back(i);\n  std::cout << v[index] << "\\n";\n}',
+        output: '7',
+        explanation:
+          'However often the vector moved, index 0 still holds the first element.',
+      },
+      questions: [
+        choose(
+          'What is wrong with this code?',
+          [
+            'first is a copy, so it never changes',
+            'push_back cannot be called in a loop',
+            'first may refer to freed storage',
+            'Nothing; references follow the vector',
+          ],
+          2,
+          'The reference was taken before the growth that moved the elements.',
+          'std::vector<int> v{7};\nint& first = v[0];\nfor (int i = 0; i < 100; ++i) v.push_back(i);\nstd::cout << first;',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <cstddef>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 4};\n  std::size_t i = 1;\n  for (int k = 0; k < 50; ++k) v.push_back(k);\n  std::cout << v[i] << v.size() << "\\n";\n}',
+          ['452', '42', '352', '050'],
+          0,
+          'Index 1 still holds 4, and the vector now has 52 elements.',
+        ),
+        choose(
+          'Which one still finds the same element after a reallocation?',
+          [
+            'A pointer to the element',
+            'A reference to the element',
+            'An iterator to the element',
+            "The element's index",
+          ],
+          3,
+          'Only the index does not depend on where the storage lives.',
+        ),
+      ],
+    },
+    {
+      title: 'Reacquire after growth',
+      explanation: [
+        'Take pointers, references, and iterators after the vector has finished growing, or reserve enough capacity first so it does not reallocate. Within the reserved capacity, existing references stay valid.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{5};\n  for (int i = 0; i < 20; ++i) v.push_back(i);\n  int& first = v[0];\n  first += 1;\n  std::cout << v[0] << "\\n";\n}',
+        output: '6',
+        explanation:
+          'The reference is taken after the growth, so it refers to the current storage.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1};\n  v.reserve(10);\n  int& r = v[0];\n  v.push_back(2);\n  r = 9;\n  std::cout << v[0] << "\\n";\n}',
+          ['1', '2', '9', '0'],
+          2,
+          'The reserve made room for the push_back, so no reallocation invalidated r.',
+        ),
+        choose(
+          'A loop pushes elements and also needs the first element each time. What is safe?',
+          [
+            'Keep a pointer from before the loop',
+            'Keep an iterator from before the loop',
+            'Keep a reference from before the loop',
+            'Keep an index and read v[0] when needed',
+          ],
+          3,
+          'Pointers, references, and iterators may be invalidated by any push that reallocates.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{2, 4};\n  for (int i = 0; i < 30; ++i) v.push_back(i);\n  auto it = v.begin() + 1;\n  std::cout << *it << "\\n";\n}',
+          ['2', '1', '4', '29'],
+          2,
+          'The iterator is created after the growth and points at index 1.',
+        ),
+      ],
+    },
+  ],
+  'cpp-iterators': [
+    {
+      title: 'Erase while iterating with the returned iterator',
+      explanation: [
+        'To remove some elements in one pass, assign it = v.erase(it) when erasing and ++it only when keeping the element. The returned iterator already points at the next element, so incrementing it too would skip one.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, -2, -3, 4};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it < 0) it = v.erase(it);\n    else ++it;\n  }\n  std::cout << v.size() << "\\n";\n}',
+        output: '2',
+        explanation:
+          'Both negative values are removed, including the second of two in a row.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{-1, -1, 5};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it < 0) it = v.erase(it);\n    else ++it;\n  }\n  std::cout << v.size() << "\\n";\n}',
+          ['1', '2', '3', '0'],
+          0,
+          'Both negatives are removed, leaving only 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{3, 0, 0, 7};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it == 0) it = v.erase(it);\n    else ++it;\n  }\n  for (int x : v) std::cout << x;\n  std::cout << "\\n";\n}',
+          ['307', '3007', '37', '7'],
+          2,
+          'Both zeros are erased and 3, 7 remain.',
+        ),
+        choose(
+          'Why does the loop increment it only in the else branch?',
+          [
+            '++it is never allowed after an erase',
+            'To skip every other element on purpose',
+            'The returned iterator already points at the next element',
+            'It makes the loop run noticeably faster',
+          ],
+          2,
+          'Incrementing after an erase would skip the element that moved into place.',
+        ),
+      ],
+    },
+    {
+      title: 'Never use the erased iterator',
+      explanation: [
+        'After v.erase(it), the old it is invalid. Incrementing or reading it is undefined behavior, which is exactly what a plain for loop with ++it does if it erases without using the returned iterator.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{2, 4, 5, 6};\n  int erased = 0;\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it % 2 == 0) {\n      it = v.erase(it);\n      ++erased;\n    } else {\n      ++it;\n    }\n  }\n  std::cout << erased << " " << v.size() << "\\n";\n}',
+        output: '3 1',
+        explanation: 'Three even values are erased, and only 5 remains.',
+      },
+      questions: [
+        choose(
+          'What is wrong with this loop?',
+          [
+            'erase cannot take an iterator argument',
+            'it is invalid after erase, yet the loop uses it',
+            'Negative values cannot be erased',
+            'Nothing; the loop is correct',
+          ],
+          1,
+          'The erased iterator must be replaced by the one erase returns.',
+          'for (auto it = v.begin(); it != v.end(); ++it)\n  if (*it < 0) v.erase(it);',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 1, 1};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it == 1) it = v.erase(it);\n    else ++it;\n  }\n  std::cout << v.size() << (v.begin() == v.end()) << "\\n";\n}',
+          ['31', '00', '11', '01'],
+          3,
+          'Every element is erased, so the vector ends empty.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{5, -5, 5, -5};\n  int seen = 0;\n  for (auto it = v.begin(); it != v.end();) {\n    ++seen;\n    if (*it < 0) it = v.erase(it);\n    else ++it;\n  }\n  std::cout << seen << v.size() << "\\n";\n}',
+          ['22', '44', '24', '42'],
+          3,
+          'Each original element is examined once, and the two negatives are erased.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep the remaining order',
+      explanation: [
+        'Erasing in this loop keeps the order of the elements that remain; nothing is reordered or sorted.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{9, 1, 8, 2, 7};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it < 5) it = v.erase(it);\n    else ++it;\n  }\n  for (int x : v) std::cout << x;\n  std::cout << "\\n";\n}',
+        output: '987',
+        explanation:
+          'The small values are removed, and 9, 8, 7 stay in their original order.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{4, 3, 2, 1};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it % 2 != 0) it = v.erase(it);\n    else ++it;\n  }\n  for (int x : v) std::cout << x;\n  std::cout << "\\n";\n}',
+          ['24', '42', '31', '4321'],
+          1,
+          'The odd values are erased, and 4, 2 keep their order.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <vector>\nint main() {\n  std::vector<int> v{1, 2, 3};\n  for (auto it = v.begin(); it != v.end();) {\n    if (*it > 1) it = v.erase(it);\n    else ++it;\n  }\n  for (int x : v) std::cout << x;\n  std::cout << "\\n";\n}',
+          ['23', '123', '3', '1'],
+          3,
+          'Only 1 is kept.',
+        ),
+        choose(
+          'Does erasing in this loop change the order of the elements that remain?',
+          [
+            'Yes, they end up sorted',
+            'Yes, they end up reversed',
+            'No, they keep their order',
+            'Only the first one moves',
+          ],
+          2,
+          'erase shifts later elements down without reordering them.',
+        ),
+      ],
+    },
+  ],
+  'cpp-pair-members': [
+    {
+      title: 'Make a pair and read .first and .second',
+      explanation: [
+        'std::pair<int, int> from <utility> holds two values. They are data members, so they are read and written without parentheses: p.first and p.second.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> point{3, 8};\n  std::cout << point.first << " " << point.second << "\\n";\n}',
+        output: '3 8',
+        explanation:
+          'The first value given goes into first, the second into second.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{10, 4};\n  std::cout << p.first - p.second << "\\n";\n}',
+          ['-6', '6', '14', '104'],
+          1,
+          'first is 10 and second is 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{1, 2};\n  p.second = p.first + 5;\n  std::cout << p.first << p.second << "\\n";\n}',
+          ['12', '62', '66', '16'],
+          3,
+          'second is replaced with 1 + 5.',
+        ),
+        choose(
+          'How do you read the second value of a pair p?',
+          ['p.second()', 'p[1]', 'p.second', 'p.get(1)'],
+          2,
+          'first and second are data members, not functions.',
+        ),
+      ],
+    },
+    {
+      title: 'Copy pairs and build them with make_pair',
+      explanation: [
+        'std::make_pair(4, 5) creates a pair from its arguments. Copying a pair copies both values, so the copy is independent.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{2, 3};\n  std::pair<int, int> b = a;\n  b.first = 9;\n  std::cout << a.first << b.first << "\\n";\n}',
+        output: '29',
+        explanation: 'b is a copy, so changing it leaves a alone.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a = std::make_pair(4, 5);\n  std::pair<int, int> b = a;\n  a.second = 0;\n  std::cout << b.second << a.second << "\\n";\n}',
+          ['00', '55', '50', '05'],
+          2,
+          'b copied 5 before a.second became 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{7, 1};\n  std::pair<int, int> q{p.second, p.first};\n  std::cout << q.first << q.second << "\\n";\n}',
+          ['71', '11', '77', '17'],
+          3,
+          'q is built with the members of p in swapped order.',
+        ),
+        choose(
+          'What does std::make_pair(4, 5) create?',
+          [
+            'An array holding the two ints',
+            'The sum of its arguments, 9',
+            'A std::pair<int, int> holding 4 and 5',
+            'A reference to the first argument',
+          ],
+          2,
+          'make_pair deduces the member types from its arguments.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep two related results together',
+      explanation: [
+        'A pair is a simple way to keep two results that belong together, such as a quotient and its remainder, as one value.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nint main() {\n  int total = 17;\n  int divisor = 5;\n  std::pair<int, int> result{total / divisor, total % divisor};\n  std::cout << result.first << " " << result.second << "\\n";\n}',
+        output: '3 2',
+        explanation: '17 / 5 is 3, with 2 left over.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> result{23 / 4, 23 % 4};\n  std::cout << result.first << " " << result.second << "\\n";\n}',
+          ['5 3', '3 5', '5.75 3', '6 1'],
+          0,
+          '23 / 4 is 5, and 23 - 20 leaves 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> r{-7 / 2, -7 % 2};\n  std::cout << r.first << " " << r.second << "\\n";\n}',
+          ['-4 1', '-3 1', '-4 -1', '-3 -1'],
+          3,
+          'The quotient truncates toward zero, and the remainder takes the sign of -7.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  int minutes = 135;\n  std::pair<int, int> hm{minutes / 60, minutes % 60};\n  std::cout << hm.first * 100 + hm.second << "\\n";\n}',
+          ['2015', '215', '135', '275'],
+          1,
+          'The pair holds 2 hours and 15 minutes, combined as 215.',
+        ),
+      ],
+    },
+  ],
+  'cpp-pair-ordering': [
+    {
+      title: 'Compare pairs by first, then by second',
+      explanation: [
+        'p < q compares the .first members first. Only when they are equal does it compare .second. This is lexicographic order, like sorting words letter by letter.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{1, 9};\n  std::pair<int, int> b{2, 0};\n  std::cout << (a < b) << "\\n";\n}',
+        output: '1',
+        explanation: '1 < 2 decides it; the second members are never compared.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{2, 1};\n  std::pair<int, int> b{2, 5};\n  std::cout << (a < b) << (b < a) << "\\n";\n}',
+          ['01', '10', '00', '11'],
+          1,
+          'The firsts tie, so the seconds decide: 1 < 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{3, 0};\n  std::pair<int, int> b{2, 9};\n  std::cout << (a < b) << "\\n";\n}',
+          ['1', '9', '3', '0'],
+          3,
+          '3 is not less than 2, so a is not less than b, whatever the seconds are.',
+        ),
+        choose(
+          'When does .second affect the result of p < q?',
+          [
+            'Always',
+            'Never',
+            'Only when p.second is larger',
+            'Only when p.first == q.first',
+          ],
+          3,
+          'The second members break ties between equal firsts.',
+        ),
+      ],
+    },
+    {
+      title: 'Require both members for equality',
+      explanation: [
+        'p == q is true only when both the firsts and the seconds are equal. The other comparisons, <=, >, and >=, follow the same lexicographic order.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{4, 5};\n  std::pair<int, int> b{4, 6};\n  std::cout << (a == b) << (a != b) << "\\n";\n}',
+        output: '01',
+        explanation: 'The firsts match but the seconds differ.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{1, 1};\n  std::pair<int, int> b = a;\n  std::cout << (a == b) << (a < b) << "\\n";\n}',
+          ['11', '01', '00', '10'],
+          3,
+          'Equal pairs are not less than each other.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{2, 7};\n  std::pair<int, int> b{2, 7};\n  std::cout << (a <= b) << (a > b) << "\\n";\n}',
+          ['10', '11', '01', '00'],
+          0,
+          'Equal pairs satisfy <= but not >.',
+        ),
+        choose(
+          'Which two pairs are equal?',
+          [
+            '{1, 2} and {2, 1}',
+            '{0, 5} and {5, 0}',
+            '{3, 4} and {3, 4}',
+            '{1, 1} and {1, 2}',
+          ],
+          2,
+          'Both members must match, in the same positions.',
+        ),
+      ],
+    },
+    {
+      title: 'Write the same comparison by hand',
+      explanation: [
+        'Pair ordering is the same as a.first < b.first || (a.first == b.first && a.second < b.second). Put the primary key in .first and the tie-breaker in .second, and pair comparison does the rest.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{5, 2};\n  std::pair<int, int> b{5, 3};\n  bool manual = a.first < b.first || (a.first == b.first && a.second < b.second);\n  std::cout << manual << (a < b) << "\\n";\n}',
+        output: '11',
+        explanation: 'Both forms see equal firsts and compare the seconds.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> a{6, 0};\n  std::pair<int, int> b{5, 9};\n  bool manual = a.first < b.first || (a.first == b.first && a.second < b.second);\n  std::cout << manual << (a < b) << "\\n";\n}',
+          ['11', '01', '10', '00'],
+          3,
+          '6 is not less than 5 and not equal to it, so both forms say false.',
+        ),
+        choose(
+          'Records are pairs of {price, arrival id}. Two records have the same price. Which one is less?',
+          [
+            'The one with the larger id',
+            'The one with the smaller id',
+            'Neither; ties stay unordered',
+            'The one created first in the program',
+          ],
+          1,
+          'With equal firsts, the seconds decide.',
+        ),
+        choose(
+          'Which hand-written test matches a < b for pairs?',
+          [
+            'a.first < b.first && a.second < b.second',
+            'a.second < b.second || a.first < b.first',
+            'a.first < b.first || (a.first == b.first && a.second < b.second)',
+            'a.first + a.second < b.first + b.second',
+          ],
+          2,
+          'Only this one compares the seconds just when the firsts tie.',
+        ),
+      ],
+    },
+  ],
+  'cpp-structured-bindings': [
+    {
+      title: 'Unpack a pair into named copies',
+      explanation: [
+        'auto [low, high] = range; declares two new variables initialized from range.first and range.second, matched by position. With plain auto they are copies.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> range{3, 10};\n  auto [low, high] = range;\n  std::cout << high - low << "\\n";\n}',
+        output: '7',
+        explanation: 'low gets 3 and high gets 10.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{4, 9};\n  auto [a, b] = p;\n  std::cout << b << a << "\\n";\n}',
+          ['49', '13', '94', '99'],
+          2,
+          'a is 4 and b is 9; the program prints b first.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{1, 2};\n  auto [x, y] = p;\n  x = 50;\n  std::cout << p.first << " " << x << "\\n";\n}',
+          ['50 50', '1 1', '50 1', '1 50'],
+          3,
+          'x is a copy, so assigning to it leaves p.first at 1.',
+        ),
+        choose(
+          'In auto [a, b] = p;, how are a and b matched to the members of p?',
+          [
+            'By the names a and b themselves',
+            'Alphabetically by the chosen names',
+            'By position: a gets first and b gets second',
+            'In an unspecified order',
+          ],
+          2,
+          'The names are chosen freely; only their order matters.',
+        ),
+      ],
+    },
+    {
+      title: 'Bind by reference with auto&',
+      explanation: [
+        "auto& [a, b] = p; makes a and b refer to p's members, so assigning to them changes p.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{1, 2};\n  auto& [first, second] = p;\n  first = 10;\n  std::cout << p.first << "\\n";\n}',
+        output: '10',
+        explanation:
+          'first refers to p.first, so the assignment changes the pair.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{3, 4};\n  auto& [a, b] = p;\n  b += a;\n  std::cout << p.second << "\\n";\n}',
+          ['4', '3', '34', '7'],
+          3,
+          'b refers to p.second, which becomes 4 + 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nint main() {\n  std::pair<int, int> p{3, 4};\n  auto [a, b] = p;\n  auto& [c, d] = p;\n  a = 0;\n  d = 0;\n  std::cout << p.first << p.second << "\\n";\n}',
+          ['00', '34', '30', '04'],
+          2,
+          'a is a copy, so p.first stays 3; d refers to p.second, which becomes 0.',
+        ),
+        choose(
+          "You want to change a pair's members through the unpacked names. Which form do you need?",
+          [
+            'auto [a, b] = p;',
+            'auto [a, b] = &p;',
+            'auto (a, b) = p;',
+            'auto& [a, b] = p;',
+          ],
+          3,
+          "Only the reference form binds the names to the pair's own members.",
+        ),
+      ],
+    },
+    {
+      title: 'Unpack each element in a range-based for loop',
+      explanation: [
+        'Structured bindings work in a range-based for loop over pairs: for (auto [id, value] : items) copies each pair, and for (auto& [id, value] : items) refers to it, so updates reach the container. const auto& reads without copying.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\n#include <utility>\nint main() {\n  std::array<std::pair<int, int>, 3> orders{{{100, 2}, {101, 5}, {99, 1}}};\n  int total = 0;\n  for (const auto& [price, qty] : orders) total += price * qty;\n  std::cout << total << "\\n";\n}',
+        output: '804',
+        explanation: '100 * 2 + 101 * 5 + 99 * 1 is 200 + 505 + 99.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\n#include <utility>\nint main() {\n  std::array<std::pair<int, int>, 2> items{{{1, 10}, {2, 20}}};\n  int sum = 0;\n  for (auto [id, value] : items) sum += value;\n  std::cout << sum << "\\n";\n}',
+          ['3', '33', '10', '30'],
+          3,
+          'Only the second members, 10 and 20, are added.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\n#include <utility>\nint main() {\n  std::array<std::pair<int, int>, 2> items{{{1, 10}, {2, 20}}};\n  for (auto& [id, value] : items) value += id;\n  std::cout << items[1].second << "\\n";\n}',
+          ['20', '2', '22', '21'],
+          2,
+          'The reference bindings update each pair: 20 + 2 is 22.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\n#include <utility>\nint main() {\n  std::array<std::pair<int, int>, 2> items{{{1, 10}, {2, 20}}};\n  for (auto [id, value] : items) value = 0;\n  std::cout << items[0].second << "\\n";\n}',
+          ['0', '10', '1', '11'],
+          1,
+          'Plain auto copies each pair, so the array keeps its values.',
+        ),
+      ],
+    },
+  ],
+  'cpp-pairs': [
+    {
+      title: 'Return two results as a pair',
+      explanation: [
+        'A function can return std::pair<int, int> to hand back two results at once. return {low, high}; builds the pair with low as first and high as second.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <array>\n#include <utility>\nstd::pair<int, int> min_max(std::array<int, 4> values) {\n  int low = values[0];\n  int high = values[0];\n  for (int x : values) {\n    if (x < low) low = x;\n    if (x > high) high = x;\n  }\n  return {low, high};\n}\nint main() {\n  std::pair<int, int> result = min_max({3, 9, -2, 5});\n  std::cout << result.first << " " << result.second << "\\n";\n}',
+        output: '-2 9',
+        explanation:
+          'One pass finds both extremes, and the pair carries both back.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <array>\n#include <utility>\nstd::pair<int, int> min_max(std::array<int, 4> values) {\n  int low = values[0];\n  int high = values[0];\n  for (int x : values) {\n    if (x < low) low = x;\n    if (x > high) high = x;\n  }\n  return {low, high};\n}\nint main() {\n  std::pair<int, int> result = min_max({4, 4, 4, 4});\n  std::cout << result.first << " " << result.second << "\\n";\n}',
+          ['4 4', '0 4', '4 0', '16 4'],
+          0,
+          'Every value is 4, so it is both the smallest and the largest.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <array>\n#include <utility>\nstd::pair<int, int> min_max(std::array<int, 4> values) {\n  int low = values[0];\n  int high = values[0];\n  for (int x : values) {\n    if (x < low) low = x;\n    if (x > high) high = x;\n  }\n  return {low, high};\n}\nint main() {\n  std::pair<int, int> result = min_max({0, -1, 7, 2});\n  std::cout << result.second - result.first << "\\n";\n}',
+          ['7', '6', '-8', '8'],
+          3,
+          'The range runs from -1 to 7, a spread of 8.',
+        ),
+        choose(
+          'What does return {low, high}; do in a function that returns std::pair<int, int>?',
+          [
+            'Returns low only',
+            'Returns an array of two ints',
+            'Builds a pair with first = low and second = high',
+            'Does not compile without make_pair',
+          ],
+          2,
+          'The braces initialize the returned pair in member order.',
+        ),
+      ],
+    },
+    {
+      title: 'Unpack the result in the same order',
+      explanation: [
+        'The caller can name both results at once with auto [q, r] = f();. The names are matched by position, so they must follow the order the function used to build the pair.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  auto [q, r] = div_mod(17, 5);\n  std::cout << q << " " << r << "\\n";\n}',
+        output: '3 2',
+        explanation: 'q receives the quotient and r the remainder.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  auto [r, q] = div_mod(17, 5);\n  std::cout << q << "\\n";\n}',
+          ['3', '17', '2', '5'],
+          2,
+          'The names are swapped: q is bound to second, which holds the remainder 2.',
+        ),
+        choose(
+          'A function returns {count, total}. The caller writes auto [total, count] = f();. What goes wrong?',
+          [
+            'It does not compile',
+            'The names are swapped: total holds the count',
+            'Bindings match by name, so it works',
+            'Both names receive the total',
+          ],
+          1,
+          'Structured bindings follow positions, not names.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  auto [q, r] = div_mod(29, 6);\n  std::cout << q * 6 + r << "\\n";\n}',
+          ['4', '5', '35', '29'],
+          3,
+          'Quotient times divisor plus remainder rebuilds the original 29.',
+        ),
+      ],
+    },
+    {
+      title: 'Compare returned pairs',
+      explanation: [
+        'A returned pair can be compared directly with == or <, using the lexicographic rules: first members first, second members to break ties.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  std::cout << (div_mod(10, 3) == std::pair<int, int>(3, 1)) << "\\n";\n}',
+        output: '1',
+        explanation: '10 / 3 is 3 with remainder 1, so both members match.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  std::cout << (div_mod(9, 3) == std::pair<int, int>(3, 1)) << "\\n";\n}',
+          ['1', '3', '0', '30'],
+          2,
+          '9 / 3 leaves remainder 0, so the seconds differ.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  std::cout << (div_mod(7, 2) < div_mod(8, 2)) << "\\n";\n}',
+          ['0', '3', '4', '1'],
+          3,
+          '{3, 1} is less than {4, 0} because 3 < 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <utility>\nstd::pair<int, int> div_mod(int a, int b) {\n  return {a / b, a % b};\n}\nint main() {\n  std::pair<int, int> a = div_mod(11, 4);\n  std::pair<int, int> b = div_mod(10, 4);\n  std::cout << (a > b) << (a.first == b.first) << "\\n";\n}',
+          ['01', '10', '11', '00'],
+          2,
+          'Both quotients are 2, so the remainders 3 and 2 decide.',
+        ),
+      ],
+    },
+  ],
 };
