@@ -1254,4 +1254,1287 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+
+  'da-csv': [
+    {
+      title: 'Parse CSV text into a table',
+      explanation: [
+        'CSV stores a table as text: the first line names the columns, and each later line is one row with values separated by commas. pd.read_csv parses that text into a DataFrame and guesses a type for each column, so numbers become numbers.',
+        'These examples wrap the text with StringIO (from io import StringIO), which makes a string behave like an open file; with a real file you pass its path instead. The parser respects quotes: in "Lima, Peru" the comma belongs to the value, which splitting each line on commas by hand would break.',
+      ],
+      example: {
+        code: 'from io import StringIO\nimport pandas as pd\ntext = "city,visits\\n\\"Lima, Peru\\",12\\nOslo,7\\n"\nplaces = pd.read_csv(StringIO(text))\nprint(places.shape)\nprint(places["city"].tolist())',
+        output: "(2, 2)\n['Lima, Peru', 'Oslo']",
+        explanation:
+          'The header names two columns and two lines follow, so the shape is (2, 2). The quoted comma stays inside the first city.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from io import StringIO\nimport pandas as pd\ntext = "id,score\\n1,80\\n2,95\\n3,70\\n"\nt = pd.read_csv(StringIO(text))\nprint(t.shape)',
+          ['(4, 2)', '(2, 3)', '(3, 2)', '(3, 1)'],
+          2,
+          'The header line names the columns and is not a row, leaving three rows of two values.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from io import StringIO\nimport pandas as pd\ntext = "name,city\\n\\"Ng, Kim\\",Rome\\nAli,Oslo\\n"\nt = pd.read_csv(StringIO(text))\nprint(t["name"].tolist())',
+          [
+            "['Ng', 'Ali']",
+            "['Ng, Kim', 'Ali']",
+            "['Ng', 'Kim', 'Ali']",
+            "['Rome', 'Oslo']",
+          ],
+          1,
+          'The quotes mark "Ng, Kim" as one field, so its comma does not split it.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from io import StringIO\nimport pandas as pd\ntext = "item,qty\\npen,4\\npad,6\\n"\nt = pd.read_csv(StringIO(text))\nprint(t["qty"].sum())',
+          ['46', "['4', '6']", '2', '10'],
+          3,
+          'read_csv recognises the qty values as numbers, so sum adds them rather than joining text.',
+        ),
+        choose(
+          'Why does read_csv handle the line "Smith, Jo",42 correctly when line.split(",") does not?',
+          [
+            'read_csv ignores every comma inside a line',
+            'split removes the quotes before splitting',
+            'read_csv treats the quoted text as a single field',
+            'read_csv reads only the first column of each line',
+          ],
+          2,
+          'A CSV parser knows a quoted field may contain the delimiter; split cuts at every comma.',
+        ),
+      ],
+    },
+    {
+      title: 'Declare the delimiter',
+      explanation: [
+        'Not every delimited file uses commas. Semicolons are common where the comma is the decimal mark, and tab-separated files come from many exports. sep tells read_csv which character separates fields, such as sep=";" or sep="\\t" for a tab.',
+        'With the wrong separator, the header contains no delimiter, so the whole line becomes one column with a long name. Checking shape and column names right after loading catches this immediately.',
+      ],
+      example: {
+        code: 'from io import StringIO\nimport pandas as pd\ntext = "site;count\\nA;4\\nB;9\\n"\nwrong = pd.read_csv(StringIO(text))\nright = pd.read_csv(StringIO(text), sep=";")\nprint(wrong.shape)\nprint(right.shape)\nprint(right["count"].tolist())',
+        output: '(2, 1)\n(2, 2)\n[4, 9]',
+        explanation:
+          'Read with commas, each line is one field, giving one column. With sep=";" the two columns appear.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from io import StringIO\nimport pandas as pd\ntext = "a|b\\n1|2\\n3|4\\n"\nt = pd.read_csv(StringIO(text), sep="|")\nprint(t.columns.tolist())',
+          ["['a|b']", "['1', '2']", "['a', 'b', '1', '2']", "['a', 'b']"],
+          3,
+          'With the pipe declared as the separator, the header splits into two column names.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from io import StringIO\nimport pandas as pd\ntext = "x;y\\n1;2\\n"\nt = pd.read_csv(StringIO(text))\nprint(t.columns.tolist())',
+          ["['x;y']", "['x', 'y']", "['1;2']", '[]'],
+          0,
+          'The default separator is a comma, and the header has none, so it is one column name.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from io import StringIO\nimport pandas as pd\ntext = "day\\ttemp\\nmon\\t12\\ntue\\t15\\n"\nt = pd.read_csv(StringIO(text), sep="\\t")\nprint(t["temp"].mean())',
+          ['27', '13.5', '12', 'nan'],
+          1,
+          'The tab separator splits day from temp, and the mean of 12 and 15 is 13.5.',
+        ),
+        choose(
+          'A file loads with shape (500, 1) and a single column named "id;name;total". What is the most likely fix?',
+          [
+            'Pass dtype={"id": "string"}',
+            'Drop the first row',
+            'Pass sep=";" to read_csv',
+            'Call head(500)',
+          ],
+          2,
+          'The semicolons in the column name show the real delimiter was never applied.',
+        ),
+      ],
+    },
+    {
+      title: 'Protect identifiers and missing markers',
+      explanation: [
+        'read_csv guesses each column’s type. A code such as 007 looks numeric, so it becomes the number 7 and loses its leading zeros. dtype={"code": "string"} keeps it as text: identifiers are labels, not quantities.',
+        'Empty fields and common markers such as NA or n/a are read as missing automatically. Sources often have their own markers, such as - or 999; na_values=["-"] tells read_csv to treat those tokens as missing too.',
+      ],
+      example: {
+        code: 'from io import StringIO\nimport pandas as pd\ntext = "code,temp\\n007,21\\n042,-\\n"\nraw = pd.read_csv(StringIO(text))\nclean = pd.read_csv(StringIO(text), dtype={"code": "string"}, na_values=["-"])\nprint(raw["code"].tolist())\nprint(clean["code"].tolist())\nprint(clean["temp"].tolist())',
+        output: "[7, 42]\n['007', '042']\n[21.0, nan]",
+        explanation:
+          'Without a dtype the codes lose their zeros. With na_values, the - becomes missing, so temp is numeric (floats because of the missing value).',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from io import StringIO\nimport pandas as pd\ntext = "zip,pop\\n02134,9\\n10001,21\\n"\nt = pd.read_csv(StringIO(text))\nprint(t["zip"].tolist())',
+          [
+            "['02134', '10001']",
+            '[2134, 10001]',
+            '[2134.0, 10001.0]',
+            '[2, 1]',
+          ],
+          1,
+          'The zip codes look like integers, so they are parsed as numbers and the leading zero disappears.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from io import StringIO\nimport pandas as pd\ntext = "zip,pop\\n02134,9\\n10001,21\\n"\nt = pd.read_csv(StringIO(text), dtype={"zip": "string"})\nprint(t["zip"].tolist())',
+          [
+            '[2134, 10001]',
+            "['2134', '10001']",
+            '[2134.0, 10001.0]',
+            "['02134', '10001']",
+          ],
+          3,
+          'Declaring the column as text keeps every character, including the leading zero.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from io import StringIO\nimport pandas as pd\ntext = "id,score\\n1,88\\n2,?\\n3,75\\n"\nt = pd.read_csv(StringIO(text), na_values=["?"])\nprint(t["score"].tolist())',
+          [
+            '[88.0, nan, 75.0]',
+            "[88, '?', 75]",
+            '[88, 75]',
+            '[88.0, 0.0, 75.0]',
+          ],
+          0,
+          'The ? marker becomes missing, so the column is numeric with one NaN, stored as floats.',
+        ),
+        choose(
+          'A sensor export writes 999 when a reading failed. What should read_csv be told?',
+          [
+            'dtype={"reading": "string"}',
+            'sep="999"',
+            'na_values=["999"]',
+            'Nothing, because 999 is a valid number',
+          ],
+          2,
+          '999 is a source-specific missing marker, so declare it with na_values.',
+        ),
+      ],
+    },
+  ],
+
+  'da-missing-values': [
+    {
+      title: 'Detect missing values',
+      explanation: [
+        'pandas marks a missing number as NaN (some column types show <NA> instead). .isna() returns True for each missing entry and .notna() the opposite. Because True counts as 1, .isna().sum() counts the missing entries; on a whole table it gives one count per column.',
+        'Never test with == against NaN: NaN is not equal to anything, not even itself, so the comparison is always False and finds nothing.',
+      ],
+      example: {
+        code: 'import pandas as pd\ntemps = pd.Series([21.5, None, 19.0, None])\nprint(temps.isna().tolist())\nprint(temps.isna().sum())\nprint((temps == float("nan")).sum())',
+        output: '[False, True, False, True]\n2\n0',
+        explanation:
+          'isna flags the two None entries, and summing the flags counts them. The == test finds nothing because NaN never equals NaN.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([4, None, 7])\nprint(s.notna().tolist())',
+          ['[False, True, False]', '[4.0, 7.0]', '[True, False, True]', '2'],
+          2,
+          'notna is True where a value is present, so only the middle entry is False.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"a": [1, None, 3], "b": [None, None, 6]})\nprint(t["b"].isna().sum())\nprint(t.isna().sum().tolist())',
+          ['2\n3', '2\n[1, 2]', '1\n[1, 2]', '2\n[2, 1]'],
+          1,
+          'Column b has two missing entries; on the table, the counts are 1 for a and 2 for b.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([1.0, None, 3.0])\nprint((s == s).tolist())',
+          [
+            '[True, True, True]',
+            '[False, True, False]',
+            '[True, None, True]',
+            '[True, False, True]',
+          ],
+          3,
+          'Every present value equals itself, but NaN is not equal even to itself.',
+        ),
+        choose(
+          'Which expression counts the missing values in the price column?',
+          [
+            't["price"].isna().sum()',
+            '(t["price"] == None).sum()',
+            't["price"].sum()',
+            'len(t["price"])',
+          ],
+          0,
+          'isna flags missing entries reliably, and summing the flags counts them.',
+        ),
+      ],
+    },
+    {
+      title: 'Drop or fill, and keep the result',
+      explanation: [
+        '.dropna() removes missing entries. On a table, .dropna() removes every row with any missing value, while .dropna(subset=["score"]) removes only rows whose score is missing. .fillna(value) replaces missing entries with a chosen value.',
+        'Both return a new result and leave the original unchanged, so assign the result to a name or back to a column.',
+      ],
+      example: {
+        code: 'import pandas as pd\nt = pd.DataFrame({"name": ["Ana", "Ben", "Cy"], "score": [8.0, None, 6.0], "note": [None, "late", None]})\nkept = t.dropna(subset=["score"])\nprint(kept["name"].tolist())\nprint(t.dropna().shape)\nt["note"] = t["note"].fillna("none")\nprint(t["note"].tolist())',
+        output: "['Ana', 'Cy']\n(0, 3)\n['none', 'late', 'none']",
+        explanation:
+          'Only Ben lacks a score. Plain dropna removes all three rows, because each misses either score or note. The fill is assigned back to the note column.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([2.0, None, 5.0])\ns.fillna(0)\nprint(s.tolist())',
+          ['[2.0, 0.0, 5.0]', '[2.0, 5.0]', '[2.0, nan, 5.0]', '[2, 0, 5]'],
+          2,
+          'fillna returns a new Series; the result was never assigned, so s still has its NaN.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"a": [1, None, 3], "b": [4, 5, None]})\nprint(len(t.dropna()))\nprint(len(t.dropna(subset=["a"])))',
+          ['2\n1', '1\n2', '3\n2', '1\n1'],
+          1,
+          'Two rows miss something, leaving 1. Only one row misses a, leaving 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"city": ["Rome", None, "Oslo"], "pop": [3, 2, None]})\nclean = t.dropna(subset=["city"])\nprint(clean["pop"].tolist())',
+          ['[3.0, nan]', '[3.0]', '[3.0, 2.0]', '[3.0, 2.0, nan]'],
+          0,
+          'Only the row with no city is dropped; the missing pop in Oslo’s row stays.',
+        ),
+        choose(
+          'A survey has an optional comment column and a required age column. Which call removes only respondents without an age?',
+          [
+            't.dropna()',
+            't.fillna("age")',
+            't.dropna(subset=["comment"])',
+            't.dropna(subset=["age"])',
+          ],
+          3,
+          'subset limits the rule to the required column; plain dropna would also drop rows missing only a comment.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose a rule that matches the meaning',
+      explanation: [
+        'Reductions such as .sum() and .mean() skip missing entries, so a mean describes the values that were actually observed. Filling missing entries with 0 adds observations that never happened and drags the mean down.',
+        'Whether a blank means zero or unknown is a fact about the source, not something pandas can decide. Use the documented meaning, and count the missing entries before changing them so you can report the effect.',
+      ],
+      example: {
+        code: 'import pandas as pd\nminutes = pd.Series([30.0, None, 50.0, None])\nprint(minutes.mean())\nprint(minutes.fillna(0).mean())\nprint(minutes.isna().sum())',
+        output: '40.0\n20.0\n2',
+        explanation:
+          'The mean skips the two blanks: (30 + 50) / 2. After filling, it divides 80 by 4 instead.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([10.0, None, 20.0])\nprint(s.mean())\nprint(s.fillna(0).mean())',
+          ['10.0\n10.0', '15.0\n15.0', '15.0\n10.0', 'nan\n10.0'],
+          2,
+          'The first mean uses the two observed values; the filled version divides 30 by 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([4.0, None, 6.0, None])\nprint(s.mean())',
+          ['2.5', '5.0', 'nan', '10.0'],
+          1,
+          'Missing entries are skipped, so the mean is (4 + 6) / 2.',
+        ),
+        choose(
+          'A shop’s refund column is blank on days with no refunds, as the export documentation states. Which handling fits?',
+          [
+            'Drop the blank days',
+            'Fill the blanks with the mean refund',
+            'Leave them missing, since blank means unknown',
+            'Fill the blanks with 0',
+          ],
+          3,
+          'The documentation says a blank means no refunds, so 0 is the observed value.',
+        ),
+        choose(
+          'A heart-rate column is blank whenever the watch was off. What does fillna(0) do to the average heart rate?',
+          [
+            'Pulls it down with readings that never happened',
+            'Nothing, because the mean skips zeros',
+            'Raises it, because blanks become numbers',
+            'Sets it to exactly 0',
+          ],
+          0,
+          'Zeros count as observations, so the average now mixes in impossible heart rates.',
+        ),
+      ],
+    },
+  ],
+
+  'da-conversion': [
+    {
+      title: 'Convert text to numbers and expose bad tokens',
+      explanation: [
+        'Columns read from text can hold numbers stored as strings, such as "12", next to junk such as "oops". pd.to_numeric(series, errors="coerce") converts every valid token and turns invalid ones into NaN. Because NaN is a float, the result is a float column.',
+        'errors="raise", the default, stops with ValueError at the first invalid token. Use it when your data contract promises every value is numeric, so a violation is loud instead of silently missing.',
+      ],
+      example: {
+        code: 'import pandas as pd\nraw = pd.Series(["12", "7.5", "oops"])\nnums = pd.to_numeric(raw, errors="coerce")\nprint(nums.tolist())\nprint(nums.sum())',
+        output: '[12.0, 7.5, nan]\n19.5',
+        explanation:
+          'The two valid tokens become numbers and oops becomes NaN, which the sum skips.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nraw = pd.Series(["3", "x", "4"])\nprint(pd.to_numeric(raw, errors="coerce").tolist())',
+          ['[3, 0, 4]', "['3', nan, '4']", '[3.0, nan, 4.0]', '[3.0, 4.0]'],
+          2,
+          'x cannot be a number, so it becomes NaN; the column becomes float to hold it.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nraw = pd.Series(["10", "20", "30"])\nprint(pd.to_numeric(raw).sum())',
+          ['102030', '60', "['10', '20', '30']", '60.0'],
+          1,
+          'Every token is a valid whole number, so the result is integers and the sum is 60.',
+        ),
+        choose(
+          'pd.to_numeric(pd.Series(["5", "five"])) is called with default settings. What happens?',
+          [
+            'It returns [5.0, nan]',
+            'It returns [5, 0]',
+            'It returns the text unchanged',
+            'It raises ValueError at "five"',
+          ],
+          3,
+          'The default is errors="raise", so the first invalid token stops the conversion.',
+        ),
+        choose(
+          'A price column must contain only numbers; a bad token means the upstream export broke. Which call fits?',
+          [
+            'pd.to_numeric(col, errors="raise")',
+            'pd.to_numeric(col, errors="coerce")',
+            'col.fillna(0)',
+            'col.astype("string")',
+          ],
+          0,
+          'Raising makes the broken contract visible instead of quietly producing NaN.',
+        ),
+      ],
+    },
+    {
+      title: 'Count conversions that failed',
+      explanation: [
+        'After coercion, a NaN means one of two things: the raw value was already missing, or conversion rejected it. A newly failed value was present before and missing after, so its mask is raw.notna() & converted.isna().',
+        'Counting those separately tells you how much bad input the source sent, and raw.loc[mask] shows the rejected tokens themselves before you decide what to do.',
+      ],
+      example: {
+        code: 'import pandas as pd\nraw = pd.Series(["4", None, "abc", "9"])\nconverted = pd.to_numeric(raw, errors="coerce")\nfailed = raw.notna() & converted.isna()\nprint(converted.isna().sum())\nprint(failed.sum())\nprint(raw.loc[failed].tolist())',
+        output: "2\n1\n['abc']",
+        explanation:
+          'Two converted values are missing, but one was already missing in raw. Only abc was rejected.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nraw = pd.Series(["1", None, "2", "?"])\nconv = pd.to_numeric(raw, errors="coerce")\nprint(conv.isna().sum())\nprint((raw.notna() & conv.isna()).sum())',
+          ['1\n2', '2\n2', '2\n1', '1\n1'],
+          2,
+          'Two converted values are missing; only ? was present before conversion.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nraw = pd.Series(["7", "seven", "7.0", "-"])\nconv = pd.to_numeric(raw, errors="coerce")\nprint(raw.loc[raw.notna() & conv.isna()].tolist())',
+          ["['seven']", "['7', '7.0']", "['-']", "['seven', '-']"],
+          3,
+          '7 and 7.0 are valid numbers; seven and - were present but rejected.',
+        ),
+        choose(
+          'After coercing a column of 1,000 values, 40 are missing. Before coercion, 35 were already missing. How many tokens did conversion reject?',
+          ['40', '5', '75', '35'],
+          1,
+          'Only the missing values that were present before count as rejections: 40 − 35.',
+        ),
+        choose(
+          'Why count raw.notna() & converted.isna() rather than converted.isna()?',
+          [
+            'It separates rejected tokens from values that were never there',
+            'It includes values that were already missing',
+            'isna does not work on converted columns',
+            'It turns rejected tokens into zeros',
+          ],
+          0,
+          'converted.isna() mixes both causes; the combined mask isolates the rejections.',
+        ),
+      ],
+    },
+    {
+      title: 'Store whole numbers with gaps as Int64',
+      explanation: [
+        'A numeric column containing NaN is stored as floats, so counts print as 4.0. .astype("Int64"), with a capital I, converts to pandas’ nullable integer type, which holds whole numbers and shows missing entries as <NA>.',
+        'astype("Int64") refuses values with a fractional part, such as 2.5, by raising TypeError rather than silently truncating a measurement. Use it only when the values really are whole.',
+      ],
+      example: {
+        code: 'import pandas as pd\ncounts = pd.to_numeric(pd.Series(["4", "x", "9"]), errors="coerce")\nprint(counts.tolist())\nwhole = counts.astype("Int64")\nprint(whole.tolist())\nprint(whole.dtype)',
+        output: '[4.0, nan, 9.0]\n[4, <NA>, 9]\nInt64',
+        explanation:
+          'Coercion leaves floats because of the NaN. Int64 stores the counts as whole numbers and keeps the gap as <NA>.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([3.0, None, 5.0])\nprint(s.astype("Int64").tolist())',
+          ['[3.0, nan, 5.0]', '[3, 0, 5]', '[3, 5]', '[3, <NA>, 5]'],
+          3,
+          'Int64 keeps the whole values as integers and the missing entry as <NA>.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series([1.0, 2.0])\nprint(s.astype("Int64").sum())',
+          ['3.0', '3', '[1, 2]', '12'],
+          1,
+          'After conversion the values are integers, so their sum is the integer 3.',
+        ),
+        choose(
+          's holds [1.0, 2.5, None]. What does s.astype("Int64") do?',
+          [
+            'Returns [1, 2, <NA>]',
+            'Returns [1, 3, <NA>]',
+            'Raises TypeError because 2.5 is not whole',
+            'Returns [1.0, 2.5, nan] unchanged',
+          ],
+          2,
+          'Int64 will not truncate or round a fractional value.',
+        ),
+        choose(
+          'Why choose "Int64" rather than "int64" for a visitor-count column with a few unknown days?',
+          [
+            '"Int64" can hold missing entries; "int64" cannot',
+            '"Int64" rounds decimals automatically',
+            '"int64" stores text',
+            '"Int64" stores floats more precisely',
+          ],
+          0,
+          'The plain NumPy integer type has no representation for a missing value.',
+        ),
+      ],
+    },
+  ],
+
+  'da-duplicates': [
+    {
+      title: 'Find repeated keys with duplicated',
+      explanation: [
+        '.duplicated() marks each row that repeats an earlier row: the first occurrence is False and later copies are True. With no arguments it compares every column.',
+        '.duplicated(subset=["order_id"]) compares only the key, which also catches rows that share an identity but disagree on other fields. .sum() on the result counts the extra rows.',
+      ],
+      example: {
+        code: 'import pandas as pd\nlog = pd.DataFrame({"order_id": [1, 2, 1, 3, 1], "qty": [5, 2, 5, 4, 6]})\nprint(log.duplicated().tolist())\nprint(log.duplicated(subset=["order_id"]).tolist())\nprint(log.duplicated(subset=["order_id"]).sum())',
+        output:
+          '[False, False, True, False, False]\n[False, False, True, False, True]\n2',
+        explanation:
+          'Only row 2 repeats a whole earlier row. By key, rows 2 and 4 both repeat order 1, even though row 4 has a different qty.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"id": [7, 8, 7, 7]})\nprint(t.duplicated().tolist())',
+          [
+            '[True, False, True, True]',
+            '[False, False, True, False]',
+            '[False, False, True, True]',
+            '[False, True, False, True]',
+          ],
+          2,
+          'The first 7 is an original; both later 7s repeat it.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"id": [1, 1, 2], "v": [10, 11, 12]})\nprint(t.duplicated().sum())\nprint(t.duplicated(subset=["id"]).sum())',
+          ['1\n1', '0\n0', '1\n0', '0\n1'],
+          3,
+          'No whole row repeats, but id 1 appears twice.',
+        ),
+        choose(
+          'Two rows have the same event_id but different amounts. Which check reports the repeat?',
+          [
+            't.duplicated(subset=["event_id"])',
+            't.duplicated()',
+            't.duplicated(subset=["amount"])',
+            't["amount"].sum()',
+          ],
+          0,
+          'The rows differ in amount, so only a key-based check sees them as the same event.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"user": ["a", "b", "a", "c", "b"], "day": [1, 1, 2, 2, 1]})\nprint(t.duplicated(subset=["user", "day"]).sum())',
+          ['2', '0', '1', '3'],
+          2,
+          'Only the pair (b, 1) occurs twice; a appears twice but on different days.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep one row per key with a declared policy',
+      explanation: [
+        '.drop_duplicates(subset=["id"], keep="first") keeps the first row for each id, and keep="last" keeps the last. First and last refer to the current row order, which may be arbitrary.',
+        'To make the choice meaningful, sort first: .sort_values("version") orders the rows by version from smallest to largest, so keep="last" then keeps the highest version of each id. Sort by id afterwards if you want a tidy order.',
+      ],
+      example: {
+        code: 'import pandas as pd\nrec = pd.DataFrame({"id": [2, 1, 2, 1], "version": [2, 1, 4, 3], "city": ["Rome", "Oslo", "Pisa", "Bergen"]})\nlatest = rec.sort_values("version").drop_duplicates(subset=["id"], keep="last")\nprint(latest.sort_values("id")["city"].tolist())\nprint(rec.drop_duplicates(subset=["id"])["city"].tolist())',
+        output: "['Bergen', 'Pisa']\n['Rome', 'Oslo']",
+        explanation:
+          'After sorting by version, the last row for id 1 is version 3 (Bergen) and for id 2 is version 4 (Pisa). Without sorting, keep="first" just takes whichever row came first.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"id": [5, 5, 6], "val": ["a", "b", "c"]})\nprint(t.drop_duplicates(subset=["id"], keep="last")["val"].tolist())',
+          ["['a', 'c']", "['c']", "['b', 'c']", "['a', 'b', 'c']"],
+          2,
+          'For id 5 the last row is b; id 6 appears once.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"id": [1, 1, 1], "ver": [3, 1, 2], "v": ["x", "y", "z"]})\nprint(t.sort_values("ver").drop_duplicates(subset=["id"], keep="last")["v"].tolist())',
+          ["['x']", "['z']", "['y']", "['x', 'y', 'z']"],
+          0,
+          'Sorted by ver the rows are y, z, x, so the last is x, the highest version.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"id": [1, 1, 1], "ver": [3, 1, 2], "v": ["x", "y", "z"]})\nprint(t.sort_values("ver").drop_duplicates(subset=["id"])["v"].tolist())',
+          ["['x']", "['z']", "['y', 'z', 'x']", "['y']"],
+          3,
+          'keep="first" is the default, and after sorting the first row is the lowest version, y.',
+        ),
+        choose(
+          'Rows for each customer arrive in random order, each with an updated_at timestamp. You want the most recent row per customer. What should come before drop_duplicates(subset=["customer"], keep="last")?',
+          [
+            'Sorting by customer name',
+            'Sorting by updated_at',
+            'Nothing, because last already means most recent',
+            'Removing the timestamp column',
+          ],
+          1,
+          'last follows row order, so the rows must be ordered by time for last to mean latest.',
+        ),
+      ],
+    },
+    {
+      title: 'Validate the key and report what you removed',
+      explanation: [
+        'After deduplicating, confirm the key really is unique: table["id"].is_unique is True only when no value repeats. Record how many rows were removed, len(before) - len(after), so a reader can judge the effect.',
+        'Rows that share a key but disagree on other fields may be real conflicts, not harmless repeats. A large removal count is a reason to investigate before reporting.',
+      ],
+      example: {
+        code: 'import pandas as pd\nraw = pd.DataFrame({"id": [1, 2, 2, 3, 3, 3], "amount": [5, 8, 8, 2, 2, 9]})\nprint(raw["id"].is_unique)\nclean = raw.drop_duplicates(subset=["id"])\nprint(clean["id"].is_unique)\nprint(len(raw) - len(clean))',
+        output: 'False\nTrue\n3',
+        explanation:
+          'Ids 2 and 3 repeat, so the key is not unique until three rows are removed. One of them (amount 9) disagreed with the kept row and deserves a look.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"code": ["a", "b", "a"]})\nprint(t["code"].is_unique)\nprint(t.drop_duplicates()["code"].is_unique)',
+          ['True\nTrue', 'False\nFalse', 'True\nFalse', 'False\nTrue'],
+          3,
+          'a repeats at first; after dropping the repeat, every code appears once.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nt = pd.DataFrame({"id": [4, 4, 4, 5], "x": [1, 1, 2, 3]})\nprint(len(t) - len(t.drop_duplicates()))\nprint(len(t) - len(t.drop_duplicates(subset=["id"])))',
+          ['1\n2', '2\n1', '1\n1', '2\n2'],
+          0,
+          'Only one whole row repeats exactly; by id alone, two rows repeat id 4.',
+        ),
+        choose(
+          'After deduplication, table["id"].is_unique is still False. What does that mean?',
+          [
+            'Every id is missing',
+            'Some id still appears more than once',
+            'The table has no rows',
+            'Too many rows were removed',
+          ],
+          1,
+          'is_unique is False exactly when at least one value repeats.',
+        ),
+        choose(
+          'Deduplicating 10,000 orders by order_id removes 2,400 rows, many with amounts that differ from the kept rows. What is the sound next step?',
+          [
+            'Report the totals, since deduplication succeeded',
+            'Drop the amount column',
+            'Investigate why one order has several different amounts',
+            'Switch to keep="last" so fewer rows are removed',
+          ],
+          2,
+          'Conflicting values for one key suggest a data problem that deduplication only hides.',
+        ),
+      ],
+    },
+  ],
+
+  'da-text': [
+    {
+      title: 'Clean a text column with .str',
+      explanation: [
+        'A column of text has vectorized string methods under .str. .str.strip() removes surrounding spaces, .str.lower() and .str.upper() change case, and .str.len() counts characters. They apply to every entry, and missing entries stay missing.',
+        'Chain them to normalise identifiers: s.str.strip().str.lower() turns " North " and "NORTH" into the same text.',
+      ],
+      example: {
+        code: 'import pandas as pd\nsites = pd.Series([" North ", "north", "NORTH", None])\nclean = sites.str.strip().str.lower()\nprint(clean.fillna("missing").tolist())\nprint(sites.str.len().tolist())',
+        output: "['north', 'north', 'north', 'missing']\n[7.0, 5.0, 5.0, nan]",
+        explanation:
+          'All three spellings become north, and the missing entry stays missing until fillna labels it. The spaces count toward the first length.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(["  Ada", "Lin  "])\nprint(s.str.strip().tolist())',
+          [
+            "['  Ada', 'Lin  ']",
+            "['ada', 'lin']",
+            "['Ada', 'Lin']",
+            "['Ada  ', '  Lin']",
+          ],
+          2,
+          'strip removes spaces at both ends and does not change case.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(["Paris", " paris", "PARIS "])\nprint(s.str.strip().str.lower().tolist())',
+          [
+            "['paris', 'paris', 'paris']",
+            "['paris', ' paris', 'paris ']",
+            "['Paris', 'paris', 'PARIS']",
+            "['PARIS', 'PARIS', 'PARIS']",
+          ],
+          0,
+          'Stripping then lowercasing makes all three spellings identical.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(["ok", None])\nprint(s.str.upper().fillna("?").tolist())',
+          ["['OK', 'NONE']", "['OK']", "['ok', '?']", "['OK', '?']"],
+          3,
+          'upper changes the present text and leaves the missing entry missing, which fillna then labels.',
+        ),
+        choose(
+          'Why does s.strip() fail when s is a Series, while s.str.strip() works?',
+          [
+            'Series cannot hold text',
+            'strip is a method of single strings, and .str applies it to every entry',
+            'strip needs an argument when used on a Series',
+            's.strip() works only on numeric Series',
+          ],
+          1,
+          'The .str accessor exposes string methods that run element by element.',
+        ),
+      ],
+    },
+    {
+      title: 'Check which values normalisation merged',
+      explanation: [
+        'Normalising is a decision about meaning: treating "North" and "north" as one site is right only if the source says case does not matter. Some codes are case-sensitive, and merging them would combine different things.',
+        '.nunique() counts distinct non-missing values. Comparing it before and after cleaning shows how many values were merged, and keeping the raw column lets anyone audit those merges.',
+      ],
+      example: {
+        code: 'import pandas as pd\nraw = pd.Series(["Oslo", "oslo ", "Bergen", "OSLO"])\nclean = raw.str.strip().str.lower()\nprint(raw.nunique())\nprint(clean.nunique())',
+        output: '4\n2',
+        explanation:
+          'Four distinct spellings collapse to two cities, so three raw values were merged into oslo.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nraw = pd.Series(["A1", "a1", " A1", "B2"])\nprint(raw.nunique())\nprint(raw.str.strip().str.lower().nunique())',
+          ['2\n2', '4\n4', '4\n2', '3\n2'],
+          2,
+          'All four raw strings differ; after cleaning only a1 and b2 remain.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nraw = pd.Series(["x ", "x", "y", None])\nprint(raw.nunique())\nprint(raw.str.strip().nunique())',
+          ['4\n3', '3\n3', '4\n2', '3\n2'],
+          3,
+          'nunique ignores the missing entry; stripping merges "x " with "x".',
+        ),
+        choose(
+          'Product codes "AB-12" and "ab-12" belong to different suppliers, and the supplier contract says case is significant. What should cleaning do?',
+          [
+            'Keep case and only strip surrounding spaces',
+            'Lowercase both so they match',
+            'Drop one of them as a duplicate',
+            'Uppercase both so they match',
+          ],
+          0,
+          'The contract makes case part of the identity, so changing it would merge different products.',
+        ),
+        choose(
+          'Why keep the raw column after creating a normalised one?',
+          [
+            'Because pandas cannot overwrite a text column',
+            'To check later which source values were merged',
+            'To make the table load faster',
+            'Because normalised text cannot be filtered',
+          ],
+          1,
+          'The raw values are the evidence for reviewing the normalisation rule.',
+        ),
+      ],
+    },
+    {
+      title: 'Search text literally and decide the missing rule',
+      explanation: [
+        '.str.contains(pattern) is True where the text contains the pattern. By default the pattern is a regular expression, a small language in which some characters have special meanings; "." matches any single character. regex=False searches for the literal text instead.',
+        'Depending on the column type, missing text can produce a missing result instead of True or False, which is not a usable mask. na=False states the rule explicitly: missing text does not match.',
+      ],
+      example: {
+        code: 'import pandas as pd\ncodes = pd.Series(["A.1", "AX1", None], dtype="string")\nprint(codes.str.contains(".", regex=False, na=False).tolist())\nprint(codes.str.contains(".", na=False).tolist())\nprint(codes.str.contains(".", regex=False).tolist())',
+        output:
+          '[True, False, False]\n[True, True, False]\n[True, False, <NA>]',
+        explanation:
+          'Literally, only A.1 contains a dot. As a regular expression the dot matches any character, so AX1 matches too. Without na=False, the missing code gives <NA>.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(["v1.2", "v12", "v1-2"])\nprint(s.str.contains("1.2", regex=False).tolist())',
+          [
+            '[True, True, True]',
+            '[True, False, True]',
+            '[True, False, False]',
+            '[False, False, False]',
+          ],
+          2,
+          'Only v1.2 contains the literal characters 1.2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(["v1.2", "v12", "v1-2"])\nprint(s.str.contains("1.2").tolist())',
+          [
+            '[True, False, True]',
+            '[True, False, False]',
+            '[True, True, True]',
+            '[False, False, True]',
+          ],
+          0,
+          'As a regular expression the dot matches any character, so 1-2 matches. v12 has no character between 1 and 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(["red apple", None, "green pear"], dtype="string")\nprint(s.str.contains("apple", regex=False, na=False).tolist())',
+          [
+            '[True, <NA>, False]',
+            '[True, True, False]',
+            '[True, False]',
+            '[True, False, False]',
+          ],
+          3,
+          'na=False decides that the missing entry does not match, so every result is True or False.',
+        ),
+        choose(
+          'You keep emails containing "@example.com" using contains with default settings. Which mistake does regex=False prevent?',
+          [
+            'Uppercase letters being ignored',
+            'A dot matching any character, as in "@exampleXcom"',
+            'Missing emails raising KeyError',
+            'The @ sign being removed',
+          ],
+          1,
+          'In a regular expression the dot is a wildcard, so unintended addresses can match.',
+        ),
+      ],
+    },
+  ],
+
+  'da-categories': [
+    {
+      title: 'Declare an ordered scale',
+      explanation: [
+        'pd.Categorical(values, categories=[...], ordered=True) records the allowed labels and their order; wrap it in pd.Series to use it as a column. s.sort_values() returns the values in ascending order, and for an ordered categorical that order is the declared one rather than the alphabet.',
+        'Ordered categories also compare by rank, so s > "low" is True for medium and high.',
+      ],
+      example: {
+        code: 'import pandas as pd\nlevels = ["high", "low", "medium", "low"]\nplain = pd.Series(levels)\nranked = pd.Series(pd.Categorical(levels, categories=["low", "medium", "high"], ordered=True))\nprint(plain.sort_values().tolist())\nprint(ranked.sort_values().tolist())\nprint((ranked > "low").tolist())',
+        output:
+          "['high', 'low', 'low', 'medium']\n['low', 'low', 'medium', 'high']\n[True, False, True, False]",
+        explanation:
+          'Plain text sorts alphabetically, which puts high first. The ordered categorical follows low, medium, high, and compares by that rank.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nsizes = pd.Series(["M", "S", "L"])\nprint(sizes.sort_values().tolist())',
+          [
+            "['S', 'M', 'L']",
+            "['M', 'S', 'L']",
+            "['L', 'M', 'S']",
+            "['L', 'S', 'M']",
+          ],
+          2,
+          'Plain text sorts alphabetically: L, M, S.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nsizes = pd.Series(pd.Categorical(["M", "S", "L"], categories=["S", "M", "L"], ordered=True))\nprint(sizes.sort_values().tolist())',
+          [
+            "['S', 'M', 'L']",
+            "['L', 'M', 'S']",
+            "['M', 'S', 'L']",
+            "['L', 'S', 'M']",
+          ],
+          0,
+          'The declared order S, M, L controls sorting.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ngrade = pd.Series(pd.Categorical(["B", "A", "C"], categories=["C", "B", "A"], ordered=True))\nprint((grade >= "B").tolist())',
+          [
+            '[True, False, True]',
+            '[True, False, False]',
+            '[False, True, True]',
+            '[True, True, False]',
+          ],
+          3,
+          'The scale runs C, B, A, so A ranks above B and C ranks below it.',
+        ),
+        choose(
+          'Why sort shirt sizes with an ordered categorical rather than as plain text?',
+          [
+            'Plain text cannot be sorted',
+            'Plain text sorts alphabetically, putting L before M before S',
+            'Categoricals sort by how often each size appears',
+            'Ordered categoricals remove duplicate sizes',
+          ],
+          1,
+          'The meaningful order of sizes is not the alphabetical order of their labels.',
+        ),
+      ],
+    },
+    {
+      title: 'Check values against the allowed set',
+      explanation: [
+        'A value outside the declared categories cannot be stored, so pandas turns it into a missing value (newer versions also warn). A typo such as "hgih" would quietly become missing.',
+        'Check membership before converting: values.isin(allowed) is True for each allowed entry, and len(values) - values.isin(allowed).sum() counts the entries that need a look.',
+      ],
+      example: {
+        code: 'import pandas as pd\nraw = pd.Series(["low", "hgih", "high", "Low"])\nallowed = ["low", "medium", "high"]\nprint(raw.isin(allowed).tolist())\nprint(len(raw) - raw.isin(allowed).sum())',
+        output: '[True, False, True, False]\n2',
+        explanation:
+          'The typo and the capitalised Low are not in the allowed list. Converting now would turn both into missing values.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nraw = pd.Series(["red", "blue", "Red", "green"])\nprint(raw.isin(["red", "green", "blue"]).tolist())',
+          [
+            '[True, True, True, True]',
+            '[True, False, False, True]',
+            '[False, False, True, False]',
+            '[True, True, False, True]',
+          ],
+          3,
+          'isin compares exact text, so Red with a capital letter is not in the list.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nraw = pd.Series(["S", "M", "XL", "M"])\nprint(len(raw) - raw.isin(["S", "M", "L"]).sum())',
+          ['1', '3', '0', '2'],
+          0,
+          'Three entries are allowed; only XL is not.',
+        ),
+        choose(
+          'A Categorical with categories ["S", "M", "L"] is built from ["S", "XL", "M"]. What happens to "XL"?',
+          [
+            'It becomes a new category',
+            'It is stored as "L"',
+            'It becomes a missing value',
+            'It moves to the end of the order',
+          ],
+          2,
+          'Only declared categories can be stored, so the unexpected label is lost as missing.',
+        ),
+        choose(
+          'Why run isin against the allowed list before converting to a Categorical?',
+          [
+            'isin sorts the values into category order',
+            'Conversion would turn unexpected labels into missing values, losing what they were',
+            'Categorical requires every value to be lowercase',
+            'isin removes duplicate labels',
+          ],
+          1,
+          'Checking first shows exactly which raw labels break the contract.',
+        ),
+      ],
+    },
+    {
+      title: 'Encode membership with indicator columns',
+      explanation: [
+        'pd.get_dummies(series, dtype=int) makes one column per category, named after it, holding 1 where the row has that category and 0 elsewhere, so each row has exactly one 1. For plain text the columns are in alphabetical order; for a Categorical there is one column per declared category, in declared order, even for unused ones.',
+        '.cat.codes shows each value’s position in its categories list. Codes are internal identifiers, not measurements: with categories red, green, blue, code 2 is not twice code 1.',
+      ],
+      example: {
+        code: 'import pandas as pd\ncolour = pd.Series(["red", "blue", "red"])\ndummies = pd.get_dummies(colour, dtype=int)\nprint(dummies.columns.tolist())\nprint(dummies["red"].tolist())\nprint(dummies.shape)',
+        output: "['blue', 'red']\n[1, 0, 1]\n(3, 2)",
+        explanation:
+          'Two distinct colours give two indicator columns. The red column is 1 in the rows that are red.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(["cat", "dog", "cat", "fish"])\nd = pd.get_dummies(s, dtype=int)\nprint(d.shape)\nprint(d["cat"].tolist())',
+          [
+            '(3, 4)\n[1, 0, 1, 0]',
+            '(4, 3)\n[0, 1, 0, 1]',
+            '(4, 3)\n[1, 0, 1, 0]',
+            '(4, 1)\n[2]',
+          ],
+          2,
+          'Four rows and three distinct animals; the cat column marks rows 0 and 2.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(pd.Categorical(["mid", "low"], categories=["low", "mid", "high"]))\nprint(pd.get_dummies(s, dtype=int).columns.tolist())',
+          [
+            "['mid', 'low']",
+            "['low', 'mid']",
+            "['high', 'low', 'mid']",
+            "['low', 'mid', 'high']",
+          ],
+          3,
+          'A Categorical gets a column for every declared category, in declared order, even high, which never occurs.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\ns = pd.Series(pd.Categorical(["b", "c", "a"], categories=["c", "b", "a"]))\nprint(s.cat.codes.tolist())',
+          ['[1, 2, 0]', '[1, 0, 2]', '[0, 1, 2]', '[2, 1, 0]'],
+          1,
+          'Codes are positions in the declared list c, b, a: b is 1, c is 0 and a is 2.',
+        ),
+        choose(
+          'Cities are encoded as 0 = Lima, 1 = Oslo, 2 = Rome, and a model treats the code as a number. What false assumption does that create?',
+          [
+            'That the cities are missing values',
+            'That the column is text',
+            'That Rome is somehow double Oslo, with Oslo between Lima and Rome',
+            'None, because codes are measurements',
+          ],
+          2,
+          'Arithmetic on codes invents an order and distances between cities; indicator columns avoid this.',
+        ),
+      ],
+    },
+  ],
+
+  'da-joins': [
+    {
+      title: 'Choose which rows survive a join',
+      explanation: [
+        'left.merge(right, on="key", how=...) adds the right table’s columns to rows with a matching key. how="inner" keeps only keys found in both tables. how="left" keeps every left row; where no right row matches, the new columns hold NaN, pandas’ missing marker.',
+        'The join type is an analysis decision: an inner join silently drops observations that have no match.',
+      ],
+      example: {
+        code: 'import pandas as pd\norders = pd.DataFrame({"sku": ["A", "B", "C"], "qty": [2, 1, 5]})\nprices = pd.DataFrame({"sku": ["A", "C"], "price": [3, 4]})\nprint(len(orders.merge(prices, on="sku", how="inner")))\nleft = orders.merge(prices, on="sku", how="left")\nprint(left["price"].tolist())',
+        output: '2\n[3.0, nan, 4.0]',
+        explanation:
+          'B has no price, so the inner join drops it while the left join keeps it with a missing price.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\na = pd.DataFrame({"id": [1, 2, 3, 4]})\nb = pd.DataFrame({"id": [2, 4, 6], "x": [9, 8, 7]})\nprint(len(a.merge(b, on="id", how="inner")))\nprint(len(a.merge(b, on="id", how="left")))',
+          ['4\n4', '2\n5', '3\n4', '2\n4'],
+          3,
+          'Only ids 2 and 4 are in both; the left join keeps all four left rows.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\na = pd.DataFrame({"id": [1, 2, 3, 4]})\nb = pd.DataFrame({"id": [2, 4, 6], "x": [9, 8, 7]})\nprint(a.merge(b, on="id", how="left")["x"].tolist())',
+          [
+            '[9, 8]',
+            '[nan, 9.0, nan, 8.0]',
+            '[9.0, 8.0, 7.0, nan]',
+            '[0, 9, 0, 8]',
+          ],
+          1,
+          'Each left id gets its own match or NaN; id 6 exists only on the right and is not kept.',
+        ),
+        choose(
+          'Every sale must stay in the revenue report, even when its product is missing from the catalogue. Which join fits sales.merge(catalogue, on="sku", ...)?',
+          [
+            'how="inner"',
+            'how="left"',
+            'Either, because inner and left keep the same rows',
+            'Neither; join the catalogue to itself first',
+          ],
+          1,
+          'A left join keeps every sale and shows missing catalogue details as NaN.',
+        ),
+        choose(
+          'An inner join of 1,000 visits to a site table with one row per site returns 940 rows. What does that tell you?',
+          [
+            'The site table has duplicate sites',
+            '940 sites were visited',
+            '60 visits name sites missing from the site table',
+            'The join must be repeated',
+          ],
+          2,
+          'With unique site rows, each visit matches at most once, so 60 visits found no site.',
+        ),
+      ],
+    },
+    {
+      title: 'Catch repeated keys with validate',
+      explanation: [
+        'Every matching pair of rows becomes a result row. If the right table repeats a key, each left row with that key is copied once per repeat, so a left join can return more rows than the left table had and totals double-count.',
+        'validate states the expected relationship, left side first: "many_to_one" means many left rows may share a key but right keys must be unique; "one_to_one" demands uniqueness on both sides. If the data breaks the rule, merge raises MergeError instead of quietly multiplying rows.',
+      ],
+      example: {
+        code: 'import pandas as pd\nsales = pd.DataFrame({"store": ["N", "S", "N"], "amount": [10, 20, 30]})\nregions = pd.DataFrame({"store": ["N", "N", "S"], "region": ["east", "west", "south"]})\njoined = sales.merge(regions, on="store", how="left")\nprint(len(joined))\nprint(joined["amount"].sum())',
+        output: '5\n100',
+        explanation:
+          'Store N appears twice in regions, so both N sales are copied twice: 5 rows, and the total of 60 becomes 100. validate="many_to_one" would have raised an error.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nleft = pd.DataFrame({"k": ["a", "b"]})\nright = pd.DataFrame({"k": ["a", "a", "a", "b"], "v": [1, 2, 3, 4]})\nprint(len(left.merge(right, on="k", how="left")))',
+          ['2', '3', '4', '6'],
+          2,
+          'a matches three right rows and b matches one, so there are four result rows.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\norders = pd.DataFrame({"cust": [1, 1, 2], "total": [5, 7, 9]})\ncust = pd.DataFrame({"cust": [1, 2, 2], "tier": ["gold", "std", "vip"]})\nprint(orders.merge(cust, on="cust", how="left")["total"].sum())',
+          ['21', '39', '18', '30'],
+          3,
+          'Customer 2 appears twice in cust, so the 9 is counted twice: 5 + 7 + 9 + 9.',
+        ),
+        choose(
+          'Many invoices should each match exactly one customer record. Which validate value states that contract for invoices.merge(customers, on="cust_id")?',
+          ['"one_to_one"', '"many_to_one"', '"many_to_many"', '"left_only"'],
+          1,
+          'Invoices (left) may repeat a customer, but customers (right) must be unique.',
+        ),
+        choose(
+          'A left join with validate="many_to_one" raises MergeError. What does that mean?',
+          [
+            'Some key appears more than once in the right table',
+            'Some left keys have no match',
+            'The left table repeats some keys',
+            'The key columns hold different types',
+          ],
+          0,
+          'many_to_one allows repeated left keys and unmatched rows; it forbids repeated right keys.',
+        ),
+      ],
+    },
+    {
+      title: 'Audit unmatched rows with indicator',
+      explanation: [
+        'indicator=True adds a _merge column saying where each row came from: "both" for a match and "left_only" for a left row with no partner. Counting the left_only rows shows how much of your data the lookup table failed to cover.',
+        'Inspect unmatched keys before reporting. A typo, a missing lookup entry and a genuinely new item each need a different fix.',
+      ],
+      example: {
+        code: 'import pandas as pd\nevents = pd.DataFrame({"site": ["A", "C", "A", "D"], "n": [1, 2, 3, 4]})\nsites = pd.DataFrame({"site": ["A", "B"], "region": ["east", "west"]})\nj = events.merge(sites, on="site", how="left", indicator=True)\nprint(j["_merge"].tolist())\nprint((j["_merge"] == "left_only").sum())',
+        output: "['both', 'left_only', 'both', 'left_only']\n2",
+        explanation:
+          'Sites C and D are not in the site table, so two event rows are left_only.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\na = pd.DataFrame({"k": [1, 2, 3]})\nb = pd.DataFrame({"k": [3, 1]})\nj = a.merge(b, on="k", how="left", indicator=True)\nprint(j["_merge"].tolist())',
+          [
+            "['both', 'both', 'left_only']",
+            "['both', 'left_only', 'both']",
+            "['left_only', 'both', 'left_only']",
+            "['both', 'both', 'both']",
+          ],
+          1,
+          'Keys 1 and 3 appear in b; key 2 does not. The result keeps the left order.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\na = pd.DataFrame({"code": ["x", "y", "z", "y"]})\nb = pd.DataFrame({"code": ["y"], "name": ["Yew"]})\nj = a.merge(b, on="code", how="left", indicator=True)\nprint((j["_merge"] == "left_only").sum())',
+          ['1', '3', '0', '2'],
+          3,
+          'x and z have no partner; both y rows match.',
+        ),
+        choose(
+          'After a left join with indicator=True, 15% of rows are left_only. Which response is sound?',
+          [
+            'Switch to an inner join so they disappear',
+            'Fill their region with the most common region',
+            'Inspect those keys before reporting totals by region',
+            'Ignore them, because left joins always leave some rows unmatched',
+          ],
+          2,
+          'Unmatched rows would distort a by-region report; find out why they failed to match.',
+        ),
+        choose(
+          'Which _merge value marks a left row that found no partner in the right table?',
+          ['"left_only"', '"both"', 'NaN', '"unmatched"'],
+          0,
+          'left_only means the row exists only on the left side of the join.',
+        ),
+      ],
+    },
+  ],
+
+  'da-reshape': [
+    {
+      title: 'Melt wide columns into long rows',
+      explanation: [
+        'A wide table has one column per repeated measurement, such as jan and feb. A long table has one row per measurement, with one column naming the measurement and one holding its value. .melt(id_vars=["site"], var_name="month", value_name="sales") converts wide to long.',
+        'Each id row contributes one row per melted column, so the long table has rows × melted columns rows. pandas lists every row for the first melted column, then every row for the next.',
+      ],
+      example: {
+        code: 'import pandas as pd\nwide = pd.DataFrame({"site": ["A", "B"], "jan": [3, 5], "feb": [4, 6]})\nlong = wide.melt(id_vars=["site"], var_name="month", value_name="sales")\nprint(long.shape)\nprint(long["month"].tolist())\nprint(long["sales"].tolist())',
+        output: "(4, 3)\n['jan', 'jan', 'feb', 'feb']\n[3, 5, 4, 6]",
+        explanation:
+          'Two sites times two month columns give four rows of site, month and sales. All jan rows come first.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nw = pd.DataFrame({"id": [1, 2, 3], "q1": [5, 6, 7], "q2": [1, 2, 3]})\nprint(w.melt(id_vars=["id"]).shape)',
+          ['(3, 3)', '(6, 2)', '(3, 6)', '(6, 3)'],
+          3,
+          'Three ids times two melted columns give 6 rows: id, a variable column and a value column.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nw = pd.DataFrame({"team": ["x", "y"], "home": [2, 0], "away": [1, 3]})\nl = w.melt(id_vars=["team"], var_name="venue", value_name="goals")\nprint(l["team"].tolist())',
+          [
+            "['x', 'x', 'y', 'y']",
+            "['x', 'y']",
+            "['x', 'y', 'x', 'y']",
+            "['home', 'home', 'away', 'away']",
+          ],
+          2,
+          'All home rows come first (x, y), then all away rows (x, y).',
+        ),
+        choose(
+          'A wide table has a student id and 4 test columns for 50 students. How many rows does melting the test columns produce?',
+          ['54', '50', '4', '200'],
+          3,
+          'Each of the 50 students contributes one row per test: 50 × 4.',
+        ),
+        choose(
+          'In wide.melt(id_vars=["site"], ...), what is the role of site?',
+          [
+            'It is melted into the value column',
+            'It is repeated on every long row, keeping each value attached to its site',
+            'It is dropped from the result',
+            'It becomes the new column names',
+          ],
+          1,
+          'Identifier columns stay as columns and are copied to every measurement row.',
+        ),
+      ],
+    },
+    {
+      title: 'Pivot long rows back to wide',
+      explanation: [
+        '.pivot(index="site", columns="month", values="sales") builds a wide table with one row per index value and one column per distinct value of the columns field, each cell taken from the matching long row. The new columns come out in sorted order.',
+        'Read a cell with .loc[row_label, column_label]. A pair with no long row gets NaN, which also turns that column’s values into floats.',
+      ],
+      example: {
+        code: 'import pandas as pd\nlong = pd.DataFrame({"site": ["A", "A", "B"], "month": ["jan", "feb", "jan"], "sales": [3, 4, 5]})\nwide = long.pivot(index="site", columns="month", values="sales")\nprint(wide.shape)\nprint(wide.loc["A", "feb"])\nprint(wide.loc["B", "feb"])',
+        output: '(2, 2)\n4.0\nnan',
+        explanation:
+          'Two sites and two months give a 2 × 2 table. B has no feb row, so that cell is missing and the feb column holds floats.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nl = pd.DataFrame({"day": ["mon", "mon", "tue", "tue"], "shift": ["am", "pm", "am", "pm"], "staff": [3, 5, 4, 6]})\nw = l.pivot(index="day", columns="shift", values="staff")\nprint(w.loc["tue", "am"])',
+          ['5', '3', '6', '4'],
+          3,
+          'The cell for tue and am comes from the long row with staff 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nl = pd.DataFrame({"day": ["mon", "mon", "tue", "tue"], "shift": ["am", "pm", "am", "pm"], "staff": [3, 5, 4, 6]})\nw = l.pivot(index="day", columns="shift", values="staff")\nprint(w.shape)',
+          ['(4, 3)', '(2, 2)', '(2, 4)', '(4, 2)'],
+          1,
+          'Two days become rows and two shifts become columns.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nl = pd.DataFrame({"k": ["a", "b"], "m": ["x", "y"], "v": [1, 2]})\nw = l.pivot(index="k", columns="m", values="v")\nprint(w.loc["a", "y"])',
+          ['nan', '0', '1', '2'],
+          0,
+          'No long row has k = a and m = y, so that cell is missing.',
+        ),
+        choose(
+          'After pivot(index="store", columns="week", values="sales"), what does one row of the wide table represent?',
+          [
+            'One week, with a column per store',
+            'One sale',
+            'One store, with a column per week',
+            'One store and week pair',
+          ],
+          2,
+          'The index field becomes the rows and the columns field becomes the columns.',
+        ),
+      ],
+    },
+    {
+      title: 'Pivot needs one value per cell',
+      explanation: [
+        'pivot places exactly one value in each index and column cell. If two long rows share the same pair, there is no single value to place, so pivot raises ValueError rather than guessing.',
+        'Check first with .duplicated(subset=["site", "month"]).sum(). Then resolve repeats deliberately: drop exact repeats, or investigate conflicting values. Do not average conflicting measurements just to make a reshape succeed.',
+      ],
+      example: {
+        code: 'import pandas as pd\nlong = pd.DataFrame({"site": ["A", "A", "A"], "month": ["jan", "jan", "feb"], "sales": [3, 3, 4]})\nprint(long.duplicated(subset=["site", "month"]).sum())\nfixed = long.drop_duplicates()\nprint(fixed.pivot(index="site", columns="month", values="sales").loc["A", "jan"])',
+        output: '1\n3',
+        explanation:
+          'A and jan appears twice, but both rows agree, so dropping the exact repeat is safe and pivot succeeds.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nl = pd.DataFrame({"r": [1, 1, 2, 2], "c": ["x", "y", "x", "x"], "v": [5, 6, 7, 8]})\nprint(l.duplicated(subset=["r", "c"]).sum())',
+          ['0', '2', '1', '3'],
+          2,
+          'Only the pair (2, x) appears twice, so pivot would fail on that cell.',
+        ),
+        choose(
+          'pivot raises ValueError saying the index contains duplicate entries. What does it mean?',
+          [
+            'The value column holds text',
+            'Some index and column pair has more than one value',
+            'The index column has missing values',
+            'The table is already wide',
+          ],
+          1,
+          'One output cell would need two values, so pivot refuses.',
+        ),
+        choose(
+          'Two long rows give different temperatures for station S3 at noon. Which response is sound before pivoting?',
+          [
+            'Investigate which reading is valid, then resolve it explicitly',
+            'Average them so the pivot works',
+            'Delete station S3 entirely',
+            'Swap the index and columns fields',
+          ],
+          0,
+          'Conflicting measurements need a decision based on evidence, not an automatic average.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import pandas as pd\nw = pd.DataFrame({"id": ["p", "q"], "a": [1, 2], "b": [3, 4]})\nl = w.melt(id_vars=["id"], var_name="col", value_name="val")\nback = l.pivot(index="id", columns="col", values="val")\nprint(back.loc["q", "b"])',
+          ['2', '3', 'nan', '4'],
+          3,
+          'Melting and pivoting reorganise values without changing them, so q and b still hold 4.',
+        ),
+      ],
+    },
+  ],
 };
