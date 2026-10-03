@@ -9075,7 +9075,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'parse::<u8>(text)',
           ],
           0,
-          'The declared return type already names u8, so a plain text.parse() is inferred to produce it. An i32 result would not match, and the last two are not calls of the parse method.',
+          'The declared return type already names u8, so a plain text.parse() is inferred to produce it. An i32 result would not match; text.parse::<u8> never calls the method, and parse is not a free function.',
         ),
       ],
     },

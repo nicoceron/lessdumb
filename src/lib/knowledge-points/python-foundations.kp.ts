@@ -2550,7 +2550,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'p, q, r = (1, 2)',
           ],
           3,
-          'Three names need three items, but (1, 2) has only two. The inner tuple in the third line counts as one item.',
+          'Three names need three items, but (1, 2) has only two. In p, q = [1, (2, 3)], the inner tuple counts as one item.',
         ),
         predictOutput(
           'What does this program print?',

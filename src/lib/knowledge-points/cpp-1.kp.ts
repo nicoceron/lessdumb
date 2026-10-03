@@ -30,7 +30,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'An int can hold negative whole numbers, and it prints with its sign.',
         ),
         choose(
-          'Which declaration is safe to read on the next line?',
+          'Inside main, which declaration is safe to read on the next line?',
           ['int total;', 'int total = 0;', 'int total[];', 'int;'],
           1,
           'Only the initialized declaration has a defined value to read.',
@@ -1431,7 +1431,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '#include <iostream>\n#include <type_traits>\nint main() {\n  std::cout << std::is_same_v<char, signed char> << std::is_same_v<int, signed int> << "\\n";\n}',
           ['11', '10', '00', '01'],
           3,
-          'char and signed char are always three distinct character types, while signed int is just int.',
+          'char, signed char, and unsigned char are three distinct types, so the first test is 0, while signed int is just int.',
         ),
         choose(
           'On a platform where int and long are both 4 bytes, what is std::is_same_v<int, long>?',
@@ -1679,9 +1679,9 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'Which literal equals 15?',
-          ['0x15', '0b15', '0xF0', '0b1111'],
+          ['0x15', '0b15', '0b1110', '0b1111'],
           3,
-          'Binary 1111 is 8 + 4 + 2 + 1. 0x15 is 21, 0xF0 is 240, and 0b15 is not a valid literal.',
+          'Binary 1111 is 8 + 4 + 2 + 1. 0x15 is 21, 0b1110 is 14, and 0b15 is not a valid literal.',
         ),
       ],
     },
@@ -3690,7 +3690,7 @@ export const knowledgePoints: KnowledgePointModule = {
           '7 / 2 is integer division, so its type is int and it selects the first overload.',
         ),
         choose(
-          'Which pair of declarations is a valid overload set?',
+          'Which pair declares two distinct overloads of f?',
           [
             'int f(int); double f(int);',
             'int f(int x); int f(int y);',
@@ -3698,7 +3698,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'double f(int); double f(int);',
           ],
           2,
-          'Only the third pair differs in parameter types; parameter names and return types do not count.',
+          'Only int f(int); int f(double); differs in parameter types; parameter names and return types do not count.',
         ),
       ],
     },
@@ -3838,7 +3838,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'int f(int a, int b = 1);',
           ],
           3,
-          'Only the last one gives defaults to trailing parameters alone.',
+          'Only int f(int a, int b = 1); gives defaults to trailing parameters alone.',
         ),
         predictOutput(
           'What does this complete C++20 program print?',
@@ -4392,7 +4392,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'ref changes x to 4; copy is independent and becomes 13.',
         ),
         choose(
-          'f returns int&. What is value after int value = f(x);?',
+          'f takes int& v and returns v as an int&. What is value after int value = f(x);?',
           [
             'Another name for x, bound by the call',
             'An independent int copied from x',
@@ -6425,7 +6425,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'a saved 2; one more tick makes the reading 3.',
         ),
         choose(
-          'Given const Meter m{5};, which member functions can be called on m?',
+          'Meter has int peek() const and void tick(). Given const Meter m{5};, which can be called on m?',
           [
             'Both peek and tick, since m exists',
             'Only tick, which is not const',
@@ -6457,7 +6457,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'a is set to 2 + 5.',
         ),
         choose(
-          'With Gauge a{1}; and const Gauge b{2};, which call does not compile?',
+          'Gauge has int read() const and void set(int v). With Gauge a{1}; and const Gauge b{2};, which call does not compile?',
           ['a.read()', 'a.set(3)', 'b.read()', 'b.set(3)'],
           3,
           'set is not const, so it cannot be called on the const object b.',
@@ -6495,7 +6495,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           1,
           'Through const Tally& only const member functions are allowed, and add modifies the object.',
-          'int reset(const Tally& t) {\n  t.add(-t.value());\n  return t.value();\n}',
+          'struct Tally {\n  int total;\n  void add(int x) { total += x; }\n  int value() const { return total; }\n};\nint reset(const Tally& t) {\n  t.add(-t.value());\n  return t.value();\n}',
         ),
         predictOutput(
           'What does this complete C++20 program print?',
@@ -6704,11 +6704,11 @@ export const knowledgePoints: KnowledgePointModule = {
           'The first withdrawal leaves 20; the second asks for more than 20 and is refused.',
         ),
         choose(
-          'Why does Account offer balance() instead of making balance_ public?',
+          'Account keeps balance_ private, offers int balance() const, and changes it only in withdraw, which checks the amount. Why not make balance_ public?',
           [
             'Because int members cannot be public',
             'To make the program run faster',
-            'So callers can read it while every change must pass through withdraw',
+            'Every change must go through withdraw’s check',
             'Because const functions must return members',
           ],
           2,
@@ -8085,10 +8085,10 @@ export const knowledgePoints: KnowledgePointModule = {
           'struct Pack {\n  std::unique_ptr<int> item;\n};\nPack a{std::make_unique<int>(6)};\nPack b = a;',
         ),
         choose(
-          "Which members does Pack's compiler-generated move constructor move?",
+          "Which members does a struct's compiler-generated move constructor move?",
           [
             'Only the first declared member',
-            'Every member, each with its own move operation',
+            'Every member, using its own move',
             'None of them; it copies instead',
             'Only the members that are unique_ptrs',
           ],
@@ -8533,7 +8533,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'b = a; where b already exists',
           ],
           3,
-          'Only the last one gives a new value to an object that already exists.',
+          'Only b = a; on an existing b gives a new value to an object that already exists; the others create b.',
         ),
         predictOutput(
           'What does this complete C++20 program print?',
@@ -10000,15 +10000,16 @@ export const knowledgePoints: KnowledgePointModule = {
           'Both zeros are erased and 3, 7 remain.',
         ),
         choose(
-          'Why does the loop increment it only in the else branch?',
+          'Why does this loop increment it only in the else branch?',
           [
             '++it is never allowed after an erase',
             'To skip every other element on purpose',
-            'The returned iterator already points at the next element',
+            'erase already returns the next element',
             'It makes the loop run noticeably faster',
           ],
           2,
           'Incrementing after an erase would skip the element that moved into place.',
+          'for (auto it = v.begin(); it != v.end();) {\n  if (*it < 0) {\n    it = v.erase(it);\n  } else {\n    ++it;\n  }\n}',
         ),
       ],
     },
@@ -10089,6 +10090,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           2,
           'erase shifts later elements down without reordering them.',
+          'for (auto it = v.begin(); it != v.end();) {\n  if (*it < 0) {\n    it = v.erase(it);\n  } else {\n    ++it;\n  }\n}',
         ),
       ],
     },
@@ -10317,12 +10319,12 @@ export const knowledgePoints: KnowledgePointModule = {
           'Which hand-written test matches a < b for pairs?',
           [
             'a.first < b.first && a.second < b.second',
-            'a.second < b.second || a.first < b.first',
+            'a.first < b.first || (a.first == b.first && a.second > b.second)',
             'a.first < b.first || (a.first == b.first && a.second < b.second)',
             'a.first + a.second < b.first + b.second',
           ],
           2,
-          'Only this one compares the seconds just when the firsts tie.',
+          'Only this test compares the seconds, with <, just when the firsts tie.',
         ),
       ],
     },

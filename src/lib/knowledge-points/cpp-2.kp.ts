@@ -3864,7 +3864,7 @@ int main() {
             'v.erase(std::remove(v.begin(), v.end(), 0));',
           ],
           1,
-          'Erase from the logical end to the real end. The third form erases the kept values instead, and the last erases only one element.',
+          'Erase from the logical end to the real end. Erasing from v.begin() to that point removes the kept values instead, and erase with one iterator removes only one element.',
         ),
       ],
     },
@@ -6360,7 +6360,7 @@ int main() {
           [
             'static_assert(index < 4);',
             'static_assert(index == index);',
-            'static_assert(sizeof(int) >= 2);',
+            'static_assert(sizeof(int) >= sizeof(char));',
             'static_assert(pick(0) == 0);',
           ],
           2,
@@ -6427,7 +6427,7 @@ int main() {
           'Which size is not fixed by the C++ standard?',
           [
             'sizeof(char)',
-            'sizeof(std::uint16_t)',
+            'sizeof(unsigned char)',
             'sizeof(std::int8_t)',
             'sizeof(long)',
           ],
@@ -7253,7 +7253,7 @@ int main() {
             '[](int x) { return x * 2; }',
           ],
           3,
-          'Only the last one takes one int and returns an int; the others have the wrong parameters or are not callable.',
+          'Only the one-parameter lambda takes one int and returns an int; the others have the wrong parameters or are not callable.',
         ),
         choose(
           'What does it mean for a function receiving a std::function<int(int)> parameter?',
@@ -7970,13 +7970,13 @@ int main() {
         choose(
           'Why does find_index return std::optional<int> rather than a plain int?',
           [
-            'Every int, including 0, can be a valid index, so absence needs its own state',
+            'Absence gets its own state instead of a marker like -1',
             'optional is faster to return than a plain int from a loop',
             'An int cannot be returned from inside a for loop body',
             'optional sorts the matches so the caller sees the smallest index',
           ],
           0,
-          'The empty state is separate from all values, so no valid answer has to be sacrificed as a marker.',
+          'The empty state is separate from every int, so a marker such as -1 cannot be mistaken for an index.',
         ),
       ],
     },

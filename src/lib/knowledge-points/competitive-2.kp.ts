@@ -1367,7 +1367,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'stack.pop() or None',
           ],
           0,
-          'It pops only a nonempty stack. The second pops only an empty one, the loop removes every entry, and the last still pops an empty list.',
+          'It pops only a nonempty stack. if not stack pops only an empty one, the while loop removes every entry, and pop() or None still pops an empty list.',
         ),
         predictOutput(
           'What is printed?',

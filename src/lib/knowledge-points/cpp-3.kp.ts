@@ -10691,7 +10691,7 @@ const riskChecks: KnowledgePointModule = {
             'price * quantity * 1LL',
           ],
           1,
-          'Only converting an operand before the first multiplication moves it to long long; in the last option price * quantity runs first, in int.',
+          'Only converting an operand before the first multiplication moves it to long long; in price * quantity * 1LL, price * quantity still runs first, in int.',
         ),
       ],
     },
@@ -11771,13 +11771,13 @@ const pipelines: KnowledgePointModule = {
         choose(
           'A tool sorts a log by value before replaying it. When can that change the final state?',
           [
-            'Whenever set and add events are mixed',
+            'Whenever the log contains a set event',
             'Never, because sorting keeps every event',
             'Only when values are negative',
             'Only when the log is empty',
           ],
           0,
-          'Moving a set before or after an add changes what the add applies to.',
+          'A set discards everything before it, so moving it changes the result; only additions commute.',
         ),
         predictOutput(
           'The log is replayed in recorded order and in order of value. What is printed?',
@@ -12106,7 +12106,7 @@ const determinism: KnowledgePointModule = {
             'return a.first == b.first ? a.first < b.first : a.second < b.second;',
           ],
           1,
-          'It compares ids only when prices tie; <= is not a valid strict ordering for std::sort.',
+          'It compares ids only when prices tie. The || version is not a strict weak ordering, the > version puts high prices first, and the == version compares ids only when prices differ.',
         ),
       ],
     },
