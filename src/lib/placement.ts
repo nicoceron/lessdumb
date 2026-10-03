@@ -9,6 +9,7 @@ import { defaultCatalog } from './catalog-index';
 import { contentOf } from './content';
 import { estimateCompletion, type CompletionEstimate } from './dashboard';
 import {
+  chooseVariant,
   coursePath,
   DAY_MS,
   getSkillState,
@@ -20,6 +21,7 @@ import {
 import { lessonSteps } from './lesson-plan';
 import { acquisitionMemory } from './retention';
 import { gradeAnswer } from './typed-answer';
+import { questionVariant } from './variants';
 
 // An adaptive placement diagnostic. It is a transparent heuristic, not Math
 // Academy's calibrated model: each skill on the course path has a probability
@@ -57,6 +59,8 @@ export interface DiagnosticQuestion {
   questionId: string;
   /** Seeds the shuffled choice order. */
   presentation: number;
+  /** The variant number asked, for a generated question (see variants.ts). */
+  variant?: number;
 }
 
 export interface DiagnosticAnswer extends DiagnosticQuestion {
@@ -157,7 +161,7 @@ function guessRate(skill: SkillOutline, questionId?: string): number {
  * unknown question or while its skill's course is not loaded.
  */
 export function diagnosticQuestion(
-  slot: Pick<DiagnosticQuestion, 'skillId' | 'questionId'>,
+  slot: Pick<DiagnosticQuestion, 'skillId' | 'questionId' | 'variant'>,
   catalog: GraphCatalog = defaultCatalog,
 ): { skill: Skill; question: AnswerQuestion } | undefined {
   const outline = catalog.skills.find((item) => item.id === slot.skillId);
@@ -166,7 +170,7 @@ export function diagnosticQuestion(
     ?.flatMap((point) => point.questions)
     .find((item) => item.id === slot.questionId);
   return skill && question && question.type !== 'code'
-    ? { skill, question }
+    ? { skill, question: questionVariant(question, slot.variant) }
     : undefined;
 }
 
@@ -284,10 +288,12 @@ export function nextDiagnosticQuestion(
       a.order - b.order,
   )[0];
   const question = answerQuestions(best).find((item) => !used.has(item.id))!;
+  const variant = chooseVariant(progress, best, question.id);
   return {
     skillId: best.id,
     questionId: question.id,
     presentation: diagnostic.answers.length,
+    ...(variant !== undefined ? { variant } : {}),
   };
 }
 

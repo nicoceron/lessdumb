@@ -58,6 +58,7 @@ import {
 } from '../lib/lesson-plan';
 import { choiceLetter, choiceOrder } from '../lib/choice-order';
 import { gradeTyped, isTyped } from '../lib/typed-answer';
+import { questionVariant } from '../lib/variants';
 import { type PythonResult } from '../lib/python';
 import { runCode } from '../lib/code-runner';
 import { codeLanguage, codeLanguageLabels } from '../lib/code-language';
@@ -103,6 +104,8 @@ interface Entry {
   number: number;
   /** How often it had been answered when shown; it fixes the choice order. */
   presentation: number;
+  /** The variant number shown, for a generated question. */
+  variant?: number;
   /** The authored index of the selected choice, whatever position it shows at. */
   selected: number | null;
   /** What the learner typed, for a numeric or text question. */
@@ -140,6 +143,12 @@ const continueId = (key: string) => `continue-${key}`;
 /** How often a question has been answered; it seeds a fresh choice order. */
 function presentationOf(progress: Progress, questionId: string) {
   return progress.attempts.filter((a) => a.questionId === questionId).length;
+}
+
+/** The question an entry shows: for a generated one, its recorded variant. */
+function entryQuestion(skill: Skill, entry: Entry): Question | undefined {
+  const question = findQuestion(skill, entry.questionId);
+  return question && questionVariant(question, entry.variant);
 }
 
 function attemptById(progress: Progress, id: string): Attempt | undefined {
@@ -185,6 +194,7 @@ function buildEntry(
     stepId,
     number: answers ? answers.correct.length + answers.incorrect + 1 : 1,
     presentation: presentationOf(progress, question.id),
+    ...(question.variant !== undefined ? { variant: question.variant } : {}),
     selected: null,
     response: '',
     invalid: null,
@@ -413,7 +423,7 @@ function LessonPage({
   const currentSkill = current ? loadedSkill(current.skillId) : undefined;
   const question =
     current && currentSkill
-      ? (findQuestion(currentSkill, current.questionId) ?? null)
+      ? (entryQuestion(currentSkill, current) ?? null)
       : null;
   const language =
     question?.type === 'code'
@@ -497,6 +507,7 @@ function LessonPage({
       mode: current.mode,
       attemptId,
       ...(isTyped(question) ? { response: current.response } : {}),
+      ...(current.variant !== undefined ? { variant: current.variant } : {}),
     };
     update((s) =>
       live.current && isUnlocked(s.progress, input.skillId)
@@ -710,7 +721,7 @@ function LessonPage({
 
   function questionCard(entry: Entry, label: string, extra?: ReactNode) {
     const owner = loadedSkill(entry.skillId);
-    const item = owner ? findQuestion(owner, entry.questionId) : undefined;
+    const item = owner ? entryQuestion(owner, entry) : undefined;
     if (!owner || !item) return null;
     const isLive = entry.key === current?.key;
     const attempt = entry.feedback

@@ -19,6 +19,7 @@ import type { GraphCatalog, SkillOutline } from './curriculum';
 import { defaultCatalog, skillById } from './catalog-index';
 import { contentOf } from './content';
 import { mistakeCardText } from './card-text';
+import { questionVariant } from './variants';
 import { mergeQuizzes, type Quiz } from './quiz';
 import { mergeDiagnostics } from './placement';
 import {
@@ -50,7 +51,8 @@ export interface QueuedCard extends AnkiCard {
  * Version 2 adds knowledge-point lesson attempts, cooldowns and task XP;
  * version 3 adds quizzes; version 4 adds implicit review credit; version 5
  * adds placement diagnostics; version 6 adds the pending prerequisite
- * refresh a failed lesson schedules.
+ * refresh a failed lesson schedules; version 7 adds the variant number of a
+ * generated question to attempts, quiz questions, and placement questions.
  */
 export interface LearnerState {
   version: typeof STATE_VERSION;
@@ -91,7 +93,11 @@ export function recordLearningAnswer(
   const skill = contentOf(skillById[input.skillId]);
   if (!skill)
     throw new Error(`Load ${input.skillId} before recording its answers.`);
-  const question = findQuestion(skill, input.questionId)!;
+  // A generated question's card shows the variant that was missed.
+  const question = questionVariant(
+    findQuestion(skill, input.questionId)!,
+    progress.attempts.at(-1)?.variant,
+  );
   const cards = [...state.cards];
   const cardIds = new Set(cards.map((card) => card.id));
   const add = (card: QueuedCard) => {
@@ -144,8 +150,8 @@ const reviewRewardKey = (attempt: Attempt) =>
 
 /** A saved state from an earlier schema: before refreshes, quizzes, or knowledge points. */
 export type LegacyLearnerState = Omit<LearnerState, 'version' | 'progress'> & {
-  version: 1 | 2 | 3 | 4 | 5;
-  progress: Omit<Progress, 'version'> & { version: 1 | 2 | 3 | 4 | 5 };
+  version: 1 | 2 | 3 | 4 | 5 | 6;
+  progress: Omit<Progress, 'version'> & { version: 1 | 2 | 3 | 4 | 5 | 6 };
 };
 
 /**

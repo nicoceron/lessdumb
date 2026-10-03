@@ -9,7 +9,9 @@ import { contentOf } from './content';
 import {
   activityDay,
   applyImplicitCredit,
+  chooseVariant,
   coursePath,
+  freshQuestion,
   getSkillState,
   isMastered,
   isUnlocked,
@@ -24,6 +26,7 @@ import { MISTAKE_WINDOW_MS, recentMistakes } from './remediation';
 import { legacyMemory } from './retention';
 import { earnedQuizXp, quizXp } from './xp';
 import { gradeAnswer } from './typed-answer';
+import { questionVariant } from './variants';
 
 // Quizzes are timed, mixed retrieval checks in the Math Academy pattern. One
 // becomes available after QUIZ_XP_INTERVAL XP of other work. It draws fresh
@@ -64,6 +67,8 @@ export interface QuizQuestion {
   questionId: string;
   /** Seeds the shuffled choice order, so a reload shows the same order. */
   presentation: number;
+  /** The variant number asked, for a generated question (see variants.ts). */
+  variant?: number;
   /**
    * The authored choice index answered, the text typed for a typed question,
    * or null when time ran out first.
@@ -118,9 +123,12 @@ function choiceQuestions(skill: SkillOutline) {
   }));
 }
 
-/** A quiz question with its content; undefined until its course is loaded. */
+/**
+ * A quiz question with its content, as the variant the slot asked;
+ * undefined until its course is loaded.
+ */
 function quizChoice(
-  slot: Pick<QuizQuestion, 'skillId' | 'questionId'>,
+  slot: Pick<QuizQuestion, 'skillId' | 'questionId' | 'variant'>,
   catalog: GraphCatalog,
 ): { skill: Skill; question: AnswerQuestion } | undefined {
   const outline = catalog.skills.find((item) => item.id === slot.skillId);
@@ -129,7 +137,7 @@ function quizChoice(
     ?.flatMap((point) => point.questions)
     .find((item) => item.id === slot.questionId);
   return skill && question && question.type !== 'code'
-    ? { skill, question }
+    ? { skill, question: questionVariant(question, slot.variant) }
     : undefined;
 }
 
@@ -220,8 +228,9 @@ export function rankQuizSkills(
 
 /**
  * A fresh question from one of a skill's points not in `used`: the point with
- * the most recent mistakes, then the least practiced; within it, the variant
- * seen least, unseen first.
+ * the most recent mistakes, then the least practiced; within it, a variant
+ * unseen first and never one of the learner's last RECENT_VARIANTS at the
+ * point (see freshQuestion and chooseVariant).
  */
 function pickQuizQuestion(
   progress: Progress,
@@ -247,14 +256,14 @@ function pickQuizQuestion(
         total(a.questions, counts) - total(b.questions, counts),
     )[0];
   if (!entry) return undefined;
-  const question = [...entry.questions].sort(
-    (a, b) => (counts.get(a.id) ?? 0) - (counts.get(b.id) ?? 0),
-  )[0];
+  const question = freshQuestion(progress, skill.id, entry.questions);
+  const variant = chooseVariant(progress, skill, question.id);
   return {
     slot: {
       skillId: skill.id,
       questionId: question.id,
       presentation: counts.get(question.id) ?? 0,
+      ...(variant !== undefined ? { variant } : {}),
     },
     point: entry.point.id,
   };
@@ -433,7 +442,7 @@ export function startQuiz(
  * unknown question or while its skill's course is not loaded.
  */
 export function quizQuestion(
-  slot: Pick<QuizQuestion, 'skillId' | 'questionId'>,
+  slot: Pick<QuizQuestion, 'skillId' | 'questionId' | 'variant'>,
   catalog: GraphCatalog = defaultCatalog,
 ): { skill: Skill; question: AnswerQuestion } | undefined {
   return quizChoice(slot, catalog);
@@ -517,6 +526,7 @@ export function answerQuiz(
     at: new Date(at).toISOString(),
     xp: 0,
     quizId,
+    ...(question.variant !== undefined ? { variant: question.variant } : {}),
   };
   const day = activityDay(progress, at);
   const updated: Quiz = {

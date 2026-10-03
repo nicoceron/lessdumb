@@ -7,17 +7,20 @@ import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import {
   courses,
+  generatorFiles,
   knowledgePointFiles,
   skills,
   validateCurriculum,
   validateKnowledgePointRegistry,
   type CodeLanguage,
   type CodeQuestion,
+  type Question,
   type Skill,
   type TextQuestion,
 } from '../src/lib/curriculum';
 import type { PythonResult } from '../src/lib/python';
 import { gradeText } from '../src/lib/typed-answer';
+import { GENERATOR_SAMPLES, questionVariant } from '../src/lib/variants';
 
 // Every worked example and every "what does this print?" question is run, and
 // its published output must be exactly what the program prints. A typed output
@@ -39,6 +42,25 @@ function expectPrinted(program: Program, printed: string | undefined) {
       status: 'correct',
     });
 }
+
+/**
+ * A generated output question runs as authored and as a sample of its
+ * variants: the first ones learners meet and a few later ones. The validator
+ * checks the structure of all GENERATOR_SAMPLES variants; this proves their
+ * answers by running them.
+ */
+const EXECUTED_VARIANTS = [0, 1, 2, 10, 25, GENERATOR_SAMPLES - 1];
+function executedVariants(question: Question): Question[] {
+  if (!question.generated || question.type === 'code') return [question];
+  return [
+    question,
+    ...EXECUTED_VARIANTS.map((variant) => questionVariant(question, variant)),
+  ];
+}
+const programId = (question: Question) =>
+  question.variant === undefined
+    ? question.id
+    : `${question.id}#${question.variant}`;
 
 function languageOf(skill: Skill, declared?: CodeLanguage): CodeLanguage {
   const course = courses.find((item) => item.id === skill.courseId);
@@ -65,28 +87,29 @@ for (const skill of skills)
         code: point.example.code,
         expected: point.example.output,
       });
-    for (const question of point.questions)
-      if (question.type === 'choice' && question.checksOutput)
-        programs.push({
-          id: question.id,
-          language: languageOf(skill),
-          code: question.code!,
-          expected: question.choices[question.answer],
-        });
-      else if (question.type === 'text' && question.checksOutput)
-        programs.push({
-          id: question.id,
-          language: languageOf(skill),
-          code: question.code!,
-          expected: question.answers[0],
-          typed: question,
-        });
-      else if (question.type === 'code')
-        exercises.push({
-          id: question.id,
-          language: languageOf(skill, question.language),
-          question,
-        });
+    for (const authored of point.questions)
+      for (const question of executedVariants(authored))
+        if (question.type === 'choice' && question.checksOutput)
+          programs.push({
+            id: programId(question),
+            language: languageOf(skill),
+            code: question.code!,
+            expected: question.choices[question.answer],
+          });
+        else if (question.type === 'text' && question.checksOutput)
+          programs.push({
+            id: programId(question),
+            language: languageOf(skill),
+            code: question.code!,
+            expected: question.answers[0],
+            typed: question,
+          });
+        else if (question.type === 'code')
+          exercises.push({
+            id: question.id,
+            language: languageOf(skill, question.language),
+            question,
+          });
   }
 const inLanguage = <T extends { language: CodeLanguage }>(
   items: T[],
@@ -142,6 +165,33 @@ describe('knowledge point registry', () => {
   it('names each catalog skill at most once and validates every point', () => {
     expect(validateKnowledgePointRegistry()).toEqual([]);
     expect(validateCurriculum()).toEqual([]);
+  });
+
+  it('registers every question generator file and runs sampled variants', () => {
+    const files = readdirSync(resolve('src/lib/knowledge-points'))
+      .filter((file) => file.endsWith('.gen.ts'))
+      .sort();
+    expect(Object.values(generatorFiles).flat().sort()).toEqual(files);
+    // Every generated output question contributes its sampled variants.
+    const generated = skills.flatMap((skill) =>
+      (skill.knowledgePoints ?? []).flatMap((point) =>
+        point.questions.filter(
+          (question) =>
+            question.generated &&
+            (question.type === 'text' || question.type === 'choice') &&
+            question.checksOutput,
+        ),
+      ),
+    );
+    expect(generated.length).toBeGreaterThan(50);
+    for (const question of generated)
+      for (const variant of EXECUTED_VARIANTS)
+        expect(
+          programs.some(
+            (program) => program.id === `${question.id}#${variant}`,
+          ),
+          `${question.id}#${variant}`,
+        ).toBe(true);
   });
 
   it('keeps output questions and examples runnable as complete programs', () => {
