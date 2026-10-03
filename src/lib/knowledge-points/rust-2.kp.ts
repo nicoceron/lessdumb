@@ -3232,4 +3232,752 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'rust-box': [
+    {
+      title: 'Box owns one value on the heap',
+      explanation: [
+        'Box::new(v) moves v into a heap allocation and returns a Box that owns it. *b reaches the value inside; with let mut, *b can also change it. Printing and method calls look through the Box automatically.',
+        'A Box has exactly one owner. Moving it moves ownership of the allocation, so the old binding cannot be used, and the heap value is freed when its owner goes away.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let mut score = Box::new(10);\n    *score += 5;\n    let total = *score * 2;\n    println!("{} {}", score, total);\n}',
+        output: '15 30',
+        explanation:
+          '*score changes the i32 inside the Box to 15, and reading it again gives 30 for the doubled value.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let a = Box::new(7);\n    let b = Box::new(3);\n    println!("{}", *a - *b * 2);\n}',
+          ['8', '4', '-1', '1'],
+          3,
+          'Each * reads the boxed value, and multiplication happens before subtraction: 7 - 6.',
+        ),
+        choose(
+          'first is a Box<String>. What happens on let second = first;?',
+          [
+            'The heap String is copied, so each Box owns one',
+            'first and second share the String and count owners',
+            'Ownership moves to second; first can no longer be used',
+            'second borrows from first until first is dropped',
+          ],
+          2,
+          'A Box is the single owner of its allocation, so assignment moves it like any owned value.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn double(mut boxed: Box<i32>) -> Box<i32> {\n    *boxed *= 2;\n    boxed\n}\n\nfn main() {\n    let start = Box::new(6);\n    let result = double(double(start));\n    println!("{}", result);\n}',
+          ['24', '12', '6', '36'],
+          0,
+          'Each call takes ownership of the Box, doubles the value inside, and hands the Box back.',
+        ),
+        choose(
+          'Given let mut b = Box::new(1);, why is *b += 1 written instead of b += 1?',
+          [
+            'Box values can only be changed through methods',
+            'b += 1 would allocate a second Box',
+            '* copies the value out so the Box is unchanged',
+            'b is the Box; * reaches the i32 stored inside it',
+          ],
+          3,
+          'Arithmetic applies to the i32, and dereferencing the Box is how you reach it.',
+        ),
+      ],
+    },
+    {
+      title: 'Lend the boxed value as a reference',
+      explanation: [
+        'A Box<T> dereferences to T, so &b can be passed where a &T is expected and &mut b where a &mut T is expected. The compiler inserts the dereference for you.',
+        'The Box keeps ownership. The function only borrows the value inside, and afterwards b is still usable.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn show(n: &i32) -> i32 {\n    *n + 1\n}\n\nfn add_ten(n: &mut i32) {\n    *n += 10;\n}\n\nfn main() {\n    let mut b = Box::new(5);\n    add_ten(&mut b);\n    println!("{} {}", show(&b), b);\n}',
+        output: '16 15',
+        explanation:
+          '&mut b lends the boxed i32 to add_ten, which makes it 15; show then borrows it to compute 16.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn triple(n: &mut i32) {\n    *n *= 3;\n}\n\nfn main() {\n    let mut b = Box::new(2);\n    triple(&mut b);\n    triple(&mut b);\n    println!("{}", b);\n}',
+          ['18', '6', '12', '2'],
+          0,
+          'Both calls change the same boxed value: 2, then 6, then 18.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn shout_len(text: &str) -> usize {\n    text.len() + 1\n}\n\nfn main() {\n    let boxed = Box::new(String::from("hey"));\n    println!("{} {}", shout_len(&boxed), boxed);\n}',
+          ['3 hey', '4', '4 hey', '4 "hey"'],
+          2,
+          '&boxed is turned into a &str view of the String inside, and boxed itself is still printed afterwards.',
+        ),
+        choose(
+          'After add_ten(&mut b) returns, who owns the heap value?',
+          [
+            'Still b; the function only borrowed the value',
+            'add_ten, which received the Box by reference',
+            'Nobody; the borrow freed the allocation',
+            'A copy of b made for the call',
+          ],
+          0,
+          'Passing a reference lends the value; ownership never left b.',
+        ),
+        choose(
+          'Given fn read(n: &i32) -> i32 and let b = Box::new(9);, which call compiles?',
+          ['read(&b)', 'read(b)', 'read(*b)', 'read(Box::new(9))'],
+          0,
+          '&b is a &Box<i32>, which the compiler converts to &i32. The others pass a Box or an i32 by value.',
+        ),
+      ],
+    },
+  ],
+  'rust-rc': [
+    {
+      title: 'Rc::clone adds an owner, not a copy',
+      explanation: [
+        'std::rc::Rc::new(v) stores v in an allocation together with a count of owners. Rc::clone(&a) makes another pointer to the same value and adds one to the count; the value itself is not copied.',
+        'Rc::strong_count(&a) reads the count. Every owner sees the same value, and all of them get shared, read-only access to it.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let first = std::rc::Rc::new(String::from("config"));\n    let second = std::rc::Rc::clone(&first);\n    let third = std::rc::Rc::clone(&second);\n    println!("{} {}", third, std::rc::Rc::strong_count(&first));\n}',
+        output: 'config 3',
+        explanation:
+          'All three pointers share one String, so the count seen through any of them is 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let a = std::rc::Rc::new(5);\n    let b = std::rc::Rc::clone(&a);\n    let c = std::rc::Rc::clone(&a);\n    println!("{} {}", std::rc::Rc::strong_count(&b), *a + *c);\n}',
+          ['2 10', '3 10', '3 15', '1 10'],
+          1,
+          'There are three owners of one value 5, and a and c both point to it.',
+        ),
+        choose(
+          'a is an Rc<String> holding a long text. What does Rc::clone(&a) copy?',
+          [
+            'The whole String, into a new allocation',
+            'Nothing; it returns a borrowed &String',
+            'The String, but only the first time it is used',
+            'Only the pointer; the owner count goes up by one',
+          ],
+          3,
+          'Cloning an Rc shares the existing value and records one more owner.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let shared = std::rc::Rc::new(String::from("map"));\n    let owners = (std::rc::Rc::clone(&shared), std::rc::Rc::clone(&shared));\n    println!("{} {}", owners.0, std::rc::Rc::strong_count(&shared));\n}',
+          ['map 2', 'map 1', 'map 3', 'mapmap 3'],
+          2,
+          'The tuple holds two more owners besides shared, all pointing at one String.',
+        ),
+        choose(
+          'Two Rc<String> pointers were made from a single Rc::new followed by one Rc::clone. How many Strings exist?',
+          [
+            'Two, one for each pointer',
+            'None until a pointer is dereferenced',
+            'One for each call to strong_count',
+            'One, shared by both pointers',
+          ],
+          3,
+          'Rc::new allocates the value once; clones only point to it.',
+        ),
+      ],
+    },
+    {
+      title: 'The value lives until its last owner goes',
+      explanation: [
+        'When an Rc owner is dropped, for example when a function that received it by value returns, the count goes down by one. The value is freed only when the count reaches zero.',
+        'Moving an Rc to a new binding does not change the count, because the number of owners stays the same. Rc gives shared access only, so the value cannot be changed through it.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn count_inside(handle: std::rc::Rc<i32>) -> usize {\n    std::rc::Rc::strong_count(&handle)\n}\n\nfn main() {\n    let a = std::rc::Rc::new(1);\n    let inside = count_inside(std::rc::Rc::clone(&a));\n    let after = std::rc::Rc::strong_count(&a);\n    println!("{} {}", inside, after);\n}',
+        output: '2 1',
+        explanation:
+          'While count_inside runs, its parameter is a second owner. It is dropped when the function returns.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn owners(handle: std::rc::Rc<String>) -> usize {\n    std::rc::Rc::strong_count(&handle)\n}\n\nfn main() {\n    let name = std::rc::Rc::new(String::from("ada"));\n    let keep = std::rc::Rc::clone(&name);\n    let during = owners(std::rc::Rc::clone(&name));\n    println!("{} {}", during, std::rc::Rc::strong_count(&keep));\n}',
+          ['2 2', '3 3', '3 2', '2 1'],
+          2,
+          'During the call there are three owners; after it returns, name and keep remain.',
+        ),
+        choose(
+          'When is the value inside an Rc freed?',
+          [
+            'When the first Rc created for it is dropped',
+            'When the last Rc pointing to it is dropped',
+            'Whenever strong_count is called',
+            'Only when the program exits',
+          ],
+          1,
+          'The count tracks owners, and the value is freed when it reaches zero.',
+        ),
+        choose(
+          'Why is let shared = Rc::new(String::from("a")); shared.push_str("b"); rejected?',
+          [
+            'Rc gives only shared access, so its value cannot be changed',
+            'push_str requires the String to be cloned first',
+            'Rc values must be dereferenced with * before any call',
+            'A String cannot be stored inside an Rc',
+          ],
+          0,
+          'Several owners may read the value at once, so Rc never hands out a mutable reference.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let a = std::rc::Rc::new(3);\n    let b = std::rc::Rc::clone(&a);\n    let c = b;\n    println!("{}", std::rc::Rc::strong_count(&a));\n}',
+          ['3', '1', '2', '0'],
+          2,
+          'let c = b moves an existing owner rather than adding one, so the count stays at 2.',
+        ),
+      ],
+    },
+  ],
+  'rust-arc': [
+    {
+      title: 'Arc is Rc with an atomic count',
+      explanation: [
+        'std::sync::Arc works like Rc: Arc::new, Arc::clone, and Arc::strong_count do the same jobs. The difference is that Arc updates its count with atomic operations, which stay correct even when several threads clone and drop pointers at once.',
+        'Rc’s plain count is cheaper, but the compiler refuses to send an Rc to another thread. Use Arc only when ownership really is shared across threads.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let config = std::sync::Arc::new(String::from("v2"));\n    let worker_copy = std::sync::Arc::clone(&config);\n    println!("{} {}", worker_copy, std::sync::Arc::strong_count(&config));\n}',
+        output: 'v2 2',
+        explanation:
+          'Arc::clone adds a second owner of the same String, exactly as Rc::clone would.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn count(shared: std::sync::Arc<u32>) -> usize {\n    std::sync::Arc::strong_count(&shared)\n}\n\nfn main() {\n    let a = std::sync::Arc::new(8);\n    let b = std::sync::Arc::clone(&a);\n    let during = count(std::sync::Arc::clone(&b));\n    println!("{} {} {}", during, std::sync::Arc::strong_count(&a), *b);\n}',
+          ['2 2 8', '3 3 8', '3 2 8', '3 2 16'],
+          2,
+          'The parameter is a third owner during the call and is dropped when count returns.',
+        ),
+        choose(
+          'Why would a program choose Arc over Rc?',
+          [
+            'It allows the shared value to be changed',
+            'It avoids counting owners entirely',
+            'It copies the value for each owner',
+            'Its clones may be shared with other threads safely',
+          ],
+          3,
+          'Atomic counting is what makes it safe for threads to share ownership.',
+        ),
+        choose(
+          'What does Arc cost compared with Rc?',
+          [
+            'A full copy of the value on every clone',
+            'An extra thread that manages the count',
+            'Atomic count updates, which are slower than plain ones',
+            'Nothing; Arc is always the faster choice',
+          ],
+          2,
+          'Atomic operations coordinate between processor cores, which takes more work than a plain increment.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let a = std::sync::Arc::new(String::from("log"));\n    let b = a.clone();\n    let c = (*a).clone();\n    println!("{} {}", std::sync::Arc::strong_count(&a), c);\n}',
+          ['3 log', '1 log', '2 log', '2 loglog'],
+          2,
+          'a.clone() clones the Arc pointer, adding an owner. (*a).clone() clones the String inside, which is a separate value.',
+        ),
+      ],
+    },
+    {
+      title: 'Arc shares reads; changes need another tool',
+      explanation: [
+        'Like Rc, Arc only hands out shared references, so every owner can read the value but none can change it through the Arc.',
+        'Changing shared data requires a type that controls mutation from inside, such as a Mutex, placed inside the Arc. Arc answers who owns the value; it does not answer who may modify it.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let readings = std::sync::Arc::new([3, 4, 5]);\n    let reader = std::sync::Arc::clone(&readings);\n    println!("{} {}", reader[0] + reader[2], readings[1]);\n}',
+        output: '8 4',
+        explanation:
+          'Both pointers read the same array; indexing looks through the Arc to the array inside.',
+      },
+      questions: [
+        choose(
+          'A program writes let shared = Arc::new(5); *shared += 1;. What happens?',
+          [
+            'Rejected: Arc gives only read-only access',
+            'It compiles, and shared now holds 6',
+            'It compiles, but other clones still see 5',
+            'It panics at run time because the count is 1',
+          ],
+          0,
+          'Arc never hands out a mutable reference to its value.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let text = std::sync::Arc::new(String::from("shared"));\n    let copy = std::sync::Arc::clone(&text);\n    let owned = (*copy).clone();\n    println!("{} {}", owned.len(), std::sync::Arc::strong_count(&text));\n}',
+          ['6 3', '6 1', '6 2', '12 2'],
+          2,
+          'Cloning the String inside makes an independent value, so the Arc count stays at 2.',
+        ),
+        choose(
+          'Several Arc owners share a String that must sometimes change. What is needed?',
+          [
+            'Arc::clone, which returns a mutable copy',
+            'Declaring every Arc binding with let mut',
+            'Dereferencing with * before calling push_str',
+            'A Mutex or similar type inside the Arc',
+          ],
+          3,
+          'Arc provides shared ownership only; synchronized mutation comes from the type it wraps.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn total(values: std::sync::Arc<[i32; 3]>) -> i32 {\n    values[0] + values[1] + values[2]\n}\n\nfn main() {\n    let data = std::sync::Arc::new([2, 4, 6]);\n    let sum = total(std::sync::Arc::clone(&data));\n    println!("{} {}", sum, std::sync::Arc::strong_count(&data));\n}',
+          ['12 2', '12 1', '6 1', '12 0'],
+          1,
+          'total reads through its own owner, which is dropped when it returns, leaving only data.',
+        ),
+      ],
+    },
+  ],
+  'rust-weak': [
+    {
+      title: 'A Weak pointer does not keep the value alive',
+      explanation: [
+        'Rc::downgrade(&strong) makes a Weak pointer to the same value. It raises the weak count but not the strong count, and only strong owners keep the value alive.',
+        'weak.upgrade() returns Option<Rc<T>>: Some with a new strong pointer while the value still exists, and None once the last strong owner has been dropped.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let strong = std::rc::Rc::new(String::from("cache"));\n    let weak = std::rc::Rc::downgrade(&strong);\n    println!("{} {}", std::rc::Rc::strong_count(&strong), std::rc::Rc::weak_count(&strong));\n    drop(strong);\n    println!("{}", weak.upgrade().is_none());\n}',
+        output: '1 1\ntrue',
+        explanation:
+          'The Weak is counted separately. Dropping the only strong owner frees the String, so upgrade gives None.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let a = std::rc::Rc::new(1);\n    let b = std::rc::Rc::clone(&a);\n    let w1 = std::rc::Rc::downgrade(&a);\n    let w2 = std::rc::Rc::downgrade(&b);\n    println!("{} {}", std::rc::Rc::strong_count(&a), std::rc::Rc::weak_count(&a));\n}',
+          ['4 0', '2 0', '2 2', '4 2'],
+          2,
+          'a and b are strong owners; the two downgrades add to the weak count only.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let a = std::rc::Rc::new(5);\n    let b = std::rc::Rc::clone(&a);\n    let w = std::rc::Rc::downgrade(&a);\n    drop(a);\n    let first = w.upgrade().is_some();\n    drop(b);\n    let second = w.upgrade().is_some();\n    println!("{} {}", first, second);\n}',
+          ['true false', 'false false', 'true true', 'false true'],
+          0,
+          'After dropping a, b still keeps the value alive. Once b is dropped too, upgrade fails.',
+        ),
+        choose(
+          'What does weak.upgrade() return?',
+          [
+            'The value T itself, copied out of the allocation',
+            'An Rc that is guaranteed to be valid',
+            'Option<Rc<T>>: Some while a strong owner exists, else None',
+            'A bool saying whether the value still exists',
+          ],
+          2,
+          'Upgrading can fail, so the result is an Option that must be checked.',
+        ),
+        choose(
+          'Why does a Weak pointer not keep its value alive?',
+          [
+            'It is not counted in strong_count, which decides when to free',
+            'It copies the value, so the original may be freed',
+            'It holds a borrow that ends on the next line',
+            'Weak pointers always free the value first',
+          ],
+          0,
+          'The value is freed when the strong count reaches zero, whatever the weak count is.',
+        ),
+      ],
+    },
+    {
+      title: 'Check upgrade before using the value',
+      explanation: [
+        'Code holding a Weak must handle both outcomes of upgrade: match on Some to use the value, and choose a fallback for None.',
+        'A successful upgrade returns a real Rc, which counts as a strong owner. While that Rc is held, the value cannot be freed.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn describe(handle: &std::rc::Weak<String>) -> String {\n    match handle.upgrade() {\n        Some(text) => format!("alive: {}", text),\n        None => String::from("gone"),\n    }\n}\n\nfn main() {\n    let owner = std::rc::Rc::new(String::from("doc"));\n    let handle = std::rc::Rc::downgrade(&owner);\n    println!("{}", describe(&handle));\n    drop(owner);\n    println!("{}", describe(&handle));\n}',
+        output: 'alive: doc\ngone',
+        explanation:
+          'The first upgrade finds the String. After the only owner is dropped, the same handle upgrades to None.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let owner = std::rc::Rc::new(9);\n    let weak = std::rc::Rc::downgrade(&owner);\n    let extra = weak.upgrade();\n    println!("{}", std::rc::Rc::strong_count(&owner));\n}',
+          ['1', '2', '3', '0'],
+          1,
+          'The upgraded pointer stored in extra is a strong owner, alongside owner.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn describe(handle: &std::rc::Weak<String>) -> String {\n    match handle.upgrade() {\n        Some(text) => format!("alive: {}", text),\n        None => String::from("gone"),\n    }\n}\n\nfn main() {\n    let owner = std::rc::Rc::new(String::from("img"));\n    let handle = std::rc::Rc::downgrade(&owner);\n    let backup = std::rc::Rc::clone(&owner);\n    drop(owner);\n    println!("{}", describe(&handle));\n    drop(backup);\n    println!("{}", describe(&handle));\n}',
+          [
+            'gone\ngone',
+            'alive: img\nalive: img',
+            'gone\nalive: img',
+            'alive: img\ngone',
+          ],
+          3,
+          'backup keeps the String alive after owner is dropped; only dropping backup frees it.',
+        ),
+        choose(
+          'A Weak handle is kept in a long-lived cache. What must code do before reading through it?',
+          [
+            'Dereference it directly with *',
+            'Check strong_count once and assume it stays valid',
+            'Clone the Weak to turn it into a strong owner',
+            'Call upgrade and handle the None case',
+          ],
+          3,
+          'Only upgrade gives access, and the value may already be gone.',
+        ),
+        choose(
+          'While code holds the Rc returned by a successful upgrade, what is guaranteed?',
+          [
+            'The value is freed when the Weak is dropped',
+            'The value stays alive at least as long as that Rc',
+            'Other owners can no longer read the value',
+            'The weak count drops to zero',
+          ],
+          1,
+          'The upgraded Rc is a strong owner, so the count cannot reach zero while it exists.',
+        ),
+      ],
+    },
+  ],
+  'rust-cell': [
+    {
+      title: 'Change a value through a shared reference with get and set',
+      explanation: [
+        'A & reference normally cannot change what it points to. std::cell::Cell<T> is an exception: cell.set(v) replaces the value and cell.get() returns a copy of it, both through a shared reference.',
+        'get requires T to be Copy, because Cell never hands out a reference to its inside, only copies. That is what keeps the mutation safe within one thread.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let visits = std::cell::Cell::new(0);\n    let a = &visits;\n    let b = &visits;\n    a.set(a.get() + 1);\n    b.set(b.get() + 1);\n    println!("{}", visits.get());\n}',
+        output: '2',
+        explanation:
+          'Both shared references update the same Cell, and nothing is declared mut.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn record(counter: &std::cell::Cell<i32>, amount: i32) {\n    counter.set(counter.get() + amount);\n}\n\nfn main() {\n    let total = std::cell::Cell::new(10);\n    record(&total, 5);\n    record(&total, -3);\n    println!("{}", total.get());\n}',
+          ['10', '15', '12', '7'],
+          2,
+          'record only receives a shared reference, yet each call updates the Cell: 10 + 5 - 3.',
+        ),
+        choose(
+          'Why does Cell::get require the value type to be Copy?',
+          [
+            'get returns a copy, never a reference to the inside',
+            'Cell always stores its value on the heap',
+            'Only Copy types can be changed at all',
+            'get must also reset the cell to zero',
+          ],
+          0,
+          'Handing out copies means no reference into the Cell can outlive a later set.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let level = std::cell::Cell::new(1);\n    let before = level.get();\n    level.set(5);\n    println!("{} {}", before, level.get());\n}',
+          ['5 5', '1 5', '1 1', '5 1'],
+          1,
+          'before is a copy taken earlier, so it keeps 1 after the Cell changes.',
+        ),
+        choose(
+          'A Cell<i32> is reachable through two shared references. Which is true?',
+          [
+            'Either reference can set a new value',
+            'Neither can change it, because & is read-only',
+            'Only the first reference may call set',
+            'Both must be turned into &mut first',
+          ],
+          0,
+          'Cell is designed for mutation through shared references.',
+        ),
+      ],
+    },
+    {
+      title: 'Move values in and out with replace and take',
+      explanation: [
+        'For types that are not Copy, such as String, Cell cannot offer get. It still works by moving whole values: replace(new) stores new and returns the old value, and take() returns the value and leaves the type’s default (an empty String, 0) behind.',
+        'Either way, the caller receives an owned value and no reference into the Cell exists.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let slot = std::cell::Cell::new(String::from("first"));\n    let old = slot.replace(String::from("second"));\n    let now = slot.take();\n    println!("{} {} [{}]", old, now, slot.take());\n}',
+        output: 'first second []',
+        explanation:
+          'replace hands back first, take hands back second and leaves an empty String, which the last take returns.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let c = std::cell::Cell::new(4);\n    let a = c.replace(9);\n    let b = c.replace(a + c.get());\n    println!("{} {} {}", a, b, c.get());\n}',
+          ['9 13 13', '4 9 13', '4 4 13', '4 9 9'],
+          1,
+          'The first replace returns 4 and stores 9. The second stores 4 + 9 and returns the 9 it replaced.',
+        ),
+        choose(
+          'Why does Cell<String> offer no get method?',
+          [
+            'String is not Copy, and get returns a copy',
+            'A String cannot be stored inside a Cell',
+            'get would need a mutable reference to the String',
+            'A String inside a Cell is always empty',
+          ],
+          0,
+          'Without Copy, the only safe ways out are moving the value with replace or take.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let name = std::cell::Cell::new(String::from("kay"));\n    let taken = name.take();\n    let rest = name.take();\n    println!("{} {} {}", taken, rest.len(), taken.len());\n}',
+          ['kay 3 3', 'kay 3 0', 'kay 0 3', '0 kay 3'],
+          2,
+          'The first take moves kay out and leaves an empty String, which the second take returns.',
+        ),
+        choose(
+          'What does cell.replace(new) return?',
+          [
+            'The value the cell held before',
+            'The new value just stored',
+            'A reference to the stored value',
+            'Nothing; it only stores the new value',
+          ],
+          0,
+          'replace swaps the values and gives the caller the old one.',
+        ),
+      ],
+    },
+  ],
+  'rust-refcell': [
+    {
+      title: 'borrow and borrow_mut are checked while the program runs',
+      explanation: [
+        'std::cell::RefCell<T> gives out a shared reference with borrow() or a mutable one with borrow_mut(), even through a shared reference to the RefCell itself.',
+        'The usual rule still applies, any number of readers or one writer, but RefCell checks it at run time by counting active borrows. Breaking the rule panics instead of failing to compile.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let log = std::cell::RefCell::new(Vec::new());\n    log.borrow_mut().push("start");\n    log.borrow_mut().push("stop");\n    println!("{} {}", log.borrow().len(), log.borrow()[0]);\n}',
+        output: '2 start',
+        explanation:
+          'Each borrow_mut lasts only for its statement, so the pushes and the later reads never overlap with a writer.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn add(list: &std::cell::RefCell<Vec<i32>>, value: i32) {\n    list.borrow_mut().push(value * 2);\n}\n\nfn main() {\n    let list = std::cell::RefCell::new(vec![1]);\n    add(&list, 3);\n    add(&list, 4);\n    println!("{} {}", list.borrow().len(), list.borrow()[2]);\n}',
+          ['3 4', '2 8', '3 6', '3 8'],
+          3,
+          'add only needs a shared reference to push. The vector becomes [1, 6, 8].',
+        ),
+        choose(
+          'When are RefCell’s borrowing rules checked?',
+          [
+            'At run time, on each borrow or borrow_mut',
+            'At compile time, like ordinary references',
+            'Never; RefCell switches the borrow rules off',
+            'Only when the RefCell is dropped',
+          ],
+          0,
+          'RefCell keeps a count of active borrows and checks it on every request.',
+        ),
+        choose(
+          'What happens if borrow_mut() is called while a guard from borrow() is still alive?',
+          [
+            'The compiler rejects the program',
+            'borrow_mut waits until the guard is dropped',
+            'Both work, and the reader sees the old data',
+            'The program panics with a borrow error',
+          ],
+          3,
+          'A writer cannot coexist with a reader, and RefCell enforces that by panicking.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let names = std::cell::RefCell::new(vec![String::from("ana")]);\n    let snapshot = names.borrow().clone();\n    names.borrow_mut().push(String::from("bo"));\n    println!("{} {}", snapshot.len(), names.borrow().len());\n}',
+          ['2 2', '1 1', '2 1', '1 2'],
+          3,
+          'snapshot is an independent clone taken before the push, and its borrow ended right away.',
+        ),
+      ],
+    },
+    {
+      title: 'Drop each guard before the next conflicting borrow',
+      explanation: [
+        'A guard returned by borrow_mut() keeps the borrow active as long as the guard exists. An unnamed guard ends with its statement; a guard stored in a variable lasts until that variable goes out of scope.',
+        'To make several changes and then read, keep the stored guard inside an inner block so it is dropped before the next borrow.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let cell = std::cell::RefCell::new(vec![1]);\n    {\n        let mut guard = cell.borrow_mut();\n        guard.push(2);\n        guard.push(3);\n    }\n    let len = cell.borrow().len();\n    println!("{}", len);\n}',
+        output: '3',
+        explanation:
+          'guard is dropped at the end of the inner block, so the following borrow succeeds.',
+      },
+      questions: [
+        choose(
+          'What happens when this program runs?',
+          [
+            'It runs normally, and reader sees 5',
+            'It panics: guard is still active',
+            'The compiler rejects the second borrow',
+            'reader waits until guard is dropped',
+          ],
+          1,
+          'guard lives until the end of main, so the shared borrow conflicts with it at run time.',
+          'fn main() {\n    let cell = std::cell::RefCell::new(5);\n    let guard = cell.borrow_mut();\n    let reader = cell.borrow();\n}',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let cell = std::cell::RefCell::new(String::from("a"));\n    cell.borrow_mut().push(\'b\');\n    let first = cell.borrow().len();\n    cell.borrow_mut().push_str("cd");\n    println!("{} {}", first, cell.borrow());\n}',
+          ['4 abcd', '2 ab', '1 abcd', '2 abcd'],
+          3,
+          'Each unnamed guard ends with its statement. first records the length before cd is added.',
+        ),
+        choose(
+          'Code stores let mut guard = cell.borrow_mut(); and later needs cell.borrow() in the same function. What lets that work?',
+          [
+            'Call borrow() twice so the second call waits',
+            'Declare cell itself with let mut',
+            'Keep the guard in an inner block',
+            'Clone the guard before borrowing again',
+          ],
+          2,
+          'Ending the guard’s scope ends the mutable borrow.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let scores = std::cell::RefCell::new(vec![10, 20]);\n    {\n        let mut s = scores.borrow_mut();\n        s[0] += 5;\n        s.push(30);\n    }\n    let s = scores.borrow();\n    println!("{} {}", s[0], s.len());\n}',
+          ['15 3', '10 3', '15 2', '10 2'],
+          0,
+          'Both changes go through the guard inside the block; the read afterwards sees them.',
+        ),
+      ],
+    },
+  ],
+  'rust-try-borrow': [
+    {
+      title: 'try_borrow reports a conflict as Err',
+      explanation: [
+        'borrow() panics on a conflict. try_borrow() returns a Result instead: Ok with a guard, or Err when a mutable guard is active. try_borrow_mut() returns Err when any guard, shared or mutable, is active.',
+        'A conflict then becomes an ordinary value the program can match on, instead of a crash.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn main() {\n    let cell = std::cell::RefCell::new(10);\n    let writer = cell.borrow_mut();\n    match cell.try_borrow() {\n        Ok(value) => println!("read {}", value),\n        Err(_) => println!("busy"),\n    }\n    drop(writer);\n    match cell.try_borrow() {\n        Ok(value) => println!("read {}", value),\n        Err(_) => println!("busy"),\n    };\n}',
+        output: 'busy\nread 10',
+        explanation:
+          'While writer exists, reading is refused with Err. After drop(writer), the same call succeeds.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn main() {\n    let cell = std::cell::RefCell::new(String::from("x"));\n    let reader = cell.borrow();\n    let first = match cell.try_borrow_mut() {\n        Ok(_) => "ok",\n        Err(_) => "blocked",\n    };\n    let second = match cell.try_borrow() {\n        Ok(_) => "ok",\n        Err(_) => "blocked",\n    };\n    println!("{} {}", first, second);\n}',
+          ['ok ok', 'blocked blocked', 'ok blocked', 'blocked ok'],
+          3,
+          'An active reader blocks a writer but allows another reader.',
+        ),
+        choose(
+          'What does try_borrow do that borrow does not?',
+          [
+            'It waits until the conflicting guard ends',
+            'It checks the borrow at compile time',
+            'It returns a copy of the value instead of a guard',
+            'It returns Err on a conflict instead of panicking',
+          ],
+          3,
+          'The check is the same; only the way a conflict is reported differs.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let cell = std::cell::RefCell::new(3);\n    let a = cell.borrow();\n    let b = cell.try_borrow();\n    let c = cell.try_borrow_mut();\n    println!("{} {}", b.is_ok(), c.is_ok());\n}',
+          ['true false', 'false false', 'true true', 'false true'],
+          0,
+          'With reader a active, a second reader is fine but a writer is refused.',
+        ),
+        choose(
+          'When does try_borrow_mut return Err?',
+          [
+            'While any borrow or borrow_mut guard is still alive',
+            'When the value inside is zero',
+            'When the RefCell was declared without mut',
+            'After try_borrow was called and its guard dropped',
+          ],
+          0,
+          'A mutable borrow needs exclusive access, so any live guard blocks it.',
+        ),
+      ],
+    },
+    {
+      title: 'Release the guard, then try again',
+      explanation: [
+        'A conflict lasts exactly as long as the blocking guard. drop(guard), or the end of the guard’s scope, releases the borrow, and a retry then succeeds.',
+        'A function can wrap the attempt and report success as a bool or Result, leaving the decision about conflicts to its caller.',
+      ],
+      example: {
+        language: 'rust',
+        code: 'fn try_add(cell: &std::cell::RefCell<i32>, amount: i32) -> bool {\n    match cell.try_borrow_mut() {\n        Ok(mut value) => {\n            *value += amount;\n            true\n        }\n        Err(_) => false,\n    }\n}\n\nfn main() {\n    let cell = std::cell::RefCell::new(1);\n    let reader = cell.borrow();\n    let first = try_add(&cell, 5);\n    drop(reader);\n    let second = try_add(&cell, 5);\n    println!("{} {} {}", first, second, cell.borrow());\n}',
+        output: 'false true 6',
+        explanation:
+          'The first attempt fails because reader is active. After drop(reader), the second attempt adds 5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'fn try_add(cell: &std::cell::RefCell<i32>, amount: i32) -> bool {\n    match cell.try_borrow_mut() {\n        Ok(mut value) => {\n            *value += amount;\n            true\n        }\n        Err(_) => false,\n    }\n}\n\nfn main() {\n    let cell = std::cell::RefCell::new(10);\n    let guard = cell.borrow_mut();\n    let a = try_add(&cell, 1);\n    drop(guard);\n    let b = try_add(&cell, 2);\n    let c = try_add(&cell, 3);\n    println!("{} {} {} {}", a, b, c, cell.borrow());\n}',
+          [
+            'false true true 15',
+            'false true true 16',
+            'true true true 16',
+            'false false true 13',
+          ],
+          0,
+          'Only the attempt made while guard existed fails, so 2 and 3 are added to 10.',
+        ),
+        choose(
+          'Inside try_add, when is the guard from Ok(mut value) released?',
+          [
+            'Only when the program exits',
+            'When the caller drops the RefCell',
+            'Immediately after try_borrow_mut returns',
+            'At the end of its match arm',
+          ],
+          3,
+          'The guard lives in value, which ends with its arm, so the next attempt is not blocked by it.',
+        ),
+        choose(
+          'Why might a program prefer try_borrow over borrow?',
+          [
+            'try_borrow is checked by the compiler instead',
+            'borrow cannot read values stored inside a RefCell',
+            'A conflict is expected sometimes and should be handled, not crash',
+            'try_borrow clones the value so no guard exists',
+          ],
+          2,
+          'When overlapping access is a normal situation, a Result lets the code choose what to do.',
+        ),
+        predictOutput(
+          'What is the output of this program?',
+          'fn main() {\n    let cell = std::cell::RefCell::new(vec![1, 2]);\n    let during;\n    {\n        let _writer = cell.borrow_mut();\n        during = cell.try_borrow().is_err();\n    }\n    let after = cell.try_borrow().is_err();\n    println!("{} {}", during, after);\n}',
+          ['true false', 'false false', 'true true', 'false true'],
+          0,
+          '_writer is a named binding, so the guard lives until the block ends; afterwards reading succeeds.',
+        ),
+      ],
+    },
+  ],
 };
