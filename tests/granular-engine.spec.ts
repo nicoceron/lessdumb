@@ -112,8 +112,11 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
       await expect(
         detail.getByRole('link', { name: 'Practice this skill' }),
       ).toHaveCount(0);
+      // Stages are siblings unless one uses another, so walk the topic list
+      // rather than assuming each stage's prerequisite is the previous stage.
       await detail
-        .getByRole('button')
+        .getByLabel('Topic learning steps')
+        .getByRole('link')
         .filter({ hasText: skillById[stages[index - 1]].title })
         .click();
     }

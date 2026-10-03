@@ -57,8 +57,16 @@ describe('competitive programming in the shared knowledge graph', () => {
     expect(skills.filter((skill) => skill.courseId === courseId)).toHaveLength(
       192,
     );
+    const ancestors = (id: string): Set<string> =>
+      new Set(
+        skillById[id].prerequisites.flatMap((parent) => [
+          parent,
+          ...ancestors(parent),
+        ]),
+      );
     for (const skill of path.filter((item) => item.courseId === courseId)) {
-      expect(skill.prerequisites).toContain('parameters');
+      // Every contest assessment defines a function that returns a result.
+      expect(ancestors(skill.id).has('return-values')).toBe(true);
       expect(skill.questions.map((q) => q.type)).toEqual([
         'choice',
         'choice',
@@ -82,11 +90,11 @@ describe('competitive programming in the shared knowledge graph', () => {
       master(createState().progress, 'cp-geometry'),
       'cp-greedy',
     );
-    const ancestor = skillById['math-mean'].questions[0];
+    const ancestor = skillById['math-vectors'].questions[0];
     progress = applyAttempt(
       progress,
       {
-        skillId: 'math-mean',
+        skillId: 'math-vectors',
         questionId: ancestor.id,
         correct: false,
         mode: 'review',
@@ -94,7 +102,7 @@ describe('competitive programming in the shared knowledge graph', () => {
       NOW + DAY_MS,
     );
     expect(isUnlocked(progress, 'cp-geometry')).toBe(false);
-    expect(getSkillState(progress, 'math-vectors').mastery).toBe(1);
+    expect(getSkillState(progress, 'cp-geometry-turn-sign').mastery).toBe(1);
     expect(getSkillState(progress, 'cp-geometry').mastery).toBe(1);
     expect(isUnlocked(progress, 'cp-greedy')).toBe(true);
     expect(() =>
@@ -112,7 +120,7 @@ describe('competitive programming in the shared knowledge graph', () => {
     const restored = applyAttempt(
       progress,
       {
-        skillId: 'math-mean',
+        skillId: 'math-vectors',
         questionId: ancestor.id,
         correct: true,
         mode: 'learn',
@@ -169,8 +177,15 @@ describe('competitive programming in the shared knowledge graph', () => {
     ).toContain('cp-prefix-sums');
   });
 
-  it('requires all three new concepts before each preserved application skill', () => {
+  it('requires the concepts each preserved application uses, in their own order', () => {
     expect(Object.keys(competitiveTopicStages)).toHaveLength(48);
+    const ancestors = (id: string): Set<string> =>
+      new Set(
+        skillById[id].prerequisites.flatMap((parent) => [
+          parent,
+          ...ancestors(parent),
+        ]),
+      );
     for (const [topic, stages] of Object.entries(competitiveTopicStages)) {
       expect(stages).toHaveLength(3);
       stages.forEach((id, index) => {
@@ -180,31 +195,37 @@ describe('competitive programming in the shared knowledge graph', () => {
           stageCount: 4,
           unitId: skillById[topic].unitId,
         });
-        if (index)
-          expect(skillById[id].prerequisites).toContain(stages[index - 1]);
+        // A concept never depends on the application it prepares.
+        expect(ancestors(id).has(topic)).toBe(false);
       });
-      expect(skillById[topic].prerequisites).toContain(stages[2]);
+      // Two concepts are not used by their application yet; their
+      // applications need rewriting before an edge would be honest.
+      for (const stage of stages)
+        expect(ancestors(topic).has(stage)).toBe(
+          !['cp-grid-component', 'cp-bit-submask-step'].includes(stage),
+        );
       expect(skillById[topic]).toMatchObject({
         topicId: topic,
         stage: 4,
         stageCount: 4,
       });
     }
+    // Mastering one ready concept unlocks exactly the nodes whose remaining
+    // prerequisites it completes; the application waits for every concept.
     const topic = 'cp-prefix-sums';
-    const [first, second, third] = competitiveTopicStages[topic];
+    const sequence = [...competitiveTopicStages[topic], topic];
     let progress = createState().progress;
-    for (const parent of skillById[first].prerequisites)
-      progress = master(progress, parent);
-    expect(isUnlocked(progress, first)).toBe(true);
-    expect(isUnlocked(progress, second)).toBe(false);
-    expect(isUnlocked(progress, topic)).toBe(false);
-    progress = master(progress, first);
-    expect(isUnlocked(progress, second)).toBe(true);
-    expect(isUnlocked(progress, third)).toBe(false);
-    progress = master(progress, second);
-    expect(isUnlocked(progress, third)).toBe(true);
-    expect(isUnlocked(progress, topic)).toBe(false);
-    progress = master(progress, third);
-    expect(isUnlocked(progress, topic)).toBe(true);
+    for (const id of sequence)
+      for (const parent of skillById[id].prerequisites)
+        if (!sequence.includes(parent)) progress = master(progress, parent);
+    for (const [index, id] of sequence.entries()) {
+      expect(isUnlocked(progress, id)).toBe(
+        skillById[id].prerequisites.every(
+          (parent) => getSkillState(progress, parent).mastery === 1,
+        ),
+      );
+      if (index < 3) expect(isUnlocked(progress, topic)).toBe(false);
+      progress = master(progress, id);
+    }
   });
 });

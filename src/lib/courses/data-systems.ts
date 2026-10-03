@@ -368,7 +368,7 @@ const nodes = [
     'ds-models',
     'Model entities and relationships',
     'Use rows, keys, and joins to represent connected facts.',
-    ['ds-authority'],
+    ['ds-workloads'],
     [
       'A relational model organizes facts into tables of rows with named columns. A primary key identifies a row; a foreign key refers to a row in another table. A join combines related rows using a matching condition.',
       'Start with entities and their relationships. A many-to-many relationship often needs a linking table, such as one row for each attendee-workshop registration. Keys separate identity from names that can change or be shared.',
@@ -518,7 +518,7 @@ const nodes = [
     'ds-models',
     'Control duplicated facts',
     'Compare normalization with deliberate denormalization.',
-    ['ds-relational', 'ds-documents'],
+    ['ds-relational', 'ds-authority'],
     [
       'Normalization places an independently changing fact in an authoritative location and refers to it with keys. This reduces update anomalies: one change need not be repeated across many copied representations.',
       'Denormalization deliberately stores redundant representations to improve a specific read pattern. It can be worthwhile, but requires an explicit update or rebuilding strategy. The right question is which consistency work the workload can afford, not whether duplication is always good or bad.',
@@ -888,7 +888,7 @@ const nodes = [
     'ds-storage',
     'Design an access path',
     'Choose secondary and composite indexes for actual queries.',
-    ['ds-btrees', 'ds-normalization'],
+    ['ds-btrees', 'ds-relational'],
     [
       'A secondary index provides access through a field other than the primary key. A composite index orders several fields together. The order of those fields matters because it determines which groups and ranges are contiguous.',
       'Design indexes from representative queries and verify their effect. Every additional index adds storage and write maintenance. An index that covers the needed fields may avoid a separate record lookup, but larger entries can increase index size.',
@@ -963,7 +963,7 @@ const nodes = [
     'ds-evolution',
     'Store data for broad scans',
     'Explain why column layouts suit many analytical workloads.',
-    ['ds-workloads', 'ds-relational'],
+    ['ds-relational'],
     [
       'A row-oriented layout keeps fields of one row together. A column-oriented layout groups values of the same column. Analytical scans that need a few fields across many rows can avoid reading unrelated columns.',
       'Similar values in a column often compress well, and engines can process batches with efficient vectorized operations. The advantage is workload-dependent: fetching or modifying one whole record has different locality needs from summing one column over a large history.',
@@ -1038,7 +1038,7 @@ const nodes = [
     'ds-evolution',
     'Maintain a precomputed view',
     'Balance faster reads against freshness and update work.',
-    ['ds-columnar', 'ds-authority'],
+    ['ds-authority'],
     [
       'A materialized view stores the result of a transformation or query instead of recomputing it on every read. It is derived data: its meaning depends on the source and the rules used to construct it.',
       'A view can be refreshed in batches or updated incrementally as source data changes. Batch refreshes create an explicit freshness window; incremental updates require handling retries, deletions, and missed changes. Decide how readers detect and tolerate staleness.',
@@ -1113,7 +1113,7 @@ const nodes = [
     'ds-evolution',
     'Evolve an encoded contract',
     'Check compatibility between old and new readers and writers.',
-    ['ds-documents', 'ds-relational'],
+    ['ds-documents'],
     [
       'Encoding turns structured values into bytes that another process or future version can read. During a rolling deployment, old and new application versions can overlap, so a schema change must account for both readers and writers.',
       'Backward compatibility means a newer reader can understand older data. Forward compatibility means an older reader can handle newer data. Optional fields, defaults, and stable field identities can support evolution, but the actual format and reader behavior must be checked.',
@@ -1188,7 +1188,7 @@ const nodes = [
     'ds-evolution',
     'Move data between services',
     'Compare request-response calls with asynchronous event delivery.',
-    ['ds-schema-evolution', 'ds-authority'],
+    ['ds-deployment'],
     [
       'A request-response call asks another service to perform work and return a result. An asynchronous message places work or a fact in a channel for later processing. A broker can buffer work and decouple processing time, but it does not remove the need for delivery and failure semantics.',
       'After a timeout, a caller may not know whether remote work finished. Retrying can repeat effects. An idempotent operation has the same intended effect when repeated; a stable operation ID and duplicate detection can help provide this property.',
@@ -1263,7 +1263,7 @@ const nodes = [
     'ds-replication',
     'Keep multiple copies',
     'Compare synchronous and asynchronous follower updates.',
-    ['ds-key-values', 'ds-deployment'],
+    ['ds-deployment'],
     [
       'Replication maintains copies of data on multiple nodes. In a single-leader design, writes go through the leader and followers receive the ordered changes. Copies can support recovery from node failure and distribute reads.',
       'Synchronous replication waits for specified replica acknowledgments before confirming a write. Asynchronous replication can confirm before followers catch up. Waiting changes response time and availability; not waiting changes which acknowledged changes may be missing during a failure.',
@@ -1408,7 +1408,7 @@ const nodes = [
     'ds-replication',
     'Resolve concurrent changes',
     'Recognize concurrency and choose an explicit merge rule.',
-    ['ds-replication', 'ds-schema-evolution'],
+    ['ds-replication'],
     [
       'Changes are concurrent when neither is known to follow from the other. Two offline clients can both edit the same earlier version. Different arrival orders at replicas must not be mistaken for one universally agreed causal order.',
       'Conflict resolution is part of application semantics. Last-write-wins chooses one value and can discard another valid change; wall clocks may also disagree. Merging sets, retaining alternatives, or asking a user to resolve a conflict can be appropriate depending on the meaning of the data.',
@@ -1483,7 +1483,7 @@ const nodes = [
     'ds-replication',
     'Check replica overlap',
     'Reason about read/write quorum intersections and their limits.',
-    ['ds-replication', 'ds-conflicts'],
+    ['ds-replication-lag', 'ds-conflicts'],
     [
       'In a fixed replica set of size N, a write may wait for W replicas and a read may wait for R. When R + W > N, the responding sets must overlap, provided they are drawn from that same replica set.',
       'Overlap is a useful building block, not a complete proof of linearizable behavior. Concurrent writes, version selection, failed writes, and alternative replica placement can complicate the result. State the assumptions before turning a quorum inequality into a guarantee.',
@@ -1553,7 +1553,7 @@ const nodes = [
     'ds-sharding',
     'Split ownership by key',
     'Distinguish sharding from replication and choose a partition key.',
-    ['ds-key-values', 'ds-requirements'],
+    ['ds-key-values', 'ds-replication'],
     [
       'Sharding distributes different parts of a dataset across nodes. Replication copies the same part to multiple nodes. A deployment can combine both: each shard owns a subset of keys and has replicas of that subset.',
       'The partition key determines which records travel together. It affects load distribution, query routing, and whether related work stays local. Choose it from access patterns and the largest expected tenants or entities, not only from the current number of records.',
@@ -1703,7 +1703,7 @@ const nodes = [
     'ds-sharding',
     'Diagnose uneven load',
     'Separate balanced key counts from balanced traffic.',
-    ['ds-hash-range', 'ds-requirements'],
+    ['ds-hash-range'],
     [
       'A hot spot is an ownership group receiving disproportionate traffic or storing disproportionate data. Equal numbers of keys do not imply equal work: one record may receive most requests. Measure load by shard and by the keys responsible for it.',
       'Different remedies move different costs. Caching or extra read replicas can help repeated reads; splitting a logical counter across several keys can spread writes but makes reads combine the pieces. Any split must preserve the application’s update and query semantics.',
@@ -1778,7 +1778,7 @@ const nodes = [
     'ds-sharding',
     'Move data without losing ownership',
     'Plan shard migration, routing, and verification.',
-    ['ds-partitioning', 'ds-replication'],
+    ['ds-partitioning'],
     [
       'Rebalancing moves ownership or data as capacity changes. A useful scheme limits unnecessary movement when nodes are added or removed. Fixed logical shards can be reassigned to physical nodes without changing every record’s logical shard.',
       'A live move must account for writes that occur during copying. Routing and ownership need a clear transition rule, and the destination must be checked before the source is retired. A copy operation alone is not proof that no concurrent updates were missed.',
@@ -2078,7 +2078,7 @@ const nodes = [
     'ds-transactions',
     'Protect a multi-record invariant',
     'Recognize write skew and reason about serializable outcomes.',
-    ['ds-isolation', 'ds-lost-update', 'ds-relational'],
+    ['ds-lost-update', 'ds-relational'],
     [
       'Write skew can violate a rule involving several records even when concurrent transactions write different records. Each transaction checks the same earlier condition and then makes a change that would have been unsafe after observing the other’s change.',
       'Serializable isolation aims for a result equivalent to some one-at-a-time transaction order, even when execution overlaps. Engines may enforce it through locking or conflict detection and aborts. Applications must be prepared to retry suitable aborted transactions; stronger isolation is not a guarantee of no failures or unlimited throughput.',

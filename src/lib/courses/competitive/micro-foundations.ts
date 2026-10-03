@@ -8,7 +8,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Count one scan',
     'Count one constant-cost action for each visited value.',
-    ['ranges', 'for-loops', 'accumulators'],
+    ['accumulators', 'return-values'],
     [
       'A scan visits each item once. If the counted action happens once per visit, a list of n items causes exactly n actions, including zero actions for an empty list.',
       'Keep a counter initially at zero and increase it after each visit. After i visits the counter equals i. This simple invariant distinguishes the amount of work from the sum of the values.',
@@ -68,7 +68,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Count a rectangular pair loop',
     'Multiply independent loop sizes without confusing work with storage.',
-    ['cp-work-scan', 'ranges', 'numbers'],
+    ['cp-work-scan', 'parameters', 'ranges'],
     [
       'If every outer iteration runs the complete inner loop, rows outer visits and columns inner visits produce rows × columns pairs. A zero size in either dimension produces no pairs.',
       'Two consecutive loops add work; a full nested pair loop multiplies it. The loop can still reuse a single counter, so the number of pairs does not imply storing that many values.',
@@ -123,7 +123,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Count doubling steps',
     'Recognize logarithmic progress by multiplying a probe.',
-    ['cp-work-pairs', 'while-loops'],
+    ['cp-work-scan', 'while-loops'],
     [
       'Start a probe at 1 and double it until it reaches a target. For target 10 the visited probes are 1, 2, 4, 8, 16, so four updates suffice.',
       'After k updates the probe is 2 to the power k. Doubling a positive target adds at most one more update. For targets at most 1 the starting probe already reaches the target and the count is zero.',
@@ -180,7 +180,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Split whitespace tokens',
     'Separate text into string tokens before assigning roles.',
-    ['strings', 'lists'],
+    ['lists', 'return-values'],
     [
       'Calling text.split() with no argument separates runs of whitespace. Spaces, tabs, and newlines all act as separators; leading and trailing whitespace do not create empty tokens.',
       'Every token remains a string. Tokenization decides where text fields begin and end; it does not decide which field is a count or convert numeric fields into integers.',
@@ -235,7 +235,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Convert numeric tokens',
     'Convert numeric text before arithmetic.',
-    ['cp-input-tokens', 'types', 'for-loops', 'list-mutation'],
+    ['comprehensions', 'return-values', 'list-mutation'],
     [
       'The token "12" is text; int("12") is an integer. The distinction matters because + concatenates strings but adds integers.',
       'When a format promises valid integer tokens, convert each token before using it as a number. Negative values and zero are ordinary valid inputs. This stage assumes all supplied tokens are valid integer text.',
@@ -295,7 +295,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Separate a count from its payload',
     'Read exactly the declared number of numeric fields.',
-    ['cp-input-integers', 'indexing', 'slicing', 'conditionals'],
+    ['cp-input-tokens', 'cp-input-integers', 'slicing'],
     [
       'In a counted format, the first token says how many values follow. For "2 8 5", the count is 2 and the payload is [8, 5]; the count is not a measurement.',
       'Convert the count, then consume positions 1 through count. This exercise permits trailing metadata and asks you to ignore it. Blank text has no count and returns an empty payload; nonblank input promises enough valid numeric payload fields.',
@@ -355,7 +355,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Apply one state transition',
     'Turn an event into a single current-state change.',
-    ['conditionals', 'numbers'],
+    ['parameters'],
     [
       'A transition defines the state after one event. Here "up" increases a level by 2, "down" decreases it by 1, and "reset" replaces it with zero. There are no bounds in this stage.',
       'The event changes the current state once. A reset discards the old current level regardless of its sign; it does not mean subtracting a fixed amount. Assume the command is one of the three declared strings.',
@@ -420,7 +420,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Clamp a state to its bounds',
     'Keep a proposed numeric state inside an inclusive interval.',
-    ['cp-state-transition'],
+    ['parameters'],
     [
       'Clamping keeps a value inside [0, ceiling]. Values below zero become zero; values above the ceiling become the ceiling; values already inside remain unchanged.',
       'For a nonnegative ceiling, max(0, value) handles the floor and min(ceiling, ...) handles the cap. Clamping after a proposed transition enforces the state invariant 0 <= level <= ceiling.',
@@ -475,7 +475,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Preserve a historical peak',
     'Update a maximum after each state observation.',
-    ['cp-state-bounds', 'for-loops', 'accumulators'],
+    ['accumulators', 'return-values'],
     [
       'A historical peak summarizes all observed states. Initialize the peak to zero for nonnegative levels, then replace it with max(peak, current) after observing each new state.',
       'A later reset or downward state can change the present but cannot erase a past maximum. Keep peak as a separate variable. Empty observations retain the initial peak zero.',
@@ -535,7 +535,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Enumerate distinct index pairs',
     'Visit each unordered pair once with i < j.',
-    ['cp-complexity', 'ranges', 'lists', 'list-mutation'],
+    ['cp-work-pairs'],
     [
       'An unordered pair of different positions can be represented by i < j. Let i cover all positions, then let j start at i + 1. This excludes self-pairs and reversed duplicates.',
       'Positions remain distinct even when their values are equal. A list of length n contains n(n - 1)/2 such pairs; lengths zero and one contain none.',
@@ -595,7 +595,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Score one candidate',
     'Separate candidate generation from its objective value.',
-    ['cp-enumerate-index-pairs', 'indexing', 'numbers'],
+    ['parameters'],
     [
       'A candidate is a proposed choice; a score describes how good that choice is. For two positions in a numeric list, the gap score is abs(values[i] - values[j]).',
       'The absolute value makes the score independent of subtraction direction. Equal values have score zero even when their positions differ. Scoring one valid pair uses constant additional storage.',
@@ -655,7 +655,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-foundations',
     'Keep the best visited candidate',
     'Use an explicit empty state for a minimum search.',
-    ['cp-enumerate-score', 'conditionals', 'for-loops'],
+    ['for-loops', 'return-values', 'boolean-logic'],
     [
       'While minimizing candidate scores, keep best equal to the smallest score already visited. Before visiting anything, there is no best score; use None to represent this empty state.',
       'Set best from the first candidate, then replace it only for a smaller score. Initializing to zero would incorrectly claim a perfect score before any candidate is checked. Empty input returns None under this contract.',
@@ -720,7 +720,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-collections',
     'Sort without changing the input',
     'Choose a sorted copy when preserving the source matters.',
-    ['lists', 'list-mutation', 'cp-complexity'],
+    ['list-mutation', 'return-values'],
     [
       'sorted(values) creates a new ascending list and leaves values unchanged. In contrast, values.sort() changes that same list and returns None.',
       'A function that promises to preserve its input should return the sorted copy. Repeated values remain repeated; sorting changes order rather than membership. General comparison sorting costs O(n log n) time.',
@@ -780,7 +780,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-collections',
     'Build a two-field sort key',
     'Express primary and secondary numeric ordering.',
-    ['cp-sort-copy', 'functions', 'indexing'],
+    ['cp-sort-copy', 'parameters'],
     [
       'A key function translates each record into a value used for comparison. For (deadline, effort), the key (deadline, -effort) sorts deadline upward and effort downward within equal deadlines.',
       'Tuples compare their first fields first, then their next fields only when earlier fields tie. A lambda is a short function expression: lambda record: (record[0], -record[1]) returns this two-field key for one record.',
@@ -905,7 +905,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-collections',
     'Record distinct values in a set',
     'Use presence when multiplicity is irrelevant.',
-    ['dictionaries', 'for-loops'],
+    ['dictionaries', 'return-values'],
     [
       'A set stores distinct hashable values. Membership with value in seen asks whether a value has appeared; repeated additions do not create repeated set entries.',
       'Integers and strings can be set members, while ordinary mutable lists cannot. For a presence-only problem, a set is simpler than a frequency dictionary. Building it takes expected O(n) time and O(u) space for u distinct values.',
@@ -965,7 +965,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-collections',
     'Increment one frequency map',
     'Maintain counts for the processed prefix.',
-    ['cp-hash-membership', 'dictionary-loops'],
+    ['cp-hash-membership'],
     [
       'A frequency map stores counts[value], the number of times value has appeared. For a first occurrence, counts.get(value, 0) supplies the missing count zero.',
       'Update with counts[value] = counts.get(value, 0) + 1 for every observation. The invariant is that each count matches the processed prefix. A set alone cannot distinguish one occurrence from several.',
@@ -1025,7 +1025,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-collections',
     'Filter a completed frequency map',
     'Select keys by their counts after aggregation.',
-    ['cp-hash-frequency', 'conditionals'],
+    ['cp-hash-frequency', 'dictionary-loops', 'parameters'],
     [
       'After counts have been built, scanning counts.items() examines one (value, count) entry per distinct value. Keep an entry only when its count satisfies the requested threshold.',
       'Filter into a new dictionary rather than deleting keys during iteration. This leaves the original map intact and separates collecting observations from asking a question about the completed counts.',
@@ -1085,7 +1085,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-collections',
     'Read one next reference',
     'Interpret a linked node record independently of storage order.',
-    ['dictionaries', 'indexing'],
+    ['dictionaries', 'parameters'],
     [
       'A node record is (value, next_id). A dictionary maps node IDs to these records. The next_id field identifies the next node; it need not match the next dictionary key or a neighboring integer.',
       'Reading a next reference performs one link step. None indicates the chain ends. This stage assumes the requested node exists and does not traverse the remainder of the chain.',
@@ -1150,7 +1150,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-collections',
     'Test the exact end sentinel',
     'Distinguish None from valid false-valued identifiers.',
-    ['cp-link-next', 'conditionals'],
+    ['for-loops', 'return-values'],
     [
       'A chain ends at None, so the end test is node_id is None. A valid node ID may be zero or an empty string; both are false-valued but are not None.',
       'A truthiness test like if not node_id merges these cases and could stop before visiting a legitimate node. Sentinel checks should match the specified sentinel exactly.',
@@ -1212,7 +1212,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-collections',
     'Count nodes by following links',
     'Advance a cursor until the explicit sentinel.',
-    ['cp-link-sentinel', 'while-loops', 'accumulators'],
+    ['cp-link-next', 'cp-link-sentinel', 'while-loops'],
     [
       'Initialize current to the head and count to zero. While current is not None, count the current node and replace current with its next reference.',
       'After k steps, count equals the number of visited nodes and current points to the next unvisited node. Assume the reachable chain is finite, acyclic, and has no missing references. Unreachable dictionary records do not affect the count.',
@@ -1277,7 +1277,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-collections',
     'Recognize the accepted alphabet',
     'Specify ASCII letter membership before normalizing text.',
-    ['strings', 'conditionals'],
+    ['for-loops', 'return-values', 'boolean-logic'],
     [
       'A task may accept exactly ASCII letters A–Z and a–z. Explicit character-range comparisons implement that alphabet and exclude digits, punctuation, and non-ASCII letters.',
       'A general Unicode letter test would answer a broader question. The accepted alphabet is part of the problem contract, so choose membership before applying a transformation. This stage receives exactly one character.',
@@ -1407,7 +1407,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-collections',
     'Collect normalized accepted characters',
     'Filter and normalize one character at a time.',
-    ['cp-text-normalization', 'for-loops', 'list-mutation'],
+    ['cp-text-normalization', 'list-mutation'],
     [
       'Scan the original text in order. Normalize ASCII uppercase letters, then append only characters inside a–z. The result is a list of accepted lowercase characters, with repetitions preserved.',
       'After each input character, the output contains exactly the accepted characters from the processed prefix in order. Counting them is a later task; this stage isolates the acceptance and normalization pipeline.',
@@ -1467,7 +1467,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Represent prefix boundaries',
     'Count boundaries rather than only element positions.',
-    ['cp-enumeration', 'lists', 'indexing', 'numbers'],
+    ['ranges', 'return-values'],
     [
       'A list of n values has n + 1 prefix boundaries: before the first value, between values, and after the last value. Prefix boundary i represents the first i values.',
       'The zero boundary contains no values and has total zero. Keeping this boundary makes a query starting at zero follow the same subtraction rule as any other query. Even an empty list has one boundary.',
@@ -1524,7 +1524,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Extend a cumulative total',
     'Append the next boundary total from the previous one.',
-    ['cp-prefix-boundaries', 'accumulators', 'list-mutation', 'for-loops'],
+    ['cp-prefix-boundaries', 'list-mutation'],
     [
       'Start prefix with [0]. For each value, append prefix[-1] + value. After processing i values, the final entry is their total and the table contains i + 1 boundaries.',
       'Negative values may make cumulative totals decrease. The invariant concerns sums, not sorted order. Building the table visits each value once and requires O(n) additional storage.',
@@ -1584,7 +1584,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Subtract two prefix boundaries',
     'Answer a half-open range query from a prepared table.',
-    ['cp-prefix-build'],
+    ['cp-prefix-boundaries', 'parameters'],
     [
       'For a half-open range [left, right), subtract prefix[left] from prefix[right]. The earlier prefix cancels exactly the values before left.',
       'Require 0 <= left <= right <= n. A range with equal boundaries is empty and returns zero. The right boundary may be n even though the final element index is n - 1.',
@@ -1649,7 +1649,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Encode a range change at its boundaries',
     'Represent an addition with a start and cancellation event.',
-    ['cp-prefix-sums', 'numbers'],
+    ['cp-prefix-build', 'parameters'],
     [
       'Adding delta to a half-open range [left, right) can be encoded as +delta at left and -delta at right. A later cumulative scan carries the addition until its cancellation boundary.',
       'The excluded right boundary cancels the effect before position right is reconstructed. If left equals right, the two events occur at the same coordinate and cancel completely. A negative delta works by the same rule.',
@@ -1709,7 +1709,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Accumulate overlapping boundary changes',
     'Add each update into one difference table.',
-    ['cp-difference-events', 'list-mutation', 'for-loops', 'indexing'],
+    ['cp-difference-events', 'accumulators'],
     [
       'For n positions, allocate n + 1 difference entries initialized to zero. The extra boundary permits updates whose right endpoint equals n.',
       'For every [left, right) update, add delta at left and subtract delta at right. Events at the same boundary add together, so overlaps and repeated updates are naturally combined without visiting every affected element.',
@@ -1769,7 +1769,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Recover values from difference events',
     'Carry a running effect through each real position.',
-    ['cp-difference-batch', 'accumulators'],
+    ['cp-difference-batch'],
     [
       'Scan the real positions from left to right and accumulate their difference entries. At position i, the running effect is the value produced by all ranges currently covering i.',
       'The last table entry is a cancellation sentinel after the final position, so it does not produce an output value. A length n + 1 difference table reconstructs n values, including an empty output for a one-entry table.',
@@ -1834,7 +1834,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Inspect the remaining pair endpoints',
     'Represent candidate pairs with two ordered indices.',
-    ['cp-sorting', 'indexing', 'conditionals'],
+    ['indexing', 'return-values'],
     [
       'For an ascending list, initialize left = 0 and right = n - 1. While left < right, these are two distinct candidate positions with the smallest and largest remaining values.',
       'The strict comparison prevents pairing a position with itself. Empty and single-item inputs have no distinct-index pair. Equal values at different indices still form valid pairs.',
@@ -1899,7 +1899,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Discard a provably too-heavy endpoint',
     'Use sorted order to rule out every partner of right.',
-    ['cp-pointer-endpoints', 'while-loops'],
+    ['cp-pointer-endpoints', 'parameters'],
     [
       'If smallest + largest exceeds a pair-sum limit, the largest remaining value has no valid partner. Every other remaining partner is at least as large as the smallest, so its sum is also too large.',
       'Decrease right to discard that value safely. This proof requires ascending order and works for negative numbers too. It does not permit discarding left, which might pair successfully with a smaller right value.',
@@ -1969,7 +1969,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Count a whole proven-fitting partner block',
     'Use one fitting largest partner to certify the smaller ones.',
-    ['cp-pointer-discard', 'numbers'],
+    ['cp-pointer-endpoints', 'parameters'],
     [
       'If values[left] + values[right] fits the limit, every partner between left + 1 and right also fits with left. Each partner is no larger than values[right].',
       'There are right - left partner positions in that block. Count them before advancing left, so that left endpoint will not be counted twice. This atom computes one block rather than scanning the complete pair search.',
@@ -2034,7 +2034,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Describe the exact current window',
     'Keep multiplicities for a specific half-open window.',
-    ['cp-two-pointers', 'cp-hashing', 'slicing', 'for-loops'],
+    ['cp-hash-frequency', 'parameters', 'slicing'],
     [
       'A window [left, right) contains only the labels at those positions. Its frequency map must count exactly that section, rather than the entire input or every label seen historically.',
       'Map size is the number of distinct labels presently in the window. Repetitions increase an entry’s count without increasing that size. An empty window has an empty map.',
@@ -2099,7 +2099,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Remove one outgoing occurrence',
     'Delete a label’s key only after its last copy leaves.',
-    ['cp-window-counts', 'list-mutation', 'dictionary-loops'],
+    ['cp-window-counts'],
     [
       'When moving the left boundary forward, subtract one from the outgoing label’s count. If copies remain, keep the key. If the count reaches zero, remove that key.',
       'Leaving a zero entry would falsely increase len(counts), because the map would still claim a distinct label is present. This exercise returns a copied map so callers can compare before and after states.',
@@ -2164,7 +2164,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-linear',
     'Repair one expanded window',
     'Shrink from the left until the distinct-label limit holds.',
-    ['cp-window-remove', 'while-loops', 'accumulators'],
+    ['cp-window-remove', 'while-loops'],
     [
       'After a right expansion introduces too many distinct labels, advance the left boundary until the window has at most k distinct labels. Each removal updates counts and deletes a zero entry.',
       'Removing positions cannot increase distinct count, so repair makes progress. Stop at the first valid boundary to retain the longest suffix of this single expanded window. This atom repairs one window; choosing the best among all right endpoints belongs to the synthesis skill.',
@@ -2229,7 +2229,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-search',
     'Choose a valid midpoint',
     'Divide a nonempty half-open candidate interval.',
-    ['cp-sorting', 'numbers', 'while-loops'],
+    ['parameters'],
     [
       'A half-open candidate interval [low, high) contains indices low through high - 1. When low < high, mid = (low + high) // 2 always belongs to that interval.',
       'Integer floor division keeps the midpoint an index. With a one-item interval, mid equals low. An empty interval has no midpoint to examine, so a binary-search loop tests low < high before indexing.',
@@ -2289,7 +2289,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-search',
     'Preserve a qualifying midpoint',
     'Make one lower-bound search update without losing the answer.',
-    ['cp-binary-midpoint', 'indexing', 'conditionals'],
+    ['cp-binary-midpoint'],
     [
       'A lower-bound search seeks the first value at least target. If values[mid] is too small, every index at or before mid is too small, so replace low with mid + 1.',
       'If values[mid] qualifies, it may be the first answer. Replace high with mid to search earlier while preserving that boundary as a possible answer. Both updates strictly shrink a nonempty undecided interval.',
@@ -2414,7 +2414,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-search',
     'Test one capacity with consecutive groups',
     'Greedily form the longest fitting current group.',
-    ['cp-binary-search', 'cp-prefix-sums', 'for-loops', 'conditionals'],
+    ['accumulators', 'parameters', 'boolean-logic'],
     [
       'For nonnegative ordered loads and a fixed capacity, extend the current group while the next load fits. If it would overflow, open a new group with that load.',
       'An individual load above capacity makes the capacity impossible, since loads cannot be split. Taking the longest fitting prefix minimizes the groups needed for this fixed capacity. Empty loads need zero groups.',
@@ -2619,7 +2619,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-search',
     'Order the distinct coordinates',
     'Remove repeats before assigning compact positions.',
-    ['cp-sorting', 'cp-hashing'],
+    ['cp-sort-copy', 'cp-hash-membership'],
     [
       'Coordinate compression begins with sorted(set(values)): the set keeps one copy of each coordinate and sorting arranges those distinct coordinates numerically.',
       'Repeated input values must share a rank, so they need one distinct-coordinate entry rather than separate entries per occurrence. Negative and widely separated values are ordered in exactly the same way.',
@@ -2684,7 +2684,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-search',
     'Assign each coordinate its ordered rank',
     'Build a value-to-index dictionary.',
-    ['cp-compress-unique', 'ranges', 'indexing', 'dictionary-loops'],
+    ['cp-compress-unique', 'ranges'],
     [
       'Each coordinate’s rank is its zero-based index in the sorted distinct-coordinate list. Build a dictionary from coordinate to that index for repeated expected constant-time translation.',
       'If x < y, rank[x] < rank[y]. This preserves ordering and equality, but not distances: coordinates 10 and 1000 may receive ranks 0 and 1 even though their gap is 990.',
@@ -2749,7 +2749,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-search',
     'Translate without reordering occurrences',
     'Look up ranks in the original sequence order.',
-    ['cp-compress-ranks', 'list-mutation'],
+    ['cp-compress-ranks', 'parameters'],
     [
       'After building the rank map, scan the original sequence and append ranks[value] for each occurrence. Original positions and repeated occurrences remain, while the representation becomes compact indices.',
       'Returning the sorted unique-coordinate list would answer a different question and erase input order. For values [50, -20, 50, 3] and ranks {-20: 0, 3: 1, 50: 2}, the translated sequence is [2, 0, 2, 1].',
@@ -2814,7 +2814,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-search',
     'Turn intervals into sparse events',
     'Represent only coordinates where occupancy changes.',
-    ['cp-sorting', 'cp-difference-arrays', 'list-mutation'],
+    ['cp-difference-events'],
     [
       'A half-open interval [start, end) creates an activation event (start, 1) and a departure event (end, -1). Sparse events avoid allocating an entry for every possible coordinate.',
       'Ignore start == end because an empty interval occupies nothing. Keep one event pair for every nonempty interval, including repeated intervals, since each represents another active occupant.',
@@ -2884,7 +2884,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-search',
     'Order departures before arrivals',
     'Respect the half-open convention at shared endpoints.',
-    ['cp-sweep-events'],
+    ['cp-sweep-events', 'cp-sort-key'],
     [
       'Sort events by coordinate, then by change. With -1 for departures and +1 for arrivals, ordinary tuple sorting puts departures before arrivals at a shared coordinate.',
       'This tie rule prevents [1, 3) and [3, 5) from falsely overlapping at three: the first interval excludes three and must leave before the second enters. Closed-interval tasks require a different convention.',
@@ -2949,7 +2949,7 @@ export const competitiveMicroFoundations: Skill[] = [
     'cp-search',
     'Track active occupancy through ordered events',
     'Maintain the current count and its historical maximum.',
-    ['cp-sweep-ties', 'accumulators', 'for-loops'],
+    ['cp-sweep-events', 'cp-state-peak'],
     [
       'Initialize active and peak to zero. For each ordered event, add its change to active, then update peak = max(peak, active). The running count describes the intervals currently covering the swept position.',
       'The input is already sorted with half-open departures before arrivals and comes from nonempty valid intervals. This atom isolates the accumulation phase; event generation and sorting were separate stages.',

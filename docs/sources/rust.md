@@ -1,6 +1,6 @@
 # Rust curriculum sources and execution boundaries
 
-The Rust course contains **128 focused skills in 32 four-step topic sequences**, with **512 original questions, 128 Rust implementation exercises, 128 executable examples, and 256 original flashcards**. Each skill isolates one rule, traces a complete program, checks an implementation decision, and requires an independently written function or type-backed operation. Every implementation exercise displays its canonical assertion contract above the editor. The topic metadata groups the visible graph; explicit prerequisites determine eligibility.
+The Rust course contains **128 focused skills in 32 four-skill topics**, with **512 original questions, 128 Rust implementation exercises, 128 executable examples, and 256 original flashcards**. Each skill isolates one rule, traces a complete program, checks an implementation decision, and requires an independently written function or type-backed operation. Every implementation exercise displays its canonical assertion contract above the editor. The topic metadata groups the visible graph; explicit prerequisites determine eligibility.
 
 The course starts at `rust-main` without requiring Python. Its graph includes real branches: optional-value fundamentals precede optional UTF-8 operations; enum patterns precede recoverable errors; error propagation precedes optional-error transposition. Ownership and slice foundations feed both abstraction and systems work. A failed ancestor blocks its dependents while unrelated mastered branches retain their evidence.
 

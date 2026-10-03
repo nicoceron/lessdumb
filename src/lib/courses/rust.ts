@@ -6,6 +6,8 @@ import type {
   Unit,
 } from '../curriculum';
 import { rustDefinitions, rustTopics } from './rust/content';
+import { rustPrerequisites } from './rust/prerequisites';
+import { withTeachingOrder } from './teaching-order';
 
 const courseId = 'rust';
 const unitDescriptions: Record<string, [string, string]> = {
@@ -60,7 +62,7 @@ const units: Unit[] = Object.entries(unitDescriptions).map(
   }),
 );
 
-/** Four distinct skills form each visible topic; graph edges remain the unlock authority. */
+/** Four related skills form each visible topic; graph edges remain the unlock authority. */
 export const rustTopicStages = Object.fromEntries(
   rustTopics.map((topic) => {
     const ids = rustDefinitions
@@ -94,17 +96,13 @@ function choice(
   };
 }
 
-const skills: Skill[] = rustDefinitions.map((definition, index) => {
+const authored: Skill[] = rustDefinitions.map((definition, index) => {
   const id = `rust-${definition.slug}`;
   const topic = rustTopics.find((item) => item.slug === definition.topic)!;
   const topicDefinitions = rustDefinitions.filter(
     (item) => item.topic === topic.slug,
   );
   const topicId = `rust-${topicDefinitions[3].slug}`;
-  const previous =
-    definition.stage > 1
-      ? [`rust-${topicDefinitions[definition.stage - 2].slug}`]
-      : topic.prereqs;
   const solution = definition.solution;
   const exampleCode = definition.exampleCode;
   const tests = definition.testCode;
@@ -127,10 +125,11 @@ const skills: Skill[] = rustDefinitions.map((definition, index) => {
     unitId: `rust-${topic.unit}`,
     title: definition.title,
     summary: definition.rule,
-    prerequisites: [...new Set([...previous, ...definition.extra])],
+    prerequisites: rustPrerequisites[id],
     order: index + 1,
     estimatedMinutes: 5,
     topicId,
+    topicTitle: topic.title,
     stage: definition.stage,
     stageCount: 4,
     assessment: { requiredTypes: ['choice', 'code'], reviewAnswers: 2 },
@@ -193,6 +192,7 @@ const skills: Skill[] = rustDefinitions.map((definition, index) => {
     ],
   };
 });
+const skills = withTeachingOrder(authored);
 
 export const rustCatalog: CurriculumCatalog = {
   courses: [

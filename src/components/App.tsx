@@ -1157,7 +1157,8 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
           {selected.topicId && (
             <div className="mb-5">
               <p className="detail-note">
-                Topic: {skillById[selected.topicId].title}
+                Topic:{' '}
+                {selected.topicTitle ?? skillById[selected.topicId].title}
               </p>
               <div
                 aria-label="Topic learning steps"

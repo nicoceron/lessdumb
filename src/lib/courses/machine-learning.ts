@@ -6,6 +6,7 @@ import type {
   Unit,
   CurriculumCatalog,
 } from '../curriculum';
+import { withTeachingOrder } from './teaching-order';
 
 type DraftQuestion = Omit<ChoiceQuestion, 'id'> | Omit<CodeQuestion, 'id'>;
 const choice = (
@@ -155,7 +156,7 @@ const curriculum = [
     'ml-project',
     'Choose the learning task',
     'Separate inputs, targets, and the type of prediction you need.',
-    ['dictionaries', 'functions', 'da-dataframes'],
+    ['dictionaries', 'return-values'],
     [
       'A supervised dataset contains features available at prediction time and a target you want to predict. Predicting a numeric delivery time is regression. Predicting whether a delivery is late is classification. The same records can support different tasks depending on how you define the target.',
       'Unsupervised learning looks for structure without labeled targets, such as grouping similar deliveries. Reinforcement learning chooses actions to improve accumulated reward through interaction. Before selecting an algorithm, name the decision, the observation unit, and the information that will actually be available when that decision is made.',
@@ -228,7 +229,7 @@ const curriculum = [
     'ml-project',
     'Protect train and test sets',
     'Match your split to the future predictions you need to make.',
-    ['ml-learning-tasks', 'slicing', 'math-probability'],
+    ['ml-learning-tasks', 'slicing'],
     [
       'Training data fits parameters. Validation data guides choices such as model depth or decision threshold. A final test set estimates performance after those choices are finished. Repeatedly changing a model based on test results turns the test set into another validation set.',
       'The split must reflect deployment. For forecasting, train on earlier observations and evaluate on later ones. If several rows belong to one person, keep that person in a single partition when the goal is generalization to new people. Stratification can preserve class proportions for an ordinary independent classification split; it does not fix time or group leakage.',
@@ -301,7 +302,7 @@ const curriculum = [
     'ml-project',
     'Build a baseline and loss',
     'Compare a trained model with a simple reference prediction.',
-    ['ml-data-splits', 'math-mean', 'math-variance', 'return-values'],
+    ['ml-data-splits', 'math-variance'],
     [
       'A baseline is a simple rule evaluated with the same split and metric as the proposed model. A constant regression predictor can use the training target mean. A majority-class classifier always predicts the most common training class. A complicated model that does not beat an appropriate baseline has not earned its complexity.',
       'Mean squared error averages squared differences between predictions and actual targets. It penalizes large errors strongly and uses squared target units. Root mean squared error takes its square root to restore the target units. Choose a metric tied to the real cost of errors, and never use test targets to choose the baseline prediction.',
@@ -363,7 +364,7 @@ const curriculum = [
     'ml-project',
     'Fit preprocessing without leakage',
     'Learn transformations on training data and reuse them on new rows.',
-    ['ml-data-splits', 'da-arrays', 'da-missing-values', 'math-variance'],
+    ['ml-data-splits', 'math-variance', 'da-categories'],
     [
       'Imputation, scaling, and category encoding turn raw features into usable model inputs. A standard scaler subtracts a training feature mean and divides by its training standard deviation. Learning those statistics from the test set leaks information, even when no target labels are involved.',
       'A scikit-learn Pipeline joins preprocessing to an estimator. Calling fit on the training set fits each transformation and then the predictor. Calling predict on test data applies the already-fitted transformations. During cross-validation, putting the transformer inside the pipeline lets each fold learn its own statistics from its training portion.',
@@ -436,7 +437,7 @@ const curriculum = [
     'ml-models',
     'Fit a linear regression',
     'Connect feature coefficients, intercepts, and least-squares predictions.',
-    ['ml-baselines', 'ml-preprocessing', 'math-vectors'],
+    ['ml-baselines', 'math-vectors', 'da-exploration'],
     [
       'A linear model predicts an intercept plus a weighted sum of input features: prediction = b + w1*x1 + ... . The model is linear in its learned coefficients; you can still supply transformed features such as a squared input. Least squares chooses coefficients to minimize the sum of squared training residuals.',
       'scikit-learn LinearRegression expects a two-dimensional feature matrix with one row per observation and one column per feature. fit(X, y) estimates coefficients; predict(new_X) applies them. A coefficient describes a conditional relationship inside the model and is not automatically a causal effect.',
@@ -499,7 +500,7 @@ const curriculum = [
     'ml-models',
     'Follow a loss gradient',
     'Update parameters in the direction that locally reduces a loss.',
-    ['ml-linear-regression', 'math-gradients', 'for-loops'],
+    ['math-gradients', 'ml-baselines'],
     [
       'A gradient tells you how a loss changes when each parameter changes. Gradient descent updates a parameter vector by subtracting learning_rate times the gradient. For the scalar loss L(w) = (w - target)^2, the derivative is 2*(w - target). The subtraction moves toward the target when the step size is suitable.',
       'A very small learning rate can make progress slow; a very large one can overshoot or diverge. Batch gradient descent uses all training examples per update. Stochastic descent uses one; mini-batch descent uses a small group. A neural-network loss need not be convex, so a zero gradient does not by itself prove that you found the best possible solution.',
@@ -572,7 +573,7 @@ const curriculum = [
     'ml-models',
     'Control model complexity',
     'Recognize overfitting and penalize unnecessary coefficient size.',
-    ['ml-linear-regression', 'ml-gradient-descent', 'ml-data-splits'],
+    ['ml-linear-regression', 'ml-gradient-descent'],
     [
       'Overfitting appears when a model fits training details that do not generalize: training error is low while validation error remains high. Underfitting appears when the model or optimization fails to capture useful patterns in both sets. Learning curves compare training and validation behavior as data quantity or training time changes.',
       'Ridge adds an L2 penalty proportional to the sum of squared coefficients; lasso adds an L1 penalty proportional to the sum of absolute coefficients. A larger penalty usually constrains coefficients more strongly. Choose its strength on validation data. Early stopping is another form of control: keep the model from the best validation checkpoint instead of blindly keeping the last training step.',
@@ -645,7 +646,7 @@ const curriculum = [
     'ml-models',
     'Turn scores into probabilities',
     'Use logistic scores and thresholds for binary classification.',
-    ['ml-linear-regression', 'math-probability', 'boolean-logic'],
+    ['ml-linear-regression', 'math-probability'],
     [
       'Binary logistic regression forms a linear score and applies the sigmoid: probability = 1 / (1 + exp(-score)). A score of zero maps to probability 0.5. Positive scores map above 0.5 and negative scores below it. Despite its name, logistic regression is commonly used for classification.',
       'A probability estimate and a class decision are separate outputs. A threshold converts probabilities into labels, for example positive when p >= 0.7. Raising the threshold reduces the set of predicted positives; lowering it expands that set. Select a threshold using validation data and error costs. A probability-shaped output also needs calibration checks before being trusted as a frequency estimate.',
@@ -713,7 +714,7 @@ const curriculum = [
     'ml-evaluation',
     'Read classification errors',
     'Distinguish precision, recall, and accuracy when classes are uneven.',
-    ['ml-logistic-regression', 'ml-baselines', 'math-probability'],
+    ['ml-logistic-regression'],
     [
       'For a chosen positive class, a true positive is correctly predicted positive. A false positive is predicted positive but actually negative. A false negative is actually positive but missed. Precision = TP/(TP+FP) asks how many positive predictions were correct. Recall = TP/(TP+FN) asks how many actual positives were found.',
       'Accuracy counts correct predictions across both classes. It can hide failure on a rare class: always predicting negative yields 99% accuracy when only 1% are positive. Report metrics that reflect the decision costs, inspect a confusion matrix, and consider multiple thresholds. The F1 score is the harmonic mean of precision and recall; it does not encode every possible business cost.',
@@ -776,7 +777,7 @@ const curriculum = [
     'ml-evaluation',
     'Evaluate across validation folds',
     'Rotate held-out data while preserving the independence of each evaluation.',
-    ['ml-preprocessing', 'ml-classification-metrics', 'math-mean'],
+    ['ml-preprocessing', 'ml-linear-regression'],
     [
       'K-fold cross-validation partitions training data into k folds. In each round, a fresh model fits k-1 folds and is evaluated on the remaining fold. The collection of scores reveals variability that one arbitrary split can hide. The final test set stays outside the entire cross-validation process.',
       'Use a splitter suited to the data: stratified folds for ordinary independent classification, group folds for repeated entities, and time-aware folds for forecasting. Fit learned preprocessing inside each fold using a pipeline. scikit-learn scorers maximize scores, so neg_mean_squared_error returns the negative of MSE; negate it before interpreting it as an error.',
@@ -844,7 +845,7 @@ const curriculum = [
     'ml-evaluation',
     'Select hyperparameters fairly',
     'Separate learned parameters from choices about the learning algorithm.',
-    ['ml-cross-validation', 'ml-regularization', 'dictionaries'],
+    ['ml-cross-validation', 'ml-decision-trees'],
     [
       'Parameters such as regression weights are learned during fitting. Hyperparameters such as penalty strength, tree depth, or number of neighbors configure the fitting process. Grid search evaluates a predefined combination set; randomized search samples configurations from chosen distributions or lists.',
       'Compare configurations using the same appropriate validation strategy and metric. Searching more settings gives more opportunities to overfit validation results; the best observed score is not a guarantee of future performance. After selection, refit the chosen configuration on the available training data and evaluate once on the untouched test set. Nested cross-validation adds an outer evaluation loop when estimating the full selection procedure.',
@@ -917,7 +918,7 @@ const curriculum = [
     'ml-structure',
     'Separate classes with a margin',
     'Reason about support vectors, feature scales, and nonlinear kernels.',
-    ['ml-preprocessing', 'ml-logistic-regression', 'ml-regularization'],
+    ['ml-logistic-regression', 'ml-regularization', 'ml-preprocessing'],
     [
       'A linear support vector classifier seeks a separating boundary with a wide margin while allowing violations controlled by regularization. The examples nearest the boundary or violating the margin constrain the solution; these are support vectors. Feature scaling matters because distances and margins depend on numeric units.',
       'The C hyperparameter controls the trade-off: larger C penalizes violations more strongly, usually allowing less regularization. A kernel such as the radial basis function permits nonlinear boundaries through similarity calculations. For an RBF model, gamma controls how locally each observation influences the boundary. Tune these choices with validation; an SVM decision score is not automatically a calibrated probability.',
@@ -990,7 +991,7 @@ const curriculum = [
     'ml-structure',
     'Split data with a decision tree',
     'Connect threshold rules, impurity, and tree depth.',
-    ['ml-learning-tasks', 'ml-regularization', 'conditionals'],
+    ['ml-regularization', 'ml-preprocessing', 'dictionary-loops'],
     [
       'A decision tree repeatedly asks feature-threshold questions and routes a row down one branch until it reaches a leaf. A classification leaf predicts a class or class proportions; a regression leaf predicts a numeric summary. Training chooses splits that improve a criterion such as Gini impurity or squared error.',
       'For class proportions p1, p2, ..., Gini impurity is 1 - sum(pi^2). A pure node has impurity zero. Deep trees can memorize small training details, so validate constraints such as max_depth and min_samples_leaf. Trees usually do not need feature standardization because a consistent monotonic rescaling preserves possible threshold splits.',
@@ -1058,7 +1059,7 @@ const curriculum = [
     'ml-structure',
     'Combine multiple predictors',
     'Distinguish voting, bagging, random forests, and boosting.',
-    ['ml-decision-trees', 'ml-cross-validation', 'math-mean'],
+    ['ml-decision-trees'],
     [
       'An ensemble combines several predictors. Classification can use majority voting; regression can average predictions. Combining diverse models can reduce variance when their errors are not identical. Bagging trains models on resampled training sets, often independently and in parallel.',
       'A random forest bags decision trees and also samples candidate features at splits, promoting diversity. Boosting instead adds models sequentially to improve remaining errors or gradients of a loss. More models do not automatically eliminate bias, leakage, or poor data. Validate the ensemble against baselines and monitor its compute cost as well as its predictive metric.',
@@ -1131,7 +1132,7 @@ const curriculum = [
     'ml-structure',
     'Project data with PCA',
     'Reduce numeric dimensions while tracking retained variation.',
-    ['da-arrays', 'math-vectors', 'math-variance', 'ml-preprocessing'],
+    ['ml-preprocessing', 'math-vectors'],
     [
       'Principal component analysis finds orthogonal directions of large variance in centered numeric data. Keeping the first few components projects observations into a smaller feature space. It is unsupervised: the directions are selected without knowing which target you hope to predict.',
       "High retained variance does not guarantee high predictive usefulness; a low-variance direction can still matter for a target. Scaling changes the variance geometry, so decide whether raw units or standardized features match your task. Fit PCA on training data, often inside a pipeline. The explained_variance_ratio_ values report each component's share of the total fitted variance.",
@@ -1204,7 +1205,7 @@ const curriculum = [
     'ml-structure',
     'Group similar observations',
     'Understand centroids, cluster assignments, and geometric assumptions.',
-    ['ml-pca', 'math-vectors', 'ml-preprocessing'],
+    ['ml-preprocessing', 'math-vectors'],
     [
       'K-means alternates between assigning each observation to its nearest centroid and updating each centroid to the mean of its assigned observations. Its objective is the sum of squared within-cluster distances. The number of clusters k is supplied before fitting, and different initializations can lead to different local solutions.',
       'Cluster numbers are arbitrary identifiers, not known class names. Feature scaling changes distances, and k-means works best for roughly compact groups under its chosen geometry. A silhouette score compares within-cluster closeness with separation from other clusters, but it does not prove that the groups are useful for a real decision. Density-based methods can handle different shapes and mark some observations as noise.',
@@ -1277,7 +1278,7 @@ const curriculum = [
     'ml-structure',
     'Flag unusual observations',
     'Use scores and thresholds without equating rarity with wrongdoing.',
-    ['ml-clustering', 'ml-classification-metrics', 'math-probability'],
+    ['ml-classification-metrics'],
     [
       'An anomaly detector scores how unusual an observation is relative to a learned reference. Isolation forests, density models, or distance-based rules can supply such scores. Different libraries use different score directions: in one API larger means more unusual, while another returns larger values for more normal observations. Read the contract before applying a threshold.',
       'An unusual row can be a measurement error, a rare legitimate event, or a genuine problem. Detection requires investigation and domain context. A threshold determines alert volume and the false-positive/false-negative trade-off. Evaluate with representative labels when available, and distinguish outlier detection in potentially contaminated training data from novelty detection using a mostly clean reference set.',
@@ -1350,7 +1351,7 @@ const curriculum = [
     'ml-neural',
     'Compute a dense neural layer',
     'Track weighted sums, activations, and batch shapes.',
-    ['ml-linear-regression', 'da-arrays', 'math-vectors'],
+    ['da-broadcasting', 'ml-logistic-regression'],
     [
       'A dense layer computes Z = X @ W + b and applies an activation. With X shaped (batch, inputs), W shaped (inputs, outputs), and b shaped (outputs,), the result has shape (batch, outputs). Each output neuron has one weight per input plus a bias. ReLU replaces negative pre-activation values with zero.',
       'Stacking dense layers with nonlinear activations can model nonlinear relationships. Stacking only linear layers still gives a linear transformation. The output activation and loss must match the task: a single sigmoid often represents a binary probability; a softmax distributes probability across mutually exclusive classes; regression can use an unrestricted numeric output. This lesson executes the layer arithmetic with NumPy, without requiring TensorFlow.',
@@ -1418,7 +1419,7 @@ const curriculum = [
     'ml-neural',
     'Trace gradients backward',
     'Apply the chain rule from a prediction error to its weights.',
-    ['ml-neural-layers', 'ml-gradient-descent', 'math-gradients'],
+    ['ml-gradient-descent', 'ml-neural-layers'],
     [
       'Backpropagation applies the chain rule to compute how each parameter influences a final loss. For prediction p = w*x + b and loss L = (p-y)^2, dL/dp = 2*(p-y). Multiplying by dp/dw = x gives dL/dw = 2*(p-y)*x; multiplying by dp/db = 1 gives dL/db = 2*(p-y).',
       'A forward pass computes predictions and intermediate values. A backward pass uses those values to compute gradients. An optimizer then applies parameter updates; backpropagation and the update are separate operations. Automatic differentiation frameworks perform this bookkeeping for a computation graph, but the derivatives still follow the same chain rule. The exercise calculates a simple scalar case directly in Python.',
@@ -1481,7 +1482,7 @@ const curriculum = [
     'ml-neural',
     'Stabilize network training',
     'Separate optimization difficulties from generalization problems.',
-    ['ml-backpropagation', 'ml-regularization', 'ml-preprocessing'],
+    ['ml-backpropagation', 'ml-regularization'],
     [
       "Repeated multiplications through many layers can make gradients vanish or explode. Appropriate initialization, normalization, residual connections, and activation choices help manage signal scales. Gradient clipping limits a gradient vector's norm when it is too large; it does not fix every cause of unstable training. Learning-rate schedules change step sizes during optimization.",
       'Dropout randomly suppresses some activations during training and adjusts scaling so their expected contribution is preserved. Standard prediction uses the full network with dropout disabled. Batch normalization also behaves differently between training and inference: it uses batch statistics while training and learned running statistics at inference. Track both training and validation loss; reduce overfitting through data, regularization, and early stopping rather than confusing it with a numerical failure.',
@@ -1554,11 +1555,7 @@ const curriculum = [
     'ml-neural',
     'Read a Keras training workflow',
     'Connect model construction, compilation, fitting, and evaluation.',
-    [
-      'ml-neural-layers',
-      'ml-training-deep-networks',
-      'ml-classification-metrics',
-    ],
+    ['ml-neural-layers', 'ml-regularization'],
     [
       'A Keras workflow constructs a model, compiles it with an optimizer and loss, fits it on training examples, and evaluates it on held-out examples. A Sequential model fits a simple layer stack; the Functional API describes graphs with branching, multiple inputs, or multiple outputs. A binary classifier often combines one sigmoid output with binary cross-entropy; mutually exclusive multiclass outputs often use softmax with an appropriate categorical loss.',
       'Choose the loss to match both the prediction and the target representation: integer multiclass labels differ from one-hot label vectors. Validation data guides callbacks such as early stopping, while the test set estimates the selected model once. TensorFlow and Keras training are not executed in this browser environment. This skill assesses workflow and API reasoning; the runnable Python example below only computes cross-entropy arithmetic.',
@@ -1635,7 +1632,7 @@ const curriculum = [
     'ml-architectures',
     'Recognize convolutional structure',
     'Reason about local receptive fields, shared filters, and pooling.',
-    ['ml-neural-layers', 'ml-keras-workflow', 'indexing'],
+    ['ml-neural-layers'],
     [
       'A convolutional layer applies the same learned filter at many positions. Each response depends on a local receptive field, and the shared weights let the layer detect a pattern in different locations. Deep-learning libraries commonly implement cross-correlation without reversing the filter, while still calling the layer convolution. Multiple filters produce multiple output channels.',
       'Stride controls how far the filter moves between positions; padding controls the treatment of boundaries. Pooling summarizes neighborhoods, often reducing spatial resolution. Convolutional networks can build local features into larger patterns, but invariance to every translation is not automatic. This browser lesson uses a plain-Python filter response for illustration and assesses architecture reasoning, without running a TensorFlow CNN.',
@@ -1707,7 +1704,7 @@ const curriculum = [
     'ml-architectures',
     'Model ordered sequences',
     'Separate recurrent state, causal windows, and forecast horizons.',
-    ['ml-neural-layers', 'ml-data-splits', 'da-groupby'],
+    ['ml-neural-layers', 'da-window'],
     [
       'A recurrent network updates a hidden state using the current input and the previous state, reusing its parameters at each step. Its output can summarize an entire sequence or provide a prediction at every step. LSTM and GRU architectures use gates to control how information enters, persists in, and leaves their state.',
       'Forecasting needs a causal input window: each prediction uses observations available before its forecast time. For multiple entities, group observations by entity before creating windows, so a sequence never crosses from one person or sensor to another. A one-step forecast and a multi-step forecast have different outputs and evaluation demands. Sequence models also include temporal convolution and attention, so recurrence is a design choice rather than a requirement. The Python example creates past-value windows; the assessment does not claim to train an RNN in the browser.',
@@ -1784,12 +1781,7 @@ const curriculum = [
     'ml-architectures',
     'Read attention and transformer flow',
     'Connect queries, keys, values, and causal masking.',
-    [
-      'ml-neural-layers',
-      'ml-sequence-models',
-      'math-vectors',
-      'math-probability',
-    ],
+    ['ml-sequence-models', 'ml-training-deep-networks'],
     [
       'Attention compares a query with keys to produce scores, normalizes those scores into weights, and uses the weights to combine value vectors. The result is a context-dependent representation. Self-attention obtains queries, keys, and values from the same sequence; cross-attention lets one sequence query information from another.',
       'Transformer blocks combine attention with feed-forward layers, residual paths, and normalization. Sequence order needs an explicit positional representation because ordinary attention alone does not encode token positions. A causal mask prevents an autoregressive token prediction from attending to future tokens. The plain-Python example computes an already-chosen weighted value average; it does not execute a trained transformer.',
@@ -1861,7 +1853,7 @@ const curriculum = [
     'ml-architectures',
     'Reuse learned representations',
     'Plan feature extraction and careful fine-tuning for a new task.',
-    ['ml-keras-workflow', 'ml-training-deep-networks', 'ml-convolution'],
+    ['ml-keras-workflow', 'ml-training-deep-networks'],
     [
       'Transfer learning reuses weights learned on one task as a starting point for a related task. A common approach replaces the old prediction head, freezes the pretrained base, and trains the new head. This can exploit reusable features when the new labeled dataset is small, but transfer quality depends on how closely the source representation matches the new task.',
       "After the head has learned a reasonable mapping, you can unfreeze some base layers and fine-tune at a small learning rate. In Keras, changing trainable flags requires compiling again so the training configuration reflects those flags. Preserve the pretrained model's expected preprocessing and handle batch-normalization behavior deliberately. This browser skill assesses that workflow; the example is only a plain-Python listing of which toy layer names are trainable.",
@@ -1938,7 +1930,7 @@ const curriculum = [
     'ml-architectures',
     'Distinguish generative models',
     'Compare reconstruction, latent sampling, adversarial training, and denoising.',
-    ['ml-attention', 'ml-training-deep-networks', 'math-probability'],
+    ['ml-training-deep-networks'],
     [
       'An autoencoder maps an input to a compact representation and reconstructs it with a decoder. A variational autoencoder learns a distribution of latent representations, balancing reconstruction with a regularizer toward a chosen prior. A generative adversarial network trains a generator against a discriminator. A diffusion model learns a denoising process that can generate samples by iteratively reversing a noising process.',
       'Reconstruction quality, sample diversity, and useful downstream performance measure different things. A model can memorize training examples, omit modes of the data, or generate plausible-looking but incorrect content. Evaluation should examine held-out behavior and the intended use, rather than judging a few attractive outputs. This skill is conceptual: the runnable example computes a reconstruction error using ordinary Python, not a GAN, VAE, or diffusion training job.',
@@ -2015,7 +2007,7 @@ const curriculum = [
     'ml-architectures',
     'Reason about actions and rewards',
     'Separate a policy, delayed return, and exploration.',
-    ['ml-learning-tasks', 'ml-gradient-descent', 'math-probability'],
+    ['ml-learning-tasks', 'math-probability', 'comprehensions'],
     [
       'A reinforcement-learning agent observes an environment, chooses an action according to a policy, and receives a reward and a new observation. It tries to maximize expected accumulated return, not merely the next immediate reward. A discounted return sums rewards with powers of a discount factor gamma between 0 and 1, placing progressively less weight on distant rewards.',
       'Exploration tries actions to learn about their consequences; exploitation uses current knowledge to choose a promising action. A value function estimates expected future return. A Q-value conditions that estimate on both state and action. Reward design matters because an agent can optimize the stated proxy in a way that misses the intended goal. This browser lesson computes a short discounted return in Python; it does not run an external simulator or train a deep RL agent.',
@@ -2086,7 +2078,7 @@ const curriculum = [
     'ml-production',
     'Keep deployed predictions reliable',
     'Version the full prediction pipeline and monitor real outcomes.',
-    ['ml-ensembles', 'ml-hyperparameter-search', 'ml-keras-workflow', 'errors'],
+    ['ml-preprocessing', 'da-pipeline'],
     [
       'Serving a model requires the same feature definitions and fitted preprocessing used during training. Store the model together with its schema, transformation state, package versions, and training-data lineage. Validate required fields and input types at the boundary. A reproducible prediction is more than a saved weight file.',
       'Monitor input quality, latency, failures, prediction distributions, and eventual outcomes when labels arrive. Covariate shift changes input distributions; concept drift changes the relationship between inputs and targets. An input-distribution change is a warning to investigate, not automatic proof that accuracy fell. Re-evaluate with new representative labels, compare subgroup performance, and keep a rollback path for a bad release.',
@@ -2156,10 +2148,7 @@ const curriculum = [
   ),
 ];
 
-export const machineLearningSkills: Skill[] = curriculum.map((item, index) => ({
-  ...item,
-  order: index,
-}));
+export const machineLearningSkills: Skill[] = withTeachingOrder(curriculum);
 
 export const machineLearningCourse: Course = {
   id: 'machine-learning',

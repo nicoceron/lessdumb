@@ -54,7 +54,7 @@ describe('granular C++20 curriculum', () => {
         expect(skill.topicId).toBe(topicId);
         expect(skill.stage).toBe(index + 1);
         expect(skill.stageCount).toBe(4);
-        if (index > 0) expect(skill.prerequisites).toContain(ids[index - 1]);
+        expect(skill.topicTitle).toBeTruthy();
         expect(skill.lesson.example.language).toBe('cpp');
         expect(skill.lesson.example.kind).not.toBe('text');
         expect(skill.lesson.example.code).toContain('int main()');
@@ -120,28 +120,29 @@ describe('granular C++20 curriculum', () => {
     );
   });
 
-  it('requires algorithms and lambda capture before their testing, thread, and address-model consumers', () => {
-    const firstTest = skillById['cpp-assert-contract'];
-    const firstThread = skillById['cpp-thread-join'];
-    const firstAddressModel = skillById['cpp-page-offset'];
-    expect(firstTest.prerequisites).toContain('cpp-algorithms');
-    expect(firstThread.prerequisites).toContain('cpp-lambdas');
-    expect(firstAddressModel.prerequisites).toContain('cpp-lambdas');
-    let addressing = master(createState().progress, 'cpp-pointers');
-    expect(isUnlocked(addressing, firstAddressModel.id, cppCatalog)).toBe(
-      false,
+  it('unlocks consumers from the operations they use rather than from course position', () => {
+    const thread = skillById['cpp-thread-join'];
+    expect(thread.prerequisites).toEqual(['cpp-lambda-reference-capture']);
+    let progress = master(createState().progress, 'cpp-lambda-value-capture');
+    expect(isUnlocked(progress, thread.id, cppCatalog)).toBe(false);
+    progress = master(progress, 'cpp-lambda-reference-capture');
+    expect(isUnlocked(progress, thread.id, cppCatalog)).toBe(true);
+    const ancestors = (id: string): Set<string> =>
+      new Set(
+        skillById[id].prerequisites.flatMap((parent) => [
+          parent,
+          ...ancestors(parent),
+        ]),
+      );
+    // Address arithmetic and contract assertions need no lambdas or algorithms.
+    for (const id of ['cpp-page-offset', 'cpp-assert-contract']) {
+      expect(ancestors(id).has('cpp-lambdas')).toBe(false);
+      expect(ancestors(id).has('cpp-algorithms')).toBe(false);
+    }
+    // Copying a vector really uses vector element access.
+    expect(ancestors('cpp-independent-copy').has('cpp-vector-elements')).toBe(
+      true,
     );
-    addressing = master(addressing, 'cpp-lambdas');
-    expect(isUnlocked(addressing, firstAddressModel.id, cppCatalog)).toBe(true);
-    let progress = master(createState().progress, 'cpp-build');
-    expect(isUnlocked(progress, firstTest.id, cppCatalog)).toBe(false);
-    progress = master(progress, 'cpp-algorithms');
-    expect(isUnlocked(progress, firstTest.id, cppCatalog)).toBe(true);
-    progress = master(master(progress, 'cpp-testing'), 'cpp-references');
-    expect(getSkillState(progress, 'cpp-lambdas').mastery).toBe(0);
-    expect(isUnlocked(progress, firstThread.id, cppCatalog)).toBe(false);
-    progress = master(progress, 'cpp-lambdas');
-    expect(isUnlocked(progress, firstThread.id, cppCatalog)).toBe(true);
     const access = skillById['cpp-vector-elements'].questions[3];
     if (access.type !== 'code')
       throw new Error('Missing checked vector contract');
