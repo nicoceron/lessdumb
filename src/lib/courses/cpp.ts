@@ -4628,7 +4628,7 @@ export const cppCatalog: CurriculumCatalog = {
       id: 'cpp',
       title: 'C++: from values to systems',
       description:
-        '208 focused C++20 skills: lifetime and ownership, STL, generic code, compiler contracts, concurrency, architecture, and original quant-system applications.',
+        '216 focused C++20 skills: lifetime and ownership, STL, generic code, compiler contracts, concurrency, architecture, and original quant-system applications.',
       domain: 'programming',
       language: 'cpp',
       skillIds: cppSkills.map((skill) => skill.id),
