@@ -5738,4 +5738,1485 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'cpp-aggregate-init': [
+    {
+      title: 'Fill members in declaration order with braces',
+      explanation: [
+        'A struct groups named members. For a simple struct with public members, Quote q{10, 3}; gives the values to the members in the order they are declared, and q.price reads a member.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Quote {\n  int price;\n  int size;\n};\nint main() {\n  Quote q{10, 3};\n  std::cout << q.price << " " << q.size << "\\n";\n}',
+        output: '10 3',
+        explanation:
+          'price is declared first, so it receives 10; size receives 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Point {\n  int x;\n  int y;\n};\nint main() {\n  Point p{4, -2};\n  std::cout << p.y << " " << p.x << "\\n";\n}',
+          ['4 -2', '-2 4', '-2 -2', '4 4'],
+          1,
+          'x is 4 and y is -2; the program prints y first.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Size {\n  int width;\n  int height;\n};\nint main() {\n  Size s{3, 5};\n  std::cout << s.width * s.height << "\\n";\n}',
+          ['8', '35', '53', '15'],
+          3,
+          'The members are 3 and 5, and their product is 15.',
+        ),
+        choose(
+          'Given struct Item { int id; int qty; };, which member holds 2 after Item it{7, 2};?',
+          [
+            'id',
+            'Both of them',
+            'qty',
+            'Neither; braces match members by name',
+          ],
+          2,
+          'Values are matched to members by declaration order: id gets 7 and qty gets 2.',
+        ),
+      ],
+    },
+    {
+      title: 'Expect zero for members without a value',
+      explanation: [
+        'Members left out of a brace list are set to zero, and Stats s{}; zeroes every member. A struct declared with no initializer at all, Stats s;, leaves int members indeterminate, so they must not be read before being assigned.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Counter {\n  int hits;\n  int misses;\n};\nint main() {\n  Counter c{5};\n  std::cout << c.hits << " " << c.misses << "\\n";\n}',
+        output: '5 0',
+        explanation: 'Only hits was given a value; misses starts at 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Totals {\n  int a;\n  int b;\n  int c;\n};\nint main() {\n  Totals t{1, 2};\n  std::cout << t.a + t.b + t.c << "\\n";\n}',
+          ['3', '6', '2', '0'],
+          0,
+          'c was not given a value, so it is 0, and the sum is 1 + 2 + 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Stats {\n  int count;\n  int sum;\n};\nint main() {\n  Stats s{};\n  s.count += 1;\n  std::cout << s.count << s.sum << "\\n";\n}',
+          ['11', '00', '10', '1'],
+          2,
+          'Empty braces zero both members; then count becomes 1.',
+        ),
+        choose(
+          'struct Pair { int a; int b; }; is declared inside main as Pair p; with no braces. What is p.a?',
+          [
+            '0, like a member left out of a brace list',
+            '1',
+            'The same value as p.b',
+            'An indeterminate value that must not be read',
+          ],
+          3,
+          'Without any initializer, int members are not set, so reading them is an error.',
+        ),
+      ],
+    },
+    {
+      title: 'Copy structs and pass them by value',
+      explanation: [
+        'Copying a struct copies every member, and the copy is independent. A struct can be passed to and returned from functions by value like an int.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Quote {\n  int price;\n  int size;\n};\nint notional(Quote q) {\n  return q.price * q.size;\n}\nint main() {\n  Quote q{10, 3};\n  Quote copy = q;\n  copy.size = 5;\n  std::cout << notional(q) << " " << notional(copy) << "\\n";\n}',
+        output: '30 50',
+        explanation:
+          'copy starts with the same members, but changing its size leaves q unchanged.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct P {\n  int x;\n  int y;\n};\nint main() {\n  P a{1, 2};\n  P b = a;\n  b.x = 9;\n  std::cout << a.x << b.x << "\\n";\n}',
+          ['99', '11', '19', '91'],
+          2,
+          'b is an independent copy, so only b.x becomes 9.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Range {\n  int low;\n  int high;\n};\nRange make(int a, int b) {\n  return Range{a, b};\n}\nint width(Range r) {\n  return r.high - r.low;\n}\nint main() {\n  std::cout << width(make(3, 10)) << "\\n";\n}',
+          ['7', '13', '-7', '30'],
+          0,
+          'make builds the struct {3, 10}, and width returns 10 - 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Box {\n  int v;\n};\nint bump(Box b) {\n  b.v += 1;\n  return b.v;\n}\nint main() {\n  Box box{4};\n  int r = bump(box);\n  std::cout << r << box.v << "\\n";\n}',
+          ['55', '44', '45', '54'],
+          3,
+          "bump changes its own copy and returns 5; the caller's box keeps 4.",
+        ),
+      ],
+    },
+  ],
+  'cpp-constructor-init': [
+    {
+      title: 'Initialize members in a constructor',
+      explanation: [
+        'A constructor is a member function named after the struct that runs when an object is created. Holder(int x) : value(x) {} uses a member initializer list to initialize value from x. explicit stops the constructor from being used for silent conversions.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Holder {\n  int value;\n  explicit Holder(int x) : value(x) {}\n};\nint main() {\n  Holder h(11);\n  std::cout << h.value << "\\n";\n}',
+        output: '11',
+        explanation:
+          'Creating h runs the constructor with x = 11, which initializes value.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Temp {\n  int celsius;\n  explicit Temp(int c) : celsius(c) {}\n};\nint main() {\n  Temp t(-4);\n  std::cout << t.celsius + 4 << "\\n";\n}',
+          ['-4', '0', '4', '-8'],
+          1,
+          'celsius is initialized to -4, and adding 4 gives 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Scaled {\n  int value;\n  explicit Scaled(int x) : value(x * 10) {}\n};\nint main() {\n  Scaled s(3);\n  std::cout << s.value << "\\n";\n}',
+          ['3', '10', '13', '30'],
+          3,
+          'The initializer may be any expression: value starts as 3 * 10.',
+        ),
+        choose(
+          'What does : value(x) do in Holder(int x) : value(x) {}?',
+          [
+            'Calls a function named value',
+            'Assigns x after the body has run',
+            'Initializes the member value from x before the body runs',
+            'Declares a new local variable named value',
+          ],
+          2,
+          'Entries in the member initializer list construct the members.',
+        ),
+      ],
+    },
+    {
+      title: 'Know that initializers run before the body',
+      explanation: [
+        'Every member is initialized before the constructor body starts, so the body already sees the initialized values and can adjust them.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Logged {\n  int value;\n  explicit Logged(int x) : value(x) {\n    std::cout << "body sees " << value << "\\n";\n  }\n};\nint main() {\n  Logged item(7);\n  std::cout << item.value << "\\n";\n}',
+        output: 'body sees 7\n7',
+        explanation: 'value is already 7 when the body prints it.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Account {\n  int balance;\n  explicit Account(int start) : balance(start) {\n    balance += 100;\n  }\n};\nint main() {\n  Account a(5);\n  std::cout << a.balance << "\\n";\n}',
+          ['5', '100', '105', '0'],
+          2,
+          'balance starts at 5 from the initializer, and the body adds 100.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Doubler {\n  int v;\n  explicit Doubler(int x) : v(x) {\n    v = v * 2;\n  }\n};\nint main() {\n  Doubler d(6);\n  std::cout << d.v << "\\n";\n}',
+          ['12', '6', '24', '0'],
+          0,
+          'v is 6 when the body starts, and the body doubles it.',
+        ),
+        choose(
+          'When is a member that appears in the initializer list constructed?',
+          [
+            'After the constructor body finishes',
+            'Only when it is first read',
+            'When main starts',
+            'Before the constructor body runs',
+          ],
+          3,
+          'All members are initialized first; then the body runs.',
+        ),
+      ],
+    },
+    {
+      title: 'Initialize members in declaration order',
+      explanation: [
+        'Members are always initialized in the order they are declared in the struct, whatever order the initializer list is written in. When one member is computed from another, declare the one it depends on first.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Span {\n  int length;\n  int end;\n  Span(int start, int len) : length(len), end(start + length) {}\n};\nint main() {\n  Span s(10, 4);\n  std::cout << s.end << "\\n";\n}',
+        output: '14',
+        explanation:
+          'length is declared first, so it already holds 4 when end is computed as 10 + 4.',
+      },
+      questions: [
+        choose(
+          'What is wrong with this struct?',
+          [
+            'Members cannot be initialized from other members',
+            'end is declared first, so it reads length before length is initialized',
+            'Nothing, because the initializer list order is used',
+            'length must be listed first in the initializer list',
+          ],
+          1,
+          'Declaration order wins: end is initialized first and reads an uninitialized length.',
+          'struct Bad {\n  int end;\n  int length;\n  Bad(int start, int len) : length(len), end(start + length) {}\n};',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Area {\n  int w;\n  int h;\n  int area;\n  Area(int a, int b) : w(a), h(b), area(w * h) {}\n};\nint main() {\n  Area x(3, 4);\n  std::cout << x.area << "\\n";\n}',
+          ['7', '0', '12', '34'],
+          2,
+          'w and h are declared before area, so they hold 3 and 4 when area is computed.',
+        ),
+        choose(
+          "In what order are a struct's members initialized?",
+          [
+            'The order of the initializer list',
+            'Alphabetical order',
+            'Reverse declaration order',
+            'The order they are declared in the struct',
+          ],
+          3,
+          'The initializer list order does not change it; compilers warn when the two differ.',
+        ),
+      ],
+    },
+  ],
+  'cpp-destructor-scope': [
+    {
+      title: 'See a destructor run at scope exit',
+      explanation: [
+        'A destructor, written ~Name(), runs automatically when an object is destroyed. For a local object that happens when control leaves the block { } that declared it.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Note {\n  ~Note() { std::cout << "closed\\n"; }\n};\nint main() {\n  {\n    Note n;\n    std::cout << "inside\\n";\n  }\n  std::cout << "after\\n";\n}',
+        output: 'inside\nclosed\nafter',
+        explanation:
+          'n is destroyed at the closing brace of its block, before after is printed.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Bell {\n  ~Bell() { std::cout << "ring\\n"; }\n};\nint main() {\n  std::cout << "start\\n";\n  {\n    Bell b;\n  }\n  std::cout << "end\\n";\n}',
+          [
+            'start\nend\nring',
+            'start\nring\nend',
+            'ring\nstart\nend',
+            'start\nend',
+          ],
+          1,
+          'b lives only inside the inner block, so ring appears before end.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Bell {\n  ~Bell() { std::cout << "ring\\n"; }\n};\nint main() {\n  Bell a;\n  std::cout << "body\\n";\n}',
+          ['ring\nbody', 'body', 'body\nring', 'ring'],
+          2,
+          "a is destroyed when main's body ends, after body is printed.",
+        ),
+        choose(
+          "When does a local object's destructor run?",
+          [
+            'When delete is called on it',
+            'When the program ends, for every object',
+            'Only if the struct also has a constructor',
+            'When control leaves the block that declared it',
+          ],
+          3,
+          'Local objects are destroyed automatically at the end of their scope.',
+        ),
+      ],
+    },
+    {
+      title: 'Record cleanup through a reference member',
+      explanation: [
+        'A struct can hold a reference to an outside variable, for example int& released;, and its destructor can update that variable. This makes the moment of destruction visible to the rest of the program.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Guard {\n  int& released;\n  ~Guard() { ++released; }\n};\nint main() {\n  int released = 0;\n  {\n    Guard g{released};\n    std::cout << released << " ";\n  }\n  std::cout << released << "\\n";\n}',
+        output: '0 1',
+        explanation:
+          'Inside the block the guard is still alive; leaving the block runs its destructor.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Counter {\n  int& count;\n  ~Counter() { count += 10; }\n};\nint main() {\n  int total = 1;\n  {\n    Counter c{total};\n    total += 1;\n  }\n  std::cout << total << "\\n";\n}',
+          ['2', '11', '1', '12'],
+          3,
+          'total becomes 2 inside the block, and the destructor adds 10 at its end.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Guard {\n  int& released;\n  ~Guard() { ++released; }\n};\nint main() {\n  int n = 0;\n  {\n    Guard a{n};\n  }\n  {\n    Guard b{n};\n  }\n  std::cout << n << "\\n";\n}',
+          ['1', '2', '0', '3'],
+          1,
+          'Each guard is destroyed at the end of its own block, so n is incremented twice.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Guard {\n  int& released;\n  ~Guard() { ++released; }\n};\nint main() {\n  int n = 0;\n  {\n    Guard a{n};\n    std::cout << n;\n  }\n  std::cout << n << "\\n";\n}',
+          ['11', '00', '01', '10'],
+          2,
+          'n is still 0 while the guard lives and becomes 1 when the block ends.',
+        ),
+      ],
+    },
+    {
+      title: 'Let scope exit do the destroying',
+      explanation: [
+        'Each block destroys its own locals when it ends, innermost block first. Never call a destructor by hand on a local: scope exit would destroy the object a second time.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << "end " << id << "\\n"; }\n};\nint main() {\n  Tag outer{1};\n  {\n    Tag inner{2};\n  }\n  std::cout << "between\\n";\n}',
+        output: 'end 2\nbetween\nend 1',
+        explanation:
+          'inner dies at the end of its block; outer lives until the end of main.',
+      },
+      questions: [
+        choose(
+          'Code calls guard.~Guard() explicitly, and then the guard leaves its scope. What happens?',
+          [
+            'The second destruction is skipped automatically',
+            'The explicit call is ignored',
+            'The object is destroyed twice, which is undefined behavior',
+            'The object is destroyed once, at the explicit call',
+          ],
+          2,
+          'Scope exit always destroys the object, so a manual call means a second destruction.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << "end " << id << "\\n"; }\n};\nint main() {\n  Tag a{1};\n  {\n    Tag b{2};\n    {\n      Tag c{3};\n    }\n  }\n  std::cout << "x\\n";\n}',
+          [
+            'end 1\nend 2\nend 3\nx',
+            'end 3\nend 2\nx\nend 1',
+            'x\nend 3\nend 2\nend 1',
+            'end 3\nx\nend 2\nend 1',
+          ],
+          1,
+          'c and b end with their blocks, innermost first; a lasts until main ends.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << "end " << id << "\\n"; }\n};\nint main() {\n  Tag outer{5};\n  {\n    Tag inner{6};\n    std::cout << "in\\n";\n  }\n}',
+          [
+            'in\nend 6\nend 5',
+            'in\nend 5\nend 6',
+            'end 6\nin\nend 5',
+            'in\nend 6',
+          ],
+          0,
+          'in is printed while both live; the inner block ends first, then main.',
+        ),
+      ],
+    },
+  ],
+  'cpp-lifetime': [
+    {
+      title: 'Destroy locals in reverse order',
+      explanation: [
+        'Objects in one scope are destroyed in the reverse of the order they were constructed: the last one declared goes first. A later object may depend on an earlier one, so the earlier one must still exist while the later one is torn down.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nint main() {\n  {\n    Tag a{1};\n    Tag b{2};\n    Tag c{3};\n  }\n  std::cout << "\\n";\n}',
+        output: '321',
+        explanation: 'Construction went 1, 2, 3, so destruction goes 3, 2, 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nint main() {\n  {\n    Tag x{7};\n    Tag y{8};\n  }\n  std::cout << "\\n";\n}',
+          ['78', '87', '7', '8'],
+          1,
+          'y was constructed last, so it is destroyed first.',
+        ),
+        choose(
+          'Why are locals destroyed in the reverse order of construction?',
+          [
+            'The order is chosen at random by the compiler',
+            'A later object may depend on an earlier one, which must outlive it',
+            'The compiler sorts the objects by their size',
+            'So that output appears in reverse order',
+          ],
+          1,
+          'Reverse order guarantees that anything an object was built on still exists when it is destroyed.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Tracker {\n  int& log;\n  int digit;\n  ~Tracker() { log = log * 10 + digit; }\n};\nint main() {\n  int log = 0;\n  {\n    Tracker first{log, 1};\n    Tracker second{log, 2};\n  }\n  std::cout << log << "\\n";\n}',
+          ['12', '3', '0', '21'],
+          3,
+          'second is destroyed first and records 2; then first appends 1.',
+        ),
+      ],
+    },
+    {
+      title: 'Follow destruction through nested blocks',
+      explanation: [
+        'A nested block destroys its own locals when it ends, before the enclosing block continues. Objects declared after that inner block are destroyed, in reverse order, together with the rest of the outer block.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nint main() {\n  {\n    Tag a{1};\n    {\n      Tag b{2};\n    }\n    Tag c{3};\n  }\n  std::cout << "\\n";\n}',
+        output: '231',
+        explanation:
+          "b ends with the inner block. At the outer block's end, c (declared last) goes before a.",
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nint main() {\n  {\n    {\n      Tag a{1};\n    }\n    Tag b{2};\n    Tag c{3};\n  }\n  std::cout << "\\n";\n}',
+          ['132', '321', '123', '312'],
+          0,
+          'a ends with its own block first; then c and b go in reverse order.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Tracker {\n  int& log;\n  int digit;\n  ~Tracker() { log = log * 10 + digit; }\n};\nint main() {\n  int log = 0;\n  {\n    Tracker a{log, 4};\n    {\n      Tracker b{log, 5};\n    }\n    Tracker c{log, 6};\n  }\n  std::cout << log << "\\n";\n}',
+          ['456', '654', '564', '546'],
+          2,
+          'b is recorded first, then c, then a.',
+        ),
+        choose(
+          'Objects a, b, and c are declared in that order in one block. Which is destroyed first?',
+          ['a', 'b', 'All of them at the same moment', 'c'],
+          3,
+          'The last one constructed is the first one destroyed.',
+        ),
+      ],
+    },
+    {
+      title: 'Declare an owner before its borrowers',
+      explanation: [
+        "If one object's destructor uses another object, that other object must be declared first in the same scope, so that it is destroyed later. Declaring the borrower first would let the owner die while the borrower still needs it.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Log {\n  int lines;\n};\nstruct Writer {\n  Log& log;\n  ~Writer() { log.lines += 1; }\n};\nint main() {\n  Log log{0};\n  {\n    Writer w{log};\n  }\n  std::cout << log.lines << "\\n";\n}',
+        output: '1',
+        explanation:
+          "log outlives the writer, so the writer's destructor can safely record a line.",
+      },
+      questions: [
+        choose(
+          "Writer's destructor writes to a Log through a reference. Which declaration order in the same block is safe?",
+          [
+            'Writer first, then Log',
+            'Log first, then Writer',
+            'Either order works',
+            'Neither, because references cannot be members',
+          ],
+          1,
+          'The Log must be destroyed after the Writer, so it is declared before it.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Log {\n  int lines;\n};\nstruct Writer {\n  Log& log;\n  int n;\n  ~Writer() { log.lines += n; }\n};\nint main() {\n  Log log{0};\n  {\n    Writer a{log, 1};\n    Writer b{log, 10};\n  }\n  std::cout << log.lines << "\\n";\n}',
+          ['1', '10', '11', '0'],
+          2,
+          'Both writers record their amounts when the block ends: 10 + 1.',
+        ),
+        choose(
+          'Why is it a bug to declare a borrower before the object it borrows in the same block?',
+          [
+            'The borrower cannot be constructed',
+            'References must always be declared last',
+            'It wastes memory on an extra copy',
+            'The owner dies first while the borrower still needs it',
+          ],
+          3,
+          "Reverse destruction order would end the owner's lifetime while the borrower still refers to it.",
+        ),
+      ],
+    },
+  ],
+  'cpp-member-functions': [
+    {
+      title: 'Call a member function on an object',
+      explanation: [
+        "A function declared inside a struct is a member function. It is called on one object, as c.add(5), and inside it a bare member name such as count means that object's member.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Counter {\n  int count;\n  void add(int amount) { count += amount; }\n};\nint main() {\n  Counter c{0};\n  c.add(5);\n  c.add(2);\n  std::cout << c.count << "\\n";\n}',
+        output: '7',
+        explanation: "Each call adds to c's own count: 0 + 5 + 2.",
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Wallet {\n  int cash;\n  void spend(int amount) { cash -= amount; }\n};\nint main() {\n  Wallet w{20};\n  w.spend(5);\n  w.spend(5);\n  std::cout << w.cash << "\\n";\n}',
+          ['15', '10', '20', '5'],
+          1,
+          "Two calls each subtract 5 from w's cash.",
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Rect {\n  int w;\n  int h;\n  int area() { return w * h; }\n};\nint main() {\n  Rect r{3, 4};\n  std::cout << r.area() << "\\n";\n}',
+          ['7', '34', '0', '12'],
+          3,
+          "area uses r's members w and h.",
+        ),
+        choose(
+          'Inside void add(int amount) { count += amount; }, which count changes?',
+          [
+            'A global variable named count',
+            "Every Counter object's count member",
+            'The count member of the object add was called on',
+            'A local copy of count inside add',
+          ],
+          2,
+          'A member name inside a member function refers to the member of the object the call is made on.',
+        ),
+      ],
+    },
+    {
+      title: "Keep each object's members separate",
+      explanation: [
+        'Every object has its own copy of every member. A call on one object changes only that object, and copying an object gives the copy its own members.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Counter {\n  int count;\n  void add(int amount) { count += amount; }\n};\nint main() {\n  Counter a{0};\n  Counter b{100};\n  a.add(1);\n  b.add(1);\n  std::cout << a.count << " " << b.count << "\\n";\n}',
+        output: '1 101',
+        explanation: 'Each call updates the object it was made on.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Counter {\n  int count;\n  void add(int amount) { count += amount; }\n};\nint main() {\n  Counter a{5};\n  Counter b = a;\n  b.add(10);\n  std::cout << a.count << " " << b.count << "\\n";\n}',
+          ['15 15', '5 5', '15 5', '5 15'],
+          3,
+          'b is a separate copy, so adding to it leaves a at 5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Counter {\n  int count;\n  void add(int amount) { count += amount; }\n};\nint main() {\n  Counter a{0};\n  Counter b{0};\n  a.add(3);\n  a.add(3);\n  b.add(1);\n  std::cout << a.count - b.count << "\\n";\n}',
+          ['5', '6', '1', '7'],
+          0,
+          'a reaches 6 and b reaches 1.',
+        ),
+        choose(
+          'Two Counter objects exist, and c1.add(5) is called. What happens to c2?',
+          [
+            'It also grows by 5',
+            'It is reset to 0',
+            'Nothing; only c1 changes',
+            'It grows by 5 at its next call',
+          ],
+          2,
+          'A member function call affects only the object it is called on.',
+        ),
+      ],
+    },
+    {
+      title: 'Return values from member functions',
+      explanation: [
+        "Member functions can take parameters and return values like other functions, and they can combine the object's members with their arguments.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Score {\n  int points;\n  int doubled() { return points * 2; }\n  void reset() { points = 0; }\n};\nint main() {\n  Score s{4};\n  int d = s.doubled();\n  s.reset();\n  std::cout << d << " " << s.points << "\\n";\n}',
+        output: '8 0',
+        explanation: 'd stores the returned 8 before reset sets points to 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Tank {\n  int level;\n  void fill(int amount) { level += amount; }\n  int remaining(int capacity) { return capacity - level; }\n};\nint main() {\n  Tank t{30};\n  t.fill(20);\n  std::cout << t.remaining(100) << "\\n";\n}',
+          ['70', '80', '150', '50'],
+          3,
+          'level becomes 50, and 100 - 50 leaves 50.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Acc {\n  int total;\n  int add(int x) {\n    total += x;\n    return total;\n  }\n};\nint main() {\n  Acc a{0};\n  a.add(2);\n  std::cout << a.add(3) << "\\n";\n}',
+          ['3', '5', '2', '0'],
+          1,
+          'The first call makes total 2, and the second returns 2 + 3.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Score {\n  int points;\n  int doubled() { return points * 2; }\n};\nint main() {\n  Score s{3};\n  std::cout << s.doubled() + s.doubled() << " " << s.points << "\\n";\n}',
+          ['12 12', '12 3', '6 3', '12 6'],
+          1,
+          'doubled only reads points, so both calls return 6 and points stays 3.',
+        ),
+      ],
+    },
+  ],
+  'cpp-const-member-functions': [
+    {
+      title: 'Mark a reading member function const',
+      explanation: [
+        "Writing const after a member function's parameter list, as in int area() const, promises that it does not modify the object. Only such const member functions can be called on a const object.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Rect {\n  int w;\n  int h;\n  int area() const { return w * h; }\n};\nint main() {\n  const Rect r{3, 4};\n  std::cout << r.area() << "\\n";\n}',
+        output: '12',
+        explanation:
+          'r is const, and area is a const member function, so the call is allowed.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Temp {\n  int c;\n  int doubled() const { return c * 2; }\n};\nint main() {\n  const Temp t{21};\n  std::cout << t.doubled() << "\\n";\n}',
+          ['21', '23', '0', '42'],
+          3,
+          'The const member function reads c and returns 42.',
+        ),
+        choose(
+          'Why does b.read() fail to compile here?',
+          [
+            'v must be declared private first',
+            'read must return void instead of int',
+            'read is not const, so a const Box cannot call it',
+            'const objects cannot have any members',
+          ],
+          2,
+          'Without const, the compiler must assume read might modify the object.',
+          'struct Box {\n  int v;\n  int read() { return v; }\n};\nint main() {\n  const Box b{1};\n  b.read();\n}',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Pair {\n  int a;\n  int b;\n  int sum() const { return a + b; }\n};\nint main() {\n  const Pair p{2, 5};\n  Pair q{1, 1};\n  std::cout << p.sum() << q.sum() << "\\n";\n}',
+          ['72', '7', '2', '27'],
+          0,
+          'A const member function can be called on const and non-const objects alike.',
+        ),
+      ],
+    },
+    {
+      title: 'Know that const member functions cannot modify',
+      explanation: [
+        'Inside a const member function, the members are read-only: assigning to one does not compile. Functions that change state stay non-const and can be called only on non-const objects.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Meter {\n  int reading;\n  int peek() const { return reading; }\n  void tick() { reading += 1; }\n};\nint main() {\n  Meter m{9};\n  m.tick();\n  std::cout << m.peek() << "\\n";\n}',
+        output: '10',
+        explanation:
+          'tick changes the reading, so it is not const; peek only reads it.',
+      },
+      questions: [
+        choose(
+          'What happens when this struct is compiled?',
+          [
+            'It compiles and peek increments reading',
+            'It compiles, but the change is lost',
+            'It compiles, and peek returns the old value',
+            'It does not compile: a const member function cannot modify reading',
+          ],
+          3,
+          'Members are read-only inside a const member function.',
+          'struct Meter {\n  int reading;\n  int peek() const {\n    reading += 1;\n    return reading;\n  }\n};',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Meter {\n  int reading;\n  int peek() const { return reading; }\n  void tick() { reading += 1; }\n};\nint main() {\n  Meter m{0};\n  m.tick();\n  m.tick();\n  int a = m.peek();\n  m.tick();\n  std::cout << a << m.peek() << "\\n";\n}',
+          ['33', '22', '23', '13'],
+          2,
+          'a saved 2; one more tick makes the reading 3.',
+        ),
+        choose(
+          'Given const Meter m{5};, which member functions can be called on m?',
+          [
+            'Both peek and tick, since m exists',
+            'Only tick, which is not const',
+            'Neither, because m is const',
+            'Only peek, which is marked const',
+          ],
+          3,
+          'A const object allows only const member functions.',
+        ),
+      ],
+    },
+    {
+      title: 'Mix const and non-const objects',
+      explanation: [
+        'A non-const object can call both kinds of member functions; a const object, only the const ones. Copying a const object into a non-const one gives an independent object that can be changed.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Gauge {\n  int level;\n  int read() const { return level; }\n  void set(int v) { level = v; }\n};\nint main() {\n  Gauge g{1};\n  const Gauge fixed{7};\n  g.set(fixed.read());\n  std::cout << g.read() << "\\n";\n}',
+        output: '7',
+        explanation: 'fixed can be read but not set; g copies its level.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Gauge {\n  int level;\n  int read() const { return level; }\n  void set(int v) { level = v; }\n};\nint main() {\n  Gauge a{2};\n  const Gauge b{5};\n  a.set(a.read() + b.read());\n  std::cout << a.read() << "\\n";\n}',
+          ['5', '2', '7', '10'],
+          2,
+          'a is set to 2 + 5.',
+        ),
+        choose(
+          'With Gauge a{1}; and const Gauge b{2};, which call does not compile?',
+          ['a.read()', 'a.set(3)', 'b.read()', 'b.set(3)'],
+          3,
+          'set is not const, so it cannot be called on the const object b.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Gauge {\n  int level;\n  int read() const { return level; }\n  void set(int v) { level = v; }\n};\nint main() {\n  Gauge a{4};\n  const Gauge snapshot = a;\n  a.set(9);\n  std::cout << snapshot.read() << a.read() << "\\n";\n}',
+          ['99', '44', '49', '94'],
+          2,
+          'snapshot is an independent const copy made while the level was 4.',
+        ),
+      ],
+    },
+  ],
+  'cpp-const-correctness': [
+    {
+      title: 'Call only const members through const T&',
+      explanation: [
+        "A const T& parameter refers to the caller's object without copying it, and through it only const member functions can be called. A getter that is not marked const cannot be used there.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Tally {\n  int total;\n  void add(int x) { total += x; }\n  int value() const { return total; }\n};\nint read(const Tally& t) {\n  return t.value();\n}\nint main() {\n  Tally t{3};\n  t.add(4);\n  std::cout << read(t) << "\\n";\n}',
+        output: '7',
+        explanation: 'read may call value because value is const.',
+      },
+      questions: [
+        choose(
+          'Why does this function not compile?',
+          [
+            'value() cannot be called twice',
+            'add is not const, and t is a const reference',
+            'Tally must be passed by value',
+            'Negative arguments are not allowed',
+          ],
+          1,
+          'Through const Tally& only const member functions are allowed, and add modifies the object.',
+          'int reset(const Tally& t) {\n  t.add(-t.value());\n  return t.value();\n}',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Tally {\n  int total;\n  void add(int x) { total += x; }\n  int value() const { return total; }\n};\nint twice(const Tally& t) {\n  return t.value() * 2;\n}\nint main() {\n  Tally t{5};\n  t.add(1);\n  std::cout << twice(t) << "\\n";\n}',
+          ['10', '11', '6', '12'],
+          3,
+          'The tally is 6 when twice reads it.',
+        ),
+        choose(
+          'A getter is not marked const. What happens when code calls it through a const T& parameter?',
+          [
+            'It works, because getters only read',
+            'The call makes a copy first',
+            'It does not compile',
+            'The const version is generated automatically',
+          ],
+          2,
+          'The compiler only knows what the declaration promises, and it does not promise const.',
+        ),
+      ],
+    },
+    {
+      title: 'Use T& only for functions that change the object',
+      explanation: [
+        "Choose the parameter from the job: const T& for functions that only read, T& for functions whose purpose is to change the caller's object, and T by value for functions that need their own copy.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Tally {\n  int total;\n  void add(int x) { total += x; }\n  int value() const { return total; }\n};\nvoid record(Tally& t, int x) {\n  t.add(x);\n}\nint read(const Tally& t) {\n  return t.value();\n}\nint main() {\n  Tally t{0};\n  record(t, 5);\n  record(t, 3);\n  std::cout << read(t) << "\\n";\n}',
+        output: '8',
+        explanation:
+          'record needs to change the tally, so it takes Tally&; read only looks, so it takes const Tally&.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Tally {\n  int total;\n  void add(int x) { total += x; }\n  int value() const { return total; }\n};\nvoid record(Tally& t, int x) {\n  t.add(x);\n}\nvoid copy_record(Tally t, int x) {\n  t.add(x);\n}\nint main() {\n  Tally t{1};\n  record(t, 2);\n  copy_record(t, 100);\n  std::cout << t.value() << "\\n";\n}',
+          ['103', '1', '3', '101'],
+          2,
+          "Only record reaches the caller's tally; copy_record changes a copy.",
+        ),
+        choose(
+          "Which signature fits a function that only reports a tally's value?",
+          [
+            'int report(Tally& t)',
+            'void report(Tally& t, int x)',
+            'int report(const Tally& t)',
+            'int report(Tally t, int x)',
+          ],
+          2,
+          'const Tally& avoids the copy and states that the function only reads.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Tally {\n  int total;\n  void add(int x) { total += x; }\n  int value() const { return total; }\n};\nbool reached(const Tally& t, int goal) {\n  return t.value() >= goal;\n}\nint main() {\n  Tally t{0};\n  t.add(4);\n  std::cout << reached(t, 4) << reached(t, 5) << "\\n";\n}',
+          ['11', '01', '00', '10'],
+          3,
+          'The tally is 4, which reaches a goal of 4 but not 5.',
+        ),
+      ],
+    },
+    {
+      title: 'Give read-only access through const accessors',
+      explanation: [
+        'Marking every reading member function const is what lets the rest of the program pass objects around as const T&. Removing const from a getter breaks every read-only function that uses it.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Wallet {\n  int cash;\n  int amount() const { return cash; }\n};\nint combined(const Wallet& a, const Wallet& b) {\n  return a.amount() + b.amount();\n}\nint main() {\n  Wallet x{5};\n  Wallet y{7};\n  std::cout << combined(x, y) << "\\n";\n}',
+        output: '12',
+        explanation:
+          'combined reads both wallets through const references using the const accessor.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Stock {\n  int units;\n  int count() const { return units; }\n  void sell() { units -= 1; }\n};\nint total(const Stock& a, const Stock& b) {\n  return a.count() + b.count();\n}\nint main() {\n  Stock s{3};\n  Stock t{4};\n  s.sell();\n  std::cout << total(s, t) << "\\n";\n}',
+          ['7', '5', '6', '8'],
+          2,
+          's has 2 units after the sale, and t has 4.',
+        ),
+        choose(
+          'A team removes const from every getter. What breaks?',
+          [
+            'The getters become slower',
+            'Objects can no longer be copied',
+            'Functions taking const T& can no longer call them',
+            'Nothing breaks',
+          ],
+          2,
+          'Through const T& only const member functions are callable.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Stock {\n  int units;\n  int count() const { return units; }\n  void sell() { units -= 1; }\n};\nint total(const Stock& a, const Stock& b) {\n  return a.count() + b.count();\n}\nint main() {\n  const Stock fixed{10};\n  Stock live{10};\n  live.sell();\n  std::cout << total(fixed, live) << "\\n";\n}',
+          ['20', '18', '10', '19'],
+          3,
+          'Both const and non-const objects bind to const Stock&; the total is 10 + 9.',
+        ),
+      ],
+    },
+  ],
+  'cpp-members': [
+    {
+      title: 'Hide state behind private',
+      explanation: [
+        "In a class, members under private: can be used only by the class's own member functions, while members under public: are available to everyone. struct and class differ only in the default: struct members are public unless stated otherwise, class members private.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(10);\n  g.add(4);\n  g.add(3);\n  std::cout << g.level() << "\\n";\n}',
+        output: '7',
+        explanation:
+          'Outside code changes the level only through add and reads it through level().',
+      },
+      questions: [
+        choose(
+          'Gauge is the class above. What happens with g.level_ = 50; in main?',
+          [
+            'level_ becomes 50',
+            'It does not compile: level_ is private',
+            'The assignment is ignored at run time',
+            'level_ becomes 10, the cap',
+          ],
+          1,
+          "Only Gauge's own member functions can access its private members.",
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(10);\n  g.add(8);\n  g.add(5);\n  std::cout << g.level() << "\\n";\n}',
+          ['13', '8', '5', '10'],
+          3,
+          '8 + 5 would be 13, but add caps the level at 10.',
+        ),
+        choose(
+          'How do struct and class differ in C++?',
+          [
+            'Only classes can have member functions',
+            'Only structs can have constructors',
+            'Struct members default to public, class members to private',
+            'They do not differ at all',
+          ],
+          2,
+          'Apart from that default, the two keywords define the same kind of type.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep an invariant inside member functions',
+      explanation: [
+        'An invariant is a rule that must always hold, such as "the level stays between 0 and the cap". When the state is private, every change goes through member functions, so checking the rule there is enough to guarantee it everywhere.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n    if (level_ < 0) level_ = 0;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(5);\n  g.add(-3);\n  g.add(9);\n  std::cout << g.level() << "\\n";\n}',
+        output: '5',
+        explanation: '-3 is raised to 0, and 9 is lowered to the cap of 5.',
+      },
+      questions: [
+        predictOutput(
+          'This uses the Gauge class from the example. What does the program print?',
+          '#include <iostream>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n    if (level_ < 0) level_ = 0;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(5);\n  g.add(2);\n  g.add(-10);\n  g.add(1);\n  std::cout << g.level() << "\\n";\n}',
+          ['-7', '0', '1', '3'],
+          2,
+          'The level goes 2, then is raised from -8 to 0, then becomes 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n    if (level_ < 0) level_ = 0;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(100);\n  g.add(60);\n  g.add(60);\n  g.add(-30);\n  std::cout << g.level() << "\\n";\n}',
+          ['90', '100', '70', '120'],
+          2,
+          '60, then capped at 100, then 100 - 30.',
+        ),
+        choose(
+          'Why can no caller ever see a Gauge level above its cap?',
+          [
+            'The compiler checks the cap at every call',
+            'An int member cannot exceed the cap',
+            'The destructor corrects any bad level',
+            'Every change goes through add, which enforces the cap',
+          ],
+          3,
+          'The state is private, so add is the only way in, and add checks the rule.',
+        ),
+      ],
+    },
+    {
+      title: 'Read private state through const accessors',
+      explanation: [
+        'A const accessor such as int balance() const lets callers read private state without being able to change it. Changes go through member functions that can refuse invalid requests.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nclass Account {\n public:\n  explicit Account(int start) : balance_(start) {}\n  bool withdraw(int amount) {\n    if (amount > balance_) return false;\n    balance_ -= amount;\n    return true;\n  }\n  int balance() const { return balance_; }\n\n private:\n  int balance_;\n};\nint main() {\n  Account a(50);\n  bool ok = a.withdraw(80);\n  std::cout << ok << " " << a.balance() << "\\n";\n}',
+        output: '0 50',
+        explanation: 'The withdrawal is refused, so the balance is unchanged.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nclass Account {\n public:\n  explicit Account(int start) : balance_(start) {}\n  bool withdraw(int amount) {\n    if (amount > balance_) return false;\n    balance_ -= amount;\n    return true;\n  }\n  int balance() const { return balance_; }\n\n private:\n  int balance_;\n};\nint main() {\n  Account a(50);\n  bool first = a.withdraw(30);\n  bool second = a.withdraw(30);\n  std::cout << first << second << " " << a.balance() << "\\n";\n}',
+          ['11 -10', '01 20', '10 20', '11 20'],
+          2,
+          'The first withdrawal leaves 20; the second asks for more than 20 and is refused.',
+        ),
+        choose(
+          'Why does Account offer balance() instead of making balance_ public?',
+          [
+            'Because int members cannot be public',
+            'To make the program run faster',
+            'So callers can read it while every change must pass through withdraw',
+            'Because const functions must return members',
+          ],
+          2,
+          'Read access is safe to share; write access is kept behind the checking function.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nclass Account {\n public:\n  explicit Account(int start) : balance_(start) {}\n  bool withdraw(int amount) {\n    if (amount > balance_) return false;\n    balance_ -= amount;\n    return true;\n  }\n  int balance() const { return balance_; }\n\n private:\n  int balance_;\n};\nint main() {\n  Account a(10);\n  Account b = a;\n  b.withdraw(4);\n  std::cout << a.balance() << " " << b.balance() << "\\n";\n}',
+          ['6 6', '10 10', '6 10', '10 6'],
+          3,
+          'b is an independent copy, so only b loses 4.',
+        ),
+      ],
+    },
+  ],
+  'cpp-scope-resource': [
+    {
+      title: 'Acquire in the constructor, release in the destructor',
+      explanation: [
+        'RAII ("resource acquisition is initialization") ties a resource to an object: the constructor acquires it and the destructor releases it. Because local objects are destroyed automatically, the resource is released when the owner\'s scope ends.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint main() {\n  int active = 0;\n  {\n    Lease lease(active);\n    std::cout << active << " ";\n  }\n  std::cout << active << "\\n";\n}',
+        output: '1 0',
+        explanation:
+          'The lease counts as active while it lives and releases itself at the end of the block.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint main() {\n  int active = 0;\n  {\n    Lease a(active);\n    Lease b(active);\n    std::cout << active;\n  }\n  std::cout << active << "\\n";\n}',
+          ['20', '21', '10', '22'],
+          0,
+          'Two leases are held inside the block, and both are released when it ends.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint main() {\n  int active = 0;\n  {\n    Lease a(active);\n    {\n      Lease b(active);\n      std::cout << active;\n    }\n    std::cout << active;\n  }\n  std::cout << active << "\\n";\n}',
+          ['221', '211', '210', '200'],
+          2,
+          'Each lease is released at the end of its own block: 2, then 1, then 0.',
+        ),
+        choose(
+          'In RAII, what makes the release happen at scope exit?',
+          [
+            'A release call written at the end of each block',
+            'The garbage collector',
+            "The owning object's destructor",
+            'The return statement',
+          ],
+          2,
+          'The destructor runs automatically when the owner is destroyed.',
+        ),
+      ],
+    },
+    {
+      title: 'Release on every exit path',
+      explanation: [
+        "A function may leave a scope in several ways, such as an early return. The owner's destructor runs on each of them, so no path can forget the release, and no release call has to be written by hand.",
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Lock {\n  int& held;\n  explicit Lock(int& h) : held(h) { held = 1; }\n  ~Lock() { held = 0; }\n};\nint work(int& state, int input) {\n  Lock lock(state);\n  if (input < 0) return -1;\n  return input * 2;\n}\nint main() {\n  int state = 0;\n  int r = work(state, -5);\n  std::cout << r << " " << state << "\\n";\n}',
+        output: '-1 0',
+        explanation:
+          'The early return still destroys lock, which sets state back to 0.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Lock {\n  int& held;\n  explicit Lock(int& h) : held(h) { held = 1; }\n  ~Lock() { held = 0; }\n};\nint work(int& state, int input) {\n  Lock lock(state);\n  if (input < 0) return -1;\n  return input * 2;\n}\nint main() {\n  int state = 0;\n  int r = work(state, 4);\n  std::cout << r << " " << state << "\\n";\n}',
+          ['8 1', '8 0', '-1 0', '4 0'],
+          1,
+          'The normal return also destroys lock, so state is 0 again.',
+        ),
+        choose(
+          'A function holds a Lease and has three return statements. How many release calls must be written?',
+          [
+            'Three, one before each return',
+            'One, at the end of the function',
+            'Two, before the early returns',
+            'None; the destructor releases on every path',
+          ],
+          3,
+          'Every way out of the scope destroys the owner.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint measure(int& active) {\n  Lease lease(active);\n  return active * 10;\n}\nint main() {\n  int a = 0;\n  int r = measure(a);\n  std::cout << r << " " << a << "\\n";\n}',
+          ['10 1', '0 0', '10 0', '0 1'],
+          2,
+          'The return value is computed while the lease is held; the lease is released afterwards.',
+        ),
+      ],
+    },
+    {
+      title: 'Release exactly once',
+      explanation: [
+        'Each resource needs exactly one owner that releases it. If two objects both believe they own it, it is released twice. A struct whose destructor releases something is copied member by member by default, and the copy releases again.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint main() {\n  int active = 0;\n  {\n    Lease a(active);\n  }\n  {\n    Lease b(active);\n  }\n  std::cout << active << "\\n";\n}',
+        output: '0',
+        explanation:
+          'Each lease is acquired once and released once, so the count returns to 0.',
+      },
+      questions: [
+        choose(
+          'Two independent objects both close the same file handle in their destructors. What goes wrong?',
+          [
+            'The handle is never closed',
+            'The handle is closed twice',
+            'Nothing; the second close is ignored',
+            'Neither object can be constructed',
+          ],
+          1,
+          'Two owners mean two releases of one resource.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Counter {\n  int& releases;\n  ~Counter() { ++releases; }\n};\nint main() {\n  int releases = 0;\n  {\n    Counter a{releases};\n    Counter b = a;\n  }\n  std::cout << releases << "\\n";\n}',
+          ['1', '0', '2', '3'],
+          2,
+          'The copy b also runs the destructor, so the release is counted twice.',
+        ),
+        choose(
+          'Why should a resource owner acquire its resource in its constructor?',
+          [
+            'Constructors run faster than other functions',
+            'So the destructor can be skipped',
+            'So the object can be copied freely',
+            'So that every existing owner really holds the resource',
+          ],
+          3,
+          'If the object exists, it owns the resource; its destructor can then always release it.',
+        ),
+      ],
+    },
+  ],
+  'cpp-exception-cleanup': [
+    {
+      title: 'Run destructors while an exception leaves a scope',
+      explanation: [
+        'When an exception is thrown, the program leaves each scope between the throw and the matching catch. Leaving those scopes destroys their completed local objects, in reverse order. This is called stack unwinding, and it runs before the catch block.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <stdexcept>\nstruct Note {\n  ~Note() { std::cout << "cleanup\\n"; }\n};\nint main() {\n  try {\n    Note n;\n    throw std::runtime_error("stop");\n  } catch (const std::runtime_error&) {\n    std::cout << "caught\\n";\n  }\n}',
+        output: 'cleanup\ncaught',
+        explanation:
+          'n is destroyed as the exception leaves the try block, before the handler runs.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <stdexcept>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nint main() {\n  try {\n    Tag a{1};\n    Tag b{2};\n    throw std::runtime_error("x");\n  } catch (const std::runtime_error&) {\n    std::cout << "!";\n  }\n  std::cout << "\\n";\n}',
+          ['12!', '!21', '21!', '!'],
+          2,
+          'Unwinding destroys b and then a before the handler prints !.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <stdexcept>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint main() {\n  int active = 0;\n  try {\n    Lease lease(active);\n    throw std::runtime_error("fail");\n  } catch (const std::runtime_error&) {\n    std::cout << active << "\\n";\n  }\n}',
+          ['1', '-1', '2', '0'],
+          3,
+          'The lease is released during unwinding, before the handler reads active.',
+        ),
+        choose(
+          'When does a catch block run relative to the destructors of objects in its try block?',
+          [
+            'Before them',
+            'At the same time',
+            "After them, because the try block's objects are destroyed first",
+            'Never together, because the destructors are skipped',
+          ],
+          2,
+          'Unwinding finishes before control enters the handler.',
+        ),
+      ],
+    },
+    {
+      title: 'Destroy only objects that were completed',
+      explanation: [
+        'Unwinding destroys only objects whose construction finished. Statements after the throw never run, so objects declared there are never created and never destroyed. Objects in functions that the exception passes through are destroyed too, innermost first.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <stdexcept>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nint main() {\n  try {\n    Tag a{1};\n    throw std::runtime_error("x");\n    Tag b{2};\n  } catch (const std::runtime_error&) {\n    std::cout << "!";\n  }\n  std::cout << "\\n";\n}',
+        output: '1!',
+        explanation: 'b is never constructed, so only a is destroyed.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <stdexcept>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nint main() {\n  try {\n    Tag a{5};\n    Tag b{6};\n    throw std::runtime_error("x");\n    Tag c{7};\n  } catch (const std::runtime_error&) {\n    std::cout << "!";\n  }\n  std::cout << "\\n";\n}',
+          ['765!', '65!', '56!', '!65'],
+          1,
+          'c was never created; b and a are destroyed in reverse order.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <stdexcept>\nstruct Tag {\n  int id;\n  ~Tag() { std::cout << id; }\n};\nvoid step() {\n  Tag t{3};\n  throw std::runtime_error("x");\n}\nint main() {\n  try {\n    Tag outer{9};\n    step();\n  } catch (const std::runtime_error&) {\n    std::cout << "!";\n  }\n  std::cout << "\\n";\n}',
+          ['93!', '3!9', '!39', '39!'],
+          3,
+          'The exception leaves step first, destroying t, then the try block, destroying outer.',
+        ),
+        choose(
+          "An exception is thrown before Tag c is declared in a try block. Is c's destructor run?",
+          [
+            'Yes, every declared object is destroyed',
+            'Only if Tag has a constructor',
+            'No, because c was never constructed',
+            'It depends on the catch block',
+          ],
+          2,
+          'Only completed objects are destroyed during unwinding.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep destructors from throwing',
+      explanation: [
+        'Destructors run during unwinding, so they must not throw: a second exception while one is already in flight calls std::terminate and ends the program. Cleanup in a destructor should be written so that it cannot fail with an exception.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <stdexcept>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint main() {\n  int active = 0;\n  try {\n    Lease a(active);\n    Lease b(active);\n    throw std::runtime_error("fail");\n  } catch (const std::runtime_error& e) {\n    std::cout << active << " " << e.what() << "\\n";\n  }\n}',
+        output: '0 fail',
+        explanation:
+          'Both destructors release quietly during unwinding, and the handler sees the original message.',
+      },
+      questions: [
+        choose(
+          'What happens if a destructor throws while another exception is already unwinding the stack?',
+          [
+            'The second exception replaces the first',
+            'Both exceptions are caught together',
+            'std::terminate ends the program',
+            'The second exception is ignored',
+          ],
+          2,
+          'C++ cannot handle two exceptions at once, so it terminates.',
+        ),
+        choose(
+          'Why should cleanup code in a destructor not throw?',
+          [
+            'Destructors may not contain any statements',
+            'A throw during unwinding terminates the program',
+            'The compiler rejects every throw there',
+            'It makes the destructor run twice',
+          ],
+          1,
+          'Destructors are exactly the code that runs while an exception is in flight.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <stdexcept>\nstruct Lease {\n  int& count;\n  explicit Lease(int& c) : count(c) { ++count; }\n  ~Lease() { --count; }\n};\nint main() {\n  int active = 0;\n  try {\n    Lease a(active);\n    {\n      Lease b(active);\n      std::cout << active;\n      throw std::runtime_error("x");\n    }\n  } catch (const std::runtime_error&) {\n    std::cout << active << "\\n";\n  }\n}',
+          ['22', '21', '20', '02'],
+          2,
+          'Two leases are held when the exception is thrown; both are released before the handler prints.',
+        ),
+      ],
+    },
+  ],
+  'cpp-noncopy-owner': [
+    {
+      title: 'Delete the copy operations of an exclusive owner',
+      explanation: [
+        'Owner(const Owner&) = delete; and Owner& operator=(const Owner&) = delete; remove copy construction and copy assignment. Any attempt to copy then fails to compile, and the traits std::is_copy_constructible_v and std::is_copy_assignable_v report false.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\n#include <type_traits>\nstruct Owner {\n  Owner() = default;\n  Owner(const Owner&) = delete;\n  Owner& operator=(const Owner&) = delete;\n};\nint main() {\n  std::cout << std::is_copy_constructible_v<Owner> << "\\n";\n}',
+        output: '0',
+        explanation:
+          'With its copy constructor deleted, Owner cannot be copy-constructed.',
+      },
+      questions: [
+        choose(
+          'Owner is the struct above. What happens with Owner a; Owner b = a;?',
+          [
+            'b becomes a second owner of the resource',
+            'b starts out empty, owning nothing',
+            'a is moved into b, leaving a empty',
+            'It does not compile: the copy constructor is deleted',
+          ],
+          3,
+          'Copying needs the copy constructor, which no longer exists.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\n#include <type_traits>\nstruct Plain {\n  int v;\n};\nstruct Owner {\n  Owner() = default;\n  Owner(const Owner&) = delete;\n  Owner& operator=(const Owner&) = delete;\n};\nint main() {\n  std::cout << std::is_copy_constructible_v<Plain> << std::is_copy_constructible_v<Owner> << "\\n";\n}',
+          ['11', '01', '00', '10'],
+          3,
+          'Plain keeps its default copy constructor; Owner deleted its own.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\n#include <type_traits>\nstruct Owner {\n  Owner() = default;\n  Owner(const Owner&) = delete;\n  Owner& operator=(const Owner&) = delete;\n};\nint main() {\n  std::cout << (!std::is_copy_constructible_v<Owner> && !std::is_copy_assignable_v<Owner>) << "\\n";\n}',
+          ['0', '1', '2', '-1'],
+          1,
+          'Both copy operations are deleted, so both traits are false and both negations true.',
+        ),
+      ],
+    },
+    {
+      title: 'See why default copies release twice',
+      explanation: [
+        'Without deleted copies, the compiler copies an owner member by member, so the copy refers to the same resource. When both are destroyed, the resource is released twice.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Handle {\n  int& releases;\n  ~Handle() { ++releases; }\n};\nint main() {\n  int releases = 0;\n  {\n    Handle a{releases};\n    Handle b = a;\n  }\n  std::cout << releases << "\\n";\n}',
+        output: '2',
+        explanation:
+          'One resource, two destructors: the release happens twice.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Handle {\n  int& releases;\n  ~Handle() { ++releases; }\n};\nint main() {\n  int releases = 0;\n  {\n    Handle a{releases};\n    Handle b = a;\n    Handle c = b;\n  }\n  std::cout << releases << "\\n";\n}',
+          ['1', '2', '3', '0'],
+          2,
+          'Every copy runs the destructor, so the one resource is released three times.',
+        ),
+        choose(
+          'A struct owns one file handle and closes it in its destructor. What does the default copy constructor do?',
+          [
+            'Opens a second file for the copy',
+            'Refuses to compile',
+            'Copies the handle, so both objects close it',
+            'Moves the handle and empties the source',
+          ],
+          2,
+          'The default copy duplicates the handle value, not the file.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Handle {\n  int& releases;\n  ~Handle() { ++releases; }\n};\nint main() {\n  int releases = 0;\n  Handle a{releases};\n  {\n    Handle b = a;\n  }\n  std::cout << releases << "\\n";\n}',
+          ['0', '1', '2', '3'],
+          1,
+          'The copy b is destroyed at the end of its block; a is still alive when the count is printed.',
+        ),
+      ],
+    },
+    {
+      title: 'Use a non-copyable owner normally',
+      explanation: [
+        'Deleting copies blocks only copying. The owner can still be created, used, and referred to through references, and it still releases its resource once at scope exit.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Owner {\n  int& active;\n  explicit Owner(int& a) : active(a) { ++active; }\n  ~Owner() { --active; }\n  Owner(const Owner&) = delete;\n  Owner& operator=(const Owner&) = delete;\n};\nint main() {\n  int active = 0;\n  {\n    Owner o(active);\n    Owner& view = o;\n    std::cout << view.active << " ";\n  }\n  std::cout << active << "\\n";\n}',
+        output: '1 0',
+        explanation:
+          'A reference is not a copy, so view is allowed; the single owner releases once.',
+      },
+      questions: [
+        choose(
+          "Owner's copy operations are deleted and Owner a(x); exists. Which line still compiles?",
+          [
+            'Owner b = a;',
+            'Owner c(a);',
+            'Owner& r = a;',
+            'b = a; for another Owner b',
+          ],
+          2,
+          'Binding a reference does not copy the owner.',
+        ),
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Owner {\n  int& active;\n  explicit Owner(int& a) : active(a) { ++active; }\n  ~Owner() { --active; }\n  Owner(const Owner&) = delete;\n  Owner& operator=(const Owner&) = delete;\n};\nint main() {\n  int active = 0;\n  {\n    Owner a(active);\n    Owner b(active);\n    std::cout << active;\n  }\n  std::cout << active << "\\n";\n}',
+          ['20', '10', '22', '21'],
+          0,
+          'Two separate owners each acquire and release their own share.',
+        ),
+        choose(
+          'Why delete the copies instead of trusting everyone not to copy an owner?',
+          [
+            'Copies are too slow',
+            'Deleted functions run faster',
+            'Deleting copies turns a double release into a compile error',
+            'Copying is undefined for every struct',
+          ],
+          2,
+          'The mistake is caught when compiling instead of misbehaving at run time.',
+        ),
+      ],
+    },
+  ],
+  'cpp-raii': [
+    {
+      title: 'Save a value and restore it at scope exit',
+      explanation: [
+        'A scope guard is a small object whose destructor undoes a temporary change. Restore guard{mode, mode}; remembers the current value of mode; whatever happens to mode inside the block, the destructor puts the saved value back.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int mode = 1;\n  {\n    Restore guard{mode, mode};\n    mode = 7;\n    std::cout << mode << " ";\n  }\n  std::cout << mode << "\\n";\n}',
+        output: '7 1',
+        explanation:
+          'mode is 7 inside the block; the guard restores the saved 1 when the block ends.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int level = 3;\n  {\n    Restore g{level, level};\n    level = 99;\n  }\n  std::cout << level << "\\n";\n}',
+          ['99', '0', '3', '102'],
+          2,
+          'The guard saved 3 and writes it back at the end of the block.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int x = 5;\n  {\n    Restore g{x, x};\n    x += 10;\n    x *= 2;\n    std::cout << x << " ";\n  }\n  std::cout << x << "\\n";\n}',
+          ['30 30', '15 5', '5 5', '30 5'],
+          3,
+          'Inside the block x becomes 30; afterwards it is restored to 5.',
+        ),
+        choose(
+          'When does the guard put the old value back?',
+          [
+            'Immediately after it is constructed',
+            'Only if the program ends normally',
+            'When its destructor runs at scope exit',
+            'The next time target is read',
+          ],
+          2,
+          "Restoring is the destructor's job, so it happens when the guard is destroyed.",
+        ),
+      ],
+    },
+    {
+      title: 'Restore the actual prior value',
+      explanation: [
+        'A guard must save the value that was really there and restore that, not a fixed default. Resetting to a constant is right only by accident, when the old value happened to equal it.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int volume = 4;\n  {\n    Restore g{volume, volume};\n    volume = 0;\n  }\n  std::cout << volume << "\\n";\n}',
+        output: '4',
+        explanation: 'The guard restores the 4 it saved, not some default.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct ResetToZero {\n  int& target;\n  ~ResetToZero() { target = 0; }\n};\nint main() {\n  int volume = 4;\n  {\n    ResetToZero g{volume};\n    volume = 9;\n  }\n  std::cout << volume << "\\n";\n}',
+          ['4', '9', '13', '0'],
+          3,
+          'This guard writes 0 instead of the saved 4, so the old setting is lost.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int v = 1;\n  {\n    Restore a{v, v};\n    v = 2;\n    {\n      Restore b{v, v};\n      v = 3;\n    }\n    std::cout << v;\n  }\n  std::cout << v << "\\n";\n}',
+          ['31', '11', '21', '23'],
+          2,
+          'The inner guard restores 2 when its block ends; the outer one restores 1.',
+        ),
+        choose(
+          'A guard always resets a setting to 0 instead of saving it first. When is that wrong?',
+          [
+            'Never, because 0 is a safe default',
+            'Only when the new value is 0',
+            'Only when the guard object is copied',
+            'Whenever the setting was not 0 before the change',
+          ],
+          3,
+          'The goal is to undo the change, which means returning to the previous value.',
+        ),
+      ],
+    },
+    {
+      title: 'Stack several guards',
+      explanation: [
+        'Several guards can protect several values at once. Guards are destroyed in reverse order, so when two guards protect the same variable, the first one, destroyed last, decides the final value.',
+      ],
+      example: {
+        language: 'cpp',
+        code: '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int speed = 1;\n  int volume = 2;\n  {\n    Restore a{speed, speed};\n    Restore b{volume, volume};\n    speed = 10;\n    volume = 20;\n    std::cout << speed + volume << " ";\n  }\n  std::cout << speed + volume << "\\n";\n}',
+        output: '30 3',
+        explanation:
+          'Both settings are changed inside the block and both are restored when it ends.',
+      },
+      questions: [
+        predictOutput(
+          'What does this complete C++20 program print?',
+          '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int v = 1;\n  {\n    Restore a{v, v};\n    v = 5;\n    Restore b{v, v};\n    v = 9;\n  }\n  std::cout << v << "\\n";\n}',
+          ['5', '9', '1', '0'],
+          2,
+          'b restores 5 first; then a, destroyed last, restores 1.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          '#include <iostream>\nstruct Restore {\n  int& target;\n  int saved;\n  ~Restore() { target = saved; }\n};\nint main() {\n  int v = 1;\n  {\n    Restore a{v, v};\n    v = 5;\n    Restore b{v, v};\n    v = 9;\n    std::cout << v;\n  }\n  std::cout << v << "\\n";\n}',
+          ['95', '99', '11', '91'],
+          3,
+          'Inside the block v is 9; after both guards run it is back to 1.',
+        ),
+        choose(
+          'Two guards protect the same variable, one created after the other. Which saved value remains after the scope ends?',
+          [
+            'The value saved by the second guard',
+            'The value saved by the first guard',
+            'The last value assigned in the block',
+            'Zero',
+          ],
+          1,
+          'The first guard is destroyed last, so its restore is the final write.',
+        ),
+      ],
+    },
+  ],
 };

@@ -67,7 +67,11 @@ export const cppPrerequisites: Record<string, string[]> = {
   'cpp-lifetime': ['cpp-destructor-scope'],
   'cpp-member-functions': ['cpp-aggregate-init'],
   'cpp-const-member-functions': ['cpp-member-functions'],
-  'cpp-const-correctness': ['cpp-const-member-functions', 'cpp-functions'],
+  'cpp-const-correctness': [
+    'cpp-const-member-functions',
+    'cpp-functions',
+    'cpp-bool-values',
+  ],
   'cpp-members': [
     'cpp-const-member-functions',
     'cpp-constructor-init',
