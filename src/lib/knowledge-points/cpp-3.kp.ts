@@ -7975,6 +7975,2434 @@ const measurement: KnowledgePointModule = {
   ],
 };
 
+const orderBook: KnowledgePointModule = {
+  'cpp-book-add-level': [
+    {
+      title: 'Add each order’s size to its price level',
+      explanation: [
+        'An order book shows, for each price, the total size resting there: a price level. Keeping the levels in a std::map<int, int> from price to total size, `levels[price] += size` creates a missing level with size 0 and then adds to it, so repeated prices accumulate.',
+        'Prices here are integer ticks, which keeps the keys exact. To read a level that may not exist, use find: operator[] would insert an empty level as a side effect.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          #include <map>
+          int main() {
+            std::map<int, int> levels;
+            levels[100] += 3;
+            levels[101] += 8;
+            levels[100] += 4;
+            std::cout << levels[100] << " " << levels.size() << "\\n";
+          }
+        `),
+        output: '7 2',
+        explanation:
+          'Both orders at 100 add into one level (3 + 4), and the book has two levels, 100 and 101.',
+      },
+      questions: [
+        predictOutput(
+          'Orders arrive as parallel price and size vectors. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <map>
+            #include <vector>
+            int main() {
+              std::vector<int> prices = {50, 51, 50, 52, 51};
+              std::vector<int> sizes = {2, 5, 6, 1, 4};
+              std::map<int, int> levels;
+              for (std::size_t i = 0; i < prices.size(); ++i) levels[prices[i]] += sizes[i];
+              std::cout << levels[50] << " " << levels[51] << " " << levels.size() << "\\n";
+            }
+          `),
+          ['6 4 3', '8 9 3', '8 9 5', '2 5 3'],
+          1,
+          'Sizes at the same price add up: 2 + 6 at 50 and 5 + 4 at 51, across three distinct prices.',
+        ),
+        predictOutput(
+          'A missing level is looked up with find. What is printed?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> levels;
+              levels[100] += 3;
+              auto it = levels.find(99);
+              int shown = 0;
+              if (it != levels.end()) shown = it->second;
+              std::cout << shown << " " << levels.size() << "\\n";
+            }
+          `),
+          ['0 2', '3 1', '0 1', '99 1'],
+          2,
+          'find reports that 99 is absent without inserting it, so the book still has one level.',
+        ),
+        choose(
+          'What does `levels[price] += size` do when price has no level yet?',
+          [
+            'Creates the level with size 0, then adds size to it',
+            'Throws std::out_of_range',
+            'Does nothing',
+            'Adds size to the nearest existing price',
+          ],
+          0,
+          'operator[] value-initializes a missing mapped int to 0 before the addition.',
+        ),
+        predictOutput(
+          'A missing level is read with operator[]. What is printed?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> levels;
+              levels[100] += 3;
+              int peek = levels[99];
+              std::cout << peek << " " << levels.size() << "\\n";
+            }
+          `),
+          ['0 1', '0 2', '3 2', 'Undefined'],
+          1,
+          'operator[] inserted an empty level at 99 just to read it, so the book now has two levels.',
+        ),
+      ],
+    },
+    {
+      title: 'Reject non-positive sizes before touching the book',
+      explanation: [
+        'A new order must have a positive size. Adding 0 creates an empty level that shows no liquidity, and adding a negative size can produce negative displayed liquidity, which no real book can have.',
+        'Validate first and only then update the level, so a rejected order leaves the book exactly as it was.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <map>
+          #include <vector>
+          int main() {
+            std::vector<int> prices = {100, 101, 100};
+            std::vector<int> sizes = {3, -2, 0};
+            std::map<int, int> levels;
+            int rejected = 0;
+            for (std::size_t i = 0; i < prices.size(); ++i) {
+              if (sizes[i] > 0) {
+                levels[prices[i]] += sizes[i];
+              } else {
+                rejected += 1;
+              }
+            }
+            std::cout << levels.size() << " " << levels[100] << " " << rejected << "\\n";
+          }
+        `),
+        output: '1 3 2',
+        explanation:
+          'Only the first order is valid. The -2 and 0 orders are rejected before they can create or change a level.',
+      },
+      questions: [
+        predictOutput(
+          'This book adds every size without checking. What does it show at 101?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> levels;
+              levels[101] += 4;
+              levels[101] += -6;
+              std::cout << levels[101] << "\\n";
+            }
+          `),
+          ['-2', '4', '0', '6'],
+          0,
+          'Nothing stops the negative size, so the level shows impossible negative liquidity.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <map>
+            #include <vector>
+            int main() {
+              std::vector<int> prices = {7, 8, 7, 9};
+              std::vector<int> sizes = {5, 0, -1, 2};
+              std::map<int, int> levels;
+              int rejected = 0;
+              for (std::size_t i = 0; i < prices.size(); ++i) {
+                if (sizes[i] > 0) {
+                  levels[prices[i]] += sizes[i];
+                } else {
+                  rejected += 1;
+                }
+              }
+              std::cout << levels.size() << " " << rejected << "\\n";
+            }
+          `),
+          ['4 0', '2 2', '3 1', '2 1'],
+          1,
+          'Only the orders at 7 (size 5) and 9 (size 2) are accepted; the 0 and -1 orders are rejected and create no level.',
+        ),
+        choose(
+          'Why is an order of size 0 rejected rather than added?',
+          [
+            'Adding 0 throws an exception',
+            'Size 0 means a market order',
+            'It would double the level',
+            'Adding it would create a price level that shows no liquidity',
+          ],
+          3,
+          'An empty level misrepresents the book; there is nothing to show at that price.',
+        ),
+        choose(
+          'In which order should an add-order handler work?',
+          [
+            'Update the level, then validate and undo if needed',
+            'Update the level and let the display hide negatives',
+            'Validate the size, then update the level',
+            'Validate only when the level already exists',
+          ],
+          2,
+          'Validating first means a rejected order never changes the book.',
+        ),
+      ],
+    },
+  ],
+  'cpp-book-cancel-level': [
+    {
+      title: 'A cancel reduces the level but never below zero',
+      explanation: [
+        'Cancelling removes resting size from a level: remaining = available - cancelled. A cancel can ask for more than is resting, for example because part of the order has already traded, but the level cannot go negative. A common contract clamps the result at 0.',
+        'Compare before subtracting: if the cancel is smaller than what is available, subtract; otherwise the level becomes 0.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int available = 10;
+            int cancelled = 4;
+            int remaining = 0;
+            if (cancelled < available) remaining = available - cancelled;
+            std::cout << remaining << "\\n";
+          }
+        `),
+        output: '6',
+        explanation:
+          'The cancel is smaller than the level, so 4 is removed from 10.',
+      },
+      questions: [
+        predictOutput(
+          'The cancel is larger than the level. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int available = 3;
+              int cancelled = 9;
+              int remaining = 0;
+              if (cancelled < available) remaining = available - cancelled;
+              std::cout << remaining << "\\n";
+            }
+          `),
+          ['-6', '0', '3', '9'],
+          1,
+          'The over-cancel is clamped: the level becomes 0 rather than -6.',
+        ),
+        predictOutput(
+          'The cancel equals the level. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int available = 5;
+              int cancelled = 5;
+              int remaining = 0;
+              if (cancelled < available) remaining = available - cancelled;
+              std::cout << remaining << "\\n";
+            }
+          `),
+          ['5', '10', '0', '-1'],
+          2,
+          'Cancelling everything that rests leaves an empty level.',
+        ),
+        predictOutput(
+          'Three cancels hit one level in turn. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int level = 12;
+              int cancel = 5;
+              if (cancel < level) level = level - cancel; else level = 0;
+              std::cout << level << " ";
+              cancel = 4;
+              if (cancel < level) level = level - cancel; else level = 0;
+              std::cout << level << " ";
+              cancel = 6;
+              if (cancel < level) level = level - cancel; else level = 0;
+              std::cout << level << "\\n";
+            }
+          `),
+          ['7 3 -3', '7 2 0', '7 3 0', '12 7 3'],
+          2,
+          '12 - 5 = 7 and 7 - 4 = 3; the last cancel asks for 6 of 3, so the level clamps to 0.',
+        ),
+        choose(
+          'Why might a cancel ask for more than the level currently holds?',
+          [
+            'The book always double counts',
+            'Cancels add size to the level',
+            'It cannot happen',
+            'Part of the order may already have traded, so less is resting than the cancel names',
+          ],
+          3,
+          'Fills and cancels race in real markets, so over-cancels must be handled.',
+        ),
+      ],
+    },
+    {
+      title: 'Validate inputs and follow the stated over-cancel contract',
+      explanation: [
+        'Negative available or cancelled sizes are invalid input and should be rejected before any arithmetic. For an over-cancel, clamping to 0 and rejecting the cancel are both reasonable contracts; the code must implement the one that is stated.',
+        'Comparing before subtracting matters even more for unsigned sizes: with unsigned arithmetic, 3 - 9 does not go negative but wraps around to a huge positive number.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int available = 8;
+            int cancelled = -3;
+            if (available < 0) {
+              std::cout << "invalid\\n";
+            } else if (cancelled < 0) {
+              std::cout << "invalid\\n";
+            } else if (cancelled > available) {
+              std::cout << "rejected\\n";
+            } else {
+              std::cout << available - cancelled << "\\n";
+            }
+          }
+        `),
+        output: 'invalid',
+        explanation:
+          'A negative cancel is caught by the validation before the over-cancel rule or any subtraction runs.',
+      },
+      questions: [
+        predictOutput(
+          'This handler rejects over-cancels. What does it print for a cancel of 9?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int available = 8;
+              int cancelled = 9;
+              if (available < 0) {
+                std::cout << "invalid\\n";
+              } else if (cancelled < 0) {
+                std::cout << "invalid\\n";
+              } else if (cancelled > available) {
+                std::cout << "rejected\\n";
+              } else {
+                std::cout << available - cancelled << "\\n";
+              }
+            }
+          `),
+          ['-1', '0', 'rejected', 'invalid'],
+          2,
+          'Both inputs are valid, but the cancel exceeds the level, and this contract rejects it rather than clamping.',
+        ),
+        predictOutput(
+          'The same handler receives a cancel of exactly 8. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int available = 8;
+              int cancelled = 8;
+              if (available < 0) {
+                std::cout << "invalid\\n";
+              } else if (cancelled < 0) {
+                std::cout << "invalid\\n";
+              } else if (cancelled > available) {
+                std::cout << "rejected\\n";
+              } else {
+                std::cout << available - cancelled << "\\n";
+              }
+            }
+          `),
+          ['rejected', '0', 'invalid', '8'],
+          1,
+          'Cancelling exactly what rests is allowed and leaves 0.',
+        ),
+        choose(
+          'Sizes are stored as unsigned, and code computes available - cancelled with available = 3 and cancelled = 9. What is the result?',
+          [
+            '-6',
+            '0',
+            'A huge positive number, because unsigned subtraction wraps around',
+            'A compile error',
+          ],
+          2,
+          'Unsigned arithmetic is modular, so the "negative" result wraps to a value near the maximum.',
+        ),
+        choose(
+          'Which statement about the over-cancel contract is right?',
+          [
+            'Clamping to 0 and rejecting are both valid; the code must follow the one that is stated',
+            'Over-cancels must always produce negative levels',
+            'Over-cancels should sometimes be clamped and sometimes ignored, at random',
+            'The level must be deleted and recreated',
+          ],
+          0,
+          'What matters is a clear, consistently implemented rule.',
+        ),
+      ],
+    },
+  ],
+  'cpp-book-best-bid': [
+    {
+      title: 'The best bid is the last key of the map',
+      explanation: [
+        'A std::map keeps its keys in ascending order. In a bid book keyed by price, the best (highest) bid is therefore the last entry; rbegin() returns a reverse iterator to it, so rbegin()->first is its price and rbegin()->second its size.',
+        'For asks the best price is the lowest, which is begin()->first.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          #include <map>
+          int main() {
+            std::map<int, int> bids = {{101, 2}, {105, 3}, {103, 8}};
+            std::cout << bids.rbegin()->first << " " << bids.rbegin()->second << "\\n";
+          }
+        `),
+        output: '105 3',
+        explanation:
+          'The map orders the prices 101, 103, 105; the last one, 105, has size 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> bids = {{99, 4}, {97, 1}, {98, 6}};
+              std::cout << bids.rbegin()->first << " " << bids.rbegin()->second << "\\n";
+            }
+          `),
+          ['97 1', '99 4', '98 6', '99 1'],
+          1,
+          'The highest bid price is 99, resting with size 4, whatever order the levels were listed in.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> asks = {{106, 1}, {104, 7}, {109, 2}};
+              std::cout << asks.begin()->first << "\\n";
+            }
+          `),
+          ['109', '106', '104', '7'],
+          2,
+          'The best ask is the lowest price, the first key of the ascending map.',
+        ),
+        predictOutput(
+          'Two new bid levels are added. What is printed?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> bids = {{100, 2}, {101, 3}};
+              bids[103] += 1;
+              bids[99] += 9;
+              std::cout << bids.rbegin()->first << " " << bids.begin()->first << "\\n";
+            }
+          `),
+          ['103 99', '99 103', '101 100', '103 100'],
+          0,
+          'The map re-sorts on insertion: 103 is now the highest bid and 99 the lowest.',
+        ),
+        choose(
+          'Why is the best ask at begin() but the best bid at rbegin()?',
+          [
+            'Asks are stored in reverse',
+            'std::map sorts ascending; the best ask is the lowest price and the best bid the highest',
+            'rbegin() is faster than begin()',
+            'Bids are kept unsorted',
+          ],
+          1,
+          'Both sides use the same ascending map; they differ in which end is best.',
+        ),
+      ],
+    },
+    {
+      title: 'Check for an empty side first',
+      explanation: [
+        'On an empty map, rbegin() equals rend(), and dereferencing it is undefined behavior; the same holds for begin() on an empty ask side. Check empty() first.',
+        'Then decide what an empty side means for the caller, for example printing "no bid" or returning a documented sentinel such as -1.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          #include <map>
+          int main() {
+            std::map<int, int> bids;
+            if (bids.empty()) {
+              std::cout << "no bid\\n";
+            } else {
+              std::cout << bids.rbegin()->first << "\\n";
+            }
+          }
+        `),
+        output: 'no bid',
+        explanation:
+          'The empty check prevents dereferencing an iterator that points at no element.',
+      },
+      questions: [
+        choose(
+          'What does `bids.rbegin()->first` do on an empty map?',
+          [
+            'Returns 0',
+            'Throws std::out_of_range',
+            'Dereferences an iterator with no element behind it: undefined behavior',
+            'Returns the lowest possible int',
+          ],
+          2,
+          'An empty map has no last element, and iterators do not check.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> bids = {{100, 1}};
+              if (bids.empty()) {
+                std::cout << "no bid\\n";
+              } else {
+                std::cout << bids.rbegin()->first << "\\n";
+              }
+            }
+          `),
+          ['no bid', '100', '1', '0'],
+          1,
+          'A single level is both the lowest and the highest bid.',
+        ),
+        predictOutput(
+          'This version reports a missing bid as -1. What is printed?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> bids;
+              int best = -1;
+              if (!bids.empty()) best = bids.rbegin()->first;
+              std::cout << best << "\\n";
+            }
+          `),
+          ['0', 'Undefined', '-1', 'no bid'],
+          2,
+          'The book is empty, so the documented sentinel is kept.',
+        ),
+        choose(
+          'Which check must come before reading the best bid?',
+          [
+            'bids.size() > 1',
+            'bids.count(0) == 0',
+            'bids.begin() == bids.rbegin()',
+            'bids.empty() is false',
+          ],
+          3,
+          'Any nonempty map has a last element to read.',
+        ),
+      ],
+    },
+  ],
+  'cpp-order-book': [
+    {
+      title: 'The spread is best ask minus best bid',
+      explanation: [
+        'The quoted spread is the gap between the best ask (lowest sell price) and the best bid (highest buy price): spread = asks.begin()->first - bids.rbegin()->first. In a normal book it is positive.',
+        'The mid price, (best bid + best ask) / 2, sits in the middle of the spread.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          #include <map>
+          int main() {
+            std::map<int, int> bids = {{100, 2}, {102, 1}};
+            std::map<int, int> asks = {{105, 3}, {108, 4}};
+            std::cout << asks.begin()->first - bids.rbegin()->first << "\\n";
+          }
+        `),
+        output: '3',
+        explanation: 'The best ask is 105 and the best bid is 102.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> bids = {{99, 5}, {101, 2}};
+              std::map<int, int> asks = {{104, 1}, {103, 6}};
+              std::cout << asks.begin()->first - bids.rbegin()->first << "\\n";
+            }
+          `),
+          ['5', '2', '3', '-2'],
+          1,
+          'The best ask is 103 and the best bid 101.',
+        ),
+        predictOutput(
+          'The second number uses the wrong end of each side. What is printed?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> bids = {{98, 1}, {100, 1}};
+              std::map<int, int> asks = {{101, 1}, {105, 1}};
+              std::cout << asks.begin()->first - bids.rbegin()->first << " "
+                        << asks.rbegin()->first - bids.begin()->first << "\\n";
+            }
+          `),
+          ['7 1', '1 1', '1 7', '5 2'],
+          2,
+          'The quoted spread is 101 - 100; the second expression measures the widest prices instead, 105 - 98.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> bids = {{100, 3}};
+              std::map<int, int> asks = {{104, 2}};
+              int bid = bids.rbegin()->first;
+              int ask = asks.begin()->first;
+              std::cout << ask - bid << " " << (bid + ask) / 2 << "\\n";
+            }
+          `),
+          ['4 102', '4 204', '102 4', '-4 102'],
+          0,
+          'The spread is 4 ticks and the mid price is halfway between 100 and 104.',
+        ),
+        choose(
+          'Which formula gives the quoted spread?',
+          [
+            'best bid − best ask',
+            'highest ask − lowest bid',
+            '(best ask + best bid) / 2',
+            'best ask − best bid',
+          ],
+          3,
+          'It is the distance from the highest bid up to the lowest ask.',
+        ),
+      ],
+    },
+    {
+      title: 'Require both sides and an uncrossed book',
+      explanation: [
+        'A spread needs a best bid and a best ask. If either side is empty there is no spread; treating the missing side as price 0 produces a meaningless number.',
+        'If the best ask is at or below the best bid, the book is locked or crossed: buyers and sellers agree on price, so those orders should already have traded. Report such a book as invalid instead of quoting a zero or negative spread.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          #include <map>
+          int main() {
+            std::map<int, int> bids = {{100, 2}};
+            std::map<int, int> asks = {{99, 3}};
+            if (bids.empty()) {
+              std::cout << "no spread\\n";
+            } else if (asks.empty()) {
+              std::cout << "no spread\\n";
+            } else if (asks.begin()->first <= bids.rbegin()->first) {
+              std::cout << "crossed\\n";
+            } else {
+              std::cout << asks.begin()->first - bids.rbegin()->first << "\\n";
+            }
+          }
+        `),
+        output: 'crossed',
+        explanation:
+          'Someone is offering to sell at 99 while someone bids 100, so the book is crossed; -1 would be no real spread.',
+      },
+      questions: [
+        predictOutput(
+          'The bid side is empty. What is printed?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> bids;
+              std::map<int, int> asks = {{105, 3}};
+              if (bids.empty()) {
+                std::cout << "no spread\\n";
+              } else if (asks.empty()) {
+                std::cout << "no spread\\n";
+              } else if (asks.begin()->first <= bids.rbegin()->first) {
+                std::cout << "crossed\\n";
+              } else {
+                std::cout << asks.begin()->first - bids.rbegin()->first << "\\n";
+              }
+            }
+          `),
+          ['105', 'no spread', 'crossed', '0'],
+          1,
+          'Without a bid there is nothing to measure the ask against.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> bids = {{100, 2}};
+              std::map<int, int> asks = {{103, 1}};
+              if (bids.empty()) {
+                std::cout << "no spread\\n";
+              } else if (asks.empty()) {
+                std::cout << "no spread\\n";
+              } else if (asks.begin()->first <= bids.rbegin()->first) {
+                std::cout << "crossed\\n";
+              } else {
+                std::cout << asks.begin()->first - bids.rbegin()->first << "\\n";
+              }
+            }
+          `),
+          ['crossed', 'no spread', '3', '-3'],
+          2,
+          'Both sides exist and the ask is above the bid, so the spread is 3.',
+        ),
+        choose(
+          'If an empty bid side were treated as price 0, what would a book with best ask 105 report?',
+          [
+            'A spread of 105, which looks like a very wide market instead of a missing side',
+            'A spread of 0',
+            'A spread of -105',
+            'No spread',
+          ],
+          0,
+          'The invented 0 turns "no data" into a plausible-looking but false number.',
+        ),
+        predictOutput(
+          'Both sides sit at the same price. What is printed?',
+          cpp(`
+            #include <iostream>
+            #include <map>
+            int main() {
+              std::map<int, int> bids = {{100, 1}};
+              std::map<int, int> asks = {{100, 2}};
+              if (bids.empty()) {
+                std::cout << "no spread\\n";
+              } else if (asks.empty()) {
+                std::cout << "no spread\\n";
+              } else if (asks.begin()->first <= bids.rbegin()->first) {
+                std::cout << "crossed\\n";
+              } else {
+                std::cout << asks.begin()->first - bids.rbegin()->first << "\\n";
+              }
+            }
+          `),
+          ['0', 'no spread', '100', 'crossed'],
+          3,
+          'An ask equal to the bid is a locked book, which this check reports with the crossed case.',
+        ),
+      ],
+    },
+  ],
+};
+
+const ringBuffers: KnowledgePointModule = {
+  'cpp-ring-wrap': [
+    {
+      title: 'Advance an index with (i + 1) % capacity',
+      explanation: [
+        'A ring buffer reuses a fixed number of slots, numbered 0 to capacity - 1. After the last slot the index wraps back to 0. `(i + 1) % capacity` does exactly that: it adds one and wraps when the result reaches capacity.',
+        'Advancing k steps at once is `(i + k) % capacity`.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int capacity = 3;
+            int i = 1;
+            i = (i + 1) % capacity;
+            std::cout << i << " ";
+            i = (i + 1) % capacity;
+            std::cout << i << " ";
+            i = (i + 1) % capacity;
+            std::cout << i << "\\n";
+          }
+        `),
+        output: '2 0 1',
+        explanation:
+          'From 1 the index moves to 2, wraps from 2 to 0, then continues to 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int capacity = 4;
+              int i = 3;
+              std::cout << (i + 1) % capacity << "\\n";
+            }
+          `),
+          ['4', '0', '3', '1'],
+          1,
+          'Slot 3 is the last of four, so the next index wraps to 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int capacity = 5;
+              int i = 4;
+              i = (i + 1) % capacity;
+              std::cout << i << " ";
+              i = (i + 1) % capacity;
+              std::cout << i << "\\n";
+            }
+          `),
+          ['5 6', '4 0', '0 1', '1 2'],
+          2,
+          'From the last slot 4 the index wraps to 0 and then advances to 1.',
+        ),
+        predictOutput(
+          'The index jumps 7 steps at once. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int capacity = 4;
+              int i = 2;
+              int k = 7;
+              std::cout << (i + k) % capacity << "\\n";
+            }
+          `),
+          ['9', '3', '2', '1'],
+          3,
+          '2 + 7 = 9, and 9 % 4 is 1: two full laps plus one more slot.',
+        ),
+        choose(
+          'What happens if the index is advanced with i + 1 and no % capacity?',
+          [
+            'It walks past the last slot of the storage',
+            'It wraps around automatically',
+            'It stops at capacity - 1',
+            'It resets to 0 when it reaches capacity',
+          ],
+          0,
+          'Nothing brings the index back; it soon indexes outside the buffer.',
+        ),
+      ],
+    },
+    {
+      title: 'Reject zero capacity and out-of-range indices',
+      explanation: [
+        'A ring with capacity 0 has no slots, and `% 0` is undefined behavior, so capacity must be positive. The current index must also be a real slot: 0 <= current < capacity.',
+        'An index outside that range means the ring’s state is already corrupt; reporting it is safer than quietly wrapping it back into range.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            int capacity = 0;
+            int current = 0;
+            if (capacity <= 0) {
+              std::cout << "invalid capacity\\n";
+            } else if (current < 0) {
+              std::cout << "invalid index\\n";
+            } else if (current >= capacity) {
+              std::cout << "invalid index\\n";
+            } else {
+              std::cout << (current + 1) % capacity << "\\n";
+            }
+          }
+        `),
+        output: 'invalid capacity',
+        explanation:
+          'The capacity check runs first, so % 0 is never evaluated.',
+      },
+      questions: [
+        predictOutput(
+          'The index equals the capacity. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int capacity = 3;
+              int current = 3;
+              if (capacity <= 0) {
+                std::cout << "invalid capacity\\n";
+              } else if (current < 0) {
+                std::cout << "invalid index\\n";
+              } else if (current >= capacity) {
+                std::cout << "invalid index\\n";
+              } else {
+                std::cout << (current + 1) % capacity << "\\n";
+              }
+            }
+          `),
+          ['1', 'invalid index', '0', 'invalid capacity'],
+          1,
+          'Slots run from 0 to 2, so 3 is not a slot of this ring.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              int capacity = 3;
+              int current = 2;
+              if (capacity <= 0) {
+                std::cout << "invalid capacity\\n";
+              } else if (current < 0) {
+                std::cout << "invalid index\\n";
+              } else if (current >= capacity) {
+                std::cout << "invalid index\\n";
+              } else {
+                std::cout << (current + 1) % capacity << "\\n";
+              }
+            }
+          `),
+          ['3', 'invalid index', '0', '2'],
+          2,
+          'The inputs are valid, and the last slot wraps to 0.',
+        ),
+        choose(
+          'What does `(i + 1) % capacity` do when capacity is 0?',
+          [
+            'Returns i + 1',
+            'Returns 0',
+            'Throws std::domain_error',
+            'It is undefined behavior',
+          ],
+          3,
+          'Remainder by zero is undefined, so capacity must be checked first.',
+        ),
+        choose(
+          'Why reject current == capacity, even though (current + 1) % capacity would be a valid slot?',
+          [
+            'current itself is not a slot of the ring, so the caller’s state is already wrong',
+            'It is not necessary',
+            'It would divide by zero',
+            'The result would be negative',
+          ],
+          0,
+          'Silently wrapping an impossible index hides a bug elsewhere.',
+        ),
+      ],
+    },
+  ],
+  'cpp-ring-bounded-push': [
+    {
+      title: 'Track a write index and an occupied count',
+      explanation: [
+        'A ring buffer stores items in a fixed vector of slots. A push writes at the write index, advances it with (write + 1) % capacity, and increases the count of occupied slots.',
+        'The count is needed because the write index alone cannot tell an empty ring from a full one: after capacity pushes, write is back where it started.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> storage(4, 0);
+            std::size_t write = 0;
+            std::size_t count = 0;
+            std::vector<int> input = {7, 8};
+            for (std::size_t i = 0; i < input.size(); ++i) {
+              storage[write] = input[i];
+              write = (write + 1) % storage.size();
+              count += 1;
+            }
+            std::cout << write << " " << count << " " << storage[1] << "\\n";
+          }
+        `),
+        output: '2 2 8',
+        explanation:
+          '7 goes to slot 0 and 8 to slot 1; write now points at slot 2 and two slots are occupied.',
+      },
+      questions: [
+        predictOutput(
+          'The write index starts at slot 3 of 4. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> storage(4, 0);
+              std::size_t write = 3;
+              std::size_t count = 0;
+              std::vector<int> input = {5, 6};
+              for (std::size_t i = 0; i < input.size(); ++i) {
+                storage[write] = input[i];
+                write = (write + 1) % storage.size();
+                count += 1;
+              }
+              std::cout << write << " " << storage[0] << "\\n";
+            }
+          `),
+          ['5 6', '1 6', '1 5', '0 6'],
+          1,
+          '5 fills slot 3, the index wraps, 6 fills slot 0, and write ends at 1.',
+        ),
+        predictOutput(
+          'Three items are pushed into an empty ring of capacity 3. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> storage(3, 0);
+              std::size_t write = 0;
+              std::size_t count = 0;
+              std::vector<int> input = {1, 2, 3};
+              for (std::size_t i = 0; i < input.size(); ++i) {
+                storage[write] = input[i];
+                write = (write + 1) % storage.size();
+                count += 1;
+              }
+              std::cout << write << " " << count << "\\n";
+            }
+          `),
+          ['0 3', '3 3', '0 0', '3 0'],
+          0,
+          'write wraps back to 0, exactly where it was when the ring was empty; only count shows it is full.',
+        ),
+        choose(
+          'After 3 pushes into an empty ring of capacity 3, write is 0 again. Why keep a separate count?',
+          [
+            'The count is only for statistics',
+            'write must never return to 0',
+            'write is the same when the ring is empty and when it is full, so the count tells them apart',
+            'count replaces the storage',
+          ],
+          2,
+          'Position alone is ambiguous after a full lap.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> storage(3, 0);
+              std::size_t write = 0;
+              std::size_t count = 0;
+              std::vector<int> input = {1, 2};
+              for (std::size_t i = 0; i < input.size(); ++i) {
+                storage[write] = input[i];
+                write = (write + 1) % storage.size();
+                count += 1;
+              }
+              std::cout << storage[0] << " " << storage[1] << " " << storage[2] << "\\n";
+            }
+          `),
+          ['0 1 2', '1 2 3', '2 1 0', '1 2 0'],
+          3,
+          'Two pushes fill slots 0 and 1; slot 2 keeps its initial 0.',
+        ),
+      ],
+    },
+    {
+      title: 'Reject a push into a full ring',
+      explanation: [
+        'A ring is full when count == capacity. A bounded ring must then reject the push and report it to the producer; writing anyway would overwrite the oldest unread item and lose it silently.',
+        'Advance write and count only after a push is accepted, so a rejected push leaves the ring exactly as it was.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> storage(3, 0);
+            std::size_t write = 0;
+            std::size_t count = 0;
+            int rejected = 0;
+            std::vector<int> input = {1, 2, 3, 4, 5};
+            for (std::size_t i = 0; i < input.size(); ++i) {
+              if (count == storage.size()) {
+                rejected += 1;
+              } else {
+                storage[write] = input[i];
+                write = (write + 1) % storage.size();
+                count += 1;
+              }
+            }
+            std::cout << count << " " << rejected << " " << storage[0] << "\\n";
+          }
+        `),
+        output: '3 2 1',
+        explanation:
+          'The first three items fill the ring; 4 and 5 are rejected, so the oldest item 1 is still in slot 0.',
+      },
+      questions: [
+        predictOutput(
+          'Three items go into a ring of capacity 4. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> storage(4, 0);
+              std::size_t write = 0;
+              std::size_t count = 0;
+              int rejected = 0;
+              std::vector<int> input = {1, 2, 3};
+              for (std::size_t i = 0; i < input.size(); ++i) {
+                if (count == storage.size()) {
+                  rejected += 1;
+                } else {
+                  storage[write] = input[i];
+                  write = (write + 1) % storage.size();
+                  count += 1;
+                }
+              }
+              std::cout << count << " " << rejected << " " << storage[0] << "\\n";
+            }
+          `),
+          ['4 0 1', '3 1 1', '3 0 1', '3 0 0'],
+          2,
+          'The ring never fills, so all three pushes are accepted.',
+        ),
+        predictOutput(
+          'This ring writes without checking whether it is full. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> storage(3, 0);
+              std::size_t write = 0;
+              std::vector<int> input = {1, 2, 3, 4, 5};
+              for (std::size_t i = 0; i < input.size(); ++i) {
+                storage[write] = input[i];
+                write = (write + 1) % storage.size();
+              }
+              std::cout << storage[0] << " " << storage[1] << " " << storage[2] << "\\n";
+            }
+          `),
+          ['1 2 3', '4 5 3', '3 4 5', '5 4 3'],
+          1,
+          '4 and 5 wrap around and overwrite the unread 1 and 2.',
+        ),
+        choose(
+          'A producer’s push finds count == capacity. What should a bounded ring do?',
+          [
+            'Overwrite the oldest unread value and report success',
+            'Reject the push and report it to the producer',
+            'Grow the storage',
+            'Advance write but leave count unchanged',
+          ],
+          1,
+          'A bounded ring keeps its capacity and makes the failure visible.',
+        ),
+        choose(
+          'Why advance write only after a push is accepted?',
+          [
+            'write must always lead count',
+            'It saves one modulo operation',
+            'It does not matter when write advances',
+            'A rejected push must leave the ring exactly as it was',
+          ],
+          3,
+          'Moving write for a rejected item would desynchronize the index from the stored data.',
+        ),
+      ],
+    },
+  ],
+  'cpp-ring-fifo-pop': [
+    {
+      title: 'Pop at the read index, then advance it',
+      explanation: [
+        'A pop takes the item at the read index, advances read with (read + 1) % capacity, and decreases count. Because push advances write the same way, items come out in the order they went in: first in, first out.',
+        'Draining the ring is a loop that pops while count is not 0.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> storage(4, 0);
+            std::size_t write = 0;
+            std::size_t read = 0;
+            std::size_t count = 0;
+            std::vector<int> input = {1, 2, 3};
+            for (std::size_t i = 0; i < input.size(); ++i) {
+              storage[write] = input[i];
+              write = (write + 1) % storage.size();
+              count += 1;
+            }
+            while (count != 0) {
+              std::cout << storage[read] << " ";
+              read = (read + 1) % storage.size();
+              count -= 1;
+            }
+            std::cout << "\\n";
+          }
+        `),
+        output: '1 2 3',
+        explanation:
+          'read follows write around the ring, so the pops return 1, 2, 3.',
+      },
+      questions: [
+        predictOutput(
+          'Three items are pushed and one is popped. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> storage(4, 0);
+              std::size_t write = 0;
+              std::size_t read = 0;
+              std::size_t count = 0;
+              std::vector<int> input = {5, 6, 7};
+              for (std::size_t i = 0; i < input.size(); ++i) {
+                storage[write] = input[i];
+                write = (write + 1) % storage.size();
+                count += 1;
+              }
+              int popped = storage[read];
+              read = (read + 1) % storage.size();
+              count -= 1;
+              std::cout << popped << " " << read << " " << count << "\\n";
+            }
+          `),
+          ['7 1 2', '5 1 2', '5 0 3', '5 1 3'],
+          1,
+          'The oldest item, 5, comes out first; read moves to slot 1 and two items remain.',
+        ),
+        predictOutput(
+          'Pushes and pops interleave in a ring of capacity 3. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> storage(3, 0);
+              std::size_t write = 0;
+              std::size_t read = 0;
+              std::size_t count = 0;
+              storage[write] = 1;
+              write = (write + 1) % storage.size();
+              count += 1;
+              storage[write] = 2;
+              write = (write + 1) % storage.size();
+              count += 1;
+              std::cout << storage[read] << " ";
+              read = (read + 1) % storage.size();
+              count -= 1;
+              storage[write] = 3;
+              write = (write + 1) % storage.size();
+              count += 1;
+              storage[write] = 4;
+              write = (write + 1) % storage.size();
+              count += 1;
+              while (count != 0) {
+                std::cout << storage[read] << " ";
+                read = (read + 1) % storage.size();
+                count -= 1;
+              }
+              std::cout << "\\n";
+            }
+          `),
+          ['1 4 2 3', '4 3 2 1', '1 2 3 4', '1 2 4 3'],
+          2,
+          '4 wraps into slot 0, but read also wraps, so the items still come out in push order.',
+        ),
+        choose(
+          'In which order does a ring buffer pop its items?',
+          [
+            'Most recent first',
+            'In the order they were pushed',
+            'Smallest first',
+            'In storage-slot order starting at slot 0',
+          ],
+          1,
+          'read and write move the same way around the ring, which gives FIFO order.',
+        ),
+        predictOutput(
+          'Two items are pushed and both are popped. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> storage(2, 0);
+              std::size_t write = 0;
+              std::size_t read = 0;
+              std::size_t count = 0;
+              std::vector<int> input = {9, 8};
+              for (std::size_t i = 0; i < input.size(); ++i) {
+                storage[write] = input[i];
+                write = (write + 1) % storage.size();
+                count += 1;
+              }
+              int total = 0;
+              while (count != 0) {
+                total += storage[read];
+                read = (read + 1) % storage.size();
+                count -= 1;
+              }
+              std::cout << total << " " << count << "\\n";
+            }
+          `),
+          ['17 2', '9 1', '8 0', '17 0'],
+          3,
+          'Both items are popped, so their sum is 17 and the ring is empty again.',
+        ),
+      ],
+    },
+    {
+      title: 'Reject a pop from an empty ring',
+      explanation: [
+        'When count is 0 there is nothing to pop. The slot at read still holds whatever was last stored there, because popping only moves read and count; the slot is overwritten by a later push. Reading it would hand out a stale item a second time.',
+        'An unchecked pop also breaks the bookkeeping: with a std::size_t count, count -= 1 from 0 wraps around to the largest value, and the ring looks full of garbage.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <vector>
+          int main() {
+            std::vector<int> storage(2, 0);
+            std::size_t write = 0;
+            std::size_t read = 0;
+            std::size_t count = 0;
+            storage[write] = 42;
+            write = (write + 1) % storage.size();
+            count += 1;
+            std::cout << storage[read] << " ";
+            read = (read + 1) % storage.size();
+            count -= 1;
+            if (count == 0) {
+              std::cout << "empty\\n";
+            } else {
+              std::cout << storage[read] << "\\n";
+            }
+          }
+        `),
+        output: '42 empty',
+        explanation:
+          'After the only item is popped, count is 0, so the second pop reports empty instead of reading a slot.',
+      },
+      questions: [
+        predictOutput(
+          'The second pop does not check count. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> storage(1, 0);
+              std::size_t read = 0;
+              std::size_t count = 0;
+              storage[0] = 5;
+              count += 1;
+              std::cout << storage[read] << " ";
+              read = (read + 1) % storage.size();
+              count -= 1;
+              std::cout << storage[read] << "\\n";
+              read = (read + 1) % storage.size();
+              count -= 1;
+            }
+          `),
+          ['5 0', '5 5', '5', '0 5'],
+          1,
+          'The slot still holds 5, so the unchecked pop hands out the same item twice.',
+        ),
+        predictOutput(
+          'This time the second pop checks count. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <vector>
+            int main() {
+              std::vector<int> storage(1, 0);
+              std::size_t read = 0;
+              std::size_t count = 0;
+              storage[0] = 5;
+              count += 1;
+              std::cout << storage[read] << " ";
+              read = (read + 1) % storage.size();
+              count -= 1;
+              if (count == 0) {
+                std::cout << "empty\\n";
+              } else {
+                std::cout << storage[read] << "\\n";
+              }
+            }
+          `),
+          ['5 empty', '5 5', 'empty 5', '5 0'],
+          0,
+          'One item was pushed and popped; the check stops a second pop.',
+        ),
+        choose(
+          'What does `count -= 1` do to a std::size_t count that is already 0?',
+          [
+            'It stays 0',
+            'It becomes -1',
+            'It wraps to the largest std::size_t value, so the ring looks full',
+            'It throws',
+          ],
+          2,
+          'Unsigned arithmetic wraps around instead of going negative.',
+        ),
+        choose(
+          'After an item is popped, what happens to its slot?',
+          [
+            'It is cleared to 0',
+            'It keeps the old value until a later push overwrites it',
+            'It is freed',
+            'It is erased from the vector',
+          ],
+          1,
+          'Popping only moves read and count; the storage itself is untouched.',
+        ),
+      ],
+    },
+  ],
+  'cpp-ring-buffer': [
+    {
+      title: 'The producer publishes each slot with a release store',
+      explanation: [
+        'A single-producer, single-consumer (SPSC) ring can work without a mutex. The producer fills slot write % capacity and then stores write + 1 with memory_order_release. The consumer loads write with memory_order_acquire; once it sees a value larger than its own read position, the slot write is visible and the slot can be read.',
+        'Here write and read keep counting up and only their remainder picks a slot. With exactly one producer, only one thread ever stores to write, so a plain store is enough; no read-modify-write is needed.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <atomic>
+          #include <cstddef>
+          #include <iostream>
+          #include <thread>
+          #include <vector>
+          int main() {
+            std::vector<int> slots(8, 0);
+            std::atomic<std::size_t> write{0};
+            std::thread producer([&slots, &write] {
+              for (int value = 1; value <= 5; ++value) {
+                std::size_t position = write.load(std::memory_order_relaxed);
+                slots[position % slots.size()] = value * 10;
+                write.store(position + 1, std::memory_order_release);
+              }
+            });
+            int total = 0;
+            std::size_t read = 0;
+            while (read < 5) {
+              while (write.load(std::memory_order_acquire) == read) std::this_thread::yield();
+              total += slots[read % slots.size()];
+              read += 1;
+            }
+            producer.join();
+            std::cout << total << "\\n";
+          }
+        `),
+        output: '150',
+        explanation:
+          'The ring has room for all five items, so only publication matters here: each acquire that sees a larger write makes the slot’s value visible, and the consumer adds 10 + 20 + 30 + 40 + 50.',
+      },
+      questions: [
+        predictOutput(
+          'The consumer records the order it receives items in. What is printed?',
+          cpp(`
+            #include <atomic>
+            #include <cstddef>
+            #include <iostream>
+            #include <thread>
+            #include <vector>
+            int main() {
+              std::vector<int> slots(4, 0);
+              std::atomic<std::size_t> write{0};
+              std::thread producer([&slots, &write] {
+                for (int value = 1; value <= 3; ++value) {
+                  std::size_t position = write.load(std::memory_order_relaxed);
+                  slots[position % slots.size()] = value;
+                  write.store(position + 1, std::memory_order_release);
+                }
+              });
+              int encoded = 0;
+              std::size_t read = 0;
+              while (read < 3) {
+                while (write.load(std::memory_order_acquire) == read) std::this_thread::yield();
+                encoded = encoded * 10 + slots[read % slots.size()];
+                read += 1;
+              }
+              producer.join();
+              std::cout << encoded << "\\n";
+            }
+          `),
+          ['321', '123', '6', '0'],
+          1,
+          'The consumer reads positions 0, 1, 2 in order, and each holds its published value.',
+        ),
+        choose(
+          'Why does the producer store write with memory_order_release after filling the slot?',
+          [
+            'To make the slot write atomic',
+            'To wake the consumer up',
+            'So a consumer that acquires the new write value also sees the slot’s contents',
+            'So the producer can read write again later',
+          ],
+          2,
+          'Release orders the earlier slot write before the index update that the consumer acquires.',
+        ),
+        choose(
+          'The consumer loads write with memory_order_relaxed instead of acquire. What breaks?',
+          [
+            'Nothing',
+            'The consumer can see the new index without the slot’s write being visible, so reading the slot races',
+            'The loop never ends',
+            'The producer deadlocks',
+          ],
+          1,
+          'Without acquire there is no synchronizes-with edge, so the plain slot read is unordered with the write.',
+        ),
+        choose(
+          'Why can write be updated with a plain store instead of fetch_add?',
+          [
+            'store is faster, and correctness does not matter here',
+            'fetch_add cannot be used on std::size_t',
+            'The consumer also writes to write',
+            'Only the single producer ever modifies write, so there is no competing update',
+          ],
+          3,
+          'With one writer there is no lost-update race to guard against.',
+        ),
+      ],
+    },
+    {
+      title: 'The consumer releases read so slots can be reused',
+      explanation: [
+        'When the ring can fill, the producer must not overwrite a slot the consumer has not read. It acquire-loads read and waits while write - read == capacity. The consumer stores read + 1 with memory_order_release only after it has finished with the slot, so a producer that sees the new read value may safely reuse that slot.',
+        'Each index has exactly one writer: the producer owns write and the consumer owns read. With two producers, both could load the same write position and fill the same slot, so this design is only correct for one producer and one consumer.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <atomic>
+          #include <cstddef>
+          #include <iostream>
+          #include <thread>
+          #include <vector>
+          int main() {
+            std::vector<int> slots(4, 0);
+            std::atomic<std::size_t> write{0};
+            std::atomic<std::size_t> read{0};
+            std::thread producer([&] {
+              for (int value = 1; value <= 5; ++value) {
+                std::size_t position = write.load(std::memory_order_relaxed);
+                while (position - read.load(std::memory_order_acquire) == slots.size()) std::this_thread::yield();
+                slots[position % slots.size()] = value;
+                write.store(position + 1, std::memory_order_release);
+              }
+            });
+            int total = 0;
+            for (int i = 0; i < 5; ++i) {
+              std::size_t position = read.load(std::memory_order_relaxed);
+              while (write.load(std::memory_order_acquire) == position) std::this_thread::yield();
+              total += slots[position % slots.size()];
+              read.store(position + 1, std::memory_order_release);
+            }
+            producer.join();
+            std::cout << total << "\\n";
+          }
+        `),
+        output: '15',
+        explanation:
+          'Item 5 must reuse slot 0; the producer waits until the consumer has released position 0, so no unread item is overwritten.',
+      },
+      questions: [
+        predictOutput(
+          'Six items pass through a ring with only 2 slots. What is printed?',
+          cpp(`
+            #include <atomic>
+            #include <cstddef>
+            #include <iostream>
+            #include <thread>
+            #include <vector>
+            int main() {
+              std::vector<int> slots(2, 0);
+              std::atomic<std::size_t> write{0};
+              std::atomic<std::size_t> read{0};
+              std::thread producer([&] {
+                for (int value = 1; value <= 6; ++value) {
+                  std::size_t position = write.load(std::memory_order_relaxed);
+                  while (position - read.load(std::memory_order_acquire) == slots.size()) std::this_thread::yield();
+                  slots[position % slots.size()] = value;
+                  write.store(position + 1, std::memory_order_release);
+                }
+              });
+              int total = 0;
+              for (int i = 0; i < 6; ++i) {
+                std::size_t position = read.load(std::memory_order_relaxed);
+                while (write.load(std::memory_order_acquire) == position) std::this_thread::yield();
+                total += slots[position % slots.size()];
+                read.store(position + 1, std::memory_order_release);
+              }
+              producer.join();
+              std::cout << total << "\\n";
+            }
+          `),
+          ['3', '21', '15', 'Less than 21'],
+          1,
+          'Every slot is reused several times, but never before it is read, so all six items arrive: 1 + 2 + ... + 6.',
+        ),
+        predictOutput(
+          'The consumer records the order of four items through 2 slots. What is printed?',
+          cpp(`
+            #include <atomic>
+            #include <cstddef>
+            #include <iostream>
+            #include <thread>
+            #include <vector>
+            int main() {
+              std::vector<int> slots(2, 0);
+              std::atomic<std::size_t> write{0};
+              std::atomic<std::size_t> read{0};
+              std::thread producer([&] {
+                for (int value = 1; value <= 4; ++value) {
+                  std::size_t position = write.load(std::memory_order_relaxed);
+                  while (position - read.load(std::memory_order_acquire) == slots.size()) std::this_thread::yield();
+                  slots[position % slots.size()] = value;
+                  write.store(position + 1, std::memory_order_release);
+                }
+              });
+              int encoded = 0;
+              for (int i = 0; i < 4; ++i) {
+                std::size_t position = read.load(std::memory_order_relaxed);
+                while (write.load(std::memory_order_acquire) == position) std::this_thread::yield();
+                encoded = encoded * 10 + slots[position % slots.size()];
+                read.store(position + 1, std::memory_order_release);
+              }
+              producer.join();
+              std::cout << encoded << "\\n";
+            }
+          `),
+          ['4321', '1212', '1234', '34'],
+          2,
+          'Slot reuse does not change FIFO order: positions are read 0, 1, 2, 3.',
+        ),
+        choose(
+          'Why does the producer wait while write - read == capacity?',
+          [
+            'Every slot then holds an item the consumer has not read, so writing would overwrite one',
+            'The ring is empty',
+            'The consumer is waiting for the producer',
+            'To keep write below capacity',
+          ],
+          0,
+          'The positions differ by capacity exactly when all slots are occupied.',
+        ),
+        choose(
+          'Two producer threads share this ring, each doing load write, fill the slot, store write + 1. What goes wrong?',
+          [
+            'Nothing; the atomics make it safe',
+            'The consumer reads every item twice',
+            'It deadlocks immediately',
+            'Both can load the same position and fill the same slot, losing an item',
+          ],
+          3,
+          'The protocol relies on a single writer per index; multiple producers need a different design.',
+        ),
+      ],
+    },
+  ],
+};
+
+const protocols: KnowledgePointModule = {
+  'cpp-big-endian-word': [
+    {
+      title: 'Big-endian puts the high byte first',
+      explanation: [
+        'Network protocols often send a 16-bit number as two bytes in big-endian order: the most significant (high) byte first, then the low byte. The value is high * 256 + low, which is the same as (high << 8) | low.',
+        'Each byte is between 0 and 255, so two bytes encode values from 0 to 65535.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            unsigned high = 1;
+            unsigned low = 2;
+            std::cout << high * 256 + low << "\\n";
+          }
+        `),
+        output: '258',
+        explanation: 'The high byte 1 is worth 256, plus the low byte 2.',
+      },
+      questions: [
+        predictOutput(
+          'The bytes 18 and 52 arrive in that order. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              unsigned first = 18;
+              unsigned second = 52;
+              std::cout << first * 256 + second << "\\n";
+            }
+          `),
+          ['13330', '4660', '70', '1852'],
+          1,
+          '18 * 256 + 52 = 4660; 13330 is what the reversed byte order would give.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              unsigned high = 0;
+              unsigned low = 255;
+              std::cout << high * 256 + low << "\\n";
+            }
+          `),
+          ['65280', '0', '255', '511'],
+          2,
+          'A zero high byte contributes nothing, leaving 255.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              unsigned high = 255;
+              unsigned low = 255;
+              std::cout << high * 256 + low << "\\n";
+            }
+          `),
+          ['65535', '510', '65280', '255'],
+          0,
+          '255 * 256 + 255 = 65535, the largest 16-bit value.',
+        ),
+        choose(
+          'In a big-endian two-byte field, which byte comes first?',
+          [
+            'The least significant (low) byte',
+            'Whichever the host CPU uses',
+            'The larger of the two values',
+            'The most significant (high) byte',
+          ],
+          3,
+          'Big-endian means "big end first".',
+        ),
+      ],
+    },
+    {
+      title: 'Decode bytes explicitly instead of reinterpreting memory',
+      explanation: [
+        'Little-endian order sends the low byte first, so the same two bytes mean a different number: value = second * 256 + first. Host CPUs also differ in the order they store integers, so copying received bytes straight into a std::uint16_t gives a machine-dependent result. Explicit arithmetic gives the same answer everywhere.',
+        'Received bytes are usually std::uint8_t (in <cstdint>). Printing one directly shows it as a character, so convert it to unsigned first, as the arithmetic does.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstdint>
+          #include <iostream>
+          int main() {
+            std::uint8_t first = 1;
+            std::uint8_t second = 2;
+            unsigned big = static_cast<unsigned>(first) * 256 + second;
+            unsigned little = static_cast<unsigned>(second) * 256 + first;
+            std::cout << big << " " << little << "\\n";
+          }
+        `),
+        output: '258 513',
+        explanation:
+          'The same bytes decode to 258 when the first is high and to 513 when the second is high.',
+      },
+      questions: [
+        predictOutput(
+          'Four bytes arrive in big-endian order: 0, 0, 1, 0. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              unsigned b0 = 0;
+              unsigned b1 = 0;
+              unsigned b2 = 1;
+              unsigned b3 = 0;
+              unsigned value = ((b0 * 256 + b1) * 256 + b2) * 256 + b3;
+              std::cout << value << "\\n";
+            }
+          `),
+          ['65536', '256', '1', '16777216'],
+          1,
+          'Only the third byte is set, and it is worth 256 in a four-byte big-endian number.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstdint>
+            #include <iostream>
+            int main() {
+              std::uint8_t b = 65;
+              std::cout << b << " " << static_cast<unsigned>(b) << "\\n";
+            }
+          `),
+          ['65 65', 'A 65', 'A A', '65 A'],
+          1,
+          'std::uint8_t is a character type, so streaming it prints the character with code 65; the cast prints the number.',
+        ),
+        choose(
+          'Why not copy two received bytes into a std::uint16_t with memcpy and use it directly?',
+          [
+            'memcpy cannot copy two bytes',
+            'It always produces the big-endian value',
+            'The result depends on the host’s byte order, so it differs between machines',
+            'A std::uint16_t cannot hold 65535',
+          ],
+          2,
+          'The wire format is fixed; the host layout is not.',
+        ),
+        predictOutput(
+          'The bytes 52 and 18 are a little-endian field. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              unsigned first = 52;
+              unsigned second = 18;
+              std::cout << second * 256 + first << "\\n";
+            }
+          `),
+          ['13330', '70', '52', '4660'],
+          3,
+          'Little-endian puts the low byte first, so the value is 18 * 256 + 52.',
+        ),
+      ],
+    },
+  ],
+  'cpp-frame-length': [
+    {
+      title: 'Read the two-byte length only when both bytes arrived',
+      explanation: [
+        'A length-prefixed frame starts with a 2-byte big-endian length, followed by that many payload bytes. A std::span<const std::uint8_t> can view the received buffer.',
+        'Before reading bytes[0] and bytes[1], check that the span holds at least 2 bytes; a buffer can arrive in pieces, and indexing past its end is undefined behavior.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstdint>
+          #include <iostream>
+          #include <span>
+          #include <vector>
+          int main() {
+            std::vector<std::uint8_t> buffer = {0, 3, 4, 5, 6};
+            std::span<const std::uint8_t> bytes(buffer);
+            if (bytes.size() < 2) {
+              std::cout << "incomplete header\\n";
+            } else {
+              unsigned length = static_cast<unsigned>(bytes[0]) * 256 + bytes[1];
+              std::cout << "length " << length << "\\n";
+            }
+          }
+        `),
+        output: 'length 3',
+        explanation: 'The header bytes 0 and 3 announce a 3-byte payload.',
+      },
+      questions: [
+        predictOutput(
+          'Only one byte has arrived. What is printed?',
+          cpp(`
+            #include <cstdint>
+            #include <iostream>
+            #include <span>
+            #include <vector>
+            int main() {
+              std::vector<std::uint8_t> buffer = {0};
+              std::span<const std::uint8_t> bytes(buffer);
+              if (bytes.size() < 2) {
+                std::cout << "incomplete header\\n";
+              } else {
+                unsigned length = static_cast<unsigned>(bytes[0]) * 256 + bytes[1];
+                std::cout << "length " << length << "\\n";
+              }
+            }
+          `),
+          ['length 0', 'incomplete header', 'length 1', '0'],
+          1,
+          'Half a header is not enough to know the length.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstdint>
+            #include <iostream>
+            #include <span>
+            #include <vector>
+            int main() {
+              std::vector<std::uint8_t> buffer = {1, 4};
+              std::span<const std::uint8_t> bytes(buffer);
+              if (bytes.size() < 2) {
+                std::cout << "incomplete header\\n";
+              } else {
+                unsigned length = static_cast<unsigned>(bytes[0]) * 256 + bytes[1];
+                std::cout << "length " << length << "\\n";
+              }
+            }
+          `),
+          ['length 5', 'length 1040', 'length 260', 'incomplete header'],
+          2,
+          'The header is complete: 1 * 256 + 4 = 260, even though no payload has arrived yet.',
+        ),
+        choose(
+          'Why check bytes.size() >= 2 before decoding the length?',
+          [
+            'The length is always at least 2',
+            'std::span requires it',
+            'It is only a performance hint',
+            'Reading bytes[1] of a 1-byte buffer is out of bounds',
+          ],
+          3,
+          'span’s operator[] does not check, so the program must.',
+        ),
+        predictOutput(
+          'The program compares the advertised length with what follows the header. What is printed?',
+          cpp(`
+            #include <cstdint>
+            #include <iostream>
+            #include <span>
+            #include <vector>
+            int main() {
+              std::vector<std::uint8_t> buffer = {0, 2, 9, 9, 9};
+              std::span<const std::uint8_t> bytes(buffer);
+              if (bytes.size() < 2) {
+                std::cout << "incomplete header\\n";
+              } else {
+                unsigned length = static_cast<unsigned>(bytes[0]) * 256 + bytes[1];
+                std::cout << length << " " << bytes.size() - 2 << "\\n";
+              }
+            }
+          `),
+          ['2 3', '3 2', '2 5', '515 3'],
+          0,
+          'The header asks for 2 payload bytes, and 3 bytes follow it.',
+        ),
+      ],
+    },
+    {
+      title: 'The advertised length must fit in the received bytes',
+      explanation: [
+        'The length field is data from the network: it can claim more bytes than the buffer holds, because the frame is still arriving or because the sender is broken or malicious. Check 2 + length <= bytes.size() before reading any payload byte.',
+        'Bytes after 2 + length belong to the next frame, whose header starts right there.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <cstdint>
+          #include <iostream>
+          #include <span>
+          #include <vector>
+          int main() {
+            std::vector<std::uint8_t> buffer = {0, 5, 1, 2, 3};
+            std::span<const std::uint8_t> bytes(buffer);
+            unsigned length = static_cast<unsigned>(bytes[0]) * 256 + bytes[1];
+            if (2 + length > bytes.size()) {
+              std::cout << "incomplete payload\\n";
+            } else {
+              unsigned sum = 0;
+              for (std::size_t i = 2; i < 2 + length; ++i) sum += bytes[i];
+              std::cout << "complete " << sum << "\\n";
+            }
+          }
+        `),
+        output: 'incomplete payload',
+        explanation:
+          'The header promises 5 payload bytes, but only 3 arrived, so nothing past the buffer is read.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <cstddef>
+            #include <cstdint>
+            #include <iostream>
+            #include <span>
+            #include <vector>
+            int main() {
+              std::vector<std::uint8_t> buffer = {0, 2, 7, 8};
+              std::span<const std::uint8_t> bytes(buffer);
+              unsigned length = static_cast<unsigned>(bytes[0]) * 256 + bytes[1];
+              if (2 + length > bytes.size()) {
+                std::cout << "incomplete payload\\n";
+              } else {
+                unsigned sum = 0;
+                for (std::size_t i = 2; i < 2 + length; ++i) sum += bytes[i];
+                std::cout << "complete " << sum << "\\n";
+              }
+            }
+          `),
+          ['incomplete payload', 'complete 15', 'complete 7', 'complete 2'],
+          1,
+          'Exactly 2 payload bytes follow the header, so the frame is complete: 7 + 8.',
+        ),
+        choose(
+          'A buffer holds the bytes 0, 1, 9, 0, 2, 4, 5. At which index does the second frame’s header start?',
+          ['Index 2', 'Index 3', 'Index 1', 'Index 5'],
+          1,
+          'The first frame is 2 header bytes plus 1 payload byte, so it occupies indices 0 to 2.',
+        ),
+        choose(
+          'A frame header says 60000 bytes follow, but only 10 have arrived. What should the parser do?',
+          [
+            'Read 60000 bytes anyway',
+            'Shrink the length to 10 and parse',
+            'Treat the frame as incomplete (or invalid) and read nothing past the buffer',
+            'Treat the 10 bytes as the whole payload',
+          ],
+          2,
+          'An advertised length must be checked against what is actually there.',
+        ),
+        predictOutput(
+          'One byte of the next frame has already arrived. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <cstdint>
+            #include <iostream>
+            #include <span>
+            #include <vector>
+            int main() {
+              std::vector<std::uint8_t> buffer = {0, 1, 7, 99};
+              std::span<const std::uint8_t> bytes(buffer);
+              unsigned length = static_cast<unsigned>(bytes[0]) * 256 + bytes[1];
+              if (2 + length > bytes.size()) {
+                std::cout << "incomplete payload\\n";
+              } else {
+                std::cout << bytes[2] + 0 << " " << bytes.size() - (2 + length) << "\\n";
+              }
+            }
+          `),
+          ['7 0', '7 1', '99 1', 'incomplete payload'],
+          1,
+          'The frame is complete with payload 7; the trailing 99 is the first byte of the next frame.',
+        ),
+      ],
+    },
+  ],
+  'cpp-sequence-gap': [
+    {
+      title: 'Compare each message with the expected next number',
+      explanation: [
+        'Feeds number their messages 1, 2, 3, and so on. The consumer keeps the number it expects next. If a message carries that number, everything is in order and expected becomes that number + 1; any other number means something is wrong.',
+        'This check is independent of payload validation: a message can have a perfect checksum and still arrive after a gap.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            unsigned expected = 10;
+            unsigned received = 12;
+            if (received == expected) {
+              std::cout << "in order\\n";
+            } else {
+              std::cout << "gap\\n";
+            }
+          }
+        `),
+        output: 'gap',
+        explanation:
+          'Message 10 was expected but 12 arrived, so at least one message is missing.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              unsigned expected = 7;
+              unsigned received = 7;
+              if (received == expected) {
+                std::cout << "in order\\n";
+              } else {
+                std::cout << "gap\\n";
+              }
+            }
+          `),
+          ['gap', 'in order', '7', 'Nothing'],
+          1,
+          'The message carries exactly the expected number.',
+        ),
+        predictOutput(
+          'Three messages arrive in turn. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              unsigned expected = 1;
+              unsigned received = 1;
+              if (received == expected) std::cout << "ok "; else std::cout << "gap ";
+              expected = received + 1;
+              received = 2;
+              if (received == expected) std::cout << "ok "; else std::cout << "gap ";
+              expected = received + 1;
+              received = 4;
+              if (received == expected) std::cout << "ok\\n"; else std::cout << "gap\\n";
+            }
+          `),
+          ['ok ok ok', 'ok gap gap', 'ok ok gap', 'gap ok gap'],
+          2,
+          'After 1 and 2 the consumer expects 3, so 4 reveals that message 3 is missing.',
+        ),
+        choose(
+          'Every message’s checksum is valid. Does that prove no message was lost?',
+          [
+            'Yes, a valid checksum covers the whole stream',
+            'No: checksums validate each payload, while only sequence numbers reveal a missing message',
+            'Yes, if the checksums are strong enough',
+            'No, because checksums are never reliable',
+          ],
+          1,
+          'A dropped message leaves no trace in the messages that did arrive, except in their numbering.',
+        ),
+        choose(
+          'Message 41 has just been processed in order. What should expected become?',
+          ['41', '40', '42', '0'],
+          2,
+          'The next message in order carries 41 + 1.',
+        ),
+      ],
+    },
+    {
+      title: 'Count missing messages and recognize old ones',
+      explanation: [
+        'If received > expected, the messages from expected to received - 1 are missing: received - expected of them. Record the gap and continue with expected = received + 1. If received < expected, the message is a duplicate or arrived late; it reveals no new gap.',
+        'With unsigned numbers, compute received - expected only after checking received > expected; otherwise the subtraction wraps around to a huge number.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <iostream>
+          int main() {
+            unsigned expected = 10;
+            unsigned received = 13;
+            if (received > expected) {
+              std::cout << "missing " << received - expected << ", next " << received + 1 << "\\n";
+            } else if (received < expected) {
+              std::cout << "duplicate\\n";
+            } else {
+              std::cout << "in order\\n";
+            }
+          }
+        `),
+        output: 'missing 3, next 14',
+        explanation:
+          'Messages 10, 11 and 12 never arrived; the consumer now expects 14.',
+      },
+      questions: [
+        predictOutput(
+          'An old message arrives. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              unsigned expected = 10;
+              unsigned received = 8;
+              if (received > expected) {
+                std::cout << "missing " << received - expected << ", next " << received + 1 << "\\n";
+              } else if (received < expected) {
+                std::cout << "duplicate\\n";
+              } else {
+                std::cout << "in order\\n";
+              }
+            }
+          `),
+          ['missing 2, next 9', 'duplicate', 'in order', 'missing 8, next 9'],
+          1,
+          '8 is below the expected 10, so it is a message the consumer has already moved past.',
+        ),
+        choose(
+          'What does received - expected give for unsigned values received = 8 and expected = 10?',
+          [
+            '-2',
+            '2',
+            'A huge number, because unsigned subtraction wraps around',
+            '0',
+          ],
+          2,
+          'Unsigned subtraction is modular, which is why the comparison must come first.',
+        ),
+        predictOutput(
+          'Three messages arrive; the program totals the missing ones. What is printed?',
+          cpp(`
+            #include <iostream>
+            int main() {
+              unsigned expected = 5;
+              unsigned missing = 0;
+              unsigned received = 5;
+              if (received > expected) missing += received - expected;
+              if (received >= expected) expected = received + 1;
+              received = 8;
+              if (received > expected) missing += received - expected;
+              if (received >= expected) expected = received + 1;
+              received = 9;
+              if (received > expected) missing += received - expected;
+              if (received >= expected) expected = received + 1;
+              std::cout << missing << " " << expected << "\\n";
+            }
+          `),
+          ['3 10', '2 9', '2 10', '1 10'],
+          2,
+          'Messages 6 and 7 are missing; after 9 the consumer expects 10.',
+        ),
+        choose(
+          'Why is a duplicate (received < expected) not counted as a gap?',
+          [
+            'It is an old message that was already processed or skipped; nothing new is missing',
+            'It means the stream restarted',
+            'Duplicates are always fatal errors',
+            'Unsigned numbers cannot be compared',
+          ],
+          0,
+          'Gaps are about numbers that never arrived, not ones that arrive again.',
+        ),
+      ],
+    },
+  ],
+  'cpp-protocol': [
+    {
+      title: 'Collapse each run into a character and a count',
+      explanation: [
+        'Run-length encoding (RLE) replaces each run of equal consecutive characters with the character and the run length, so "aaabbc" becomes "a3b2c1". A scan finds where each run ends, appends the character and std::to_string of the count, and continues at the next run.',
+        'The inner loop must check end < input.size() before reading input[end], so the last run never reads past the end.',
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <string>
+          #include <string_view>
+          int main() {
+            std::string_view input = "aaabbc";
+            std::string output;
+            std::size_t i = 0;
+            while (i < input.size()) {
+              std::size_t end = i + 1;
+              while (end < input.size() && input[end] == input[i]) ++end;
+              output.push_back(input[i]);
+              output += std::to_string(end - i);
+              i = end;
+            }
+            std::cout << output << "\\n";
+          }
+        `),
+        output: 'a3b2c1',
+        explanation: 'The runs are aaa, bb and c, with lengths 3, 2 and 1.',
+      },
+      questions: [
+        predictOutput(
+          'The same encoder runs on "zzzz". What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <string>
+            #include <string_view>
+            int main() {
+              std::string_view input = "zzzz";
+              std::string output;
+              std::size_t i = 0;
+              while (i < input.size()) {
+                std::size_t end = i + 1;
+                while (end < input.size() && input[end] == input[i]) ++end;
+                output.push_back(input[i]);
+                output += std::to_string(end - i);
+                i = end;
+              }
+              std::cout << output << "\\n";
+            }
+          `),
+          ['zzzz', 'z4', '4z', 'z1z1z1z1'],
+          1,
+          'The whole input is one run of length 4.',
+        ),
+        predictOutput(
+          'The same encoder runs on "abc". What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <string>
+            #include <string_view>
+            int main() {
+              std::string_view input = "abc";
+              std::string output;
+              std::size_t i = 0;
+              while (i < input.size()) {
+                std::size_t end = i + 1;
+                while (end < input.size() && input[end] == input[i]) ++end;
+                output.push_back(input[i]);
+                output += std::to_string(end - i);
+                i = end;
+              }
+              std::cout << output << "\\n";
+            }
+          `),
+          ['abc', 'a3', 'a1b1c1', '1a1b1c'],
+          2,
+          'Every character is its own run of length 1, so RLE makes this input longer.',
+        ),
+        predictOutput(
+          'The same encoder runs on "xxyyyx". What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <string>
+            #include <string_view>
+            int main() {
+              std::string_view input = "xxyyyx";
+              std::string output;
+              std::size_t i = 0;
+              while (i < input.size()) {
+                std::size_t end = i + 1;
+                while (end < input.size() && input[end] == input[i]) ++end;
+                output.push_back(input[i]);
+                output += std::to_string(end - i);
+                i = end;
+              }
+              std::cout << output << "\\n";
+            }
+          `),
+          ['x3y3', 'x2y3', 'x1x1y3x1', 'x2y3x1'],
+          3,
+          'The runs are xx, yyy and a final x.',
+        ),
+        choose(
+          'Why must the inner loop test end < input.size() before input[end] == input[i]?',
+          [
+            'Otherwise the last run would read one past the end of the view',
+            'The comparison is faster that way',
+            'It only matters for letters',
+            'The order of the two tests does not matter',
+          ],
+          0,
+          '&& stops at the first false test, so the bounds check protects the read.',
+        ),
+      ],
+    },
+    {
+      title: 'Separated repeats stay separate runs',
+      explanation: [
+        'RLE describes runs in input order, so "aba" encodes as "a1b1a1", not "a2b1". Merging all occurrences of a character counts frequencies instead; that loses the order and cannot be decoded back into the input.',
+        "Decoding repeats each character by its count, in order. For single-digit counts, encoded[i + 1] - '0' turns the digit character into its number. Decoding a correct encoding gives back exactly the original input.",
+      ],
+      example: {
+        language: 'cpp',
+        code: cpp(`
+          #include <cstddef>
+          #include <iostream>
+          #include <string>
+          #include <string_view>
+          int main() {
+            std::string_view input = "aba";
+            std::string output;
+            std::size_t i = 0;
+            while (i < input.size()) {
+              std::size_t end = i + 1;
+              while (end < input.size() && input[end] == input[i]) ++end;
+              output.push_back(input[i]);
+              output += std::to_string(end - i);
+              i = end;
+            }
+            std::cout << output << "\\n";
+          }
+        `),
+        output: 'a1b1a1',
+        explanation: 'The b splits the two a characters into separate runs.',
+      },
+      questions: [
+        predictOutput(
+          'The encoder runs on "aabaa". What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <string>
+            #include <string_view>
+            int main() {
+              std::string_view input = "aabaa";
+              std::string output;
+              std::size_t i = 0;
+              while (i < input.size()) {
+                std::size_t end = i + 1;
+                while (end < input.size() && input[end] == input[i]) ++end;
+                output.push_back(input[i]);
+                output += std::to_string(end - i);
+                i = end;
+              }
+              std::cout << output << "\\n";
+            }
+          `),
+          ['a4b1', 'a2b1a2', 'a2a2b1', 'a5'],
+          1,
+          'The two runs of a are separated by b, so they are encoded separately.',
+        ),
+        predictOutput(
+          'This decoder expands character and count pairs. What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <string>
+            #include <string_view>
+            int main() {
+              std::string_view encoded = "c3d1";
+              std::string decoded;
+              for (std::size_t i = 0; i + 1 < encoded.size(); i += 2) {
+                int count = encoded[i + 1] - '0';
+                for (int k = 0; k < count; ++k) decoded.push_back(encoded[i]);
+              }
+              std::cout << decoded << "\\n";
+            }
+          `),
+          ['cccd', 'c3d1', 'cd', 'dccc'],
+          0,
+          'c is repeated 3 times and then d once, in order.',
+        ),
+        choose(
+          'Why is "a2b1" a wrong encoding of "aba"?',
+          [
+            'Counts must come before characters',
+            'b must be listed first',
+            'It describes how often each character occurs, not the runs; decoding it gives "aab"',
+            'It is correct; RLE counts every occurrence',
+          ],
+          2,
+          'Run-length encoding must preserve order to be reversible.',
+        ),
+        predictOutput(
+          'This program counts the runs in "aabbbaa". What is printed?',
+          cpp(`
+            #include <cstddef>
+            #include <iostream>
+            #include <string_view>
+            int main() {
+              std::string_view input = "aabbbaa";
+              int runs = 0;
+              for (std::size_t i = 0; i < input.size(); ++i)
+                if (i == 0 || input[i] != input[i - 1]) runs += 1;
+              std::cout << runs << "\\n";
+            }
+          `),
+          ['2', '7', '3', '4'],
+          2,
+          'A new run starts at the first character and wherever the character changes: aa, bbb, aa.',
+        ),
+      ],
+    },
+  ],
+};
+
 export const knowledgePoints: KnowledgePointModule = {
   ...threads,
   ...signals,
@@ -7984,4 +10412,7 @@ export const knowledgePoints: KnowledgePointModule = {
   ...memoryModels,
   ...layout,
   ...measurement,
+  ...orderBook,
+  ...ringBuffers,
+  ...protocols,
 };
