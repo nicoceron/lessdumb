@@ -411,7 +411,7 @@ export function startQuiz(
   if (status.kind === 'active') return progress;
   if (status.kind !== 'available') throw new Error('No quiz is available yet.');
   const at = time(now);
-  const questions = planQuiz(progress, courseId, catalog);
+  const questions = planQuiz(progress, courseId, catalog, at);
   const quiz: Quiz = {
     id: `quiz-${status.number}-${at}`,
     number: status.number,
@@ -461,8 +461,9 @@ function replaceQuiz(progress: Progress, quiz: Quiz): Quiz[] {
  * typed question. A correct answer on a skill whose review is due counts
  * toward that review cycle, but only a review answer can complete the cycle;
  * on any other skill it changes no schedule, as with early practice. A wrong
- * answer makes the skill's review due now. Answering the last question, or
- * answering after the time limit, finishes the quiz. A typed response that
+ * answer makes the skill's review due now. Each answer can end the quiz early
+ * or add a question (see quizContinues); answering the last question, or
+ * answering after the time limit, finishes it. A typed response that
  * cannot be graded (blank, or not a number) is rejected, not counted wrong.
  */
 export function answerQuiz(
@@ -544,9 +545,50 @@ export function answerQuiz(
         : attempt,
     ].slice(-MAX_RECENT_ATTEMPTS),
   };
-  return updated.questions.every((item) => item.answer !== undefined)
-    ? finishQuiz(next, quizId, at, catalog)
-    : next;
+  return adaptQuizLength(next, quizId, at, catalog);
+}
+
+/**
+ * After an answer, end the quiz early, keep going, or add a question (see
+ * quizContinues). Ending early drops the questions not yet asked; adding one
+ * also adds its 90 seconds and its XP, so time and XP stay per question.
+ */
+function adaptQuizLength(
+  progress: Progress,
+  quizId: string,
+  at: number,
+  catalog: GraphCatalog,
+): Progress {
+  const quiz = quizzesOf(progress).find((item) => item.id === quizId)!;
+  const asked = quiz.questions.filter((item) => item.answer !== undefined);
+  const resize = (
+    questions: QuizQuestion[],
+    timeLimitMs: number,
+  ): Progress => ({
+    ...progress,
+    quizzes: replaceQuiz(progress, {
+      ...quiz,
+      questions,
+      timeLimitMs,
+      possible: quizXp(questions.length),
+    }),
+  });
+  if (!quizContinues(asked.map((item) => !!item.correct)))
+    return finishQuiz(
+      asked.length < quiz.questions.length
+        ? resize(asked, quiz.timeLimitMs)
+        : progress,
+      quizId,
+      at,
+      catalog,
+    );
+  if (asked.length < quiz.questions.length) return progress;
+  const extra = nextQuizQuestion(progress, quiz, at, catalog);
+  if (!extra) return finishQuiz(progress, quizId, at, catalog);
+  return resize(
+    [...quiz.questions, extra],
+    quiz.timeLimitMs + QUIZ_SECONDS_PER_QUESTION * 1000,
+  );
 }
 
 /**
