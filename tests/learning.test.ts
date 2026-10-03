@@ -59,7 +59,6 @@ function subjectCatalog(): CurriculumCatalog {
         choices: ['2', '3'],
         answer: 1,
         explanation: 'One plus two is three.',
-        hint: 'Count two more after one.',
       },
       {
         id: 'fixture-addition-q2',
@@ -68,7 +67,6 @@ function subjectCatalog(): CurriculumCatalog {
         choices: ['3', '4'],
         answer: 1,
         explanation: 'Two plus two is four.',
-        hint: 'Count two more after two.',
       },
       {
         id: 'fixture-addition-q3',
@@ -77,7 +75,6 @@ function subjectCatalog(): CurriculumCatalog {
         choices: ['5', '6'],
         answer: 0,
         explanation: 'Three plus two is five.',
-        hint: 'Count two more after three.',
       },
     ],
     flashcards: [],
@@ -108,7 +105,6 @@ function subjectCatalog(): CurriculumCatalog {
         choices: ['three', 'five'],
         answer: 0,
         explanation: 'Three names 3.',
-        hint: 'Read the numeral aloud.',
       },
       {
         id: 'fixture-number-words-q2',
@@ -117,7 +113,6 @@ function subjectCatalog(): CurriculumCatalog {
         choices: ['two', 'four'],
         answer: 1,
         explanation: 'Four names 4.',
-        hint: 'Read the numeral aloud.',
       },
     ],
     flashcards: [],

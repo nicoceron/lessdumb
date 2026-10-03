@@ -72,7 +72,6 @@ assert _result == 972248041367800504724352407998099, "count_routes(200) returned
 _check_time(_seconds, "count_routes(200)", "Cache each remaining distance so it is computed once.")`,
         ),
         'Each nonempty route ends in either a one-unit or three-unit advance. Cache the answer for the remaining distance so each state is solved once.',
-        'Use a nested helper with @cache, return 1 at zero and 0 below zero, then add the two smaller states.',
       ),
     ],
     [
@@ -141,7 +140,6 @@ assert _result == [13, 13, -1], "The 5,000-total cases returned wrong counts."
 _check_time(_seconds, "Three 5,000-total cases", "Fill one table entry per total instead of recomputing smaller totals recursively.")`,
         ),
         'The table stores the optimum for every exact total. Trying every possible last packet preserves all choices without enumerating whole sequences.',
-        'Initialize dp[0] to zero, fill totals from 1 upward, and relax from dp[total - size].',
       ),
     ],
     [
@@ -205,7 +203,6 @@ assert _result == 21297, "The 100-item case returned the wrong value."
 _check_time(_seconds, "The 100-item case", "Fill one capacity table per item instead of trying every subset of items.")`,
         ),
         'A descending pass separates the previous item stage from the current stage without storing a second table.',
-        'Use range(capacity, weight - 1, -1), then compare skipping with taking the item once.',
       ),
     ],
     [
@@ -280,7 +277,6 @@ assert _result == 874, "The 200,000-value case returned the wrong length."
 _check_time(_seconds, "The 200,000-value case", "Keep the smallest tail for each length and binary-search it instead of comparing every earlier value.")`,
         ),
         'Replacing a tail improves its future extension opportunities without losing any achievable length.',
-        'Use bisect_left(tails, value), append at the end, and otherwise replace that position.',
       ),
     ],
     [
@@ -349,7 +345,6 @@ assert _checksum(_result) == 1927797419062957549, "The 100,000-booking case retu
 _check_time(_seconds, "The 100,000-booking case", "Sort once and extend the latest merged span instead of merging pairs repeatedly.")`,
         ),
         'After sorting, only the most recent span can connect to the next booking. Extending by the maximum end handles nested intervals correctly.',
-        'Use sorted(bookings), merge when start <= merged[-1][1], and keep tuple outputs.',
       ),
     ],
     [
@@ -419,7 +414,6 @@ assert _result == 3525, "The 100,000-session case returned the wrong count."
 _check_time(_seconds, "The 100,000-session case", "Sort by finish time and accept compatible sessions greedily instead of trying subsets.")`,
         ),
         'Each accepted session ends as early as possible for the next choice, and an exchange with an optimal schedule proves no session count is lost.',
-        'Sort using the end field. Accept the first session, then accept when start >= end_of_last.',
       ),
     ],
     [
@@ -527,7 +521,6 @@ assert _checksum(_result) == 1292453565480001866, "The 500-change case returned 
 _check_time(_seconds, "The 500-change case", "Walk only the submasks of the current selection instead of every mask below 1 << 20.")`,
         ),
         'Set and clear keep one mask equal to the current selection, and the submask walk visits each subset of that selection exactly once, so every count neither omits nor repeats a choice.',
-        'Update the mask with | or & ~. Then start at sub = mask, count matching totals, stop after zero, and step with (sub - 1) & mask.',
       ),
     ],
     [
@@ -583,7 +576,6 @@ points = [(0, 0), (2, 0), (2, 2), (4, 2), (6, 2)]
 assert turn_signs(points) == [1, -1, 0]
 assert points == [(0, 0), (2, 0), (2, 2), (4, 2), (6, 2)]`,
         'Subtract the first point to form two vectors, then classify the signed cross product without division.',
-        'For each triple compute dx1 * dy2 - dy1 * dx2. Compare it with zero to produce -1, 0, or 1.',
       ),
     ],
     [
@@ -663,7 +655,6 @@ _check_time(_seconds, "The 20,000-pair case", "Replace (a, b) with (b, a % b) in
           ),
         ),
         'Each remainder update preserves the gcd and reduces the second nonnegative argument. Derive the lcm only after checking for zero inputs.',
-        'Start x, y = abs(a), abs(b), then use x, y = y, x % y while y is nonzero.',
       ),
     ],
     [
@@ -762,7 +753,6 @@ _check_time(_seconds, "The 10,000-power case", "Square the base and halve the ex
           ),
         ),
         'Each step preserves the modular-power invariant while removing one exponent bit. Reducing both multiplications keeps residues bounded.',
-        'Start at 1 % modulus. For an odd exponent multiply the result, then square the base and use exponent //= 2.',
       ),
     ],
     [
@@ -842,7 +832,6 @@ assert _checksum(_result) == 1620756028218592251, "primes_up_to(5000000) returne
 _check_time(_seconds, "primes_up_to(5000000)", "Mark multiples in one table instead of testing each number by trial division.", 1.5)`,
         ),
         'Each prime marks its composite multiples. Processing through its square bound suffices to eliminate every composite in the table.',
-        'Handle limit < 2 first, allocate limit + 1 entries, and mark with range(p * p, limit + 1, p).',
       ),
     ],
     [
@@ -929,7 +918,6 @@ _check_time(_seconds, "Three n = 500 cases", "Build Pascal rows with one table i
           ),
         ),
         'The include/exclude partition produces Pascal’s recurrence. Descending updates preserve the previous row, and addition works for every positive modulus.',
-        'Reject invalid k, initialize the empty selection, then add dp[r - 1] to dp[r] in descending r order.',
       ),
     ],
     [
@@ -1036,7 +1024,6 @@ assert _checksum(_result) == 207961389645802781, "The 200,000-operation case ret
 _check_time(_seconds, "The 200,000-operation case", "Walk the Fenwick tree in O(log n) per operation instead of re-adding each range.")`,
         ),
         'Fenwick blocks preserve their sums under point additions. Prefix queries partition the requested prefix into disjoint stored blocks, and subtraction yields the range.',
-        'Use index + 1 for updates, end for prefix queries, and i & -i to move between blocks.',
       ),
     ],
     [
@@ -1160,7 +1147,6 @@ assert _checksum(_result) == 19758530507032262, "The 120,000-operation case retu
 _check_time(_seconds, "The 120,000-operation case", "Combine O(log n) boundary nodes per query instead of scanning the whole range.")`,
         ),
         'Each assignment restores the ancestor-minimum invariant. The query collects disjoint tree intervals covering exactly the requested half-open range.',
-        'Use infinity for padding, rebuild parents after a set, and move query endpoints upward while consuming odd boundaries.',
       ),
     ],
     [
@@ -1249,7 +1235,6 @@ assert _checksum(_result) == 1356393175373117166, "The 100,000-query case return
 _check_time(_seconds, "The 100,000-query case", "Jump by powers of two from a doubling table instead of stepping one parent at a time.")`,
         ),
         'Each doubling row composes two existing jumps, guarding the -1 sentinel. Query bits select disjoint jump lengths; k >= n has no ancestor in an acyclic forest.',
-        'Store the parent row first, compose each row through the previous row, then consume k bits while the current vertex exists.',
       ),
     ],
     [
@@ -1390,7 +1375,6 @@ assert _checksum(_result) == 1230589931274524807, "The 50,000-vertex graph retur
 _check_time(_seconds, "The 50,000-vertex graph", "Use two linear passes (finishing order, then the reversed graph) instead of a search from every vertex.")`,
         ),
         'Finishing order on the original graph followed by reversed-edge traversals separates the maximal mutual-reachability groups. Explicit stacks handle deep graphs.',
-        'In the first pass, save a (vertex, next-neighbor-index) frame so a vertex enters order only after all neighbors finish. Traverse reverse edges in reversed(order).',
       ),
     ],
     [

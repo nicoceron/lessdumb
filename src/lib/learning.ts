@@ -59,9 +59,9 @@ import { isTypedType, TYPED_RESPONSE_MAX_LENGTH } from './typed-answer';
  * cooldowns and task XP; 3 quizzes; 4 implicit review credit; 5 placement
  * diagnostics; 6 prerequisite refreshes after failed lessons; 7 the variant
  * of a generated question on attempts, quiz questions, and placement
- * questions.
+ * questions; 8 cards stored by reference rather than with their text.
  */
-export const STATE_VERSION = 7;
+export const STATE_VERSION = 8;
 
 export const DAY_MS = 86_400_000;
 /**

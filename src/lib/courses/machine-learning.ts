@@ -13,7 +13,6 @@ const exercise = (
   solution: string,
   tests: string,
   explanation: string,
-  hint: string,
 ): Omit<CodeQuestion, 'id'> => ({
   type: 'code',
   prompt,
@@ -21,7 +20,6 @@ const exercise = (
   solution,
   tests,
   explanation,
-  hint,
 });
 
 function skill(
@@ -137,7 +135,6 @@ const curriculum = [
         'def delivery_example(record):\n    return [record["distance_km"], record["rain"]], record["minutes"]',
         'r = {"distance_km": 4, "rain": 0, "minutes": 16}\nassert delivery_example(r) == ([4, 0], 16)\nassert delivery_example({"distance_km": 9, "rain": 1, "minutes": 31}) == ([9, 1], 31)\nassert r == {"distance_km": 4, "rain": 0, "minutes": 16}, "Keep the input unchanged."',
         'The target stays separate from the feature vector so it cannot accidentally become an input.',
-        'Read two feature keys and the target key separately.',
       ),
     ],
     [
@@ -174,7 +171,6 @@ const curriculum = [
         'def chronological_split(values, n_train):\n    return values[:n_train], values[n_train:]',
         'values = [2, 4, 6, 8, 10]\nassert chronological_split(values, 3) == ([2, 4, 6], [8, 10])\nassert chronological_split(values, 0) == ([], values)\nassert chronological_split(values, 5) == (values, [])\na, b = chronological_split(values, 2)\na.append(99)\nassert values == [2, 4, 6, 8, 10]',
         'Slicing preserves chronological order and creates independent lists.',
-        'Two slices meet at n_train.',
       ),
     ],
     [
@@ -210,7 +206,6 @@ const curriculum = [
         'def mean_squared_error(actual, predicted):\n    return sum((a - p) ** 2 for a, p in zip(actual, predicted)) / len(actual)',
         'assert mean_squared_error([1, 3], [2, 2]) == 1\nassert mean_squared_error([0, 4], [0, 0]) == 8\nassert mean_squared_error([5], [5]) == 0\nassert abs(mean_squared_error([2, 4, 6], [4, 4, 4]) - 8/3) < 1e-9',
         'Pair corresponding predictions and targets before averaging their squared differences.',
-        'Use zip(), square each difference, and divide by the number of targets.',
       ),
     ],
     [
@@ -247,7 +242,6 @@ const curriculum = [
         'import numpy as np\n\ndef standardize(train, values):\n    train = np.asarray(train, dtype=float)\n    scale = train.std()\n    if scale == 0:\n        scale = 1.0\n    return (np.asarray(values, dtype=float) - train.mean()) / scale',
         'import numpy as np\nassert np.allclose(standardize([2, 6], [4, 8]), [0, 2])\nassert np.allclose(standardize([1, 1], [1, 3]), [0, 2])\nassert np.allclose(standardize([0, 2], [-2, 4]), [-3, 3])\nassert standardize([1, 2], []).shape == (0,)',
         'Training statistics remain fixed for every later input, including values far outside the training range.',
-        'np.asarray(), mean(), and std() provide the needed statistics.',
       ),
     ],
     [
@@ -313,7 +307,6 @@ const curriculum = [
         'from sklearn.linear_model import LinearRegression\nimport numpy as np\n\ndef fit_line(x, y):\n    X = np.asarray(x, dtype=float).reshape(-1, 1)\n    return LinearRegression(n_jobs=1).fit(X, y)',
         'import numpy as np\nm = fit_line([0, 1, 2], [3, 5, 7])\nassert np.allclose(m.predict([[4], [5]]), [11, 13])\nm2 = fit_line([-1, 0, 1], [8, 5, 2])\nassert np.allclose(m2.predict([[2], [-2]]), [-1, 11])\nassert m.n_features_in_ == 1',
         'The reshape creates an observation-by-feature matrix, and fit learns both slope and intercept.',
-        'Reshape the x array to (-1, 1), then call fit.',
       ),
     ],
     [
@@ -350,7 +343,6 @@ const curriculum = [
         'def quadratic_steps(w, target, rate, steps):\n    for _ in range(steps):\n        w -= rate * 2 * (w - target)\n    return w',
         'assert abs(quadratic_steps(0, 5, 0.1, 1) - 1) < 1e-9\nassert abs(quadratic_steps(0, 5, 0.1, 2) - 1.8) < 1e-9\nassert quadratic_steps(3, 5, 0.1, 0) == 3\nassert abs(quadratic_steps(10, 2, 0.25, 2) - 4) < 1e-9',
         'Each new gradient is computed at the current w, not just once at its starting value.',
-        'Recompute 2*(w-target) inside the loop.',
       ),
     ],
     [
@@ -392,7 +384,6 @@ const curriculum = [
         'def ridge_objective(data_loss, weights, alpha):\n    return data_loss + alpha * sum(w*w for w in weights)',
         'assert ridge_objective(3, [2, -1], 0.5) == 5.5\nassert ridge_objective(7, [], 2) == 7\nassert ridge_objective(4, [9, -8], 0) == 4\nassert ridge_objective(1, [-3], 2) == 19',
         'The objective combines prediction error with a coefficient-size penalty.',
-        'Square each coefficient, sum, multiply by alpha, and add the data loss.',
       ),
     ],
     [
@@ -434,7 +425,6 @@ const curriculum = [
         'def classify_probabilities(probabilities, threshold):\n    return [int(p >= threshold) for p in probabilities]',
         'assert classify_probabilities([0.2, 0.5, 0.8], 0.5) == [0, 1, 1]\nassert classify_probabilities([0.2, 0.5, 0.8], 0.7) == [0, 0, 1]\nassert classify_probabilities([], 0.5) == []\nassert classify_probabilities([0, 1], 1) == [0, 1]',
         'The same probabilities can support different policies by changing the decision threshold.',
-        'A comprehension can convert each comparison with int().',
       ),
     ],
     [
@@ -471,7 +461,6 @@ const curriculum = [
         'def precision_recall(tp, fp, fn):\n    precision = tp / (tp + fp) if tp + fp else 0.0\n    recall = tp / (tp + fn) if tp + fn else 0.0\n    return precision, recall',
         'assert precision_recall(6, 2, 4) == (0.75, 0.6)\nassert precision_recall(0, 0, 3) == (0.0, 0.0)\nassert precision_recall(0, 4, 0) == (0.0, 0.0)\nassert precision_recall(3, 0, 0) == (1.0, 1.0)',
         'Each metric uses a different population in its denominator, with an explicit empty-population convention.',
-        'Guard tp+fp and tp+fn separately.',
       ),
     ],
     [
@@ -508,7 +497,6 @@ const curriculum = [
         'def mean_validation_mse(negative_scores):\n    return -sum(negative_scores) / len(negative_scores)',
         'assert mean_validation_mse([-4, -9, -2]) == 5\nassert mean_validation_mse([0, 0]) == 0\nassert mean_validation_mse([-7]) == 7\nassert mean_validation_mse([-1.5, -2.5]) == 2',
         'Negating the average recovers the mean validation error.',
-        'The scores are negative losses, not raw errors.',
       ),
     ],
     [
@@ -545,7 +533,6 @@ const curriculum = [
         'def best_config(results):\n    return min(results, key=lambda row: row["validation_loss"])["name"]',
         'assert best_config([{"name": "a", "validation_loss": 3}, {"name": "b", "validation_loss": 1}]) == "b"\nassert best_config([{"name": "first", "validation_loss": 2}, {"name": "second", "validation_loss": 2}]) == "first"\nassert best_config([{"name": "only", "validation_loss": 9}]) == "only"',
         'The metric defines the ranking, and stable tie behavior makes selection reproducible.',
-        'Python min preserves the first minimum when its key ties.',
       ),
     ],
     [
@@ -587,7 +574,6 @@ const curriculum = [
         'from sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.svm import SVC\n\ndef fit_margin_classifier(X, y):\n    return make_pipeline(StandardScaler(), SVC(kernel="linear", C=1.0)).fit(X, y)',
         'model = fit_margin_classifier([[-2], [-1], [1], [2]], [0, 0, 1, 1])\nassert model.predict([[-3], [3]]).tolist() == [0, 1]\nassert isinstance(model.steps[0][1], StandardScaler)\nassert isinstance(model.steps[-1][1], SVC)\nassert model.steps[-1][1].kernel == "linear"\nassert model.steps[-1][1].C == 1.0\nsecond = fit_margin_classifier([[0], [1], [10], [11]], [0, 0, 1, 1])\nassert second.predict([[-1], [12]]).tolist() == [0, 1]',
         'The fitted pipeline owns both its scaling statistics and the classifier, so predictions use consistent preprocessing.',
-        'Construct both stages, then fit the pipeline as one estimator.',
       ),
     ],
     [
@@ -624,7 +610,6 @@ const curriculum = [
         'def gini(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    return 1 - sum((count / len(labels)) ** 2 for count in counts.values())',
         'assert gini([1, 1, 1]) == 0\nassert gini([0, 0, 1, 1]) == 0.5\nassert abs(gini(["a", "b", "c"]) - 2/3) < 1e-9\nassert abs(gini([0, 0, 0, 1]) - 0.375) < 1e-9',
         'Count each class, convert counts to proportions, then measure the mixture.',
-        'A frequency dictionary gives the class counts.',
       ),
     ],
     [
@@ -661,7 +646,6 @@ const curriculum = [
         'def ensemble_mean(predictions):\n    count = len(predictions)\n    return [sum(model[j] for model in predictions) / count for j in range(len(predictions[0]))]',
         'assert ensemble_mean([[2, 8], [4, 10], [3, 9]]) == [3, 9]\nassert ensemble_mean([[5, 1]]) == [5, 1]\nassert ensemble_mean([[], []]) == []\nassert ensemble_mean([[0, 10, -4], [2, 2, 4]]) == [1, 6, 0]',
         'Each observation j collects model[j] from every model, and the ensemble averages those values.',
-        'Loop j over the positions of the first model’s list, and average model[j] across the models.',
       ),
     ],
     [
@@ -698,7 +682,6 @@ const curriculum = [
         'from sklearn.decomposition import PCA\n\ndef one_component(X):\n    model = PCA(n_components=1)\n    return model.fit_transform(X), model',
         'import numpy as np\nprojected, model = one_component([[1, 1], [2, 2], [3, 3]])\nassert projected.shape == (3, 1)\nassert np.isclose(model.explained_variance_ratio_.sum(), 1)\nassert np.allclose(model.inverse_transform(projected), [[1, 1], [2, 2], [3, 3]])\np2, m2 = one_component([[0, 0, 0], [1, 2, 3], [2, 4, 6], [3, 6, 9]])\nassert p2.shape == (4, 1)\nassert m2.n_features_in_ == 3',
         'The projection has one column regardless of how many numeric columns the original data had.',
-        'Create the PCA estimator once, then return its transformed data and fitted instance.',
       ),
     ],
     [
@@ -735,7 +718,6 @@ const curriculum = [
         'def closest_center(point, centers):\n    distances = [sum((a-b)**2 for a, b in zip(point, c)) for c in centers]\n    return min(range(len(centers)), key=lambda i: distances[i])',
         'assert closest_center([4, 3], [[0, 0], [5, 3]]) == 1\nassert closest_center([1], [[0], [2]]) == 0\nassert closest_center([-4, 8], [[-4, 8], [4, -8]]) == 0\nassert closest_center([2, 2, 2], [[0, 0, 0], [1, 1, 1], [3, 2, 2]]) == 2',
         'Squared distance is sufficient for comparing centers; a square root would not change the ranking.',
-        'Sum coordinate-wise squared differences, then select the smallest distance.',
       ),
     ],
     [
@@ -772,7 +754,6 @@ const curriculum = [
         'def alert_indices(scores, threshold):\n    return [i for i, score in enumerate(scores) if score >= threshold]',
         'assert alert_indices([0.1, 0.8, 0.4, 0.95], 0.8) == [1, 3]\nassert alert_indices([1, 2, 3], 4) == []\nassert alert_indices([], 0) == []\nassert alert_indices([-3, -1, 0], -1) == [1, 2]',
         'An explicit score convention turns threshold comparison into a reproducible alert policy.',
-        'enumerate supplies both index and score.',
       ),
     ],
     [
@@ -814,7 +795,6 @@ const curriculum = [
         'import numpy as np\n\ndef dense_relu(X, W, b):\n    return np.maximum(0, np.asarray(X) @ np.asarray(W) + np.asarray(b))',
         'import numpy as np\nassert np.allclose(dense_relu([[1, 2], [-1, 0]], [[2, -1], [1, 1]], [0, -2]), [[4, 0], [0, 0]])\nassert np.allclose(dense_relu([[2], [-3]], [[1, -1]], [1, 1]), [[3, 0], [0, 4]])\nassert dense_relu([[0, 0]], [[1], [2]], [-1]).shape == (1, 1)',
         'Array broadcasting adds one output bias vector to every batch row before clipping.',
-        'Use @ for matrix multiplication and np.maximum for the activation.',
       ),
     ],
     [
@@ -851,7 +831,6 @@ const curriculum = [
         'def linear_gradients(x, y, w, b):\n    upstream = 2 * (w*x + b - y)\n    return upstream*x, upstream',
         'assert linear_gradients(2, 5, 1, 0) == (-12, -6)\nassert linear_gradients(3, 7, 2, 1) == (0, 0)\nassert linear_gradients(0, 4, 2, 1) == (0, -6)\nassert linear_gradients(-2, 0, 1, 1) == (4, -2)',
         'The chain rule multiplies the loss derivative by each prediction derivative.',
-        'Compute the residual, then multiply its doubled value by x for the weight.',
       ),
     ],
     [
@@ -888,7 +867,6 @@ const curriculum = [
         'import numpy as np\n\ndef clip_gradient(values, max_norm):\n    gradient = np.asarray(values, dtype=float)\n    norm = np.linalg.norm(gradient)\n    if norm > max_norm:\n        gradient = gradient * (max_norm / norm)\n    return gradient',
         'import numpy as np\nassert np.allclose(clip_gradient([3, 4], 2), [1.2, 1.6])\nassert np.allclose(clip_gradient([0, 0], 2), [0, 0])\nassert np.allclose(clip_gradient([1, -1], 3), [1, -1])\nassert np.isclose(np.linalg.norm(clip_gradient([-6, 8], 5)), 5)',
         'Norm clipping rescales only oversized gradients and keeps their direction.',
-        'Compute the norm, then scale only if it exceeds the limit.',
       ),
     ],
     [
@@ -1132,7 +1110,6 @@ const curriculum = [
         'def missing_features(record, required):\n    return sorted(set([name for name in required if name not in record]))',
         'assert missing_features({"a": 1}, ["a", "b", "c"]) == ["b", "c"]\nassert missing_features({"a": 1, "extra": 2}, ["a"]) == []\nassert missing_features({}, ["z", "a", "a"]) == ["a", "z"]\nassert missing_features({"a": None}, ["a"]) == [], "Presence and value validation are separate checks."',
         'A missing-field check establishes presence; checking null values, types, and ranges is a separate validation step.',
-        'Keep the required names that are not in record, drop duplicates with set(), then sort.',
       ),
     ],
     [

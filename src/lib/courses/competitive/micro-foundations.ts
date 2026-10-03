@@ -23,7 +23,6 @@ export const competitiveMicroFoundations: Skill[] = [
         'def scan_checks(values):\n    checks = 0\n    for value in values:\n        checks += 1\n    return checks',
         'assert scan_checks([]) == 0\nassert scan_checks([9]) == 1\nassert scan_checks([8, -2, 8]) == 3\nassert scan_checks(list(range(30))) == 30',
         'Only visits are counted; the values do not affect the count.',
-        'Increment a counter once for each value.',
       ),
     ],
     [
@@ -62,7 +61,6 @@ assert _result == 1000000000000000000, "pair_checks(10**9, 10**9) returned the w
 _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes instead of running the loops.")`,
         ),
         'Two rows each contain three counted visits.',
-        'Multiply the two independent dimensions.',
       ),
     ],
     [
@@ -96,7 +94,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def doubling_steps(target):\n    probe = 1\n    steps = 0\n    while probe < target:\n        probe *= 2\n        steps += 1\n    return steps',
         'assert doubling_steps(0) == 0\nassert doubling_steps(1) == 0\nassert doubling_steps(2) == 1\nassert doubling_steps(8) == 3\nassert doubling_steps(9) == 4\nassert doubling_steps(1025) == 11',
         'The fourth doubling reaches 16, the first visited probe at least 10.',
-        'While the probe is too small, double it and increment the count.',
       ),
     ],
     [
@@ -127,7 +124,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def tokenize(text):\n    return text.split()',
         'assert tokenize("") == []\nassert tokenize(" \\n\\t") == []\nassert tokenize(" 3\\n-4\\t9 ") == ["3", "-4", "9"]\nassert tokenize("alpha beta") == ["alpha", "beta"]',
         'Three whitespace-delimited fields remain strings.',
-        'Use the no-argument split method.',
       ),
     ],
     [
@@ -161,7 +157,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def integer_tokens(tokens):\n    result = []\n    for token in tokens:\n        result.append(int(token))\n    return result',
         'assert integer_tokens([]) == []\nassert integer_tokens(["0"]) == [0]\nassert integer_tokens(["12", "-5", "003"]) == [12, -5, 3]\nassert integer_tokens(["-1", "-1"]) == [-1, -1]',
         'The converted integers add to seven.',
-        'Append int(token) for each token.',
       ),
     ],
     [
@@ -195,7 +190,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def counted_values(text):\n    tokens = text.split()\n    if not tokens:\n        return []\n    count = int(tokens[0])\n    return [int(token) for token in tokens[1:1 + count]]',
         'assert counted_values("") == []\nassert counted_values("0 ignored") == []\nassert counted_values("2 8 5 trailer") == [8, 5]\nassert counted_values("3\\n-1 0\\t7") == [-1, 0, 7]\nassert counted_values("1 9 10") == [9]',
         'The slice selects the two payload fields and leaves metadata alone.',
-        'Handle blank text before reading tokens[0], then slice the declared payload.',
       ),
     ],
     [
@@ -229,7 +223,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def advance_level(level, command):\n    if command == "up":\n        return level + 2\n    if command == "down":\n        return level - 1\n    return 0',
         'assert advance_level(3, "up") == 5\nassert advance_level(0, "down") == -1\nassert advance_level(11, "reset") == 0\nassert advance_level(-3, "up") == -1\nassert advance_level(-3, "reset") == 0',
         'The one downward transition subtracts one.',
-        'Choose the branch from the command and return its new state.',
       ),
     ],
     [
@@ -263,7 +256,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def clamp_level(value, ceiling):\n    return min(ceiling, max(0, value))',
         'assert clamp_level(-4, 6) == 0\nassert clamp_level(3, 6) == 3\nassert clamp_level(9, 5) == 5\nassert clamp_level(0, 8) == 0\nassert clamp_level(5, 5) == 5\nassert clamp_level(-10, 0) == 0\nassert clamp_level(10, 0) == 0',
         'Nine exceeds the cap, so the accepted state is five.',
-        'Apply a zero floor and the requested ceiling.',
       ),
     ],
     [
@@ -297,7 +289,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def observed_peak(levels):\n    peak = 0\n    for level in levels:\n        peak = max(peak, level)\n    return peak',
         'assert observed_peak([]) == 0\nassert observed_peak([0, 0]) == 0\nassert observed_peak([2, 7, 0, 4]) == 7\nassert observed_peak([9, 2]) == 9\nassert observed_peak([1, 2, 3]) == 3',
         'The zero observation does not erase the earlier five.',
-        'Maintain the maximum of the old peak and each observation.',
       ),
     ],
     [
@@ -331,7 +322,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def index_pairs(n):\n    pairs = []\n    for i in range(n):\n        for j in range(i + 1, n):\n            pairs.append((i, j))\n    return pairs',
         'assert index_pairs(0) == []\nassert index_pairs(1) == []\nassert index_pairs(2) == [(0, 1)]\nassert index_pairs(3) == [(0, 1), (0, 2), (1, 2)]\nassert len(index_pairs(6)) == 15',
         'The three unordered distinct-index pairs each occur once.',
-        'Nest ranges and start the inner range at i + 1.',
       ),
     ],
     [
@@ -365,7 +355,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def pair_gap(values, i, j):\n    return abs(values[i] - values[j])',
         'assert pair_gap([13, 4, 10], 0, 2) == 3\nassert pair_gap([-5, 2], 0, 1) == 7\nassert pair_gap([8, 8], 0, 1) == 0\nassert pair_gap([3, -9], 1, 0) == 12',
         'The values thirteen and ten differ by three.',
-        'Subtract the two selected values and take abs.',
       ),
     ],
     [
@@ -399,7 +388,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def minimum_score(scores):\n    best = None\n    for score in scores:\n        if best is None or score < best:\n            best = score\n    return best',
         'assert minimum_score([]) is None\nassert minimum_score([7]) == 7\nassert minimum_score([9, 4, 7]) == 4\nassert minimum_score([0, 2, 0]) == 0\nassert minimum_score([-3, -8, 1]) == -8',
         'The first score establishes a minimum and four improves it.',
-        'Use None until the first score, then keep the smallest visited value.',
       ),
     ],
     [
@@ -433,7 +421,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def ordered_copy(values):\n    return sorted(values)',
         'assert ordered_copy([]) == []\nassert ordered_copy([7, 2, 7]) == [2, 7, 7]\nassert ordered_copy([-1, 3, -4]) == [-4, -1, 3]\nvalues = [5, 1, 2]\nresult = ordered_copy(values)\nassert result == [1, 2, 5]\nassert values == [5, 1, 2]\nassert result is not values',
         'The ordered copy changes sequence order while the input remains intact.',
-        'Return sorted(values), preserving the original list.',
       ),
     ],
     [
@@ -467,7 +454,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def deadline_effort_key(record):\n    return (record[0], -record[1])',
         'assert deadline_effort_key((3, 2)) == (3, -2)\nassert deadline_effort_key((-1, 7)) == (-1, -7)\nassert deadline_effort_key((0, -4)) == (0, 4)\nrecords = [(2, 1), (1, 5), (2, 8)]\nassert sorted(records, key=deadline_effort_key) == [(1, 5), (2, 8), (2, 1)]',
         'Deadline is primary; negated effort places seven before two at deadline three.',
-        'Return the first field followed by the negated second field.',
       ),
     ],
     [
@@ -501,7 +487,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def stable_priorities(records):\n    return sorted(records, key=lambda record: record[0])',
         'assert stable_priorities([]) == []\nassert stable_priorities([(2, "z"), (1, "b"), (2, "a")]) == [(1, "b"), (2, "z"), (2, "a")]\nassert stable_priorities([(0, "second"), (0, "first")]) == [(0, "second"), (0, "first")]\nrecords = [(3, "x"), (-1, "y")]\nassert stable_priorities(records) == [(-1, "y"), (3, "x")]\nassert records == [(3, "x"), (-1, "y")]',
         'The two priority-two records stay in their original z-then-a order.',
-        'Sort with a key that returns only record[0].',
       ),
     ],
     [
@@ -535,7 +520,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def distinct_count(values):\n    return len(set(values))',
         'assert distinct_count([]) == 0\nassert distinct_count([4, 4, 4]) == 1\nassert distinct_count([2, -1, 2, 0]) == 3\nassert distinct_count(["a", "b", "a"]) == 2\nassert distinct_count([0, "0"]) == 2',
         'Three observations contain two distinct labels and elm is present.',
-        'A set removes repeated membership; count its members.',
       ),
     ],
     [
@@ -569,7 +553,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def frequencies(values):\n    counts = {}\n    for value in values:\n        counts[value] = counts.get(value, 0) + 1\n    return counts',
         'assert frequencies([]) == {}\nassert frequencies([5, 2, 5, 5]) == {5: 3, 2: 1}\nassert frequencies(["a", "b", "a"]) == {"a": 2, "b": 1}\nassert frequencies([0, -2, 0]) == {0: 2, -2: 1}\nvalues = [8, 8]\nassert frequencies(values) == {8: 2}\nassert values == [8, 8]',
         'Each observation adds one to its own value count.',
-        'Use get(value, 0) before incrementing each stored count.',
       ),
     ],
     [
@@ -603,7 +586,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def counts_at_least(counts, threshold):\n    kept = {}\n    for value, count in counts.items():\n        if count >= threshold:\n            kept[value] = count\n    return kept',
         'assert counts_at_least({}, 2) == {}\nassert counts_at_least({"a": 2, "b": 1}, 2) == {"a": 2}\nassert counts_at_least({1: 5, 2: 3}, 6) == {}\nassert counts_at_least({1: 5, 2: 3}, 1) == {1: 5, 2: 3}\ncounts = {"p": 4, "q": 2}\nassert counts_at_least(counts, 3) == {"p": 4}\nassert counts == {"p": 4, "q": 2}',
         'Only keys with counts at least two enter the result.',
-        'Scan items and copy only entries meeting the inclusive threshold.',
       ),
     ],
     [
@@ -637,7 +619,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def next_reference(nodes, node_id):\n    return nodes[node_id][1]',
         'assert next_reference({"a": (4, "b"), "b": (9, None)}, "a") == "b"\nassert next_reference({"a": (4, None)}, "a") is None\nassert next_reference({0: (5, 2), 2: (8, None)}, 0) == 2\nnodes = {"x": (2, "y")}\nassert next_reference(nodes, "x") == "y"\nassert nodes == {"x": (2, "y")}',
         'The record explicitly points from head to tail.',
-        'Read the second field of nodes[node_id].',
       ),
     ],
     [
@@ -671,7 +652,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def is_chain_end(node_id):\n    return node_id is None',
         'assert is_chain_end(None) is True\nassert is_chain_end(0) is False\nassert is_chain_end("") is False\nassert is_chain_end(False) is False\nassert is_chain_end("tail") is False',
         'Only None matches the terminal sentinel.',
-        'Use identity comparison with None.',
       ),
     ],
     [
@@ -702,7 +682,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def chain_length(nodes, head):\n    current = head\n    count = 0\n    while current is not None:\n        count += 1\n        current = nodes[current][1]\n    return count',
         'assert chain_length({}, None) == 0\nassert chain_length({"a": (7, None)}, "a") == 1\nassert chain_length({0: (8, "last"), "last": (3, None), "unused": (1, None)}, 0) == 2\nassert chain_length({"z": (1, "a"), "a": (2, "b"), "b": (3, None)}, "z") == 3',
         'The cursor visits ID zero and last, ignoring the unrelated node.',
-        'Use an explicit None check, count each visited node, and follow the next field.',
       ),
     ],
     [
@@ -736,7 +715,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def ascii_letter(char):\n    return "A" <= char <= "Z" or "a" <= char <= "z"',
         'assert ascii_letter("A") is True\nassert ascii_letter("Z") is True\nassert ascii_letter("a") is True\nassert ascii_letter("z") is True\nassert ascii_letter("[") is False\nassert ascii_letter("7") is False\nassert ascii_letter("é") is False\nassert ascii_letter(" ") is False',
         'Only the two ASCII letters pass the declared membership test.',
-        'Combine the uppercase and lowercase bounded comparisons with or.',
       ),
     ],
     [
@@ -770,7 +748,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def normalize_ascii(char):\n    if "A" <= char <= "Z":\n        return char.lower()\n    return char',
         'assert normalize_ascii("B") == "b"\nassert normalize_ascii("Z") == "z"\nassert normalize_ascii("m") == "m"\nassert normalize_ascii("İ") == "İ"\nassert normalize_ascii("?") == "?"\nassert normalize_ascii("7") == "7"',
         'The normalized result is new text; the original stays uppercase.',
-        'Check the uppercase ASCII range before calling lower.',
       ),
     ],
     [
@@ -804,7 +781,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def accepted_characters(text):\n    accepted = []\n    for char in text:\n        if "A" <= char <= "Z":\n            char = char.lower()\n        if "a" <= char <= "z":\n            accepted.append(char)\n    return accepted',
         'assert accepted_characters("") == []\nassert accepted_characters("A!b2Aé") == ["a", "b", "a"]\nassert accepted_characters("123éİß") == []\nassert accepted_characters("Zz a") == ["z", "z", "a"]\ntext = "Hi?"\nassert accepted_characters(text) == ["h", "i"]\nassert text == "Hi?"',
         'Punctuation, the digit, and the non-ASCII letter are ignored; accepted repetitions remain.',
-        'Normalize only ASCII uppercase, then append only lowercase ASCII letters.',
       ),
     ],
     [
@@ -838,7 +814,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def prefix_boundary_count(values):\n    return len(values) + 1',
         'assert prefix_boundary_count([]) == 1\nassert prefix_boundary_count([7]) == 2\nassert prefix_boundary_count([4, 7, -2]) == 4\nassert prefix_boundary_count([0] * 9) == 10',
         'Three elements have four boundaries, including the empty prefix.',
-        'Include one boundary beyond the element count.',
       ),
     ],
     [
@@ -869,7 +844,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def build_prefix(values):\n    prefix = [0]\n    for value in values:\n        prefix.append(prefix[-1] + value)\n    return prefix',
         'assert build_prefix([]) == [0]\nassert build_prefix([4, -6, 9]) == [0, 4, -2, 7]\nassert build_prefix([0, 0]) == [0, 0, 0]\nassert build_prefix([-2, -3]) == [0, -2, -5]\nvalues = [2, 8]\nassert build_prefix(values) == [0, 2, 10]\nassert values == [2, 8]',
         'Each new entry adds one value to the previous total.',
-        'Append the previous total plus the current value, starting from [0].',
       ),
     ],
     [
@@ -903,7 +877,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def prefix_query(prefix, left, right):\n    return prefix[right] - prefix[left]',
         'assert prefix_query([0], 0, 0) == 0\nassert prefix_query([0, 4, -2, 7], 1, 3) == 3\nassert prefix_query([0, 4, -2, 7], 0, 3) == 7\nassert prefix_query([0, 4, -2, 7], 2, 2) == 0\nassert prefix_query([0, -3, -5], 0, 1) == -3',
         'The first query sums -6 and 9; equal boundaries cancel to zero.',
-        'Subtract the left boundary total from the right boundary total.',
       ),
     ],
     [
@@ -937,7 +910,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def range_change_events(left, right, delta):\n    return [(left, delta), (right, -delta)]',
         'assert range_change_events(1, 4, 3) == [(1, 3), (4, -3)]\nassert range_change_events(0, 2, -4) == [(0, -4), (2, 4)]\nassert range_change_events(3, 3, 7) == [(3, 7), (3, -7)]\nassert range_change_events(2, 9, 0) == [(2, 0), (9, 0)]',
         'The effect begins at one and stops before four.',
-        'Create the start event and its negated cancellation at right.',
       ),
     ],
     [
@@ -971,7 +943,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def difference_table(n, updates):\n    diff = [0] * (n + 1)\n    for left, right, delta in updates:\n        diff[left] += delta\n        diff[right] -= delta\n    return diff',
         'assert difference_table(0, []) == [0]\nassert difference_table(3, []) == [0, 0, 0, 0]\nassert difference_table(4, [(0, 3, 2), (1, 4, 5)]) == [2, 5, 0, -2, -5]\nassert difference_table(2, [(0, 2, -3)]) == [-3, 0, 3]\nassert difference_table(2, [(1, 1, 9)]) == [0, 0, 0]\nassert difference_table(1, [(0, 1, 2), (0, 1, 3)]) == [5, -5]',
         'The combined boundary events describe both updates.',
-        'Allocate n + 1 zeros and accumulate both endpoint events for each update.',
       ),
     ],
     [
@@ -1005,7 +976,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def recover_difference(diff):\n    running = 0\n    values = []\n    for i in range(len(diff) - 1):\n        running += diff[i]\n        values.append(running)\n    return values',
         'assert recover_difference([0]) == []\nassert recover_difference([2, 5, 0, -2, -5]) == [2, 7, 7, 5]\nassert recover_difference([3, -1, 2, -4]) == [3, 2, 4]\nassert recover_difference([-3, 0, 3]) == [-3, -3]\nassert recover_difference([0, 0, 0]) == [0, 0]',
         'The first update contributes two on positions zero through two; the second contributes five on one through three.',
-        'Accumulate entries before the final sentinel and append each running effect.',
       ),
     ],
     [
@@ -1039,7 +1009,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def outer_pair_sum(sorted_values):\n    if len(sorted_values) < 2:\n        return None\n    return sorted_values[0] + sorted_values[-1]',
         'assert outer_pair_sum([]) is None\nassert outer_pair_sum([4]) is None\nassert outer_pair_sum([-2, 3, 8]) == 6\nassert outer_pair_sum([2, 2]) == 4\nassert outer_pair_sum([-5, -1]) == -6',
         'The outer pair uses two distinct positions with sum six.',
-        'Check that two distinct positions exist before adding the endpoints.',
       ),
     ],
     [
@@ -1073,7 +1042,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def discard_heavy_right(sorted_values, left, right, limit):\n    if sorted_values[left] + sorted_values[right] > limit:\n        return right - 1\n    return right',
         'assert discard_heavy_right([1, 4, 10], 0, 2, 8) == 1\nassert discard_heavy_right([1, 4, 7], 0, 2, 8) == 2\nassert discard_heavy_right([-5, -1, 8], 0, 2, 0) == 1\nassert discard_heavy_right([2, 2], 0, 1, 4) == 1\nassert discard_heavy_right([0, 3, 9, 12], 1, 3, 10) == 2',
         'The value ten cannot pair with even the smallest one under limit eight.',
-        'Compare the outer sum and move right inward only when it is too large.',
       ),
     ],
     [
@@ -1107,7 +1075,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def fitting_partner_block(sorted_values, left, right, limit):\n    if sorted_values[left] + sorted_values[right] <= limit:\n        return right - left\n    return 0',
         'assert fitting_partner_block([1, 2, 5, 7], 0, 3, 8) == 3\nassert fitting_partner_block([1, 2, 5, 7], 1, 3, 8) == 0\nassert fitting_partner_block([2, 2, 2], 0, 2, 4) == 2\nassert fitting_partner_block([-5, -1, 3], 0, 2, 0) == 2\nassert fitting_partner_block([1, 4, 5], 1, 2, 9) == 1',
         'All three larger-index partners fit with the left value one.',
-        'A fitting outer sum certifies every partner from left + 1 through right.',
       ),
     ],
     [
@@ -1141,7 +1108,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def window_counts(labels, left, right):\n    counts = {}\n    for label in labels[left:right]:\n        counts[label] = counts.get(label, 0) + 1\n    return counts',
         'assert window_counts([], 0, 0) == {}\nassert window_counts(["a", "b", "a", "c"], 1, 3) == {"b": 1, "a": 1}\nassert window_counts([1, 1, 2], 0, 2) == {1: 2}\nassert window_counts([1, 1, 2], 2, 2) == {}\nassert window_counts([1, 1, 2], 0, 3) == {1: 2, 2: 1}',
         'Only positions one and two belong to this half-open window.',
-        'Count only the specified half-open slice.',
       ),
     ],
     [
@@ -1175,7 +1141,6 @@ _check_time(_seconds, "pair_checks(10**9, 10**9)", "Multiply the two loop sizes 
         'def remove_occurrence(counts, label):\n    result = dict(counts)\n    result[label] -= 1\n    if result[label] == 0:\n        del result[label]\n    return result',
         'assert remove_occurrence({"a": 1, "b": 2}, "a") == {"b": 2}\nassert remove_occurrence({"a": 3}, "a") == {"a": 2}\nassert remove_occurrence({0: 1}, 0) == {}\ncounts = {"x": 2, "y": 1}\nassert remove_occurrence(counts, "x") == {"x": 1, "y": 1}\nassert counts == {"x": 2, "y": 1}',
         'Removing the last a occurrence leaves only the b key.',
-        'Copy the map with dict(counts), decrement one count, and delete only a zero entry.',
       ),
     ],
     [
@@ -1215,7 +1180,6 @@ assert _result == 148891, "The 200,000-label case returned the wrong index."
 _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from the count map per step instead of recounting the suffix.")`,
         ),
         'Removing the first a is insufficient; removing b leaves the suffix a,c with two distinct labels.',
-        'Build counts for the expanded window, then remove from the left while too many keys remain.',
       ),
     ],
     [
@@ -1249,7 +1213,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def search_midpoint(low, high):\n    return (low + high) // 2',
         'assert search_midpoint(0, 1) == 0\nassert search_midpoint(3, 8) == 5\nassert search_midpoint(2, 7) == 4\nassert search_midpoint(100, 101) == 100\nassert search_midpoint(0, 10) == 5',
         'The integer midpoint lies inside indices two through six.',
-        'Use integer floor division for the average of the boundaries.',
       ),
     ],
     [
@@ -1283,7 +1246,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def lower_bound_step(values, target, low, high):\n    mid = (low + high) // 2\n    if values[mid] < target:\n        return (mid + 1, high)\n    return (low, mid)',
         'assert lower_bound_step([2, 5, 5, 9], 5, 0, 4) == (0, 2)\nassert lower_bound_step([2, 5, 5, 9], 6, 0, 4) == (3, 4)\nassert lower_bound_step([7], 7, 0, 1) == (0, 0)\nassert lower_bound_step([7], 8, 0, 1) == (1, 1)\nassert lower_bound_step([-8, -3, 0, 2], -4, 0, 4) == (0, 2)',
         'The qualifying index two remains a possible boundary while earlier positions are searched.',
-        'Compare the midpoint to target; return either (mid + 1, high) or (low, mid).',
       ),
     ],
     [
@@ -1317,7 +1279,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def boundary_value(values, index):\n    if index == len(values):\n        return None\n    return values[index]',
         'assert boundary_value([], 0) is None\nassert boundary_value([2, 5, 9], 1) == 5\nassert boundary_value([2, 5, 9], 3) is None\nassert boundary_value([-4], 0) == -4\nassert boundary_value([-4], 1) is None',
         'The boundary after the last element represents absence.',
-        'Handle index == len(values) before indexing the list.',
       ),
     ],
     [
@@ -1351,7 +1312,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def groups_for_capacity(weights, capacity):\n    if not weights:\n        return 0\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return None\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups',
         'assert groups_for_capacity([], 0) == 0\nassert groups_for_capacity([3, 5, 2, 4], 8) == 2\nassert groups_for_capacity([3, 5, 2, 4], 7) == 3\nassert groups_for_capacity([9], 8) is None\nassert groups_for_capacity([0, 0], 0) == 1\nassert groups_for_capacity([2, 3, 4], 9) == 1',
         'The capacity allows consecutive groups [3,5] and [2,4].',
-        'Reject oversized individual loads, then keep extending each group until overflow.',
       ),
     ],
     [
@@ -1385,7 +1345,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def capacity_fits(weights, max_groups, capacity):\n    if not weights:\n        return True\n    groups = 1\n    current = 0\n    for weight in weights:\n        if weight > capacity:\n            return False\n        if current + weight > capacity:\n            groups += 1\n            current = weight\n        else:\n            current += weight\n    return groups <= max_groups',
         'assert capacity_fits([], 1, 0) is True\nassert capacity_fits([3, 5, 2, 4], 2, 7) is False\nassert capacity_fits([3, 5, 2, 4], 2, 8) is True\nassert capacity_fits([3, 5, 2, 4], 2, 9) is True\nassert capacity_fits([9], 5, 8) is False\nassert capacity_fits([0, 0], 1, 0) is True\nassert capacity_fits([2, 3], 1, 4) is False',
         'Two needed groups meet the budget, and a larger allowance cannot break the same grouping.',
-        'Run the fixed-capacity group test, reject oversized items, then compare groups to max_groups.',
       ),
     ],
     [
@@ -1419,7 +1378,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def capacity_bounds(weights):\n    if not weights:\n        return (0, 0)\n    return (max(weights), sum(weights))',
         'assert capacity_bounds([]) == (0, 0)\nassert capacity_bounds([3, 5, 2, 4]) == (5, 14)\nassert capacity_bounds([0, 0]) == (0, 0)\nassert capacity_bounds([7]) == (7, 7)\nassert capacity_bounds([2, 9, 1]) == (9, 12)',
         'Five is the unavoidable single-item lower bound and fourteen permits one whole-input group.',
-        'Handle empty input first, then compute the largest load and total.',
       ),
     ],
     [
@@ -1453,7 +1411,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def ordered_coordinates(values):\n    return sorted(set(values))',
         'assert ordered_coordinates([]) == []\nassert ordered_coordinates([50, -20, 50, 3]) == [-20, 3, 50]\nassert ordered_coordinates([7, 7, 7]) == [7]\nassert ordered_coordinates([-3, -9, -3]) == [-9, -3]\nvalues = [8, -1, 8, 4]\nassert ordered_coordinates(values) == [-1, 4, 8]\nassert values == [8, -1, 8, 4]',
         'One representative of each coordinate appears in ascending order.',
-        'Build a set of distinct coordinates, then return its sorted list.',
       ),
     ],
     [
@@ -1487,7 +1444,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def coordinate_ranks(unique):\n    ranks = {}\n    for index in range(len(unique)):\n        ranks[unique[index]] = index\n    return ranks',
         'assert coordinate_ranks([]) == {}\nassert coordinate_ranks([-20, 3, 50]) == {-20: 0, 3: 1, 50: 2}\nassert coordinate_ranks([900]) == {900: 0}\nassert coordinate_ranks([-9, -2]) == {-9: 0, -2: 1}\nassert coordinate_ranks([10, 1000]) == {10: 0, 1000: 1}',
         'Each original coordinate maps to its position in the ordered vocabulary.',
-        'Assign the index of each unique coordinate as its rank.',
       ),
     ],
     [
@@ -1521,7 +1477,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def translate_ranks(values, ranks):\n    translated = []\n    for value in values:\n        translated.append(ranks[value])\n    return translated',
         'assert translate_ranks([], {}) == []\nassert translate_ranks([50, -20, 50, 3], {-20: 0, 3: 1, 50: 2}) == [2, 0, 2, 1]\nassert translate_ranks([7, 7], {7: 0}) == [0, 0]\nassert translate_ranks([-9, 2], {-9: 0, 2: 1}) == [0, 1]\nvalues = [9, 1, 9]\nassert translate_ranks(values, {1: 0, 9: 1}) == [1, 0, 1]\nassert values == [9, 1, 9]',
         'The original occurrence order remains while each value becomes its rank.',
-        'Append the rank-map lookup for every value in the original order.',
       ),
     ],
     [
@@ -1555,7 +1510,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def interval_events(intervals):\n    events = []\n    for start, end in intervals:\n        if start < end:\n            events.append((start, 1))\n            events.append((end, -1))\n    return events',
         'assert interval_events([]) == []\nassert interval_events([(5, 5)]) == []\nassert interval_events([(1, 4), (2, 2), (3, 8)]) == [(1, 1), (4, -1), (3, 1), (8, -1)]\nassert interval_events([(-3, 0)]) == [(-3, 1), (0, -1)]\nassert interval_events([(1, 2), (1, 2)]) == [(1, 1), (2, -1), (1, 1), (2, -1)]',
         'Only the two nonempty intervals generate activation/departure pairs.',
-        'Skip equal endpoints; append +1 at start and -1 at end for each remaining interval.',
       ),
     ],
     [
@@ -1589,7 +1543,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def ordered_half_open_events(events):\n    return sorted(events)',
         'assert ordered_half_open_events([]) == []\nassert ordered_half_open_events([(3, 1), (1, 1), (3, -1), (5, -1)]) == [(1, 1), (3, -1), (3, 1), (5, -1)]\nassert ordered_half_open_events([(0, 1), (0, -1), (-2, 1)]) == [(-2, 1), (0, -1), (0, 1)]\nevents = [(4, 1), (2, -1)]\nassert ordered_half_open_events(events) == [(2, -1), (4, 1)]\nassert events == [(4, 1), (2, -1)]',
         'At coordinate three, departure precedes arrival.',
-        'Use tuple sorting: coordinate first, then -1 before +1.',
       ),
     ],
     [
@@ -1623,7 +1576,6 @@ _check_time(_seconds, "The 200,000-label case", "Remove one outgoing label from 
         'def peak_active(ordered_events):\n    active = 0\n    peak = 0\n    for coordinate, change in ordered_events:\n        active += change\n        peak = max(peak, active)\n    return peak',
         'assert peak_active([]) == 0\nassert peak_active([(1, 1), (3, -1)]) == 1\nassert peak_active([(1, 1), (2, 1), (3, -1), (3, 1), (5, -1), (6, -1)]) == 2\nassert peak_active([(1, 1), (3, -1), (3, 1), (5, -1)]) == 1\nassert peak_active([(0, 1), (0, 1), (2, -1), (2, -1)]) == 2',
         'The maximum occupancy is two, and all intervals have departed by the final event.',
-        'Add each event change to active, then retain the largest observed active count.',
       ),
     ],
     [

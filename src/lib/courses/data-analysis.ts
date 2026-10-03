@@ -13,7 +13,6 @@ const exercise = (
   solution: string,
   tests: string,
   explanation: string,
-  hint: string,
 ): Omit<CodeQuestion, 'id'> => ({
   type: 'code',
   prompt,
@@ -21,7 +20,6 @@ const exercise = (
   solution,
   tests,
   explanation,
-  hint,
 });
 function skill(
   id: string,
@@ -121,7 +119,6 @@ const skills: Skill[] = [
         'import numpy as np\nreadings = np.array([[3, 5, 7], [4, 6, 8]])\ndimensions = readings.shape\ncount = readings.size',
         'assert isinstance(readings, np.ndarray), "Create a NumPy array."\nassert readings.tolist() == [[3, 5, 7], [4, 6, 8]], "Keep the two requested rows."\nassert dimensions == (2, 3), "Read the shape attribute."\nassert count == 6, "Read the size attribute."',
         'np.array creates the grid; shape and size describe it without changing its entries.',
-        'Pass a nested list to np.array, then access readings.shape and readings.size.',
       ),
     ],
     [
@@ -157,7 +154,6 @@ const skills: Skill[] = [
         'import numpy as np\nsales = np.array([[3, 7, 5], [8, 2, 4]])\ndoubled = sales * 2\ndaily_totals = sales.sum(axis=0)',
         'assert isinstance(doubled, np.ndarray) and doubled.tolist() == [[6, 14, 10], [16, 4, 8]], "Double every sale."\nassert isinstance(daily_totals, np.ndarray) and daily_totals.tolist() == [11, 9, 9], "Produce one total for each day."\nassert sales.tolist() == [[3, 7, 5], [8, 2, 4]], "Preserve the source array."',
         'Element-wise arithmetic and axis=0 reduction answer two different questions from the same grid.',
-        'Use sales * 2 and sales.sum(axis=0).',
       ),
     ],
     [
@@ -193,7 +189,6 @@ const skills: Skill[] = [
         'import numpy as np\nvalues = np.array([[8, 2], [14, 5], [10, 7]])\nselected = values[values[:, 0] >= 10]\nindependent = values[:, 1].copy()',
         'assert selected.tolist() == [[14, 5], [10, 7]], "Filter whole rows using the first column."\nassert independent.tolist() == [2, 5, 7], "Select the second column."\nassert not np.shares_memory(independent, values), "Create an independent copy."\nassert values.tolist() == [[8, 2], [14, 5], [10, 7]], "Keep raw values unchanged."',
         'A row mask selects observations; .copy() protects the original matrix from later edits.',
-        'Build a mask from values[:, 0], and call .copy() on values[:, 1].',
       ),
     ],
     [
@@ -229,7 +224,6 @@ const skills: Skill[] = [
         'import numpy as np\nreadings = np.array([[10, 20, 30], [15, 25, 35]])\ncalibration = np.array([1, -2, 3])\ncalibrated = readings + calibration',
         'assert isinstance(calibrated, np.ndarray), "Keep an array result."\nassert calibrated.shape == (2, 3), "Keep the original shape."\nassert calibrated.tolist() == [[11, 18, 33], [16, 23, 38]], "Apply the matching offset to each sensor column."',
         'The three-element calibration aligns with the three sensor columns and repeats across days.',
-        'The shapes (2, 3) and (3,) are already compatible.',
       ),
     ],
     [
@@ -265,7 +259,6 @@ const skills: Skill[] = [
         'import pandas as pd\nstock = pd.Series([12, 7], index=["pen", "notebook"])\nnotebooks = stock.loc["notebook"]\nfirst = stock.iloc[0]',
         'assert isinstance(stock, pd.Series), "Create a pandas Series."\nassert stock.to_dict() == {"pen": 12, "notebook": 7}, "Use the requested labels and values."\nassert notebooks == 7, "Select notebook by label."\nassert first == 12, "Select the first position."',
         'The labels describe items, while position zero describes their order.',
-        'Use pd.Series(..., index=...), then .loc and .iloc.',
       ),
     ],
     [
@@ -301,7 +294,6 @@ const skills: Skill[] = [
         'import pandas as pd\ncolumns = {"item": ["book", "lamp"], "units": [4, 2], "price": [6, 11]}\norders = pd.DataFrame(columns)\norders["revenue"] = orders["units"] * orders["price"]\nsummary = orders[["item", "revenue"]]',
         'assert isinstance(orders, pd.DataFrame) and orders.shape == (2, 4), "Create the table and derived column."\nassert orders["revenue"].tolist() == [24, 22], "Multiply units by price per row."\nassert isinstance(summary, pd.DataFrame), "Keep a table result."\nassert summary.to_dict("list") == {"item": ["book", "lamp"], "revenue": [24, 22]}, "Select the requested columns in order."',
         'A DataFrame gives columns a shared observation index while allowing separate data types.',
-        'Construct pd.DataFrame(columns), assign revenue, then select a list of column names.',
       ),
     ],
     [
@@ -337,7 +329,6 @@ const skills: Skill[] = [
         'import pandas as pd\nshop = pd.Series([5, 2], index=["pen", "bag"])\nweb = pd.Series([4, 3], index=["mug", "pen"])\ntotals = shop.add(web, fill_value=0).reindex(["pen", "bag", "mug"])',
         'assert isinstance(totals, pd.Series), "Keep labels on the result."\nassert totals.index.tolist() == ["pen", "bag", "mug"], "Use the requested order."\nassert totals.tolist() == [8, 2, 4], "Align product labels and fill absent contributions with zero."',
         'The pen entries combine, while bag and mug keep their single-channel contributions.',
-        'Use .add(..., fill_value=0), then .reindex(...).',
       ),
     ],
     [
@@ -373,7 +364,6 @@ const skills: Skill[] = [
         'import pandas as pd\nproducts = pd.DataFrame({"name": ["clip", "desk", "cup", "pad"], "price": [3, 80, 8, 5], "stock": [4, 2, 0, 7]})\nmask = (products["price"] <= 10) & (products["stock"] > 0)\neligible = products.loc[mask, ["name", "price"]]',
         'assert isinstance(eligible, pd.DataFrame), "Return a table."\nassert eligible.to_dict("list") == {"name": ["clip", "pad"], "price": [3, 5]}, "Apply both conditions and select the two requested columns."\nassert len(products) == 4, "Preserve the source rows."',
         'Filtering checks each observation independently while column selection limits the resulting variables.',
-        'Parenthesize the two comparisons, combine with &, and pass the mask to .loc.',
       ),
     ],
     [
@@ -409,7 +399,6 @@ const skills: Skill[] = [
         'from io import StringIO\nimport pandas as pd\ntext = "code;count\\n003;5\\n009;8\\n"\nevents = pd.read_csv(StringIO(text), sep=";", dtype={"code": "string"})\ntotal = events["count"].sum()',
         'assert isinstance(events, pd.DataFrame) and events.shape == (2, 2), "Parse two columns and two rows."\nassert events["code"].tolist() == ["003", "009"], "Preserve identifier zeros."\nassert events["count"].tolist() == [5, 8], "Parse numeric counts."\nassert total == 13, "Sum the count column."',
         'The separator and identifier dtype are part of the dataset contract.',
-        'Call pd.read_csv(StringIO(text), sep=";", dtype={"code": "string"}).',
       ),
     ],
     [
@@ -445,7 +434,6 @@ const skills: Skill[] = [
         'import pandas as pd\nraw = pd.DataFrame({"site": ["A", "B", "C"], "events": [3.0, None, 8.0]})\nmissing_count = raw["events"].isna().sum()\ncleaned = raw.copy()\ncleaned["events"] = cleaned["events"].fillna(0)',
         'assert missing_count == 1, "Count missing entries before cleaning."\nassert cleaned["events"].tolist() == [3.0, 0.0, 8.0], "Apply the documented zero rule."\nassert cleaned["site"].tolist() == ["A", "B", "C"], "Keep site identities."\nassert raw["events"].isna().sum() == 1, "Keep the raw evidence unchanged."',
         'Preserving raw data lets you audit both the missing count and the chosen replacement rule.',
-        'Count .isna(), copy the table, then assign a filled events column.',
       ),
     ],
     [
@@ -481,7 +469,6 @@ const skills: Skill[] = [
         'import pandas as pd\nraw = pd.Series(["4", "oops", None, "9"], dtype="string")\nconverted = pd.to_numeric(raw, errors="coerce")\ninvalid_count = (raw.notna() & converted.isna()).sum()\ncounts = converted.astype("Int64")',
         'assert isinstance(counts, pd.Series) and str(counts.dtype) == "Int64", "Use nullable integers."\nassert counts.dropna().tolist() == [4, 9], "Keep the valid counts."\nassert counts.isna().tolist() == [False, True, True, False], "Keep absent and invalid entries missing."\nassert invalid_count == 1, "Count only newly rejected nonmissing inputs."',
         'Only oops is newly invalid; the original None was already missing.',
-        'Combine raw.notna() with converted.isna(), then convert to "Int64".',
       ),
     ],
     [
@@ -517,7 +504,6 @@ const skills: Skill[] = [
         'import pandas as pd\nrecords = pd.DataFrame({"id": [2, 1, 2, 3], "version": [1, 1, 2, 1], "value": [5, 8, 9, 4]})\nlatest = records.sort_values("version").drop_duplicates(subset=["id"], keep="last").sort_values("id")\nremoved = len(records) - len(latest)',
         'assert latest["id"].tolist() == [1, 2, 3], "Order the unique keys."\nassert latest["value"].tolist() == [8, 9, 4], "Keep the greatest version of each id."\nassert latest["id"].is_unique and removed == 1, "Validate uniqueness and count removed rows."\nassert len(records) == 4, "Keep the source table unchanged."',
         'Version sorting supplies the meaning of last; deduplication then implements the policy.',
-        'Sort version ascending, keep the last duplicate id, then sort id.',
       ),
     ],
     [
@@ -553,7 +539,6 @@ const skills: Skill[] = [
         'import pandas as pd\nraw = pd.Series([" NORTH ", "South", None, "north-east"], dtype="string")\nnormalized = raw.str.strip().str.lower()\nis_north = normalized.str.contains("north", regex=False, na=False)',
         'assert normalized.fillna("MISSING").tolist() == ["north", "south", "MISSING", "north-east"], "Normalize case and spaces while preserving missingness."\nassert is_north.tolist() == [True, False, False, True], "Search literal text and define the missing rule."\nassert raw.iloc[0] == " NORTH ", "Preserve the raw text."',
         'String methods express the source normalization contract and build a complete boolean mask.',
-        'Chain .str.strip() and .str.lower(); then call .str.contains(..., regex=False, na=False).',
       ),
     ],
     [
@@ -589,7 +574,6 @@ const skills: Skill[] = [
         'import pandas as pd\nvalues = ["large", "small", "medium", "small"]\nsizes = pd.Series(pd.Categorical(values, categories=["small", "medium", "large"], ordered=True))\nsorted_sizes = sizes.sort_values().tolist()\nindicators = pd.get_dummies(sizes, dtype=int)',
         'assert isinstance(sizes.dtype, pd.CategoricalDtype) and sizes.cat.ordered, "Declare an ordered categorical."\nassert sizes.cat.categories.tolist() == ["small", "medium", "large"], "Specify the semantic size order."\nassert sorted_sizes == ["small", "small", "medium", "large"], "Sort by category meaning."\nassert indicators["small"].tolist() == [0, 1, 0, 1] and indicators["large"].tolist() == [1, 0, 0, 0], "Build category membership indicators."',
         'A declared order represents size ranking; dummy columns represent membership per original row.',
-        'Use pd.Categorical with categories and ordered=True, then pd.get_dummies(..., dtype=int).',
       ),
     ],
     [
@@ -625,7 +609,6 @@ const skills: Skill[] = [
         'import pandas as pd\nevents = pd.DataFrame({"site": ["A", "C", "A"], "count": [4, 2, 6]})\nsites = pd.DataFrame({"site": ["A", "B"], "region": ["east", "west"]})\nenriched = events.merge(sites, on="site", how="left", validate="many_to_one", indicator=True)\nunmatched = (enriched["_merge"] == "left_only").sum()',
         'assert len(enriched) == 3 and enriched["site"].tolist() == ["A", "C", "A"], "Preserve all event rows in source order."\nassert enriched["region"].fillna("UNKNOWN").tolist() == ["east", "UNKNOWN", "east"], "Match known sites without inventing C data."\nassert "_merge" in enriched.columns and unmatched == 1, "Audit the unmatched event."',
         'The join enriches observations without silently losing a missing lookup key.',
-        'Use .merge(..., how="left", validate="many_to_one", indicator=True).',
       ),
     ],
     [
@@ -661,7 +644,6 @@ const skills: Skill[] = [
         'import pandas as pd\nwide = pd.DataFrame({"site": ["A", "B"], "morning": [2, 7], "evening": [5, 9]})\nlong = wide.melt(id_vars=["site"], value_vars=["morning", "evening"], var_name="period", value_name="count")\nrestored = long.pivot(index="site", columns="period", values="count")',
         'assert long.columns.tolist() == ["site", "period", "count"] and len(long) == 4, "Keep identifiers and create measurement rows."\nassert set(zip(long["site"], long["period"], long["count"])) == {("A", "morning", 2), ("B", "morning", 7), ("A", "evening", 5), ("B", "evening", 9)}, "Preserve each measurement."\nassert restored.loc["A", "morning"] == 2 and restored.loc["B", "evening"] == 9, "Restore the wide table by unique site-period pairs."',
         'Reshaping changes the organization of observations without changing their measured values.',
-        'Use .melt(...) and then .pivot(index="site", columns="period", values="count").',
       ),
     ],
     [
@@ -697,7 +679,6 @@ const skills: Skill[] = [
         'import pandas as pd\nsales = pd.DataFrame({"shop": ["west", "east", "west", "east", "west"], "units": [2, 4, 5, 1, 3]})\ntotals = sales.groupby("shop")["units"].sum().sort_index()\nrow_counts = sales.groupby("shop").size().sort_index()',
         'assert isinstance(totals, pd.Series) and totals.to_dict() == {"east": 5, "west": 10}, "Sum units within each shop."\nassert totals.index.tolist() == ["east", "west"], "Use the requested group order."\nassert row_counts.to_dict() == {"east": 2, "west": 3}, "Count group rows."',
         'A grouped sum and grouped size answer different questions about the same partition.',
-        'Select units before .sum(); use .size() for row counts.',
       ),
     ],
     [
@@ -733,7 +714,6 @@ const skills: Skill[] = [
         'import pandas as pd\nscores = pd.DataFrame({"team": ["B", "A", "B", "A"], "points": [8, 3, 12, 7]})\nsummary = scores.groupby("team", as_index=False).agg(total=("points", "sum"), average=("points", "mean"), records=("points", "size")).sort_values("team")',
         'assert isinstance(summary, pd.DataFrame), "Create a summary table."\nassert summary.to_dict("list") == {"team": ["A", "B"], "total": [10, 20], "average": [5.0, 10.0], "records": [2, 2]}, "Name and calculate the requested group measures."',
         'Named aggregation records exactly which source column and operation produced each result.',
-        'Use .agg(total=("points", "sum"), average=("points", "mean"), records=("points", "size")).',
       ),
     ],
     [
@@ -769,7 +749,6 @@ const skills: Skill[] = [
         'import pandas as pd\ndata = pd.DataFrame({"team": ["A", "B", "A", "B"], "value": [4, 10, 8, 14]})\nmeans = data.groupby("team")["value"].transform("mean")\ncentered = data["value"] - means',
         'assert isinstance(means, pd.Series) and means.tolist() == [6.0, 12.0, 6.0, 12.0], "Repeat each group mean at its original rows."\nassert isinstance(centered, pd.Series) and centered.tolist() == [-2.0, -2.0, 2.0, 2.0], "Subtract the corresponding team mean."\nassert centered.index.equals(data.index), "Preserve observation alignment."',
         'Transform attaches the correct reference value to every row before subtraction.',
-        'Use .transform("mean") instead of .mean() so the result matches the original table.',
       ),
     ],
     [
@@ -805,7 +784,6 @@ const skills: Skill[] = [
         'import pandas as pd\nvalues = pd.Series([3, 6, 9, 12, 15])\nmoving = values.rolling(window=3).mean()',
         'assert isinstance(moving, pd.Series) and len(moving) == 5, "Keep a result aligned to every row."\nassert moving.isna().tolist() == [True, True, False, False, False], "Require three observations per window."\nassert moving.dropna().tolist() == [6.0, 9.0, 12.0], "Average each trailing triple."',
         'A complete trailing window produces the mean of [3,6,9], then [6,9,12], then [9,12,15].',
-        'Call values.rolling(window=3).mean() with the default minimum count.',
       ),
     ],
     [
@@ -841,7 +819,6 @@ const skills: Skill[] = [
         'import pandas as pd\nevents = pd.DataFrame({"id": ["late", "early"], "text": ["2024-02-01T15:00:00+00:00", "2024-02-01T10:00:00+02:00"]})\nevents["time"] = pd.to_datetime(events["text"], utc=True)\nordered = events.sort_values("time")\nhours = ordered["time"].dt.hour.tolist()',
         'assert str(events["time"].dt.tz) == "UTC", "Normalize to UTC."\nassert ordered["id"].tolist() == ["early", "late"], "Sort by actual instants."\nassert hours == [8, 15], "Extract normalized UTC hours."',
         '10:00 at UTC+02 is 08:00 UTC, so it precedes the 15:00 UTC event.',
-        'Use pd.to_datetime(..., utc=True), .sort_values("time"), and .dt.hour.',
       ),
     ],
     [
@@ -877,7 +854,6 @@ const skills: Skill[] = [
         'import pandas as pd\nrecords = pd.DataFrame({"time": pd.to_datetime(["2024-03-01T08:00Z", "2024-03-01T18:00Z", "2024-03-03T10:00Z"], utc=True), "amount": [4, 7, 9]})\ndaily = records.resample("D", on="time")["amount"].sum(min_count=1)',
         'assert isinstance(daily, pd.Series) and len(daily) == 3, "Produce one bin per day from March 1 through March 3."\nassert daily.index.strftime("%Y-%m-%d").tolist() == ["2024-03-01", "2024-03-02", "2024-03-03"], "Use daily timestamp bins."\nassert daily.iloc[0] == 11 and pd.isna(daily.iloc[1]) and daily.iloc[2] == 9, "Sum observed days and keep the unobserved day missing."',
         'The minimum observation count preserves the difference between no events recorded and an observed zero.',
-        'Use records.resample("D", on="time")["amount"].sum(min_count=1).',
       ),
     ],
     [
@@ -918,7 +894,6 @@ const skills: Skill[] = [
         'import pandas as pd\nmeasurements = pd.Series([2.0, 3.0, None, 4.0, 51.0])\nreport = {"count": int(measurements.count()), "missing": int(measurements.isna().sum()), "mean": float(measurements.mean()), "median": float(measurements.median())}',
         'assert isinstance(report, dict), "Create a dictionary report."\nassert report == {"count": 4, "missing": 1, "mean": 15.0, "median": 3.5}, "Report support, missingness, and both location summaries."',
         'The report shows both data coverage and the influence of the large observation on the mean.',
-        'Use count(), isna().sum(), mean(), and median() on the Series.',
       ),
     ],
     [
@@ -961,7 +936,6 @@ const skills: Skill[] = [
         'from io import StringIO\nimport pandas as pd\n\ndef summarize(text):\n    data = pd.read_csv(StringIO(text))\n    data["units"] = pd.to_numeric(data["units"], errors="raise")\n    if data["units"].isna().any():\n        raise ValueError("Missing quantity")\n    data = data.sort_values("version").drop_duplicates("event_id", keep="last")\n    assert data["event_id"].is_unique\n    return data.groupby("shop")["units"].sum().sort_index()',
         'sample = "event_id,version,shop,units\\n1,1,west,2\\n2,1,east,5\\n1,2,west,7\\n3,1,east,3\\n"\nresult = summarize(sample)\nassert isinstance(result, pd.Series) and result.to_dict() == {"east": 8, "west": 7}, "Keep latest event versions and aggregate by shop."\nassert result.index.tolist() == ["east", "west"], "Sort the result labels."\nsecond = "event_id,version,shop,units\\n4,1,north,9\\n5,1,north,2\\n"\nassert summarize(second).to_dict() == {"north": 11}, "Use the function input rather than a fixed dataset."\nassert summarize(sample).equals(result), "Repeated calls should reproduce the result."\ntry:\n    summarize("event_id,version,shop,units\\n6,1,south,invalid\\n")\nexcept (ValueError, TypeError):\n    pass\nelse:\n    raise AssertionError("Reject invalid numeric quantities rather than silently changing them.")\ntry:\n    summarize("event_id,version,shop,units\\n7,1,south,\\n")\nexcept (ValueError, TypeError):\n    pass\nelse:\n    raise AssertionError("Reject missing quantities rather than assuming zero.")',
         'The function makes the input contract, numeric validation, duplicate policy, and grouping rule part of a reusable analysis.',
-        'Use read_csv(StringIO(text)), to_numeric(errors="raise"), sort/drop_duplicates, then groupby/sum/sort_index.',
       ),
     ],
     [

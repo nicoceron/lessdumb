@@ -101,7 +101,6 @@ const authored: Skill[] = rustDefinitions.map((definition, index) => {
     contract: tests,
     tests,
     explanation: `${definition.rule} ${definition.decision} The reference implementation follows this contract without external crates.`,
-    hint: `${definition.decision} Examine the example and the contract assertions before choosing the operations.`,
   };
   return {
     id,

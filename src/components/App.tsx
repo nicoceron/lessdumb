@@ -68,6 +68,7 @@ import {
   PASSWORD_RESET_NOTICE,
 } from '../lib/account';
 import { createAnkiClient, type AnkiClient } from '../lib/anki';
+import { loadCardText } from '../lib/cards';
 import { type LearnerState } from '../lib/state';
 import { legacyMemory, recallProbability } from '../lib/retention';
 import { useLearner } from './useLearner';
@@ -172,9 +173,20 @@ export default function App({
     setAnkiBusy(true);
     try {
       const activeClient = client.current;
-      const result = await activeClient.syncCards(cards, {
+      // Cards are references: their text comes from their units' content.
+      const { cards: withText, missing } = await loadCardText(cards);
+      if (!current()) return;
+      const result = await activeClient.syncCards(withText, {
         deck: stateRef.current.anki.deck,
       });
+      result.failed.push(
+        ...missing.map((card) => ({
+          cardId: card.id,
+          error: 'This card’s question is no longer in the course.',
+          code: 'INVALID_CARD' as const,
+          retryable: false,
+        })),
+      );
       if (!current()) return;
       if (!activeClient.getConnection()) setAnkiLive(false);
       update((s) => ({

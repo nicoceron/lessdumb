@@ -76,7 +76,6 @@ function fixture(language: 'cpp' | 'rust'): Skill {
           language === 'cpp'
             ? '#include <cassert>\nint main(){assert(add_one(1)==2);assert(add_one(-1)==0);}'
             : 'fn main(){assert_eq!(add_one(1),2);assert_eq!(add_one(-1),0);}',
-        hint: 'Add to x.',
         explanation: 'The function returns its input plus one.',
       },
     ],

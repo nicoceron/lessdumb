@@ -27,6 +27,9 @@ export interface AnkiCard {
    * backtick code spans, `\$` for a dollar) with code in fenced blocks, as
    * mistake cards made since CEN-128 are (`src/lib/card-text.ts`). Absent:
    * plain text, as mastery cards and older mistake cards are.
+   *
+   * A learner's state stores cards by reference; `src/lib/cards.ts` gives
+   * them this text before they are sent or exported.
    */
   format?: 'prose';
   kind: 'mastery' | 'mistake';
@@ -208,7 +211,8 @@ function cardTags(card: AnkiCard): string[] {
 /**
  * Anki's documented UTF-8 text import format, preserving Python whitespace.
  * Plain-text cards keep one `<pre>`; `format: 'prose'` cards use the
- * AnkiConnect layout, so their math is typeset too.
+ * AnkiConnect layout, so their math is typeset too. Cards need their text
+ * (`loadCardText` in `src/lib/cards.ts`).
  */
 export function exportCardsTsv(cards: readonly AnkiCard[]): string {
   const plain = (text: string) =>

@@ -20,6 +20,7 @@ import {
 } from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
 import { cardBlocks, plainText } from '../src/lib/card-text';
+import { cardWithText } from '../src/lib/cards';
 import { earnedXp, lessonXp } from '../src/lib/xp';
 import { acceptedAnswer } from '../src/lib/typed-answer';
 import { lessonAnswerIds, masterSkill } from './helpers/mastery';
@@ -172,8 +173,9 @@ describe('recording learning answers against current state', () => {
     });
     const question = skill.knowledgePoints![0].questions[0];
     expect(question.id).toBe(input.questionId);
-    expect(result.cards[0].front).toContain(question.prompt);
-    const back = plainText(cardBlocks(result.cards[0].back));
+    const card = cardWithText(result.cards[0])!;
+    expect(card.front).toContain(question.prompt);
+    const back = plainText(cardBlocks(card.back));
     if (question.type === 'choice')
       expect(back).toBe(
         `${question.choices[question.answer]}\n\n${question.explanation}`,
@@ -183,7 +185,7 @@ describe('recording learning answers against current state', () => {
         `${acceptedAnswer(question)}${question.type === 'numeric' && question.unit ? ` ${question.unit}` : ''}\n\n${question.explanation}`,
       );
     if (question.type !== 'code' && question.code)
-      expect(result.cards[0].front).toContain(question.code);
+      expect(card.front).toContain(question.code);
   });
 
   it('replays a stable event identity as a no-op after unrelated new work', () => {
@@ -246,6 +248,15 @@ describe('recording learning answers against current state', () => {
     expect(mastered.progress.totalXp).toBe(systemsXp);
     expect(mastered.cards).toEqual(
       systemsSkill.flashcards.map((card) => ({
+        id: card.id,
+        skillId: systemsSkill.id,
+        kind: 'mastery',
+        status: 'pending',
+      })),
+    );
+    // Their text is the skill's authored cards.
+    expect(mastered.cards.map(cardWithText)).toEqual(
+      systemsSkill.flashcards.map((card) => ({
         ...card,
         skillName: systemsSkill.title,
         kind: 'mastery',
@@ -272,7 +283,7 @@ describe('recording learning answers against current state', () => {
     });
     expect(question.type).toBe('code');
     if (question.type !== 'code') throw new Error('Expected code exercise.');
-    expect(cardBlocks(result.cards[0].back)).toEqual([
+    expect(cardBlocks(cardWithText(result.cards[0])!.back)).toEqual([
       { kind: 'code', text: question.solution },
       { kind: 'prose', text: question.explanation },
     ]);

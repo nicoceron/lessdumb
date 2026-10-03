@@ -74,7 +74,7 @@ Lesson prose is typeset with [KaTeX](https://katex.org/docs/supported): lesson p
 - Inline math cannot start or end with a space, and only ASCII belongs inside it: use `\times`, `\le`, `\sigma`, `\bar{x}`, and `\text{mean}` rather than Unicode symbols or bare words.
 - Use display math only for a long standalone formula in an explanation, never in choices. It scrolls inside its own box on narrow screens.
 - If one choice is a formula, write the comparable choices in TeX too, so formatting never hints at the answer.
-- Titles, summaries, and authored flashcards are plain text everywhere; keep math out of them. A mistake card copies the question's prose and code separately, so its math is typeset on the Flashcards page and in Anki (see [math in cards](anki.md#math-in-cards)).
+- Titles, summaries, and authored flashcards are plain text everywhere; keep math out of them. A mistake card shows the question's prose and code separately, so its math is typeset on the Flashcards page and in Anki (see [math in cards](anki.md#math-in-cards)).
 
 The catalog validator rejects unclosed, empty, or space-padded `$` delimiters, and a test renders every math span with KaTeX in strict mode, so a TeX typo fails CI. Competitive Programming keeps complexity notation such as O(n log n) as plain text.
 
@@ -103,7 +103,7 @@ export const generators: GeneratorModule = {
 - **Compute answers exactly.** Prefer values whose answers are integers or short decimals: pick the answer first and build the question around it (choose the mean, then the values). Python semantics are in `authoring.ts`: `py()` prints a value as Python does, `pyFloat`, `pyDiv`, and `pyMod` follow its floats, `//`, and `%`. `num()` strips floating-point noise from prose, and `prose()`, `paren()`, `plus()`, `coef()`, `terms()`, and `poly()` write signed numbers and polynomials.
 - **Enough variety.** Among its first 50 variants (`GENERATOR_SAMPLES`), a generator must produce at least 12 different questions (`MIN_DISTINCT_VARIANTS`), so a learner's recent variants can always be avoided. Aim for dozens.
 - **Stand alone, and stay apart.** A variant must not reproduce another question of the same skill, prompt and code included; the quality test checks this. A choice generator must not make its key the longest or shortest choice in more than 40% of its variants.
-- **Edit with care.** Variant `k` of a question is whatever its generator returns for `variantSeed(id, k)`, so changing a generator changes what old attempts rebuild to, just as editing an authored question does. Keep IDs stable.
+- **Edit with care.** Variant `k` of a question is whatever its generator returns for `variantSeed(id, k)`, so changing a generator changes what old attempts and mistake cards rebuild to, just as editing an authored question does. Keep IDs stable.
 
 How generators are checked:
 

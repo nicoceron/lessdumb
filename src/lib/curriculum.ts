@@ -58,7 +58,6 @@ interface QuestionBase {
   id: string;
   prompt: string;
   explanation: string;
-  hint: string;
   /**
    * A generated question: each presentation asks a fresh seeded variant
    * from `generate` (see `src/lib/variants.ts`). The fields above are the
@@ -500,6 +499,9 @@ export function validateCurriculum(
         errors.push(`${question.id}: output questions need code to run.`);
       if (!['choice', 'numeric', 'text', 'code'].includes(question.type))
         errors.push(`${question.id}: unknown question type.`);
+      // Lessons have no hints (CEN-79): the worked example is the support.
+      if ('hint' in question)
+        errors.push(`${question.id}: questions have no hint; remove it.`);
       errors.push(...typedQuestionErrors(question));
       if (questions.has(question.id))
         errors.push(`Duplicate question ID ${question.id}.`);

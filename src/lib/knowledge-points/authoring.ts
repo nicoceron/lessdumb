@@ -38,7 +38,6 @@ export function predictOutput(
     choices,
     answer,
     explanation,
-    hint: explanation,
     checksOutput: true,
   };
 }
@@ -57,7 +56,6 @@ export function choose(
     choices,
     answer,
     explanation,
-    hint: explanation,
     ...(code ? { code } : {}),
   };
 }
@@ -78,7 +76,6 @@ export function typeOutput(
     code,
     answers: [output],
     explanation,
-    hint: explanation,
     checksOutput: true,
   };
 }
@@ -95,7 +92,6 @@ export function typeNumber(
     prompt,
     answer,
     explanation,
-    hint: explanation,
     ...options,
   };
 }
@@ -112,7 +108,6 @@ export function typeText(
     prompt,
     answers,
     explanation,
-    hint: explanation,
     ...options,
   };
 }

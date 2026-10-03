@@ -36,6 +36,7 @@ import {
 } from '../src/lib/learning';
 import { reviewCycleComplete } from '../src/lib/lesson-plan';
 import { cardBlocks } from '../src/lib/card-text';
+import { cardWithText } from '../src/lib/cards';
 import {
   decodeIndex,
   encodeIndex,
@@ -69,7 +70,6 @@ const numeric = (
   prompt: 'How many?',
   answer,
   explanation: 'Count them.',
-  hint: 'Count them.',
   ...extra,
 });
 const text = (
@@ -81,7 +81,6 @@ const text = (
   prompt: 'What does it print?',
   answers,
   explanation: 'It prints that.',
-  hint: 'It prints that.',
   ...extra,
 });
 
@@ -233,7 +232,6 @@ describe('grading text answers', () => {
       choices: ['a', 'b', 'c', 'd'],
       answer: 2,
       explanation: '',
-      hint: '',
     };
     expect(gradeAnswer(choice, 2)).toBe(true);
     expect(gradeAnswer(choice, 1)).toBe(false);
@@ -454,11 +452,14 @@ describe('typed questions in the engine', () => {
     });
     expect(state.progress.attempts[0].response).toBe('"Ready"');
     // The accepted answer is literal text, as the lesson shows it (CEN-128).
-    expect(cardBlocks(state.cards[0].back)).toEqual([
+    const card = cardWithText(state.cards[0])!;
+    expect(cardBlocks(card.back)).toEqual([
       { kind: 'code', text: question.answers[0] },
       { kind: 'prose', text: question.explanation },
     ]);
-    expect(state.cards[0].front).toContain(question.code);
+    expect(card.front).toContain(question.code);
+    // The card is a reference: what was typed stays on the attempt only.
+    expect(JSON.stringify(state.cards)).not.toContain('Ready');
     // A choice answer records no response.
     const choice = skill.knowledgePoints![0].questions.find(
       (q) => q.type === 'choice',
