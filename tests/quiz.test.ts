@@ -11,6 +11,7 @@ import {
   reviewsSinceLesson,
   selectQuestion,
   type Progress,
+  STATE_VERSION,
 } from '../src/lib/learning';
 import {
   activeQuiz,
@@ -289,8 +290,8 @@ describe('quiz persistence', () => {
       progress: { ...createState().progress, version: 2 },
     };
     const migrated = parseStateUpdate({ state: v2, revision: 0 }).state;
-    expect(migrated.version).toBe(5);
-    expect(migrated.progress.version).toBe(5);
+    expect(migrated.version).toBe(STATE_VERSION);
+    expect(migrated.progress.version).toBe(STATE_VERSION);
     expect(migrated.progress.quizzes).toBeUndefined();
   });
 

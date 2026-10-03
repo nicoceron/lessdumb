@@ -21,6 +21,7 @@ import {
   reviewCoverage,
   selectQuestion,
   type Progress,
+  STATE_VERSION,
 } from '../src/lib/learning';
 import { legacyMemory, reviewMemory } from '../src/lib/retention';
 import { taskHistory, taskQueue } from '../src/lib/dashboard';
@@ -423,7 +424,9 @@ describe('implicit credit persistence', () => {
       version: 3,
       progress: { ...createState().progress, version: 3 },
     };
-    expect(parseStateUpdate({ state: v3, revision: 0 }).state.version).toBe(5);
+    expect(parseStateUpdate({ state: v3, revision: 0 }).state.version).toBe(
+      STATE_VERSION,
+    );
   });
 
   it('keeps credit from one device when merging with a stale one', () => {

@@ -21,6 +21,7 @@ import {
   nextTask,
   selectQuestion,
   type Progress,
+  STATE_VERSION,
 } from '../src/lib/learning';
 import {
   authoredChoice,
@@ -481,8 +482,8 @@ describe('saved state migration, merge and validation', () => {
       },
     });
     const parsed = parseStateUpdate({ state: saved, revision: 0 }).state;
-    expect(parsed.version).toBe(5);
-    expect(parsed.progress.version).toBe(5);
+    expect(parsed.version).toBe(STATE_VERSION);
+    expect(parsed.progress.version).toBe(STATE_VERSION);
     expect(isMastered(parsed.progress, skill.id)).toBe(true);
     const migrated = getSkillState(parsed.progress, skill.id);
     expect(migrated.dueAt).toBe(NOW + DAY_MS);
@@ -691,7 +692,7 @@ describe('saved state migration, merge and validation', () => {
       (copy.progress.attempts[0] as { outcome?: string }).outcome = 'won';
     });
     reject((copy) => {
-      (copy as { version: number }).version = 6;
+      (copy as { version: number }).version = STATE_VERSION + 1;
     });
     // A recorded answer still applies to the current state.
     state = recordLearningAnswer(state, {

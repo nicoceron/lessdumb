@@ -1,7 +1,12 @@
 import { courses } from '../catalog-index';
 import { migrateState, type LearnerState } from '../state';
+import { STATE_VERSION } from '../learning';
+import { MAX_REFRESHES } from '../remediation';
 import { MAX_SAVED_QUIZZES } from '../quiz';
 import { activityTotals, type ActivityState } from '../activity';
+
+/** Every schema version a saved state may have; older ones migrate on read. */
+const VERSIONS = Array.from({ length: STATE_VERSION }, (_, index) => index + 1);
 
 /** The full current catalog plus every mastery/mistake card fits with headroom. */
 export const MAX_STATE_BODY_BYTES = 4 * 1024 * 1024;
@@ -151,6 +156,8 @@ const SKILL_FIELDS = [
   'lessonRewarded',
   'implicitCredit',
   'placement',
+  'lessonFailures',
+  'refresh',
 ];
 
 function validateSkill(value: unknown, path: string) {
@@ -236,6 +243,15 @@ function validateSkill(value: unknown, path: string) {
   }
   if (skill.lessonFailedAt !== undefined)
     timestamp(skill.lessonFailedAt, `${path}.lessonFailedAt`);
+  if (skill.lessonFailures !== undefined)
+    number(skill.lessonFailures, `${path}.lessonFailures`, 1, attempts);
+  if (skill.refresh !== undefined) {
+    const at = `${path}.refresh`;
+    const refresh = object(skill.refresh, at, ['at', 'lesson', 'basis']);
+    timestamp(refresh.at, `${at}.at`);
+    string(refresh.lesson, `${at}.lesson`);
+    timestamp(refresh.basis, `${at}.basis`);
+  }
   if (skill.lessonAttempt !== undefined) {
     const lesson = object(skill.lessonAttempt, `${path}.lessonAttempt`, [
       'startedAt',
@@ -356,8 +372,8 @@ function validateProgress(value: unknown) {
     'quizzes',
     'diagnostics',
   ]);
-  if (![1, 2, 3, 4, 5].includes(progress.version as number))
-    fail(`${path}.version`, '1 to 5');
+  if (!VERSIONS.includes(progress.version as number))
+    fail(`${path}.version`, `1 to ${STATE_VERSION}`);
   if (progress.diagnostics !== undefined) {
     const ids = array(progress.diagnostics, `${path}.diagnostics`, 10).map(
       (diagnostic, index) =>
@@ -537,6 +553,7 @@ function validateAttempt(value: unknown, path: string): string {
     'outcome',
     'quizId',
     'credited',
+    'refreshed',
   ]);
   const id = string(attempt.id, `${path}.id`);
   string(attempt.skillId, `${path}.skillId`);
@@ -548,6 +565,8 @@ function validateAttempt(value: unknown, path: string): string {
   if (attempt.quizId !== undefined) string(attempt.quizId, `${path}.quizId`);
   if (attempt.credited !== undefined)
     strings(attempt.credited, `${path}.credited`, 100);
+  if (attempt.refreshed !== undefined)
+    strings(attempt.refreshed, `${path}.refreshed`, MAX_REFRESHES);
   isoTimestamp(attempt.at, `${path}.at`);
   number(attempt.xp, `${path}.xp`, 0, 10_000);
   if (attempt.reviewDueAt !== undefined)
@@ -584,8 +603,8 @@ export function parseStateUpdate(value: unknown): {
     'updatedAt',
   ]);
   // Version 1 accounts predate knowledge-point lessons; they migrate on read.
-  if (![1, 2, 3, 4, 5].includes(state.version as number))
-    fail('state.version', '1 to 5');
+  if (!VERSIONS.includes(state.version as number))
+    fail('state.version', `1 to ${STATE_VERSION}`);
   number(state.dailyGoal, 'state.dailyGoal', 1, 10_000);
   if (state.activeCourseId !== undefined)
     string(state.activeCourseId, 'state.activeCourseId', 128);

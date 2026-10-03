@@ -12,6 +12,7 @@ import {
   nextTask,
   selectQuestion,
   type Progress,
+  STATE_VERSION,
 } from '../src/lib/learning';
 import {
   activeDiagnostic,
@@ -387,7 +388,9 @@ describe('placement persistence', () => {
       version: 4,
       progress: { ...createState().progress, version: 4 },
     };
-    expect(parseStateUpdate({ state: v4, revision: 0 }).state.version).toBe(5);
+    expect(parseStateUpdate({ state: v4, revision: 0 }).state.version).toBe(
+      STATE_VERSION,
+    );
   });
 
   it('merges a test taken on one device into a stale one, and keeps a demotion', () => {
