@@ -43,9 +43,9 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 | Course                   |  Skills | Questions | Executable exercises | Anki cards |
 | ------------------------ | ------: | --------: | -------------------: | ---------: |
 | Python foundations       |      48 |       192 |                   48 |         96 |
-| Quantitative foundations |       5 |        20 |                    5 |         10 |
+| Quantitative foundations |      36 |       144 |                   10 |         72 |
 | Python for Data Analysis |      24 |        96 |                   24 |         48 |
-| Machine Learning         |      28 |       112 |                   21 |         56 |
+| Machine Learning         |      29 |       116 |                   21 |         58 |
 | Data Systems             |      28 |       112 |                    0 |         56 |
 | Competitive Programming  |     192 |       768 |                  192 |        384 |
 | Rust                     |     145 |       580 |                  145 |        290 |

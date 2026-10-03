@@ -433,11 +433,84 @@ const curriculum = [
     ],
   ),
   skill(
+    'ml-overfitting',
+    'ml-evaluation',
+    'Recognize overfitting',
+    'Compare training and validation error to judge how a model generalizes.',
+    ['ml-baselines'],
+    [
+      'A model generalizes when it performs about as well on new data as on the data it was fit to. Overfitting means the model has learned training details, including noise, that do not carry over: training error is low while validation error stays high. Underfitting means the model misses real structure, so training and validation errors are both high.',
+      'Model complexity drives this trade-off. A rule that memorizes every training row reaches zero training error yet can predict new rows badly; a constant baseline cannot memorize but may underfit. Learning curves plot training and validation error against training-set size or training time: a persistent gap signals overfitting, and more data, simpler models, or explicit constraints can narrow it. Judge every fix on validation data, never on the final test set.',
+    ],
+    {
+      kind: 'text',
+      code: 'model        training MSE   validation MSE\nconstant         9.0            9.5\nmedium           3.0            3.5\nmemorizer        0.0            8.0',
+      output: 'medium generalizes best; memorizer overfits; constant underfits',
+      explanation:
+        'The memorizer has the lowest training error but the largest gap. The constant model has a small gap but high error on both sets. The medium model has the lowest validation error.',
+    },
+    [
+      choice(
+        'Training MSE is 0.2 and validation MSE is 6.5. What is the clearest diagnosis?',
+        [
+          'Overfitting',
+          'Underfitting',
+          'Good generalization',
+          'Proven leakage',
+        ],
+        0,
+        'A low training error with a much higher validation error means the fit does not carry over.',
+        'Compare performance on fitted and unseen data.',
+      ),
+      choice(
+        'Training and validation errors are both high and close together. What does that suggest?',
+        ['Overfitting', 'Underfitting', 'A leaked test set', 'A perfect fit'],
+        1,
+        'The model misses structure even on the data it was fit to.',
+        'A small gap with high error is a different problem from a large gap.',
+      ),
+      choice(
+        'As training data grows, validation error falls toward training error. What is the added data doing?',
+        [
+          'Narrowing the generalization gap',
+          'Causing overfitting',
+          'Driving training error to zero',
+          'Replacing the validation set',
+        ],
+        0,
+        'More representative examples make memorized details matter less.',
+        'Read the gap between the two curves.',
+      ),
+      choice(
+        'Which evidence should decide how much model complexity to keep?',
+        [
+          'Training error alone',
+          'Final test error after each change',
+          'Validation performance',
+          'The parameter count alone',
+        ],
+        2,
+        'Validation data estimates generalization while leaving the test set for the final estimate.',
+        'Choices need held-out evidence that is not the final test.',
+      ),
+    ],
+    [
+      [
+        'What error pattern indicates overfitting?',
+        'Low training error with substantially higher validation error.',
+      ],
+      [
+        'What error pattern indicates underfitting?',
+        'Training and validation errors are both high because the model misses real structure.',
+      ],
+    ],
+  ),
+  skill(
     'ml-linear-regression',
     'ml-models',
     'Fit a linear regression',
     'Connect feature coefficients, intercepts, and least-squares predictions.',
-    ['ml-baselines', 'math-vectors', 'da-exploration', 'methods'],
+    ['ml-baselines', 'da-exploration', 'methods', 'math-matrix-vector'],
     [
       'A linear model predicts an intercept plus a weighted sum of input features: prediction = b + w1*x1 + ... . The model is linear in its learned coefficients; you can still supply transformed features such as a squared input. Least squares chooses coefficients to minimize the sum of squared training residuals.',
       'scikit-learn LinearRegression expects a two-dimensional feature matrix with one row per observation and one column per feature. fit(X, y) estimates coefficients; predict(new_X) applies them. A coefficient describes a conditional relationship inside the model and is not automatically a causal effect.',
@@ -500,7 +573,7 @@ const curriculum = [
     'ml-models',
     'Follow a loss gradient',
     'Update parameters in the direction that locally reduces a loss.',
-    ['math-gradients', 'ml-baselines'],
+    ['math-gradients', 'ml-baselines', 'math-convexity'],
     [
       'A gradient tells you how a loss changes when each parameter changes. Gradient descent updates a parameter vector by subtracting learning_rate times the gradient. For the scalar loss L(w) = (w - target)^2, the derivative is 2*(w - target). The subtraction moves toward the target when the step size is suitable.',
       'A very small learning rate can make progress slow; a very large one can overshoot or diverge. Batch gradient descent uses all training examples per update. Stochastic descent uses one; mini-batch descent uses a small group. A loss can have several valleys, so a zero gradient does not by itself prove that you found the best possible solution.',
@@ -572,10 +645,15 @@ const curriculum = [
     'ml-regularization',
     'ml-models',
     'Control model complexity',
-    'Recognize overfitting and penalize unnecessary coefficient size.',
-    ['ml-linear-regression', 'ml-gradient-descent'],
+    'Penalize unnecessary coefficient size to reduce overfitting.',
     [
-      'Overfitting appears when a model fits training details that do not generalize: training error is low while validation error remains high. Underfitting appears when the model or optimization fails to capture useful patterns in both sets. Learning curves compare training and validation behavior as data quantity or training time changes.',
+      'ml-overfitting',
+      'ml-linear-regression',
+      'ml-gradient-descent',
+      'math-vector-norm',
+    ],
+    [
+      'Regularization is a response to overfitting: it constrains a model so it cannot fit every training detail. A penalized objective adds a cost for large coefficients to the data loss, accepting a little more training error in exchange for better validation behavior.',
       'Ridge adds an L2 penalty proportional to the sum of squared coefficients; lasso adds an L1 penalty proportional to the sum of absolute coefficients. A larger penalty usually constrains coefficients more strongly. Choose its strength on validation data. Early stopping is another form of control: keep the model from the best validation checkpoint instead of blindly keeping the last training step.',
     ],
     {
@@ -646,7 +724,7 @@ const curriculum = [
     'ml-models',
     'Turn scores into probabilities',
     'Use logistic scores and thresholds for binary classification.',
-    ['ml-linear-regression', 'math-probability'],
+    ['ml-linear-regression', 'math-probability', 'math-sigmoid'],
     [
       'Binary logistic regression forms a linear score and applies the sigmoid: probability = 1 / (1 + exp(-score)). A score of zero maps to probability 0.5. Positive scores map above 0.5 and negative scores below it. Despite its name, logistic regression is commonly used for classification.',
       'A probability estimate and a class decision are separate outputs. A threshold converts probabilities into labels, for example positive when p >= 0.7. Raising the threshold reduces the set of predicted positives; lowering it expands that set. Select a threshold using validation data and error costs. A probability-shaped output also needs calibration checks before being trusted as a frequency estimate.',
@@ -918,7 +996,12 @@ const curriculum = [
     'ml-structure',
     'Separate classes with a margin',
     'Reason about support vectors, feature scales, and nonlinear kernels.',
-    ['ml-logistic-regression', 'ml-regularization', 'ml-preprocessing'],
+    [
+      'ml-logistic-regression',
+      'ml-regularization',
+      'ml-preprocessing',
+      'math-distance',
+    ],
     [
       'A linear support vector classifier seeks a separating boundary with a wide margin while allowing violations controlled by regularization. The examples nearest the boundary or violating the margin constrain the solution; these are support vectors. Feature scaling matters because distances and margins depend on numeric units.',
       'The C hyperparameter controls the trade-off: larger C penalizes violations more strongly, usually allowing less regularization. A kernel such as the radial basis function permits nonlinear boundaries through similarity calculations. For an RBF model, gamma controls how locally each observation influences the boundary. Tune these choices with validation; an SVM decision score is not automatically a calibrated probability.',
@@ -991,7 +1074,7 @@ const curriculum = [
     'ml-structure',
     'Split data with a decision tree',
     'Connect threshold rules, impurity, and tree depth.',
-    ['ml-regularization', 'ml-preprocessing', 'dictionary-loops'],
+    ['ml-overfitting', 'ml-preprocessing', 'dictionary-loops'],
     [
       'A decision tree repeatedly asks feature-threshold questions and routes a row down one branch until it reaches a leaf. A classification leaf predicts a class or class proportions; a regression leaf predicts a numeric summary. Training chooses splits that improve a criterion such as Gini impurity or squared error.',
       'For class proportions p1, p2, ..., Gini impurity is 1 - sum(pi^2). A pure node has impurity zero. Deep trees can memorize small training details, so validate constraints such as max_depth and min_samples_leaf. Trees usually do not need feature standardization because a consistent monotonic rescaling preserves possible threshold splits.',
@@ -1059,7 +1142,7 @@ const curriculum = [
     'ml-structure',
     'Combine multiple predictors',
     'Distinguish voting, bagging, random forests, and boosting.',
-    ['ml-decision-trees'],
+    ['ml-decision-trees', 'math-sampling', 'math-correlation'],
     [
       'An ensemble combines several predictors. Classification can use majority voting; regression can average predictions. Combining diverse models can reduce variance when their errors are not identical. Bagging trains models on resampled training sets, often independently and in parallel.',
       'A random forest bags decision trees and also samples candidate features at splits, promoting diversity. Boosting instead adds models sequentially to improve remaining errors or gradients of a loss. More models do not automatically eliminate bias, leakage, or poor data. Validate the ensemble against baselines and monitor its compute cost as well as its predictive metric.',
@@ -1132,7 +1215,7 @@ const curriculum = [
     'ml-structure',
     'Project data with PCA',
     'Reduce numeric dimensions while tracking retained variation.',
-    ['ml-preprocessing', 'math-vectors'],
+    ['ml-preprocessing', 'math-eigenvectors'],
     [
       'Principal component analysis finds orthogonal directions (perpendicular, with a dot product of zero) of large variance in centered numeric data. Keeping the first few components projects observations into a smaller feature space. It is unsupervised: the directions are selected without knowing which target you hope to predict.',
       "High retained variance does not guarantee high predictive usefulness; a low-variance direction can still matter for a target. Scaling changes the variance geometry, so decide whether raw units or standardized features match your task. Fit PCA on training data, often inside a pipeline. The explained_variance_ratio_ values report each component's share of the total fitted variance.",
@@ -1205,7 +1288,7 @@ const curriculum = [
     'ml-structure',
     'Group similar observations',
     'Understand centroids, cluster assignments, and geometric assumptions.',
-    ['ml-preprocessing', 'math-vectors', 'zip-enumerate', 'key-functions'],
+    ['ml-preprocessing', 'zip-enumerate', 'key-functions', 'math-distance'],
     [
       'K-means alternates between assigning each observation to its nearest centroid and updating each centroid to the mean of its assigned observations. Its objective is the sum of squared within-cluster distances. The number of clusters k is supplied before fitting, and different initializations can lead to different local solutions.',
       'Cluster numbers are arbitrary identifiers, not known class names. Feature scaling changes distances, and k-means works best for roughly compact groups under its chosen geometry. A silhouette score compares within-cluster closeness with separation from other clusters, but it does not prove that the groups are useful for a real decision. Density-based methods can handle different shapes and mark some observations as noise.',
@@ -1278,7 +1361,7 @@ const curriculum = [
     'ml-structure',
     'Flag unusual observations',
     'Use scores and thresholds without equating rarity with wrongdoing.',
-    ['ml-classification-metrics'],
+    ['ml-classification-metrics', 'math-normal-distribution'],
     [
       'An anomaly detector scores how unusual an observation is relative to a learned reference. Z-scores, density models, or distance-based rules can supply such scores. Different libraries use different score directions: in one API larger means more unusual, while another returns larger values for more normal observations. Read the contract before applying a threshold.',
       'An unusual row can be a measurement error, a rare legitimate event, or a genuine problem. Detection requires investigation and domain context. A threshold determines alert volume and the false-positive/false-negative trade-off. Evaluate with representative labels when available, and distinguish outlier detection in potentially contaminated training data from novelty detection using a mostly clean reference set.',
@@ -1351,7 +1434,12 @@ const curriculum = [
     'ml-neural',
     'Compute a dense neural layer',
     'Track weighted sums, activations, and batch shapes.',
-    ['da-broadcasting', 'ml-logistic-regression'],
+    [
+      'da-broadcasting',
+      'ml-logistic-regression',
+      'math-matrix-multiplication',
+      'math-softmax',
+    ],
     [
       'A dense layer computes Z = X @ W + b and applies an activation. With X shaped (batch, inputs), W shaped (inputs, outputs), and b shaped (outputs,), the result has shape (batch, outputs). Each output neuron has one weight per input plus a bias. ReLU replaces negative pre-activation values with zero.',
       'Stacking dense layers with nonlinear activations can model nonlinear relationships. Stacking only linear layers still gives a linear transformation. The output activation and loss must match the task: a single sigmoid often represents a binary probability; a softmax distributes probability across mutually exclusive classes; regression can use an unrestricted numeric output. This lesson executes the layer arithmetic with NumPy, without requiring TensorFlow.',
@@ -1482,7 +1570,7 @@ const curriculum = [
     'ml-neural',
     'Stabilize network training',
     'Separate optimization difficulties from generalization problems.',
-    ['ml-backpropagation', 'ml-regularization'],
+    ['ml-backpropagation', 'ml-regularization', 'math-random-variables'],
     [
       "Repeated multiplications through many layers can make gradients vanish or explode. Appropriate initialization, normalization, residual connections, and activation choices help manage signal scales. Gradient clipping limits a gradient vector's norm when it is too large; it does not fix every cause of unstable training. Learning-rate schedules change step sizes during optimization.",
       'Dropout randomly suppresses some activations during training and adjusts scaling so their expected contribution is preserved. Standard prediction uses the full network with dropout disabled. Batch normalization also behaves differently between training and inference: it uses batch statistics while training and learned running statistics at inference. Track both training and validation loss; reduce overfitting through data, regularization, and early stopping rather than confusing it with a numerical failure.',
@@ -1555,7 +1643,7 @@ const curriculum = [
     'ml-neural',
     'Read a Keras training workflow',
     'Connect model construction, compilation, fitting, and evaluation.',
-    ['ml-neural-layers', 'ml-regularization'],
+    ['ml-neural-layers', 'ml-regularization', 'math-likelihood'],
     [
       'A Keras workflow constructs a model, compiles it with an optimizer and loss, fits it on training examples, and evaluates it on held-out examples. A Sequential model fits a simple layer stack; the Functional API describes graphs with branching, multiple inputs, or multiple outputs. A binary classifier often combines one sigmoid output with binary cross-entropy; mutually exclusive multiclass outputs often use softmax with an appropriate categorical loss.',
       'Choose the loss to match both the prediction and the target representation: integer multiclass labels differ from one-hot label vectors. Validation data guides callbacks such as early stopping, while the test set estimates the selected model once. TensorFlow and Keras training are not executed in this browser environment. This skill assesses workflow and API reasoning; the runnable Python example below only computes cross-entropy arithmetic.',
@@ -1930,7 +2018,7 @@ const curriculum = [
     'ml-architectures',
     'Distinguish generative models',
     'Compare reconstruction, latent sampling, adversarial training, and denoising.',
-    ['ml-training-deep-networks'],
+    ['ml-training-deep-networks', 'math-sampling'],
     [
       'An autoencoder maps an input to a compact representation and reconstructs it with a decoder. A variational autoencoder learns a distribution of latent representations, balancing reconstruction with a regularizer toward a chosen prior. A generative adversarial network trains a generator against a discriminator. A diffusion model learns a denoising process that can generate samples by iteratively reversing a noising process.',
       'Reconstruction quality, sample diversity, and useful downstream performance measure different things. A model can memorize training examples, omit modes of the data, or generate plausible-looking but incorrect content. Evaluation should examine held-out behavior and the intended use, rather than judging a few attractive outputs. This skill is conceptual: the runnable example computes a reconstruction error using ordinary Python, not a GAN, VAE, or diffusion training job.',
@@ -2009,9 +2097,9 @@ const curriculum = [
     'Separate a policy, delayed return, and exploration.',
     [
       'ml-learning-tasks',
-      'math-probability',
       'zip-enumerate',
       'generator-expressions',
+      'math-random-variables',
     ],
     [
       'A reinforcement-learning agent observes an environment, chooses an action according to a policy, and receives a reward and a new observation. It tries to maximize expected accumulated return, not merely the next immediate reward. A discounted return sums rewards with powers of a discount factor gamma between 0 and 1, placing progressively less weight on distant rewards.',
@@ -2083,7 +2171,14 @@ const curriculum = [
     'ml-production',
     'Keep deployed predictions reliable',
     'Version the full prediction pipeline and monitor real outcomes.',
-    ['ml-preprocessing', 'da-pipeline', 'sorting', 'sets'],
+    [
+      'ml-preprocessing',
+      'da-pipeline',
+      'sorting',
+      'sets',
+      'ml-classification-metrics',
+      'math-sampling',
+    ],
     [
       'Serving a model requires the same feature definitions and fitted preprocessing used during training. Store the model together with its schema, transformation state, package versions, and training-data lineage. Validate required fields and input types at the boundary. A reproducible prediction is more than a saved weight file.',
       'Monitor input quality, latency, failures, prediction distributions, and eventual outcomes when labels arrive. Covariate shift changes input distributions; concept drift changes the relationship between inputs and targets. An input-distribution change is a warning to investigate, not automatic proof that predictions got worse. Re-evaluate with new representative labels, compare subgroup performance, and keep a rollback path for a bad release.',

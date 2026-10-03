@@ -7,6 +7,7 @@ import { knowledgePoints as competitive3 } from './competitive-3.kp';
 import { knowledgePoints as cpp1 } from './cpp-1.kp';
 import { knowledgePoints as machineLearning } from './machine-learning.kp';
 import { knowledgePoints as pythonFoundations } from './python-foundations.kp';
+import { knowledgePoints as quantitativeFoundations } from './quantitative-foundations.kp';
 import { knowledgePoints as rust1 } from './rust-1.kp';
 
 export * from './authoring';
@@ -21,6 +22,7 @@ const modules: Record<string, KnowledgePointModule> = {
   'cpp-1.kp.ts': cpp1,
   'machine-learning.kp.ts': machineLearning,
   'python-foundations.kp.ts': pythonFoundations,
+  'quantitative-foundations.kp.ts': quantitativeFoundations,
   'rust-1.kp.ts': rust1,
 };
 

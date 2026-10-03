@@ -6,13 +6,13 @@ All lesson paragraphs, synthetic data, examples, assessment prompts, solutions, 
 
 ## Scope
 
-The course has 28 skills in seven units, 112 assessment questions, 21 executable exercises, and 56 mastery flashcards. Every skill has four distinct questions and two flashcards. The seven architecture/workflow skills use a choice-only mastery/review policy, while executable skills require both code and choice evidence.
+The course has 29 skills in seven units, 116 assessment questions, 21 executable exercises, and 58 mastery flashcards. Every skill has four distinct questions and two flashcards. The overfitting skill and the seven architecture/workflow skills use a choice-only mastery/review policy, while executable skills require both code and choice evidence.
 
 | Unit                      | Skills                                                                                 | Source topics                                                   |
 | ------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | Frame an ML project       | Learning tasks, splits, baselines, preprocessing                                       | ML landscape and end-to-end projects, chapters 1-2              |
 | Fit predictive models     | Linear regression, gradient descent, regularization, logistic regression               | Training models, chapter 4                                      |
-| Measure what matters      | Classification metrics, cross-validation, hyperparameter search                        | Classification and model selection, chapters 2-3                |
+| Measure what matters      | Overfitting, classification metrics, cross-validation, hyperparameter search           | Classification and model selection, chapters 2-3                |
 | Discover structure        | SVM, decision trees, ensembles, PCA, clustering, anomalies                             | Chapters 5-9                                                    |
 | Train neural networks     | Dense layers, backpropagation, training stability, Keras workflow                      | Chapters 10-13                                                  |
 | Choose deep architectures | Convolution, sequences, attention, transfer, generative models, reinforcement learning | Chapters 11 and 14-18                                           |
@@ -30,7 +30,7 @@ This course is part of the shared graph, not an isolated lesson list. Its extern
 
 - Python: dictionaries, functions, return values, slicing, loops, boolean logic, conditionals, indexing, and errors.
 - Data Analysis: `da-dataframes`, `da-arrays`, `da-missing-values`, and `da-groupby`.
-- Quantitative Foundations: `math-mean`, `math-variance`, `math-vectors`, `math-probability`, and `math-gradients`.
+- Quantitative Foundations: the statistics, probability, sigmoid/softmax/likelihood, calculus, and linear-algebra skills each ML skill uses, such as `math-sigmoid`, `math-convexity`, `math-matrix-multiplication`, `math-distance`, `math-eigenvectors`, and `math-sampling`. [The knowledge graph notes](../knowledge-graph.md#mathematics-for-ml-cen-82) list every edge.
 
 Within the course, graph branches allow learners to pursue classification evaluation, tree ensembles, or unsupervised structure after their actual prerequisites. Neural arithmetic depends on vector operations and linear models; backpropagation depends on gradients. Deep architecture nodes depend on these foundations. Production monitoring combines evaluation, ensemble knowledge, and neural workflow literacy. The same global skill identifiers support unlocking, prerequisite paths, adaptive practice, spaced review, and Anki generation across courses.
 
