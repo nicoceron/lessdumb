@@ -6,18 +6,18 @@ The author also publishes an [official online edition](https://wesmckinney.com/b
 
 ## Course scope
 
-24 skills contain 96 questions (72 conceptual or output questions and 24 executable exercises), 24 runnable lesson examples, and 48 original Anki cards. Every executable snippet embeds its own small dataset. It needs NumPy and pandas, which run in the same free, local Pyodide worker as the Python foundations exercises. No exercise downloads book datasets, calls an API, requires a paid notebook, or reads a personal file.
+25 skills teach 76 knowledge points with 304 practice questions, and each has an executable exercise, a runnable lesson example, and two original Anki cards: 25 exercises, 25 examples, and 50 cards. 32 of the questions are generators that draw fresh arrays and tables each time they are asked (CEN-162). Every executable snippet embeds its own small dataset. It needs NumPy and pandas, which run in the same free, local Pyodide worker as the Python foundations exercises. No exercise downloads book datasets, calls an API, requires a paid notebook, or reads a personal file.
 
 The course teaches an end-to-end tabular-analysis foundation, rather than claiming to reproduce every section of the book. Large-file storage, web scraping, rich chart rendering, hierarchical indices, advanced modeling libraries, and full-scale case studies are outside this course's present assessment scope.
 
-| Unit                | Original assessed skills                                                               | Reference topics                                  |
-| ------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| Numerical arrays    | Creation and shape; vectorization and reductions; masks and copies; broadcasting       | Chapter 4; broadcasting appendix topics           |
-| Labeled tables      | Series; DataFrames; label alignment; row filtering                                     | Chapter 5                                         |
-| Load and clean      | CSV parsing; missingness policies; numeric conversion; deduplication by key            | Chapters 6 and 7                                  |
-| Connect and reshape | Text normalization; categories and indicators; validated merges; melt and pivot        | Chapters 7 and 8                                  |
-| Summarize groups    | Group reductions; named aggregation; transform; rolling windows                        | Chapter 10 and moving-window topics in Chapter 11 |
-| Build an analysis   | Timestamp parsing; time resampling; exploratory summaries; reusable validated pipeline | Chapters 9-11 and data-analysis workflow topics   |
+| Unit                | Original assessed skills                                                                            | Reference topics                                  |
+| ------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Numerical arrays    | Creation and shape; vectorization and reductions; masks and copies; broadcasting; np.exp and np.log | Chapter 4; broadcasting appendix topics           |
+| Labeled tables      | Series; DataFrames; label alignment; row filtering                                                  | Chapter 5                                         |
+| Load and clean      | CSV parsing; missingness policies; numeric conversion; deduplication by key                         | Chapters 6 and 7                                  |
+| Connect and reshape | Text normalization; categories and indicators; validated merges; melt and pivot                     | Chapters 7 and 8                                  |
+| Summarize groups    | Group reductions; named aggregation; transform; rolling windows                                     | Chapter 10 and moving-window topics in Chapter 11 |
+| Build an analysis   | Timestamp parsing; time resampling; exploratory summaries; reusable validated pipeline              | Chapters 9-11 and data-analysis workflow topics   |
 
 ## Knowledge graph
 

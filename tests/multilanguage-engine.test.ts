@@ -131,19 +131,31 @@ describe('Rust and C++ in the shared learner engine', () => {
 
   it('rejects an assessment or runnable example carrying a different course language', () => {
     for (const root of roots()) {
-      const wrongExercise = structuredClone(root);
-      const code = wrongExercise.questions.find(
-        (question) => question.type === 'code',
-      )!;
-      if (code.type !== 'code') throw new Error('Expected compiled exercise.');
-      code.language = 'python';
+      // Copy only what changes: generated questions carry functions, which
+      // structuredClone cannot copy.
+      expect(root.questions.some((question) => question.type === 'code')).toBe(
+        true,
+      );
+      const wrongExercise = {
+        ...root,
+        questions: root.questions.map((question) =>
+          question.type === 'code'
+            ? { ...question, language: 'python' as const }
+            : question,
+        ),
+      };
       expect(
         validateCurriculum(
           skills.map((item) => (item.id === root.id ? wrongExercise : item)),
         ),
       ).not.toEqual([]);
-      const wrongExample = structuredClone(root);
-      wrongExample.lesson.example.language = 'python';
+      const wrongExample = {
+        ...root,
+        lesson: {
+          ...root.lesson,
+          example: { ...root.lesson.example, language: 'python' as const },
+        },
+      };
       expect(
         validateCurriculum(
           skills.map((item) => (item.id === root.id ? wrongExample : item)),
