@@ -30,6 +30,8 @@ Rust and C++ keep their edges in one explicit map each (`src/lib/courses/rust/pr
 
 Redundant edges fell from 523 to 0. Rust and C++ gained edges because the old generators chained each skill to the previous one and omitted most real uses: 55% of Rust's and 52% of C++'s previous-skill edges were false, and dozens of skills used constructs taught only later. Competitive Programming no longer injects `parameters` into every node or chains every concept to its sibling; 231 of its removed edges named skills that are no longer ancestors at all.
 
+Since the audit, C++ gained seven four-skill topics for constructs it used without teaching (logical and conditional operators, fixed arrays and range-based loops, characters and type traits, bit operations, member functions and `const`, pairs and structured bindings, and `std::chrono`). Every dependent now names the skill it uses: C++ has 208 skills and 383 direct edges, its longest in-course chain is still 12, and the median ready count is 32.
+
 ## Known gaps
 
 Edges cannot fix content. These items are the backlog for new concept nodes and lesson rewrites.
@@ -39,11 +41,10 @@ Edges cannot fix content. These items are the backlog for new concept nodes and 
 - Python: tuples (32), `min`/`max` (15), truthiness (12), `[x] * n` (11), conditional expressions (9), `zip`/`enumerate`/generator expressions (19 combined), sorting and `key=`/`lambda` (10), imports and standard-library modules (11), classes and objects (4), `break`/`continue` (4), sets, recursion, bitwise operators.
 - Mathematics for ML: exponentials and logarithms, softmax, derivative definition and rules, partial derivatives, expected value, correlation, percentiles.
 - Rust: `{:?}`, `assert!`/`assert_eq!`, `.unwrap()` (12), `.copied()` (10), `Option`/`Result` query methods (8), `?` on `Option` (6), turbofish (6), early `return` (5), `TryFrom`/`TryInto` (5), tuple structs (5), `while`/`while let`, `VecDeque`.
-- C++: `&&`/`||`/`!` (28), `?:` (26), range-for (13), `std::array` (8), const member functions, type traits, structured bindings, `break`/`continue`, bit shifts, fixed-width integers.
+- C++: generic lambdas and `decltype`/`std::decay_t` (`cpp-optional`, `cpp-tie-break-order`), `mutable` lambdas (`cpp-callbacks`), and single uses of `std::count_if`, `std::reverse`, `std::abs`, and `std::to_string`. `cpp-elapsed-duration` still subtracts raw `long long` timestamps instead of using the `std::chrono` skills.
 
 **Content that contradicts its own edges:**
 
 - Rust: `rust-main`, `rust-format`, and `rust-returns` use typed parameters, `&str`, or `&'static str` before the nodes that teach them; `rust-future-ready` uses `pin!` before `rust-future-pin`. `rust-test-contract` and `rust-package-name` do not exercise their stated rules (`#[test]`, package names). Building maps and sets with `collect` puts every collection behind closures and iterators.
-- C++: `cpp-functions` sums a `std::vector` although vectors depend on it; `cpp-while-progress` teaches `while` with a `do-while` example; `cpp-arithmetic` never teaches `%`, which 12 later skills use.
 - Competitive Programming: `cp-grid-component` (flood fill) and `cp-bit-submask-step` are not used by their applications, so they remain leaves. Brute-force solutions passed all 32 application assessments tried, because inputs are small.
 - Machine Learning: `ml-decision-trees` reaches calculus only through the overfitting idea in `ml-regularization`; a separate overfitting node would remove that dependency.
