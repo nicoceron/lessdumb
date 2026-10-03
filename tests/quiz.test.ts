@@ -16,6 +16,7 @@ import {
   activeQuiz,
   answerQuiz,
   finishQuiz,
+  MAX_SAVED_QUIZZES,
   nonQuizXp,
   planQuiz,
   QUIZ_MAX_QUESTIONS,
@@ -30,7 +31,10 @@ import {
 } from '../src/lib/quiz';
 import { taskHistory, taskQueue } from '../src/lib/dashboard';
 import { createState, mergeStates, type LearnerState } from '../src/lib/state';
-import { parseStateUpdate } from '../src/lib/server/state-validation';
+import {
+  MAX_STATE_BODY_BYTES,
+  parseStateUpdate,
+} from '../src/lib/server/state-validation';
 import { earnedQuizXp, quizXp } from '../src/lib/xp';
 
 const NOW = Date.parse('2026-10-01T16:00:00Z');
@@ -324,6 +328,26 @@ describe('quiz persistence', () => {
     ]);
     expect(merged.progress.totalXp).toBe(
       ready.totalXp + quiz.possible + otherQuiz.possible,
+    );
+  });
+
+  it('keeps only the latest quizzes, well inside the state size cap', () => {
+    let progress = ready;
+    for (let index = 0; index < MAX_SAVED_QUIZZES + 5; index++) {
+      const at = NOW + index * 1000;
+      // Stand in for another 150 XP of lessons and reviews.
+      progress = { ...progress, totalXp: progress.totalXp + QUIZ_XP_INTERVAL };
+      progress = startQuiz(progress, COURSE, at);
+      progress = finishQuiz(progress, activeQuiz(progress)!.id, at + 500);
+    }
+    expect(progress.quizzes).toHaveLength(MAX_SAVED_QUIZZES);
+    expect(progress.quizzes!.at(-1)!.number).toBe(MAX_SAVED_QUIZZES + 5);
+    const saved = state(progress, NOW + 1);
+    expect(parseStateUpdate({ state: saved, revision: 0 }).state).toEqual(
+      saved,
+    );
+    expect(JSON.stringify(progress.quizzes).length).toBeLessThan(
+      MAX_STATE_BODY_BYTES / 20,
     );
   });
 
