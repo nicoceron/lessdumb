@@ -1377,7 +1377,7 @@ export const knowledgePoints: KnowledgePointModule = {
       questions: [
         choose(
           'Three fair coins are flipped. What is $P(\\text{exactly 2 heads})$?',
-          ['$\\frac{1}{8}$', '3/8', '1/2', '2/3'],
+          ['1/8', '3/8', '1/2', '2/3'],
           1,
           '$C(3, 2) = 3$ arrangements, each with probability 1/8.',
         ),
@@ -1678,38 +1678,38 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Compute the likelihood of a parameter value',
       explanation: [
-        'Given observed data and a model with parameter p, the likelihood L(p) is the probability of exactly those data if p were true. For independent Bernoulli observations, multiply p for each 1 and 1 − p for each 0. A larger likelihood means the parameter value explains the data better.',
+        'Given observed data and a model with parameter $p$, the likelihood $L(p)$ is the probability of exactly those data if $p$ were true. For independent Bernoulli observations, multiply $p$ for each 1 and $1 - p$ for each 0. A larger likelihood means the parameter value explains the data better.',
       ],
       example: {
         code: 'p = 0.5\nprint(p * p * (1 - p))\np = 0.75\nprint(p * p * (1 - p))',
         output: '0.125\n0.140625',
         explanation:
-          'For the data 1, 1, 0, the value p = 0.75 makes the observations more probable than p = 0.5.',
+          'For the data 1, 1, 0, the value $p = 0.75$ makes the observations more probable than $p = 0.5$.',
       },
       questions: [
         choose(
-          'The data are 1, 0 from a Bernoulli(p) model. What is L(0.5)?',
+          'The data are 1, 0 from a $\\text{Bernoulli}(p)$ model. What is $L(0.5)$?',
           ['0.5', '0.25', '1', '0'],
           1,
-          '0.5 × (1 − 0.5) = 0.25.',
+          '$0.5 \\times (1 - 0.5) = 0.25$.',
         ),
         predictOutput(
-          'This program computes L(0.25) for the data 1, 0, 0. What does it print?',
+          'This program computes $L(0.25)$ for the data 1, 0, 0. What does it print?',
           'p = 0.25\nprint(p * (1 - p) * (1 - p))',
           ['0.25', '0.046875', '0.140625', '0.5625'],
           2,
-          '0.25 × 0.75 × 0.75 = 0.140625.',
+          '$0.25 \\times 0.75 \\times 0.75 = 0.140625$.',
         ),
         choose(
-          'The data are 1, 1, 1, 0. Which value of p has the larger likelihood?',
+          'The data are 1, 1, 1, 0. Which value of $p$ has the larger likelihood?',
           [
-            'p = 0.25',
-            'p = 0.75',
+            '$p = 0.25$',
+            '$p = 0.75$',
             'They are equal',
             'Likelihoods cannot compare them',
           ],
           1,
-          '0.75³ × 0.25 ≈ 0.105 exceeds 0.25³ × 0.75 ≈ 0.012.',
+          '$0.75^3 \\times 0.25 \\approx 0.105$ exceeds $0.25^3 \\times 0.75 \\approx 0.012$.',
         ),
         choose(
           'Why is the likelihood of independent observations a product?',
@@ -1727,7 +1727,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Choose the maximum likelihood estimate',
       explanation: [
-        'Maximum likelihood estimation chooses the parameter value with the largest likelihood. For k successes in n independent Bernoulli trials, the maximizer is p = k / n, the observed success rate. Values farther from k / n make the observed data less probable.',
+        'Maximum likelihood estimation chooses the parameter value with the largest likelihood. For $k$ successes in $n$ independent Bernoulli trials, the maximizer is $p = k / n$, the observed success rate. Values farther from $k / n$ make the observed data less probable.',
       ],
       example: worked(
         'data: 2 successes in 5 trials\nL(p) = p²(1 − p)³\nL(0.2) ≈ 0.0205, L(0.4) ≈ 0.0346, L(0.6) ≈ 0.0230',
@@ -1739,32 +1739,32 @@ export const knowledgePoints: KnowledgePointModule = {
           'A drug works for 18 of 24 independent patients. What is the maximum likelihood estimate of its success rate?',
           ['0.5', '0.75', '18', '0.25'],
           1,
-          'k / n = 18 / 24 = 0.75.',
+          '$k / n = 18 / 24 = 0.75$.',
         ),
         choose(
           'A filter sees 3 spam messages among 60. What is the maximum likelihood estimate of the spam rate?',
           ['0.3', '0.5', '0.05', '20'],
           2,
-          '3 / 60 = 0.05.',
+          '$3 / 60 = 0.05$.',
         ),
         choose(
-          'The data are 0, 0, 0, 0. What is the maximum likelihood estimate of p?',
+          'The data are 0, 0, 0, 0. What is the maximum likelihood estimate of $p$?',
           ['0.5', '0.25', '1', '0'],
           3,
-          'L(p) = (1 − p)⁴ is largest at p = 0, matching k / n = 0 / 4.',
+          '$L(p) = (1 - p)^4$ is largest at $p = 0$, matching $k / n = 0 / 4$.',
         ),
         choose(
           'With 4 successes in 10 trials, which candidate has the largest likelihood?',
-          ['p = 0.4', 'p = 0.5', 'p = 0.1', 'p = 0.9'],
+          ['$p = 0.4$', '$p = 0.5$', '$p = 0.1$', '$p = 0.9$'],
           0,
-          'The likelihood peaks at the observed rate 4 / 10.',
+          'The likelihood peaks at the observed rate $4 / 10$.',
         ),
       ],
     },
     {
       title: 'Work with log-likelihoods',
       explanation: [
-        'Products of many probabilities shrink toward 0, so we take logs: ln L(p) adds the log-probabilities of the observations. Because ln is increasing, the parameter that maximizes the log-likelihood also maximizes the likelihood. Training usually minimizes the negative log-likelihood, which is the same goal.',
+        'Products of many probabilities shrink toward 0, so we take logs: $\\ln L(p)$ adds the log-probabilities of the observations. Because $\\ln$ is increasing, the parameter that maximizes the log-likelihood also maximizes the likelihood. Training usually minimizes the negative log-likelihood, which is the same goal.',
       ],
       example: worked(
         'data 1, 1, 0\nL(p) = p × p × (1 − p)\nln L(p) = ln p + ln p + ln(1 − p) = 2 ln p + ln(1 − p)',
@@ -1773,32 +1773,32 @@ export const knowledgePoints: KnowledgePointModule = {
       ),
       questions: [
         choose(
-          'L(p) = p³(1 − p). Which expression is ln L(p)?',
+          '$L(p) = p^3(1 - p)$. Which expression is $\\ln L(p)$?',
           [
-            'ln(3p) + ln(1 − p)',
-            '3 ln p + ln(1 − p)',
-            '3 ln p × ln(1 − p)',
-            '(ln p)³ + ln(1 − p)',
+            '$\\ln(3p) + \\ln(1 - p)$',
+            '$3 \\ln p + \\ln(1 - p)$',
+            '$3 \\ln p \\times \\ln(1 - p)$',
+            '$(\\ln p)^3 + \\ln(1 - p)$',
           ],
           1,
-          'ln turns the product into a sum and the power into a factor.',
+          '$\\ln$ turns the product into a sum and the power into a factor.',
         ),
         choose(
           'On the same data, model A has log-likelihood −12.4 and model B has −15.1. Which explains the data better?',
           ['B', 'They tie', 'A', 'Log-likelihoods cannot be compared'],
           2,
-          '−12.4 is larger, and a larger log-likelihood means a larger likelihood.',
+          '$-12.4$ is larger, and a larger log-likelihood means a larger likelihood.',
         ),
         choose(
           'Minimizing the negative log-likelihood is equivalent to what?',
           [
             'Minimizing the likelihood',
             'Maximizing the number of parameters',
-            'Setting p = 0.5',
+            'Setting $p = 0.5$',
             'Maximizing the likelihood',
           ],
           3,
-          'Negating flips minimization into maximization, and ln preserves the maximizer.',
+          'Negating flips minimization into maximization, and $\\ln$ preserves the maximizer.',
         ),
         choose(
           'Why do programs add log-probabilities instead of multiplying thousands of probabilities?',
@@ -1816,7 +1816,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Read binary cross-entropy as a negative log-likelihood',
       explanation: [
-        'For a binary label y and a predicted probability p that y = 1, the likelihood of the label is p when y = 1 and 1 − p when y = 0. Its negative log is the binary cross-entropy −(y ln p + (1 − y) ln(1 − p)). Confident correct predictions cost little; confident wrong ones cost a lot, because the log of a number near 0 is very negative.',
+        'For a binary label $y$ and a predicted probability $p$ that $y = 1$, the likelihood of the label is $p$ when $y = 1$ and $1 - p$ when $y = 0$. Its negative log is the binary cross-entropy $-(y \\ln p + (1 - y) \\ln(1 - p))$. Confident correct predictions cost little; confident wrong ones cost a lot, because the log of a number near 0 is very negative.',
       ],
       example: worked(
         'y = 1, p = 0.9: −ln 0.9\ny = 1, p = 0.1: −ln 0.1\ny = 0, p = 0.1: −ln(1 − 0.1)',
@@ -1825,28 +1825,33 @@ export const knowledgePoints: KnowledgePointModule = {
       ),
       questions: [
         choose(
-          'The label is y = 0 and the model predicts p = 0.8 for class 1. What is the loss?',
-          ['−ln(0.8) ≈ 0.223', '0.8', '−ln(0.2) ≈ 1.609', '−ln(1) = 0'],
+          'The label is $y = 0$ and the model predicts $p = 0.8$ for class 1. What is the loss?',
+          [
+            '$-\\ln(0.8) \\approx 0.223$',
+            '$0.8$',
+            '$-\\ln(0.2) \\approx 1.609$',
+            '$-\\ln(1) = 0$',
+          ],
           2,
-          'With y = 0 only −ln(1 − p) remains, and the true label received probability 0.2.',
+          'With $y = 0$ only $-\\ln(1 - p)$ remains, and the true label received probability 0.2.',
         ),
         choose(
-          'For a label y = 1, which prediction has the largest cross-entropy?',
-          ['p = 0.99', 'p = 0.6', 'p = 0.5', 'p = 0.01'],
+          'For a label $y = 1$, which prediction has the largest cross-entropy?',
+          ['$p = 0.99$', '$p = 0.6$', '$p = 0.5$', '$p = 0.01$'],
           3,
-          '−ln(0.01) ≈ 4.6 is far larger than the others.',
+          '$-\\ln(0.01) \\approx 4.6$ is far larger than the others.',
         ),
         choose(
-          'The label is y = 1 and p = e⁻¹. What is the cross-entropy?',
-          ['$e$', '1', '−1', '0.368'],
+          'The label is $y = 1$ and $p = e^{-1}$. What is the cross-entropy?',
+          ['$e$', '$1$', '$-1$', '$0.368$'],
           1,
-          '−ln(e⁻¹) = 1.',
+          '$-\\ln(e^{-1}) = 1$.',
         ),
         choose(
-          'A model predicts p = 0.5 for every example. What is its cross-entropy on each one?',
-          ['ln 2 ≈ 0.693', '0.5', '0', '1'],
+          'A model predicts $p = 0.5$ for every example. What is its cross-entropy on each one?',
+          ['$\\ln 2 \\approx 0.693$', '$0.5$', '$0$', '$1$'],
           0,
-          'Either label receives probability 0.5, and −ln(0.5) = ln 2.',
+          'Either label receives probability 0.5, and $-\\ln(0.5) = \\ln 2$.',
         ),
       ],
     },
@@ -4798,40 +4803,41 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Multiply by the identity',
       explanation: [
-        'The identity matrix I has 1s on its diagonal and 0s elsewhere. It changes nothing: AI = IA = A and Ix = x, just as multiplying a number by 1 does. The matrix cI scales every vector by c.',
+        'The identity matrix $I$ has 1s on its diagonal and 0s elsewhere. It changes nothing: $AI = IA = A$ and $Ix = x$, just as multiplying a number by 1 does. The matrix $cI$ scales every vector by $c$.',
       ],
       example: {
         code: 'I = [[1, 0], [0, 1]]\nx = [7, -2]\nprint([row[0] * x[0] + row[1] * x[1] for row in I])',
         output: '[7, -2]',
-        explanation: 'Each row of I picks out one coordinate of x, so Ix = x.',
+        explanation:
+          'Each row of $I$ picks out one coordinate of $x$, so $Ix = x$.',
       },
       questions: [
         choose(
-          'What is the 3 × 3 identity matrix times [4, 5, 6]?',
-          ['[1, 1, 1]', '[4, 5, 6]', '[15]', '[6, 5, 4]'],
+          'What is the $3 \\times 3$ identity matrix times $[4, 5, 6]$?',
+          ['$[1, 1, 1]$', '$[4, 5, 6]$', '$[15]$', '$[6, 5, 4]$'],
           1,
           'The identity leaves every vector unchanged.',
         ),
         choose(
-          'A is 2 × 2. What is IA?',
-          ['I', 'Aᵀ', 'A', '2A'],
+          '$A$ is $2 \\times 2$. What is $IA$?',
+          ['$I$', '$A^\\top$', '$A$', '$2A$'],
           2,
-          'Multiplying by the identity on either side returns A.',
+          'Multiplying by the identity on either side returns $A$.',
         ),
         predictOutput(
           'What does this program print?',
           'M = [[3, 0], [0, 3]]\nx = [2, -1]\nprint([row[0] * x[0] + row[1] * x[1] for row in M])',
           ['[2, -1]', '[5, 2]', '[6, 3]', '[6, -3]'],
           3,
-          'M = 3I scales every coordinate by 3.',
+          '$M = 3I$ scales every coordinate by 3.',
         ),
         choose(
-          'Which matrix is the 2 × 2 identity?',
+          'Which matrix is the $2 \\times 2$ identity?',
           [
-            '[[1, 0], [0, 1]]',
-            '[[1, 1], [1, 1]]',
-            '[[0, 1], [1, 0]]',
-            '[[1, 0], [0, 0]]',
+            '$[[1, 0], [0, 1]]$',
+            '$[[1, 1], [1, 1]]$',
+            '$[[0, 1], [1, 0]]$',
+            '$[[1, 0], [0, 0]]$',
           ],
           0,
           'Ones on the diagonal, zeros elsewhere.',
@@ -4841,91 +4847,91 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Compute a 2 × 2 determinant and inverse',
       explanation: [
-        'For A = [[a, b], [c, d]], the determinant is ad − bc. When it is not 0, A⁻¹ = (1 / (ad − bc)) [[d, −b], [−c, a]]: swap the diagonal entries, negate the off-diagonal entries, and divide by the determinant. Check by multiplying: A⁻¹A = I.',
+        'For $A = [[a, b], [c, d]]$, the determinant is $ad - bc$. When it is not 0, $A^{-1} = \\frac{1}{ad - bc} [[d, -b], [-c, a]]$: swap the diagonal entries, negate the off-diagonal entries, and divide by the determinant. Check by multiplying: $A^{-1}A = I$.',
       ],
       example: worked(
         'A = [[4, 7], [2, 6]]\ndet = 4 × 6 − 7 × 2 = 10\nA⁻¹ = (1/10) [[6, −7], [−2, 4]]',
         'A⁻¹ = [[0.6, −0.7], [−0.2, 0.4]]',
-        'Check one entry of A⁻¹A: 0.6 × 4 − 0.7 × 2 = 1.',
+        'Check one entry of $A^{-1}A$: $0.6 \\times 4 - 0.7 \\times 2 = 1$.',
       ),
       questions: [
         choose(
-          'What is the determinant of [[3, 1], [4, 2]]?',
+          'What is the determinant of $[[3, 1], [4, 2]]$?',
           ['10', '2', '−2', '5'],
           1,
-          '3 × 2 − 1 × 4 = 2.',
+          '$3 \\times 2 - 1 \\times 4 = 2$.',
         ),
         choose(
-          'What is the inverse of [[2, 0], [0, 4]]?',
+          'What is the inverse of $[[2, 0], [0, 4]]$?',
           [
-            '[[−2, 0], [0, −4]]',
-            '[[4, 0], [0, 2]]',
-            '[[0.5, 0], [0, 0.25]]',
-            '[[2, 0], [0, 4]]',
+            '$[[-2, 0], [0, -4]]$',
+            '$[[4, 0], [0, 2]]$',
+            '$[[0.5, 0], [0, 0.25]]$',
+            '$[[2, 0], [0, 4]]$',
           ],
           2,
           'A diagonal matrix is inverted by taking the reciprocal of each diagonal entry.',
         ),
         choose(
-          'A = [[1, 2], [1, 3]] has determinant 1. What is A⁻¹?',
+          '$A = [[1, 2], [1, 3]]$ has determinant 1. What is $A^{-1}$?',
           [
-            '[[1, −2], [−1, 3]]',
-            '[[3, 2], [1, 1]]',
-            '[[−3, 2], [1, −1]]',
-            '[[3, −2], [−1, 1]]',
+            '$[[1, -2], [-1, 3]]$',
+            '$[[3, 2], [1, 1]]$',
+            '$[[-3, 2], [1, -1]]$',
+            '$[[3, -2], [-1, 1]]$',
           ],
           3,
           'Swap the diagonal to 3 and 1, negate the off-diagonal to −2 and −1, and divide by 1.',
         ),
         choose(
-          'A is invertible. What is A⁻¹A?',
-          ['A', 'I', '0', 'A²'],
+          '$A$ is invertible. What is $A^{-1}A$?',
+          ['$A$', '$I$', '$0$', '$A^2$'],
           1,
-          'An inverse undoes A, leaving the identity.',
+          'An inverse undoes $A$, leaving the identity.',
         ),
       ],
     },
     {
       title: 'Recognize when no inverse exists',
       explanation: [
-        'A square matrix has no inverse when its determinant is 0. Then A sends some nonzero vector to the zero vector, so different inputs share an output and the effect cannot be undone. In a 2 × 2 matrix this happens exactly when one row is a multiple of the other.',
+        'A square matrix has no inverse when its determinant is 0. Then $A$ sends some nonzero vector to the zero vector, so different inputs share an output and the effect cannot be undone. In a $2 \\times 2$ matrix this happens exactly when one row is a multiple of the other.',
       ],
       example: worked(
         'A = [[1, 2], [2, 4]]\ndet = 1 × 4 − 2 × 2 = 0\nA[2, −1] = [2 − 2, 4 − 4]',
         'A[2, −1] = [0, 0], so A has no inverse',
-        'The second row is twice the first, and A flattens the direction [2, −1] to zero.',
+        'The second row is twice the first, and $A$ flattens the direction $[2, -1]$ to zero.',
       ),
       questions: [
         choose(
           'Which matrix has no inverse?',
           [
-            '[[2, 1], [1, 2]]',
-            '[[3, 6], [1, 2]]',
-            '[[1, 0], [0, 5]]',
-            '[[0, 2], [3, 0]]',
+            '$[[2, 1], [1, 2]]$',
+            '$[[3, 6], [1, 2]]$',
+            '$[[1, 0], [0, 5]]$',
+            '$[[0, 2], [3, 0]]$',
           ],
           1,
-          '3 × 2 − 6 × 1 = 0; the first row is 3 times the second.',
+          '$3 \\times 2 - 6 \\times 1 = 0$; the first row is 3 times the second.',
         ),
         choose(
-          'For which k does [[k, 4], [1, 2]] have no inverse?',
+          'For which $k$ does $[[k, 4], [1, 2]]$ have no inverse?',
           ['4', '0', '2', '−2'],
           2,
-          'The determinant 2k − 4 is 0 when k = 2.',
+          'The determinant $2k - 4$ is 0 when $k = 2$.',
         ),
         choose(
-          'A sends a nonzero vector v to [0, 0]. What follows?',
+          '$A$ sends a nonzero vector $v$ to $[0, 0]$. What follows?',
           [
-            'A is the identity',
-            'A is symmetric',
-            'v must be the zero vector',
-            'A has no inverse',
+            '$A$ is the identity',
+            '$A$ is symmetric',
+            '$v$ must be the zero vector',
+            '$A$ has no inverse',
           ],
           3,
-          'v and the zero vector share the output 0, so no matrix can undo A.',
+          '$v$ and the zero vector share the output 0, so no matrix can undo $A$.',
         ),
         choose(
-          'Ax = b has exactly one solution, x = A⁻¹b. What must be true of A?',
+          '$Ax = b$ has exactly one solution, $x = A^{-1}b$. What must be true of $A$?',
           [
             'Its determinant is not 0',
             'It is symmetric',
@@ -4942,13 +4948,13 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Check whether a vector is an eigenvector',
       explanation: [
-        'v is an eigenvector of A when Av is a multiple of v: Av = λv for some number λ, the eigenvalue. To check, compute Av and see whether every coordinate is the same multiple of the matching coordinate of v. The zero vector never counts as an eigenvector.',
+        '$v$ is an eigenvector of $A$ when $Av$ is a multiple of $v$: $Av = \\lambda v$ for some number $\\lambda$, the eigenvalue. To check, compute $Av$ and see whether every coordinate is the same multiple of the matching coordinate of $v$. The zero vector never counts as an eigenvector.',
       ],
       example: {
         code: 'A = [[2, 1], [1, 2]]\nv = [1, -1]\nprint([row[0] * v[0] + row[1] * v[1] for row in A])',
         output: '[1, -1]',
         explanation:
-          'Av equals v itself, so v is an eigenvector with eigenvalue 1.',
+          '$Av$ equals $v$ itself, so $v$ is an eigenvector with eigenvalue 1.',
       },
       questions: [
         predictOutput(
@@ -4956,31 +4962,31 @@ export const knowledgePoints: KnowledgePointModule = {
           'A = [[3, 1], [0, 2]]\nv = [1, 0]\nprint([row[0] * v[0] + row[1] * v[1] for row in A])',
           ['[1, 0]', '[3, 0]', '[3, 1]', '[0, 2]'],
           1,
-          'Av = [3, 0] = 3v, so [1, 0] is an eigenvector with eigenvalue 3.',
+          '$Av = [3, 0] = 3v$, so $[1, 0]$ is an eigenvector with eigenvalue 3.',
         ),
         choose(
-          'A = [[2, 1], [1, 2]]. Is [1, 2] an eigenvector?',
+          '$A = [[2, 1], [1, 2]]$. Is $[1, 2]$ an eigenvector?',
           [
             'Yes, with eigenvalue 4',
             'Yes, with eigenvalue 2',
-            'No, because A[1, 2] = [4, 5] is not a multiple of [1, 2]',
+            'No, because $A[1, 2] = [4, 5]$ is not a multiple of $[1, 2]$',
             'Only after normalizing it',
           ],
           2,
-          '4 = 4 × 1 but 5 ≠ 4 × 2, so A turns the vector.',
+          '$4 = 4 \\times 1$ but $5 \\ne 4 \\times 2$, so $A$ turns the vector.',
         ),
         choose(
-          'Av = [6, −3] for v = [2, −1]. What is the eigenvalue?',
+          '$Av = [6, -3]$ for $v = [2, -1]$. What is the eigenvalue?',
           ['−3', '6', '2', '3'],
           3,
-          '[6, −3] = 3 × [2, −1].',
+          '$[6, -3] = 3 \\times [2, -1]$.',
         ),
         choose(
           'Why is the zero vector excluded as an eigenvector?',
           [
-            'A0 = λ0 holds for every λ, so it identifies nothing',
+            '$A0 = \\lambda 0$ holds for every $\\lambda$, so it identifies nothing',
             'It has no coordinates',
-            'A cannot multiply it',
+            '$A$ cannot multiply it',
             'Its norm is 1',
           ],
           0,
@@ -4991,39 +4997,44 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Find the eigenvalues of a 2 × 2 matrix',
       explanation: [
-        'Av = λv means (A − λI)v = 0 for a nonzero v, so A − λI must have no inverse: det(A − λI) = 0. For a 2 × 2 matrix this is a quadratic equation in λ. A diagonal matrix’s eigenvalues are its diagonal entries, with the coordinate directions as eigenvectors.',
+        '$Av = \\lambda v$ means $(A - \\lambda I)v = 0$ for a nonzero $v$, so $A - \\lambda I$ must have no inverse: $\\det(A - \\lambda I) = 0$. For a $2 \\times 2$ matrix this is a quadratic equation in $\\lambda$. A diagonal matrix’s eigenvalues are its diagonal entries, with the coordinate directions as eigenvectors.',
       ],
       example: worked(
         'A = [[4, 1], [2, 3]]\ndet(A − λI) = (4 − λ)(3 − λ) − 1 × 2\n= λ² − 7λ + 10 = (λ − 5)(λ − 2)',
         'λ = 5 or λ = 2',
-        'Subtract λ from the diagonal, take the determinant, and solve for the λ that makes it 0.',
+        'Subtract $\\lambda$ from the diagonal, take the determinant, and solve for the $\\lambda$ that makes it 0.',
       ),
       questions: [
         choose(
-          'What are the eigenvalues of [[7, 0], [0, −2]]?',
+          'What are the eigenvalues of $[[7, 0], [0, -2]]$?',
           ['5 and 0', '7 and −2', '7 and 0', '0 and −2'],
           1,
           'A diagonal matrix only stretches each coordinate direction by its diagonal entry.',
         ),
         choose(
-          'A = [[3, 1], [1, 3]]. Which equation gives its eigenvalues?',
-          ['3λ − 1 = 0', '(3 − λ)² + 1 = 0', '(3 − λ)² − 1 = 0', 'λ² − 9 = 0'],
+          '$A = [[3, 1], [1, 3]]$. Which equation gives its eigenvalues?',
+          [
+            '$3\\lambda - 1 = 0$',
+            '$(3 - \\lambda)^2 + 1 = 0$',
+            '$(3 - \\lambda)^2 - 1 = 0$',
+            '$\\lambda^2 - 9 = 0$',
+          ],
           2,
-          'det(A − λI) = (3 − λ)(3 − λ) − 1 × 1.',
+          '$\\det(A - \\lambda I) = (3 - \\lambda)(3 - \\lambda) - 1 \\times 1$.',
         ),
         choose(
-          'det(A − λI) = (5 − λ)(1 − λ). What are the eigenvalues?',
+          '$\\det(A - \\lambda I) = (5 - \\lambda)(1 - \\lambda)$. What are the eigenvalues?',
           ['5 and −1', '6 and 0', '4 and 1', '5 and 1'],
           3,
-          'The product is 0 when λ = 5 or λ = 1.',
+          'The product is 0 when $\\lambda = 5$ or $\\lambda = 1$.',
         ),
         choose(
-          'Why must det(A − λI) be 0 at an eigenvalue?',
+          'Why must $\\det(A - \\lambda I)$ be 0 at an eigenvalue?',
           [
             'Every determinant is 0',
-            'A − λI sends a nonzero v to 0, so it has no inverse',
-            'λ must equal 0',
-            'A must be the identity',
+            '$A - \\lambda I$ sends a nonzero $v$ to 0, so it has no inverse',
+            '$\\lambda$ must equal 0',
+            '$A$ must be the identity',
           ],
           1,
           'A matrix that collapses a nonzero vector has determinant 0.',
@@ -5033,7 +5044,7 @@ export const knowledgePoints: KnowledgePointModule = {
     {
       title: 'Read a covariance matrix',
       explanation: [
-        'For features x₁, …, xₖ, the covariance matrix Σ holds Var(xᵢ) in diagonal position i and cov(xᵢ, xⱼ) in position (i, j). Since cov(xᵢ, xⱼ) = cov(xⱼ, xᵢ), Σ is symmetric and k × k. For a centered data matrix X with n rows, Σ = XᵀX / n.',
+        'For features $x_1, \\ldots, x_k$, the covariance matrix $\\Sigma$ holds $\\operatorname{Var}(x_i)$ in diagonal position $i$ and $\\operatorname{cov}(x_i, x_j)$ in position $(i, j)$. Since $\\operatorname{cov}(x_i, x_j) = \\operatorname{cov}(x_j, x_i)$, $\\Sigma$ is symmetric and $k \\times k$. For a centered data matrix $X$ with $n$ rows, $\\Sigma = X^\\top X / n$.',
       ],
       example: worked(
         'centered features: x₁ = [−1, 1], x₂ = [−3, 3]\nVar(x₁) = 1, Var(x₂) = 9, cov(x₁, x₂) = (3 + 3) / 2 = 3',
@@ -5042,13 +5053,13 @@ export const knowledgePoints: KnowledgePointModule = {
       ),
       questions: [
         choose(
-          'Σ = [[4, −1], [−1, 9]]. What is the variance of the second feature?',
+          '$\\Sigma = [[4, -1], [-1, 9]]$. What is the variance of the second feature?',
           ['−1', '4', '9', '3'],
           2,
-          'The second diagonal entry is Var(x₂).',
+          'The second diagonal entry is $\\operatorname{Var}(x_2)$.',
         ),
         choose(
-          'Σ = [[4, −1], [−1, 9]]. What is the covariance of the two features?',
+          '$\\Sigma = [[4, -1], [-1, 9]]$. What is the covariance of the two features?',
           ['4', '−1', '9', '13'],
           1,
           'Off-diagonal entries are covariances.',
@@ -5059,14 +5070,14 @@ export const knowledgePoints: KnowledgePointModule = {
             'All its variances are equal',
             'Its entries are positive',
             'It is the identity',
-            'cov(xᵢ, xⱼ) = cov(xⱼ, xᵢ)',
+            '$\\operatorname{cov}(x_i, x_j) = \\operatorname{cov}(x_j, x_i)$',
           ],
           3,
           'The products of paired deviations are the same in either order.',
         ),
         choose(
           'A dataset has 6 features. What is the shape of its covariance matrix?',
-          ['6 × 6', 'n × 6', '6 × 1', '36 × 1'],
+          ['$6 \\times 6$', '$n \\times 6$', '$6 \\times 1$', '$36 \\times 1$'],
           0,
           'There is one row and one column per feature.',
         ),
@@ -5087,13 +5098,13 @@ export const knowledgePoints: KnowledgePointModule = {
           'A covariance matrix has eigenvalues 8, 1.5, and 0.5. What share of the variance do the first two components keep?',
           ['80%', '95%', '15%', '90%'],
           1,
-          '(8 + 1.5) / 10 = 0.95.',
+          '$(8 + 1.5) / 10 = 0.95$.',
         ),
         choose(
-          'Σ = [[3, 0], [0, 7]]. Which direction is the first principal component?',
-          ['[1, 0]', '[1, 1]', '[0, 1]', '[3, 7]'],
+          '$\\Sigma = [[3, 0], [0, 7]]$. Which direction is the first principal component?',
+          ['$[1, 0]$', '$[1, 1]$', '$[0, 1]$', '$[3, 7]$'],
           2,
-          'The second feature has the larger variance, 7, along [0, 1].',
+          'The second feature has the larger variance, 7, along $[0, 1]$.',
         ),
         choose(
           'The feature variances are 4 and 6. What is the sum of the covariance matrix’s eigenvalues?',
@@ -5102,7 +5113,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'The eigenvalues add up to the sum of the diagonal variances.',
         ),
         choose(
-          'Two principal directions of a covariance matrix are [1, 1] and [1, −1]. What is their dot product?',
+          'Two principal directions of a covariance matrix are $[1, 1]$ and $[1, -1]$. What is their dot product?',
           ['0', '1', '2', '−1'],
           0,
           'Principal directions are perpendicular.',

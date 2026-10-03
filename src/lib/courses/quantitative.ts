@@ -870,7 +870,7 @@ const definitions: Definition[] = [
       ),
       q(
         'Which value is e⁻¹ closest to?',
-        ['-2.718', '0.368', '1', '-0.368'],
+        ['-2.718', '$0.368$', '1', '-0.368'],
         1,
         'e⁻¹ = 1 / e ≈ 1 / 2.718 ≈ 0.368, a positive number.',
       ),
@@ -1777,7 +1777,7 @@ const definitions: Definition[] = [
     questions: [
       q(
         'What is the cosine similarity of [1, 2] and [−2, 1]?',
-        ['1', '−1', '0.5', '0'],
+        ['1', '$-1$', '0.5', '0'],
         3,
         'The dot product is −2 + 2 = 0, so the vectors are orthogonal.',
       ),
@@ -1996,8 +1996,8 @@ const definitions: Definition[] = [
     summary:
       'Recognize the matrix that changes nothing and the matrix that undoes another.',
     paragraphs: [
-      'The identity matrix I has 1s on its diagonal and 0s elsewhere. Multiplying by it changes nothing: AI = IA = A and Ix = x. A scalar multiple λI multiplies every vector by λ.',
-      'A square matrix A is invertible when some A⁻¹ satisfies A⁻¹A = AA⁻¹ = I; then Ax = b has the single solution x = A⁻¹b. For a 2 × 2 matrix [[a, b], [c, d]], the determinant is ad − bc. The inverse exists exactly when the determinant is nonzero, and it is (1 / (ad − bc)) [[d, −b], [−c, a]]. A zero determinant means A sends some nonzero vector to 0, so its effect cannot be undone.',
+      'The identity matrix $I$ has 1s on its diagonal and 0s elsewhere. Multiplying by it changes nothing: $AI = IA = A$ and $Ix = x$. A scalar multiple $\\lambda I$ multiplies every vector by $\\lambda$.',
+      'A square matrix $A$ is invertible when some $A^{-1}$ satisfies $A^{-1}A = AA^{-1} = I$; then $Ax = b$ has the single solution $x = A^{-1}b$. For a $2 \\times 2$ matrix $[[a, b], [c, d]]$, the determinant is $ad - bc$. The inverse exists exactly when the determinant is nonzero, and it is $$\\frac{1}{ad - bc} \\begin{bmatrix} d & -b \\\\ -c & a \\end{bmatrix}.$$ A zero determinant means $A$ sends some nonzero vector to 0, so its effect cannot be undone.',
     ],
     example: worked(
       'A = [[2, 1], [5, 3]]\ndet = 2 × 3 − 1 × 5 = 1\nA⁻¹ = [[3, −1], [−5, 2]]',
@@ -2020,10 +2020,10 @@ const definitions: Definition[] = [
       q(
         'Which matrix has no inverse?',
         [
-          '[[1, 0], [0, 1]]',
+          '$[[1, 0], [0, 1]]$',
           '[[2, 0], [0, 5]]',
           '[[1, 2], [2, 4]]',
-          '[[0, 1], [1, 0]]',
+          '$[[0, 1], [1, 0]]$',
         ],
         2,
         'Its determinant is 1 × 4 − 2 × 2 = 0; the second row is twice the first.',
@@ -2054,7 +2054,7 @@ const definitions: Definition[] = [
     summary:
       'Find the directions a matrix only stretches and read them as PCA directions.',
     paragraphs: [
-      'A nonzero vector v is an eigenvector of a square matrix A when Av = λv: A only stretches v, by the eigenvalue λ, without turning it. For A = [[2, 1], [1, 2]], A[1, 1] = [3, 3] = 3[1, 1] and A[1, −1] = [1, −1], so the eigenvalues are 3 and 1. Eigenvalues solve det(A − λI) = 0; here (2 − λ)² − 1 = 0 gives λ = 3 or λ = 1.',
+      'A nonzero vector $v$ is an eigenvector of a square matrix $A$ when $Av = \\lambda v$: $A$ only stretches $v$, by the eigenvalue $\\lambda$, without turning it. For $A = [[2, 1], [1, 2]]$, $A[1, 1] = [3, 3] = 3[1, 1]$ and $A[1, -1] = [1, -1]$, so the eigenvalues are 3 and 1. Eigenvalues solve $\\det(A - \\lambda I) = 0$; here $(2 - \\lambda)^2 - 1 = 0$ gives $\\lambda = 3$ or $\\lambda = 1$.',
       "A covariance matrix holds each feature's variance on its diagonal and each pair's covariance off it, so it is symmetric. Its eigenvectors are perpendicular directions, and each eigenvalue is the variance of the data along its eigenvector. PCA keeps the eigenvectors with the largest eigenvalues; an eigenvalue divided by the sum of all eigenvalues is that component's share of the total variance.",
     ],
     example: worked(
@@ -2107,8 +2107,8 @@ const definitions: Definition[] = [
     summary:
       'Score parameter values by how probable they make the observed data.',
     paragraphs: [
-      'The likelihood of a parameter value is the probability of the observed data, computed as if that value were true. For independent observations it is a product. After observing 1, 1, 0 from Bernoulli trials, L(p) = p × p × (1 − p), so L(0.5) = 0.125 and L(2/3) ≈ 0.148: p = 2/3 explains the data better. Maximum likelihood estimation picks the value with the largest likelihood; for k successes in n trials it is p = k / n.',
-      'Products of many probabilities become tiny, so we work with the log-likelihood: log turns the product into a sum, and because log is increasing, the same p maximizes both. Maximizing the log-likelihood is the same as minimizing the negative log-likelihood. For one binary label y and predicted probability p, the negative log-likelihood is −(y ln p + (1 − y) ln(1 − p)), the binary cross-entropy loss used to train classifiers.',
+      'The likelihood of a parameter value is the probability of the observed data, computed as if that value were true. For independent observations it is a product. After observing 1, 1, 0 from Bernoulli trials, $L(p) = p \\times p \\times (1 - p)$, so $L(0.5) = 0.125$ and $L(2/3) \\approx 0.148$: $p = 2/3$ explains the data better. Maximum likelihood estimation picks the value with the largest likelihood; for $k$ successes in $n$ trials it is $p = k / n$.',
+      'Products of many probabilities become tiny, so we work with the log-likelihood: log turns the product into a sum, and because log is increasing, the same $p$ maximizes both. Maximizing the log-likelihood is the same as minimizing the negative log-likelihood. For one binary label $y$ and predicted probability $p$, the negative log-likelihood is $-(y \\ln p + (1 - y) \\ln(1 - p))$, the binary cross-entropy loss used to train classifiers.',
     ],
     example: worked(
       'data 1, 0, 1, 1 (k = 3 successes in n = 4)\nL(0.5) = 0.5⁴ = 0.0625\nL(0.75) = 0.75³ × 0.25 ≈ 0.105',
