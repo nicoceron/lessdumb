@@ -5,6 +5,7 @@ import {
   emptyProgress,
   isMastered,
   MAX_RECENT_ATTEMPTS,
+  STATE_VERSION,
   type EvidenceUpdate,
   type ImplicitCredit,
   type Placement,
@@ -37,6 +38,7 @@ import {
   type MemoryState,
 } from './retention';
 import { activityTotals, mergeActivity } from './activity';
+import type { Refresh } from './remediation';
 import type { AnkiCard } from './anki';
 
 export interface QueuedCard extends AnkiCard {
@@ -47,10 +49,11 @@ export interface QueuedCard extends AnkiCard {
 /**
  * Version 2 adds knowledge-point lesson attempts, cooldowns and task XP;
  * version 3 adds quizzes; version 4 adds implicit review credit; version 5
- * adds placement diagnostics.
+ * adds placement diagnostics; version 6 adds the pending prerequisite
+ * refresh a failed lesson schedules.
  */
 export interface LearnerState {
-  version: 5;
+  version: typeof STATE_VERSION;
   progress: Progress;
   dailyGoal: number;
   /** Optional for backward compatibility with existing saved accounts. */
@@ -62,7 +65,7 @@ export interface LearnerState {
 }
 export function createState(): LearnerState {
   return {
-    version: 5,
+    version: STATE_VERSION,
     progress: emptyProgress(),
     dailyGoal: 50,
     activeCourseId: 'python-foundations',
@@ -139,10 +142,10 @@ const reviewRewardKey = (attempt: Attempt) =>
       ])
     : null;
 
-/** A saved state from an earlier schema: before quizzes, or before knowledge points. */
+/** A saved state from an earlier schema: before refreshes, quizzes, or knowledge points. */
 export type LegacyLearnerState = Omit<LearnerState, 'version' | 'progress'> & {
-  version: 1 | 2 | 3 | 4;
-  progress: Omit<Progress, 'version'> & { version: 1 | 2 | 3 | 4 };
+  version: 1 | 2 | 3 | 4 | 5;
+  progress: Omit<Progress, 'version'> & { version: 1 | 2 | 3 | 4 | 5 };
 };
 
 /**
@@ -154,15 +157,17 @@ export function migrateState(
   state: LearnerState | LegacyLearnerState,
   catalog: GraphCatalog = defaultCatalog,
 ): LearnerState {
+  // Every later version only adds optional fields, so older progress reads
+  // as is under the current version.
   const progress = normalizeProgress(
-    state.progress.version === 5
+    state.progress.version === STATE_VERSION
       ? (state.progress as Progress)
-      : { ...state.progress, version: 5 },
+      : { ...state.progress, version: STATE_VERSION },
     catalog,
   );
-  if (state.version === 5 && progress === state.progress)
+  if (state.version === STATE_VERSION && progress === state.progress)
     return state as LearnerState;
-  return { ...state, version: 5, progress };
+  return { ...state, version: STATE_VERSION, progress };
 }
 
 /** Converts legacy evidence for skills now taught through knowledge points. */
@@ -230,6 +235,15 @@ function mergePlacement(
       ? left
       : right;
   return settled(right) > settled(left) ? right : left;
+}
+
+/** The more recent refresh; on a tie, the first lesson by ID. */
+function latestRefresh(left?: Refresh, right?: Refresh): Refresh | undefined {
+  if (!left || !right) return left ?? right;
+  return right.at > left.at ||
+    (right.at === left.at && right.lesson < left.lesson)
+    ? right
+    : left;
 }
 
 /** The more recent implicit credit; on a tie, the later due date. */
@@ -627,6 +641,18 @@ export function mergeStates(
         reviewQuestionIds.length === 0
       )
         dueAt = implicitCredit.dueAt;
+      // A refresh a failed lesson scheduled stays due until the next real
+      // review, whichever device recorded it. It replaces an older credit;
+      // a credit recorded later (by a device that had not seen it) wins.
+      const refresh = latestRefresh(a.refresh, b.refresh);
+      const refreshPending =
+        mastery === 1 &&
+        !!refresh &&
+        !!memory &&
+        memory.lastReviewAt < refresh.at &&
+        dueAt !== null &&
+        refresh.at >= (implicitCredit?.at ?? -Infinity);
+      if (refreshPending && dueAt! > refresh!.at) dueAt = refresh!.at;
       let consecutiveCorrect = 0;
       for (const attempt of [...history].reverse()) {
         if (!attempt.correct || attempt.usedHint) break;
@@ -642,6 +668,7 @@ export function mergeStates(
         lessonAttempt: _attempt,
         implicitCredit: _credit,
         placement: _placement,
+        refresh: _refresh,
         ...rest
       } = latest;
       const placement = mergePlacement(a.placement, b.placement);
@@ -650,9 +677,10 @@ export function mergeStates(
         {
           ...rest,
           ...(placement ? { placement } : {}),
-          ...(implicitCredit ? { implicitCredit } : {}),
+          ...(implicitCredit && !refreshPending ? { implicitCredit } : {}),
           ...(lessonAttempt ? { lessonAttempt } : {}),
           ...(lessonFailedAt !== undefined ? { lessonFailedAt } : {}),
+          ...(refreshPending ? { refresh } : {}),
           ...(a.lessonRewarded || b.lessonRewarded
             ? { lessonRewarded: true }
             : {}),
