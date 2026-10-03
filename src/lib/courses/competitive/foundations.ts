@@ -685,7 +685,13 @@ _check_time(_seconds, "The 200,000-update case", "Mark each update at its two bo
     'cp-linear',
     'Discard candidates with two pointers',
     'Use sorted order to count or reject whole groups of pairs.',
-    ['cp-pointer-discard', 'cp-pointer-count-block', 'while-loops'],
+    [
+      'cp-pointer-discard',
+      'cp-pointer-count-block',
+      'while-loops',
+      'ranges',
+      'cp-sort-copy',
+    ],
     [
       'Two pointers mark the ends of a remaining candidate interval. For an ascending list, let left point at its smallest remaining value and right at its largest. We want the number of distinct-index pairs whose sum is at most a limit. Values may repeat or be negative; the required property is sorted order.',
       'If values[left] + values[right] fits, the left value fits with every value between left + 1 and right. Count right − left pairs and advance left. If the sum is too large, even the smallest remaining value cannot pair with right, so discard right. The invariant is that all pairs outside the remaining interval have been counted or proved invalid, and every pair inside remains undecided.',

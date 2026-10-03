@@ -3371,11 +3371,7 @@ assert source == [(0, 2, 0), (0, 1, -3)]`,
     id: 'cp-forest-cycle-check',
     unit: 'cp-paths',
     title: 'Reject an edge inside one forest component',
-    parents: [
-      'cp-undirected-edge',
-      'multiple-returns',
-      'conditional-expressions',
-    ],
+    parents: ['conditional-expressions', 'cp-dsu'],
     summary: 'Accept an edge only when it joins two distinct components.',
     lesson: [
       'Selected edges form a forest. Adding an edge whose endpoints already share a component would close a cycle; an edge between different components joins them safely.',

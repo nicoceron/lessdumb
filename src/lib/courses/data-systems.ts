@@ -143,7 +143,7 @@ const nodes = [
     'ds-foundations',
     'Measure service behavior',
     'Use throughput, response percentiles, and failure targets.',
-    ['ds-workloads'],
+    ['ds-workloads', 'indexing'],
     [
       'Throughput measures completed work per unit of time. Response time measures how long a request takes from the caller’s perspective. A service can complete many requests per second while a minority of users experience very slow responses.',
       'A percentile describes a boundary in the response-time distribution: the p95 is the time within which 95% of requests finish, so only the slowest 5% take longer. Unlike an average, it exposes the slow tail. Also specify the load under which the target should hold; an unloaded benchmark does not establish behavior at peak demand.',
