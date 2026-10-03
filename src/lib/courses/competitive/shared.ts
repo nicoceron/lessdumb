@@ -67,7 +67,20 @@ def _without(module, names, message):
         for name, original in zip(names, originals):
             setattr(module, name, original)`;
 
-/** Runs indented checks with the named module functions disabled. */
+/** Runs checks indented inside a `with` block, so cleanup always happens. */
+export function insideWith(
+  setup: string,
+  context: string,
+  checks: string,
+): string {
+  const body = checks
+    .split('\n')
+    .map((line) => (line ? `    ${line}` : line))
+    .join('\n');
+  return `${setup}\nwith ${context}:\n${body}`;
+}
+
+/** Runs checks with the named module functions disabled. */
 export function withoutShortcuts(
   setup: string,
   module: string,
@@ -75,11 +88,11 @@ export function withoutShortcuts(
   message: string,
   checks: string,
 ): string {
-  const body = checks
-    .split('\n')
-    .map((line) => (line ? `    ${line}` : line))
-    .join('\n');
-  return `${ruleHelpers}\n\n${setup}\nwith _without(${module}, ${JSON.stringify(names)}, ${JSON.stringify(message)}):\n${body}`;
+  return insideWith(
+    `${ruleHelpers}\n\n${setup}`,
+    `_without(${module}, ${JSON.stringify(names)}, ${JSON.stringify(message)})`,
+    checks,
+  );
 }
 
 export function choice(
