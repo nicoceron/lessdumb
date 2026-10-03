@@ -10,13 +10,19 @@ import {
   Link2,
   LoaderCircle,
   LogOut,
+  Mail,
   Play,
   RotateCcw,
   Target,
   X,
 } from 'lucide-react';
 import { exportCardsTsv } from '../lib/anki';
-import { authClient } from '../lib/account';
+import {
+  authClient,
+  NOTICE_PARAM,
+  PASSWORD_RESET_NOTICE,
+  type AccountUser,
+} from '../lib/account';
 import { type PythonResult } from '../lib/python';
 import type { CodeLanguage } from '../lib/curriculum';
 import { runCode } from '../lib/code-runner';
@@ -36,7 +42,7 @@ import {
   CardHeader,
   CardTitle,
 } from './ui/card';
-import { Alert, AlertDescription } from './ui/alert';
+import { Alert, AlertAction, AlertDescription, AlertTitle } from './ui/alert';
 import {
   Dialog,
   DialogClose,
@@ -713,19 +719,31 @@ export function CodeLab({
   );
 }
 
+export type AccountView = 'register' | 'sign-in' | 'forgot';
+
 export function AccountModal({
   close,
   user,
+  emailEnabled,
+  initialView = 'register',
 }: {
   close: () => void;
-  user?: { name: string; email: string };
+  user?: AccountUser;
+  /** Without email, nothing that depends on it (reset, verification) is shown. */
+  emailEnabled: boolean;
+  initialView?: AccountView;
 }) {
-  const [register, setRegister] = useState(true);
+  const [view, setView] = useState<AccountView>(
+    initialView === 'forgot' && !emailEnabled ? 'sign-in' : initialView,
+  );
+  const register = view === 'register';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const requestGeneration = useRef(0);
   const returnFocus = useRef(
     typeof document !== 'undefined' &&
@@ -739,20 +757,27 @@ export function AccountModal({
     },
     [],
   );
-  async function submit(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function show(next: AccountView) {
+    setView(next);
+    setError('');
+    setNotice('');
+  }
+  /** Runs one account request; a newer request or closing the dialog ignores it. */
+  async function run(
+    action: () => Promise<{ error: { message?: string } | null }>,
+    fallback: string,
+    done: () => void,
+  ) {
     if (busy) return;
     const generation = ++requestGeneration.current;
     setBusy(true);
     setError('');
+    setNotice('');
     try {
-      const result = register
-        ? await authClient.signUp.email({ name, email, password })
-        : await authClient.signIn.email({ email, password });
+      const result = await action();
       if (generation !== requestGeneration.current) return;
-      if (result.error)
-        setError(result.error.message ?? 'Could not connect your account.');
-      else close();
+      if (result.error) setError(result.error.message ?? fallback);
+      else done();
     } catch {
       if (generation === requestGeneration.current)
         setError('Could not reach the server. Please try again.');
@@ -760,24 +785,50 @@ export function AccountModal({
       if (generation === requestGeneration.current) setBusy(false);
     }
   }
-  async function signOut() {
-    const generation = ++requestGeneration.current;
-    setBusy(true);
-    setError('');
-    try {
-      const result = await authClient.signOut();
-      if (generation !== requestGeneration.current) return;
-      if (result.error)
-        setError(
-          result.error.message ?? 'Could not sign out. Please try again.',
-        );
-      else close();
-    } catch {
-      if (generation === requestGeneration.current)
-        setError('Could not reach the server. Please try again.');
-    } finally {
-      if (generation === requestGeneration.current) setBusy(false);
-    }
+  function submit(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (view === 'forgot')
+      return run(
+        () => authClient.requestPasswordReset(email),
+        'Could not send a reset link.',
+        () =>
+          setNotice(
+            'If an account uses that email, a link to reset your password is on its way. It expires in 1 hour.',
+          ),
+      );
+    return run(
+      () =>
+        register
+          ? authClient.signUp.email({ name, email, password })
+          : authClient.signIn.email({ email, password }),
+      'Could not connect your account.',
+      close,
+    );
+  }
+  function signOut() {
+    return run(
+      () => authClient.signOut(),
+      'Could not sign out. Please try again.',
+      close,
+    );
+  }
+  function resendVerification() {
+    if (!user) return;
+    return run(
+      () => authClient.sendVerificationEmail(user.email),
+      'Could not send the verification email.',
+      () => setNotice(`We sent a new verification link to ${user.email}.`),
+    );
+  }
+  function deleteAccount(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!user) return;
+    // On success the account client leaves this page for a fresh document.
+    return run(
+      () => authClient.deleteUser(user.id, password),
+      'Could not delete your account.',
+      () => {},
+    );
   }
   return (
     <Dialog open onOpenChange={(open) => !open && close()}>
@@ -806,9 +857,11 @@ export function AccountModal({
           <DialogTitle className="text-xl">
             {user
               ? 'Your learning space.'
-              : register
-                ? 'Make yourself at home.'
-                : 'Welcome back.'}
+              : view === 'forgot'
+                ? 'Reset your password.'
+                : register
+                  ? 'Make yourself at home.'
+                  : 'Welcome back.'}
           </DialogTitle>
           <DialogDescription>
             {user ? (
@@ -817,6 +870,8 @@ export function AccountModal({
                 <br />
                 {user.email}
               </>
+            ) : view === 'forgot' ? (
+              'Enter your account email and we’ll send you a link to choose a new password.'
             ) : (
               <>
                 Your progress, your graph, your small wins.
@@ -834,19 +889,103 @@ export function AccountModal({
                 Your progress is connected to your account.
               </AlertDescription>
             </Alert>
+            {emailEnabled && !user.emailVerified && (
+              <Alert role="status">
+                <Mail size={19} />
+                <AlertTitle>Verify your email</AlertTitle>
+                <AlertDescription>
+                  Open the link we sent to {user.email}. You can keep learning
+                  meanwhile.
+                </AlertDescription>
+                <AlertAction>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    disabled={busy}
+                    onClick={resendVerification}
+                  >
+                    Resend link
+                  </Button>
+                </AlertAction>
+              </Alert>
+            )}
+            {notice && (
+              <Alert role="status">
+                <AlertDescription>{notice}</AlertDescription>
+              </Alert>
+            )}
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <Button variant="outline" disabled={busy} onClick={signOut}>
-              {busy ? (
-                <LoaderCircle className="animate-spin" size={17} />
-              ) : (
-                <LogOut size={17} />
-              )}
-              {busy ? 'Signing out…' : 'Sign out'}
-            </Button>
+            {deleting ? (
+              <form
+                onSubmit={deleteAccount}
+                className="space-y-4"
+                aria-label="Delete account"
+              >
+                <p className="text-sm text-muted-foreground">
+                  This permanently deletes your account and all of its saved
+                  progress. It can’t be undone.
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="delete-password">Password</Label>
+                  <Input
+                    id="delete-password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    disabled={busy}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="submit" variant="destructive" disabled={busy}>
+                    {busy && (
+                      <LoaderCircle className="animate-spin" size={17} />
+                    )}
+                    {busy ? 'Deleting…' : 'Delete account permanently'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={busy}
+                    onClick={() => {
+                      setDeleting(false);
+                      setPassword('');
+                      setError('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <Button variant="outline" disabled={busy} onClick={signOut}>
+                  {busy ? (
+                    <LoaderCircle className="animate-spin" size={17} />
+                  ) : (
+                    <LogOut size={17} />
+                  )}
+                  {busy ? 'Signing out…' : 'Sign out'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-destructive"
+                  disabled={busy}
+                  onClick={() => {
+                    setDeleting(true);
+                    setError('');
+                    setNotice('');
+                  }}
+                >
+                  Delete account
+                </Button>
+              </>
+            )}
           </>
         ) : (
           <>
@@ -879,20 +1018,41 @@ export function AccountModal({
                   disabled={busy}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="account-password">Password</Label>
-                <Input
-                  id="account-password"
-                  type="password"
-                  required
-                  minLength={8}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete={register ? 'new-password' : 'current-password'}
-                  placeholder="At least 8 characters"
-                  disabled={busy}
-                />
-              </div>
+              {view !== 'forgot' && (
+                <div className="space-y-2">
+                  <Label htmlFor="account-password">Password</Label>
+                  <Input
+                    id="account-password"
+                    type="password"
+                    required
+                    minLength={8}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={
+                      register ? 'new-password' : 'current-password'
+                    }
+                    placeholder="At least 8 characters"
+                    disabled={busy}
+                  />
+                  {view === 'sign-in' && emailEnabled && (
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="h-auto px-0"
+                      disabled={busy}
+                      onClick={() => show('forgot')}
+                    >
+                      Forgot password?
+                    </Button>
+                  )}
+                </div>
+              )}
+              {notice && (
+                <Alert role="status">
+                  <AlertDescription>{notice}</AlertDescription>
+                </Alert>
+              )}
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
@@ -902,11 +1062,19 @@ export function AccountModal({
                 {busy ? (
                   <>
                     <LoaderCircle className="animate-spin" size={17} />
-                    {register ? 'Creating your account…' : 'Signing in…'}
+                    {view === 'forgot'
+                      ? 'Sending…'
+                      : register
+                        ? 'Creating your account…'
+                        : 'Signing in…'}
                   </>
                 ) : (
                   <>
-                    {register ? 'Create free account' : 'Sign in'}
+                    {view === 'forgot'
+                      ? 'Send reset link'
+                      : register
+                        ? 'Create free account'
+                        : 'Sign in'}
                     <ArrowRight size={17} />
                   </>
                 )}
@@ -917,18 +1085,122 @@ export function AccountModal({
               variant="link"
               className="h-auto whitespace-normal"
               disabled={busy}
-              onClick={() => {
-                setRegister(!register);
-                setError('');
-              }}
+              onClick={() => show(view === 'sign-in' ? 'register' : 'sign-in')}
             >
-              {register
-                ? 'Already have an account? Sign in'
-                : 'New here? Create an account'}
+              {view === 'forgot'
+                ? 'Back to sign in'
+                : register
+                  ? 'Already have an account? Sign in'
+                  : 'New here? Create an account'}
             </Button>
           </>
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** `/reset-password?token=…`, reached from the reset email through Better Auth. */
+export function ResetPassword({
+  emailEnabled,
+  openAccount,
+}: {
+  emailEnabled: boolean;
+  openAccount: (view: AccountView) => void;
+}) {
+  const [params] = useState(() => new URLSearchParams(window.location.search));
+  const token = params.get('token') ?? '';
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  async function submit(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (busy) return;
+    if (password !== confirm) {
+      setError('The two passwords don’t match.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    try {
+      const result = await authClient.resetPassword(token, password);
+      if (!result.error) {
+        // Resetting signs out every session, so start from a fresh document.
+        window.location.assign(`/?${NOTICE_PARAM}=${PASSWORD_RESET_NOTICE}`);
+        return;
+      }
+      setError(result.error.message ?? 'Could not change your password.');
+    } catch {
+      setError('Could not reach the server. Please try again.');
+    }
+    setBusy(false);
+  }
+  const unavailable = !emailEnabled
+    ? 'Email isn’t enabled on this server, so passwords can’t be reset by email.'
+    : !token || params.has('error')
+      ? 'This reset link is invalid or has expired. Request a new one.'
+      : '';
+  return (
+    <>
+      <PageTitle title="Choose a new password" />
+      <Card className="max-w-md">
+        <CardContent className="space-y-4">
+          {unavailable ? (
+            <>
+              <Alert variant="destructive">
+                <AlertDescription>{unavailable}</AlertDescription>
+              </Alert>
+              {emailEnabled && (
+                <Button onClick={() => openAccount('forgot')}>
+                  Request a new link
+                </Button>
+              )}
+            </>
+          ) : (
+            <form onSubmit={submit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  required
+                  minLength={8}
+                  maxLength={128}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  placeholder="At least 8 characters"
+                  disabled={busy}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm new password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  required
+                  minLength={8}
+                  maxLength={128}
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  autoComplete="new-password"
+                  disabled={busy}
+                />
+              </div>
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <Button type="submit" disabled={busy}>
+                {busy && <LoaderCircle className="animate-spin" size={17} />}
+                {busy ? 'Saving…' : 'Set new password'}
+              </Button>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 }
