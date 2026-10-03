@@ -58,23 +58,23 @@ const topics: Topic[] = [
       },
       {
         key: 'arithmetic',
-        title: 'Integer arithmetic',
+        title: 'Integer division and remainder',
         definition:
-          'Integer division discards the fractional part, truncating toward zero.',
-        misconception:
-          'Integer division rounds every result to the nearest integer.',
-        rule: 'Use a nonzero divisor and reason about truncation for negative values.',
-        violation: 'Treat integer division as floating-point division.',
+          'Integer / discards the fractional part, truncating toward zero, and % gives the matching remainder, which has the sign of the left operand.',
+        misconception: '-7 % 2 is 1, because a remainder is never negative.',
+        rule: 'Use a nonzero divisor, and expect a negative remainder when the left operand is negative.',
+        violation:
+          'Test for an odd number with value % 2 == 1, which misses negative odd values.',
         signature: 'int solve(int numerator, int denominator)',
         solution:
-          '#include <iostream>\n#include <cassert>\nint solve(int numerator, int denominator) {\n  return numerator / denominator;\n}',
+          '#include <iostream>\n#include <cassert>\nint solve(int numerator, int denominator) {\n  return numerator % denominator;\n}',
         starterCode:
           '#include <iostream>\n#include <cassert>\nint solve(int numerator, int denominator) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
         tests:
-          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(7, 2) == 3);\n  assert(solve(-7, 2) == -3);\n  assert(solve(8, -3) == -2);\n}\n',
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(17, 5) == 2);\n  assert(solve(-7, 2) == -1);\n  assert(solve(7, -2) == 1);\n  assert(solve(6, 3) == 0);\n}\n',
         example:
-          '#include <iostream>\n#include <cassert>\nint solve(int numerator, int denominator) {\n  return numerator / denominator;\n}\nint main() { std::cout << solve(7, 2) << "\\n"; }',
-        output: '3',
+          '#include <iostream>\n#include <cassert>\nint solve(int numerator, int denominator) {\n  return numerator % denominator;\n}\nint main() { std::cout << 17 / 5 << " " << solve(17, 5) << "\\n"; }',
+        output: '3 2',
       },
       {
         key: 'explicit-casts',
@@ -210,6 +210,183 @@ const topics: Topic[] = [
     ],
   },
   {
+    key: 'type-facts',
+    title: 'Characters, sizes, and type traits',
+    unit: 'cpp-values',
+    atoms: [
+      {
+        key: 'char-values',
+        title: 'Store characters in char',
+        definition:
+          "A char holds one character as a small integer code, and a character literal such as 'A' uses single quotes.",
+        misconception: "The digit character '7' has the integer value 7.",
+        rule: "Convert a digit character to its value with c - '0', because the codes for '0' through '9' are consecutive.",
+        violation:
+          "Add the digit character '7' to a total as though it were the number 7.",
+        signature: 'int solve(char digit)',
+        solution:
+          "#include <iostream>\n#include <cassert>\nint solve(char digit) {\n  return digit - '0';\n}",
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nint solve(char digit) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          "#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve('7') == 7);\n  assert(solve('0') == 0);\n  assert(solve('9') == 9);\n}\n",
+        example:
+          "#include <iostream>\n#include <cassert>\nint solve(char digit) {\n  return digit - '0';\n}\nint main() { std::cout << solve('7') << \"\\n\"; }",
+        output: '7',
+      },
+      {
+        key: 'sizeof-bytes',
+        title: 'Measure sizes with sizeof',
+        definition:
+          'sizeof reports how many bytes a type or object occupies, as a std::size_t known at compile time, and sizeof(char) is always 1.',
+        misconception: 'sizeof(int) is exactly 4 on every C++ implementation.',
+        rule: 'Compute byte counts with sizeof instead of hard-coding the size of a type.',
+        violation:
+          'Write 4 in place of sizeof(int) when computing a buffer size.',
+        signature: 'std::size_t solve(std::size_t count)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <cstddef>\nstd::size_t solve(std::size_t count) {\n  return count * sizeof(int);\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <cstddef>\nstd::size_t solve(std::size_t count) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <cstddef>\nint main() {\n  assert(solve(3) == 3 * sizeof(int));\n  assert(solve(1) == sizeof(int));\n  assert(solve(0) == 0);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <cstddef>\nstd::size_t solve(std::size_t count) {\n  return count * sizeof(int);\n}\nint main() { std::cout << solve(3) << "\\n"; }',
+        output: '12',
+      },
+      {
+        key: 'fixed-width-integers',
+        title: 'Choose exact-width integers',
+        definition:
+          '<cstdint> types such as std::int32_t and std::uint8_t have exactly the number of bits in their names.',
+        misconception:
+          'std::uint8_t values print as numbers with std::cout, just as int values do.',
+        rule: 'Use an exact-width type where a format fixes the size, and convert 8-bit values to int before printing them.',
+        violation:
+          'Store a 16-bit wire field in int and expect it to wrap at 65536.',
+        signature: 'std::uint8_t solve(std::uint8_t value, std::uint8_t step)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\nstd::uint8_t solve(std::uint8_t value, std::uint8_t step) {\n  return static_cast<std::uint8_t>(value + step);\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\nstd::uint8_t solve(std::uint8_t value, std::uint8_t step) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\nint main() {\n  assert(solve(250, 10) == 4);\n  assert(solve(1, 2) == 3);\n  assert(solve(255, 1) == 0);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\nstd::uint8_t solve(std::uint8_t value, std::uint8_t step) {\n  return static_cast<std::uint8_t>(value + step);\n}\nint main() { std::cout << static_cast<int>(solve(250, 10)) << "\\n"; }',
+        output: '4',
+      },
+      {
+        key: 'type-traits',
+        title: 'Ask the compiler about a type',
+        definition:
+          '<type_traits> answers questions about types at compile time: std::is_same_v<A, B> and std::is_unsigned_v<T> are bool constants.',
+        misconception:
+          'std::is_same_v<int, long> is true on any platform where int and long have the same size.',
+        rule: 'State a type requirement with a trait instead of inferring it from sizes.',
+        violation:
+          'Treat two types as interchangeable because sizeof reports the same number of bytes.',
+        signature: 'bool solve()',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\n#include <type_traits>\nbool solve() {\n  return sizeof(std::uint16_t) == 2 && std::is_unsigned_v<std::uint16_t> &&\n         !std::is_same_v<std::uint16_t, std::int16_t>;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\n#include <type_traits>\nbool solve() {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\n#include <type_traits>\nint main() {\n  assert(solve() == true);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\n#include <type_traits>\nbool solve() {\n  return sizeof(std::uint16_t) == 2 && std::is_unsigned_v<std::uint16_t> &&\n         !std::is_same_v<std::uint16_t, std::int16_t>;\n}\nint main() { std::cout << solve() << "\\n"; }',
+        output: '1',
+      },
+    ],
+  },
+  {
+    key: 'bits',
+    title: 'Shifts and masks',
+    unit: 'cpp-values',
+    atoms: [
+      {
+        key: 'bit-shifts',
+        title: 'Shift bits left and right',
+        definition:
+          'For an unsigned value, x << k moves its bits left by k places, multiplying by 2 to the power k, and x >> k moves them right, dividing by 2 to the power k.',
+        misconception:
+          '1u << 3 evaluates to 1000 because three zeros are appended in decimal.',
+        rule: 'Shift unsigned values, and by fewer places than their width in bits.',
+        violation:
+          'Shift a 32-bit unsigned value by 32 places and expect the result to be zero.',
+        signature: 'unsigned solve(unsigned value, unsigned places)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nunsigned solve(unsigned value, unsigned places) {\n  return (value >> places) << places;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nunsigned solve(unsigned value, unsigned places) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(13u, 2u) == 12u);\n  assert(solve(8u, 3u) == 8u);\n  assert(solve(7u, 3u) == 0u);\n  assert(solve(255u, 4u) == 240u);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nunsigned solve(unsigned value, unsigned places) {\n  return (value >> places) << places;\n}\nint main() { std::cout << solve(13u, 2u) << "\\n"; }',
+        output: '12',
+      },
+      {
+        key: 'bit-masks',
+        title: 'Select and set bits with masks',
+        definition:
+          'x & mask keeps only the bits that are set in both values, and x | mask turns the mask bits on.',
+        misconception: 'x & 0xF0 and x && 0xF0 produce the same result.',
+        rule: 'Use & with a mask to test or extract bits and | to set them; keep && and || for conditions.',
+        violation: 'Use && where a bitwise mask was intended.',
+        signature: 'unsigned solve(unsigned value)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nunsigned solve(unsigned value) {\n  return value & 0xFFu;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nunsigned solve(unsigned value) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(0x1234u) == 0x34u);\n  assert(solve(255u) == 255u);\n  assert(solve(256u) == 0u);\n  assert(solve(0x1FFu) == 0xFFu);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nunsigned solve(unsigned value) {\n  return value & 0xFFu;\n}\nint main() { std::cout << solve(0x1234u) << "\\n"; }',
+        output: '52',
+      },
+      {
+        key: 'bit-flags',
+        title: 'Toggle and clear single-bit flags',
+        definition:
+          'The flag 1u << k has only bit k set; x ^ flag toggles that bit and x & ~flag clears it.',
+        misconception: '2 ^ 3 raises 2 to the third power and evaluates to 8.',
+        rule: 'Build a flag with 1u << k, then use | to set it, ^ to toggle it, and & ~ to clear it.',
+        violation:
+          'Clear a flag with x & flag, which keeps only that flag instead.',
+        signature: 'unsigned solve(unsigned flags, unsigned bit)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nunsigned solve(unsigned flags, unsigned bit) {\n  return flags & ~(1u << bit);\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nunsigned solve(unsigned flags, unsigned bit) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(15u, 1u) == 13u);\n  assert(solve(8u, 3u) == 0u);\n  assert(solve(5u, 1u) == 5u);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nunsigned solve(unsigned flags, unsigned bit) {\n  return flags & ~(1u << bit);\n}\nint main() { std::cout << solve(15u, 1u) << "\\n"; }',
+        output: '13',
+      },
+      {
+        key: 'byte-extract',
+        title: 'Extract a byte from a word',
+        definition:
+          'Shifting a word right by 8 * i places and masking with 0xFF extracts byte i, counting from the least significant byte.',
+        misconception:
+          'Masking with 0xFF and then shifting right extracts the same byte as shifting first.',
+        rule: 'Shift the wanted byte down to the lowest position first, then mask with 0xFF.',
+        violation:
+          'Mask with 0xFF before shifting, which discards the byte you wanted.',
+        signature: 'std::uint8_t solve(std::uint32_t word, unsigned index)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\nstd::uint8_t solve(std::uint32_t word, unsigned index) {\n  return static_cast<std::uint8_t>((word >> (8 * index)) & 0xFFu);\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\nstd::uint8_t solve(std::uint32_t word, unsigned index) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\nint main() {\n  assert(solve(0x11223344u, 0) == 0x44);\n  assert(solve(0x11223344u, 1) == 0x33);\n  assert(solve(0x11223344u, 3) == 0x11);\n  assert(solve(255u, 1) == 0);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <cstdint>\nstd::uint8_t solve(std::uint32_t word, unsigned index) {\n  return static_cast<std::uint8_t>((word >> (8 * index)) & 0xFFu);\n}\nint main() { std::cout << static_cast<int>(solve(0x11223344u, 1)) << "\\n"; }',
+        output: '51',
+      },
+    ],
+  },
+  {
     key: 'control',
     title: 'Decisions and loops',
     unit: 'cpp-control',
@@ -257,20 +434,20 @@ const topics: Topic[] = [
         key: 'while-progress',
         title: 'Advance a while loop',
         definition:
-          'A while loop rechecks its condition before every iteration.',
+          'A while loop checks its condition before every iteration, including the first, so its body can run zero times.',
         misconception:
-          'A while loop executes exactly once before checking its condition.',
+          'A while loop always runs its body once before checking its condition.',
         rule: 'Update the quantity that controls termination on every path.',
         violation: 'Keep the loop condition true without updating its state.',
         signature: 'int solve(int value)',
         solution:
-          '#include <iostream>\n#include <cassert>\nint solve(int value) {\n  int digits = 0;\n  do { ++digits; value /= 10; } while (value != 0);\n  return digits;\n}',
+          '#include <iostream>\n#include <cassert>\nint solve(int value) {\n  int steps = 0;\n  while (value > 1) {\n    value /= 2;\n    ++steps;\n  }\n  return steps;\n}',
         starterCode:
           '#include <iostream>\n#include <cassert>\nint solve(int value) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
         tests:
-          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(123) == 3);\n  assert(solve(0) == 1);\n  assert(solve(-42) == 2);\n}\n',
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(8) == 3);\n  assert(solve(10) == 3);\n  assert(solve(1) == 0);\n  assert(solve(0) == 0);\n  assert(solve(-4) == 0);\n}\n',
         example:
-          '#include <iostream>\n#include <cassert>\nint solve(int value) {\n  int digits = 0;\n  do { ++digits; value /= 10; } while (value != 0);\n  return digits;\n}\nint main() { std::cout << solve(123) << "\\n"; }',
+          '#include <iostream>\n#include <cassert>\nint solve(int value) {\n  int steps = 0;\n  while (value > 1) {\n    value /= 2;\n    ++steps;\n  }\n  return steps;\n}\nint main() { std::cout << solve(8) << "\\n"; }',
         output: '3',
       },
       {
@@ -293,6 +470,185 @@ const topics: Topic[] = [
         example:
           '#include <iostream>\n#include <cassert>\n#include <vector>\nint solve(const std::vector<int>& values, int target) {\n  for (int i = 0; i < static_cast<int>(values.size()); ++i)\n    if (values[i] == target) return i;\n  return -1;\n}\nint main() { std::cout << solve({4, 8, 4}, 8) << "\\n"; }',
         output: '1',
+      },
+    ],
+  },
+  {
+    key: 'logic',
+    title: 'Combining conditions',
+    unit: 'cpp-control',
+    atoms: [
+      {
+        key: 'logical-operators',
+        title: 'Combine conditions',
+        definition:
+          'a && b is true only when both operands are true, a || b is true when at least one is, and !a inverts a bool.',
+        misconception: 'a || b is false when both of its operands are true.',
+        rule: 'Add parentheses when mixing && and ||, because && groups more tightly than ||.',
+        violation: 'Write a || b && c and expect it to mean (a || b) && c.',
+        signature: 'bool solve(int hour, bool holiday)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nbool solve(int hour, bool holiday) {\n  return hour >= 9 && hour < 17 && !holiday;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nbool solve(int hour, bool holiday) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(10, false) == true);\n  assert(solve(10, true) == false);\n  assert(solve(8, false) == false);\n  assert(solve(17, false) == false);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nbool solve(int hour, bool holiday) {\n  return hour >= 9 && hour < 17 && !holiday;\n}\nint main() { std::cout << solve(10, false) << "\\n"; }',
+        output: '1',
+      },
+      {
+        key: 'short-circuit',
+        title: 'Guard with short-circuit evaluation',
+        definition:
+          '&& evaluates its right operand only when the left one is true, and || only when the left one is false.',
+        misconception:
+          'Both operands of && are always evaluated before the result is decided.',
+        rule: 'Put the safety check on the left so the risky operand runs only when it is valid.',
+        violation:
+          'Divide by a count on the left of && and check that the count is nonzero on the right.',
+        signature: 'bool solve(int total, int count)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nbool solve(int total, int count) {\n  return count != 0 && total / count >= 10;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nbool solve(int total, int count) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(50, 5) == true);\n  assert(solve(40, 5) == false);\n  assert(solve(7, 0) == false);\n  assert(solve(-30, -3) == true);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nbool solve(int total, int count) {\n  return count != 0 && total / count >= 10;\n}\nint main() { std::cout << solve(50, 5) << "\\n"; }',
+        output: '1',
+      },
+      {
+        key: 'conditional-operator',
+        title: 'Choose a value with ?:',
+        definition:
+          'condition ? a : b evaluates the condition, then evaluates only a when it is true or only b when it is false.',
+        misconception:
+          'condition ? a : b evaluates both a and b before choosing one of them.',
+        rule: 'Use ?: to choose between two values of compatible types, and parenthesize it inside a larger expression.',
+        violation:
+          'Give the two branches unrelated types, such as a string literal and an int.',
+        signature: 'int solve(int a, int b)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nint solve(int a, int b) {\n  return a > b ? a : b;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nint solve(int a, int b) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(3, 9) == 9);\n  assert(solve(9, 3) == 9);\n  assert(solve(-2, -5) == -2);\n  assert(solve(4, 4) == 4);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nint solve(int a, int b) {\n  return a > b ? a : b;\n}\nint main() { std::cout << solve(3, 9) << "\\n"; }',
+        output: '9',
+      },
+      {
+        key: 'inclusive-range',
+        title: 'Test an inclusive range',
+        definition:
+          'A value lies in the inclusive range from low to high when low <= value && value <= high.',
+        misconception:
+          'low <= value <= high checks both bounds, just as the same notation does in mathematics.',
+        rule: 'Write each bound as its own comparison joined with &&, and use || to test for a value outside the range.',
+        violation: 'Chain two comparisons as low <= value <= high.',
+        signature: 'bool solve(int value, int low, int high)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nbool solve(int value, int low, int high) {\n  return low <= value && value <= high;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nbool solve(int value, int low, int high) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(5, 1, 10) == true);\n  assert(solve(1, 1, 10) == true);\n  assert(solve(10, 1, 10) == true);\n  assert(solve(0, 1, 10) == false);\n  assert(solve(-5, 1, 10) == false);\n  assert(solve(20, 1, 10) == false);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nbool solve(int value, int low, int high) {\n  return low <= value && value <= high;\n}\nint main() { std::cout << solve(5, 1, 10) << "\\n"; }',
+        output: '1',
+      },
+    ],
+  },
+  {
+    key: 'arrays',
+    title: 'Fixed arrays and range loops',
+    unit: 'cpp-control',
+    atoms: [
+      {
+        key: 'std-array',
+        title: 'Store a fixed number of values',
+        definition:
+          'std::array<T, N> holds exactly N elements of type T, indexed from 0 through N - 1, and size() returns N.',
+        misconception:
+          'A std::array grows by one element whenever push_back is called.',
+        rule: 'Index only positions below size(), and write {} to start every element at zero.',
+        violation: 'Use N itself as an index into a std::array of N elements.',
+        signature: 'int solve(std::array<int, 4> values)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <array>\n#include <cstddef>\nint solve(std::array<int, 4> values) {\n  int total = 0;\n  for (std::size_t i = 0; i < values.size(); ++i) total += values[i];\n  return total;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <array>\n#include <cstddef>\nint solve(std::array<int, 4> values) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <array>\n#include <cstddef>\nint main() {\n  assert(solve({1, 2, 3, 4}) == 10);\n  assert(solve({5}) == 5);\n  assert(solve({}) == 0);\n  assert(solve({-2, 2, -2, 2}) == 0);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <array>\n#include <cstddef>\nint solve(std::array<int, 4> values) {\n  int total = 0;\n  for (std::size_t i = 0; i < values.size(); ++i) total += values[i];\n  return total;\n}\nint main() { std::cout << solve({1, 2, 3, 4}) << "\\n"; }',
+        output: '10',
+      },
+      {
+        key: 'range-for',
+        title: 'Visit each element with range-for',
+        definition:
+          'for (int x : values) runs its body once per element, in order, with x holding a copy of that element.',
+        misconception:
+          'Assigning to x inside for (int x : values) changes the element stored in values.',
+        rule: 'Use a by-value loop variable when the loop only reads the elements.',
+        violation:
+          'Assign to a by-value loop variable and expect the array to change.',
+        signature: 'int solve(std::array<int, 5> values)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nint solve(std::array<int, 5> values) {\n  int total = 0;\n  for (int x : values) total += x * x;\n  return total;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nint solve(std::array<int, 5> values) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nint main() {\n  assert(solve({1, 2, 3, 4, 5}) == 55);\n  assert(solve({}) == 0);\n  assert(solve({-1, -1, -1, -1, -1}) == 5);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nint solve(std::array<int, 5> values) {\n  int total = 0;\n  for (int x : values) total += x * x;\n  return total;\n}\nint main() { std::cout << solve({1, 2, 3, 4, 5}) << "\\n"; }',
+        output: '55',
+      },
+      {
+        key: 'loop-exits',
+        title: 'Skip or stop with continue and break',
+        definition:
+          'continue jumps to the next iteration of the innermost loop, and break leaves that loop immediately.',
+        misconception:
+          'break skips only the current element, and the loop then carries on with the next one.',
+        rule: 'Use continue to skip one element and break once the remaining elements no longer matter.',
+        violation:
+          'Use break where only the current element should be skipped.',
+        signature: 'int solve(std::array<int, 6> readings)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nint solve(std::array<int, 6> readings) {\n  int total = 0;\n  for (int x : readings) {\n    if (x < 0) continue;\n    if (x == 0) break;\n    total += x;\n  }\n  return total;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nint solve(std::array<int, 6> readings) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nint main() {\n  assert(solve({4, -1, 5, 0, 7, 8}) == 9);\n  assert(solve({1, 2, 3, 4, 5, 6}) == 21);\n  assert(solve({0, 9, 9, 9, 9, 9}) == 0);\n  assert(solve({-3, -3, 2, -3, 0, 5}) == 2);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nint solve(std::array<int, 6> readings) {\n  int total = 0;\n  for (int x : readings) {\n    if (x < 0) continue;\n    if (x == 0) break;\n    total += x;\n  }\n  return total;\n}\nint main() { std::cout << solve({4, -1, 5, 0, 7, 8}) << "\\n"; }',
+        output: '9',
+      },
+      {
+        key: 'range-reference',
+        title: 'Change elements through a range-for reference',
+        definition:
+          'for (int& x : values) binds x to each element itself, so assigning to x updates the array.',
+        misconception:
+          'A range-based for loop can never modify the elements it visits.',
+        rule: 'Declare the loop variable as a reference, such as int& or auto&, when the loop must update each element.',
+        violation:
+          'Write for (int x : values) when the loop is meant to update each element.',
+        signature:
+          'std::array<int, 4> solve(std::array<int, 4> values, int factor)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nstd::array<int, 4> solve(std::array<int, 4> values, int factor) {\n  for (int& x : values) x *= factor;\n  return values;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nstd::array<int, 4> solve(std::array<int, 4> values, int factor) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nint main() {\n  assert((solve({1, 2, 3, 4}, 3) == std::array<int, 4>{3, 6, 9, 12}));\n  assert((solve({5, -1, 0, 2}, -2) == std::array<int, 4>{-10, 2, 0, -4}));\n  assert((solve({}, 7) == std::array<int, 4>{}));\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <array>\nstd::array<int, 4> solve(std::array<int, 4> values, int factor) {\n  for (int& x : values) x *= factor;\n  return values;\n}\nint main() {\n  std::array<int, 4> scaled = solve({1, 2, 3, 4}, 3);\n  std::cout << scaled[0] << " " << scaled[3] << "\\n";\n}',
+        output: '3 12',
       },
     ],
   },
@@ -371,16 +727,16 @@ const topics: Topic[] = [
         rule: 'Use const& for a borrowed input that this function only reads.',
         violation:
           'Cast away constness to mutate an object supplied as read-only.',
-        signature: 'int solve(const std::vector<int>& values)',
+        signature: 'int solve(const Order& order)',
         solution:
-          '#include <iostream>\n#include <cassert>\n#include <vector>\nint solve(const std::vector<int>& values) {\n  int total = 0;\n  for (int x : values) total += x;\n  return total;\n}',
+          '#include <iostream>\n#include <cassert>\nstruct Order {\n  int price;\n  int quantity;\n};\nint solve(const Order& order) {\n  return order.price * order.quantity;\n}',
         starterCode:
-          '#include <iostream>\n#include <cassert>\n#include <vector>\nint solve(const std::vector<int>& values) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+          '#include <iostream>\n#include <cassert>\nstruct Order {\n  int price;\n  int quantity;\n};\nint solve(const Order& order) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
         tests:
-          '#include <iostream>\n#include <cassert>\n#include <vector>\nint main() {\n  assert(solve({2, 4, 6}) == 12);\n  assert(solve({}) == 0);\n  assert(solve({-3, 1}) == -2);\n}\n',
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(Order{12, 3}) == 36);\n  assert(solve(Order{5, 0}) == 0);\n  Order order{7, 6};\n  assert(solve(order) == 42);\n  assert(order.price == 7);\n}\n',
         example:
-          '#include <iostream>\n#include <cassert>\n#include <vector>\nint solve(const std::vector<int>& values) {\n  int total = 0;\n  for (int x : values) total += x;\n  return total;\n}\nint main() { std::cout << solve({2, 4, 6}) << "\\n"; }',
-        output: '12',
+          '#include <iostream>\n#include <cassert>\nstruct Order {\n  int price;\n  int quantity;\n};\nint solve(const Order& order) {\n  return order.price * order.quantity;\n}\nint main() {\n  Order order{12, 3};\n  std::cout << solve(order) << "\\n";\n}',
+        output: '36',
       },
     ],
   },
@@ -514,9 +870,9 @@ const topics: Topic[] = [
         starterCode:
           '#include <iostream>\n#include <cassert>\nint solve(const int* pointer) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
         tests:
-          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(([] { int x = 9; return solve(&x); }()) == 9);\n  assert(solve(nullptr) == -1);\n}\n',
+          '#include <iostream>\n#include <cassert>\nint main() {\n  int x = 9;\n  assert(solve(&x) == 9);\n  assert(solve(nullptr) == -1);\n}\n',
         example:
-          '#include <iostream>\n#include <cassert>\nint solve(const int* pointer) {\n  return pointer ? *pointer : -1;\n}\nint main() { std::cout << ([] { int x = 9; return solve(&x); }()) << "\\n"; }',
+          '#include <iostream>\n#include <cassert>\nint solve(const int* pointer) {\n  return pointer ? *pointer : -1;\n}\nint main() {\n  int x = 9;\n  std::cout << solve(&x) << "\\n";\n}',
         output: '9',
       },
       {
@@ -582,9 +938,9 @@ const topics: Topic[] = [
         starterCode:
           '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\nint solve(std::span<const int> values) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
         tests:
-          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\nint main() {\n  assert(([] { std::array<int, 3> a{2, 3, 4}; return solve(a); }()) == 9);\n  assert(solve({}) == 0);\n}\n',
+          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\nint main() {\n  std::array<int, 3> a{2, 3, 4};\n  assert(solve(a) == 9);\n  assert(solve({}) == 0);\n}\n',
         example:
-          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\nint solve(std::span<const int> values) {\n  int sum = 0;\n  for (int value : values) sum += value;\n  return sum;\n}\nint main() { std::cout << ([] { std::array<int, 3> a{2, 3, 4}; return solve(a); }()) << "\\n"; }',
+          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\nint solve(std::span<const int> values) {\n  int sum = 0;\n  for (int value : values) sum += value;\n  return sum;\n}\nint main() {\n  std::array<int, 3> a{2, 3, 4};\n  std::cout << solve(a) << "\\n";\n}',
         output: '9',
       },
       {
@@ -602,9 +958,9 @@ const topics: Topic[] = [
         starterCode:
           '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\n#include <cstddef>\nint solve(std::span<const int> values, std::size_t offset) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
         tests:
-          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\n#include <cstddef>\nint main() {\n  assert(([] { std::array<int, 4> a{}; return solve(a, 1); }()) == 3);\n  assert(solve({}, 0) == 0);\n  assert(solve({}, 1) == -1);\n}\n',
+          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\n#include <cstddef>\nint main() {\n  std::array<int, 4> a{};\n  assert(solve(a, 1) == 3);\n  assert(solve({}, 0) == 0);\n  assert(solve({}, 1) == -1);\n}\n',
         example:
-          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\n#include <cstddef>\nint solve(std::span<const int> values, std::size_t offset) {\n  if (offset > values.size()) return -1;\n  auto tail = values.subspan(offset);\n  return static_cast<int>(tail.size());\n}\nint main() { std::cout << ([] { std::array<int, 4> a{}; return solve(a, 1); }()) << "\\n"; }',
+          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\n#include <cstddef>\nint solve(std::span<const int> values, std::size_t offset) {\n  if (offset > values.size()) return -1;\n  auto tail = values.subspan(offset);\n  return static_cast<int>(tail.size());\n}\nint main() {\n  std::array<int, 4> a{};\n  std::cout << solve(a, 1) << "\\n";\n}',
         output: '3',
       },
       {
@@ -738,6 +1094,97 @@ const topics: Topic[] = [
         example:
           '#include <iostream>\n#include <cassert>\nstruct Tracker { int& log; int digit; ~Tracker() { log = log * 10 + digit; } };\nint solve() {\n  int log = 0;\n  { Tracker first{log, 1}; Tracker second{log, 2}; }\n  return log;\n}\nint main() { std::cout << solve() << "\\n"; }',
         output: '21',
+      },
+    ],
+  },
+  {
+    key: 'members',
+    title: 'Member functions and const',
+    unit: 'cpp-ownership',
+    atoms: [
+      {
+        key: 'member-functions',
+        title: 'Call a member function on an object',
+        definition:
+          "A member function is declared inside a struct and called on one object as object.function(), reading and updating that object's members directly.",
+        misconception:
+          'Calling a member function on one object updates the members of every object of the same type.',
+        rule: 'Call the member function on the specific object whose state it should use.',
+        violation:
+          'Call add on one counter and expect a second counter to change too.',
+        signature: 'int solve(int start, int amount)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nstruct Counter {\n  int count;\n  void add(int amount) { count += amount; }\n};\nint solve(int start, int amount) {\n  Counter counter{start};\n  counter.add(amount);\n  counter.add(amount);\n  return counter.count;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nstruct Counter {\n  int count;\n  void add(int amount) { count += amount; }\n};\nint solve(int start, int amount) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(1, 3) == 7);\n  assert(solve(0, 0) == 0);\n  assert(solve(10, -4) == 2);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nstruct Counter {\n  int count;\n  void add(int amount) { count += amount; }\n};\nint solve(int start, int amount) {\n  Counter counter{start};\n  counter.add(amount);\n  counter.add(amount);\n  return counter.count;\n}\nint main() { std::cout << solve(1, 3) << "\\n"; }',
+        output: '7',
+      },
+      {
+        key: 'const-member-functions',
+        title: 'Mark read-only member functions const',
+        definition:
+          'A member function declared with const after its parameter list promises not to modify members, so it can be called on a const object.',
+        misconception:
+          'A const object may call any member function that happens not to change its members.',
+        rule: 'Mark every member function that only reads state as const.',
+        violation:
+          'Leave a read-only member function unmarked and then call it on a const object.',
+        signature: 'int solve(int width, int height)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nstruct Rect {\n  int width;\n  int height;\n  int area() const { return width * height; }\n};\nint solve(int width, int height) {\n  const Rect rect{width, height};\n  return rect.area();\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nstruct Rect {\n  int width;\n  int height;\n  int area() const { return width * height; }\n};\nint solve(int width, int height) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(3, 4) == 12);\n  assert(solve(0, 9) == 0);\n  assert(solve(5, 5) == 25);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nstruct Rect {\n  int width;\n  int height;\n  int area() const { return width * height; }\n};\nint solve(int width, int height) {\n  const Rect rect{width, height};\n  return rect.area();\n}\nint main() { std::cout << solve(3, 4) << "\\n"; }',
+        output: '12',
+      },
+      {
+        key: 'const-correctness',
+        title: 'Read objects through const references',
+        definition:
+          'Through a const T& parameter a function can call only const member functions, so read-only access needs const accessors.',
+        misconception:
+          'A const T& parameter receives a copy, so the function may call any member function on it.',
+        rule: 'Take objects the function only reads as const T&, mark their accessors const, and use T& only when the function must change the object.',
+        violation:
+          'Drop const from a getter so that it compiles, then pass every object by non-const reference.',
+        signature: 'bool solve(const Tally& tally, int goal)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nstruct Tally {\n  int total;\n  void add(int amount) { total += amount; }\n  int value() const { return total; }\n};\nbool solve(const Tally& tally, int goal) {\n  return tally.value() >= goal;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nstruct Tally {\n  int total;\n  void add(int amount) { total += amount; }\n  int value() const { return total; }\n};\nbool solve(const Tally& tally, int goal) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  Tally tally{0};\n  tally.add(5);\n  tally.add(3);\n  assert(solve(tally, 8) == true);\n  assert(solve(tally, 9) == false);\n  assert(tally.value() == 8);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nstruct Tally {\n  int total;\n  void add(int amount) { total += amount; }\n  int value() const { return total; }\n};\nbool solve(const Tally& tally, int goal) {\n  return tally.value() >= goal;\n}\nint main() {\n  Tally tally{0};\n  tally.add(5);\n  tally.add(3);\n  std::cout << solve(tally, 8) << "\\n";\n}',
+        output: '1',
+      },
+      {
+        key: 'private-invariant',
+        title: 'Protect an invariant with private members',
+        definition:
+          "Members declared private can be changed only by the class's own member functions, so those functions can keep an invariant true.",
+        misconception:
+          'A private member can still be assigned directly by any function that has the object.',
+        rule: 'Make state private when every change must pass a check, and expose it through const accessors.',
+        violation:
+          'Leave a capped level public so callers can assign values above the cap.',
+        signature: 'int solve(int cap, int first, int second)',
+        solution:
+          '#include <iostream>\n#include <cassert>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint solve(int cap, int first, int second) {\n  Gauge gauge(cap);\n  gauge.add(first);\n  gauge.add(second);\n  return gauge.level();\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint solve(int cap, int first, int second) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\nint main() {\n  assert(solve(10, 4, 3) == 7);\n  assert(solve(10, 8, 5) == 10);\n  assert(solve(5, 0, 0) == 0);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint solve(int cap, int first, int second) {\n  Gauge gauge(cap);\n  gauge.add(first);\n  gauge.add(second);\n  return gauge.level();\n}\nint main() { std::cout << solve(10, 8, 5) << "\\n"; }',
+        output: '10',
       },
     ],
   },
@@ -979,13 +1426,13 @@ const topics: Topic[] = [
           'Give both source and destination ownership of the same raw allocation.',
         signature: 'int solve(int value)',
         solution:
-          '#include <iostream>\n#include <cassert>\n#include <memory>\n#include <utility>\nstruct Box { std::unique_ptr<int> data; explicit Box(int x) : data(std::make_unique<int>(x)) {} Box(Box&& other) noexcept : data(std::move(other.data)) {} };\nint solve(int value) {\n  Box source(value);\n  Box destination(std::move(source));\n  return source.data ? -1 : *destination.data;\n}',
+          '#include <iostream>\n#include <cassert>\n#include <memory>\n#include <utility>\nstruct Box { std::unique_ptr<int> data; explicit Box(int x) : data(std::make_unique<int>(x)) {} Box(Box&& other) : data(std::move(other.data)) {} };\nint solve(int value) {\n  Box source(value);\n  Box destination(std::move(source));\n  return source.data ? -1 : *destination.data;\n}',
         starterCode:
-          '#include <iostream>\n#include <cassert>\n#include <memory>\n#include <utility>\nstruct Box { std::unique_ptr<int> data; explicit Box(int x) : data(std::make_unique<int>(x)) {} Box(Box&& other) noexcept : data(std::move(other.data)) {} };\nint solve(int value) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+          '#include <iostream>\n#include <cassert>\n#include <memory>\n#include <utility>\nstruct Box { std::unique_ptr<int> data; explicit Box(int x) : data(std::make_unique<int>(x)) {} Box(Box&& other) : data(std::move(other.data)) {} };\nint solve(int value) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
         tests:
           '#include <iostream>\n#include <cassert>\n#include <memory>\n#include <utility>\nint main() {\n  assert(solve(9) == 9);\n  assert(solve(3) == 3);\n}\n',
         example:
-          '#include <iostream>\n#include <cassert>\n#include <memory>\n#include <utility>\nstruct Box { std::unique_ptr<int> data; explicit Box(int x) : data(std::make_unique<int>(x)) {} Box(Box&& other) noexcept : data(std::move(other.data)) {} };\nint solve(int value) {\n  Box source(value);\n  Box destination(std::move(source));\n  return source.data ? -1 : *destination.data;\n}\nint main() { std::cout << solve(9) << "\\n"; }',
+          '#include <iostream>\n#include <cassert>\n#include <memory>\n#include <utility>\nstruct Box { std::unique_ptr<int> data; explicit Box(int x) : data(std::make_unique<int>(x)) {} Box(Box&& other) : data(std::move(other.data)) {} };\nint solve(int value) {\n  Box source(value);\n  Box destination(std::move(source));\n  return source.data ? -1 : *destination.data;\n}\nint main() { std::cout << solve(9) << "\\n"; }',
         output: '9',
       },
       {
@@ -1368,6 +1815,96 @@ const topics: Topic[] = [
     ],
   },
   {
+    key: 'pairs',
+    title: 'Pairs and structured bindings',
+    unit: 'cpp-sequences',
+    atoms: [
+      {
+        key: 'pair-members',
+        title: 'Group two values in a std::pair',
+        definition:
+          'std::pair<A, B> stores two values together: .first holds the A value and .second holds the B value.',
+        misconception:
+          'first and second are member functions of a pair, so they are read as p.first().',
+        rule: 'Build the pair in a fixed order and read its parts as p.first and p.second.',
+        violation: 'Call p.first() as though first were a member function.',
+        signature: 'std::pair<int, int> solve(int total, int divisor)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nstd::pair<int, int> solve(int total, int divisor) {\n  return {total / divisor, total % divisor};\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nstd::pair<int, int> solve(int total, int divisor) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nint main() {\n  assert(solve(17, 5).first == 3);\n  assert(solve(17, 5).second == 2);\n  assert(solve(8, 4).first == 2);\n  assert(solve(8, 4).second == 0);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nstd::pair<int, int> solve(int total, int divisor) {\n  return {total / divisor, total % divisor};\n}\nint main() {\n  std::pair<int, int> result = solve(17, 5);\n  std::cout << result.first << " " << result.second << "\\n";\n}',
+        output: '3 2',
+      },
+      {
+        key: 'pair-ordering',
+        title: 'Compare pairs lexicographically',
+        definition:
+          'Pairs compare by .first, and only when the firsts are equal does .second decide; == requires both members to match.',
+        misconception:
+          'p < q compares only the .first members and ignores .second.',
+        rule: 'Put the primary key in .first and the tie-breaker in .second when pair order should decide.',
+        violation:
+          'Put the tie-breaking value in .first and the primary key in .second.',
+        signature: 'bool solve(std::pair<int, int> a, std::pair<int, int> b)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nbool solve(std::pair<int, int> a, std::pair<int, int> b) {\n  return a < b;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nbool solve(std::pair<int, int> a, std::pair<int, int> b) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nint main() {\n  assert(solve({1, 9}, {2, 0}) == true);\n  assert(solve({2, 1}, {2, 5}) == true);\n  assert(solve({2, 5}, {2, 5}) == false);\n  assert(solve({3, 0}, {2, 9}) == false);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nbool solve(std::pair<int, int> a, std::pair<int, int> b) {\n  return a < b;\n}\nint main() { std::cout << solve({2, 1}, {2, 5}) << "\\n"; }',
+        output: '1',
+      },
+      {
+        key: 'structured-bindings',
+        title: 'Unpack a pair with structured bindings',
+        definition:
+          'auto [a, b] = p; declares a and b as copies of p.first and p.second, while auto& [a, b] = p; makes them refer to the members.',
+        misconception:
+          'Assigning to a after auto [a, b] = p; also changes p.first.',
+        rule: 'Unpack with auto& when the names must update the pair, and with plain auto for independent copies.',
+        violation:
+          'Unpack with plain auto and expect writes to reach the original pair.',
+        signature: 'int solve(std::pair<int, int> range)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nint solve(std::pair<int, int> range) {\n  auto [low, high] = range;\n  return high - low;\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nint solve(std::pair<int, int> range) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nint main() {\n  assert(solve({3, 10}) == 7);\n  assert(solve({-2, 2}) == 4);\n  assert(solve({5, 5}) == 0);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <utility>\nint solve(std::pair<int, int> range) {\n  auto [low, high] = range;\n  return high - low;\n}\nint main() { std::cout << solve({3, 10}) << "\\n"; }',
+        output: '7',
+      },
+      {
+        key: 'pair-results',
+        title: 'Return two results as a pair',
+        definition:
+          'A function can return a std::pair to report two related results, and the caller can name both with structured bindings.',
+        misconception:
+          'A function cannot hand back two results, so the second one must be stored in a global variable.',
+        rule: 'Return {low, high} as a pair and unpack it at the call site in the same order.',
+        violation:
+          'Unpack the returned pair in a different order from the one the function used to build it.',
+        signature: 'std::pair<int, int> solve(std::array<int, 4> values)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <array>\n#include <utility>\nstd::pair<int, int> solve(std::array<int, 4> values) {\n  int low = values[0];\n  int high = values[0];\n  for (int x : values) {\n    if (x < low) low = x;\n    if (x > high) high = x;\n  }\n  return {low, high};\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <array>\n#include <utility>\nstd::pair<int, int> solve(std::array<int, 4> values) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <array>\n#include <utility>\nint main() {\n  assert((solve({3, 9, -2, 5}) == std::pair<int, int>(-2, 9)));\n  assert((solve({4, 4, 4, 4}) == std::pair<int, int>(4, 4)));\n  assert((solve({0, -1, 7, 2}) == std::pair<int, int>(-1, 7)));\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <array>\n#include <utility>\nstd::pair<int, int> solve(std::array<int, 4> values) {\n  int low = values[0];\n  int high = values[0];\n  for (int x : values) {\n    if (x < low) low = x;\n    if (x > high) high = x;\n  }\n  return {low, high};\n}\nint main() {\n  auto [low, high] = solve({3, 9, -2, 5});\n  std::cout << low << " " << high << "\\n";\n}',
+        output: '-2 9',
+      },
+    ],
+  },
+  {
     key: 'maps',
     title: 'Associative mappings',
     unit: 'cpp-containers',
@@ -1404,13 +1941,13 @@ const topics: Topic[] = [
           'Assume insertion succeeded merely because a key now exists.',
         signature: 'int solve(int initial, int replacement)',
         solution:
-          '#include <iostream>\n#include <cassert>\n#include <map>\nint solve(int initial, int replacement) {\n  std::map<int, int> values;\n  values.emplace(1, initial);\n  values.emplace(1, replacement);\n  return values.at(1);\n}',
+          '#include <iostream>\n#include <cassert>\n#include <map>\nint solve(int initial, int replacement) {\n  std::map<int, int> values;\n  values.emplace(1, initial);\n  values.emplace(1, replacement);\n  return values.find(1)->second;\n}',
         starterCode:
           '#include <iostream>\n#include <cassert>\n#include <map>\nint solve(int initial, int replacement) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
         tests:
           '#include <iostream>\n#include <cassert>\n#include <map>\nint main() {\n  assert(solve(4, 9) == 4);\n  assert(solve(-2, 5) == -2);\n}\n',
         example:
-          '#include <iostream>\n#include <cassert>\n#include <map>\nint solve(int initial, int replacement) {\n  std::map<int, int> values;\n  values.emplace(1, initial);\n  values.emplace(1, replacement);\n  return values.at(1);\n}\nint main() { std::cout << solve(4, 9) << "\\n"; }',
+          '#include <iostream>\n#include <cassert>\n#include <map>\nint solve(int initial, int replacement) {\n  std::map<int, int> values;\n  values.emplace(1, initial);\n  values.emplace(1, replacement);\n  return values.find(1)->second;\n}\nint main() { std::cout << solve(4, 9) << "\\n"; }',
         output: '4',
       },
       {
@@ -3261,6 +3798,96 @@ const topics: Topic[] = [
     ],
   },
   {
+    key: 'chrono',
+    title: 'Durations and clocks',
+    unit: 'cpp-performance',
+    atoms: [
+      {
+        key: 'duration-count',
+        title: 'Hold time as a std::chrono duration',
+        definition:
+          'A std::chrono duration stores a tick count together with its unit; count() returns the ticks, and adding durations of different units yields the finer unit.',
+        misconception:
+          'count() on any std::chrono duration returns the amount in seconds.',
+        rule: 'Keep time values as durations, and call count() only where a plain number is needed, stating its unit.',
+        violation:
+          'Add a count of seconds to a count of milliseconds as plain integers.',
+        signature: 'long long solve(long long seconds, long long millis)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(long long seconds, long long millis) {\n  std::chrono::milliseconds total = std::chrono::seconds(seconds) + std::chrono::milliseconds(millis);\n  return total.count();\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(long long seconds, long long millis) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nint main() {\n  assert(solve(1, 500) == 1500LL);\n  assert(solve(0, 0) == 0LL);\n  assert(solve(2, -250) == 1750LL);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(long long seconds, long long millis) {\n  std::chrono::milliseconds total = std::chrono::seconds(seconds) + std::chrono::milliseconds(millis);\n  return total.count();\n}\nint main() { std::cout << solve(1, 500) << "\\n"; }',
+        output: '1500',
+      },
+      {
+        key: 'duration-cast',
+        title: 'Convert durations with duration_cast',
+        definition:
+          'Converting a duration to a finer unit happens implicitly, but converting to a coarser unit needs std::chrono::duration_cast, which truncates toward zero.',
+        misconception:
+          'duration_cast<std::chrono::seconds> rounds 2700 milliseconds up to 3 seconds.',
+        rule: 'Use duration_cast only where dropping the remainder is acceptable, and keep the finer unit otherwise.',
+        violation:
+          'Cast to seconds early and then report the truncated value as an exact time.',
+        signature: 'long long solve(long long millis)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(long long millis) {\n  return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::milliseconds(millis)).count();\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(long long millis) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nint main() {\n  assert(solve(2700) == 2LL);\n  assert(solve(999) == 0LL);\n  assert(solve(-1500) == -1LL);\n  assert(solve(3000) == 3LL);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(long long millis) {\n  return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::milliseconds(millis)).count();\n}\nint main() { std::cout << solve(2700) << "\\n"; }',
+        output: '2',
+      },
+      {
+        key: 'time-points',
+        title: 'Subtract time points to get a duration',
+        definition:
+          'A time_point marks an instant on one clock; subtracting two time points of that clock gives the duration between them.',
+        misconception: 'Adding two time points produces a later time point.',
+        rule: 'Subtract time points from the same clock, and add a duration to a time point to move it.',
+        violation:
+          'Subtract time points that were read from two different clocks.',
+        signature: 'long long solve(long long start_ms, long long end_ms)',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(long long start_ms, long long end_ms) {\n  std::chrono::steady_clock::time_point start{std::chrono::milliseconds(start_ms)};\n  std::chrono::steady_clock::time_point end{std::chrono::milliseconds(end_ms)};\n  return std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(long long start_ms, long long end_ms) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nint main() {\n  assert(solve(100, 145) == 45LL);\n  assert(solve(10, 10) == 0LL);\n  assert(solve(500, 200) == -300LL);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nlong long solve(long long start_ms, long long end_ms) {\n  std::chrono::steady_clock::time_point start{std::chrono::milliseconds(start_ms)};\n  std::chrono::steady_clock::time_point end{std::chrono::milliseconds(end_ms)};\n  return std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();\n}\nint main() { std::cout << solve(100, 145) << "\\n"; }',
+        output: '45',
+      },
+      {
+        key: 'steady-interval',
+        title: 'Time an interval with steady_clock',
+        definition:
+          'std::chrono::steady_clock::now() reads a monotonic clock, so a later reading minus an earlier one is never negative.',
+        misconception:
+          'system_clock suits interval timing because it never moves backward.',
+        rule: 'Measure intervals with steady_clock and convert the difference to an explicit unit before reporting it.',
+        violation:
+          'Time an interval with system_clock and trust it across clock adjustments.',
+        signature: 'bool solve()',
+        solution:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nbool solve() {\n  std::chrono::steady_clock::time_point first = std::chrono::steady_clock::now();\n  std::chrono::steady_clock::time_point second = std::chrono::steady_clock::now();\n  return second - first >= std::chrono::nanoseconds(0);\n}',
+        starterCode:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nbool solve() {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
+        tests:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nint main() {\n  assert(solve() == true);\n  assert(std::chrono::steady_clock::is_steady);\n}\n',
+        example:
+          '#include <iostream>\n#include <cassert>\n#include <chrono>\nbool solve() {\n  std::chrono::steady_clock::time_point first = std::chrono::steady_clock::now();\n  std::chrono::steady_clock::time_point second = std::chrono::steady_clock::now();\n  return second - first >= std::chrono::nanoseconds(0);\n}\nint main() { std::cout << solve() << "\\n"; }',
+        output: '1',
+      },
+    ],
+  },
+  {
     key: 'measurement',
     title: 'Performance measurement contracts',
     unit: 'cpp-performance',
@@ -3572,9 +4199,9 @@ const topics: Topic[] = [
         starterCode:
           '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\n#include <cstdint>\n#include <cstddef>\nbool solve(std::span<const std::uint8_t> bytes) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
         tests:
-          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\n#include <cstdint>\n#include <cstddef>\nint main() {\n  assert(([] { std::array<std::uint8_t, 5> b{0, 3, 4, 5, 6}; return solve(b); }()) == true);\n  assert(([] { std::array<std::uint8_t, 2> b{0, 3}; return solve(b); }()) == false);\n  assert(solve({}) == false);\n}\n',
+          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\n#include <cstdint>\n#include <cstddef>\nint main() {\n  std::array<std::uint8_t, 5> full{0, 3, 4, 5, 6};\n  assert(solve(full) == true);\n  std::array<std::uint8_t, 2> header{0, 3};\n  assert(solve(header) == false);\n  assert(solve({}) == false);\n}\n',
         example:
-          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\n#include <cstdint>\n#include <cstddef>\nbool solve(std::span<const std::uint8_t> bytes) {\n  if (bytes.size() < 2) return false;\n  std::size_t length = (static_cast<unsigned>(bytes[0]) << 8) | bytes[1];\n  return length == bytes.size() - 2;\n}\nint main() { std::cout << ([] { std::array<std::uint8_t, 5> b{0, 3, 4, 5, 6}; return solve(b); }()) << "\\n"; }',
+          '#include <iostream>\n#include <cassert>\n#include <span>\n#include <array>\n#include <cstdint>\n#include <cstddef>\nbool solve(std::span<const std::uint8_t> bytes) {\n  if (bytes.size() < 2) return false;\n  std::size_t length = (static_cast<unsigned>(bytes[0]) << 8) | bytes[1];\n  return length == bytes.size() - 2;\n}\nint main() {\n  std::array<std::uint8_t, 5> full{0, 3, 4, 5, 6};\n  std::cout << solve(full) << "\\n";\n}',
         output: '1',
       },
       {
@@ -4257,7 +4884,7 @@ export const cppCatalog: CurriculumCatalog = {
       id: 'cpp',
       title: 'C++: from values to systems',
       description:
-        '180 focused C++20 skills: lifetime and ownership, STL, generic code, compiler contracts, concurrency, architecture, and original quant-system applications.',
+        '208 focused C++20 skills: lifetime and ownership, STL, generic code, compiler contracts, concurrency, architecture, and original quant-system applications.',
       domain: 'programming',
       language: 'cpp',
       skillIds: cppSkills.map((skill) => skill.id),

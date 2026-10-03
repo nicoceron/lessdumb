@@ -1,5 +1,6 @@
 import { courses } from '../curriculum';
-import type { LearnerState } from '../state';
+import { migrateState, type LearnerState } from '../state';
+import { MAX_SAVED_QUIZZES } from '../quiz';
 import { activityTotals, type ActivityState } from '../activity';
 
 /** The full current catalog plus every mastery/mistake card fits with headroom. */
@@ -145,6 +146,9 @@ const SKILL_FIELDS = [
   'totalXp',
   'dailyXp',
   'activity',
+  'lessonAttempt',
+  'lessonFailedAt',
+  'lessonRewarded',
 ];
 
 function validateSkill(value: unknown, path: string) {
@@ -189,6 +193,29 @@ function validateSkill(value: unknown, path: string) {
     number(m.lapses, `${path}.memory.lapses`, 0);
   }
   if (skill.totalXp !== undefined) number(skill.totalXp, `${path}.totalXp`);
+  if (skill.lessonRewarded !== undefined)
+    boolean(skill.lessonRewarded, `${path}.lessonRewarded`);
+  if (skill.lessonFailedAt !== undefined)
+    timestamp(skill.lessonFailedAt, `${path}.lessonFailedAt`);
+  if (skill.lessonAttempt !== undefined) {
+    const lesson = object(skill.lessonAttempt, `${path}.lessonAttempt`, [
+      'startedAt',
+      'steps',
+    ]);
+    timestamp(lesson.startedAt, `${path}.lessonAttempt.startedAt`);
+    const steps = object(lesson.steps, `${path}.lessonAttempt.steps`);
+    if (Object.keys(steps).length > 100)
+      fail(`${path}.lessonAttempt.steps`, 'at most 100 lesson steps');
+    for (const [id, value] of Object.entries(steps)) {
+      string(id, `${path}.lessonAttempt.steps ID`);
+      const step = object(value, `${path}.lessonAttempt.steps.${id}`, [
+        'correct',
+        'incorrect',
+      ]);
+      strings(step.correct, `${path}.lessonAttempt.steps.${id}.correct`, 100);
+      number(step.incorrect, `${path}.lessonAttempt.steps.${id}.incorrect`);
+    }
+  }
   if (skill.activity !== undefined) {
     const activity = object(skill.activity, `${path}.activity`, [
       'version',
@@ -287,8 +314,19 @@ function validateProgress(value: unknown) {
     'streak',
     'attempts',
     'timeZone',
+    'quizzes',
   ]);
-  if (progress.version !== 1) fail(`${path}.version`, '1');
+  if (![1, 2, 3].includes(progress.version as number))
+    fail(`${path}.version`, '1, 2 or 3');
+  if (progress.quizzes !== undefined) {
+    const ids = array(
+      progress.quizzes,
+      `${path}.quizzes`,
+      MAX_SAVED_QUIZZES,
+    ).map((quiz, index) => validateQuiz(quiz, `${path}.quizzes[${index}]`));
+    if (new Set(ids).size !== ids.length)
+      fail(`${path}.quizzes`, 'an array of distinct quiz IDs');
+  }
   number(progress.totalXp, `${path}.totalXp`);
   number(progress.streak, `${path}.streak`);
   date(progress.lastActivityDate, `${path}.lastActivityDate`, true);
@@ -319,6 +357,60 @@ function validateProgress(value: unknown) {
     fail(`${path}.attempts`, 'an array of distinct attempt IDs');
 }
 
+function validateQuiz(value: unknown, path: string): string {
+  const quiz = object(value, path, [
+    'id',
+    'number',
+    'courseId',
+    'createdAt',
+    'timeLimitMs',
+    'xpMark',
+    'possible',
+    'questions',
+    'completedAt',
+    'earned',
+  ]);
+  const id = string(quiz.id, `${path}.id`, 128);
+  number(quiz.number, `${path}.number`, 1);
+  string(quiz.courseId, `${path}.courseId`, 128);
+  const createdAt = timestamp(quiz.createdAt, `${path}.createdAt`)!;
+  number(quiz.timeLimitMs, `${path}.timeLimitMs`, 1, 24 * 3_600_000);
+  number(quiz.xpMark, `${path}.xpMark`);
+  const possible = number(quiz.possible, `${path}.possible`, 0, 1000);
+  const questions = array(quiz.questions, `${path}.questions`, 20);
+  if (!questions.length) fail(`${path}.questions`, 'a nonempty array');
+  questions.forEach((value, index) => {
+    const at = `${path}.questions[${index}]`;
+    const question = object(value, at, [
+      'skillId',
+      'questionId',
+      'presentation',
+      'answer',
+      'correct',
+      'answeredAt',
+    ]);
+    string(question.skillId, `${at}.skillId`);
+    string(question.questionId, `${at}.questionId`);
+    number(question.presentation, `${at}.presentation`);
+    if (question.answer !== undefined && question.answer !== null)
+      number(question.answer, `${at}.answer`, 0, 100);
+    if (question.correct !== undefined)
+      boolean(question.correct, `${at}.correct`);
+    if ((question.answer === undefined) !== (question.correct === undefined))
+      fail(at, 'answered and graded together');
+    if (question.answeredAt !== undefined)
+      timestamp(question.answeredAt, `${at}.answeredAt`);
+  });
+  if ((quiz.completedAt === undefined) !== (quiz.earned === undefined))
+    fail(path, 'completed and scored together');
+  if (quiz.completedAt !== undefined) {
+    const completedAt = timestamp(quiz.completedAt, `${path}.completedAt`)!;
+    if (completedAt < createdAt) fail(`${path}.completedAt`, 'after creation');
+    number(quiz.earned, `${path}.earned`, 0, possible);
+  }
+  return id;
+}
+
 function validateAttempt(value: unknown, path: string): string {
   const attempt = object(value, path, [
     'id',
@@ -330,18 +422,28 @@ function validateAttempt(value: unknown, path: string): string {
     'at',
     'xp',
     'reviewDueAt',
+    'outcome',
+    'quizId',
   ]);
   const id = string(attempt.id, `${path}.id`);
   string(attempt.skillId, `${path}.skillId`);
   string(attempt.questionId, `${path}.questionId`);
   boolean(attempt.correct, `${path}.correct`);
   boolean(attempt.usedHint, `${path}.usedHint`);
-  if (attempt.mode !== 'learn' && attempt.mode !== 'review')
-    fail(`${path}.mode`, 'learn or review');
+  if (!['learn', 'review', 'quiz'].includes(attempt.mode as string))
+    fail(`${path}.mode`, 'learn, review or quiz');
+  if (attempt.quizId !== undefined) string(attempt.quizId, `${path}.quizId`);
   isoTimestamp(attempt.at, `${path}.at`);
   number(attempt.xp, `${path}.xp`, 0, 10_000);
   if (attempt.reviewDueAt !== undefined)
     timestamp(attempt.reviewDueAt, `${path}.reviewDueAt`);
+  if (
+    attempt.outcome !== undefined &&
+    !['lesson-passed', 'lesson-failed', 'review-passed'].includes(
+      attempt.outcome as string,
+    )
+  )
+    fail(`${path}.outcome`, 'a task outcome');
   return id;
 }
 
@@ -366,7 +468,9 @@ export function parseStateUpdate(value: unknown): {
     'createdAt',
     'updatedAt',
   ]);
-  if (state.version !== 1) fail('state.version', '1');
+  // Version 1 accounts predate knowledge-point lessons; they migrate on read.
+  if (![1, 2, 3].includes(state.version as number))
+    fail('state.version', '1, 2 or 3');
   number(state.dailyGoal, 'state.dailyGoal', 1, 10_000);
   if (state.activeCourseId !== undefined)
     string(state.activeCourseId, 'state.activeCourseId', 128);
@@ -386,7 +490,7 @@ export function parseStateUpdate(value: unknown): {
   boolean(anki.connected, 'state.anki.connected');
   if (anki.profile !== null) string(anki.profile, 'state.anki.profile', 256);
   string(anki.deck, 'state.anki.deck', 256);
-  const parsed = body.state as LearnerState;
+  const parsed = migrateState(body.state as LearnerState);
   const normalized =
     parsed.activeCourseId &&
     !courses.some((c) => c.id === parsed.activeCourseId)

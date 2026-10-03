@@ -1,5 +1,11 @@
 import type { Skill } from '../../curriculum';
-import { skill, choice, exercise } from './shared';
+import {
+  skill,
+  choice,
+  exercise,
+  withLargeCase,
+  withoutShortcuts,
+} from './shared';
 
 export const competitiveFoundations: Skill[] = [
   skill(
@@ -7,7 +13,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-foundations',
     'Count algorithm work',
     'Estimate how time and memory grow before choosing an approach.',
-    ['cp-work-pairs', 'cp-work-doubling'],
+    ['cp-work-pairs', 'cp-work-doubling', 'multiple-returns'],
     [
       'Complexity describes how resource use grows with input size n. A scan that does constant work per element takes O(n) time; two complete nested scans take O(n²). Consecutive stages add their costs, and the fastest-growing term usually determines the asymptotic bound. These bounds compare growth, not exact seconds on a particular computer.',
       'A useful loop invariant explains the work already done. After i iterations of a scan, i elements have been processed; after i rows of an n-by-n pair scan, i × n pairs have been checked. A probe that doubles from 1 reaches n after about log₂(n) rounds. Doubling n roughly doubles a scan, quadruples a pair scan, and adds one doubling round.',
@@ -40,10 +46,15 @@ export const competitiveFoundations: Skill[] = [
         'Count new storage, not loop iterations.',
       ),
       exercise(
-        'Implement work_counts(n) for a nonnegative integer n. Return a tuple: the number of checks in a length-n scan, the number in a full n-by-n ordered pair scan, and the number of doublings from 1 needed to reach at least n. Compute counts without performing the pair scan.',
+        'Implement work_counts(n) for a nonnegative integer n. Return a tuple: the number of checks in a length-n scan, the number in a full n-by-n ordered pair scan, and the number of doublings from 1 needed to reach at least n. Compute counts without performing the pair scan. A hidden case with n = 10¹² must finish within 3 seconds.',
         'def work_counts(n):\n    # Return the two check counts and the doubling count.\n    pass',
         'def work_counts(n):\n    probe = 1\n    rounds = 0\n    while probe < n:\n        probe *= 2\n        rounds += 1\n    return (n, n * n, rounds)',
-        'assert work_counts(0) == (0, 0, 0)\nassert work_counts(1) == (1, 1, 0)\nassert work_counts(2) == (2, 4, 1)\nassert work_counts(6) == (6, 36, 3)\nassert work_counts(8) == (8, 64, 3)\nassert work_counts(9) == (9, 81, 4)\nassert work_counts(1000000) == (1000000, 1000000000000, 20)',
+        withLargeCase(
+          'assert work_counts(0) == (0, 0, 0)\nassert work_counts(1) == (1, 1, 0)\nassert work_counts(2) == (2, 4, 1)\nassert work_counts(6) == (6, 36, 3)\nassert work_counts(8) == (8, 64, 3)\nassert work_counts(9) == (9, 81, 4)\nassert work_counts(1000000) == (1000000, 1000000000000, 20)',
+          `_result, _seconds = _timed(work_counts, 10**12)
+assert _result == (1000000000000, 1000000000000000000000000, 40), "work_counts(10**12) returned the wrong counts."
+_check_time(_seconds, "work_counts(10**12)", "Compute the pair count with a formula instead of performing the scan.")`,
+        ),
         'The hypothetical scan counts are n and n². Computing those formulas is cheap; this function itself takes O(log(n + 1)) time and O(1) additional space.',
         'Use formulas for the first two counts, and repeatedly double a probe while it is smaller than n.',
       ),
@@ -370,10 +381,16 @@ export const competitiveFoundations: Skill[] = [
         'Keep expected behavior separate from worst-case guarantees.',
       ),
       exercise(
-        'Implement repeat_report(labels) for a list of hashable labels. Return a dictionary containing only labels that occur at least twice, mapped to their full occurrence counts. Return {} for no repetitions and leave the input unchanged.',
+        'Implement repeat_report(labels) for a list of hashable labels. Return a dictionary containing only labels that occur at least twice, mapped to their full occurrence counts. Return {} for no repetitions and leave the input unchanged. A hidden case with 200,000 labels must finish within 3 seconds.',
         'def repeat_report(labels):\n    # Count labels, then keep those with at least two occurrences.\n    pass',
         'def repeat_report(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    repeated = {}\n    for label, count in counts.items():\n        if count >= 2:\n            repeated[label] = count\n    return repeated',
-        'assert repeat_report([]) == {}\nassert repeat_report(["a", "b", "c"]) == {}\nassert repeat_report(["north", "west", "north", "north"]) == {"north": 3}\nassert repeat_report([2, -1, 2, -1, 0]) == {2: 2, -1: 2}\nassert repeat_report(["x"] * 5) == {"x": 5}\nlabels = ["p", "q", "q", "p", "r"]\nassert repeat_report(labels) == {"p": 2, "q": 2}\nassert labels == ["p", "q", "q", "p", "r"]',
+        withLargeCase(
+          'assert repeat_report([]) == {}\nassert repeat_report(["a", "b", "c"]) == {}\nassert repeat_report(["north", "west", "north", "north"]) == {"north": 3}\nassert repeat_report([2, -1, 2, -1, 0]) == {2: 2, -1: 2}\nassert repeat_report(["x"] * 5) == {"x": 5}\nlabels = ["p", "q", "q", "p", "r"]\nassert repeat_report(labels) == {"p": 2, "q": 2}\nassert labels == ["p", "q", "q", "p", "r"]',
+          `_labels = _numbers(200000, 0, 150000, 11)
+_result, _seconds = _timed(repeat_report, _labels)
+assert _checksum(sorted(_result.items())) == 1332624839871332808, "The 200,000-label case returned the wrong report."
+_check_time(_seconds, "The 200,000-label case", "Count every label in one pass with a dictionary instead of calling count() for each label.")`,
+        ),
         'One scan maintains the frequency invariant; a scan over the u keys filters the map. Expected time is O(n + u), or O(n), with O(u) additional space.',
         'Use get(label, 0) + 1 while counting, then keep dictionary entries whose count is at least two.',
       ),
@@ -394,7 +411,7 @@ export const competitiveFoundations: Skill[] = [
     'cp-collections',
     'Follow linked nodes',
     'Traverse next references rather than assuming contiguous storage.',
-    ['cp-link-count'],
+    ['cp-link-count', 'unpacking'],
     [
       'A linked list stores a value and a next reference in each node. Nodes need not occupy neighboring positions. In this lesson a dictionary maps a node ID to a tuple (value, next_id); None marks the end. The head is the first node ID, and following references determines the list order, regardless of dictionary insertion order.',
       'Before each iteration, current identifies the next unvisited node, and the output contains the values already visited in link order. Read its value and next reference, append the value, then continue from the next ID. Use current is not None rather than a truthiness test: the valid node ID 0 must still be visited.',
@@ -561,10 +578,18 @@ export const competitiveFoundations: Skill[] = [
         'Count work after the table already exists.',
       ),
       exercise(
-        'Implement range_totals(values, queries). values is a list of integers; queries is a list of (left, right) half-open ranges with 0 <= left <= right <= len(values). Return their sums in query order using one prefix table. Empty ranges have total 0. Do not change either input.',
+        'Implement range_totals(values, queries). values is a list of integers; queries is a list of (left, right) half-open ranges with 0 <= left <= right <= len(values). Return their sums in query order using one prefix table. Empty ranges have total 0. Do not change either input. A hidden case with 200,000 values and 200,000 queries must finish within 3 seconds.',
         'def range_totals(values, queries):\n    # Build one prefix table, then answer every half-open query.\n    pass',
         'def range_totals(values, queries):\n    prefix = [0]\n    for value in values:\n        prefix.append(prefix[-1] + value)\n    totals = []\n    for left, right in queries:\n        totals.append(prefix[right] - prefix[left])\n    return totals',
-        'assert range_totals([], []) == []\nassert range_totals([], [(0, 0)]) == [0]\nassert range_totals([6, -2, 5, 1], [(1, 3), (0, 4), (2, 2), (4, 4)]) == [3, 10, 0, 0]\nassert range_totals([-4, 4, -1], [(0, 2), (1, 3), (0, 3)]) == [0, 3, -1]\nassert range_totals([8], [(0, 1), (0, 0), (1, 1)]) == [8, 0, 0]\nvalues = [2, 7, -3]\nqueries = [(0, 3), (1, 2)]\nassert range_totals(values, queries) == [6, 7]\nassert values == [2, 7, -3]\nassert queries == [(0, 3), (1, 2)]',
+        withLargeCase(
+          'assert range_totals([], []) == []\nassert range_totals([], [(0, 0)]) == [0]\nassert range_totals([6, -2, 5, 1], [(1, 3), (0, 4), (2, 2), (4, 4)]) == [3, 10, 0, 0]\nassert range_totals([-4, 4, -1], [(0, 2), (1, 3), (0, 3)]) == [0, 3, -1]\nassert range_totals([8], [(0, 1), (0, 0), (1, 1)]) == [8, 0, 0]\nvalues = [2, 7, -3]\nqueries = [(0, 3), (1, 2)]\nassert range_totals(values, queries) == [6, 7]\nassert values == [2, 7, -3]\nassert queries == [(0, 3), (1, 2)]',
+          `_values = _numbers(200000, -1000, 1000, 21)
+_ends = _numbers(400000, 0, 200000, 22)
+_queries = [(min(_ends[i], _ends[i + 1]), max(_ends[i], _ends[i + 1])) for i in range(0, 400000, 2)]
+_result, _seconds = _timed(range_totals, _values, _queries)
+assert _checksum(_result) == 1583528261156788488, "The 200,000-query case returned wrong totals."
+_check_time(_seconds, "The 200,000-query case", "Answer each query from the prefix table instead of re-adding its range.")`,
+        ),
         'The prefix invariant proves the subtraction formula. The result list preserves query order; preprocessing happens only once.',
         'Start prefix at [0], append cumulative totals, and use prefix[right] - prefix[left] for each query.',
       ),
@@ -628,10 +653,18 @@ export const competitiveFoundations: Skill[] = [
         'The last boundary is not an output element.',
       ),
       exercise(
-        'Implement apply_additions(size, updates). Begin with size zeros. Each (left, right, delta) adds delta to the half-open range [left, right). Return the final integer list using a difference array. Assume size >= 0 and all boundaries satisfy 0 <= left <= right <= size. Leave updates unchanged.',
+        'Implement apply_additions(size, updates). Begin with size zeros. Each (left, right, delta) adds delta to the half-open range [left, right). Return the final integer list using a difference array. Assume size >= 0 and all boundaries satisfy 0 <= left <= right <= size. Leave updates unchanged. A hidden case with 200,000 positions and 200,000 updates must finish within 3 seconds.',
         'def apply_additions(size, updates):\n    # Mark start/end changes, then reconstruct the size output values.\n    pass',
         'def apply_additions(size, updates):\n    difference = [0] * (size + 1)\n    for left, right, delta in updates:\n        difference[left] += delta\n        difference[right] -= delta\n    values = []\n    running = 0\n    for index in range(size):\n        running += difference[index]\n        values.append(running)\n    return values',
-        'assert apply_additions(0, []) == []\nassert apply_additions(0, [(0, 0, 5)]) == []\nassert apply_additions(4, []) == [0, 0, 0, 0]\nassert apply_additions(5, [(1, 4, 3), (0, 2, 2)]) == [2, 5, 3, 3, 0]\nassert apply_additions(3, [(0, 3, 7), (1, 2, -9)]) == [7, -2, 7]\nassert apply_additions(3, [(1, 1, 100), (3, 3, -4)]) == [0, 0, 0]\nupdates = [(0, 1, -2), (1, 3, 4)]\nassert apply_additions(3, updates) == [-2, 4, 4]\nassert updates == [(0, 1, -2), (1, 3, 4)]',
+        withLargeCase(
+          'assert apply_additions(0, []) == []\nassert apply_additions(0, [(0, 0, 5)]) == []\nassert apply_additions(4, []) == [0, 0, 0, 0]\nassert apply_additions(5, [(1, 4, 3), (0, 2, 2)]) == [2, 5, 3, 3, 0]\nassert apply_additions(3, [(0, 3, 7), (1, 2, -9)]) == [7, -2, 7]\nassert apply_additions(3, [(1, 1, 100), (3, 3, -4)]) == [0, 0, 0]\nupdates = [(0, 1, -2), (1, 3, 4)]\nassert apply_additions(3, updates) == [-2, 4, 4]\nassert updates == [(0, 1, -2), (1, 3, 4)]',
+          `_ends = _numbers(400000, 0, 200000, 31)
+_deltas = _numbers(200000, -50, 50, 32)
+_updates = [(min(_ends[2 * i], _ends[2 * i + 1]), max(_ends[2 * i], _ends[2 * i + 1]), _deltas[i]) for i in range(200000)]
+_result, _seconds = _timed(apply_additions, 200000, _updates)
+assert _checksum(_result) == 1683390223532082913, "The 200,000-update case returned wrong values."
+_check_time(_seconds, "The 200,000-update case", "Mark each update at its two boundaries and reconstruct once instead of looping over every range.")`,
+        ),
         'Boundary changes add independently, including overlaps and negative deltas. A single prefix scan combines all currently active additions.',
         'Allocate size + 1 zeros; add delta at left and subtract it at right, then accumulate only the first size entries.',
       ),
@@ -652,7 +685,13 @@ export const competitiveFoundations: Skill[] = [
     'cp-linear',
     'Discard candidates with two pointers',
     'Use sorted order to count or reject whole groups of pairs.',
-    ['cp-pointer-discard', 'cp-pointer-count-block', 'while-loops'],
+    [
+      'cp-pointer-discard',
+      'cp-pointer-count-block',
+      'while-loops',
+      'ranges',
+      'cp-sort-copy',
+    ],
     [
       'Two pointers mark the ends of a remaining candidate interval. For an ascending list, let left point at its smallest remaining value and right at its largest. We want the number of distinct-index pairs whose sum is at most a limit. Values may repeat or be negative; the required property is sorted order.',
       'If values[left] + values[right] fits, the left value fits with every value between left + 1 and right. Count right − left pairs and advance left. If the sum is too large, even the smallest remaining value cannot pair with right, so discard right. The invariant is that all pairs outside the remaining interval have been counted or proved invalid, and every pair inside remains undecided.',
@@ -695,10 +734,16 @@ export const competitiveFoundations: Skill[] = [
         'values = [1, 2, 5]\nleft = 0\nright = len(values) - 1\ncount = 0\nwhile left < right:\n    if values[left] + values[right] <= 6:\n        count += right - left\n        left += 1\n    else:\n        right -= 1\nprint(count)',
       ),
       exercise(
-        'Implement count_light_pairs(sorted_values, limit). sorted_values is an ascending list of integers. Return the number of unordered pairs of distinct indices whose values sum to at most limit. Count duplicate values at different indices separately. Use two pointers and do not change the input.',
+        'Implement count_light_pairs(sorted_values, limit). sorted_values is an ascending list of integers. Return the number of unordered pairs of distinct indices whose values sum to at most limit. Count duplicate values at different indices separately. Use two pointers and do not change the input. A hidden case with 200,000 values must finish within 3 seconds.',
         'def count_light_pairs(sorted_values, limit):\n    # Count proven-fitting partners or discard the largest remaining value.\n    pass',
         'def count_light_pairs(sorted_values, limit):\n    left = 0\n    right = len(sorted_values) - 1\n    count = 0\n    while left < right:\n        if sorted_values[left] + sorted_values[right] <= limit:\n            count += right - left\n            left += 1\n        else:\n            right -= 1\n    return count',
-        'assert count_light_pairs([], 10) == 0\nassert count_light_pairs([4], 10) == 0\nassert count_light_pairs([1, 4, 6, 9], 10) == 4\nassert count_light_pairs([2, 2, 2], 4) == 3\nassert count_light_pairs([-4, -1, 2, 5], 1) == 4\nassert count_light_pairs([3, 6, 9], 2) == 0\nassert count_light_pairs([1, 2, 3, 4], 100) == 6\nvalues = [-5, 0, 3]\nassert count_light_pairs(values, 0) == 2\nassert values == [-5, 0, 3]',
+        withLargeCase(
+          'assert count_light_pairs([], 10) == 0\nassert count_light_pairs([4], 10) == 0\nassert count_light_pairs([1, 4, 6, 9], 10) == 4\nassert count_light_pairs([2, 2, 2], 4) == 3\nassert count_light_pairs([-4, -1, 2, 5], 1) == 4\nassert count_light_pairs([3, 6, 9], 2) == 0\nassert count_light_pairs([1, 2, 3, 4], 100) == 6\nvalues = [-5, 0, 3]\nassert count_light_pairs(values, 0) == 2\nassert values == [-5, 0, 3]',
+          `_values = sorted(_numbers(200000, -10**6, 10**6, 41))
+_result, _seconds = _timed(count_light_pairs, _values, 12345)
+assert _result == 10149814211, "The 200,000-value case returned the wrong count."
+_check_time(_seconds, "The 200,000-value case", "Count a whole block of partners per pointer move instead of testing every pair.")`,
+        ),
         'Every counted block shares the same left endpoint, so advancing left prevents double counting. A too-large outer sum proves that the current right value has no remaining valid partner.',
         'If the outer sum fits, add right - left and advance left; otherwise decrease right.',
       ),
@@ -762,10 +807,17 @@ export const competitiveFoundations: Skill[] = [
         'counts = {"red": 1, "blue": 2}\ncounts["red"] -= 1\nif counts["red"] == 0:\n    del counts["red"]\nprint(len(counts))',
       ),
       exercise(
-        'Implement longest_variety(labels, max_types). labels is a list of hashable labels and max_types is a nonnegative integer. Return the maximum length of a contiguous segment with at most max_types distinct labels. Empty input or max_types == 0 returns 0. Use a frequency map and moving boundaries; leave labels unchanged.',
+        'Implement longest_variety(labels, max_types). labels is a list of hashable labels and max_types is a nonnegative integer. Return the maximum length of a contiguous segment with at most max_types distinct labels. Empty input or max_types == 0 returns 0. Use a frequency map and moving boundaries; leave labels unchanged. A hidden case with 200,000 labels must finish within 3 seconds.',
         'def longest_variety(labels, max_types):\n    # Expand right, shrink until valid, and retain the best valid length.\n    pass',
         'def longest_variety(labels, max_types):\n    if max_types == 0:\n        return 0\n    counts = {}\n    left = 0\n    best = 0\n    for right in range(len(labels)):\n        label = labels[right]\n        counts[label] = counts.get(label, 0) + 1\n        while len(counts) > max_types:\n            old = labels[left]\n            counts[old] -= 1\n            if counts[old] == 0:\n                del counts[old]\n            left += 1\n        best = max(best, right - left + 1)\n    return best',
-        'assert longest_variety([], 3) == 0\nassert longest_variety(["a", "b"], 0) == 0\nassert longest_variety(["a", "a", "a", "a"], 1) == 4\nassert longest_variety(list("abacba"), 2) == 3\nassert longest_variety(["red", "blue", "red", "green", "blue"], 2) == 3\nassert longest_variety([1, 2, 3, 1], 5) == 4\nassert longest_variety([1, 2, 1, 2, 3], 2) == 4\nlabels = [1, 1, 2, 2, 3]\nassert longest_variety(labels, 1) == 2\nassert labels == [1, 1, 2, 2, 3]',
+        withLargeCase(
+          'assert longest_variety([], 3) == 0\nassert longest_variety(["a", "b"], 0) == 0\nassert longest_variety(["a", "a", "a", "a"], 1) == 4\nassert longest_variety(list("abacba"), 2) == 3\nassert longest_variety(["red", "blue", "red", "green", "blue"], 2) == 3\nassert longest_variety([1, 2, 3, 1], 5) == 4\nassert longest_variety([1, 2, 1, 2, 3], 2) == 4\nlabels = [1, 1, 2, 2, 3]\nassert longest_variety(labels, 1) == 2\nassert labels == [1, 1, 2, 2, 3]',
+          `_noise = _numbers(200000, 0, 3, 51)
+_labels = [i // 1000 + _noise[i] for i in range(200000)]
+_result, _seconds = _timed(longest_variety, _labels, 20)
+assert _result == 17021, "The 200,000-label case returned the wrong length."
+_check_time(_seconds, "The 200,000-label case", "Move both window boundaries forward with a frequency map instead of rescanning from every start.")`,
+        ),
         'The frequency invariant ensures that len(counts) is the actual distinct count. Each right endpoint contributes its longest valid window, and taking their maximum covers the optimum.',
         'Increment the incoming label, shrink while len(counts) is too large, and delete any outgoing label whose count becomes zero.',
       ),
@@ -824,10 +876,32 @@ export const competitiveFoundations: Skill[] = [
         'A boundary can sit just beyond the valid element indices.',
       ),
       exercise(
-        'Implement first_at_least(values, target). values is an ascending list of integers. Return the first index i with values[i] >= target, or len(values) if none exists. Return 0 for an empty list. Use binary search, handle duplicates, and preserve the input.',
+        'Implement first_at_least(values, target). values is an ascending list of integers. Return the first index i with values[i] >= target, or len(values) if none exists. Return 0 for an empty list. Use binary search, handle duplicates, and preserve the input. The checks disable the bisect module, and a hidden case of 100,000 searches in 200,000 values must finish within 3 seconds.',
         'def first_at_least(values, target):\n    # Find the first qualifying boundary in [0, len(values)].\n    pass',
         'def first_at_least(values, target):\n    low = 0\n    high = len(values)\n    while low < high:\n        mid = (low + high) // 2\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid\n    return low',
-        'assert first_at_least([], 5) == 0\nassert first_at_least([2, 5, 5, 11], 5) == 1\nassert first_at_least([2, 5, 5, 11], 6) == 3\nassert first_at_least([2, 5, 5, 11], 12) == 4\nassert first_at_least([2, 5, 5, 11], -1) == 0\nassert first_at_least([4, 4, 4], 4) == 0\nassert first_at_least([-8, -3, 0, 2], -4) == 1\nvalues = [7]\nassert first_at_least(values, 7) == 0\nassert first_at_least(values, 8) == 1\nassert values == [7]',
+        withoutShortcuts(
+          'import bisect',
+          'bisect',
+          [
+            'bisect_left',
+            'bisect_right',
+            'bisect',
+            'insort_left',
+            'insort_right',
+            'insort',
+          ],
+          'This exercise asks you to write the binary search yourself, so the bisect module is disabled during the checks.',
+          withLargeCase(
+            'assert first_at_least([], 5) == 0\nassert first_at_least([2, 5, 5, 11], 5) == 1\nassert first_at_least([2, 5, 5, 11], 6) == 3\nassert first_at_least([2, 5, 5, 11], 12) == 4\nassert first_at_least([2, 5, 5, 11], -1) == 0\nassert first_at_least([4, 4, 4], 4) == 0\nassert first_at_least([-8, -3, 0, 2], -4) == 1\nvalues = [7]\nassert first_at_least(values, 7) == 0\nassert first_at_least(values, 8) == 1\nassert values == [7]',
+            `_values = sorted(_numbers(200000, -10**9, 10**9, 61))
+_targets = _numbers(100000, -10**9 - 5, 10**9 + 5, 62)
+def _run():
+    return [first_at_least(_values, target) for target in _targets]
+_result, _seconds = _timed(_run)
+assert _checksum(_result) == 1870136244434542145, "The 100,000-search case returned wrong boundaries."
+_check_time(_seconds, "The 100,000-search case", "Halve the candidate interval on each step instead of scanning the list.")`,
+          ),
+        ),
         'The half-open interval avoids special handling for an empty list. The invariant keeps all too-small values to the left and qualifying values on the right until one boundary remains.',
         'Initialize high to len(values); move low past too-small midpoints, and set high to qualifying midpoints.',
       ),
@@ -895,10 +969,16 @@ export const competitiveFoundations: Skill[] = [
         'Compare a greedy first cut with an earlier valid cut.',
       ),
       exercise(
-        'Implement minimum_capacity(weights, max_groups). weights is an ordered list of nonnegative integer loads and max_groups >= 1. Split all loads into at most max_groups nonempty consecutive groups and return the smallest possible maximum group sum. Empty weights returns 0. Use a monotone feasibility test with binary search; preserve the input order and list.',
+        'Implement minimum_capacity(weights, max_groups). weights is an ordered list of nonnegative integer loads and max_groups >= 1. Split all loads into at most max_groups nonempty consecutive groups and return the smallest possible maximum group sum. Empty weights returns 0. Use a monotone feasibility test with binary search; preserve the input order and list. A hidden case with 50,000 loads up to 10⁶ must finish within 3 seconds.',
         'def minimum_capacity(weights, max_groups):\n    # Greedily test capacities and search for the smallest feasible one.\n    pass',
         'def minimum_capacity(weights, max_groups):\n    if not weights:\n        return 0\n    def fits(capacity):\n        groups = 1\n        current = 0\n        for weight in weights:\n            if weight > capacity:\n                return False\n            if current + weight > capacity:\n                groups += 1\n                current = weight\n            else:\n                current += weight\n        return groups <= max_groups\n    low = max(weights)\n    high = sum(weights)\n    while low < high:\n        mid = (low + high) // 2\n        if fits(mid):\n            high = mid\n        else:\n            low = mid + 1\n    return low',
-        'assert minimum_capacity([], 1) == 0\nassert minimum_capacity([3, 5, 2, 4], 2) == 8\nassert minimum_capacity([4, 1, 7, 2], 2) == 9\nassert minimum_capacity([0, 0], 2) == 0\nassert minimum_capacity([6], 4) == 6\nassert minimum_capacity([2, 3, 4], 1) == 9\nassert minimum_capacity([2, 3, 4], 3) == 4\nassert minimum_capacity([0, 4, 0, 5, 0], 2) == 5\nweights = [5, 2, 3]\nassert minimum_capacity(weights, 2) == 5\nassert weights == [5, 2, 3]',
+        withLargeCase(
+          'assert minimum_capacity([], 1) == 0\nassert minimum_capacity([3, 5, 2, 4], 2) == 8\nassert minimum_capacity([4, 1, 7, 2], 2) == 9\nassert minimum_capacity([0, 0], 2) == 0\nassert minimum_capacity([6], 4) == 6\nassert minimum_capacity([2, 3, 4], 1) == 9\nassert minimum_capacity([2, 3, 4], 3) == 4\nassert minimum_capacity([0, 4, 0, 5, 0], 2) == 5\nweights = [5, 2, 3]\nassert minimum_capacity(weights, 2) == 5\nassert weights == [5, 2, 3]',
+          `_weights = _numbers(50000, 0, 10**6, 71)
+_result, _seconds = _timed(minimum_capacity, _weights, 40)
+assert _result == 625574761, "The 50,000-load case returned the wrong capacity."
+_check_time(_seconds, "The 50,000-load case", "Binary-search the capacity with the greedy feasibility test instead of trying capacities one at a time.")`,
+        ),
         'The greedy test decides feasibility in one scan. Binary search locates its false-to-true boundary between the largest item and the total sum; zero loads and extra allowed groups obey the same rule.',
         'For a candidate capacity, start a new group only when adding the next load would overflow. Search from max(weights) to sum(weights), handling [] first.',
       ),
@@ -961,10 +1041,16 @@ export const competitiveFoundations: Skill[] = [
         'Precompute the association you repeatedly need.',
       ),
       exercise(
-        'Implement compress_values(values) for a list of integers. Give the smallest distinct value rank 0, the next rank 1, and so on. Return the ranks in the original sequence order. Equal values must have equal ranks. Preserve the input list.',
+        'Implement compress_values(values) for a list of integers. Give the smallest distinct value rank 0, the next rank 1, and so on. Return the ranks in the original sequence order. Equal values must have equal ranks. Preserve the input list. A hidden case with 250,000 values must finish within 3 seconds.',
         'def compress_values(values):\n    # Sort distinct values, map them to ranks, and translate the original list.\n    pass',
         'def compress_values(values):\n    unique = sorted(set(values))\n    ranks = {}\n    for index in range(len(unique)):\n        ranks[unique[index]] = index\n    compressed = []\n    for value in values:\n        compressed.append(ranks[value])\n    return compressed',
-        'assert compress_values([]) == []\nassert compress_values([900]) == [0]\nassert compress_values([-1000, 50, -1000, 8]) == [0, 2, 0, 1]\nassert compress_values([7, 7, 7]) == [0, 0, 0]\nassert compress_values([-5, -1, -3]) == [0, 2, 1]\nassert compress_values([9, 4, 1]) == [2, 1, 0]\nassert compress_values([1, 4, 9]) == [0, 1, 2]\nvalues = [12, -2, 12, 5]\nassert compress_values(values) == [2, 0, 2, 1]\nassert values == [12, -2, 12, 5]',
+        withLargeCase(
+          'assert compress_values([]) == []\nassert compress_values([900]) == [0]\nassert compress_values([-1000, 50, -1000, 8]) == [0, 2, 0, 1]\nassert compress_values([7, 7, 7]) == [0, 0, 0]\nassert compress_values([-5, -1, -3]) == [0, 2, 1]\nassert compress_values([9, 4, 1]) == [2, 1, 0]\nassert compress_values([1, 4, 9]) == [0, 1, 2]\nvalues = [12, -2, 12, 5]\nassert compress_values(values) == [2, 0, 2, 1]\nassert values == [12, -2, 12, 5]',
+          `_values = _numbers(200000, -10**9, 10**9, 81) + _numbers(50000, -100, 100, 82)
+_result, _seconds = _timed(compress_values, _values)
+assert _checksum(_result) == 365298159280422661, "The 250,000-value case returned wrong ranks."
+_check_time(_seconds, "The 250,000-value case", "Map each distinct value to its rank with a dictionary instead of searching the sorted list for every value.")`,
+        ),
         'The dictionary assigns one ordered rank per distinct value. Translating the original list, rather than returning the sorted list, preserves positions and repeated occurrences.',
         'Build unique = sorted(set(values)); assign each entry its index, then look up every original value.',
       ),
@@ -1027,10 +1113,18 @@ export const competitiveFoundations: Skill[] = [
         'Include preprocessing when reporting the whole algorithm.',
       ),
       exercise(
-        'Implement maximum_overlap(intervals). Each integer pair (start, end) describes the half-open interval [start, end), with start <= end. Return the greatest number of intervals active at any coordinate. Empty intervals contribute nothing; intervals meeting only at an endpoint do not overlap. Use sorted boundary events and preserve intervals.',
+        'Implement maximum_overlap(intervals). Each integer pair (start, end) describes the half-open interval [start, end), with start <= end. Return the greatest number of intervals active at any coordinate. Empty intervals contribute nothing; intervals meeting only at an endpoint do not overlap. Use sorted boundary events and preserve intervals. A hidden case with 100,000 intervals must finish within 3 seconds.',
         'def maximum_overlap(intervals):\n    # Sort boundary events with ends before starts, then track peak occupancy.\n    pass',
         'def maximum_overlap(intervals):\n    events = []\n    for start, end in intervals:\n        if start < end:\n            events.append((start, 1))\n            events.append((end, -1))\n    events.sort()\n    active = 0\n    best = 0\n    for coordinate, change in events:\n        active += change\n        best = max(best, active)\n    return best',
-        'assert maximum_overlap([]) == 0\nassert maximum_overlap([(4, 4), (0, 0)]) == 0\nassert maximum_overlap([(0, 4), (2, 6), (4, 7)]) == 2\nassert maximum_overlap([(1, 3), (3, 5)]) == 1\nassert maximum_overlap([(2, 8), (2, 8), (2, 8)]) == 3\nassert maximum_overlap([(-4, -1), (-2, 2), (2, 5)]) == 2\nassert maximum_overlap([(0, 5), (1, 5), (2, 5), (5, 7), (5, 8)]) == 3\nintervals = [(9, 11), (0, 10), (4, 4)]\nassert maximum_overlap(intervals) == 2\nassert intervals == [(9, 11), (0, 10), (4, 4)]',
+        withLargeCase(
+          'assert maximum_overlap([]) == 0\nassert maximum_overlap([(4, 4), (0, 0)]) == 0\nassert maximum_overlap([(0, 4), (2, 6), (4, 7)]) == 2\nassert maximum_overlap([(1, 3), (3, 5)]) == 1\nassert maximum_overlap([(2, 8), (2, 8), (2, 8)]) == 3\nassert maximum_overlap([(-4, -1), (-2, 2), (2, 5)]) == 2\nassert maximum_overlap([(0, 5), (1, 5), (2, 5), (5, 7), (5, 8)]) == 3\nintervals = [(9, 11), (0, 10), (4, 4)]\nassert maximum_overlap(intervals) == 2\nassert intervals == [(9, 11), (0, 10), (4, 4)]',
+          `_starts = _numbers(100000, -10**9, 10**9, 91)
+_lengths = _numbers(100000, 0, 10**8, 92)
+_intervals = [(_starts[i], _starts[i] + _lengths[i]) for i in range(100000)]
+_result, _seconds = _timed(maximum_overlap, _intervals)
+assert _result == 4646, "The 100,000-interval case returned the wrong overlap."
+_check_time(_seconds, "The 100,000-interval case", "Sort the boundary events once instead of counting active intervals at every endpoint.")`,
+        ),
         'Every nonempty interval creates balanced activation and cancellation events. Sorting changes of -1 before +1 at ties respects the half-open convention and prevents endpoint-only overlap.',
         'Ignore start == end; create (start, 1) and (end, -1), sort the tuples, and accumulate the largest active count.',
       ),

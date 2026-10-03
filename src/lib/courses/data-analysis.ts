@@ -123,7 +123,7 @@ const skills: Skill[] = [
     'da-numpy',
     'Create numerical arrays',
     'Turn Python sequences into arrays with an explicit shape and data type.',
-    ['lists'],
+    ['nested-lists', 'imports', 'tuples'],
     [
       'A NumPy array stores values in a grid with a shared data type. Import the package with import numpy as np, then call np.array(...) with a Python list. Unlike a list, an ordinary numeric array supports arithmetic on all its entries.',
       'shape is a tuple containing the length of each axis. A flat array of three values has shape (3,); two rows with three values each have shape (2, 3). size counts all entries, while ndim counts axes. dtype describes their representation. Use dtype=float when decimal calculations are expected.',
@@ -519,7 +519,7 @@ const skills: Skill[] = [
     ['da-series'],
     [
       'pandas arithmetic aligns labels, rather than blindly matching positions. If two Series list the same locations in different orders, addition still combines values for the same location. This is useful when independently collected datasets share stable identifiers.',
-      'When a label exists on only one side, ordinary addition produces a missing result for it. .add(other, fill_value=0) can treat that absent side as zero when this matches the business meaning. Missing measurements are not automatically zero; make that decision explicitly.',
+      'When a label exists on only one side, ordinary addition produces a missing result for it, shown as NaN (“not a number”). .add(other, fill_value=0) can treat that absent side as zero when this matches the business meaning. Missing measurements are not automatically zero; make that decision explicitly.',
       '.reindex([...]) requests labels in a specific order and inserts missing values for absent labels. Alignment and reindexing are about identity, not sorting values. When you deliberately want positional NumPy operations, first verify order before converting to arrays.',
     ],
     'import pandas as pd\na = pd.Series([4, 8], index=["red", "blue"])\nb = pd.Series([3, 7], index=["blue", "red"])\nprint((a + b).reindex(["red", "blue"]).tolist())\nprint(a.reindex(["blue", "red"]).tolist())',
@@ -588,7 +588,7 @@ const skills: Skill[] = [
     'da-pandas',
     'Filter observations',
     'Express multiple conditions and choose rows and columns with loc.',
-    ['da-dataframes', 'da-array-indexing', 'boolean-logic'],
+    ['da-dataframes', 'da-array-indexing'],
     [
       'A column comparison produces a boolean Series with the same index as the table. table.loc[mask, ["name", "score"]] uses that mask to select rows and then selects the named columns. The result keeps the labels of its selected observations.',
       'Combine Series conditions with & for and, | for or, and ~ for not. Parenthesize every comparison: (table["score"] >= 80) & (table["active"] == True). Python\'s scalar and/or operators do not combine entire Series.',
@@ -854,7 +854,7 @@ const skills: Skill[] = [
     ['da-dataframes'],
     [
       'Duplicate rows depend on the question: two identical full rows are one kind of duplicate, while two rows with the same event_id may disagree on other fields. .duplicated(subset=["event_id"]) checks the chosen key rather than every column.',
-      '.drop_duplicates(subset=["event_id"], keep="first") keeps the first occurrence of each key; keep="last" keeps the last. Sorting by a trusted version or timestamp before deduplication can make that choice meaningful. Input order alone does not prove which observation is correct.',
+      '.drop_duplicates(subset=["event_id"], keep="first") keeps the first occurrence of each key; keep="last" keeps the last. Sorting by a trusted version or timestamp first, for example with .sort_values("version"), can make that choice meaningful. Input order alone does not prove which observation is correct.',
       'Validate the key after cleaning with table["event_id"].is_unique, and record how many rows were removed. Deduplication avoids counting an event twice, but conflicting records may require investigation rather than automatic removal. A missing identifier also requires a separate policy.',
     ],
     'import pandas as pd\nrecords = pd.DataFrame({"id": [1, 2, 1], "version": [1, 1, 2], "count": [4, 5, 6]})\nlatest = records.sort_values("version").drop_duplicates("id", keep="last").sort_values("id")\nprint(latest["count"].tolist())\nprint(latest["id"].is_unique)',
@@ -923,7 +923,7 @@ const skills: Skill[] = [
     'da-wrangling',
     'Normalize text keys',
     'Apply vectorized string cleaning without confusing formatting with meaning.',
-    ['da-missing-values'],
+    ['da-missing-values', 'string-methods'],
     [
       'Text identifiers often differ only because of surrounding whitespace or letter case. A string Series exposes vectorized methods through .str: .str.strip() removes surrounding whitespace, and .str.lower() converts letters to lowercase.',
       'Cleaning an identifier is a modeling decision. Treating "North" and "north" as the same site is reasonable only if your source contract says case is irrelevant. Preserve the original text separately when you need an audit trail.',
@@ -993,7 +993,7 @@ const skills: Skill[] = [
     ['da-missing-values'],
     [
       'A categorical variable takes values from a defined set, such as low, medium, high. pandas Categorical can record allowed categories and whether their order matters. Alphabetical order is not necessarily the meaningful order of a severity or size scale.',
-      'An ordered categorical dtype makes sorting follow the specified category order. pd.Categorical(values, categories=["low", "medium", "high"], ordered=True) records that scale. Values outside the allowed set become missing; inspect them instead of assuming the conversion validated everything.',
+      'An ordered categorical dtype makes sorting with .sort_values() follow the specified category order. pd.Categorical(values, categories=["low", "medium", "high"], ordered=True) records that scale. Values outside the allowed set become missing (newer pandas versions also warn); check them first with .isin(allowed) instead of assuming the conversion validated everything.',
       'pd.get_dummies(series, dtype=int) creates one indicator column per category, with one or zero showing membership. This encoding is useful when downstream calculations require separate category indicators. A category code such as 0, 1, 2 is an internal representation, not automatically a numerical distance.',
     ],
     'import pandas as pd\nseverity = pd.Series(pd.Categorical(["high", "low", "medium"], categories=["low", "medium", "high"], ordered=True))\nprint(severity.sort_values().tolist())\nprint(pd.get_dummies(severity, dtype=int)["high"].tolist())',
@@ -1258,7 +1258,7 @@ const skills: Skill[] = [
     'da-grouping',
     'Name summary measures',
     'Build a compact table containing multiple explicit group statistics.',
-    ['da-groupby'],
+    ['da-groupby', 'math-median'],
     [
       'A useful grouped summary often needs several measures, such as revenue total and observation count. Named aggregation makes the output contract readable: table.groupby("shop").agg(total=("revenue", "sum"), records=("revenue", "size")). Each output name maps to an input column and reduction.',
       'Choose statistics based on their meaning, not habit. mean is sensitive to extreme values; median describes the middle value. A sum measures total activity and can hide differences in group size, so include counts when comparing groups.',
@@ -1618,11 +1618,16 @@ const skills: Skill[] = [
     'da-analysis',
     'Explore evidence carefully',
     'Compare descriptive statistics, unusual values, and the limits of association.',
-    ['da-aggregations', 'da-categories'],
     [
-      'Exploratory analysis begins with data quality and distributions. Check observation counts, missing counts, and group coverage before interpreting an average. value_counts() summarizes category frequencies; describe() provides common numerical summaries such as count, mean, minimum, quartiles, and maximum.',
+      'da-aggregations',
+      'da-categories',
+      'math-percentiles',
+      'math-correlation',
+    ],
+    [
+      'Exploratory analysis begins with data quality and distributions. Check observation counts, missing counts, and group coverage before interpreting an average. value_counts() summarizes category frequencies; describe() provides common numerical summaries such as count, mean, minimum, the values a quarter, half, and three quarters of the way through the sorted data, and maximum.',
       'Mean and median answer different questions when extreme values exist. For [2, 3, 4, 51], the median is 3.5 and the mean is 15. A difference between them is a reason to inspect the distribution and observations, not automatically to delete the largest value.',
-      'Correlation summarizes linear association, not causation. Shared trends, selection, and confounding variables can create association. For a report, state what was measured, how many observations support it, and which assumptions remain; choose a plot that matches the variable types rather than presenting a statistic without context.',
+      'Correlation, x.corr(y), summarizes how closely two columns follow a straight line, from −1 to 1. It measures linear association, not causation. Shared trends, selection, and confounding variables can create association. For a report, state what was measured, how many observations support it, and which assumptions remain; choose a plot that matches the variable types rather than presenting a statistic without context.',
     ],
     'import pandas as pd\nvalues = pd.Series([2, 3, 4, 51])\nprint(float(values.mean()))\nprint(float(values.median()))\nprint(values.describe()[["count", "min", "max"]].tolist())',
     '15.0\n3.5\n[4.0, 2.0, 51.0]',

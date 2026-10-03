@@ -6,8 +6,18 @@ import {
   recordLearningAnswer,
   type LearnerState,
 } from '../src/lib/state';
+import { earnedXp, lessonXp, REVIEW_XP } from '../src/lib/xp';
 import { signUp } from './helpers/accounts';
-import { replaceCode } from './helpers/editor';
+import {
+  answerChoice,
+  answerShown,
+  choiceButton,
+  continueLesson,
+  feedback,
+  prompt,
+  shownQuestion,
+} from './helpers/lesson';
+import { lessonAnswerIds, masterSkillState } from './helpers/mastery';
 
 const baseURL = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 test.use({ baseURL });
@@ -41,467 +51,353 @@ async function cloud(page: Page): Promise<LearnerState> {
   return saved!;
 }
 
-function outline(page: Page) {
-  return page.getByRole('navigation', { name: 'Lesson outline', exact: true });
+const escapeRegExp = (text: string) =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function markers(page: Page, name = 'Lesson progress') {
+  return page.getByRole('list', { name, exact: true });
 }
 
-function slide(page: Page) {
-  return page.getByRole('region', {
-    name: 'Instructional slide',
-    exact: true,
-  });
-}
+const print = skillById['print-output'];
+const [firstPoint, secondPoint] = print.knowledgePoints!;
+const printCode = print.questions.find((q) => q.type === 'code')!;
 
-async function returnToPractice(page: Page) {
-  await page
-    .getByRole('button', { name: /^(Return to practice|Let’s try it)$/ })
-    .first()
-    .click();
-}
-
-function correctOption(page: Page, question: ChoiceQuestion) {
-  return page.getByRole('button', {
-    name: `${String.fromCharCode(65 + question.answer)} ${question.choices[question.answer]}`,
-    exact: true,
-  });
-}
-
-test('instructional slides and the outline teach without awarding answer evidence or cards', async ({
+test('the introduction and worked example teach without awarding evidence, XP, or cards', async ({
   page,
 }) => {
-  const skill = skillById['print-output'];
   const baseline = await register(page);
-  await page.goto(`/learn?skill=${skill.id}&mode=learn`);
-  await expect(slide(page).getByRole('heading', { level: 1 })).toHaveText(
-    skill.title,
-  );
-  await expect(
-    slide(page).getByText(skill.lesson.paragraphs[0], { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Let’s try it' }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Previous slide', exact: true }),
-  ).toBeDisabled();
-
-  await page.getByRole('button', { name: 'Next slide', exact: true }).click();
-  await expect(
-    slide(page).getByText(skill.lesson.paragraphs[1], { exact: true }),
-  ).toBeVisible();
-  await page
-    .getByRole('button', { name: 'Previous slide', exact: true })
-    .click();
-  await expect(slide(page).getByRole('heading', { level: 1 })).toHaveText(
-    skill.title,
-  );
-
-  await outline(page)
-    .getByRole('button', { name: 'Worked example', exact: true })
-    .click();
-  await expect(slide(page).getByRole('heading', { level: 1 })).not.toHaveText(
-    skill.title,
-  );
-  const firstWorkedHeading = await slide(page)
-    .getByRole('heading', { level: 1 })
-    .textContent();
-  await page.getByRole('button', { name: 'Next slide', exact: true }).click();
-  await expect(slide(page).getByRole('heading', { level: 1 })).not.toHaveText(
-    firstWorkedHeading!,
-  );
-  await page
-    .getByRole('button', { name: 'Previous slide', exact: true })
-    .click();
-  await expect(slide(page).getByRole('heading', { level: 1 })).toHaveText(
-    firstWorkedHeading!,
-  );
-  await outline(page)
-    .getByRole('button', { name: 'Introduction', exact: true })
-    .click();
-  await expect(slide(page).getByRole('heading', { level: 1 })).toHaveText(
-    skill.title,
-  );
-
-  const afterReading = await cloud(page);
-  expect(afterReading.progress).toEqual(baseline.progress);
-  expect(afterReading.cards).toEqual([]);
-  await page.reload();
-  await expect(slide(page).getByRole('heading', { level: 1 })).toHaveText(
-    skill.title,
-  );
-  const reloaded = await cloud(page);
-  expect(reloaded.progress).toEqual(baseline.progress);
-  expect(reloaded.cards).toEqual([]);
-});
-
-test('reopening instruction preserves the pending choice and code but marks answers as assisted', async ({
-  page,
-}) => {
-  test.setTimeout(60_000);
-  const skill = skillById['print-output'];
-  await register(page);
-  await page.goto(`/learn?skill=${skill.id}&mode=learn`);
-  await page.getByRole('button', { name: 'Let’s try it', exact: true }).click();
-  await expect
-    .poll(async () => (await cloud(page)).progress.skills[skill.id]?.lessonSeen)
-    .toBe(true);
-
-  for (const [index, question] of skill.questions.entries()) {
-    const prompt = page.locator('.question-paper h1');
-    await expect(prompt).toHaveText(question.prompt);
-    if (question.type === 'choice') {
-      await correctOption(page, question).click();
-      await expect(correctOption(page, question)).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      );
-    } else {
-      await replaceCode(page, question.solution);
-    }
-
-    await outline(page)
-      .getByRole('button', { name: 'Worked example', exact: true })
-      .click();
-    await expect(slide(page)).toBeVisible();
-    await returnToPractice(page);
-    await expect(prompt).toHaveText(question.prompt);
-    await expect(
-      page.getByRole('button', { name: 'Give me a hint', exact: true }),
-    ).toBeDisabled();
-    if (question.type === 'choice') {
-      await expect(correctOption(page, question)).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      );
-      await page
-        .getByRole('button', { name: 'Check answer', exact: true })
-        .click();
-    } else {
-      await expect
-        .poll(() => page.locator('.cm-content .cm-line').allTextContents())
-        .toEqual(question.solution.split('\n'));
-      await page
-        .getByRole('button', { name: 'Run & check', exact: true })
-        .click();
-    }
-    await expect(
-      page.getByText('You’ve got the idea. Try it independently next.', {
-        exact: true,
-      }),
-    ).toBeVisible({ timeout: 40_000 });
-    await expect
-      .poll(async () => (await cloud(page)).progress.attempts.length)
-      .toBe(index + 1);
-    const saved = await cloud(page);
-    expect(saved.progress.attempts.at(-1)).toMatchObject({
-      skillId: skill.id,
-      questionId: question.id,
-      correct: true,
-      usedHint: true,
-      xp: 0,
-    });
-    expect(saved.progress.totalXp).toBe(0);
-    expect(saved.progress.skills[skill.id].questionIds).toEqual([]);
-    expect(saved.progress.skills[skill.id].rewardedQuestionIds).toEqual([]);
-    expect(saved.progress.skills[skill.id].mastery).toBe(0);
-    expect(saved.cards).toEqual([]);
-    if (index < skill.questions.length - 1)
-      await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  }
-
-  await page.reload();
-  await expect(page.locator('.question-paper h1')).toHaveText(
-    skill.questions[0].prompt,
-  );
-  await expect(
-    page.getByRole('button', { name: 'Check answer', exact: true }),
-  ).toBeVisible();
-  await outline(page)
-    .getByRole('button', { name: 'Worked example', exact: true })
-    .click();
-  await returnToPractice(page);
-  await expect(page.locator('.question-paper h1')).toHaveText(
-    skill.questions[0].prompt,
-  );
-  const reloaded = await cloud(page);
-  expect(reloaded.progress.attempts).toHaveLength(skill.questions.length);
-  expect(reloaded.progress.totalXp).toBe(0);
-  expect(reloaded.progress.skills[skill.id].lessonSeen).toBe(true);
-  expect(reloaded.progress.skills[skill.id].questionIds).toEqual([]);
-  expect(reloaded.cards).toEqual([]);
-});
-
-test('mobile outline and slide controls work by keyboard and scenarios never pretend to be code', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  const skill = skillById['ds-workloads'];
-  const baseline = await register(page, skill.courseId);
-  await page.goto(`/learn?skill=${skill.id}&mode=learn`);
-  const introduction = outline(page).getByRole('button', {
+  await page.goto(`/learn?skill=${print.id}&mode=learn`);
+  const introduction = page.getByRole('region', {
     name: 'Introduction',
     exact: true,
   });
-  await introduction.focus();
-  await expect(introduction).toBeFocused();
-  await introduction.press('Enter');
-  await expect(slide(page).getByRole('heading', { level: 1 })).toHaveText(
-    skill.title,
-  );
-  const next = page.getByRole('button', { name: 'Next slide', exact: true });
-  await next.focus();
-  await next.press('Enter');
-  await expect(
-    slide(page).getByText(skill.lesson.paragraphs[1], { exact: true }),
-  ).toBeVisible();
-  const previous = page.getByRole('button', {
-    name: 'Previous slide',
-    exact: true,
-  });
-  await previous.focus();
-  await previous.press('Enter');
-  await expect(slide(page).getByRole('heading', { level: 1 })).toHaveText(
-    skill.title,
-  );
+  for (const paragraph of print.lesson.paragraphs)
+    await expect(
+      introduction.getByText(paragraph, { exact: true }),
+    ).toBeVisible();
+  await expect(markers(page).getByRole('listitem')).toContainText([
+    firstPoint.title,
+    secondPoint.title,
+    'Write the code',
+  ]);
+  await expect(page.getByText('A MOMENT OF RETRIEVAL')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /hint/i })).toHaveCount(0);
+  expect((await cloud(page)).progress).toEqual(baseline.progress);
 
-  const worked = outline(page).getByRole('button', {
-    name: 'Worked scenario',
-    exact: true,
-  });
-  await worked.focus();
-  await worked.press('Enter');
-  await expect(
-    page
-      .locator('.lesson-player')
-      .getByText('Worked scenario', { exact: true }),
-  ).toBeVisible();
-  await expect(
-    slide(page).getByText(skill.lesson.example.code, { exact: true }),
-  ).toBeVisible();
-  // Scenario workthroughs have a finite authored sequence. Stop at its
-  // result, rather than clicking an unbounded loop that could hide a bug.
-  for (let index = 0; index < 6 && (await next.isVisible()); index++) {
-    await next.focus();
-    await next.press('Enter');
-  }
-  await expect(next).toHaveCount(0);
-  await expect(
-    slide(page).getByText('Decision', { exact: true }),
-  ).toBeVisible();
-  await expect(
-    slide(page).getByText(skill.lesson.example.output, { exact: true }),
-  ).toBeVisible();
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
-  await expect(page.locator('.cm-content')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Run & check' })).toHaveCount(
-    0,
+  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
+  await expect(markers(page).locator('[aria-current="step"]')).toContainText(
+    firstPoint.title,
   );
+  const teaching = page.locator('.lesson-point');
+  await expect(teaching.getByRole('heading', { level: 2 })).toHaveText(
+    firstPoint.title,
+  );
+  await expect(
+    teaching.getByText(firstPoint.explanation[0], { exact: true }),
+  ).toBeVisible();
+  await expect(
+    teaching.getByText(firstPoint.example.explanation, { exact: true }),
+  ).toBeVisible();
+  await expect(prompt(page)).toHaveText(firstPoint.questions[0].prompt);
+  await expect(
+    page.getByRole('button', { name: 'Submit', exact: true }),
+  ).toBeDisabled();
 
-  await page
-    .getByRole('button', { name: 'Let’s try it', exact: true })
-    .press('Enter');
-  await expect(page.locator('.question-paper h1')).toHaveText(
-    skill.questions[0].prompt,
-  );
-  await expect(page.locator('.cm-content')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Run & check' })).toHaveCount(
-    0,
-  );
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
-  const after = await cloud(page);
-  expect(after.progress.totalXp).toBe(baseline.progress.totalXp);
-  expect(after.progress.attempts).toEqual([]);
-  expect(after.progress.skills[skill.id]?.questionIds ?? []).toEqual([]);
-  expect(after.cards).toEqual([]);
+  await expect
+    .poll(async () => (await cloud(page)).progress.skills[print.id]?.lessonSeen)
+    .toBe(true);
+  const afterReading = await cloud(page);
+  expect(afterReading.progress.attempts).toEqual([]);
+  expect(afterReading.progress.totalXp).toBe(0);
+  expect(afterReading.cards).toEqual([]);
+  // With no answers yet, a reload opens the introduction again.
+  await page.reload();
+  await expect(introduction).toBeVisible();
+  expect((await cloud(page)).progress.attempts).toEqual([]);
 });
 
-test('reference material during a due review cannot strengthen memory before independent completion', async ({
+test('two correct answers pass a point; three misses fail the lesson, keep nothing, and the retry starts at the first point', async ({
   page,
 }) => {
-  const skill = skillById['ds-workloads'];
-  let state = createState();
-  for (const question of skill.questions)
-    state = recordLearningAnswer(state, {
-      skillId: skill.id,
-      questionId: question.id,
-      correct: true,
-      mode: 'learn',
-    });
-  const mastered = getSkillState(state.progress, skill.id);
-  expect(mastered.mastery).toBe(1);
-  expect(mastered.memory).toBeDefined();
-  expect(state.cards).toHaveLength(2);
-  const reviewTime = mastered.dueAt! + 1;
-  await register(page, skill.courseId, state);
-  await page.clock.setFixedTime(reviewTime);
-  await page.goto(`/learn?skill=${skill.id}&mode=review`);
+  test.setTimeout(90_000);
+  await register(page);
+  await page.goto(`/learn?skill=${print.id}&mode=learn`);
+  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
+  const seen: string[] = [];
+  for (let index = 0; index < 2; index++) {
+    const question = await answerShown(page, firstPoint.questions);
+    seen.push(question.id);
+    await expect(feedback(page)).toContainText('Correct');
+    await continueLesson(page);
+  }
+  expect(new Set(seen).size).toBe(2);
+  await expect(markers(page).getByRole('listitem').first()).toContainText(
+    'complete',
+  );
+  await expect(markers(page).locator('[aria-current="step"]')).toContainText(
+    secondPoint.title,
+  );
+  await expect
+    .poll(async () => (await cloud(page)).progress.attempts.length)
+    .toBe(2);
+  let saved = await cloud(page);
+  // Passed points are provisional until the whole lesson passes.
+  expect(saved.progress.skills[print.id].questionIds).toEqual([]);
+  expect(saved.progress.totalXp).toBe(0);
 
-  const assistedQuestion = selectQuestion(state.progress, skill, 'review');
-  if (assistedQuestion.type !== 'choice')
-    throw new Error('The systems review must use a real scenario choice.');
-  await expect(page.locator('.question-paper h1')).toHaveText(
-    assistedQuestion.prompt,
-  );
-  await correctOption(page, assistedQuestion).click();
-  await outline(page)
-    .getByRole('button', { name: 'Worked scenario', exact: true })
-    .click();
-  await returnToPractice(page);
-  await expect(correctOption(page, assistedQuestion)).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
-  await page.getByRole('button', { name: 'Check answer', exact: true }).click();
+  for (let miss = 1; miss <= 3; miss++) {
+    await answerShown(page, secondPoint.questions, false);
+    await expect(feedback(page)).toContainText('Incorrect');
+    await continueLesson(page);
+  }
   await expect(
-    page.getByText('You’ve got the idea. Try it independently next.', {
-      exact: true,
+    page.getByRole('heading', {
+      name: 'Lesson failed — you’ll see it again later',
     }),
   ).toBeVisible();
   await expect
     .poll(async () => (await cloud(page)).progress.attempts.length)
-    .toBe(skill.questions.length + 1);
-  let saved = await cloud(page);
+    .toBe(5);
+  saved = await cloud(page);
+  const failed = saved.progress.skills[print.id];
   expect(saved.progress.attempts.at(-1)).toMatchObject({
-    mode: 'review',
-    questionId: assistedQuestion.id,
-    correct: true,
-    usedHint: true,
+    outcome: 'lesson-failed',
+    correct: false,
     xp: 0,
   });
-  expect(saved.progress.skills[skill.id].memory).toEqual(mastered.memory);
-  expect(saved.progress.skills[skill.id].dueAt).toBe(mastered.dueAt);
-  expect(saved.progress.skills[skill.id].reviewCount).toBe(
-    mastered.reviewCount,
+  expect(failed.lessonFailedAt).toBeGreaterThan(0);
+  expect(failed.lessonAttempt).toBeUndefined();
+  expect(failed.questionIds).toEqual([]);
+  expect(saved.progress.totalXp).toBe(0);
+  expect(saved.cards.every((card) => card.kind === 'mistake')).toBe(true);
+  expect(saved.cards).toHaveLength(3);
+
+  await page.getByRole('link', { name: 'Back to Today' }).click();
+  await expect(page).toHaveURL(`${baseURL}/`);
+  await page.goto(`/learn?skill=${print.id}&mode=learn`);
+  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
+  await expect(markers(page).locator('[aria-current="step"]')).toContainText(
+    firstPoint.title,
   );
-  expect(saved.progress.skills[skill.id].reviewQuestionIds).toEqual([]);
-  expect(saved.progress.skills[skill.id].reviewHadHint).toBe(true);
-  expect(saved.progress.totalXp).toBe(state.progress.totalXp);
-  expect(saved.cards).toEqual(state.cards);
-
-  for (let index = 0; index < 2; index++) {
-    await page.getByRole('button', { name: 'Continue', exact: true }).click();
-    const question = selectQuestion(saved.progress, skill, 'review');
-    if (question.type !== 'choice')
-      throw new Error('The systems review must use a real scenario choice.');
-    await expect(page.locator('.question-paper h1')).toHaveText(
-      question.prompt,
-    );
-    await correctOption(page, question).click();
-    await page
-      .getByRole('button', { name: 'Check answer', exact: true })
-      .click();
-    await expect(
-      page.getByText(
-        index === 0
-          ? 'Good retrieval. Keep this connection fresh.'
-          : 'Review complete. That connection is stronger.',
-        { exact: true },
-      ),
-    ).toBeVisible();
-    await expect
-      .poll(async () => (await cloud(page)).progress.attempts.length)
-      .toBe(skill.questions.length + 2 + index);
-    saved = await cloud(page);
-    expect(saved.progress.attempts.at(-1)).toMatchObject({
-      mode: 'review',
-      questionId: question.id,
-      correct: true,
-      usedHint: false,
-      xp: 5,
-    });
-    expect(saved.cards).toEqual(state.cards);
-    if (index === 0) {
-      expect(saved.progress.skills[skill.id].reviewQuestionIds).toEqual([
-        question.id,
-      ]);
-      expect(saved.progress.skills[skill.id].memory).toEqual(mastered.memory);
-      expect(saved.progress.skills[skill.id].dueAt).toBe(mastered.dueAt);
-      expect(saved.progress.skills[skill.id].reviewCount).toBe(
-        mastered.reviewCount,
-      );
-    }
-  }
-
-  const reviewed = saved.progress.skills[skill.id];
-  expect(reviewed.reviewCount).toBe(mastered.reviewCount + 1);
-  expect(reviewed.reviewQuestionIds).toEqual([]);
-  expect(reviewed.reviewHadHint).toBe(false);
-  expect(reviewed.memory?.reps).toBe(mastered.memory!.reps + 1);
-  expect(reviewed.memory?.lastReviewAt).toBe(reviewTime);
-  expect(reviewed.dueAt).toBeGreaterThan(reviewTime);
-  expect(saved.progress.totalXp).toBe(state.progress.totalXp + 10);
-  await page.reload();
-  await expect(page.locator('.question-paper h1')).toBeVisible();
-  const reloaded = await cloud(page);
-  expect(reloaded.progress.skills[skill.id].memory).toEqual(reviewed.memory);
-  expect(reloaded.progress.totalXp).toBe(saved.progress.totalXp);
-  expect(reloaded.cards).toEqual(state.cards);
+  // The retry begins with a variant of the first point not seen before.
+  const retry = await answerShown(page, firstPoint.questions);
+  expect(seen).not.toContain(retry.id);
 });
 
-test('initial teaching for the next unseen skill does not turn its first answer into assisted practice', async ({
+test('the lesson page works by keyboard on a phone, and scenario examples never pretend to be code', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const skill = skillById['ds-workloads'];
+  const point = skill.knowledgePoints![0];
+  expect(point.example.kind).toBe('text');
+  const baseline = await register(page, skill.courseId);
+  await page.goto(`/learn?skill=${skill.id}&mode=learn`);
+  await expect(
+    page
+      .getByRole('region', { name: 'Introduction', exact: true })
+      .getByText(skill.lesson.paragraphs[0], { exact: true }),
+  ).toBeVisible();
+  const start = page.getByRole('button', { name: 'Start lesson', exact: true });
+  await start.focus();
+  await start.press('Enter');
+
+  // The worked scenario is text with a decision, not a program to run.
+  const teaching = page.locator('.lesson-point');
+  await expect(teaching.getByRole('heading', { level: 2 })).toHaveText(
+    point.title,
+  );
+  await expect(
+    teaching.getByText(point.example.label ?? 'SCENARIO', { exact: true }),
+  ).toBeVisible();
+  await expect(teaching.getByText('Decision', { exact: true })).toBeVisible();
+  await expect(
+    teaching.getByText(point.example.output, { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('.cm-content')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Run & check' })).toHaveCount(
+    0,
+  );
+  // The explanation folds and unfolds from the keyboard.
+  const toggle = teaching.getByRole('button', {
+    name: 'Explanation and worked example',
+  });
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await toggle.focus();
+  await toggle.press('Enter');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await toggle.press('Enter');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+
+  // Lettered choices are reachable, named, and selectable from the keyboard.
+  const question = (await shownQuestion(
+    page,
+    point.questions,
+  )) as ChoiceQuestion;
+  const answer = choiceButton(page, question.answer);
+  await answer.focus();
+  await answer.press('Enter');
+  await expect(answer).toHaveAttribute('aria-pressed', 'true');
+  await expect(answer).toHaveAccessibleName(
+    new RegExp(
+      `^[A-H] ${escapeRegExp(question.choices[question.answer].slice(0, 20))}`,
+    ),
+  );
+  await page
+    .getByRole('button', { name: 'Submit', exact: true })
+    .press('Enter');
+  await expect(feedback(page)).toContainText('Correct');
+  await expect(
+    page.getByRole('button', { name: 'Continue', exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await expect
+    .poll(async () => (await cloud(page)).progress.attempts.length)
+    .toBe(1);
+  const after = await cloud(page);
+  expect(after.progress.totalXp).toBe(baseline.progress.totalXp);
+  expect(after.progress.skills[skill.id].lessonAttempt?.steps).toEqual({
+    [point.id]: { correct: [question.id], incorrect: 0 },
+  });
+  expect(after.progress.skills[skill.id].questionIds).toEqual([]);
+  expect(after.cards).toEqual([]);
+
+  // A programming lesson keeps its markers and choices inside the screen.
+  await page.goto(`/learn?skill=${print.id}&mode=learn`);
+  await page
+    .getByRole('button', { name: 'Start lesson', exact: true })
+    .press('Enter');
+  await expect(markers(page)).toBeVisible();
+  await expect(prompt(page)).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
+test('a due review asks a fresh variant of each point plus the code exercise and strengthens memory once', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const state = masterSkillState(createState(), print.id);
+  const mastered = getSkillState(state.progress, print.id);
+  expect(state.cards).toHaveLength(print.flashcards.length);
+  const lessonQuestions = state.progress.attempts.map((a) => a.questionId);
+  const reviewTime = mastered.dueAt! + 1;
+  await register(page, print.courseId, state);
+  await page.clock.setFixedTime(reviewTime);
+  await page.goto(`/learn?skill=${print.id}&mode=review`);
+  await expect(
+    markers(page, 'Review progress').getByRole('listitem'),
+  ).toContainText(['Question 1', 'Question 2', 'Code']);
+  // Reviews show no lesson material.
+  await expect(page.locator('.lesson-point')).toHaveCount(0);
+
+  const candidates = [
+    ...firstPoint.questions,
+    ...secondPoint.questions,
+    printCode,
+  ];
+  for (let index = 0; index < 3; index++) {
+    const question = await answerShown(page, candidates);
+    // Reviews draw point variants the lesson did not use.
+    if (question.type === 'choice')
+      expect(lessonQuestions).not.toContain(question.id);
+    await expect
+      .poll(async () => (await cloud(page)).progress.attempts.length)
+      .toBe(lessonQuestions.length + index + 1);
+    const saved = await cloud(page);
+    if (index < 2) {
+      await expect(feedback(page)).toContainText('Correct');
+      expect(saved.progress.skills[print.id].memory).toEqual(mastered.memory);
+      expect(saved.progress.skills[print.id].dueAt).toBe(mastered.dueAt);
+      expect(saved.progress.totalXp).toBe(state.progress.totalXp);
+      await continueLesson(page);
+    } else {
+      await expect(feedback(page)).toContainText(
+        `Review complete · +${earnedXp(REVIEW_XP, 0, true)} XP`,
+      );
+      const reviewed = saved.progress.skills[print.id];
+      expect(reviewed.reviewCount).toBe(mastered.reviewCount + 1);
+      expect(reviewed.memory?.reps).toBe(mastered.memory!.reps + 1);
+      expect(reviewed.memory?.lastReviewAt).toBeGreaterThanOrEqual(reviewTime);
+      expect(reviewed.dueAt).toBeGreaterThan(reviewTime);
+      expect(saved.progress.totalXp).toBe(
+        state.progress.totalXp + earnedXp(REVIEW_XP, 0, true),
+      );
+      expect(saved.cards).toEqual(state.cards);
+    }
+  }
+  const reviewedPoints = (await cloud(page)).progress.attempts
+    .slice(lessonQuestions.length, lessonQuestions.length + 2)
+    .map((attempt) => attempt.questionId.split('-q')[0]);
+  expect(new Set(reviewedPoints)).toEqual(
+    new Set([firstPoint.id, secondPoint.id]),
+  );
+});
+
+test('initial teaching for the next unseen skill does not turn its first answer into practice without a lesson', async ({
   page,
 }) => {
   const skill = skillById['ds-workloads'];
+  const lastPoint = skill.knowledgePoints!.at(-1)!;
   let state = createState();
-  for (const question of skill.questions.slice(0, -1))
+  // Everything but the lesson's last answer: the attempt is still open.
+  for (const questionId of lessonAnswerIds(skill.id).slice(0, -1))
     state = recordLearningAnswer(state, {
       skillId: skill.id,
-      questionId: question.id,
+      questionId,
       correct: true,
       mode: 'learn',
     });
-  expect(state.progress.totalXp).toBe(30);
+  // A lesson pays its XP when it is complete, not per answer.
+  expect(state.progress.totalXp).toBe(0);
   expect(state.cards).toEqual([]);
   await register(page, skill.courseId, state);
   await page.goto(
     `/learn?skill=${skill.id}&mode=learn&course=${skill.courseId}`,
   );
-  const lastQuestion = skill.questions.at(-1)!;
-  if (lastQuestion.type !== 'choice')
-    throw new Error('The systems acquisition must use a real scenario choice.');
-  await expect(page.locator('.question-paper h1')).toHaveText(
-    lastQuestion.prompt,
+  // An attempt in progress resumes at its current point, not the introduction.
+  await expect(markers(page).locator('[aria-current="step"]')).toContainText(
+    lastPoint.title,
   );
-  await correctOption(page, lastQuestion).click();
-  await page.getByRole('button', { name: 'Check answer', exact: true }).click();
-  await expect(
-    page.getByText('Skill mastered. A new connection made.', { exact: true }),
-  ).toBeVisible();
-  await expect.poll(async () => (await cloud(page)).progress.totalXp).toBe(40);
+  await answerShown(page, lastPoint.questions);
+  const lessonReward = earnedXp(lessonXp(skill), 0, true);
+  await expect(feedback(page)).toContainText(
+    `Lesson complete · +${lessonReward} XP`,
+  );
+  await expect
+    .poll(async () => (await cloud(page)).progress.totalXp)
+    .toBe(lessonReward);
   const mastered = await cloud(page);
-  expect(mastered.cards).toHaveLength(2);
+  expect(mastered.cards).toHaveLength(skill.flashcards.length);
   const task = nextTask(mastered.progress, new Date(), skill.courseId)!;
   expect(task.mode).toBe('learn');
   expect(task.skillId).not.toBe(skill.id);
   const nextSkill = skillById[task.skillId];
-  expect(nextSkill.lesson.example.kind).toBe('text');
+  expect(nextSkill.knowledgePoints?.length).toBeGreaterThan(0);
   expect(getSkillState(mastered.progress, nextSkill.id).lessonSeen).toBe(false);
 
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(slide(page).getByRole('heading', { level: 1 })).toHaveText(
+  await continueLesson(page);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     nextSkill.title,
   );
   await expect(
-    page.getByRole('button', { name: 'Return to practice' }),
-  ).toHaveCount(0);
-  await expect(
-    page.getByRole('button', { name: 'Let’s try it', exact: true }),
+    page
+      .getByRole('region', { name: 'Introduction', exact: true })
+      .getByText(nextSkill.lesson.paragraphs[0], { exact: true }),
   ).toBeVisible();
-  await outline(page)
-    .getByRole('button', { name: 'Worked scenario', exact: true })
-    .click();
-  await expect(slide(page)).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Return to practice' }),
-  ).toHaveCount(0);
+  await expect(prompt(page)).toHaveCount(0);
   const afterReading = await cloud(page);
   expect(afterReading.progress.totalXp).toBe(mastered.progress.totalXp);
   expect(afterReading.progress.attempts).toEqual(mastered.progress.attempts);
@@ -510,41 +406,37 @@ test('initial teaching for the next unseen skill does not turn its first answer 
   );
   expect(afterReading.cards).toEqual(mastered.cards);
 
-  await page.getByRole('button', { name: 'Let’s try it', exact: true }).click();
+  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
   const firstQuestion = selectQuestion(mastered.progress, nextSkill, 'learn');
   if (firstQuestion.type !== 'choice')
     throw new Error('The systems acquisition must use a real scenario choice.');
-  await expect(page.locator('.question-paper h1')).toHaveText(
-    firstQuestion.prompt,
-  );
-  await expect(
-    page.getByRole('button', { name: 'Give me a hint', exact: true }),
-  ).toBeEnabled();
   await expect
     .poll(
       async () => (await cloud(page)).progress.skills[nextSkill.id]?.lessonSeen,
     )
     .toBe(true);
-  await correctOption(page, firstQuestion).click();
-  await page.getByRole('button', { name: 'Check answer', exact: true }).click();
-  await expect(
-    page.getByText('That’s a small win.', { exact: true }),
-  ).toBeVisible();
-  await expect.poll(async () => (await cloud(page)).progress.totalXp).toBe(50);
+  await answerChoice(page, firstQuestion);
+  await expect(feedback(page)).toContainText('Correct');
+  await expect
+    .poll(async () => (await cloud(page)).progress.attempts.length)
+    .toBe(mastered.progress.attempts.length + 1);
   const independent = await cloud(page);
   expect(independent.progress.attempts.at(-1)).toMatchObject({
     skillId: nextSkill.id,
     questionId: firstQuestion.id,
     correct: true,
     usedHint: false,
-    xp: 10,
+    xp: 0,
   });
-  expect(independent.progress.skills[nextSkill.id].lessonSeen).toBe(true);
-  expect(independent.progress.skills[nextSkill.id].questionIds).toEqual([
-    firstQuestion.id,
-  ]);
-  expect(independent.progress.skills[nextSkill.id].rewardedQuestionIds).toEqual(
-    [firstQuestion.id],
-  );
+  // The first answer counts toward the first point of the new lesson.
+  expect(
+    independent.progress.skills[nextSkill.id].lessonAttempt?.steps,
+  ).toEqual({
+    [nextSkill.knowledgePoints![0].id]: {
+      correct: [firstQuestion.id],
+      incorrect: 0,
+    },
+  });
+  expect(independent.progress.totalXp).toBe(lessonReward);
   expect(independent.cards).toEqual(mastered.cards);
 });

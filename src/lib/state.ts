@@ -1,5 +1,6 @@
 import {
   applyAttempt,
+  currentLessonAttempt,
   dateKey,
   emptyProgress,
   isMastered,
@@ -7,13 +8,21 @@ import {
   type EvidenceUpdate,
   type Attempt,
   type AttemptInput,
+  type LessonAttempt,
   type Progress,
+  type SkillProgress,
 } from './learning';
+import { defaultCatalog, type CurriculumCatalog } from './curriculum';
+import { mergeQuizzes, type Quiz } from './quiz';
 import {
-  assessmentPolicy,
-  defaultCatalog,
-  type CurriculumCatalog,
-} from './curriculum';
+  evidenceIdFor,
+  findQuestion,
+  hasKnowledgePoints,
+  hasLessonEvidence,
+  lessonEvidenceIds,
+  masteryFraction,
+  reviewCycleComplete,
+} from './lesson-plan';
 import {
   acquisitionMemory,
   legacyMemory,
@@ -28,8 +37,12 @@ export interface QueuedCard extends AnkiCard {
   noteId?: number;
   lastError?: string;
 }
+/**
+ * Version 2 adds knowledge-point lesson attempts, cooldowns and task XP;
+ * version 3 adds quizzes.
+ */
 export interface LearnerState {
-  version: 1;
+  version: 3;
   progress: Progress;
   dailyGoal: number;
   /** Optional for backward compatibility with existing saved accounts. */
@@ -41,7 +54,7 @@ export interface LearnerState {
 }
 export function createState(): LearnerState {
   return {
-    version: 1,
+    version: 3,
     progress: emptyProgress(),
     dailyGoal: 50,
     activeCourseId: 'python-foundations',
@@ -63,9 +76,7 @@ export function recordLearningAnswer(
   const skill = defaultCatalog.skills.find(
     (candidate) => candidate.id === input.skillId,
   )!;
-  const question = skill.questions.find(
-    (candidate) => candidate.id === input.questionId,
-  )!;
+  const question = findQuestion(skill, input.questionId)!;
   const cards = [...state.cards];
   const cardIds = new Set(cards.map((card) => card.id));
   const add = (card: QueuedCard) => {
@@ -101,12 +112,141 @@ export function recordLearningAnswer(
   return { ...state, progress, cards };
 }
 
+// Task XP rides on the answer that completed the task: one lesson reward per
+// skill, one review reward per due cycle. Older events paid per question.
+const LESSON_REWARD = '#lesson';
 const learnRewardKey = (skillId: string, questionId: string) =>
   JSON.stringify([skillId, questionId]);
+const attemptLearnKey = (attempt: Attempt) =>
+  learnRewardKey(
+    attempt.skillId,
+    attempt.outcome === 'lesson-passed' ? LESSON_REWARD : attempt.questionId,
+  );
 const reviewRewardKey = (attempt: Attempt) =>
   attempt.mode === 'review' && attempt.reviewDueAt !== undefined
-    ? JSON.stringify([attempt.skillId, attempt.questionId, attempt.reviewDueAt])
+    ? JSON.stringify([
+        attempt.skillId,
+        attempt.outcome === 'review-passed' ? '#review' : attempt.questionId,
+        attempt.reviewDueAt,
+      ])
     : null;
+
+/** A saved state from an earlier schema: before quizzes, or before knowledge points. */
+export type LegacyLearnerState = Omit<LearnerState, 'version' | 'progress'> & {
+  version: 1 | 2;
+  progress: Omit<Progress, 'version'> & { version: 1 | 2 };
+};
+
+/**
+ * Bring a saved state to the current schema and catalog. Idempotent, so it
+ * runs on every load and merge: a skill that gains knowledge points after an
+ * account was saved still keeps its mastery.
+ */
+export function migrateState(
+  state: LearnerState | LegacyLearnerState,
+  catalog: CurriculumCatalog = defaultCatalog,
+): LearnerState {
+  const progress = normalizeProgress(
+    state.progress.version === 3
+      ? (state.progress as Progress)
+      : { ...state.progress, version: 3 },
+    catalog,
+  );
+  if (state.version === 3 && progress === state.progress)
+    return state as LearnerState;
+  return { ...state, version: 3, progress };
+}
+
+/** Converts legacy evidence for skills now taught through knowledge points. */
+export function normalizeProgress(
+  progress: Progress,
+  catalog: CurriculumCatalog = defaultCatalog,
+): Progress {
+  let skills: Record<string, SkillProgress> | undefined;
+  for (const skill of catalog.skills) {
+    const state = progress.skills[skill.id];
+    if (!state || !hasKnowledgePoints(skill)) continue;
+    let next = state;
+    // Mastered under the four-question lesson: every authored question is
+    // evidence. Credit its points once; a later observation of a point
+    // (pass or fail) has an evidence checkpoint and is left alone.
+    const legacyMastered =
+      skill.questions.length > 0 &&
+      skill.questions.every((question) =>
+        state.questionIds.includes(question.id),
+      );
+    const missing = legacyMastered
+      ? lessonEvidenceIds(skill).filter(
+          (id) =>
+            !state.questionIds.includes(id) && !state.evidenceUpdates?.[id],
+        )
+      : [];
+    if (missing.length) {
+      const at = state.lastPracticedAt ?? 0;
+      const questionIds = [...state.questionIds, ...missing];
+      next = {
+        ...next,
+        questionIds,
+        evidenceUpdates: {
+          ...state.evidenceUpdates,
+          ...Object.fromEntries(
+            missing.map((id) => [
+              id,
+              { at, sequence: state.attempts, correct: true },
+            ]),
+          ),
+        },
+        mastery: masteryFraction(skill, questionIds),
+      };
+    }
+    // A cycle's legacy choice answers no longer count toward its review.
+    const reviewQuestionIds = next.reviewQuestionIds.filter(
+      (id) => evidenceIdFor(skill, id) !== undefined,
+    );
+    if (reviewQuestionIds.length !== next.reviewQuestionIds.length)
+      next = { ...next, reviewQuestionIds };
+    if (next !== state) (skills ??= { ...progress.skills })[skill.id] = next;
+  }
+  return skills ? { ...progress, skills } : progress;
+}
+
+/** One lesson attempt from two snapshots; any later failure discards it. */
+function mergeLessonAttempt(
+  a: SkillProgress,
+  b: SkillProgress,
+  lessonFailedAt: number | undefined,
+): LessonAttempt | undefined {
+  const valid = [a, b]
+    .map((state) => currentLessonAttempt({ ...state, lessonFailedAt }))
+    .filter((attempt): attempt is LessonAttempt => !!attempt);
+  if (valid.length < 2) return valid[0];
+  const [left, right] = valid;
+  if (left.startedAt !== right.startedAt)
+    return left.startedAt > right.startedAt ? left : right;
+  const steps: LessonAttempt['steps'] = {};
+  for (const id of new Set([
+    ...Object.keys(left.steps),
+    ...Object.keys(right.steps),
+  ])) {
+    const x = left.steps[id],
+      y = right.steps[id];
+    steps[id] = {
+      correct: [...new Set([...(x?.correct ?? []), ...(y?.correct ?? [])])],
+      incorrect: Math.max(x?.incorrect ?? 0, y?.incorrect ?? 0),
+    };
+  }
+  return { startedAt: left.startedAt, steps };
+}
+
+/** Quiz XP is recorded on finished quizzes rather than on answers. */
+function quizRewards(quizzes: Quiz[] = [], timeZone: string) {
+  return quizzes
+    .filter((quiz) => quiz.completedAt !== undefined && (quiz.earned ?? 0) > 0)
+    .map((quiz) => ({
+      day: dateKey(quiz.completedAt!, timeZone),
+      xp: quiz.earned!,
+    }));
+}
 
 function representedXp(progress: Progress) {
   const learnRewards = new Set<string>();
@@ -118,7 +258,7 @@ function representedXp(progress: Progress) {
   )) {
     if (attempt.xp <= 0 || !attempt.correct || attempt.usedHint) continue;
     if (attempt.mode === 'learn') {
-      const key = learnRewardKey(attempt.skillId, attempt.questionId);
+      const key = attemptLearnKey(attempt);
       if (learnRewards.has(key)) continue;
       learnRewards.add(key);
     }
@@ -131,9 +271,16 @@ function representedXp(progress: Progress) {
     daily[day] = (daily[day] ?? 0) + attempt.xp;
     total += attempt.xp;
   }
+  for (const reward of quizRewards(progress.quizzes, progress.timeZone)) {
+    daily[reward.day] = (daily[reward.day] ?? 0) + reward.xp;
+    total += reward.xp;
+  }
   const historicalLearnRewards = Object.entries(progress.skills).flatMap(
     ([id, skill]) =>
-      skill.rewardedQuestionIds
+      [
+        ...skill.rewardedQuestionIds,
+        ...(skill.lessonRewarded ? [LESSON_REWARD] : []),
+      ]
         .map((questionId) => learnRewardKey(id, questionId))
         .filter((key) => !learnRewards.has(key)),
   );
@@ -145,6 +292,7 @@ function reconcileXp(
   remote: Progress,
   merged: Attempt[],
   timeZone: string,
+  quizzes: Quiz[] = [],
 ) {
   const representedLocal = representedXp(local);
   const representedRemote = representedXp(remote);
@@ -160,7 +308,7 @@ function reconcileXp(
   const attempts = merged.map((attempt) => {
     let xp = attempt.correct && !attempt.usedHint ? attempt.xp : 0;
     if (xp > 0 && attempt.mode === 'learn') {
-      const key = learnRewardKey(attempt.skillId, attempt.questionId);
+      const key = attemptLearnKey(attempt);
       if (historicalRewards.has(key) || creditedLearnRewards.has(key)) xp = 0;
       else creditedLearnRewards.add(key);
     }
@@ -174,6 +322,12 @@ function reconcileXp(
     representedTotal += xp;
     return xp === attempt.xp ? attempt : { ...attempt, xp };
   });
+  // Each quiz pays once, however many devices recorded it.
+  for (const reward of quizRewards(quizzes, timeZone)) {
+    representedDaily[reward.day] =
+      (representedDaily[reward.day] ?? 0) + reward.xp;
+    representedTotal += reward.xp;
+  }
   const days = new Set([
     ...Object.keys(local.dailyXp),
     ...Object.keys(remote.dailyXp),
@@ -219,10 +373,12 @@ function compareMemory(left: MemoryState, right: MemoryState): number {
 }
 
 export function mergeStates(
-  local: LearnerState,
-  remote: LearnerState,
+  localState: LearnerState | LegacyLearnerState,
+  remoteState: LearnerState | LegacyLearnerState,
   catalog: CurriculumCatalog = defaultCatalog,
 ): LearnerState {
+  const local = migrateState(localState, catalog);
+  const remote = migrateState(remoteState, catalog);
   const recent = local.updatedAt > remote.updatedAt ? local : remote;
   const skillById = Object.fromEntries(
     catalog.skills.map((skill) => [skill.id, skill]),
@@ -233,6 +389,7 @@ export function mergeStates(
     ...local.progress.attempts,
   ])
     attemptsById.set(attempt.id, attempt);
+  const quizzes = mergeQuizzes(local.progress.quizzes, remote.progress.quizzes);
   const xp = reconcileXp(
     local.progress,
     remote.progress,
@@ -240,6 +397,7 @@ export function mergeStates(
       (a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id),
     ),
     recent.progress.timeZone,
+    quizzes,
   );
   const { attempts } = xp;
   const skillIds = new Set([
@@ -278,13 +436,16 @@ export function mergeStates(
         snapshot: typeof a,
         events: Attempt[],
       ): Progress => {
+        // Quiz XP belongs to the learner, not to one skill.
         const represented = representedXp({
           ...progress,
+          quizzes: undefined,
           attempts: events,
           skills: { [id]: snapshot },
         });
         return {
           ...progress,
+          quizzes: undefined,
           attempts: events,
           skills: { [id]: snapshot },
           totalXp: snapshot.totalXp ?? represented.total,
@@ -297,13 +458,21 @@ export function mergeStates(
         history,
         recent.progress.timeZone,
       );
+      const definition = skillById[id];
+      // Answers give evidence for their lesson step. A knowledge point is
+      // only proven by a completed lesson, whose checkpoints carry it.
+      const pointLesson = !!definition && hasKnowledgePoints(definition);
+      const evidenceOf = (questionId: string) =>
+        (definition && evidenceIdFor(definition, questionId)) ?? questionId;
       const evidence = new Set([...a.questionIds, ...b.questionIds]);
+      // Quiz answers are retrieval checks: a miss schedules a review, it
+      // does not remove lesson evidence.
       for (const attempt of history) {
-        if (!attempt.correct) evidence.delete(attempt.questionId);
-        else if (!attempt.usedHint && attempt.mode === 'learn')
+        if (attempt.mode === 'quiz') continue;
+        if (!attempt.correct) evidence.delete(evidenceOf(attempt.questionId));
+        else if (!pointLesson && !attempt.usedHint && attempt.mode === 'learn')
           evidence.add(attempt.questionId);
       }
-      const definition = skillById[id];
       const evidenceUpdates: Record<string, EvidenceUpdate> = {};
       for (const source of [a.evidenceUpdates ?? {}, b.evidenceUpdates ?? {}]) {
         for (const [questionId, update] of Object.entries(source)) {
@@ -321,9 +490,11 @@ export function mergeStates(
       for (const [questionId, update] of Object.entries(evidenceUpdates)) {
         const newer = history.findLast(
           (event) =>
-            event.questionId === questionId &&
+            event.mode !== 'quiz' &&
+            evidenceOf(event.questionId) === questionId &&
             Date.parse(event.at) > update.at &&
-            (!event.correct || (!event.usedHint && event.mode === 'learn')),
+            (!event.correct ||
+              (!pointLesson && !event.usedHint && event.mode === 'learn')),
         );
         const correct = newer ? newer.correct : update.correct;
         if (newer)
@@ -336,8 +507,9 @@ export function mergeStates(
         else evidence.delete(questionId);
       }
       const mastery = definition
-        ? definition.questions.filter((question) => evidence.has(question.id))
-            .length / definition.questions.length
+        ? hasLessonEvidence(definition, [...evidence])
+          ? 1
+          : Math.min(0.99, masteryFraction(definition, [...evidence]))
         : latest.mastery;
       const newlyMastered = mastery === 1 && latest.mastery < 1;
       const lastPracticedAt =
@@ -384,17 +556,10 @@ export function mergeStates(
           ...new Set([...a.reviewQuestionIds, ...b.reviewQuestionIds]),
         ];
         reviewHadHint = !!a.reviewHadHint || !!b.reviewHadHint;
-        const policy = assessmentPolicy(definition);
         if (
           lastPracticedAt !== null &&
           lastPracticedAt >= a.dueAt &&
-          reviewQuestionIds.length >= policy.reviewAnswers &&
-          policy.requiredTypes.every((type) =>
-            reviewQuestionIds.some(
-              (id) =>
-                definition.questions.find((q) => q.id === id)?.type === type,
-            ),
-          )
+          reviewCycleComplete(definition, reviewQuestionIds)
         ) {
           memory = reviewMemory(
             legacyMemory({ ...latest, memory }, lastPracticedAt),
@@ -413,10 +578,22 @@ export function mergeStates(
         if (!attempt.correct || attempt.usedHint) break;
         consecutiveCorrect += 1;
       }
+      const lessonFailedAt =
+        a.lessonFailedAt === undefined && b.lessonFailedAt === undefined
+          ? undefined
+          : Math.max(a.lessonFailedAt ?? 0, b.lessonFailedAt ?? 0);
+      const lessonAttempt =
+        mastery === 1 ? undefined : mergeLessonAttempt(a, b, lessonFailedAt);
+      const { lessonAttempt: _attempt, ...rest } = latest;
       return [
         id,
         {
-          ...latest,
+          ...rest,
+          ...(lessonAttempt ? { lessonAttempt } : {}),
+          ...(lessonFailedAt !== undefined ? { lessonFailedAt } : {}),
+          ...(a.lessonRewarded || b.lessonRewarded
+            ? { lessonRewarded: true }
+            : {}),
           lessonSeen: a.lessonSeen || b.lessonSeen,
           attempts: attemptCount,
           correct: Math.min(
@@ -483,12 +660,7 @@ export function mergeStates(
   // Reconciliation itself can complete mastery when devices supplied different answers.
   for (const [id, progress] of Object.entries(skills)) {
     const definition = skillById[id];
-    if (
-      definition &&
-      definition.questions.every((question) =>
-        progress.questionIds.includes(question.id),
-      )
-    ) {
+    if (definition && hasLessonEvidence(definition, progress.questionIds)) {
       for (const card of definition.flashcards) {
         if (!cards.has(card.id))
           cards.set(card.id, {
@@ -516,6 +688,7 @@ export function mergeStates(
       ...recent.progress,
       skills,
       ...xp,
+      ...(quizzes.length ? { quizzes } : {}),
       attempts: xp.attempts.slice(-MAX_RECENT_ATTEMPTS),
       lastActivityDate,
       streak: activitySource.progress.streak,

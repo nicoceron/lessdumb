@@ -1,5 +1,11 @@
 import type { Skill } from '../../curriculum';
-import { choice, exercise, skill } from './shared';
+import {
+  choice,
+  exercise,
+  skill,
+  withLargeCase,
+  withoutShortcuts,
+} from './shared';
 
 export const competitiveStructures: Skill[] = [
   skill(
@@ -99,7 +105,7 @@ assert source == ["x", "y", "#"], "Do not mutate the input."`,
     'cp-structures',
     'Resolve pending values in order',
     'Keep unresolved indices in a monotonic stack to avoid repeated scans.',
-    ['cp-stack-operation-budget', 'cp-complexity'],
+    ['cp-stack-operation-budget', 'cp-complexity', 'list-repetition'],
     [
       'Suppose every measurement needs the first strictly greater measurement to its right. A left-to-right scan keeps indices whose answer is still unknown. Their values are nonincreasing from the bottom to the top: a new value removes every smaller value on top before joining the stack.',
       'When the current value pops an old index, it is that index’s first greater value: all intervening values already failed to exceed it. Use < in the popping condition for strictly greater answers. Equal values stay pending because equality does not satisfy the question.',
@@ -148,7 +154,7 @@ print(answer)`,
         'Count operations over the entire run.',
       ),
       exercise(
-        'Implement later_larger(values) for a list of integers. Return one result per index: the value at the first later index with a strictly greater value, or None if none exists. Preserve values. Equal measurements do not count.',
+        'Implement later_larger(values) for a list of integers. Return one result per index: the value at the first later index with a strictly greater value, or None if none exists. Preserve values. Equal measurements do not count. A hidden case with 200,000 values must finish within 3 seconds.',
         `def later_larger(values):
     # Store unresolved indices, not only their values.
     pass`,
@@ -160,7 +166,8 @@ print(answer)`,
             result[pending.pop()] = value
         pending.append(index)
     return result`,
-        `assert later_larger([]) == [], "Handle an empty sequence."
+        withLargeCase(
+          `assert later_larger([]) == [], "Handle an empty sequence."
 assert later_larger([7]) == [None], "A final value has no later answer."
 assert later_larger([2, 7, 4, 9]) == [7, 9, 9, None], "Choose the first greater value, not the maximum."
 assert later_larger([4, 4, 6]) == [6, 6, None], "Equal values do not resolve each other."
@@ -169,6 +176,12 @@ assert later_larger([-3, -5, -2]) == [-2, -2, None], "Ordering also works for ne
 source = [1, 2]
 assert later_larger(source) == [2, None]
 assert source == [1, 2], "Preserve the source."`,
+          `_noise = _numbers(200000, 0, 3, 101)
+_values = [4 * abs(i - 100000) + _noise[i] for i in range(200000)]
+_result, _seconds = _timed(later_larger, _values)
+assert _checksum(_result) == 2138251954847895676, "The 200,000-value case returned wrong answers."
+_check_time(_seconds, "The 200,000-value case", "Keep unresolved indices on a stack instead of scanning forward from every index.")`,
+        ),
         'Indices allow the algorithm to place each answer at its original position when a later value resolves it.',
         'While the current value is greater than the top pending value, pop its index and fill that answer.',
       ),
@@ -193,7 +206,7 @@ assert source == [1, 2], "Preserve the source."`,
     [
       'A min-heap preserves one ordering rule: every parent is no larger than its children. The smallest item is therefore heap[0], but the entire list need not be sorted. Python’s heapq functions maintain this rule using an ordinary list.',
       'heapify rearranges an existing list in O(n) time. heappush adds an item and heappop removes the minimum, each in O(log n) time for a heap of n items. Check that the heap is nonempty before popping. Copy an input list before heapifying when its caller needs the original order.',
-      'Heaps are useful when priorities change as work arrives. For k removals from n initial items, building a heap then popping costs O(n + k log n). Tuple priorities compare later fields when earlier fields tie; include a comparable tie-breaker if payload objects themselves cannot be ordered.',
+      'Heaps are useful when priorities change as work arrives. With n items and e interleaved arrivals and removals, building a heap then updating it costs O(n + e log n); re-sorting or scanning for the minimum after every event costs O(n) or more per event. Tuple priorities compare later fields when earlier fields tie; include a comparable tie-breaker if payload objects themselves cannot be ordered.',
     ],
     `import heapq
 jobs = [8, 2, 5]
@@ -239,30 +252,46 @@ print(jobs[0])`,
         'Consider what tuple comparison does after equal first fields.',
       ),
       exercise(
-        'Implement smallest_items(values, k). values is a list of integers and k is a nonnegative integer. Return up to k smallest values in ascending order, preserving duplicates and the input. If k exceeds the input length, return all values. An empty input or k=0 returns []. Use a heap to practice repeated minimum extraction.',
+        'Implement take_cheapest(stock, events). stock is a list of integer prices already available. Each event is ("add", price), which makes one more item available, or ("take",), which removes the cheapest available item and records its price, or records None when nothing is available. Return the recorded results in event order, preserving duplicates and both inputs. Use a heap: a hidden case with 100,000 items and 200,000 events must finish within 3 seconds.',
         `import heapq
 
-def smallest_items(values, k):
+def take_cheapest(stock, events):
     pass`,
         `import heapq
 
-def smallest_items(values, k):
-    heap = list(values)
+def take_cheapest(stock, events):
+    heap = list(stock)
     heapq.heapify(heap)
-    result = []
-    for _ in range(min(k, len(heap))):
-        result.append(heapq.heappop(heap))
-    return result`,
-        `assert smallest_items([], 3) == [], "There is nothing to remove."
-assert smallest_items([8, 2, 5, 1], 2) == [1, 2], "Extract the minima in order."
-assert smallest_items([3, 1, 1, 2], 3) == [1, 1, 2], "Preserve duplicate priorities."
-assert smallest_items([-2, 4, -7], 9) == [-7, -2, 4], "Stop when the heap is exhausted."
-assert smallest_items([1, 2], 0) == [], "Zero extractions return an empty result."
-source = [8, 3, 6]
-assert smallest_items(source, 1) == [3]
-assert source == [8, 3, 6], "Heapify a copy, not the caller's list."`,
-        'Heap construction preserves a copy of the source, and each pop returns the smallest remaining value.',
-        'Build a heap from list(values), then pop min(k, len(values)) times.',
+    taken = []
+    for event in events:
+        if event[0] == "add":
+            heapq.heappush(heap, event[1])
+        elif heap:
+            taken.append(heapq.heappop(heap))
+        else:
+            taken.append(None)
+    return taken`,
+        withLargeCase(
+          `assert take_cheapest([], []) == [], "No events record nothing."
+assert take_cheapest([], [("take",)]) == [None], "Nothing is available to take."
+assert take_cheapest([8, 2, 5], [("take",), ("take",)]) == [2, 5], "Take the cheapest items in order."
+assert take_cheapest([8, 2], [("add", 1), ("take",), ("take",)]) == [1, 2], "A new arrival can be the cheapest."
+assert take_cheapest([3], [("add", 3), ("take",), ("take",), ("take",)]) == [3, 3, None], "Equal prices are separate items."
+assert take_cheapest([-2, 4], [("take",), ("add", -7), ("add", 9), ("take",), ("take",)]) == [-2, -7, 4]
+stock = [8, 3, 6]
+events = [("take",), ("add", 1)]
+assert take_cheapest(stock, events) == [3]
+assert stock == [8, 3, 6] and events == [("take",), ("add", 1)], "Heapify a copy, not the caller's list."`,
+          `_stock = _numbers(100000, 1, 10**6, 111)
+_kinds = _numbers(200000, 0, 1, 112)
+_prices = _numbers(200000, 1, 10**6, 113)
+_events = [("add", _prices[i]) if _kinds[i] else ("take",) for i in range(200000)]
+_result, _seconds = _timed(take_cheapest, _stock, _events)
+assert _checksum(_result) == 2178764430499123940, "The 200,000-event case returned wrong prices."
+_check_time(_seconds, "The 200,000-event case", "Keep the available prices in a heap instead of searching or re-sorting them for every event.")`,
+        ),
+        'heapify builds the starting heap from a copy, each arrival is one heappush, and each take is one heappop, so the minimum is always available in O(log n).',
+        'Heapify list(stock), then push on "add" and pop on "take", recording None when the heap is empty.',
       ),
     ],
     [
@@ -342,11 +371,11 @@ True`,
         'No other branches need to be scanned.',
       ),
       exercise(
-        'Implement count_with_prefix(words, prefix). words is a list of strings; return how many input occurrences start with prefix. Count repeated words separately. The empty prefix matches every occurrence, including an empty string. Preserve words. Build a trie with a count at each node to practice prefix queries.',
-        `def count_with_prefix(words, prefix):
+        'Implement prefix_counts(words, prefixes). words and prefixes are lists of strings. Return, for each prefix in order, how many word occurrences start with it. Count repeated words separately; the empty prefix matches every occurrence, including an empty word. Matching is case-sensitive. Preserve both lists. Build one trie with a count at each node: a hidden case with 60,000 words and 60,000 prefixes must finish within 3 seconds.',
+        `def prefix_counts(words, prefixes):
     # Each node can contain "count" and a separate "children" dictionary.
     pass`,
-        `def count_with_prefix(words, prefix):
+        `def prefix_counts(words, prefixes):
     root = {"count": 0, "children": {}}
     for word in words:
         node = root
@@ -357,23 +386,44 @@ True`,
                 children[letter] = {"count": 0, "children": {}}
             node = children[letter]
             node["count"] += 1
-    node = root
-    for letter in prefix:
-        if letter not in node["children"]:
-            return 0
-        node = node["children"][letter]
-    return node["count"]`,
-        `assert count_with_prefix([], "") == 0, "No inserted occurrences means no matches."
-assert count_with_prefix(["fern", "ferry", "fig", "oak"], "fer") == 2, "Follow the complete prefix."
-assert count_with_prefix(["go", "gone", "go"], "go") == 3, "Duplicates count separately."
-assert count_with_prefix(["", "a", "ab"], "") == 3, "The root counts all occurrences."
-assert count_with_prefix(["a", "ab"], "abc") == 0, "A missing path has no matches."
-assert count_with_prefix(["a", "A"], "A") == 1, "Character matching is case-sensitive."
-source = ["pin", "pine"]
-assert count_with_prefix(source, "pin") == 2
-assert source == ["pin", "pine"], "Preserve the input words."`,
-        'Incrementing every traversed node gives the count for precisely that prefix; the root represents the empty prefix.',
-        'Insert each occurrence character by character while incrementing counts, then follow only the queried prefix.',
+    answers = []
+    for prefix in prefixes:
+        node = root
+        for letter in prefix:
+            node = node["children"].get(letter)
+            if node is None:
+                break
+        answers.append(0 if node is None else node["count"])
+    return answers`,
+        withLargeCase(
+          `assert prefix_counts([], [""]) == [0], "No inserted occurrences means no matches."
+assert prefix_counts(["oak"], []) == [], "No prefixes produce no answers."
+assert prefix_counts(["fern", "ferry", "fig", "oak"], ["fer", "f", "o"]) == [2, 3, 1], "Follow each complete prefix."
+assert prefix_counts(["go", "gone", "go"], ["go", "gon"]) == [3, 1], "Duplicates count separately."
+assert prefix_counts(["", "a", "ab"], ["", "a", "ab"]) == [3, 2, 1], "The root counts all occurrences."
+assert prefix_counts(["a", "ab"], ["abc", "b"]) == [0, 0], "A missing path has no matches."
+assert prefix_counts(["a", "A"], ["A"]) == [1], "Character matching is case-sensitive."
+words = ["pin", "pine"]
+prefixes = ["pin", "pine", "pines"]
+assert prefix_counts(words, prefixes) == [2, 1, 0]
+assert words == ["pin", "pine"] and prefixes == ["pin", "pine", "pines"], "Preserve both lists."`,
+          `def _words(count, longest, seed):
+    lengths = _numbers(count, 0, longest, seed)
+    letters = _numbers(sum(lengths), 0, 3, seed + 1)
+    words = []
+    position = 0
+    for length in lengths:
+        words.append("".join("abcd"[letter] for letter in letters[position:position + length]))
+        position += length
+    return words
+_words_in = _words(60000, 10, 121)
+_prefixes = _words(60000, 6, 123)
+_result, _seconds = _timed(prefix_counts, _words_in, _prefixes)
+assert _checksum(_result) == 539032640718016891, "The 60,000-query case returned wrong counts."
+_check_time(_seconds, "The 60,000-query case", "Build the trie once and walk one path per prefix instead of comparing every word with every prefix.")`,
+        ),
+        'Incrementing every traversed node gives the count for precisely that prefix, so after one build each query follows only its own path; the root represents the empty prefix.',
+        'Insert each occurrence character by character while incrementing counts, then follow each queried prefix from the root.',
       ),
     ],
     [
@@ -392,7 +442,7 @@ assert source == ["pin", "pine"], "Preserve the input words."`,
     'cp-trees',
     'Define a shrinking subproblem',
     'Combine a terminating base case with a smaller recursive call.',
-    ['cp-recursive-shrink', 'cp-recursive-combine'],
+    ['cp-recursive-shrink', 'cp-recursive-combine', 'recursion'],
     [
       'A recursive function solves a problem using a smaller problem of the same kind. Its base case returns without another call. Its recursive step must move toward that case for every allowed input; otherwise the call chain never finishes.',
       'To calculate an integer power with a nonnegative exponent, halve the exponent, compute that half-power once, and square it. An odd exponent needs one extra multiplication by the base. Reusing the half-result matters: calling the same recursive computation twice creates unnecessary branching.',
@@ -447,7 +497,7 @@ print(power(0, 0))`,
         'Compare repeated subtraction with repeated halving.',
       ),
       exercise(
-        'Implement binary_power(base, exponent), returning the integer base raised to exponent. base is an integer and exponent is an integer from 0 through 10⁹. Define every zero exponent, including 0⁰, as 1. Use one recursive half-power per level; do not recurse once per exponent step.',
+        'Implement binary_power(base, exponent), returning the integer base raised to exponent. base is an integer and exponent is an integer from 0 through 10⁹. Define every zero exponent, including 0⁰, as 1. Use one recursive half-power per level; do not recurse once per exponent step. The checks count Python calls: binary_power(1, 10**9) must make at least 30 recursive calls, so ** and pow alone are not accepted.',
         `def binary_power(base, exponent):
     # Base case, smaller call, and combination.
     pass`,
@@ -465,7 +515,25 @@ assert binary_power(-3, 3) == -27, "An odd exponent preserves a negative sign."
 assert binary_power(0, 7) == 0, "A positive power of zero is zero."
 assert binary_power(0, 0) == 1, "Use the stated zero-exponent contract."
 assert binary_power(9, 0) == 1
-assert binary_power(1, 1_000_000_000) == 1, "Halve the exponent instead of making a deep linear call chain."`,
+assert binary_power(1, 1_000_000_000) == 1, "Halve the exponent instead of making a deep linear call chain."
+import sys as _sys
+
+def _python_calls(function, *arguments):
+    calls = 0
+    def profile(frame, event, argument):
+        nonlocal calls
+        if event == "call":
+            calls += 1
+    _sys.setprofile(profile)
+    try:
+        result = function(*arguments)
+    finally:
+        _sys.setprofile(None)
+    return result, calls
+
+_result, _calls = _python_calls(binary_power, 1, 10**9)
+assert _result == 1
+assert _calls >= 30, f"binary_power(1, 10**9) made {_calls} Python call(s). Compute it from a recursive half power: a 30-bit exponent needs about 30 calls, so ** and pow alone are not accepted."`,
         'The recursive result supplies the even portion of the power; the odd case contributes one additional base factor.',
         'Return 1 at exponent 0; square one recursive result for exponent // 2, then multiply by base if the exponent is odd.',
       ),
@@ -554,7 +622,7 @@ print(choices(3, 2))`,
         'Check feasibility before making another recursive call.',
       ),
       exercise(
-        'Implement choose_channels(n, k) for integers 0 ≤ k ≤ n ≤ 12. Return every k-element selection from indices 0 through n-1. Each selection must be increasing, and the outer list must be in lexicographic order. Choosing zero indices returns [[]]. Use backtracking and preserve a separate snapshot for each result.',
+        'Implement choose_channels(n, k) for integers 0 ≤ k ≤ n ≤ 12. Return every k-element selection from indices 0 through n-1. Each selection must be increasing, and the outer list must be in lexicographic order. Choosing zero indices returns [[]]. Use backtracking and preserve a separate snapshot for each result. The checks disable itertools.combinations, permutations, and product.',
         `def choose_channels(n, k):
     pass`,
         `def choose_channels(n, k):
@@ -571,7 +639,17 @@ print(choices(3, 2))`,
             path.pop()
     search(0)
     return result`,
-        `assert choose_channels(0, 0) == [[]], "There is one empty selection."
+        withoutShortcuts(
+          'import itertools',
+          'itertools',
+          [
+            'combinations',
+            'permutations',
+            'product',
+            'combinations_with_replacement',
+          ],
+          'This exercise asks you to build the selections by backtracking, so itertools combinations, permutations, and product are disabled during the checks.',
+          `assert choose_channels(0, 0) == [[]], "There is one empty selection."
 assert choose_channels(4, 0) == [[]], "Choosing none is valid."
 assert choose_channels(3, 2) == [[0, 1], [0, 2], [1, 2]], "Generate increasing selections once."
 assert choose_channels(4, 1) == [[0], [1], [2], [3]], "Keep lexicographic order."
@@ -580,6 +658,7 @@ assert choose_channels(12, 12) == [list(range(12))], "Handle a full selection wi
 selections = choose_channels(3, 1)
 selections[0].append(99)
 assert selections[1:] == [[1], [2]], "Save independent lists, not aliases of the working path."`,
+        ),
         'Increasing indices eliminate permutations of the same selection; append, recurse, and pop preserve the search invariant.',
         'Track a path and next allowed index. Stop at length k, copy the path, and restore it after every branch.',
       ),
@@ -600,7 +679,12 @@ assert selections[1:] == [[1], [2]], "Save independent lists, not aliases of the
     'cp-trees',
     'Follow a search tree’s ordering',
     'Use subtree bounds to search without visiting every node.',
-    ['cp-bst-branch', 'cp-bst-candidate', 'cp-complexity'],
+    [
+      'cp-bst-branch',
+      'cp-bst-candidate',
+      'cp-complexity',
+      'conditional-expressions',
+    ],
     [
       'A strict binary search tree stores distinct keys. Every key in a node’s left subtree is smaller than its key; every key in the right subtree is larger. This condition applies to whole subtrees, not just immediate children. Here a node is (key, left, right), and an absent child is None.',
       'Searching compares the target with the current key and follows only the side that can contain it. To find the largest key at most a limit, remember the current key when it qualifies, then try the right subtree for a better one. If the key is too large, only the left subtree can help.',
@@ -654,7 +738,7 @@ False`,
         'Separate the ordering invariant from balance.',
       ),
       exercise(
-        'Implement bst_floor(tree, limit). tree is a valid strict binary search tree of distinct integer keys, represented by nested (key, left, right) tuples; an absent node is None. Return the largest stored key ≤ limit, or None if no key qualifies. Use an iterative search so a tall valid tree does not exceed Python’s recursion limit.',
+        'Implement bst_floor(tree, limit). tree is a valid strict binary search tree of distinct integer keys, represented by nested (key, left, right) tuples; an absent node is None. Return the largest stored key ≤ limit, or None if no key qualifies. Use an iterative search so a tall valid tree does not exceed Python’s recursion limit. A hidden case runs 100,000 searches in a balanced tree of about 150,000 keys and must finish within 3 seconds.',
         `def bst_floor(tree, limit):
     pass`,
         `def bst_floor(tree, limit):
@@ -668,7 +752,8 @@ False`,
         else:
             node = left
     return best`,
-        `tree = (9, (4, (1, None, None), (6, None, None)), (13, (11, None, None), None))
+        withLargeCase(
+          `tree = (9, (4, (1, None, None), (6, None, None)), (13, (11, None, None), None))
 assert bst_floor(None, 5) is None, "An empty tree has no qualifying key."
 assert bst_floor(tree, 0) is None, "The limit may lie below every key."
 assert bst_floor(tree, 9) == 9, "An exact key qualifies."
@@ -679,6 +764,20 @@ chain = None
 for key in range(1599, -1, -1):
     chain = (key, None, chain)
 assert bst_floor(chain, 1600) == 1599, "Traverse tall trees iteratively."`,
+          `def _build(keys, low, high):
+    if low >= high:
+        return None
+    middle = (low + high) // 2
+    return (keys[middle], _build(keys, low, middle), _build(keys, middle + 1, high))
+_keys = sorted(set(_numbers(150000, -10**9, 10**9, 131)))
+_tree = _build(_keys, 0, len(_keys))
+_limits = _numbers(100000, -10**9 - 10, 10**9 + 10, 132)
+def _run():
+    return [bst_floor(_tree, limit) for limit in _limits]
+_result, _seconds = _timed(_run)
+assert _checksum(_result) == 49589883230479068, "100,000 searches in a 150,000-key tree returned wrong floors."
+_check_time(_seconds, "100,000 searches in a 150,000-key tree", "Follow one branch per comparison instead of visiting every node.")`,
+        ),
         'A qualifying node replaces the best candidate, then only its right subtree can improve the answer.',
         'Keep best=None and move one child at a time; update best whenever the current key is within the limit.',
       ),
@@ -699,7 +798,14 @@ assert bst_floor(chain, 1600) == 1599, "Traverse tall trees iteratively."`,
     'cp-trees',
     'Finish descendants before their parent',
     'Use iterative postorder to compute an aggregate for each subtree.',
-    ['cp-preorder-frontier', 'cp-postorder-combine', 'cp-recursion'],
+    [
+      'cp-preorder-frontier',
+      'cp-postorder-combine',
+      'cp-recursion',
+      'list-repetition',
+      'nested-lists',
+      'generator-expressions',
+    ],
     [
       'Traversal order should match the dependency of the computation. Preorder handles a node before its descendants; postorder handles descendants first. A subtree size is 1 plus the sizes of all child subtrees, so the parent can be completed only after its children.',
       'Represent a rooted tree with children[u], a list of child vertex indices. A valid nonempty input here has root 0, vertices 0 through n-1, one parent per other vertex, and all vertices reachable from 0. Cycles and shared children violate the tree contract; treating such a graph as a tree would repeat work or loop.',
@@ -752,7 +858,7 @@ print(sizes)`,
         'An explicit stack and the interpreter call stack are different storage mechanisms.',
       ),
       exercise(
-        'Implement subtree_sizes(children). For a nonempty input, children describes a valid rooted tree on vertices 0 through len(children)-1, rooted at 0: no cycles, every other vertex has one parent, and every vertex is reachable. Return each vertex’s subtree size, including itself. An empty input returns []. Use an iterative traversal to support tall trees. Preserve children.',
+        'Implement subtree_sizes(children). For a nonempty input, children describes a valid rooted tree on vertices 0 through len(children)-1, rooted at 0: no cycles, every other vertex has one parent, and every vertex is reachable. Return each vertex’s subtree size, including itself. An empty input returns []. Use an iterative traversal to support tall trees. Preserve children. A hidden tall tree with 100,000 vertices must finish within 3 seconds.',
         `def subtree_sizes(children):
     pass`,
         `def subtree_sizes(children):
@@ -769,7 +875,8 @@ print(sizes)`,
             for child in children[vertex]:
                 stack.append((child, False))
     return sizes`,
-        `assert subtree_sizes([]) == [], "Handle an empty tree."
+        withLargeCase(
+          `assert subtree_sizes([]) == [], "Handle an empty tree."
 assert subtree_sizes([[]]) == [1], "A single root counts itself."
 assert subtree_sizes([[1, 2], [3], [], []]) == [4, 2, 1, 1], "Combine completed child subtrees."
 assert subtree_sizes([[1, 2, 3], [], [], []]) == [4, 1, 1, 1], "Trees need not be binary."
@@ -778,6 +885,14 @@ assert subtree_sizes(source) == [3, 1, 2], "Vertex labels do not dictate travers
 assert source == [[2], [], [1]], "Preserve the tree."
 chain = [[index + 1] for index in range(1599)] + [[]]
 assert subtree_sizes(chain) == list(range(1600, 0, -1)), "Do not recurse through a tall chain."`,
+          `_back = _numbers(100000, 1, 3, 141)
+_children = [[] for _ in range(100000)]
+for _vertex in range(1, 100000):
+    _children[max(0, _vertex - _back[_vertex])].append(_vertex)
+_result, _seconds = _timed(subtree_sizes, _children)
+assert _checksum(_result) == 594500027001685296, "The 100,000-vertex tree returned wrong sizes."
+_check_time(_seconds, "The 100,000-vertex tree", "Combine finished child sizes in one postorder pass instead of searching every subtree separately.")`,
+        ),
         'Completion events wait below child events on the stack, so every required child size exists before its parent is calculated.',
         'Push a completion marker for a node, then its children. At completion, add one to the sum of the child sizes.',
       ),
@@ -798,7 +913,7 @@ assert subtree_sizes(chain) == list(range(1600, 0, -1)), "Do not recurse through
     'cp-graphs',
     'Give every vertex a place',
     'Build an adjacency representation with explicit direction and multiplicity.',
-    ['cp-undirected-edge'],
+    ['cp-undirected-edge', 'unpacking'],
     [
       'A graph models vertices and edges. Number vertices 0 through n-1 and allocate one neighbor list for every vertex, including isolated ones. An edge list alone cannot reveal an isolated vertex, so n is part of the input contract.',
       'For a directed edge u → v, append v only to neighbors[u]. For an undirected edge, append each endpoint to the other’s list. Retaining parallel edges preserves multiplicity; under this convention an undirected self-loop contributes two entries at its vertex. State these choices before using degrees or counting edges.',
@@ -956,7 +1071,7 @@ print(sorted(seen))`,
         'An edge to a seen vertex creates no new work.',
       ),
       exercise(
-        'Implement reachable_count(graph, start). graph is an adjacency list on vertices 0 through len(graph)-1; every neighbor index is valid and edges may be directed, repeated, or cyclic. For a nonempty graph, start is valid. Return how many distinct vertices are reachable from start, including start. For graph=[] return 0. Preserve graph and use an iterative stack.',
+        'Implement reachable_count(graph, start). graph is an adjacency list on vertices 0 through len(graph)-1; every neighbor index is valid and edges may be directed, repeated, or cyclic. For a nonempty graph, start is valid. Return how many distinct vertices are reachable from start, including start. For graph=[] return 0. Preserve graph and use an iterative stack. A hidden graph with 200,000 vertices must finish within 3 seconds.',
         `def reachable_count(graph, start):
     pass`,
         `def reachable_count(graph, start):
@@ -971,7 +1086,8 @@ print(sorted(seen))`,
                 seen.add(neighbor)
                 stack.append(neighbor)
     return len(seen)`,
-        `assert reachable_count([], 0) == 0, "Handle an empty graph."
+        withLargeCase(
+          `assert reachable_count([], 0) == 0, "Handle an empty graph."
 assert reachable_count([[]], 0) == 1, "Count the source itself."
 assert reachable_count([[1], [2], [0, 3], [], []], 0) == 4, "Stop cycles and omit unreachable vertices."
 assert reachable_count([[1], [], [0]], 1) == 1, "Follow outgoing edges only."
@@ -981,6 +1097,14 @@ assert reachable_count(chain, 0) == 1600, "Use a stack instead of a deep recursi
 source = [[1], []]
 assert reachable_count(source, 0) == 2
 assert source == [[1], []], "Preserve the graph."`,
+          `_targets = _numbers(400000, 0, 199999, 151)
+_graph = [[] for _ in range(200000)]
+for _index in range(400000):
+    _graph[_index // 2].append(_targets[_index])
+_result, _seconds = _timed(reachable_count, _graph, 0)
+assert _result == 159287, "The 200,000-vertex graph returned the wrong count."
+_check_time(_seconds, "The 200,000-vertex graph", "Keep discovered vertices in a set so each membership test is constant time.")`,
+        ),
         'The discovery set counts each reachable vertex once, while the stack records reachable work still to process.',
         'Initialize seen with start. Add an unseen neighbor to seen before pushing it.',
       ),
@@ -1059,7 +1183,7 @@ print(distance)`,
         'Use the distance array as the visited marker.',
       ),
       exercise(
-        'Implement hop_distances(graph, source). graph is an adjacency list with valid vertex indices 0 through len(graph)-1; edges may be directed, cyclic, repeated, or self-loops. Every edge costs one hop. For a nonempty graph source is valid. Return the fewest-hop distance to each vertex, using -1 for unreachable vertices. An empty graph returns []. Preserve graph.',
+        'Implement hop_distances(graph, source). graph is an adjacency list with valid vertex indices 0 through len(graph)-1; edges may be directed, cyclic, repeated, or self-loops. Every edge costs one hop. For a nonempty graph source is valid. Return the fewest-hop distance to each vertex, using -1 for unreachable vertices. An empty graph returns []. Preserve graph. A hidden graph with 100,000 vertices must finish within 3 seconds.',
         `from collections import deque
 
 def hop_distances(graph, source):
@@ -1079,7 +1203,8 @@ def hop_distances(graph, source):
                 distance[neighbor] = distance[vertex] + 1
                 queue.append(neighbor)
     return distance`,
-        `assert hop_distances([], 0) == [], "Handle an empty graph."
+        withLargeCase(
+          `assert hop_distances([], 0) == [], "Handle an empty graph."
 assert hop_distances([[]], 0) == [0], "The source is zero hops away."
 assert hop_distances([[1, 2], [3], [3], [], []], 0) == [0, 1, 1, 2, -1], "Unreachable vertices keep -1."
 assert hop_distances([[1], [2], [0, 3], []], 2) == [1, 2, 0, 1], "Cycles do not require revisiting."
@@ -1088,6 +1213,16 @@ assert hop_distances([[1], [], [0]], 1) == [-1, 0, -1], "Respect edge direction.
 source = [[1], []]
 assert hop_distances(source, 0) == [0, 1]
 assert source == [[1], []], "Preserve the graph."`,
+          `_jumps = _numbers(200000, -3, 3, 161)
+_graph = [[] for _ in range(100000)]
+for _vertex in range(100000):
+    for _next in (_vertex + _jumps[2 * _vertex], _vertex + 1, _vertex + _jumps[2 * _vertex + 1]):
+        if 0 <= _next < 100000:
+            _graph[99999 - _vertex].append(99999 - _next)
+_result, _seconds = _timed(hop_distances, _graph, 99999)
+assert _checksum(_result) == 1412230198499059278, "The 100,000-vertex graph returned wrong distances."
+_check_time(_seconds, "The 100,000-vertex graph", "Expand each vertex once in queue order instead of relaxing every edge repeatedly.")`,
+        ),
         'A FIFO queue finishes a distance layer before the next one, and the first discovered distance never needs revision for unit-cost edges.',
         'Initialize all distances to -1, set source to 0, and enqueue a neighbor only while its distance is still -1.',
       ),
@@ -1107,109 +1242,122 @@ assert source == [[1], []], "Preserve the graph."`,
     'cp-grids',
     'cp-graphs',
     'Treat cells as graph vertices',
-    'Apply breadth-first search with explicit bounds and movement rules.',
-    ['cp-grid-passability', 'cp-bfs'],
+    'Scan every cell and flood-fill each newly found land component.',
+    ['cp-grid-component'],
     [
-      'A grid is an implicit graph: a passable cell is a vertex, and allowed moves create edges. For four-direction movement, neighbors differ by one row or one column. Diagonal cells are not neighbors under this contract, even if they touch at a corner.',
-      'Check 0 ≤ row < rows and 0 ≤ column < columns before indexing a neighbor. Negative Python indices wrap around instead of reporting an out-of-bounds move, so skipping this check can invent edges across a border. Also reject blocked cells and mark passable cells as discovered when they enter the queue.',
-      'For unit-cost moves, BFS finds the fewest moves between cells. Use -1 when either endpoint is blocked or the destination is unreachable. A rectangular R-by-C grid has at most four outgoing moves per cell, so time and auxiliary space are O(RC). The grid itself can remain unchanged.',
+      'A grid is an implicit graph: each land cell is a vertex, and two land cells share an edge when they differ by one row or one column. Cells that touch only at a corner are not neighbors under the four-direction contract, so they belong to different islands unless another land route joins them.',
+      'One flood fill from a land cell reaches exactly its island. To find every island, scan the cells in row order and start a new flood fill only from land that no earlier search discovered. Share one discovered set across all searches: a cell claimed by an earlier island is never counted again, so the number of searches started is the number of islands, and each search’s discovered-cell count is that island’s size.',
+      'Check 0 ≤ row < rows and 0 ≤ column < columns before indexing a neighbor, because a negative index wraps to the opposite border. Use an explicit stack so a long island cannot exceed Python’s recursion limit. Each cell is discovered at most once and has at most four neighbors, so an R-by-C grid takes O(RC) time even when one island covers most of it; restarting a search from every land cell would repeat whole islands and take O((RC)²) time.',
     ],
-    `from collections import deque
-grid = ["..#", "...", "#.."]
-rows, columns = len(grid), len(grid[0])
-distance = [[-1] * columns for _ in range(rows)]
-distance[0][0] = 0
-queue = deque([(0, 0)])
-while queue:
-    row, column = queue.popleft()
-    for dr, dc in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-        nr, nc = row + dr, column + dc
-        if 0 <= nr < rows and 0 <= nc < columns:
-            if grid[nr][nc] == "." and distance[nr][nc] == -1:
-                distance[nr][nc] = distance[row][column] + 1
-                queue.append((nr, nc))
-print(distance[2][2])`,
-    '4',
-    'Only in-bounds, passable, unseen cells become queued vertices; the bottom-right cell is four moves away.',
+    `grid = [[1, 1, 0, 0],
+        [0, 1, 0, 1],
+        [1, 0, 0, 1]]
+rows, cols = len(grid), len(grid[0])
+seen = set()
+sizes = []
+for row in range(rows):
+    for col in range(cols):
+        if grid[row][col] == 1 and (row, col) not in seen:
+            seen.add((row, col))
+            pending = [(row, col)]
+            size = 0
+            while pending:
+                r, c = pending.pop()
+                size += 1
+                for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:
+                    if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1 and (nr, nc) not in seen:
+                        seen.add((nr, nc))
+                        pending.append((nr, nc))
+            sizes.append(size)
+print(sizes)`,
+    '[3, 2, 1]',
+    'The scan starts searches at (0, 0), (1, 3), and (2, 0). Each search claims its whole island, so later cells of the same island are skipped.',
     [
       choice(
-        'From cell (2, 3), which cell is a four-direction neighbor?',
-        ['(3, 4)', '(2, 5)', '(1, 3)', '(0, 3)'],
-        2,
-        'Only (1, 3) changes exactly one coordinate by one.',
-        'A permitted move is one unit horizontally or vertically.',
+        'In the grid [[1, 0], [0, 1]], how many four-direction islands are there?',
+        ['1', '2', '4', '0'],
+        1,
+        'The two land cells touch only at a corner, which is not a move, so each is its own island.',
+        'Diagonal contact is not an edge.',
       ),
       choice(
-        'Why check nr >= 0 before reading grid[nr][nc]?',
+        'Why does the scan share one discovered set across all flood fills?',
         [
-          'Python negative indexing can wrap to the last row.',
-          'BFS requires row labels to be positive.',
-          'All negative indices raise IndexError immediately.',
-          'The check automatically removes blocked cells.',
+          'So the largest island is always found first.',
+          'So diagonal cells join the same island.',
+          'So each island is counted once, when the scan first reaches it.',
+          'So the grid can be modified in place.',
         ],
-        0,
-        'An unchecked -1 row accesses the final row and would create an unintended wraparound move.',
-        'Array indexing behavior is not a grid movement rule.',
+        2,
+        'Cells claimed by an earlier search are skipped, so only the first cell the scan meets on each island starts a search.',
+        'Ask what stops a second search from starting on the same island.',
       ),
       choice(
-        'What should the distance be when start and finish are the same passable cell?',
-        ['-1', '1', 'The number of grid cells', '0'],
-        3,
-        'No movement is needed to reach a cell already occupied.',
-        'Distance counts moves, not visited cells.',
+        'What is the running time of the shared-discovery scan on an R-by-C grid?',
+        ['O(R + C)', 'O(RC)', 'O((RC)²)', 'O(RC log RC)'],
+        1,
+        'Every cell is scanned once and discovered at most once, and each discovery checks at most four neighbors.',
+        'Count how often one cell can be discovered.',
       ),
       exercise(
-        'Implement shortest_walk(grid, start, finish). grid is [] or a nonempty rectangular list of nonempty strings containing only "." (passable) and "#" (blocked). For a nonempty grid, start and finish are valid (row, column) tuples. Return the minimum number of four-direction unit moves between them, or -1 for an empty grid, blocked endpoint, or unreachable finish. Preserve grid; diagonals and border wraparound are forbidden.',
-        `from collections import deque
-
-def shortest_walk(grid, start, finish):
+        'Implement island_summary(grid). grid is [] or a rectangular list of equal-length rows containing 0 (water) and 1 (land). An island is a maximal group of land cells joined by up, down, left, or right moves; diagonal contact does not join cells. Return (island_count, largest_island_size), or (0, 0) when there is no land. Preserve grid. Share one discovered set across iterative flood fills: a hidden 400-by-400 grid must finish within 3 seconds.',
+        `def island_summary(grid):
+    # Scan every cell; flood-fill land that no earlier search discovered.
     pass`,
-        `from collections import deque
-
-def shortest_walk(grid, start, finish):
-    if not grid:
-        return -1
-    rows, columns = len(grid), len(grid[0])
-    sr, sc = start
-    fr, fc = finish
-    if grid[sr][sc] == "#" or grid[fr][fc] == "#":
-        return -1
-    distance = [[-1] * columns for _ in range(rows)]
-    distance[sr][sc] = 0
-    queue = deque([(sr, sc)])
-    while queue:
-        row, column = queue.popleft()
-        if (row, column) == finish:
-            return distance[row][column]
-        for dr, dc in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-            nr, nc = row + dr, column + dc
-            if 0 <= nr < rows and 0 <= nc < columns:
-                if grid[nr][nc] == "." and distance[nr][nc] == -1:
-                    distance[nr][nc] = distance[row][column] + 1
-                    queue.append((nr, nc))
-    return -1`,
-        `assert shortest_walk([], (0, 0), (0, 0)) == -1, "An empty grid has no route."
-assert shortest_walk(["."], (0, 0), (0, 0)) == 0, "No moves are needed at the destination."
-assert shortest_walk(["..#", "...", "#.."], (0, 0), (2, 2)) == 4
-assert shortest_walk([".#", "#."], (0, 0), (1, 1)) == -1, "Diagonal contact is not a move."
-assert shortest_walk([".#."], (0, 0), (0, 2)) == -1, "Do not wrap across a blocked border."
-assert shortest_walk(["#.", ".."], (0, 0), (1, 1)) == -1, "A blocked start is invalid."
-assert shortest_walk(["..", ".#"], (0, 0), (1, 1)) == -1, "A blocked finish is invalid."
-source = ["...", "..."]
-assert shortest_walk(source, (1, 0), (0, 2)) == 3
-assert source == ["...", "..."], "Preserve the grid."`,
-        'The grid supplies neighbors on demand; a separate distance matrix supplies discovery state and shortest move counts.',
-        'Check endpoint passability, then BFS from start. Check bounds before reading each potential neighbor.',
+        `def island_summary(grid):
+    rows = len(grid)
+    cols = len(grid[0]) if grid else 0
+    seen = set()
+    count = 0
+    largest = 0
+    for row in range(rows):
+        for col in range(cols):
+            if grid[row][col] != 1 or (row, col) in seen:
+                continue
+            count += 1
+            seen.add((row, col))
+            pending = [(row, col)]
+            size = 0
+            while pending:
+                r, c = pending.pop()
+                size += 1
+                for nr, nc in [(r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)]:
+                    if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1 and (nr, nc) not in seen:
+                        seen.add((nr, nc))
+                        pending.append((nr, nc))
+            largest = max(largest, size)
+    return count, largest`,
+        withLargeCase(
+          `assert island_summary([]) == (0, 0), "An empty grid has no islands."
+assert island_summary([[0, 0], [0, 0]]) == (0, 0), "Water alone has no islands."
+assert island_summary([[1]]) == (1, 1)
+assert island_summary([[1, 0], [0, 1]]) == (2, 1), "Diagonal contact does not join cells."
+assert island_summary([[1, 1, 0, 0], [0, 1, 0, 1], [1, 0, 0, 1]]) == (3, 3)
+assert island_summary([[1, 0, 1]]) == (2, 1), "Do not wrap across a border."
+assert island_summary([[1], [0], [1]]) == (2, 1)
+ring = [[1, 1, 1], [1, 0, 1], [1, 1, 1]]
+assert island_summary(ring) == (1, 8), "Land around water is still one island."
+assert ring == [[1, 1, 1], [1, 0, 1], [1, 1, 1]], "Preserve the grid."
+snake = [[1] * 60 if r % 2 == 0 else ([0] * 59 + [1] if r % 4 == 1 else [1] + [0] * 59) for r in range(60)]
+assert island_summary(snake) == (1, 1830), "Use an explicit stack for a long island."`,
+          `_cells = _numbers(160000, 0, 99, 171)
+_grid = [[1 if _cells[r * 400 + c] < 66 else 0 for c in range(400)] for r in range(400)]
+_result, _seconds = _timed(island_summary, _grid)
+assert _result == (2075, 100907), "The 400-by-400 grid returned the wrong summary."
+_check_time(_seconds, "The 400-by-400 grid", "Share one discovered set so each land cell is searched once, instead of restarting a search from every land cell.")`,
+        ),
+        'A shared discovered set schedules each land cell exactly once across all searches, so the scan is O(RC) and every search it starts is a new island.',
+        'Scan cells in row order. At undiscovered land, count an island and flood-fill it with a stack, marking cells when you schedule them.',
       ),
     ],
     [
       [
-        'What checks define a valid four-direction grid move?',
-        'One coordinate changes by one; the destination is in bounds, passable, and not already discovered.',
+        'How do you count the islands in a grid?',
+        'Scan every cell and start a flood fill only from land no earlier search discovered; each search started is one island.',
       ],
       [
-        'Why can unchecked negative grid indices create a false path in Python?',
-        'Negative indices wrap to the final row or column rather than representing an out-of-bounds cell.',
+        'Why can unchecked negative grid indices join cells that are not adjacent?',
+        'Negative indices wrap to the final row or column, inventing a move across the border.',
       ],
     ],
   ),
@@ -1223,6 +1371,8 @@ assert source == ["...", "..."], "Preserve the grid."`,
       'cp-fifo-frontier',
       'cp-graph-models',
       'while-loops',
+      'conditional-expressions',
+      'generator-expressions',
     ],
     [
       'In a directed dependency graph, edge u → v means u must appear before v. A topological order places every vertex once while respecting every edge. Such an order exists exactly when the graph has no directed cycle; several valid orders may exist.',
@@ -1287,7 +1437,7 @@ print(order if len(order) == n else None)`,
         'A single chosen source does not represent the entire schedule.',
       ),
       exercise(
-        'Implement dependency_order(n, edges). n is nonnegative, and each (u, v) pair uses valid vertices 0 through n-1 and requires u before v. Return any topological order containing every vertex exactly once, or None if a directed cycle exists. For n=0 return []. Keep isolated vertices; parallel edges and self-loops are allowed. Preserve edges.',
+        'Implement dependency_order(n, edges). n is nonnegative, and each (u, v) pair uses valid vertices 0 through n-1 and requires u before v. Return any topological order containing every vertex exactly once, or None if a directed cycle exists. For n=0 return []. Keep isolated vertices; parallel edges and self-loops are allowed. Preserve edges. A hidden graph with 100,000 vertices and 400,000 edges must finish within 3 seconds.',
         `from collections import deque
 
 def dependency_order(n, edges):
@@ -1310,7 +1460,8 @@ def dependency_order(n, edges):
             if indegree[neighbor] == 0:
                 queue.append(neighbor)
     return result if len(result) == n else None`,
-        `def valid_order(order, n, edges):
+        withLargeCase(
+          `def valid_order(order, n, edges):
     if not isinstance(order, list) or sorted(order) != list(range(n)):
         return False
     position = {vertex: index for index, vertex in enumerate(order)}
@@ -1326,6 +1477,23 @@ assert dependency_order(4, [(1, 2), (2, 1)]) is None, "An isolated ready vertex 
 parallel = [(0, 1), (0, 1), (1, 2)]
 assert valid_order(dependency_order(3, parallel), 3, parallel), "Match parallel-edge indegree increments and decrements."
 assert edges == [(0, 2), (1, 2), (2, 3)], "Preserve the edge list."`,
+          `_key = _numbers(100000, 0, 10**9, 181)
+_rank = sorted(range(100000), key=lambda vertex: _key[vertex])
+_starts = _numbers(300000, 0, 99998, 182)
+_gaps = _numbers(300000, 1, 50, 183)
+_edges = [(_rank[_starts[i]], _rank[min(99999, _starts[i] + _gaps[i])]) for i in range(300000)]
+_edges += [(_rank[i], _rank[i + 1]) for i in range(99999)]
+def _valid(order):
+    if not isinstance(order, list) or len(order) != 100000:
+        return False
+    position = [0] * 100000
+    for index, vertex in enumerate(order):
+        position[vertex] = index
+    return sorted(order) == list(range(100000)) and all(position[u] < position[v] for u, v in _edges)
+_result, _seconds = _timed(dependency_order, 100000, _edges)
+assert _valid(_result), "The 100,000-vertex graph returned an invalid order."
+_check_time(_seconds, "The 100,000-vertex graph", "Release each vertex once with indegree counts instead of rescanning the edges for a ready vertex.")`,
+        ),
         'Zero remaining indegree means every prerequisite has been released. The final vertex count distinguishes a full order from a cyclic blockage.',
         'Count indegrees, queue every zero, release each outgoing edge once, and reject an incomplete result.',
       ),
@@ -1346,7 +1514,7 @@ assert edges == [(0, 2), (1, 2), (2, 3)], "Preserve the edge list."`,
     'cp-paths',
     'Relax routes in best-known order',
     'Use a heap to solve directed shortest paths with nonnegative weights.',
-    ['cp-minimum-distance-work', 'cp-graph-models', 'errors'],
+    ['cp-minimum-distance-work', 'cp-graph-models', 'errors', 'break-continue'],
     [
       'Dijkstra’s algorithm maintains the best known distance to each vertex. The source starts at zero and other distances start unknown. Relaxing u → v with weight w means replacing distance[v] when distance[u] + w is a smaller known route.',
       'A min-heap chooses the smallest tentative distance next. With nonnegative weights, a current minimum cannot be improved by extending a longer route through a negative step. Reject negative edges; ordinary Dijkstra is not a valid general shortest-path algorithm for them. Zero-weight edges and cycles are allowed.',
@@ -1413,7 +1581,7 @@ print(distance)`,
         'A path’s cost is the sum of its edge weights.',
       ),
       exercise(
-        'Implement shortest_costs(n, edges, source). n is positive; vertices are 0 through n-1, source is valid, and edges contains directed (u, v, weight) triples with valid endpoints and integer weights. Return minimum costs from source, using None for unreachable vertices. Parallel edges, self-loops, and zero-weight cycles are allowed. Raise ValueError if any weight is negative, even in an unreachable component. Preserve edges.',
+        'Implement shortest_costs(n, edges, source). n is positive; vertices are 0 through n-1, source is valid, and edges contains directed (u, v, weight) triples with valid endpoints and integer weights. Return minimum costs from source, using None for unreachable vertices. Parallel edges, self-loops, and zero-weight cycles are allowed. Raise ValueError if any weight is negative, even in an unreachable component. Preserve edges. A hidden graph with 50,000 vertices and 250,000 edges must finish within 3 seconds.',
         `import heapq
 
 def shortest_costs(n, edges, source):
@@ -1439,7 +1607,8 @@ def shortest_costs(n, edges, source):
                 distance[neighbor] = candidate
                 heapq.heappush(heap, (candidate, neighbor))
     return distance`,
-        `assert shortest_costs(1, [], 0) == [0], "A lone source has cost zero."
+        withLargeCase(
+          `assert shortest_costs(1, [], 0) == [0], "A lone source has cost zero."
 edges = [(0, 1, 9), (0, 2, 2), (2, 1, 1), (1, 3, 4), (2, 3, 8)]
 assert shortest_costs(5, edges, 0) == [0, 3, 2, 7, None], "Improve old routes and retain unreachable markers."
 assert shortest_costs(3, [(0, 1, 0), (1, 0, 0), (1, 2, 5)], 0) == [0, 0, 5], "Zero cycles are permitted."
@@ -1452,6 +1621,16 @@ except ValueError:
 else:
     assert False, "Reject every negative edge, including unreachable ones."
 assert edges == [(0, 1, 9), (0, 2, 2), (2, 1, 1), (1, 3, 4), (2, 3, 8)], "Preserve edges."`,
+          `_u = _numbers(150000, 0, 49999, 191)
+_v = _numbers(150000, 0, 49999, 192)
+_w = _numbers(150000, 0, 10**6, 193)
+_edges = [(_u[i], _v[i], _w[i]) for i in range(150000)]
+_edges += [(i + 1, i, 1) for i in range(49998, -1, -1)]
+_edges += [(i, i + 1, 3) for i in range(49998, -1, -1)]
+_result, _seconds = _timed(shortest_costs, 50000, _edges, 0)
+assert _checksum(_result) == 1645433355848269451, "The 50,000-vertex graph returned wrong costs."
+_check_time(_seconds, "The 50,000-vertex graph", "Settle vertices in heap order instead of relaxing every edge in rounds.")`,
+        ),
         'Validating all edges establishes the nonnegative precondition before exploration. Heap entries propose routes; the distance array decides which proposals are still current.',
         'Build outgoing weighted lists, reject negative weights, then relax from matching minimum heap entries.',
       ),
@@ -1539,7 +1718,7 @@ print(counts)`,
         'A partition does not store ordered paths.',
       ),
       exercise(
-        'Implement component_counts(n, edges). n is nonnegative and starts with n isolated vertices, numbered 0 through n-1. edges is a sequence of undirected (u, v) connections with valid endpoints; when n=0 it is empty. Return the number of connected components after each edge, in input order. Repeated edges and self-loops must not decrease the count again. Preserve edges. Use iterative find, path compression, and union by size.',
+        'Implement component_counts(n, edges). n is nonnegative and starts with n isolated vertices, numbered 0 through n-1. edges is a sequence of undirected (u, v) connections with valid endpoints; when n=0 it is empty. Return the number of connected components after each edge, in input order. Repeated edges and self-loops must not decrease the count again. Preserve edges. Use iterative find, path compression, and union by size. A hidden case with 100,000 vertices and 200,000 edges must finish within 3 seconds.',
         `def component_counts(n, edges):
     pass`,
         `def component_counts(n, edges):
@@ -1562,7 +1741,8 @@ print(counts)`,
             components -= 1
         result.append(components)
     return result`,
-        `assert component_counts(0, []) == [], "No edges produce no snapshots."
+        withLargeCase(
+          `assert component_counts(0, []) == [], "No edges produce no snapshots."
 assert component_counts(4, []) == [], "Return counts after edges, not an initial snapshot."
 assert component_counts(1, [(0, 0), (0, 0)]) == [1, 1], "Self-loops do not merge sets."
 assert component_counts(4, [(0, 1), (2, 3), (1, 2)]) == [3, 2, 1], "Merge separate components."
@@ -1570,6 +1750,13 @@ assert component_counts(3, [(0, 1), (1, 0), (1, 2), (0, 2)]) == [2, 2, 1, 1], "R
 source = [(1, 2), (0, 1)]
 assert component_counts(4, source) == [3, 2], "Isolated vertices remain components."
 assert source == [(1, 2), (0, 1)], "Preserve the input connections."`,
+          `_a = _numbers(100000, 0, 99999, 201)
+_b = _numbers(100000, 0, 99999, 202)
+_edges = [(i, i + 1) for i in range(49999)] + [(_a[i], _b[i]) for i in range(100000)] + [(0, _a[i]) for i in range(50000)]
+_result, _seconds = _timed(component_counts, 100000, _edges)
+assert _checksum(_result) == 403053540933972930, "The 200,000-edge case returned wrong counts."
+_check_time(_seconds, "The 200,000-edge case", "Use union by size and path compression instead of relabeling or walking long parent chains.")`,
+        ),
         'Only a union between different representatives joins two components; all other edge types leave the partition unchanged.',
         'Start the count at n, compare roots for each edge, and decrement only after a successful root merge.',
       ),
@@ -1590,7 +1777,7 @@ assert source == [(1, 2), (0, 1)], "Preserve the input connections."`,
     'cp-paths',
     'Connect every vertex at minimum cost',
     'Use Kruskal’s edge order and disjoint sets to build a spanning tree.',
-    ['cp-edge-weight-order', 'cp-spanning-completion', 'cp-dsu'],
+    ['cp-edge-weight-order', 'cp-spanning-completion'],
     [
       'A spanning tree connects all n vertices of an undirected graph without a cycle, using n-1 edges when n > 0. A minimum spanning tree minimizes the sum of its chosen edge weights. It is different from minimizing routes from one source: an MST is a network-wide connection objective.',
       'Kruskal’s algorithm sorts edges from cheapest to most expensive. Accept an edge only when its endpoints belong to different DSU components. This merges the components without creating a cycle. The cheapest available edge across a component boundary is safe by the cut property: some minimum spanning tree can include it.',
@@ -1657,7 +1844,7 @@ print(cost if chosen == 3 else None)`,
         'A tree on n vertices needs n-1 successful merges.',
       ),
       exercise(
-        'Implement minimum_link_cost(n, edges). n is nonnegative; edges contains undirected (u, v, weight) triples with valid vertex indices 0 through n-1 and integer weights. Return the minimum total cost of a spanning tree, or None if the graph is disconnected. For n=0 or n=1 return 0. Parallel edges, self-loops, ties, and negative weights are allowed. Preserve edges. Use Kruskal with DSU.',
+        'Implement minimum_link_cost(n, edges). n is nonnegative; edges contains undirected (u, v, weight) triples with valid vertex indices 0 through n-1 and integer weights. Return the minimum total cost of a spanning tree, or None if the graph is disconnected. For n=0 or n=1 return 0. Parallel edges, self-loops, ties, and negative weights are allowed. Preserve edges. Use Kruskal with DSU. A hidden graph with 50,000 vertices and 200,000 edges must finish within 3 seconds.',
         `def minimum_link_cost(n, edges):
     pass`,
         `def minimum_link_cost(n, edges):
@@ -1682,7 +1869,8 @@ print(cost if chosen == 3 else None)`,
             total += weight
             chosen += 1
     return total if chosen == n - 1 else None`,
-        `assert minimum_link_cost(0, []) == 0, "The empty tree has cost zero."
+        withLargeCase(
+          `assert minimum_link_cost(0, []) == 0, "The empty tree has cost zero."
 assert minimum_link_cost(1, [(0, 0, -9)]) == 0, "A loop is not needed to span one vertex."
 edges = [(0, 1, 6), (1, 2, 1), (0, 2, 4), (2, 3, 2), (1, 3, 8)]
 assert minimum_link_cost(4, edges) == 7, "Choose the cheapest connecting forest."
@@ -1691,6 +1879,14 @@ assert minimum_link_cost(3, [(0, 0, -100), (0, 1, -3), (1, 2, 2), (0, 2, 8)]) ==
 assert minimum_link_cost(2, [(0, 1, 7), (0, 1, 2)]) == 2, "Select the cheaper parallel edge."
 assert minimum_link_cost(3, [(0, 1, 4), (1, 2, 4), (0, 2, 4)]) == 8, "Equal weights can yield several valid trees."
 assert edges == [(0, 1, 6), (1, 2, 1), (0, 2, 4), (2, 3, 2), (1, 3, 8)], "Preserve the edge list."`,
+          `_u = _numbers(150000, 0, 49999, 211)
+_v = _numbers(150000, 0, 49999, 212)
+_w = _numbers(150000, -1000, 10**6, 213)
+_edges = [(_u[i], _v[i], _w[i]) for i in range(150000)] + [(i, i + 1, 10**6 + i) for i in range(49999)]
+_result, _seconds = _timed(minimum_link_cost, 50000, _edges)
+assert _result == 10005199259, "The 50,000-vertex graph returned the wrong cost."
+_check_time(_seconds, "The 50,000-vertex graph", "Join components with a disjoint-set forest instead of relabeling vertices.")`,
+        ),
         'Sorted edge consideration plus successful DSU merges yields an acyclic minimum-cost forest; n-1 accepted edges certify that it spans every vertex.',
         'Sort by weight, accept only edges joining different roots, accumulate their weights, and verify the final merge count.',
       ),

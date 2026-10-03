@@ -1,5 +1,5 @@
 import type { Skill } from '../../curriculum';
-import { choice, exercise, skill } from './shared';
+import { choice, exercise, skill, withLargeCase } from './shared';
 
 type Check = [string, string[], number, string, string];
 type Atom = {
@@ -122,7 +122,12 @@ stages('cp-binary-lifting', 'cp-range', [
   },
   {
     id: 'cp-lifting-compose-jumps',
-    parents: ['cp-lifting-parent-row', 'cp-work-doubling', 'comprehensions'],
+    parents: [
+      'cp-lifting-parent-row',
+      'cp-work-doubling',
+      'comprehensions',
+      'conditional-expressions',
+    ],
     title: 'Compose two equal jumps',
     summary: 'Double a jump distance using its previous row.',
     lesson: [
@@ -179,7 +184,7 @@ stages('cp-binary-lifting', 'cp-range', [
   },
   {
     id: 'cp-lifting-query-bits',
-    parents: ['cp-lifting-compose-jumps', 'cp-bit-position'],
+    parents: ['cp-lifting-compose-jumps', 'cp-bit-position', 'nested-lists'],
     title: 'Select jumps from distance bits',
     summary: 'Answer one ancestor query without overflowing the table.',
     lesson: [
@@ -188,11 +193,23 @@ stages('cp-binary-lifting', 'cp-range', [
     ],
     signature: 'def jump_ancestor(table, vertex, steps)',
     contract:
-      'Implement jump_ancestor(table, vertex, steps). table is a valid binary-lifting table for a nonempty acyclic n-vertex forest, with at least max(1, n.bit_length()) rows; vertex is valid and steps is nonnegative, possibly huge. Return the ancestor or -1 if absent. Preserve table.',
+      'Implement jump_ancestor(table, vertex, steps). table is a valid binary-lifting table for a nonempty acyclic n-vertex forest, with at least max(1, n.bit_length()) rows; vertex is valid and steps is nonnegative, possibly huge. Return the ancestor or -1 if absent. Preserve table. A hidden case runs 50,000 queries on a 100,000-vertex chain and must finish within 3 seconds.',
     solution:
       'def jump_ancestor(table, vertex, steps):\n    n = len(table[0])\n    if steps >= n:\n        return -1\n    bit = 0\n    while steps and vertex != -1:\n        if steps & 1:\n            vertex = table[bit][vertex]\n        steps >>= 1\n        bit += 1\n    return vertex',
-    checks:
+    checks: withLargeCase(
       'table = [[-1, 0, 1, 2, 3], [-1, -1, 0, 1, 2], [-1, -1, -1, -1, 0]]\nassert jump_ancestor(table, 4, 0) == 4\nassert jump_ancestor(table, 4, 1) == 3\nassert jump_ancestor(table, 4, 3) == 1\nassert jump_ancestor(table, 4, 4) == 0\nassert jump_ancestor(table, 4, 5) == -1\nassert jump_ancestor(table, 0, 1) == -1\nassert jump_ancestor(table, 4, 10**100) == -1\nassert table[0] == [-1, 0, 1, 2, 3]',
+      `_table = [[vertex - 1 for vertex in range(100000)]]
+for _ in range(1, 17):
+    _previous = _table[-1]
+    _table.append([-1 if parent == -1 else _previous[parent] for parent in _previous])
+_vertices = _numbers(50000, 0, 99999, 451)
+_steps = _numbers(50000, 0, 100000, 452)
+def _run():
+    return [jump_ancestor(_table, _vertices[i], _steps[i]) for i in range(50000)]
+_result, _seconds = _timed(_run)
+assert _checksum(_result) == 273083971310116976, "50,000 queries on a 100,000-vertex chain returned wrong ancestors."
+_check_time(_seconds, "50,000 queries on a 100,000-vertex chain", "Use one table row per set bit of steps instead of walking single parents.")`,
+    ),
     demonstration:
       'table = [[-1, 0, 1, 2, 3], [-1, -1, 0, 1, 2], [-1, -1, -1, -1, 0]]\nprint(jump_ancestor(table, 4, 3))',
     output: '1',
@@ -318,7 +335,7 @@ stages('cp-scc', 'cp-range', [
   },
   {
     id: 'cp-scc-finish-order',
-    parents: ['cp-dfs', 'cp-tree-traversal'],
+    parents: ['cp-dfs', 'cp-tree-traversal', 'break-continue'],
     title: 'Record DFS completion',
     summary: 'Distinguish finishing order from discovery order.',
     lesson: [
@@ -633,7 +650,13 @@ stages('cp-fenwick', 'cp-range', [
 stages('cp-segment-tree', 'cp-range', [
   {
     id: 'cp-segment-leaf-layout',
-    parents: ['cp-work-doubling', 'slicing'],
+    parents: [
+      'cp-work-doubling',
+      'slicing',
+      'multiple-returns',
+      'list-repetition',
+      'number-builtins',
+    ],
     title: 'Pad minimum-tree leaves',
     summary: 'Place values under a power-of-two boundary.',
     lesson: [
@@ -773,11 +796,23 @@ stages('cp-segment-tree', 'cp-range', [
     ],
     signature: 'def query_minimum(tree, size, left, right)',
     contract:
-      'Implement query_minimum(tree, size, left, right) for a built padded minimum tree and valid public 0 <= left <= right <= size. Return the minimum on [left, right), or None if empty. Preserve tree.',
+      'Implement query_minimum(tree, size, left, right) for a built padded minimum tree and valid public 0 <= left <= right <= size. Return the minimum on [left, right), or None if empty. Preserve tree. A hidden case runs 30,000 queries on a 131,072-leaf tree and must finish within 3 seconds.',
     solution:
       'def query_minimum(tree, size, left, right):\n    if left == right:\n        return None\n    left += size\n    right += size\n    best = float("inf")\n    while left < right:\n        if left % 2:\n            best = min(best, tree[left])\n            left += 1\n        if right % 2:\n            right -= 1\n            best = min(best, tree[right])\n        left //= 2\n        right //= 2\n    return best',
-    checks:
+    checks: withLargeCase(
       'tree = [float("inf"), 1, 3, 1, 8, 3, 6, 1]\nassert query_minimum(tree, 4, 0, 4) == 1\nassert query_minimum(tree, 4, 0, 3) == 3\nassert query_minimum(tree, 4, 1, 3) == 3\nassert query_minimum(tree, 4, 2, 3) == 6\nassert query_minimum(tree, 4, 2, 2) is None\nassert query_minimum(tree, 4, 3, 4) == 1\nassert tree == [float("inf"), 1, 3, 1, 8, 3, 6, 1]',
+      `_size = 1 << 17
+_tree = [float("inf")] * _size + _numbers(_size, -10**9, 10**9, 441)
+for _node in range(_size - 1, 0, -1):
+    _tree[_node] = min(_tree[2 * _node], _tree[2 * _node + 1])
+_xs = _numbers(30000, 0, _size, 442)
+_ys = _numbers(30000, 0, _size, 443)
+def _run():
+    return [query_minimum(_tree, _size, min(_xs[i], _ys[i]), max(_xs[i], _ys[i])) for i in range(30000)]
+_result, _seconds = _timed(_run)
+assert _checksum(_result) == 141335678600146869, "30,000 queries on a 131,072-leaf tree returned wrong minima."
+_check_time(_seconds, "30,000 queries on a 131,072-leaf tree", "Consume boundary nodes while moving upward instead of scanning the leaves.")`,
+    ),
     demonstration:
       'print(query_minimum([float("inf"), 1, 3, 1, 8, 3, 6, 1], 4, 0, 3))',
     output: '3',
@@ -833,7 +868,7 @@ stages('cp-segment-tree', 'cp-range', [
 stages('cp-gcd', 'cp-number-theory', [
   {
     id: 'cp-gcd-divisibility',
-    parents: ['parameters', 'boolean-logic'],
+    parents: ['parameters'],
     title: 'Test a common divisor',
     summary: 'Use exact remainders for divisibility.',
     lesson: [
@@ -889,7 +924,7 @@ stages('cp-gcd', 'cp-number-theory', [
   },
   {
     id: 'cp-gcd-remainder-step',
-    parents: ['cp-gcd-divisibility'],
+    parents: ['cp-gcd-divisibility', 'multiple-returns'],
     title: 'Preserve common divisors with a remainder',
     summary: 'Apply one Euclidean state transition.',
     lesson: [
@@ -945,7 +980,7 @@ stages('cp-gcd', 'cp-number-theory', [
   },
   {
     id: 'cp-gcd-lcm-zero',
-    parents: ['cp-gcd-divisibility'],
+    parents: ['cp-gcd-divisibility', 'number-builtins'],
     title: 'Derive a least common multiple',
     summary: 'Handle zeros before dividing by the supplied gcd.',
     lesson: [
@@ -1061,7 +1096,7 @@ stages('cp-modular', 'cp-number-theory', [
   },
   {
     id: 'cp-modular-square-step',
-    parents: ['cp-modular-residue', 'cp-recursive-combine'],
+    parents: ['cp-modular-residue', 'cp-recursive-combine', 'multiple-returns'],
     title: 'Consume one exponent bit',
     summary: 'Apply one repeated-squaring transition.',
     lesson: [
@@ -1126,7 +1161,7 @@ stages('cp-modular', 'cp-number-theory', [
   },
   {
     id: 'cp-modular-inverse-condition',
-    parents: ['cp-modular-residue', 'cp-gcd'],
+    parents: ['cp-modular-residue', 'cp-gcd', 'imports'],
     title: 'Check whether division is invertible',
     summary: 'Use coprimality rather than assuming a prime modulus.',
     lesson: [
@@ -1194,7 +1229,7 @@ stages('cp-modular', 'cp-number-theory', [
 stages('cp-sieve', 'cp-number-theory', [
   {
     id: 'cp-sieve-candidate-table',
-    parents: ['list-mutation', 'return-values'],
+    parents: ['return-values', 'list-repetition'],
     title: 'Prepare prime candidates',
     summary: 'Exclude zero and one before composite marking.',
     lesson: [
@@ -1384,7 +1419,7 @@ stages('cp-sieve', 'cp-number-theory', [
 stages('cp-combinatorics', 'cp-number-theory', [
   {
     id: 'cp-combination-boundaries',
-    parents: ['comprehensions', 'parameters', 'boolean-logic'],
+    parents: ['comprehensions', 'parameters'],
     title: 'Handle empty and impossible selections',
     summary: 'Separate counting boundaries before recurrence.',
     lesson: [
@@ -1574,7 +1609,7 @@ stages('cp-combinatorics', 'cp-number-theory', [
 stages('cp-intervals', 'cp-strategy', [
   {
     id: 'cp-interval-overlap',
-    parents: ['parameters'],
+    parents: ['parameters', 'tuples', 'number-builtins'],
     title: 'Compare interval endpoints',
     summary: 'Decide overlap under a stated endpoint convention.',
     lesson: [
@@ -1897,7 +1932,11 @@ stages('cp-greedy', 'cp-strategy', [
   },
   {
     id: 'cp-greedy-exchange-boundary',
-    parents: ['cp-greedy-compatibility', 'cp-greedy-finish-order'],
+    parents: [
+      'cp-greedy-compatibility',
+      'cp-greedy-finish-order',
+      'generator-expressions',
+    ],
     title: 'Check an exchange boundary',
     summary: 'Show that an earlier finish preserves a later continuation.',
     lesson: [
@@ -1970,7 +2009,7 @@ stages('cp-greedy', 'cp-strategy', [
 stages('cp-bitmasks', 'cp-strategy', [
   {
     id: 'cp-bit-position',
-    parents: ['comprehensions', 'parameters', 'ranges'],
+    parents: ['comprehensions', 'parameters', 'ranges', 'bitwise'],
     title: 'Read one membership bit',
     summary: 'Use a power of two to inspect a set position.',
     lesson: [
@@ -2021,7 +2060,7 @@ stages('cp-bitmasks', 'cp-strategy', [
   },
   {
     id: 'cp-bit-set-clear',
-    parents: ['cp-bit-position'],
+    parents: ['cp-bit-position', 'conditional-expressions'],
     title: 'Change one set position',
     summary: 'Set a bit with OR and clear it with AND.',
     lesson: [
@@ -2076,7 +2115,7 @@ stages('cp-bitmasks', 'cp-strategy', [
   },
   {
     id: 'cp-bit-submask-step',
-    parents: ['cp-bit-position', 'while-loops'],
+    parents: ['cp-bit-position', 'break-continue'],
     title: 'Move to the next submask',
     summary: 'Enumerate subsets of a fixed bit set.',
     lesson: [
@@ -2136,7 +2175,7 @@ stages('cp-bitmasks', 'cp-strategy', [
 stages('cp-geometry', 'cp-strategy', [
   {
     id: 'cp-geometry-displacement',
-    parents: ['math-vectors', 'parameters'],
+    parents: ['math-vectors', 'parameters', 'multiple-returns'],
     title: 'Subtract a common origin',
     summary: 'Convert two points into a directed vector.',
     lesson: [
@@ -2189,7 +2228,7 @@ stages('cp-geometry', 'cp-strategy', [
   },
   {
     id: 'cp-geometry-cross-product',
-    parents: ['math-vectors', 'parameters'],
+    parents: ['math-vectors', 'parameters', 'tuples'],
     title: 'Compute signed doubled area',
     summary: 'Combine two vectors without slope division.',
     lesson: [
@@ -2307,7 +2346,7 @@ stages('cp-geometry', 'cp-strategy', [
 stages('cp-memoization', 'cp-dynamic', [
   {
     id: 'cp-memo-state-key',
-    parents: ['comprehensions', 'dictionaries', 'return-values'],
+    parents: ['comprehensions', 'dictionaries', 'return-values', 'unpacking'],
     title: 'Identify one subproblem',
     summary: 'Use every answer-changing input in a cache key.',
     lesson: [
@@ -2574,7 +2613,7 @@ stages('cp-knapsack', 'cp-dynamic', [
   },
   {
     id: 'cp-knapsack-take-skip',
-    parents: ['cp-knapsack-capacity-state', 'parameters'],
+    parents: ['cp-knapsack-capacity-state', 'parameters', 'number-builtins'],
     title: 'Compare taking with skipping',
     summary: 'Evaluate one item from the previous item stage.',
     lesson: [
@@ -2703,7 +2742,7 @@ stages('cp-knapsack', 'cp-dynamic', [
 stages('cp-subsequences', 'cp-dynamic', [
   {
     id: 'cp-subsequence-order',
-    parents: ['accumulators', 'parameters', 'boolean-logic'],
+    parents: ['accumulators', 'parameters'],
     title: 'Preserve subsequence order',
     summary: 'Select ordered values while allowing gaps.',
     lesson: [
@@ -2774,7 +2813,7 @@ stages('cp-subsequences', 'cp-dynamic', [
   },
   {
     id: 'cp-lis-tail-position',
-    parents: ['cp-subsequence-order', 'cp-binary-sentinel'],
+    parents: ['cp-subsequence-order', 'cp-binary-sentinel', 'bisect-module'],
     title: 'Find the first non-smaller tail',
     summary: 'Locate a lower bound to preserve strict increase.',
     lesson: [
@@ -2901,7 +2940,7 @@ stages('cp-subsequences', 'cp-dynamic', [
 stages('cp-tabulation', 'cp-dynamic', [
   {
     id: 'cp-dp-table-base',
-    parents: ['list-mutation', 'return-values'],
+    parents: ['return-values', 'list-repetition'],
     title: 'Initialize exact-total costs',
     summary: 'Give reachable and unreachable states different values.',
     lesson: [
@@ -2957,7 +2996,7 @@ stages('cp-tabulation', 'cp-dynamic', [
   },
   {
     id: 'cp-dp-single-relaxation',
-    parents: ['cp-dp-table-base', 'parameters'],
+    parents: ['cp-dp-table-base', 'parameters', 'number-builtins'],
     title: 'Relax one predecessor',
     summary: 'Compare keeping an answer with adding one packet.',
     lesson: [

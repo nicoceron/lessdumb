@@ -1,9 +1,22 @@
 import { expect, test, type Page } from '@playwright/test';
 import { skillById, type CodeQuestion } from '../src/lib/curriculum';
-import { applyAttempt, coursePath } from '../src/lib/learning';
+import { coursePath } from '../src/lib/learning';
 import { createState } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
 import { replaceCode } from './helpers/editor';
+import {
+  answerChoice,
+  answerShown,
+  completeLesson,
+  continueLesson,
+  feedback,
+} from './helpers/lesson';
+import { masterSkill } from './helpers/mastery';
+import {
+  chooseCourse,
+  expectActiveCourse,
+  openFromMenu,
+} from './helpers/navigation';
 const origin = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 async function ready(page: Page) {
   await expect(page.getByText('Preparing your learning space…')).toHaveCount(0);
@@ -21,12 +34,7 @@ async function seedPrerequisites(
     if (done.has(id)) return;
     const skill = skillById[id];
     skill.prerequisites.forEach(master);
-    for (const question of skill.questions)
-      state.progress = applyAttempt(
-        state.progress,
-        { skillId: id, questionId: question.id, correct: true, mode: 'learn' },
-        now,
-      );
+    state.progress = masterSkill(state.progress, id, now);
     done.add(id);
   }
   skillById[skillId].prerequisites.forEach(master);
@@ -59,23 +67,12 @@ test('course goals persist and the graph exposes prerequisites across subjects',
 }) => {
   await page.goto('/courses');
   await ready(page);
-  const course = page.locator('.ma-catalog-card').filter({
-    has: page.getByRole('heading', { name: 'Machine Learning', exact: true }),
-  });
-  await course.getByRole('button', { name: 'Set learning goal' }).click();
-  await expect(course.getByRole('button', { name: 'Selected' })).toBeVisible();
+  await chooseCourse(page, 'Machine Learning');
   await page.goto('/');
-  await expect(page.getByLabel('CURRENT COURSE')).toHaveValue(
-    'machine-learning',
-  );
+  await expectActiveCourse(page, 'Machine Learning');
   await page.reload();
-  await expect(page.getByLabel('CURRENT COURSE')).toHaveValue(
-    'machine-learning',
-  );
-  await page
-    .getByRole('navigation', { name: 'Main navigation' })
-    .getByRole('link', { name: 'Knowledge graph', exact: true })
-    .click();
+  await expectActiveCourse(page, 'Machine Learning');
+  await openFromMenu(page, 'Knowledge graph');
   await expect(page.getByLabel('Graph course')).toHaveValue('machine-learning');
   const target = Object.values(skillById).find(
     (s) =>
@@ -112,41 +109,43 @@ for (const id of ['da-arrays', 'ml-linear-regression']) {
     const skill = skillById[id];
     await seedPrerequisites(page, id);
     await page.goto(`/learn?skill=${id}`);
-    await page.getByRole('button', { name: 'Let’s try it' }).click();
-    for (const question of skill.questions) {
-      if (question.type === 'choice') {
-        await page
-          .getByRole('button', {
-            name: `${String.fromCharCode(65 + question.answer)} ${question.choices[question.answer]}`,
-            exact: true,
-          })
-          .click();
-        await page
-          .getByRole('button', { name: 'Check answer', exact: true })
-          .click();
-      } else {
-        await replaceCode(page, (question as CodeQuestion).solution);
-        await page
-          .getByRole('button', { name: 'Run & check', exact: true })
-          .click();
+    if (skill.knowledgePoints) {
+      // Points pass with two correct answers each; the scientific Python
+      // exercise then completes the lesson.
+      await page
+        .getByRole('button', { name: 'Start lesson', exact: true })
+        .click();
+      for (const point of skill.knowledgePoints)
+        for (let index = 0; index < 2; index++) {
+          await answerShown(page, point.questions);
+          await expect(feedback(page)).toContainText('Correct');
+          await continueLesson(page);
+        }
+      await answerShown(
+        page,
+        skill.questions.filter((question) => question.type === 'code'),
+      );
+      await expect(feedback(page)).toContainText('Lesson complete', {
+        timeout: 60000,
+      });
+    } else {
+      await page.getByRole('button', { name: 'Let’s try it' }).click();
+      for (const question of skill.questions) {
+        if (question.type === 'choice') await answerChoice(page, question);
+        else {
+          await replaceCode(page, (question as CodeQuestion).solution);
+          await page
+            .getByRole('button', { name: 'Run & check', exact: true })
+            .click();
+        }
+        await expect(feedback(page)).toContainText(
+          question === skill.questions.at(-1) ? 'Lesson complete' : 'Correct',
+          { timeout: 60000 },
+        );
+        if (question !== skill.questions.at(-1)) await continueLesson(page);
       }
-      await expect(
-        page.getByText(
-          question === skill.questions.at(-1)
-            ? 'Skill mastered. A new connection made.'
-            : 'That’s a small win.',
-          { exact: true },
-        ),
-      ).toBeVisible({ timeout: 60000 });
-      if (question !== skill.questions.at(-1))
-        await page
-          .getByRole('button', { name: 'Continue', exact: true })
-          .click();
     }
-    await page
-      .getByRole('navigation', { name: 'Main navigation' })
-      .getByRole('link', { name: /Flashcards/ })
-      .click();
+    await openFromMenu(page, /Flashcards/);
     await expect(
       page
         .getByRole('button', { name: /BREAKTHROUGH/ })
@@ -166,48 +165,37 @@ test('data-systems scenarios teach and earn cards without a code exercise', asyn
 }) => {
   const skill = skillById['ds-workloads'];
   await page.goto(`/learn?skill=${skill.id}`);
-  await page
-    .getByRole('navigation', { name: 'Lesson outline', exact: true })
-    .getByRole('button', { name: 'Worked scenario', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
+  // Each point's worked example is a design scenario with a decision, shown
+  // as text rather than as a program.
+  const point = skill.knowledgePoints![0];
+  expect(point.example.kind).toBe('text');
+  const teaching = page.locator('.lesson-point');
   await expect(
-    page.getByText('Design scenario', { exact: true }),
+    teaching.getByText(point.example.label ?? 'SCENARIO', { exact: true }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Next slide', exact: true }).click();
-  await page.getByRole('button', { name: 'Next slide', exact: true }).click();
-  await expect(page.getByText('Decision', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Let’s try it' }).click();
-  for (const question of skill.questions) {
-    if (question.type !== 'choice')
-      throw new Error('Scenario course unexpectedly requires Python');
-    await page
-      .getByRole('button', {
-        name: `${String.fromCharCode(65 + question.answer)} ${question.choices[question.answer]}`,
-        exact: true,
-      })
-      .click();
-    await page
-      .getByRole('button', { name: 'Check answer', exact: true })
-      .click();
-    if (question !== skill.questions.at(-1))
-      await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  }
+  await expect(teaching.getByText('Decision', { exact: true })).toBeVisible();
   await expect(
-    page.getByText('Skill mastered. A new connection made.', { exact: true }),
+    teaching.getByText(point.example.output, { exact: true }),
   ).toBeVisible();
+  expect(
+    skill.knowledgePoints!.every((item) =>
+      item.questions.every((question) => question.type === 'choice'),
+    ),
+  ).toBe(true);
+  await completeLesson(page, skill, { started: true });
+  await expect(feedback(page)).toContainText('Lesson complete');
+  await expect(page.locator('.cm-content')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Run & check' })).toHaveCount(
     0,
   );
-  await page
-    .getByRole('navigation', { name: 'Main navigation' })
-    .getByRole('link', { name: /Flashcards/ })
-    .click();
+  await openFromMenu(page, /Flashcards/);
   await expect(page.getByRole('button', { name: /BREAKTHROUGH/ })).toHaveCount(
     2,
   );
 });
 
-test('leaving a lesson cancels its real Python worker and locks submitted hints', async ({
+test('leaving a lesson cancels its real Python worker and locks the submitted code', async ({
   page,
 }) => {
   test.setTimeout(60000);
@@ -232,21 +220,13 @@ test('leaving a lesson cancels its real Python worker and locks submitted hints'
     };
   });
   await page.goto('/learn');
-  await page.getByRole('button', { name: 'Let’s try it' }).click();
+  await page.getByRole('button', { name: 'Start lesson' }).click();
   const skill = skillById['print-output'];
-  for (const q of skill.questions.filter((q) => q.type === 'choice')) {
-    if (q.type !== 'choice') continue;
-    await page
-      .getByRole('button', {
-        name: `${String.fromCharCode(65 + q.answer)} ${q.choices[q.answer]}`,
-        exact: true,
-      })
-      .click();
-    await page
-      .getByRole('button', { name: 'Check answer', exact: true })
-      .click();
-    await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  }
+  for (const point of skill.knowledgePoints!)
+    for (let index = 0; index < 2; index++) {
+      await answerShown(page, point.questions);
+      await continueLesson(page);
+    }
   const exercise = skill.questions.find(
     (q): q is CodeQuestion => q.type === 'code',
   )!;
@@ -264,16 +244,13 @@ test('leaving a lesson cancels its real Python worker and locks submitted hints'
   await page.getByRole('button', { name: 'Run & check' }).click();
   await expect.poll(() => held).toBe(true);
   await expect(
-    page.getByRole('button', { name: 'Give me a hint' }),
+    page.getByRole('button', { name: /Running Python/ }),
   ).toBeDisabled();
   await expect(page.locator('.cm-content')).toHaveAttribute(
     'contenteditable',
     'false',
   );
-  await page
-    .getByRole('navigation', { name: 'Main navigation' })
-    .getByRole('link', { name: /Flashcards/ })
-    .click();
+  await openFromMenu(page, /Flashcards/);
   release();
   await expect
     .poll(() => page.evaluate(() => (window as any).__pythonWorkersTerminated))
@@ -284,9 +261,13 @@ test('leaving a lesson cancels its real Python worker and locks submitted hints'
   const saved = await page.evaluate(() =>
     JSON.parse(localStorage.getItem('lessdumb.guest')!),
   );
-  expect(saved.progress.skills[skill.id].questionIds).toHaveLength(3);
+  // Both points passed in this attempt; nothing is evidence until the code runs.
+  expect(
+    Object.keys(saved.progress.skills[skill.id].lessonAttempt.steps),
+  ).toEqual(skill.knowledgePoints!.map((point) => point.id));
+  expect(saved.progress.skills[skill.id].questionIds).toEqual([]);
   expect(saved.progress.skills[skill.id].memory).toBeUndefined();
-  expect(saved.progress.totalXp).toBe(30);
+  expect(saved.progress.totalXp).toBe(0);
   await expect(page.getByRole('button', { name: /BREAKTHROUGH/ })).toHaveCount(
     0,
   );

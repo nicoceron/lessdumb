@@ -23,8 +23,15 @@ import {
   MAX_RECENT_ATTEMPTS,
   nextTask,
   recordLesson,
+  selectQuestion,
 } from '../src/lib/learning';
 import { skills } from '../src/lib/curriculum';
+import { earnedXp, lessonXp, REVIEW_XP } from '../src/lib/xp';
+import {
+  lessonAnswerIds,
+  masterSkill,
+  masterSkillState,
+} from './helpers/mastery';
 
 const baseURL = 'http://localhost:4321';
 const secret = 'test-only-secret-with-more-than-thirty-two-characters';
@@ -218,11 +225,11 @@ describe('documented Better Auth account backend', () => {
   });
 });
 
-function progressFixture() {
+function progressFixture(version = 3) {
   return {
-    version: 1,
+    version,
     progress: {
-      version: 1,
+      version,
       skills: {},
       totalXp: 0,
       dailyXp: {},
@@ -271,18 +278,7 @@ describe('versioned per-account progress', () => {
     first.dailyGoal = 100;
     first.activeCourseId = firstSkill.courseId;
     first.anki.deck = 'First learner';
-    for (const [index, question] of firstSkill.questions.entries()) {
-      first.progress = applyAttempt(
-        first.progress,
-        {
-          skillId: firstSkill.id,
-          questionId: question.id,
-          correct: true,
-          mode: 'learn',
-        },
-        learnedAt + index,
-      );
-    }
+    first.progress = masterSkill(first.progress, firstSkill.id, learnedAt);
     first.cards = firstSkill.flashcards.map((card) => ({
       ...card,
       skillName: firstSkill.title,
@@ -293,17 +289,10 @@ describe('versioned per-account progress', () => {
     second.dailyGoal = 25;
     second.activeCourseId = secondSkill.courseId;
     second.anki.deck = 'Second learner';
-    for (const question of secondSkill.questions) {
-      second = recordLearningAnswer(second, {
-        skillId: secondSkill.id,
-        questionId: question.id,
-        correct: true,
-        mode: 'learn',
-      });
-    }
+    second = masterSkillState(second, secondSkill.id);
     second = recordLearningAnswer(second, {
       skillId: secondSkill.id,
-      questionId: secondSkill.questions[0].id,
+      questionId: lessonAnswerIds(secondSkill.id)[0],
       correct: false,
       mode: 'learn',
     });
@@ -353,11 +342,17 @@ describe('versioned per-account progress', () => {
       storedSecond.state.cards.some((card) => card.kind === 'mistake'),
     ).toBe(true);
 
-    const reviewQuestions = [
-      firstSkill.questions.find((question) => question.type === 'choice')!,
-      firstSkill.questions.find((question) => question.type === 'code')!,
-    ];
-    for (const [index, question] of reviewQuestions.entries()) {
+    for (
+      let index = 0;
+      storedFirst.state.progress.skills[firstSkill.id].reviewCount === 0 &&
+      index < 8;
+      index++
+    ) {
+      const question = selectQuestion(
+        storedFirst.state.progress,
+        firstSkill,
+        'review',
+      );
       storedFirst.state.progress = applyAttempt(
         storedFirst.state.progress,
         {
@@ -379,7 +374,10 @@ describe('versioned per-account progress', () => {
       reviewCount: 1,
       intervalDays: 11,
     });
-    expect(reviewed.state.progress.totalXp).toBe(58);
+    // One lesson and one review cycle, each paid once as a task.
+    expect(reviewed.state.progress.totalXp).toBe(
+      earnedXp(lessonXp(firstSkill), 0, true) + earnedXp(REVIEW_XP, 0, true),
+    );
     expect((await load(secondCookie)).state).toEqual(second);
     expect((await load(secondCookie)).revision).toBe(1);
   });
@@ -479,18 +477,7 @@ describe('versioned per-account progress', () => {
       (candidate) => candidate.prerequisites.length === 0,
     )!;
     state.progress = recordLesson(state.progress, skill.id, 1_790_900_000_000);
-    for (const [index, question] of skill.questions.entries()) {
-      state.progress = applyAttempt(
-        state.progress,
-        {
-          skillId: skill.id,
-          questionId: question.id,
-          correct: true,
-          mode: 'learn',
-        },
-        1_790_900_000_001 + index,
-      );
-    }
+    state.progress = masterSkill(state.progress, skill.id, 1_790_900_000_001);
     const saved = await stateRequest(backend, cookie, { state, revision: 0 });
     expect(saved.status).toBe(200);
     expect(await (await stateRequest(backend, cookie)).json()).toEqual({
@@ -583,12 +570,28 @@ describe('versioned per-account progress', () => {
     });
   });
 
+  it('migrates accounts saved before knowledge-point lessons and before quizzes', async () => {
+    for (const version of [1, 2]) {
+      const { backend } = await freshBackend();
+      const cookie = await register(backend);
+      const legacy = progressFixture(version);
+      expect(
+        (await stateRequest(backend, cookie, { state: legacy, revision: 0 }))
+          .status,
+      ).toBe(200);
+      expect(await (await stateRequest(backend, cookie)).json()).toEqual({
+        state: progressFixture(3),
+        revision: 1,
+      });
+    }
+  });
+
   it('rejects invalid shapes, extra secrets, and cross-origin state writes', async () => {
     const { backend } = await freshBackend();
     const cookie = await register(backend);
     const state = progressFixture();
     const invalid = await stateRequest(backend, cookie, {
-      state: { ...state, version: 2 },
+      state: { ...state, version: 4 },
       revision: 0,
     });
     expect(invalid.status).toBe(400);
@@ -624,13 +627,21 @@ describe('versioned per-account progress', () => {
     const cookie = await register(backend, 'complete-catalog@example.test');
     let state = createState();
     const remaining = new Map(skills.map((skill) => [skill.id, skill]));
+    // Every question the lesson serves is missed once, then answered.
+    const missed = new Set<string>();
     while (remaining.size) {
       const skill = [...remaining.values()].find((candidate) =>
         isUnlocked(state.progress, candidate.id),
       );
       if (!skill)
         throw new Error('The current catalog has unreachable prerequisites.');
-      for (const question of skill.questions) {
+      for (
+        let index = 0;
+        !isMastered(state.progress, skill.id) && index < 64;
+        index++
+      ) {
+        const question = selectQuestion(state.progress, skill, 'learn');
+        missed.add(question.id);
         for (const correct of [false, true]) {
           state = recordLearningAnswer(state, {
             skillId: skill.id,
@@ -645,22 +656,18 @@ describe('versioned per-account progress', () => {
       expect(isMastered(state.progress, skill.id)).toBe(true);
       remaining.delete(skill.id);
     }
-    const questionCount = skills.reduce(
-      (sum, skill) => sum + skill.questions.length,
-      0,
-    );
     const masteryCards = skills.reduce(
       (sum, skill) => sum + skill.flashcards.length,
       0,
     );
-    expect(state.cards).toHaveLength(questionCount + masteryCards);
+    expect(state.cards).toHaveLength(missed.size + masteryCards);
     expect(state.progress.attempts).toHaveLength(MAX_RECENT_ATTEMPTS);
     expect(
       Object.values(state.progress.skills).reduce(
         (sum, skill) => sum + skill.attempts,
         0,
       ),
-    ).toBe(questionCount * 2);
+    ).toBe(missed.size * 2);
     const body = { state, revision: 0 };
     const bytes = Buffer.byteLength(JSON.stringify(body));
     // The old 2 MiB bound rejected this valid, finite learning history.

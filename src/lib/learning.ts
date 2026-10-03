@@ -1,10 +1,25 @@
 import {
-  assessmentPolicy,
   defaultCatalog,
   type CurriculumCatalog,
   type Question,
   type Skill,
 } from './curriculum';
+import {
+  evidenceIdFor,
+  findQuestion,
+  hasKnowledgePoints,
+  hasLessonEvidence,
+  lessonSteps,
+  masteryFraction,
+  POINT_FAIL_INCORRECT,
+  POINT_PASS_CORRECT,
+  reviewCycleComplete,
+  reviewPointOrder,
+  reviewRequirement,
+  type LessonStep,
+} from './lesson-plan';
+import { earnedXp, lessonXp, REVIEW_XP } from './xp';
+import type { Quiz } from './quiz';
 import {
   acquisitionMemory,
   legacyMemory,
@@ -15,6 +30,18 @@ import {
 import { createActivity, recordActivity, type ActivityState } from './activity';
 
 export const DAY_MS = 86_400_000;
+/**
+ * After a failed knowledge-point lesson attempt the scheduler offers other work
+ * first. The lesson returns once the learner completes another task, or after
+ * this delay, whichever comes first.
+ */
+export const LESSON_RETRY_DELAY_MS = 4 * 3_600_000;
+/**
+ * Due reviews come first, but never more than this many in a row while a
+ * lesson is ready: then a lesson goes next, so reviews interleave with new
+ * learning instead of blocking it.
+ */
+export const MAX_CONSECUTIVE_REVIEWS = 2;
 /** Keep recent diagnostics bounded; durable evidence and counters live on skills. */
 export const MAX_RECENT_ATTEMPTS = 2000;
 export interface EvidenceUpdate {
@@ -23,13 +50,30 @@ export interface EvidenceUpdate {
   correct: boolean;
 }
 
+/** Answers on one lesson step within the current lesson attempt. */
+export interface LessonStepProgress {
+  /** Distinct questions answered correctly, without help. */
+  correct: string[];
+  incorrect: number;
+}
+
+/** A knowledge-point lesson in progress. Nothing here is mastery evidence until it completes. */
+export interface LessonAttempt {
+  startedAt: number;
+  steps: Record<string, LessonStepProgress>;
+}
+
 export interface SkillProgress {
   lessonSeen: boolean;
   attempts: number;
   correct: number;
-  /** Distinct unassisted correct answers; required evidence for mastery. */
+  /**
+   * Mastery evidence: passed knowledge points and question IDs. Legacy skills
+   * use distinct unassisted correct answers; knowledge-point skills commit
+   * their points and code exercise when a lesson attempt completes.
+   */
   questionIds: string[];
-  /** Permanent ledger: relearning an already rewarded question earns no XP. */
+  /** Legacy per-question XP ledger; kept so relearning earns no new XP. */
   rewardedQuestionIds: string[];
   consecutiveCorrect: number;
   mastery: number;
@@ -47,23 +91,37 @@ export interface SkillProgress {
   totalXp?: number;
   dailyXp?: Record<string, number>;
   activity?: ActivityState;
+  /** Point progress of the lesson attempt in progress, if any. */
+  lessonAttempt?: LessonAttempt;
+  /** When the latest lesson attempt failed; see LESSON_RETRY_DELAY_MS. */
+  lessonFailedAt?: number;
+  /** The skill's one-time lesson XP has been awarded. */
+  lessonRewarded?: boolean;
 }
+
+export type AttemptOutcome =
+  'lesson-passed' | 'lesson-failed' | 'review-passed';
 
 export interface Attempt {
   id: string;
   skillId: string;
   questionId: string;
   correct: boolean;
-  mode: 'learn' | 'review';
+  /** Quiz answers are retrieval checks; they never add or remove lesson evidence. */
+  mode: 'learn' | 'review' | 'quiz';
   usedHint: boolean;
   at: string;
   xp: number;
   /** Identifies a due cycle across devices, independently of event UUIDs. */
   reviewDueAt?: number;
+  /** Set on the answer that completed or failed a task; task XP rides on it. */
+  outcome?: AttemptOutcome;
+  /** The quiz a quiz answer belongs to. */
+  quizId?: string;
 }
 
 export interface Progress {
-  version: 1;
+  version: 3;
   skills: Record<string, SkillProgress>;
   totalXp: number;
   dailyXp: Record<string, number>;
@@ -71,6 +129,8 @@ export interface Progress {
   streak: number;
   attempts: Attempt[];
   timeZone: string;
+  /** Recent quizzes, oldest first; quiz XP is recorded on them. */
+  quizzes?: Quiz[];
 }
 
 export interface AttemptInput {
@@ -78,6 +138,7 @@ export interface AttemptInput {
   questionId: string;
   correct: boolean;
   mode: 'learn' | 'review';
+  /** Only older clients sent assisted answers; they never count as evidence. */
   usedHint?: boolean;
   /** Stable event identity, generated before asynchronous grading completes. */
   attemptId?: string;
@@ -130,6 +191,21 @@ function previousDate(key: string): string {
     .slice(0, 10);
 }
 
+/** The learner's calendar day and streak after activity at `time`. */
+export function activityDay(progress: Progress, time: number) {
+  const today = dateKey(time, progress.timeZone || 'UTC');
+  const previous = progress.lastActivityDate;
+  return {
+    today,
+    streak:
+      previous === today
+        ? progress.streak
+        : previous === previousDate(today)
+          ? progress.streak + 1
+          : 1,
+  };
+}
+
 export function emptyProgress(
   _now: Now = new Date(),
   timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
@@ -137,7 +213,7 @@ export function emptyProgress(
   // Validate the zone at creation rather than failing only after the first answer.
   dateKey(_now, timeZone);
   return {
-    version: 1,
+    version: 3,
     skills: {},
     totalXp: 0,
     dailyXp: {},
@@ -179,20 +255,91 @@ export function isMastered(
 ): boolean {
   const item = skillIndex(catalog).get(skillId);
   if (!item) return false;
-  const state = getSkillState(progress, skillId);
   // Recompute from evidence so an inconsistent persisted numeric score cannot unlock a node.
-  const policy = assessmentPolicy(item);
-  return (
-    item.questions.length > 0 &&
-    item.questions.every((question) =>
-      state.questionIds.includes(question.id),
-    ) &&
-    policy.requiredTypes.every((type) =>
-      item.questions.some(
-        (question) =>
-          question.type === type && state.questionIds.includes(question.id),
-      ),
+  return hasLessonEvidence(item, getSkillState(progress, skillId).questionIds);
+}
+
+/** The lesson attempt in progress, unless a later failure discarded it. */
+export function currentLessonAttempt(
+  state: SkillProgress,
+): LessonAttempt | undefined {
+  const attempt = state.lessonAttempt;
+  if (!attempt) return undefined;
+  if (
+    state.lessonFailedAt !== undefined &&
+    attempt.startedAt <= state.lessonFailedAt
+  )
+    return undefined;
+  return attempt;
+}
+
+function stepPassed(step: LessonStep, progress?: LessonStepProgress) {
+  if (!progress) return false;
+  return step.kind === 'point'
+    ? progress.correct.length >= POINT_PASS_CORRECT
+    : progress.correct.length >= 1;
+}
+
+export type LessonStepStatus = 'done' | 'passed' | 'current' | 'todo';
+
+/**
+ * Where a learner is in a skill's lesson: evidence already earned ("done"),
+ * steps passed in this attempt ("passed"), the current step, and what remains.
+ */
+export function lessonState(progress: Progress, item: Skill) {
+  const state = getSkillState(progress, item.id);
+  const attempt = currentLessonAttempt(state);
+  let current: LessonStep | undefined;
+  const steps = lessonSteps(item).map((step) => {
+    const answers = attempt?.steps[step.id];
+    let status: LessonStepStatus;
+    if (state.questionIds.includes(step.id)) status = 'done';
+    else if (hasKnowledgePoints(item) && stepPassed(step, answers))
+      status = 'passed';
+    else if (!current) {
+      current = step;
+      status = 'current';
+    } else status = 'todo';
+    return {
+      step,
+      status,
+      correct: answers?.correct.length ?? 0,
+      incorrect: answers?.incorrect ?? 0,
+    };
+  });
+  return {
+    steps,
+    current,
+    attempt,
+    incorrect: Object.values(attempt?.steps ?? {}).reduce(
+      (sum, step) => sum + step.incorrect,
+      0,
+    ),
+  };
+}
+
+/** Whether a failed lesson is still waiting for other work (see LESSON_RETRY_DELAY_MS). */
+export function lessonCoolingDown(
+  progress: Progress,
+  skillId: string,
+  now: Now = new Date(),
+): boolean {
+  const state = progress.skills[skillId];
+  const failedAt = state?.lessonFailedAt;
+  if (failedAt === undefined || currentLessonAttempt(state)) return false;
+  if (timestamp(now) >= failedAt + LESSON_RETRY_DELAY_MS) return false;
+  if (
+    (progress.quizzes ?? []).some(
+      (quiz) => quiz.completedAt !== undefined && quiz.completedAt > failedAt,
     )
+  )
+    return false;
+  return !progress.attempts.some(
+    (attempt) =>
+      attempt.skillId !== skillId &&
+      (attempt.outcome === 'lesson-passed' ||
+        attempt.outcome === 'review-passed') &&
+      Date.parse(attempt.at) > failedAt,
   );
 }
 
@@ -256,11 +403,78 @@ export function coursePath(
   return catalog.skills.filter((item) => ids.has(item.id));
 }
 
+/** How often each question of a skill has been answered, in any mode. */
+export function seenCounts(progress: Progress, skillId: string) {
+  const counts = new Map<string, number>();
+  for (const attempt of progress.attempts)
+    if (attempt.skillId === skillId)
+      counts.set(attempt.questionId, (counts.get(attempt.questionId) ?? 0) + 1);
+  return counts;
+}
+
+/** Unseen variants first, then the least seen; never the same question twice in a row when avoidable. */
+function freshest(
+  questions: Question[],
+  counts: Map<string, number>,
+  lastQuestionId: string | null,
+  exclude: string[] = [],
+): Question {
+  const candidates = questions.filter((q) => !exclude.includes(q.id));
+  const pool = candidates.length ? candidates : questions;
+  return [...pool].sort(
+    (a, b) =>
+      (counts.get(a.id) ?? 0) - (counts.get(b.id) ?? 0) ||
+      Number(a.id === lastQuestionId) - Number(b.id === lastQuestionId) ||
+      pool.indexOf(a) - pool.indexOf(b),
+  )[0];
+}
+
+function selectKnowledgePointQuestion(
+  progress: Progress,
+  item: Skill,
+  mode: 'learn' | 'review',
+): Question {
+  const state = getSkillState(progress, item.id);
+  const counts = seenCounts(progress, item.id);
+  if (mode === 'learn' && !hasLessonEvidence(item, state.questionIds)) {
+    const { current, attempt } = lessonState(progress, item);
+    if (current)
+      return freshest(
+        current.questions,
+        counts,
+        state.lastQuestionId,
+        attempt?.steps[current.id]?.correct,
+      );
+  }
+  // Reviews (and practice on a mastered skill) take one fresh question from
+  // each of several points, then the code exercise where policy requires it.
+  const requirement = reviewRequirement(item);
+  const answered = mode === 'review' ? state.reviewQuestionIds : [];
+  const covered = new Set(
+    answered.map((id) => evidenceIdFor(item, id)).filter(Boolean),
+  );
+  const points = reviewPointOrder(item, state.reviewCount);
+  const remaining = points.filter((point) => !covered.has(point.id));
+  const pointsCovered = points.length - remaining.length;
+  if (remaining.length && pointsCovered < requirement.points)
+    return freshest(remaining[0].questions, counts, state.lastQuestionId);
+  const code = item.questions.filter((question) => question.type === 'code');
+  if (
+    requirement.code &&
+    code.length &&
+    !answered.some((id) => code.some((q) => q.id === id))
+  )
+    return freshest(code, counts, state.lastQuestionId);
+  return freshest(points[0].questions, counts, state.lastQuestionId);
+}
+
 export function selectQuestion(
   progress: Progress,
   item: Skill,
   mode: 'learn' | 'review',
 ): Question {
+  if (hasKnowledgePoints(item))
+    return selectKnowledgePointQuestion(progress, item, mode);
   const state = getSkillState(progress, item.id);
   const evidence =
     mode === 'learn' ? state.questionIds : state.reviewQuestionIds;
@@ -268,8 +482,7 @@ export function selectQuestion(
     (question) => !evidence.includes(question.id),
   );
   const candidates = available.length ? available : item.questions;
-  const policy = assessmentPolicy(item);
-  const missingTypes = policy.requiredTypes.filter(
+  const missingTypes = reviewRequirement(item).types.filter(
     (type) =>
       !state.reviewQuestionIds.some(
         (id) =>
@@ -311,11 +524,32 @@ export function selectQuestion(
 }
 
 /** Prioritize due retrieval, then remediation, then the prerequisite-ready frontier. */
+/**
+ * Review tasks finished since the learner last worked on a lesson: passed
+ * cycles and missed due-review answers (which end their cycle).
+ */
+export function reviewsSinceLesson(progress: Progress): number {
+  let count = 0;
+  for (let index = progress.attempts.length - 1; index >= 0; index--) {
+    const attempt = progress.attempts[index];
+    if (attempt.mode === 'learn') break;
+    if (
+      attempt.mode === 'review' &&
+      attempt.reviewDueAt !== undefined &&
+      (attempt.outcome === 'review-passed' || !attempt.correct)
+    )
+      count++;
+  }
+  return count;
+}
+
 export function nextTask(
   progress: Progress,
   now: Now = new Date(),
   courseId?: string,
   catalog: CurriculumCatalog = defaultCatalog,
+  /** A review session asks only for reviews, so it never switches to a lesson. */
+  options: { reviewsOnly?: boolean } = {},
 ): NextTask | null {
   const time = timestamp(now);
   const registry = coursePath(courseId, catalog);
@@ -345,7 +579,21 @@ export function nextTask(
       left.dueAt! - right.dueAt!
     );
   });
-  if (due.length) {
+  const available = registry.filter(
+    (item) => !isMastered(progress, item.id, catalog) && unlocked(item.id),
+  );
+  // A lesson failed moments ago waits behind any other available work.
+  const coolingDown = available.filter((item) =>
+    lessonCoolingDown(progress, item.id, time),
+  );
+  const fresh = available.filter((item) => !coolingDown.includes(item));
+  // Reviews come first, up to MAX_CONSECUTIVE_REVIEWS in a row while a
+  // lesson is ready; then a lesson takes its turn.
+  const lessonTurn =
+    !options.reviewsOnly &&
+    fresh.length > 0 &&
+    reviewsSinceLesson(progress) >= MAX_CONSECUTIVE_REVIEWS;
+  if (due.length && !lessonTurn) {
     const item = due[0];
     return {
       skillId: item.id,
@@ -355,9 +603,7 @@ export function nextTask(
         'This skill is due for spaced retrieval. Recall it before looking back at the lesson.',
     };
   }
-  const ready = registry.filter(
-    (item) => !isMastered(progress, item.id, catalog) && unlocked(item.id),
-  );
+  const ready = fresh.length ? fresh : coolingDown;
   const remediation = ready
     .filter((item) => getSkillState(progress, item.id).learnedAt !== null)
     .sort(
@@ -391,13 +637,17 @@ export function nextTask(
     skillId: item.id,
     mode: 'learn',
     questionId: selectQuestion(progress, item, 'learn').id,
-    reason: remediation.length
-      ? 'Restore the missing evidence for this skill before building on it.'
-      : active.length
-        ? 'Finish this skill with distinct, independent answers.'
-        : courseId && item.courseId !== courseId
-          ? 'Build this prerequisite from another course to advance your selected learning goal.'
-          : 'You have the prerequisite evidence to learn this skill.',
+    reason: !fresh.length
+      ? 'Try this lesson again from its first point.'
+      : due.length
+        ? 'You have done a few reviews in a row; learn something new before the next one.'
+        : remediation.length
+          ? 'Restore the missing evidence for this skill before building on it.'
+          : active.length
+            ? 'Finish this skill with distinct, independent answers.'
+            : courseId && item.courseId !== courseId
+              ? 'Build this prerequisite from another course to advance your selected learning goal.'
+              : 'You have the prerequisite evidence to learn this skill.',
   };
 }
 
@@ -421,6 +671,23 @@ export function recordLesson(
   };
 }
 
+/** XP from per-question rewards earned before lessons awarded XP per task. */
+function legacyLessonCredit(item: Skill, rewarded: string[]): number {
+  return item.questions
+    .filter((question) => rewarded.includes(question.id))
+    .reduce((sum, question) => sum + (question.type === 'code' ? 15 : 10), 0);
+}
+
+/** Base XP a lesson can still pay; zero once its reward has been earned. */
+export function lessonXpAvailable(progress: Progress, item: Skill): number {
+  const state = getSkillState(progress, item.id);
+  if (state.lessonRewarded) return 0;
+  return Math.max(
+    0,
+    lessonXp(item) - legacyLessonCredit(item, state.rewardedQuestionIds),
+  );
+}
+
 export function applyAttempt(
   progress: Progress,
   input: AttemptInput,
@@ -434,9 +701,7 @@ export function applyAttempt(
     return progress;
   const item = catalog.skills.find((skill) => skill.id === input.skillId);
   if (!item) throw new Error(`Unknown skill: ${input.skillId}`);
-  const question = item.questions.find(
-    (candidate) => candidate.id === input.questionId,
-  );
+  const question = findQuestion(item, input.questionId);
   if (!question) throw new Error('This question does not belong to the skill.');
   if (!isUnlocked(progress, item.id, catalog))
     throw new Error('Master the prerequisites before attempting this skill.');
@@ -474,10 +739,12 @@ export function applyAttempt(
       correct: true,
     };
   const wasMastered = isMastered(progress, item.id, catalog);
-  const policy = assessmentPolicy(item);
+  const knowledgePoints = hasKnowledgePoints(item);
+  const evidenceId = evidenceIdFor(item, question.id)!;
   const unassisted = input.correct && !input.usedHint;
   const reviewDue = wasMastered && old.dueAt !== null && old.dueAt <= time;
   let xp = 0;
+  let outcome: AttemptOutcome | undefined;
   state.lessonSeen = true;
   state.attempts += 1;
   state.correct += input.correct ? 1 : 0;
@@ -490,30 +757,82 @@ export function applyAttempt(
   state.lastPracticedAt = time;
   state.lastQuestionId = question.id;
 
+  // Learning a skill is one task: its attempt tracks answers per lesson step.
+  // Only the current step counts, so a stale screen cannot skip ahead.
+  let step: LessonStepProgress | undefined;
+  let stepKind: LessonStep['kind'] | undefined;
+  if (input.mode === 'learn' && !wasMastered) {
+    const lesson = lessonState(progress, item);
+    if (lesson.current?.id === evidenceId) {
+      const attempt = currentLessonAttempt(old);
+      const startedAt = Math.max(time, (old.lessonFailedAt ?? -1) + 1);
+      state.lessonAttempt = attempt
+        ? { ...attempt, steps: { ...attempt.steps } }
+        : { startedAt, steps: {} };
+      const previous = state.lessonAttempt.steps[evidenceId];
+      step = {
+        correct: [...(previous?.correct ?? [])],
+        incorrect: previous?.incorrect ?? 0,
+      };
+      state.lessonAttempt.steps[evidenceId] = step;
+      stepKind = lesson.current.kind;
+    }
+  }
+
   if (!input.correct) {
-    state.evidenceUpdates![question.id] = {
+    state.evidenceUpdates![evidenceId] = {
       at: time,
       sequence: state.attempts,
       correct: false,
     };
     if (wasMastered)
       state.memory = reviewMemory(legacyMemory(old, time), time, 'fail');
-    state.questionIds = state.questionIds.filter((id) => id !== question.id);
+    state.questionIds = state.questionIds.filter((id) => id !== evidenceId);
     state.reviewQuestionIds = [];
     state.reviewHadHint = false;
     state.intervalDays = 0;
     state.dueAt = null;
+    if (step) {
+      step.incorrect += 1;
+      // Three misses on one point fail the attempt: nothing from it is kept.
+      if (
+        knowledgePoints &&
+        stepKind === 'point' &&
+        step.incorrect >= POINT_FAIL_INCORRECT
+      ) {
+        state.lessonAttempt = undefined;
+        state.lessonFailedAt = time;
+        outcome = 'lesson-failed';
+      }
+    }
   } else if (input.mode === 'learn' && unassisted && !wasMastered) {
-    state.evidenceUpdates![question.id] = {
-      at: time,
-      sequence: state.attempts,
-      correct: true,
-    };
-    if (!state.questionIds.includes(question.id))
-      state.questionIds.push(question.id);
-    if (!state.rewardedQuestionIds.includes(question.id)) {
-      xp = question.type === 'code' ? 15 : 10;
-      state.rewardedQuestionIds.push(question.id);
+    if (!knowledgePoints) {
+      state.evidenceUpdates![question.id] = {
+        at: time,
+        sequence: state.attempts,
+        correct: true,
+      };
+      if (!state.questionIds.includes(question.id))
+        state.questionIds.push(question.id);
+    } else if (step) {
+      if (!step.correct.includes(question.id)) step.correct.push(question.id);
+      // Passed points become evidence together, when the whole lesson passes.
+      const steps = lessonSteps(item);
+      const complete = steps.every(
+        (candidate) =>
+          state.questionIds.includes(candidate.id) ||
+          stepPassed(candidate, state.lessonAttempt!.steps[candidate.id]),
+      );
+      if (complete)
+        for (const candidate of steps)
+          if (!state.questionIds.includes(candidate.id)) {
+            state.questionIds.push(candidate.id);
+            state.evidenceUpdates![candidate.id] = {
+              at: time,
+              sequence: state.attempts,
+              correct: true,
+            };
+          }
     }
   } else if (
     input.mode === 'review' &&
@@ -522,18 +841,7 @@ export function applyAttempt(
     !state.reviewQuestionIds.includes(question.id)
   ) {
     state.reviewQuestionIds.push(question.id);
-    xp = question.type === 'code' ? 8 : 5;
-    const includesRequiredTypes = policy.requiredTypes.every((type) =>
-      state.reviewQuestionIds.some(
-        (id) =>
-          item.questions.find((candidate) => candidate.id === id)?.type ===
-          type,
-      ),
-    );
-    if (
-      state.reviewQuestionIds.length >= policy.reviewAnswers &&
-      includesRequiredTypes
-    ) {
+    if (reviewCycleComplete(item, state.reviewQuestionIds)) {
       state.reviewCount += 1;
       state.memory = reviewMemory(
         legacyMemory(old, time),
@@ -544,6 +852,9 @@ export function applyAttempt(
       state.dueAt = state.memory.dueAt;
       state.reviewQuestionIds = [];
       state.reviewHadHint = false;
+      // A wrong answer ends a cycle, so a completed review has no misses.
+      xp = earnedXp(REVIEW_XP, 0, true);
+      outcome = 'review-passed';
     }
   }
   // Assisted answers never postpone retrieval; a later independent completion
@@ -551,18 +862,31 @@ export function applyAttempt(
   if (input.mode === 'review' && reviewDue && input.usedHint && input.correct)
     state.reviewHadHint = true;
 
-  state.mastery =
-    item.questions.filter((candidate) =>
-      state.questionIds.includes(candidate.id),
-    ).length / item.questions.length;
-  if (state.mastery === 1 && !wasMastered) {
+  state.mastery = masteryFraction(item, state.questionIds);
+  if (hasLessonEvidence(item, state.questionIds) && !wasMastered) {
     state.learnedAt ??= new Date(time).toISOString();
     state.memory = acquisitionMemory(time, state.memory);
     state.intervalDays = 1;
     state.dueAt = time + DAY_MS;
     state.reviewQuestionIds = [];
     state.reviewHadHint = false;
+    // Lesson XP is paid once per skill, net of any older per-question XP.
+    const incorrect = Object.values(state.lessonAttempt?.steps ?? {}).reduce(
+      (sum, answers) => sum + answers.incorrect,
+      0,
+    );
+    xp = state.lessonRewarded
+      ? 0
+      : Math.max(
+          0,
+          earnedXp(lessonXp(item), incorrect, true) -
+            legacyLessonCredit(item, state.rewardedQuestionIds),
+        );
+    state.lessonRewarded = true;
+    state.lessonAttempt = undefined;
+    outcome = 'lesson-passed';
   }
+  if (state.lessonAttempt === undefined) delete state.lessonAttempt;
   const today = dateKey(time, progress.timeZone || 'UTC');
   state.totalXp! += xp;
   state.dailyXp![today] = (state.dailyXp![today] ?? 0) + xp;
@@ -585,6 +909,7 @@ export function applyAttempt(
     ...(input.mode === 'review' && reviewDue
       ? { reviewDueAt: old.dueAt! }
       : {}),
+    ...(outcome ? { outcome } : {}),
   };
   return {
     ...progress,

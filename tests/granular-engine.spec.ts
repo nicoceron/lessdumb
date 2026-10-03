@@ -15,6 +15,13 @@ import {
 import { createState, type LearnerState } from '../src/lib/state';
 import { signUp } from './helpers/accounts';
 import { replaceCode } from './helpers/editor';
+import {
+  answerChoice as submitChoice,
+  answerShown,
+  continueLesson,
+} from './helpers/lesson';
+import { lessonSteps } from '../src/lib/lesson-plan';
+import { masterSkill } from './helpers/mastery';
 
 const origin = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 const password = 'granular-engine-browser-123';
@@ -32,13 +39,7 @@ function master(state: LearnerState, id: string, at: number) {
   if (isMastered(state.progress, id)) return;
   const skill = skillById[id];
   skill.prerequisites.forEach((parent) => master(state, parent, at));
-  for (const question of skill.questions) {
-    state.progress = applyAttempt(
-      state.progress,
-      { skillId: id, questionId: question.id, correct: true, mode: 'learn' },
-      at,
-    );
-  }
+  state.progress = masterSkill(state.progress, id, at);
 }
 
 async function save(
@@ -55,14 +56,7 @@ async function save(
 }
 
 async function answerChoice(page: Page, question: ChoiceQuestion) {
-  await expect(page.locator('.question-paper h1')).toHaveText(question.prompt);
-  await page
-    .getByRole('button', {
-      name: `${String.fromCharCode(65 + question.answer)} ${question.choices[question.answer]}`,
-      exact: true,
-    })
-    .click();
-  await page.getByRole('button', { name: 'Check answer', exact: true }).click();
+  await submitChoice(page, question);
 }
 
 async function answerCode(
@@ -126,39 +120,43 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
   ).toHaveAttribute('href', `/learn?skill=${atomic.id}`);
   await detail.getByRole('link', { name: 'Practice this skill' }).click();
   await expect(page.getByText('Step 1 of 4', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Let’s try it' }).click();
+  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
   const feedback = page.locator(
     '.question-paper [data-slot="alert"][role="status"]',
   );
-  for (const question of atomic.questions) {
-    if (question.type === 'choice') {
-      await answerChoice(page, question);
-      await expect(feedback).toContainText('That’s a small win.');
-      await page.getByRole('button', { name: 'Continue', exact: true }).click();
-    } else {
-      await answerCode(page, question, 'pass');
-      await expect(feedback).toContainText(
-        'A useful mistake. Let’s work through it.',
-        { timeout: 60_000 },
-      );
-      await expect
-        .poll(async () => (await cloud(page)).state?.cards.length)
-        .toBe(1);
-      const incomplete = (await cloud(page)).state!;
-      expect(incomplete.progress.skills[atomic.id].questionIds).toHaveLength(3);
-      expect(incomplete.progress.skills[atomic.id].memory).toBeUndefined();
-      expect(incomplete.cards[0]).toMatchObject({
-        skillId: atomic.id,
-        kind: 'mistake',
-      });
-      await page.getByRole('button', { name: 'Continue', exact: true }).click();
-      await answerCode(page, question, question.solution);
-      await expect(feedback).toContainText(
-        'Skill mastered. A new connection made.',
-        { timeout: 60_000 },
-      );
+  const steps = lessonSteps(atomic);
+  for (const point of atomic.knowledgePoints!)
+    for (let index = 0; index < 2; index++) {
+      await answerShown(page, point.questions);
+      await expect(feedback).toContainText('Correct');
+      await continueLesson(page);
     }
-  }
+  const exercise = atomic.questions.find(
+    (question): question is CodeQuestion => question.type === 'code',
+  )!;
+  expect(steps.at(-1)?.id).toBe(exercise.id);
+  await answerCode(page, exercise, 'pass');
+  await expect(feedback).toContainText('Incorrect', { timeout: 60_000 });
+  await expect
+    .poll(async () => (await cloud(page)).state?.cards.length)
+    .toBe(1);
+  const incomplete = (await cloud(page)).state!;
+  // Every point passed in this attempt, but nothing is evidence until the
+  // real Python exercise completes the lesson.
+  expect(incomplete.progress.skills[atomic.id].questionIds).toEqual([]);
+  expect(
+    Object.keys(incomplete.progress.skills[atomic.id].lessonAttempt!.steps),
+  ).toEqual(steps.map((step) => step.id));
+  expect(incomplete.progress.skills[atomic.id].memory).toBeUndefined();
+  expect(incomplete.cards[0]).toMatchObject({
+    skillId: atomic.id,
+    kind: 'mistake',
+  });
+  await continueLesson(page);
+  await answerCode(page, exercise, exercise.solution);
+  await expect(feedback).toContainText('Lesson complete', {
+    timeout: 60_000,
+  });
   await expect
     .poll(
       async () =>
@@ -173,7 +171,9 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
     reps: 1,
     lapses: 0,
   });
-  expect(acquired.progress.skills[atomic.id].questionIds).toHaveLength(4);
+  expect(acquired.progress.skills[atomic.id].questionIds).toEqual(
+    steps.map((step) => step.id),
+  );
   expect(acquired.progress.skills['cp-stacks']).toBeUndefined();
   await page.goto('/cards');
   await page.reload();
@@ -210,7 +210,13 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
     dueSkills.forEach((id) => master(reviewState, id, reviewTime - 3 * DAY_MS));
     // Refresh their shared ancestor so exactly these two systems skills are due.
     const ancestor = skillById['ds-workloads'];
-    for (let index = 0; index < 2; index += 1) {
+    const ancestorCycles = reviewState.progress.skills[ancestor.id].reviewCount;
+    for (
+      let index = 0;
+      reviewState.progress.skills[ancestor.id].reviewCount === ancestorCycles &&
+      index < 8;
+      index += 1
+    ) {
       const question = selectQuestion(reviewState.progress, ancestor, 'review');
       reviewState.progress = applyAttempt(
         reviewState.progress,
@@ -230,15 +236,21 @@ test('atomic graph stages earn real Python evidence and adaptive reviews interle
     await reviewPage.clock.setFixedTime(reviewTime);
     await reviewPage.goto('/learn?mode=review');
     await expect(
-      reviewPage.getByText('Spaced review', { exact: true }),
+      reviewPage
+        .locator('.lesson-session-stats')
+        .getByText('Review', { exact: true }),
     ).toBeVisible();
     let current = (await cloud(reviewPage)).state!;
     const visited: string[] = [];
     for (let index = 0; index < 4; index += 1) {
+      // /learn?mode=review is a review-only session, so lessons never
+      // take a turn here even after two reviews in a row.
       const task = nextTask(
         current.progress,
         reviewTime,
         'data-systems-foundations',
+        undefined,
+        { reviewsOnly: true },
       );
       expect(task?.mode).toBe('review');
       expect(dueSkills).toContain(task?.skillId);

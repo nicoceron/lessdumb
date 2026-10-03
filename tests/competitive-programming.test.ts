@@ -12,11 +12,13 @@ import {
   getSkillState,
   isUnlocked,
   nextTask,
+  selectQuestion,
   type Progress,
 } from '../src/lib/learning';
 import { createState, recordLearningAnswer } from '../src/lib/state';
 import { parseStateUpdate } from '../src/lib/server/state-validation';
 import { competitiveTopicStages } from '../src/lib/courses/competitive-programming';
+import { masterSkill, masterSkillState } from './helpers/mastery';
 
 const courseId = 'competitive-programming';
 const NOW = Date.parse('2026-10-02T15:00:00Z');
@@ -26,13 +28,7 @@ function master(progress: Progress, id: string): Progress {
   for (const prerequisite of skillById[id].prerequisites)
     if (getSkillState(result, prerequisite).mastery < 1)
       result = master(result, prerequisite);
-  for (const question of skillById[id].questions)
-    result = applyAttempt(
-      result,
-      { skillId: id, questionId: question.id, correct: true, mode: 'learn' },
-      NOW,
-    );
-  return result;
+  return masterSkill(result, id, NOW);
 }
 
 afterEach(() => vi.useRealTimers());
@@ -73,6 +69,13 @@ describe('competitive programming in the shared knowledge graph', () => {
         'choice',
         'code',
       ]);
+      // Three options let a learner eliminate two and still guess half the time.
+      for (const question of skill.questions)
+        if (question.type === 'choice')
+          expect(
+            new Set(question.choices.map((choice) => choice.trim())).size,
+            question.id,
+          ).toBeGreaterThanOrEqual(4);
       expect(skill.assessment).toEqual({
         requiredTypes: ['code', 'choice'],
         reviewAnswers: 2,
@@ -90,7 +93,11 @@ describe('competitive programming in the shared knowledge graph', () => {
       master(createState().progress, 'cp-geometry'),
       'cp-greedy',
     );
-    const ancestor = skillById['math-vectors'].questions[0];
+    const ancestor = selectQuestion(
+      progress,
+      skillById['math-vectors'],
+      'review',
+    );
     progress = applyAttempt(
       progress,
       {
@@ -117,16 +124,7 @@ describe('competitive programming in the shared knowledge graph', () => {
         NOW + DAY_MS,
       ),
     ).toThrow('prerequisites');
-    const restored = applyAttempt(
-      progress,
-      {
-        skillId: 'math-vectors',
-        questionId: ancestor.id,
-        correct: true,
-        mode: 'learn',
-      },
-      NOW + DAY_MS,
-    );
+    const restored = masterSkill(progress, 'math-vectors', NOW + DAY_MS);
     expect(isUnlocked(restored, 'cp-geometry')).toBe(true);
     expect(getSkillState(restored, 'cp-greedy')).toEqual(
       getSkillState(progress, 'cp-greedy'),
@@ -139,10 +137,15 @@ describe('competitive programming in the shared knowledge graph', () => {
     let state = createState();
     for (const prerequisite of skillById['cp-prefix-sums'].prerequisites)
       state.progress = master(state.progress, prerequisite);
-    for (const question of skillById['cp-prefix-sums'].questions)
+    const skill = skillById['cp-prefix-sums'];
+    for (
+      let guard = 0;
+      getSkillState(state.progress, skill.id).mastery < 1 && guard < 64;
+      guard++
+    )
       state = recordLearningAnswer(state, {
-        skillId: 'cp-prefix-sums',
-        questionId: question.id,
+        skillId: skill.id,
+        questionId: selectQuestion(state.progress, skill, 'learn').id,
         correct: true,
         mode: 'learn',
       });
@@ -153,19 +156,25 @@ describe('competitive programming in the shared knowledge graph', () => {
     expect(state.cards.every((card) => card.status === 'pending')).toBe(true);
     const due = getSkillState(state.progress, 'cp-prefix-sums').dueAt!;
     vi.setSystemTime(due);
-    state = recordLearningAnswer(state, {
-      skillId: 'cp-prefix-sums',
-      questionId: 'cp-prefix-sums-q1',
-      correct: true,
-      mode: 'review',
-    });
-    expect(getSkillState(state.progress, 'cp-prefix-sums').dueAt).toBe(due);
-    state = recordLearningAnswer(state, {
-      skillId: 'cp-prefix-sums',
-      questionId: 'cp-prefix-sums-q4',
-      correct: true,
-      mode: 'review',
-    });
+    // The review completes only once both choice and code evidence exist.
+    const answered = new Set<string>();
+    for (
+      let guard = 0;
+      getSkillState(state.progress, skill.id).dueAt === due && guard < 8;
+      guard++
+    ) {
+      const question = selectQuestion(state.progress, skill, 'review');
+      answered.add(question.type);
+      state = recordLearningAnswer(state, {
+        skillId: skill.id,
+        questionId: question.id,
+        correct: true,
+        mode: 'review',
+      });
+      if (guard === 0)
+        expect(getSkillState(state.progress, skill.id).dueAt).toBe(due);
+    }
+    expect([...answered].sort()).toEqual(['choice', 'code']);
     expect(getSkillState(state.progress, 'cp-prefix-sums').dueAt).toBe(
       due + 7 * DAY_MS,
     );
@@ -198,12 +207,9 @@ describe('competitive programming in the shared knowledge graph', () => {
         // A concept never depends on the application it prepares.
         expect(ancestors(id).has(topic)).toBe(false);
       });
-      // Two concepts are not used by their application yet; their
-      // applications need rewriting before an edge would be honest.
+      // Every concept is used by its application, so none is a dead end.
       for (const stage of stages)
-        expect(ancestors(topic).has(stage)).toBe(
-          !['cp-grid-component', 'cp-bit-submask-step'].includes(stage),
-        );
+        expect(ancestors(topic).has(stage), stage).toBe(true);
       expect(skillById[topic]).toMatchObject({
         topicId: topic,
         stage: 4,

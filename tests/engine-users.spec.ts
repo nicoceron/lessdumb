@@ -7,7 +7,14 @@ import {
   selectQuestion,
 } from '../src/lib/learning';
 import { createState, type LearnerState } from '../src/lib/state';
+import { earnedXp, lessonXp, REVIEW_XP } from '../src/lib/xp';
 import { signUp } from './helpers/accounts';
+import {
+  answerChoice,
+  completeLesson,
+  feedback,
+  shownQuestion,
+} from './helpers/lesson';
 
 const baseURL = process.env.LESSDUMB_E2E_URL ?? 'http://127.0.0.1:4321';
 const password = 'testing-engine-users-123';
@@ -48,21 +55,12 @@ async function seedPreferences(
 }
 
 async function answer(page: Page, question: ChoiceQuestion, correct = true) {
-  const index = correct
-    ? question.answer
-    : (question.answer + 1) % question.choices.length;
-  await page
-    .getByRole('button', {
-      name: `${String.fromCharCode(65 + index)} ${question.choices[index]}`,
-      exact: true,
-    })
-    .click();
-  await page.getByRole('button', { name: 'Check answer', exact: true }).click();
+  await answerChoice(page, question, correct);
 }
 
 async function signOut(page: Page) {
-  await page.getByRole('button', { name: 'Open account', exact: true }).click();
-  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await page.getByRole('button', { name: 'Account menu', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Sign out', exact: true }).click();
   await expect(page.locator('.account-name')).toHaveText('Your learning space');
 }
 
@@ -82,26 +80,19 @@ test('two authenticated learners keep separate mastery, due reviews, mistakes, c
     const mistakeSkill = skillById['print-output'];
 
     await page.goto(`/learn?skill=${masteredSkill.id}`);
-    await page.getByRole('button', { name: 'Let’s try it' }).click();
-    for (const [index, question] of masteredSkill.questions.entries()) {
-      if (question.type !== 'choice')
-        throw new Error('Expected scenario question.');
-      await answer(page, question);
-      if (index < masteredSkill.questions.length - 1)
-        await page
-          .getByRole('button', { name: 'Continue', exact: true })
-          .click();
-    }
-    await expect(
-      page.getByText('Skill mastered. A new connection made.', { exact: true }),
-    ).toBeVisible();
+    const lessonAnswers = await completeLesson(page, masteredSkill);
+    await expect(feedback(page)).toContainText('Lesson complete');
+    const lessonReward = earnedXp(lessonXp(masteredSkill), 0, true);
     await expect
       .poll(async () => (await cloud(page))?.progress.totalXp)
-      .toBe(40);
+      .toBe(lessonReward);
 
     await otherPage.goto(`/learn?skill=${mistakeSkill.id}`);
-    await otherPage.getByRole('button', { name: 'Let’s try it' }).click();
-    const firstQuestion = mistakeSkill.questions[0];
+    await otherPage.getByRole('button', { name: 'Start lesson' }).click();
+    const firstQuestion = await shownQuestion(
+      otherPage,
+      mistakeSkill.knowledgePoints![0].questions,
+    );
     if (firstQuestion.type !== 'choice')
       throw new Error('Expected choice question.');
     await answer(otherPage, firstQuestion, false);
@@ -162,7 +153,9 @@ test('two authenticated learners keep separate mastery, due reviews, mistakes, c
     await page.clock.setFixedTime(reviewTime);
     await page.goto('/learn?mode=review');
     await expect(
-      page.getByText('Spaced review', { exact: true }),
+      page
+        .locator('.lesson-session-stats')
+        .getByText('Review', { exact: true }),
     ).toBeVisible();
     let current = (await cloud(page))!;
     for (let index = 0; index < 2; index++) {
@@ -176,7 +169,7 @@ test('two authenticated learners keep separate mastery, due reviews, mistakes, c
       await answer(page, question);
       await expect
         .poll(async () => (await cloud(page))?.progress.attempts.length)
-        .toBe(5 + index);
+        .toBe(lessonAnswers + 1 + index);
       current = (await cloud(page))!;
       if (index === 0)
         await page
@@ -184,7 +177,9 @@ test('two authenticated learners keep separate mastery, due reviews, mistakes, c
           .click();
     }
     expect(current.progress.skills[masteredSkill.id].reviewCount).toBe(1);
-    expect(current.progress.totalXp).toBe(50);
+    expect(current.progress.totalXp).toBe(
+      lessonReward + earnedXp(REVIEW_XP, 0, true),
+    );
     expect(await cloud(otherPage)).toEqual(secondStored);
     expect(
       await otherPage.evaluate(
@@ -201,22 +196,34 @@ test('guest learning migrates durably into one account and stays out of the next
   page,
 }) => {
   const skill = skillById['ds-workloads'];
+  const point = skill.knowledgePoints![0];
   await page.goto(`/learn?skill=${skill.id}`);
-  await page.getByRole('button', { name: 'Let’s try it' }).click();
-  const question = skill.questions[0];
+  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
+  const question = await shownQuestion(page, point.questions);
   if (question.type !== 'choice')
     throw new Error('Expected scenario question.');
   await answer(page, question);
+  await expect(feedback(page)).toContainText('Correct');
+  // One answer is not a finished lesson: it is point progress in the
+  // attempt, with no mastery evidence or XP yet.
+  const guestAttempt = { [point.id]: { correct: [question.id], incorrect: 0 } };
   const first = await register(page, 'guest-owner');
   await page.reload();
-  await expect.poll(async () => (await cloud(page))?.progress.totalXp).toBe(10);
+  await expect
+    .poll(async () => (await cloud(page))?.progress.attempts.length)
+    .toBe(1);
+  const migrated = (await cloud(page))!.progress.skills[skill.id];
+  expect(migrated.lessonAttempt?.steps).toEqual(guestAttempt);
+  expect(migrated.questionIds).toEqual([]);
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem('lessdumb.guest')))
     .toBeNull();
   await signOut(page);
   const second = await register(page, 'fresh-owner');
   await page.reload();
-  await expect.poll(async () => (await cloud(page))?.progress.totalXp).toBe(0);
+  await expect
+    .poll(async () => (await cloud(page))?.progress.attempts.length)
+    .toBe(0);
   const secondStored = (await cloud(page))!;
   expect(secondStored.progress.skills).toEqual({});
   expect(secondStored.cards).toEqual([]);
@@ -229,8 +236,12 @@ test('guest learning migrates durably into one account and stays out of the next
   });
   expect(signIn.status()).toBe(200);
   await page.reload();
-  await expect.poll(async () => (await cloud(page))?.progress.totalXp).toBe(10);
-  expect((await cloud(page))?.progress.attempts).toHaveLength(1);
+  await expect
+    .poll(async () => (await cloud(page))?.progress.attempts.length)
+    .toBe(1);
+  expect(
+    (await cloud(page))?.progress.skills[skill.id].lessonAttempt?.steps,
+  ).toEqual(guestAttempt);
   const cachedSecond = await page.evaluate(
     (id) =>
       JSON.parse(localStorage.getItem(`lessdumb.account.${id}`) ?? 'null'),
