@@ -2362,4 +2362,1345 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'ml-decision-trees': [
+    {
+      title: 'Route a row through threshold questions to a leaf',
+      explanation: [
+        'A decision tree asks one question at each node, such as income <= 40, and sends the row left when the answer is true and right when it is false. The row stops at a leaf, which supplies the prediction: the majority class of its training rows for classification, or their mean target for regression.',
+        'DecisionTreeClassifier learns these questions with fit and follows them with predict. A value exactly equal to a threshold satisfies <=, so it goes left.',
+      ],
+      example: {
+        code: 'def predict(row):\n    if row["income"] <= 40:\n        if row["debt"] <= 10:\n            return "approve"\n        return "review"\n    return "approve"\n\nprint(predict({"income": 30, "debt": 15}))\nprint(predict({"income": 55, "debt": 15}))',
+        output: 'review\napprove',
+        explanation:
+          'The first row has income 30, so it goes left, where its debt of 15 fails the second test. The second row goes right at the first question and reaches a leaf immediately.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def predict(row):\n    if row["temp"] <= 20:\n        return "jacket"\n    if row["rain"] <= 0:\n        return "t-shirt"\n    return "umbrella"\n\nprint(predict({"temp": 20, "rain": 3}))\nprint(predict({"temp": 25, "rain": 3}))',
+          [
+            'jacket\numbrella',
+            'umbrella\numbrella',
+            'jacket\nt-shirt',
+            't-shirt\numbrella',
+          ],
+          0,
+          'temp 20 satisfies <= 20, so the first row stops at "jacket". The second row passes on and has rain above 0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.tree import DecisionTreeClassifier\nX = [[1], [3], [4], [8], [9], [10]]\ny = [0, 0, 0, 1, 1, 1]\ntree = DecisionTreeClassifier(max_depth=1, random_state=0).fit(X, y)\nprint(tree.tree_.threshold[0])\nprint(tree.predict([[5], [7]]).tolist())',
+          ['6.0\n[0, 0]', '4.0\n[1, 1]', '6.0\n[0, 1]', '5.5\n[0, 1]'],
+          2,
+          'The learned threshold is the midpoint between 4 and 8. Then 5 goes left to class 0 and 7 goes right to class 1.',
+        ),
+        choose(
+          'A tree’s first question is age <= 30. Where does a row with age 30 go?',
+          [
+            'Right, because 30 is not below 30',
+            'Left, because 30 <= 30 is true',
+            'Down both branches, then the results are averaged',
+            'Nowhere; ties are dropped',
+          ],
+          1,
+          'The test includes equality, so 30 takes the true branch.',
+        ),
+        choose(
+          'What does a leaf of a regression tree predict?',
+          [
+            'The most common class among its training rows',
+            'The threshold of its parent node',
+            'A weighted sum of the row’s features',
+            'The mean target of the training rows that reached it',
+          ],
+          3,
+          'A regression leaf summarizes its training rows numerically, usually with their mean target.',
+        ),
+      ],
+    },
+    {
+      title: 'Measure a node’s mixture with Gini impurity',
+      explanation: [
+        'Gini impurity is 1 minus the sum of squared class proportions. A pure node, with only one class, has impurity 0. A two-class node is most mixed at a 50/50 split, where the impurity is 0.5.',
+        'To compute it, count each class with a dictionary, turn counts into proportions, and subtract the sum of their squares from 1.',
+      ],
+      example: {
+        code: 'def gini(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    total = len(labels)\n    return 1 - sum([(c / total) ** 2 for c in counts.values()])\n\nprint(gini(["a", "a", "a", "a"]))\nprint(gini(["a", "a", "b", "b"]))\nprint(round(gini(["a", "a", "a", "b"]), 3))',
+        output: '0.0\n0.5\n0.375',
+        explanation:
+          'A pure node scores 0. Two equal classes give 1 - (0.25 + 0.25) = 0.5. A 3:1 mix gives 1 - (0.5625 + 0.0625) = 0.375.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def gini(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    total = len(labels)\n    return 1 - sum([(c / total) ** 2 for c in counts.values()])\n\nprint(round(gini(["x", "y", "z"]), 3))',
+          ['0.5', '0.667', '1.0', '0.333'],
+          1,
+          'Each class has proportion 1/3, so the impurity is 1 - 3 * (1/9) ≈ 0.667. With three classes it can exceed 0.5.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def gini(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    total = len(labels)\n    return 1 - sum([(c / total) ** 2 for c in counts.values()])\n\nprint(round(gini([1, 1, 1, 1, 0]), 3))',
+          ['0.2', '0.8', '0.68', '0.32'],
+          3,
+          'The proportions are 0.8 and 0.2, so the impurity is 1 - (0.64 + 0.04) = 0.32.',
+        ),
+        choose(
+          'Which node is the purest?',
+          [
+            '5 spam and 5 ham',
+            '6 spam and 4 ham',
+            '9 spam and 1 ham',
+            '3 spam and 3 ham',
+          ],
+          2,
+          'A 9:1 node is closest to a single class, so its Gini impurity (0.18) is the lowest.',
+        ),
+        choose(
+          'A node holds two classes. At what mix is its Gini impurity highest?',
+          [
+            'An even 50/50 split',
+            'A 90/10 split',
+            'When it holds a single class',
+            'It is the same for every mix',
+          ],
+          0,
+          'Impurity peaks at 0.5 when the two classes are equally common, and falls to 0 as one class takes over.',
+        ),
+      ],
+    },
+    {
+      title: 'Pick the split with the lowest weighted impurity',
+      explanation: [
+        'To score a candidate threshold, split the rows into a left and a right child, compute each child’s impurity, and weight it by the child’s share of the rows. The tree chooses the feature and threshold whose weighted impurity is lowest.',
+        'Candidate thresholds are midpoints between neighbouring sorted values, which is why fitted thresholds often fall halfway between two training values.',
+      ],
+      example: {
+        code: 'def gini(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    return 1 - sum([(c / len(labels)) ** 2 for c in counts.values()])\n\nx = [1, 2, 3, 4, 5, 6]\ny = [0, 0, 1, 0, 1, 1]\nfor t in [2.5, 3.5]:\n    left = [y[i] for i in range(6) if x[i] <= t]\n    right = [y[i] for i in range(6) if x[i] > t]\n    score = len(left) / 6 * gini(left) + len(right) / 6 * gini(right)\n    print(t, round(score, 3))',
+        output: '2.5 0.25\n3.5 0.444',
+        explanation:
+          'At 2.5 the left child [0, 0] is pure and the right child [1, 0, 1, 1] scores 0.375, weighted by 4/6. At 3.5 both children are mixed, so 2.5 is the better split.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def gini(labels):\n    counts = {}\n    for label in labels:\n        counts[label] = counts.get(label, 0) + 1\n    return 1 - sum([(c / len(labels)) ** 2 for c in counts.values()])\n\nx = [1, 2, 3, 4]\ny = [0, 0, 1, 1]\nfor t in [1.5, 2.5]:\n    left = [y[i] for i in range(4) if x[i] <= t]\n    right = [y[i] for i in range(4) if x[i] > t]\n    print(t, round(len(left) / 4 * gini(left) + len(right) / 4 * gini(right), 3))',
+          [
+            '1.5 0.444\n2.5 0.0',
+            '1.5 0.333\n2.5 0.0',
+            '1.5 0.0\n2.5 0.333',
+            '1.5 0.333\n2.5 0.5',
+          ],
+          1,
+          'At 1.5 the right child [0, 1, 1] scores 0.444, weighted by 3/4. At 2.5 both children are pure.',
+        ),
+        choose(
+          'Why is each child’s impurity weighted by its share of the rows?',
+          [
+            'So a tiny pure child cannot outweigh a large mixed one',
+            'Because larger children are always purer',
+            'To make the weights add up to the tree depth',
+            'Because the left child is always more important',
+          ],
+          0,
+          'Splitting off one pure row barely helps; weighting by size reflects how many rows each child actually describes.',
+        ),
+        choose(
+          'A candidate split sends every row to the left child. How much does it reduce impurity?',
+          [
+            'By half',
+            'All the way to zero',
+            'Not at all; the child is the same as the parent',
+            'It depends on the threshold value',
+          ],
+          2,
+          'The left child holds exactly the parent’s rows, so the weighted impurity is unchanged.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.tree import DecisionTreeClassifier\nX = [[1], [2], [3], [7], [8], [9]]\nX_km = [[1000], [2000], [3000], [7000], [8000], [9000]]\ny = [0, 0, 0, 1, 1, 1]\na = DecisionTreeClassifier(random_state=0).fit(X, y)\nb = DecisionTreeClassifier(random_state=0).fit(X_km, y)\nprint(a.tree_.threshold[0], b.tree_.threshold[0])',
+          ['5.0 5.0', '5.0 5000.0', '3.0 3000.0', '5.0 0.005'],
+          1,
+          'Both trees split between the third and fourth rows, at the midpoint of those values in each unit.',
+        ),
+      ],
+    },
+    {
+      title: 'Limit depth to stop memorizing; skip scaling',
+      explanation: [
+        'An unlimited tree keeps splitting until every leaf is pure, so it can fit every training row, noise included. Limits such as max_depth or min_samples_leaf stop it earlier; choose them on validation data. score(X, y) on a classifier returns the fraction of rows predicted correctly.',
+        'A tree only compares one feature with a threshold at a time. Multiplying a feature by a positive constant moves the thresholds but sends every row to the same leaf, so trees do not need standardized features.',
+      ],
+      example: {
+        code: 'from sklearn.tree import DecisionTreeClassifier\nX = [[1], [2], [3], [4], [5], [6], [7], [8]]\ny = [0, 0, 1, 0, 1, 1, 0, 1]\nfor depth in [1, None]:\n    tree = DecisionTreeClassifier(max_depth=depth, random_state=0).fit(X, y)\n    print(depth, tree.get_depth(), tree.score(X, y))',
+        output: '1 1 0.75\nNone 5 1.0',
+        explanation:
+          'With no limit, the tree grows five levels deep to classify every training row correctly, including the isolated labels at 3 and 7 that are likely noise.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.tree import DecisionTreeClassifier\nX = [[1], [2], [3], [4], [5], [6], [7], [8]]\ny = [0, 0, 1, 0, 1, 1, 0, 1]\nfor leaf in [1, 3]:\n    tree = DecisionTreeClassifier(min_samples_leaf=leaf, random_state=0).fit(X, y)\n    print(leaf, tree.get_n_leaves(), tree.score(X, y))',
+          [
+            '1 6 1.0\n3 6 1.0',
+            '1 2 0.75\n3 6 1.0',
+            '1 8 1.0\n3 3 0.75',
+            '1 6 1.0\n3 2 0.75',
+          ],
+          3,
+          'Requiring at least three rows per leaf forbids the tiny leaves that isolate single rows, so the tree stays small and no longer fits every row.',
+        ),
+        choose(
+          'An unlimited-depth tree scores 100% on training rows and 70% on validation rows. What should you try?',
+          [
+            'Remove max_depth entirely',
+            'Standardize the features first',
+            'Limit max_depth or raise min_samples_leaf, choosing the value on validation data',
+            'Score the tree on the training rows only',
+          ],
+          2,
+          'The gap shows overfitting; growth limits stop the tree from memorizing training noise.',
+        ),
+        choose(
+          'Why is standardizing usually unnecessary for a decision tree?',
+          [
+            'Positive rescaling keeps each feature’s order, so the same rows fall on each side of a threshold',
+            'Trees cannot read numeric features',
+            'Scaling would change the labels',
+            'Trees use only one feature',
+          ],
+          0,
+          'A threshold test depends only on order, which multiplying by a positive constant does not change.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.tree import DecisionTreeClassifier\nX = [[1], [2], [3], [7], [8], [9]]\nX_km = [[1000], [2000], [3000], [7000], [8000], [9000]]\ny = [0, 0, 0, 1, 1, 1]\na = DecisionTreeClassifier(random_state=0).fit(X, y)\nb = DecisionTreeClassifier(random_state=0).fit(X_km, y)\nprint(a.predict([[4]]).tolist(), b.predict([[4000]]).tolist())',
+          ['[0] [1]', '[1] [0]', '[0] [0]', '[1] [1]'],
+          2,
+          'The same row in either unit lands on the same side of its tree’s threshold, so both predictions agree.',
+        ),
+      ],
+    },
+  ],
+  'ml-svm': [
+    {
+      title: 'Classify by the sign of a linear decision score',
+      explanation: [
+        'A linear support vector classifier computes a score w·x + b and predicts the positive class when the score is positive. The boundary is where the score is 0. The margin is the band where the score lies between -1 and 1; training seeks the widest margin that keeps the classes apart.',
+        'SVC(kernel="linear") learns w and b. decision_function(X) returns the scores, and predict(X) returns their sign as a class.',
+      ],
+      example: {
+        code: 'from sklearn.svm import SVC\nX = [[0.0], [1.0], [3.0], [4.0]]\ny = [0, 0, 1, 1]\nmodel = SVC(kernel="linear", C=1.0).fit(X, y)\nprint(model.decision_function([[0.0], [2.5], [5.0]]).round(3).tolist())\nprint(model.predict([[1.8], [2.2]]).tolist())',
+        output: '[-2.0, 0.5, 3.0]\n[0, 1]',
+        explanation:
+          'The learned score is x - 2: the boundary sits at 2, midway between the closest points 1 and 3, which lie exactly on the margin at -1 and +1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nw = np.array([1.0, 2.0])\nb = -4.0\npoints = np.array([[1.0, 1.0], [2.0, 2.0], [0.0, 3.0]])\nscores = points @ w + b\nprint(scores.tolist())\nprint([int(s > 0) for s in scores])',
+          [
+            '[-1.0, 2.0, 2.0]\n[0, 1, 1]',
+            '[3.0, 6.0, 6.0]\n[1, 1, 1]',
+            '[-1.0, 2.0, 2.0]\n[1, 0, 0]',
+            '[-1.0, 6.0, 2.0]\n[0, 1, 1]',
+          ],
+          0,
+          'Each score is x1 + 2*x2 - 4, so the first point falls on the negative side and the other two on the positive side.',
+        ),
+        choose(
+          'A correctly classified training point has decision score 2.7. Does it lie inside the margin?',
+          [
+            'Yes; every correct point lies inside the margin',
+            'Yes, because its score is positive',
+            'No; it lies beyond the margin edge at score 1',
+            'It lies exactly on the boundary',
+          ],
+          2,
+          'The margin spans scores from -1 to 1, so 2.7 is comfortably outside it.',
+        ),
+        choose(
+          'What does a linear SVM try to make as wide as possible?',
+          [
+            'The margin between the classes',
+            'The number of features',
+            'The training error',
+            'The decision score of every point',
+          ],
+          0,
+          'Among boundaries that separate the classes, it prefers the one with the widest gap to the nearest points.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.svm import SVC\nX = [[0.0], [1.0], [3.0], [4.0]]\ny = [0, 0, 1, 1]\nmodel = SVC(kernel="linear", C=1.0).fit(X, y)\nprint(model.predict([[1.5], [2.9], [10.0]]).tolist())',
+          ['[0, 0, 1]', '[1, 1, 1]', '[0, 1, 0]', '[0, 1, 1]'],
+          3,
+          'The boundary is at 2, so 1.5 is negative while 2.9 and 10 are positive; distance beyond the margin does not flip the class.',
+        ),
+      ],
+    },
+    {
+      title: 'Find the support vectors that fix the boundary',
+      explanation: [
+        'Support vectors are the training points on the margin edge or inside it. They alone determine the fitted boundary: removing or moving any other point, as long as it stays beyond the margin, leaves the model unchanged.',
+        'A fitted SVC lists their row positions in support_ and counts them per class in n_support_.',
+      ],
+      example: {
+        code: 'from sklearn.svm import SVC\nX = [[0.0], [1.0], [3.0], [4.0], [10.0]]\ny = [0, 0, 1, 1, 1]\nmodel = SVC(kernel="linear", C=10.0).fit(X, y)\nprint(model.support_.tolist())\nprint(model.n_support_.tolist())',
+        output: '[1, 2]\n[1, 1]',
+        explanation:
+          'Only the points at 1 and 3, rows 1 and 2, touch the margin. The far points at 0, 4, and 10 do not constrain the boundary.',
+      },
+      questions: [
+        predictOutput(
+          'The second model is fitted on the two support vectors only. What does this program print?',
+          'from sklearn.svm import SVC\nfull = SVC(kernel="linear", C=10.0).fit([[0.0], [1.0], [3.0], [4.0], [10.0]], [0, 0, 1, 1, 1])\nsmall = SVC(kernel="linear", C=10.0).fit([[1.0], [3.0]], [0, 1])\nprint(full.decision_function([[2.5]]).round(3).tolist(), small.decision_function([[2.5]]).round(3).tolist())',
+          ['[0.5] [0.5]', '[0.5] [1.5]', '[1.5] [0.5]', '[0.25] [0.5]'],
+          0,
+          'The non-support points did not influence the fit, so both models learn the same boundary and score.',
+        ),
+        choose(
+          'Which training points are support vectors?',
+          [
+            'The points farthest from the boundary',
+            'Every point of the minority class',
+            'The points on the margin edge or inside it',
+            'A random sample chosen during fit',
+          ],
+          2,
+          'Points on or inside the margin are the ones that hold the boundary in place.',
+        ),
+        choose(
+          'You delete a correctly classified training point that lies far outside the margin and refit. What happens to the boundary?',
+          [
+            'It moves toward the deleted point',
+            'It stays the same',
+            'It flips orientation',
+            'The model can no longer be fitted',
+          ],
+          1,
+          'Only support vectors determine the solution, and a far point is not one of them.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.svm import SVC\nX = [[0.0], [1.0], [3.0], [4.0]]\ny = [0, 0, 1, 1]\nmodel = SVC(kernel="linear", C=1.0).fit(X, y)\nprint(model.support_.tolist(), model.n_support_.tolist())',
+          [
+            '[0, 3] [1, 1]',
+            '[1, 2] [2, 2]',
+            '[0, 1, 2, 3] [2, 2]',
+            '[1, 2] [1, 1]',
+          ],
+          3,
+          'The points at 1 and 3 sit on the margin edges, one from each class; the outer points do not.',
+        ),
+      ],
+    },
+    {
+      title: 'Trade margin width against violations with C; scale first',
+      explanation: [
+        'Real classes overlap, so a soft margin lets some points fall inside it or on the wrong side, at a cost multiplied by C. A small C tolerates violations and keeps a wide margin with many support vectors, which is stronger regularization. A large C punishes violations and fits the training rows more tightly.',
+        'The margin is measured in feature units, so a feature in large units dominates the geometry. Put StandardScaler before SVC in a pipeline, and choose C on validation data.',
+      ],
+      example: {
+        code: 'from sklearn.svm import SVC\nX = [[0.0], [1.0], [2.0], [2.5], [3.0], [4.0], [5.0]]\ny = [0, 0, 0, 1, 0, 1, 1]\nfor C in [0.1, 100.0]:\n    model = SVC(kernel="linear", C=C).fit(X, y)\n    print(C, int(model.n_support_.sum()), round(model.score(X, y), 3))',
+        output: '0.1 6 0.714\n100.0 4 0.857',
+        explanation:
+          'With C = 0.1, the wide margin holds six support vectors and more training mistakes. With C = 100, the margin narrows and the training fit improves. score returns the fraction of rows classified correctly.',
+      },
+      questions: [
+        choose(
+          'What does increasing C generally do in an SVM?',
+          [
+            'Tolerates more margin violations',
+            'Penalizes violations more, fitting training rows more tightly',
+            'Removes every support vector',
+            'Converts the scores into calibrated probabilities',
+          ],
+          1,
+          'C multiplies the violation cost, so a larger C means weaker regularization.',
+        ),
+        predictOutput(
+          'The class depends only on the first feature. What does this program print?',
+          'from sklearn.svm import SVC\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nX = [[0, 1000], [0, 3000], [0, 5000], [1, 2000], [1, 4000], [1, 6000]]\ny = [0, 0, 0, 1, 1, 1]\ntest = [[0, 5900], [1, 1100]]\nraw = SVC(kernel="rbf").fit(X, y)\nscaled = make_pipeline(StandardScaler(), SVC(kernel="rbf")).fit(X, y)\nprint(raw.predict(test).tolist(), scaled.predict(test).tolist())',
+          ['[0, 1] [0, 1]', '[0, 1] [1, 0]', '[1, 0] [1, 0]', '[1, 0] [0, 1]'],
+          3,
+          'Unscaled, the thousands in the second column dominate every distance, so the model matches on the irrelevant feature. After scaling, the first feature counts again.',
+        ),
+        choose(
+          'Validation accuracy is poor with C = 1000 although training accuracy is perfect. Which change is most sensible to try?',
+          [
+            'A smaller C, chosen on validation data',
+            'An even larger C',
+            'Removing the scaler',
+            'Training on the validation rows',
+          ],
+          0,
+          'A huge C fits the training rows too tightly; a smaller C widens the margin and regularizes more.',
+        ),
+        choose(
+          'Why should features usually be standardized before an SVM?',
+          [
+            'SVMs only accept integers',
+            'Scaling guarantees the classes become separable',
+            'Margins and distances are measured in feature units, so large-unit features would dominate',
+            'Scaling turns the decision score into a probability',
+          ],
+          2,
+          'Without scaling, a feature measured in thousands outweighs one measured in units for no real reason.',
+        ),
+      ],
+    },
+    {
+      title: 'Bend the boundary with an RBF kernel and gamma',
+      explanation: [
+        'Some classes cannot be separated by a straight boundary, such as a class in the middle of a line with the other class on both sides. kernel="rbf" compares points by similarity exp(-gamma * distance**2), which is 1 for identical points and fades with distance, allowing curved boundaries.',
+        'gamma sets how quickly similarity fades. A large gamma makes each training point influence only its immediate neighbourhood, so the boundary can wrap around single points and overfit. Tune gamma together with C on validation data.',
+      ],
+      example: {
+        code: 'from sklearn.svm import SVC\nX = [[-3.0], [-2.0], [-1.0], [0.0], [1.0], [2.0], [3.0]]\ny = [0, 0, 1, 1, 1, 0, 0]\nlinear = SVC(kernel="linear").fit(X, y)\nrbf = SVC(kernel="rbf", gamma=1.0).fit(X, y)\nprint(round(linear.score(X, y), 3), rbf.score(X, y))\nprint(rbf.predict([[-2.5], [0.5], [2.5]]).tolist())',
+        output: '0.571 1.0\n[0, 1, 0]',
+        explanation:
+          'No single threshold puts the middle class on one side, so the linear model fails. The RBF model encloses the middle interval.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import math\ngamma = 0.5\nprint([round(math.exp(-gamma * d ** 2), 3) for d in [0, 1, 2]])',
+          [
+            '[0.0, 0.607, 0.135]',
+            '[1.0, 0.5, 0.25]',
+            '[1.0, 0.607, 0.135]',
+            '[1.0, 0.368, 0.018]',
+          ],
+          2,
+          'At distance 0 the similarity is exp(0) = 1, and it decays as exp(-0.5 * d**2) with distance.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import math\ndistance = 2\nfor gamma in [0.1, 2.0]:\n    print(gamma, round(math.exp(-gamma * distance ** 2), 4))',
+          [
+            '0.1 0.0003\n2.0 0.6703',
+            '0.1 0.6703\n2.0 0.0003',
+            '0.1 0.8187\n2.0 0.0183',
+            '0.1 0.6703\n2.0 0.6703',
+          ],
+          1,
+          'With a small gamma, a point two units away is still fairly similar; with a large gamma, it barely counts.',
+        ),
+        choose(
+          'An RBF SVM with a very large gamma scores 100% on training rows and poorly on validation rows. What is happening?',
+          [
+            'Each point influences only a tiny neighbourhood, so the boundary wraps around individual training rows',
+            'The boundary has become a straight line',
+            'gamma is too small to fit the data',
+            'The kernel ignores the training data',
+          ],
+          0,
+          'Very local influence lets the model memorize single points, which is overfitting.',
+        ),
+        choose(
+          'When is an RBF kernel a better choice than a linear one?',
+          [
+            'When the classes are already separable by a straight boundary',
+            'When the classes need a curved boundary, as validation results confirm',
+            'Whenever there are fewer than ten rows',
+            'When features are measured in different units',
+          ],
+          1,
+          'The RBF kernel adds flexibility for curved boundaries; validation shows whether that flexibility helps.',
+        ),
+      ],
+    },
+  ],
+  'ml-ensembles': [
+    {
+      title: 'Combine predictions by voting or averaging',
+      explanation: [
+        'An ensemble combines several models. For classification, a majority vote takes the class most models predict; for regression, the predictions are averaged.',
+        'Combining helps when the models make different mistakes, so one model’s error is outvoted or averaged away by the others. Models that all fail on the same rows gain nothing from being combined.',
+      ],
+      example: {
+        code: 'predictions = [[1, 0, 1, 0], [1, 1, 0, 0], [0, 1, 1, 0]]\ncombined = []\nfor j in range(4):\n    ones = sum([model[j] for model in predictions])\n    if ones >= 2:\n        combined.append(1)\n    else:\n        combined.append(0)\nprint(combined)',
+        output: '[1, 1, 1, 0]',
+        explanation:
+          'If the true labels are [1, 1, 1, 0], each model makes one mistake, each on a different row, so the majority vote gets every row right.',
+      },
+      questions: [
+        predictOutput(
+          'Each row of the array holds one model’s predictions. What does this program print?',
+          'import numpy as np\npredictions = np.array([[10.0, 20.0, 30.0], [14.0, 18.0, 33.0], [12.0, 22.0, 27.0]])\nprint(predictions.mean(axis=0).tolist())',
+          [
+            '[20.0, 21.67, 24.0]',
+            '[12.0, 20.0, 30.0]',
+            '[60.0, 65.0, 66.0]',
+            '[36.0, 60.0, 90.0]',
+          ],
+          1,
+          'axis=0 averages down each column, giving one combined prediction per observation.',
+        ),
+        predictOutput(
+          'The true labels are [1, 1, 0]. What does this program print?',
+          'predictions = [[0, 1, 0], [0, 1, 0], [1, 1, 0]]\ncombined = []\nfor j in range(3):\n    ones = sum([model[j] for model in predictions])\n    if ones >= 2:\n        combined.append(1)\n    else:\n        combined.append(0)\nprint(combined)',
+          ['[1, 1, 0]', '[0, 1, 1]', '[1, 1, 1]', '[0, 1, 0]'],
+          3,
+          'Two models make the same mistake on the first row, so the vote repeats it.',
+        ),
+        choose(
+          'When does averaging several models help the most?',
+          [
+            'When their errors are weakly correlated',
+            'When they are identical copies',
+            'When they all fail on the same rows',
+            'When each uses the test labels',
+          ],
+          0,
+          'Different mistakes offset each other; identical mistakes survive any average.',
+        ),
+        choose(
+          'Three identical copies of one model are averaged. How do the ensemble’s predictions compare with the single model’s?',
+          [
+            'They are three times larger',
+            'They are more accurate',
+            'They are exactly the same',
+            'They become a majority vote',
+          ],
+          2,
+          'Averaging three equal numbers returns that number, so the ensemble adds nothing.',
+        ),
+      ],
+    },
+    {
+      title: 'Bag models on bootstrap samples',
+      explanation: [
+        'A bootstrap sample draws as many rows as the training set has, at random with replacement, so some rows appear several times and others not at all; on average about a third are left out. Bagging fits one model per bootstrap sample and combines them.',
+        'Deep decision trees change a lot when the training rows change. Averaging many trees fitted on different samples smooths out that variability. Rows left out of a sample, the out-of-bag rows, can act as validation data for that model.',
+      ],
+      example: {
+        code: 'import numpy as np\nrng = np.random.default_rng(1)\nrows = np.arange(8)\nsample = rng.choice(rows, size=8, replace=True)\nprint(np.sort(sample).tolist())\nprint(np.setdiff1d(rows, sample).tolist())',
+        output: '[0, 1, 3, 4, 6, 6, 7, 7]\n[2, 5]',
+        explanation:
+          'rng.choice draws 8 row numbers with replacement from a seeded generator. Rows 6 and 7 were drawn twice, and np.setdiff1d shows that rows 2 and 5 are out of bag.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'rows = [0, 1, 2, 3, 4, 5]\nsample = [2, 0, 2, 5, 3, 0]\nout_of_bag = [r for r in rows if r not in sample]\nprint(len(sample), out_of_bag)',
+          ['6 [1, 4]', '4 [1, 4]', '6 [0, 2]', '6 []'],
+          0,
+          'The sample still has six draws, but rows 0 and 2 repeat, so rows 1 and 4 never appear.',
+        ),
+        choose(
+          'What does sampling "with replacement" mean for a bootstrap sample?',
+          [
+            'Each row appears exactly once',
+            'The sample is the test set',
+            'A row can be drawn more than once, and some rows are not drawn',
+            'Rows are replaced by their averages',
+          ],
+          2,
+          'Each draw picks from all rows again, so repeats and omissions both happen.',
+        ),
+        choose(
+          'Why does bagging especially help deep decision trees?',
+          [
+            'Deep trees vary strongly with their training rows, and averaging reduces that variance',
+            'Deep trees cannot be fitted without resampling',
+            'Bagging makes each tree shallower',
+            'Bagging removes bias from any model',
+          ],
+          0,
+          'Averaging many unstable but different trees cancels much of their sample-to-sample fluctuation.',
+        ),
+        choose(
+          'A bagged model reports an out-of-bag score. What is it based on?',
+          [
+            'The final test set',
+            'Each model’s predictions on the training rows left out of its own sample',
+            'The training rows each model was fitted on',
+            'Predictions on duplicate rows only',
+          ],
+          1,
+          'Out-of-bag rows were unseen by that model, so they can serve as built-in validation data.',
+        ),
+      ],
+    },
+    {
+      title: 'Decorrelate trees with a random forest',
+      explanation: [
+        'A random forest bags decision trees and adds a second source of randomness: at each split, a tree considers only a random subset of features, set by max_features. Trees then differ more, so their errors are less correlated and averaging helps more.',
+        'RandomForestClassifier(n_estimators=..., random_state=0) stores its fitted trees in estimators_. predict_proba averages the trees’ class probabilities, and a fixed random_state makes the forest reproducible.',
+      ],
+      example: {
+        code: 'from sklearn.ensemble import RandomForestClassifier\nX = [[1, 5], [2, 4], [3, 6], [6, 1], [7, 2], [8, 1]]\ny = [0, 0, 0, 1, 1, 1]\nforest = RandomForestClassifier(n_estimators=4, max_features=1, random_state=0).fit(X, y)\nvotes = [int(tree.predict([[4.5, 3.5]])[0]) for tree in forest.estimators_]\nprint(votes)\nprint(forest.predict_proba([[4.5, 3.5]]).round(2).tolist())',
+        output: '[0, 1, 1, 1]\n[[0.25, 0.75]]',
+        explanation:
+          'The point lies between the groups, so the four trees disagree. Three of four lean towards class 1, and the forest’s probability averages them.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.ensemble import RandomForestClassifier\nX = [[1, 5], [2, 4], [3, 6], [6, 1], [7, 2], [8, 1]]\ny = [0, 0, 0, 1, 1, 1]\nforest = RandomForestClassifier(n_estimators=25, random_state=0).fit(X, y)\nprint(len(forest.estimators_))\nprint(forest.predict([[2, 5], [7, 1]]).tolist())',
+          ['1\n[0, 1]', '25\n[1, 0]', '6\n[0, 1]', '25\n[0, 1]'],
+          3,
+          'n_estimators=25 fits 25 trees, and points deep inside each group get that group’s class.',
+        ),
+        choose(
+          'What does max_features control in a random forest?',
+          [
+            'How many features each split may choose from',
+            'How many trees are grown',
+            'How deep each tree may be',
+            'How many rows each bootstrap sample has',
+          ],
+          0,
+          'Limiting the candidate features at each split forces trees to differ, which decorrelates their errors.',
+        ),
+        predictOutput(
+          'Five trees vote on one row. What does this program print?',
+          'tree_probabilities = [1.0, 0.0, 1.0, 1.0, 0.5]\nprint(sum(tree_probabilities) / len(tree_probabilities))',
+          ['0.5', '0.7', '1.0', '3.5'],
+          1,
+          'The forest averages the trees’ class-1 probabilities: 3.5 / 5 = 0.7.',
+        ),
+        choose(
+          'Two runs of the same forest code give slightly different predictions. What fixes this?',
+          [
+            'Adding more features',
+            'Using max_features=1',
+            'Setting random_state to a fixed number',
+            'Fitting on fewer rows',
+          ],
+          2,
+          'The bootstrap samples and feature subsets are random; a fixed seed makes them repeat exactly.',
+        ),
+      ],
+    },
+    {
+      title: 'Boost by fitting each new model to the remaining errors',
+      explanation: [
+        'Boosting builds models one after another. Gradient boosting for regression starts from a constant, fits a small tree to the current residuals, and adds that tree’s predictions scaled by learning_rate. Each round corrects part of what is still wrong.',
+        'Bagging fits independent models in parallel; boosting’s models depend on each other. More boosting rounds keep lowering training error and can overfit, so choose n_estimators and learning_rate on validation data.',
+      ],
+      example: {
+        code: 'y = [10.0, 12.0, 30.0, 34.0]\nstart = sum(y) / len(y)\npred = [start for value in y]\nresiduals = [y[i] - pred[i] for i in range(4)]\nprint(residuals)\nstump = [-10.5, -10.5, 10.5, 10.5]\npred = [pred[i] + 0.5 * stump[i] for i in range(4)]\nprint(pred)',
+        output: '[-11.5, -9.5, 8.5, 12.5]\n[16.25, 16.25, 26.75, 26.75]',
+        explanation:
+          'The constant 21.5 leaves the residuals shown. A one-split tree predicts their group means, ±10.5, and half of that correction moves each prediction toward its target.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.ensemble import GradientBoostingRegressor\nX = [[1], [2], [3], [4]]\ny = [1.0, 1.0, 5.0, 5.0]\nfor n in [1, 2]:\n    model = GradientBoostingRegressor(n_estimators=n, learning_rate=0.5, max_depth=1, random_state=0).fit(X, y)\n    print(model.predict(X).round(3).tolist())',
+          [
+            '[2.0, 2.0, 4.0, 4.0]\n[1.0, 1.0, 5.0, 5.0]',
+            '[3.0, 3.0, 3.0, 3.0]\n[2.0, 2.0, 4.0, 4.0]',
+            '[2.0, 2.0, 4.0, 4.0]\n[1.5, 1.5, 4.5, 4.5]',
+            '[1.0, 1.0, 5.0, 5.0]\n[1.0, 1.0, 5.0, 5.0]',
+          ],
+          2,
+          'Starting from 3, each round fits the residuals and adds half of them: the residuals go from ±2 to ±1 to ±0.5.',
+        ),
+        choose(
+          'How does boosting differ from bagging?',
+          [
+            'Boosting fits models one after another, each correcting the current errors',
+            'Boosting fits independent models on bootstrap samples',
+            'Boosting cannot use decision trees',
+            'Boosting averages identical models',
+          ],
+          0,
+          'Each boosted model depends on the ensemble so far; bagged models are fitted independently.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.ensemble import GradientBoostingRegressor\nimport numpy as np\nX = np.arange(10).reshape(-1, 1)\ny = np.array([3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0, 5.0, 3.0])\nfor n in [1, 10, 200]:\n    m = GradientBoostingRegressor(n_estimators=n, learning_rate=0.3, max_depth=2, random_state=0).fit(X, y)\n    print(n, round(float(((m.predict(X) - y) ** 2).mean()), 3))',
+          [
+            '1 0.0\n10 0.504\n200 3.846',
+            '1 3.846\n10 3.846\n200 3.846',
+            '1 3.846\n10 0.504\n200 0.504',
+            '1 3.846\n10 0.504\n200 0.0',
+          ],
+          3,
+          'Every round removes more of the training residuals; with 200 rounds the model fits these ten noisy targets exactly, a sign of overfitting.',
+        ),
+        choose(
+          'Training error keeps falling as boosting rounds increase, but validation error rises after round 150. What should you do?',
+          [
+            'Keep all rounds, because training error is lower',
+            'Use about 150 rounds, or a smaller learning rate, chosen on validation data',
+            'Switch to more rounds and a larger learning rate',
+            'Evaluate on the training rows instead',
+          ],
+          1,
+          'Validation error marks where further rounds start fitting noise.',
+        ),
+      ],
+    },
+  ],
+  'ml-pca': [
+    {
+      title: 'Project centered data onto a direction of large variance',
+      explanation: [
+        'PCA first centers each feature by subtracting its mean. Projecting a centered row onto a unit-length direction d is the dot product row · d; for a whole matrix, X @ d gives one projected value per row.',
+        'The first principal component is the direction along which those projected values have the largest variance. Each later component has the largest remaining variance while staying orthogonal to the earlier ones, which means its dot product with each of them is 0.',
+      ],
+      example: {
+        code: 'import numpy as np\nX = np.array([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0]])\ncentered = X - X.mean(axis=0)\ndirection = np.array([1.0, 1.0]) / np.sqrt(2)\nprint(centered.tolist())\nprint((centered @ direction).round(3).tolist())',
+        output: '[[-1.0, -1.0], [0.0, 0.0], [1.0, 1.0]]\n[-1.414, 0.0, 1.414]',
+        explanation:
+          'The points lie on the diagonal, so projecting onto the unit diagonal direction keeps all of their spread in a single number per row.',
+      },
+      questions: [
+        predictOutput(
+          'The rows are already centered. What does this program print?',
+          'import numpy as np\nX = np.array([[3.0, 1.0], [-3.0, -1.0], [1.0, -1.0], [-1.0, 1.0]])\nfor d in [np.array([1.0, 0.0]), np.array([0.0, 1.0])]:\n    print(float((X @ d).var()))',
+          ['1.0\n5.0', '5.0\n1.0', '0.0\n0.0', '20.0\n4.0'],
+          1,
+          'Projecting onto [1, 0] keeps the first column, whose variance is (9 + 9 + 1 + 1) / 4 = 5; the second column’s variance is 1.',
+        ),
+        choose(
+          'What does the first principal component maximize?',
+          [
+            'The correlation with the target',
+            'The number of rows kept',
+            'The variance of the data projected onto it',
+            'The distance between class means',
+          ],
+          2,
+          'PCA ignores any target; the first component is the direction of greatest spread in the features.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\na = np.array([3.0, 4.0])\nb = np.array([-4.0, 3.0])\nprint(float(a @ b), float(np.linalg.norm(a)))',
+          ['0.0 5.0', '24.0 5.0', '0.0 7.0', '0.0 25.0'],
+          0,
+          '3*(-4) + 4*3 = 0, so the vectors are orthogonal. np.linalg.norm gives the length, sqrt(9 + 16) = 5; dividing by it would make a unit direction.',
+        ),
+        choose(
+          'Why does PCA center the features before looking for directions?',
+          [
+            'Centering removes the target from the data',
+            'Without centering, the fixed offsets of the data from the origin would distort the directions of spread',
+            'Centering makes every feature an integer',
+            'Centering reduces the number of rows',
+          ],
+          1,
+          'Variance is spread around the mean; centering puts the mean at the origin so directions describe that spread.',
+        ),
+      ],
+    },
+    {
+      title: 'Fit PCA and read its explained variance',
+      explanation: [
+        'PCA(n_components=k).fit(X) learns k orthogonal directions, stored as the rows of components_, with shape (k, n_features). transform(X) projects the rows onto them, giving shape (n_rows, k).',
+        'explained_variance_ratio_ holds each component’s share of the total variance, largest first. PCA never looks at a target, so it is unsupervised.',
+      ],
+      example: {
+        code: 'from sklearn.decomposition import PCA\nX = [[2.0, 0.0], [0.0, 1.0], [-2.0, 0.0], [0.0, -1.0]]\npca = PCA(n_components=2).fit(X)\nprint(pca.explained_variance_ratio_.round(3).tolist())\nprint(pca.transform(X).shape)',
+        output: '[0.8, 0.2]\n(4, 2)',
+        explanation:
+          'The horizontal spread has variance 4 times the vertical spread, so the first component holds 80% of the total and the second 20%.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'from sklearn.decomposition import PCA\nX = [[1.0, 2.0], [2.0, 4.0], [3.0, 6.0], [4.0, 8.0]]\npca = PCA().fit(X)\nprint(pca.explained_variance_ratio_.round(3).tolist())',
+          ['[0.5, 0.5]', '[0.667, 0.333]', '[0.8, 0.2]', '[1.0, 0.0]'],
+          3,
+          'Every point lies on the line y = 2x, so one direction carries all of the variance.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nfrom sklearn.decomposition import PCA\nX = np.array([[1.0, 2.0, 0.0], [2.0, 1.0, 1.0], [3.0, 5.0, 0.0], [4.0, 3.0, 2.0], [5.0, 4.0, 1.0]])\npca = PCA(n_components=2).fit(X)\nprint(pca.transform(X).shape, pca.components_.shape)',
+          ['(5, 3) (2, 3)', '(5, 2) (2, 3)', '(5, 2) (3, 2)', '(2, 5) (2, 3)'],
+          1,
+          'transform keeps one row per example with one column per component; components_ holds one row per component with one entry per feature.',
+        ),
+        choose(
+          'explained_variance_ratio_ is [0.7, 0.2, 0.1]. What does 0.2 mean?',
+          [
+            'The second component holds 20% of the total feature variance',
+            'The second component predicts the target with 20% accuracy',
+            'The second feature is 20% of the data',
+            '20% of the rows belong to the second component',
+          ],
+          0,
+          'Each ratio is a share of the total variance in the inputs, not a prediction score.',
+        ),
+        choose(
+          'Which argument does PCA.fit use from a labelled dataset?',
+          [
+            'Only the target y',
+            'The features and the target together',
+            'Only the features X',
+            'The test rows',
+          ],
+          2,
+          'PCA is unsupervised; it finds directions from the features alone.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose how many components to keep',
+      explanation: [
+        'Add up explained variance ratios from the first component onward; np.cumsum returns the running totals. Keep the smallest number of components whose total reaches your target, such as 90% or 95%.',
+        'PCA(n_components=0.95) does this automatically and stores the chosen count in n_components_. Fewer components mean smaller, faster inputs, but whether enough useful signal survives must be checked on the task itself.',
+      ],
+      example: {
+        code: 'import numpy as np\nratios = np.array([0.55, 0.25, 0.12, 0.05, 0.03])\ncumulative = np.cumsum(ratios)\nprint(cumulative.round(2).tolist())\nprint(int((cumulative < 0.9).sum()) + 1)',
+        output: '[0.55, 0.8, 0.92, 0.97, 1.0]\n3',
+        explanation:
+          'Two running totals fall short of 0.9, so the third component is the first to reach it: keep 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nratios = np.array([0.4, 0.3, 0.2, 0.1])\ncumulative = np.cumsum(ratios)\nprint(cumulative.round(2).tolist())\nprint(int((cumulative < 0.8).sum()) + 1)',
+          [
+            '[0.4, 0.7, 0.9, 1.0]\n2',
+            '[0.4, 0.3, 0.2, 0.1]\n3',
+            '[0.4, 0.7, 0.9, 1.0]\n4',
+            '[0.4, 0.7, 0.9, 1.0]\n3',
+          ],
+          3,
+          'Only 0.4 and 0.7 fall short of 0.8, so three components are needed.',
+        ),
+        predictOutput(
+          'Columns 1 and 2 are near copies, and so are columns 3 and 4. What does this program print?',
+          'import numpy as np\nfrom sklearn.decomposition import PCA\nrng = np.random.default_rng(0)\nbase = rng.normal(size=(40, 1))\nother = rng.normal(size=(40, 1))\nX = np.hstack([base, base + rng.normal(scale=0.1, size=(40, 1)), other, other + rng.normal(scale=0.1, size=(40, 1))])\nprint(PCA(n_components=0.95).fit(X).n_components_)',
+          ['1', '2', '3', '4'],
+          1,
+          'The four columns carry about two independent signals, so two components already hold over 95% of the variance.',
+        ),
+        choose(
+          'What do you give up by keeping fewer components?',
+          [
+            'Some feature variance, which may include useful signal',
+            'The ability to transform new rows',
+            'The training labels',
+            'Nothing; dropped components never matter',
+          ],
+          0,
+          'Dropped components hold the remaining variance, and some of it can matter for prediction.',
+        ),
+        choose(
+          'Two components keep 95% of the feature variance. What can you conclude about a classifier trained on them?',
+          [
+            'It will reach 95% accuracy',
+            'It will match a classifier trained on all features',
+            'It cannot overfit',
+            'Nothing yet; its performance must be measured on validation data',
+          ],
+          3,
+          'Variance retained describes the inputs, not how well the target can be predicted.',
+        ),
+      ],
+    },
+    {
+      title: 'Scale features first and fit PCA on training rows',
+      explanation: [
+        'PCA chases variance, and variance depends on units. A salary in dollars varies by thousands while an age varies by tens, so unscaled PCA puts almost all weight on salary. Standardizing first lets each feature contribute according to its pattern, not its unit.',
+        'PCA learns a mean and directions, so it is fitted on training rows only, usually as a pipeline step after StandardScaler. A direction with little variance can still matter for a target, so keep checking downstream performance.',
+      ],
+      example: {
+        code: 'import numpy as np\nfrom sklearn.decomposition import PCA\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nX = np.array([[25.0, 30000.0], [32.0, 42000.0], [47.0, 35000.0], [51.0, 51000.0], [38.0, 39000.0]])\nraw = PCA(n_components=1).fit(X)\nprint(np.abs(raw.components_).round(3).tolist())\nscaled = make_pipeline(StandardScaler(), PCA(n_components=1)).fit(X)\nprint(np.abs(scaled.named_steps["pca"].components_).round(3).tolist())',
+        output: '[[0.001, 1.0]]\n[[0.707, 0.707]]',
+        explanation:
+          'np.abs drops the arbitrary sign of each component. Unscaled, the first component is essentially "salary"; after scaling, age and salary weigh equally.',
+      },
+      questions: [
+        predictOutput(
+          'The two features are uncorrelated. What does this program print?',
+          'from sklearn.decomposition import PCA\nfrom sklearn.preprocessing import StandardScaler\nX = [[0.0, 0.0], [10.0, 1.0], [0.0, 1.0], [10.0, 0.0]]\nraw = PCA().fit(X).explained_variance_ratio_[0]\nscaled = PCA().fit(StandardScaler().fit_transform(X)).explained_variance_ratio_[0]\nprint(round(float(raw), 2), round(float(scaled), 2))',
+          ['0.5 0.5', '0.5 0.99', '0.99 0.5', '0.99 0.99'],
+          2,
+          'Raw, the first column’s variance (25) dwarfs the second’s (0.25). Scaled, both have variance 1 and share the total equally.',
+        ),
+        choose(
+          'A dataset has age in years and income in dollars. Without scaling, what will the first principal component mostly reflect?',
+          [
+            'Age, because it is listed first',
+            'Income, because its numeric variance is far larger',
+            'Both equally',
+            'Whichever feature predicts the target best',
+          ],
+          1,
+          'PCA follows raw variance, so the large-unit feature dominates.',
+        ),
+        choose(
+          'You fit PCA on all rows, then split into training and test sets. What is wrong?',
+          [
+            'Nothing; PCA ignores the target',
+            'PCA cannot transform test rows',
+            'The test set becomes larger',
+            'The test rows shaped the learned mean and directions, leaking information',
+          ],
+          3,
+          'PCA learns statistics like any preprocessing step, so it must be fitted on training rows only.',
+        ),
+        choose(
+          'The last component holds only 1% of the variance. Can it still matter for prediction?',
+          [
+            'Yes; a low-variance direction can carry the signal that separates the target',
+            'No; low variance always means noise',
+            'No; PCA has removed the target from it',
+            'Only if it is the first feature',
+          ],
+          0,
+          'PCA ranks directions by spread, not usefulness, so a small direction can still be the predictive one.',
+        ),
+      ],
+    },
+  ],
+  'ml-clustering': [
+    {
+      title: 'Assign each point to its nearest centroid',
+      explanation: [
+        'K-means describes each of k clusters by a centroid, a point in feature space. The assignment step gives every observation the label of its nearest centroid by squared Euclidean distance: the sum of squared coordinate differences.',
+        'Squaring keeps the same ranking as the true distance, so the square root can be skipped. With NumPy, ((centers - p) ** 2).sum(axis=1) gives the squared distance from p to every centroid, and argmin() returns the position of the smallest one.',
+      ],
+      example: {
+        code: 'import numpy as np\npoints = np.array([[1.0, 1.0], [5.0, 4.0], [2.0, 0.0]])\ncenters = np.array([[0.0, 0.0], [6.0, 5.0]])\nfor p in points:\n    d = ((centers - p) ** 2).sum(axis=1)\n    print(d.tolist(), int(d.argmin()))',
+        output: '[2.0, 41.0] 0\n[41.0, 2.0] 1\n[4.0, 41.0] 0',
+        explanation:
+          'Each row prints the squared distances to both centroids and the index of the closer one, which becomes that point’s cluster label.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\npoints = np.array([1.0, 4.0, 6.0, 9.0])\ncenters = np.array([2.0, 8.0])\nlabels = [int(np.abs(centers - p).argmin()) for p in points]\nprint(labels)',
+          ['[0, 1, 1, 1]', '[0, 0, 0, 1]', '[0, 0, 1, 1]', '[1, 1, 0, 0]'],
+          2,
+          '4 is 2 from the first centroid and 4 from the second; 6 is closer to 8.',
+        ),
+        choose(
+          'Why may k-means compare squared distances instead of distances?',
+          [
+            'Squaring keeps the same order, so the nearest centroid is unchanged',
+            'Squared distances are always smaller',
+            'Distances cannot be computed in more than one dimension',
+            'Squaring makes the clusters equal in size',
+          ],
+          0,
+          'For non-negative numbers, a smaller distance always has a smaller square.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\npoint = np.array([3.0, 3.0])\ncenters = np.array([[0.0, 0.0], [4.0, 0.0], [3.0, 5.0]])\nd = ((centers - point) ** 2).sum(axis=1)\nprint(d.tolist(), int(d.argmin()))',
+          [
+            '[18.0, 10.0, 4.0] 0',
+            '[18.0, 10.0, 4.0] 2',
+            '[6.0, 4.0, 2.0] 2',
+            '[18.0, 10.0, 4.0] 1',
+          ],
+          1,
+          'The squared distances are 9 + 9, 1 + 9, and 0 + 4; the smallest is at index 2.',
+        ),
+        choose(
+          'What does the assignment step of k-means change?',
+          [
+            'The positions of the centroids',
+            'The number of clusters',
+            'The feature values',
+            'Each point’s cluster label',
+          ],
+          3,
+          'Assignment relabels points; a separate update step moves the centroids.',
+        ),
+      ],
+    },
+    {
+      title: 'Move each centroid to the mean of its points, and repeat',
+      explanation: [
+        'The update step moves each centroid to the mean of the points assigned to it. points[labels == k] selects the rows with label k, and .mean(axis=0) averages them column by column.',
+        'K-means alternates assignment and update until the labels stop changing. Both steps can only lower or keep the inertia, the total squared distance from each point to its own centroid, which is what k-means minimizes.',
+      ],
+      example: {
+        code: 'import numpy as np\npoints = np.array([[1.0, 1.0], [2.0, 0.0], [5.0, 4.0], [7.0, 6.0]])\nlabels = np.array([0, 0, 1, 1])\nfor k in [0, 1]:\n    print(points[labels == k].mean(axis=0).tolist())',
+        output: '[1.5, 0.5]\n[6.0, 5.0]',
+        explanation:
+          'Cluster 0’s centroid moves to the average of its two points; so does cluster 1’s.',
+      },
+      questions: [
+        predictOutput(
+          'This runs one assignment step and one update step. What does it print?',
+          'import numpy as np\npoints = np.array([1.0, 1.5, 3.0, 10.0, 11.0])\ncenters = np.array([1.0, 3.0])\nlabels = np.array([int(np.abs(centers - p).argmin()) for p in points])\ncenters = np.array([points[labels == k].mean() for k in [0, 1]])\nprint(labels.tolist(), centers.tolist())',
+          [
+            '[0, 0, 1, 1, 1] [1.25, 8.0]',
+            '[0, 0, 1, 1, 1] [1.0, 3.0]',
+            '[0, 0, 0, 1, 1] [1.833, 10.5]',
+            '[0, 1, 1, 1, 1] [1.0, 6.375]',
+          ],
+          0,
+          '1 and 1.5 are nearer to 1; the rest are nearer to 3. The new centroids are the means of each group.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\npoints = np.array([1.0, 3.0, 10.0, 12.0])\nlabels = np.array([0, 0, 1, 1])\ncenters = np.array([2.0, 11.0])\nprint(float(((points - centers[labels]) ** 2).sum()))',
+          ['2.0', '0.0', '4.0', '8.0'],
+          2,
+          'centers[labels] gives each point its own centroid; every point is 1 away, so the inertia is 4 * 1 = 4.0.',
+        ),
+        choose(
+          'When does k-means stop iterating?',
+          [
+            'When every cluster has the same size',
+            'When assignments no longer change, or a step limit is reached',
+            'When the inertia reaches zero',
+            'After exactly one update',
+          ],
+          1,
+          'Once labels stop changing, the centroids stop moving, so further steps change nothing.',
+        ),
+        choose(
+          'What happens to the inertia during a k-means update step?',
+          [
+            'It can rise sharply',
+            'It always becomes zero',
+            'It doubles',
+            'It goes down or stays the same',
+          ],
+          3,
+          'The mean is the point with the smallest total squared distance to a group, so moving the centroid there cannot increase inertia.',
+        ),
+      ],
+    },
+    {
+      title: 'Restart from several initial centroids',
+      explanation: [
+        'K-means stops at a local solution that depends on where the centroids start: a poor start can leave two centroids sharing one group while another centroid covers two groups. Running from several starts and keeping the solution with the lowest inertia guards against this.',
+        'scikit-learn’s KMeans(n_clusters=k, n_init=10, random_state=0) does exactly that and stores labels_, cluster_centers_, and inertia_; predict assigns new rows to the nearest learned centroid. Cluster numbers are arbitrary names: two runs can number the same groups differently.',
+      ],
+      example: {
+        code: 'import numpy as np\npoints = np.array([0.0, 1.0, 10.0, 11.0, 20.0, 21.0])\n\ndef kmeans(centers):\n    for step in range(5):\n        labels = np.array([int(np.abs(centers - p).argmin()) for p in points])\n        centers = np.array([points[labels == k].mean() for k in range(3)])\n    print(centers.tolist(), float(((points - centers[labels]) ** 2).sum()))\n\nkmeans(np.array([0.0, 10.0, 20.0]))\nkmeans(np.array([0.0, 1.0, 15.0]))',
+        output: '[0.5, 10.5, 20.5] 1.5\n[0.0, 1.0, 15.5] 101.0',
+        explanation:
+          'The second start splits the first pair between two centroids and never recovers; its much higher inertia shows why restarts keep the best run.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\npoints = np.array([0.0, 2.0, 9.0, 11.0])\ncenters = np.array([0.0, 2.0])\nfor step in range(3):\n    labels = np.array([int(np.abs(centers - p).argmin()) for p in points])\n    centers = np.array([points[labels == k].mean() for k in [0, 1]])\nprint(centers.tolist())',
+          [
+            '[0.0, 2.0]',
+            '[1.0, 10.0]',
+            '[0.0, 7.333]',
+            '[0.0, 7.333333333333333]',
+          ],
+          1,
+          'The first update gives centroids 0 and 22 / 3. Then 2 is nearer to 0, so the groups become {0, 2} and {9, 11}, with means 1 and 10; this start recovers.',
+        ),
+        choose(
+          'Why does KMeans run several initializations (n_init)?',
+          [
+            'Different starts can end in different local solutions, so it keeps the lowest-inertia one',
+            'Each run adds another cluster',
+            'It averages the labels across runs',
+            'It guarantees the true classes are found',
+          ],
+          0,
+          'The objective has several local minima; restarts make a poor one less likely.',
+        ),
+        choose(
+          'Run A labels a group of customers 0; run B labels the same customers 2. What does this mean?',
+          [
+            'The two runs found different customers',
+            'Cluster numbers are arbitrary names, so the grouping can be identical',
+            'Run B ranks the customers higher',
+            'One run must contain an error',
+          ],
+          1,
+          'Renumbering clusters changes nothing about which points are grouped together.',
+        ),
+        choose(
+          'What does a fitted KMeans model’s predict do with a new row?',
+          [
+            'Refits the centroids including the new row',
+            'Returns the nearest training row’s target',
+            'Assigns it to the nearest learned centroid',
+            'Creates a new cluster for it',
+          ],
+          2,
+          'Prediction is just the assignment step against the fitted centroids.',
+        ),
+      ],
+    },
+    {
+      title: 'Choose k and scale the features',
+      explanation: [
+        'Inertia always falls as k grows, reaching 0 when every point is its own cluster, so the lowest inertia cannot choose k. Look for an elbow, where adding a cluster stops helping much, or compare silhouette scores: from -1 to 1, higher when points sit closer to their own cluster than to the next one.',
+        'K-means uses distances, so a feature in large units dominates them; standardize first. Clusters are a description, not truth: judge them by whether they are useful for the decision at hand.',
+      ],
+      example: {
+        code: 'from sklearn.metrics import silhouette_score\nX = [[1, 1], [1.5, 2], [1, 0], [8, 8], [9, 8.5], [8, 9.5]]\nprint(round(float(silhouette_score(X, [0, 0, 0, 1, 1, 1])), 3))\nprint(round(float(silhouette_score(X, [0, 0, 1, 1, 2, 2])), 3))',
+        output: '0.869\n0.237',
+        explanation:
+          'Grouping the two visible clumps gives a high silhouette. A three-way labelling that cuts across them scores far lower.',
+      },
+      questions: [
+        predictOutput(
+          'The list holds inertia for k = 1, 2, 3, 4. What does this program print?',
+          'inertias = [169.21, 4.0, 2.33, 1.12]\ndrops = [round(inertias[i] - inertias[i + 1], 2) for i in range(3)]\nprint(drops)',
+          [
+            '[165.21, 1.67, 1.21]',
+            '[4.0, 2.33, 1.12]',
+            '[165.21, 167.88, 168.09]',
+            '[-165.21, -1.67, -1.21]',
+          ],
+          0,
+          'Going from 1 to 2 clusters removes almost all inertia; later clusters add little, so the elbow is at k = 2.',
+        ),
+        choose(
+          'Why not choose k by picking the lowest inertia?',
+          [
+            'Inertia is undefined for k above 3',
+            'Inertia always decreases as k grows, so the largest k always wins',
+            'Inertia measures label accuracy, not cluster quality',
+            'Inertia increases with k',
+          ],
+          1,
+          'More centroids can only bring points closer to one, so inertia alone favours too many clusters.',
+        ),
+        predictOutput(
+          'Features are age in years and income in dollars. What does this program print?',
+          'import numpy as np\npoint = np.array([30.0, 52000.0])\ncenters = np.array([[31.0, 60000.0], [65.0, 52500.0]])\nd = np.sqrt(((centers - point) ** 2).sum(axis=1))\nprint(d.round(1).tolist())',
+          [
+            '[1.0, 35.0]',
+            '[8000.0, 35.0]',
+            '[501.2, 8000.0]',
+            '[8000.0, 501.2]',
+          ],
+          3,
+          'Income differences in thousands swamp a 35-year age gap, so the 65-year-old centroid is "closer". Standardizing would fix this.',
+        ),
+        choose(
+          'A clustering has a high silhouette score. What does that establish?',
+          [
+            'Points are compact and well separated under this distance, but usefulness still needs judging',
+            'The clusters match the true customer segments',
+            'k is the number of real classes',
+            'The features did not need scaling',
+          ],
+          0,
+          'Silhouette measures geometry only; whether the groups help a decision is a separate question.',
+        ),
+      ],
+    },
+  ],
+  'ml-anomaly-detection': [
+    {
+      title: 'Score unusualness against a reference',
+      explanation: [
+        'An anomaly detector learns what normal looks like from reference data and scores how far a new observation departs from it. The simplest score is the z-score: (x - mean) / std, using the reference mean and standard deviation.',
+        'A large absolute z-score, such as 3 or more, means the value is rare under the reference. Rare is not the same as wrong: it can be a broken sensor, a legitimate but unusual event, or a real problem, and only investigation tells which.',
+      ],
+      example: {
+        code: 'import numpy as np\nreference = np.array([50.0, 52.0, 48.0, 51.0, 49.0])\nmean, std = reference.mean(), reference.std()\nnew = np.array([50.5, 58.0, 41.0])\nz = (new - mean) / std\nprint(np.round(z, 2).tolist())\nprint((np.abs(z) >= 3).tolist())',
+        output: '[0.35, 5.66, -6.36]\n[False, True, True]',
+        explanation:
+          'The reference has mean 50 and standard deviation about 1.41. Both 58 and 41 lie more than three standard deviations away, in opposite directions.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nreference = np.array([10.0, 12.0, 8.0, 10.0])\nmean, std = reference.mean(), reference.std()\nz = (np.array([13.0, 10.5]) - mean) / std\nprint(np.round(z, 2).tolist())\nprint((np.abs(z) >= 2).tolist())',
+          [
+            '[1.5, 0.25]\n[False, False]',
+            '[3.0, 0.5]\n[True, False]',
+            '[2.12, 0.35]\n[True, True]',
+            '[2.12, 0.35]\n[True, False]',
+          ],
+          3,
+          'The reference has mean 10 and standard deviation √2 ≈ 1.41, so 13 is 2.12 standard deviations above the mean.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'z = [0.3, -2.8, 1.1, 3.4, -0.9]\nprint([i for i in range(len(z)) if abs(z[i]) >= 2.5])',
+          ['[3]', '[1, 3]', '[1, 2, 3]', '[0, 2, 4]'],
+          1,
+          'abs() catches unusually low values as well as high ones, so positions 1 and 3 are flagged.',
+        ),
+        choose(
+          'A reading has z = -4 relative to last month’s data. What does that tell you?',
+          [
+            'It is four standard deviations below the reference mean',
+            'It is four units below the mean',
+            'It has a 4% chance of being normal',
+            'It is certainly a sensor failure',
+          ],
+          0,
+          'A z-score counts standard deviations from the mean; it does not by itself explain the cause.',
+        ),
+        choose(
+          'A transaction is flagged as highly unusual. What is the right next step?',
+          [
+            'Block the customer, since unusual means fraudulent',
+            'Delete the row so it does not distort statistics',
+            'Investigate it with context, since rarity alone does not establish a problem',
+            'Ignore it, since detectors are often wrong',
+          ],
+          2,
+          'An alert is evidence to examine; legitimate rare events and data errors also look unusual.',
+        ),
+      ],
+    },
+    {
+      title: 'Check which way a detector’s score points',
+      explanation: [
+        'Score direction differs between tools. A z-score is larger for more unusual values, but scikit-learn’s detectors return scores where larger means more normal: decision_function is negative for outliers, and predict returns -1 for an outlier and 1 for an inlier.',
+        'Read the contract before writing an alert rule. Applying "alert when score >= threshold" to a more-normal-is-higher score flags the most ordinary rows. EllipticEnvelope, a detector that learns the centre and spread of normal data, follows the scikit-learn convention.',
+      ],
+      example: {
+        code: 'import numpy as np\nfrom sklearn.covariance import EllipticEnvelope\nreference = np.array([[50.0], [52.0], [48.0], [51.0], [49.0], [50.5], [49.5], [50.0], [51.5], [48.5]])\ndetector = EllipticEnvelope(contamination=0.1, random_state=0).fit(reference)\nnew = np.array([[50.2], [58.0], [41.0]])\nprint(detector.predict(new).tolist())\nprint(detector.decision_function(new).round(1).tolist())',
+        output: '[1, -1, -1]\n[2.2, -34.0, -43.7]',
+        explanation:
+          'The ordinary reading gets 1 and a positive score; the two extreme readings get -1 and strongly negative scores.',
+      },
+      questions: [
+        predictOutput(
+          'These are scikit-learn detector predictions. What does this program print?',
+          'predictions = [1, -1, 1, 1, -1]\nalerts = [i for i in range(len(predictions)) if predictions[i] == -1]\nprint(alerts)',
+          ['[0, 2, 3]', '[2, 5]', '[1, 4]', '[]'],
+          2,
+          '-1 marks an outlier, which occurs at positions 1 and 4.',
+        ),
+        choose(
+          'A library documents that lower scores are more anomalous, but your rule alerts when score >= 0.9. What happens?',
+          [
+            'You alert on the most normal rows',
+            'You alert on the most anomalous rows',
+            'Nothing changes; direction does not matter',
+            'Every row triggers an alert',
+          ],
+          0,
+          'The rule selects the highest scores, which under this contract are the least unusual rows.',
+        ),
+        predictOutput(
+          'Here a higher score means more normal. What does this program print?',
+          'normality = [0.9, 0.2, 0.7, 0.4]\nanomaly = [-s for s in normality]\nthreshold = -0.5\nprint([i for i in range(4) if anomaly[i] >= threshold])',
+          ['[0, 2]', '[1]', '[0, 1, 2, 3]', '[1, 3]'],
+          3,
+          'Negating turns "higher is more normal" into "higher is more unusual"; rows 1 and 3 have normality below 0.5.',
+        ),
+        choose(
+          'A scikit-learn detector’s decision_function returns -3.2 for a row. What does that mean?',
+          [
+            'The row is 3.2 standard deviations from the mean',
+            'The row falls on the outlier side of the learned boundary',
+            'The row is unusually normal',
+            'The model failed to score the row',
+          ],
+          1,
+          'In scikit-learn’s convention, negative decision values mark outliers.',
+        ),
+      ],
+    },
+    {
+      title: 'Set the threshold by alert volume and check it with labels',
+      explanation: [
+        'The threshold decides how many alerts you get. A capacity-based rule takes a quantile of recent scores: np.quantile(scores, 0.99) is the value 99% of scores fall below, so alerting at or above it flags about the top 1%.',
+        'When some confirmed incidents are known, measure the alerts like a classifier: precision is the share of alerts that were real incidents, and recall is the share of incidents that triggered an alert. Lowering the threshold raises recall and the number of false alarms.',
+      ],
+      example: {
+        code: 'import numpy as np\nscores = np.array([0.1, 0.4, 0.2, 0.9, 0.3, 0.8, 0.05, 0.6, 0.15, 0.7])\ncutoff = np.quantile(scores, 0.8)\nalerts = scores >= cutoff\nprint(round(float(cutoff), 2), int(alerts.sum()))',
+        output: '0.72 2',
+        explanation:
+          'The 80th percentile of these ten scores is 0.72, so the two highest scores, 0.9 and 0.8, become alerts.',
+      },
+      questions: [
+        predictOutput(
+          'Larger scores are more unusual. What does this program print?',
+          'scores = [0.9, 0.2, 0.75, 0.1, 0.6, 0.85]\nincident = [1, 0, 0, 0, 1, 0]\nalerts = [int(s >= 0.7) for s in scores]\ntp = sum([1 for i in range(6) if alerts[i] == 1 and incident[i] == 1])\nprint(round(tp / sum(alerts), 3), round(tp / sum(incident), 3))',
+          ['0.5 0.333', '0.333 0.5', '0.667 0.5', '0.333 1.0'],
+          1,
+          'Three rows are alerted but only one is an incident (precision 1/3); one of the two incidents was caught (recall 1/2).',
+        ),
+        choose(
+          'An investigations team can handle about 20 alerts a day out of 10,000 scored events. How should the threshold be set?',
+          [
+            'At the score that about 20 of 10,000 daily events exceed',
+            'At 0.5, the usual default',
+            'At the score of the most unusual event ever seen',
+            'So that every event with any unusual feature alerts',
+          ],
+          0,
+          'A quantile threshold matches the alert volume to the team’s capacity.',
+        ),
+        choose(
+          'You lower the alert threshold. What usually happens?',
+          [
+            'Fewer alerts, higher precision',
+            'No change in the number of alerts',
+            'Fewer missed incidents, more false alarms',
+            'Higher precision and higher recall',
+          ],
+          2,
+          'More rows pass a lower bar, catching more incidents along with more ordinary rows.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nscores = np.arange(1, 11)\ncutoff = np.quantile(scores, 0.9)\nprint(round(float(cutoff), 2), int((scores >= cutoff).sum()))',
+          ['9.0 2', '10.0 1', '9.1 2', '9.1 1'],
+          3,
+          'The 90th percentile interpolates between 9 and 10, at 9.1, so only the score 10 is flagged.',
+        ),
+      ],
+    },
+    {
+      title: 'Separate novelty from outlier detection; use robust statistics',
+      explanation: [
+        'Novelty detection learns normal behaviour from a reference set known to be clean and then scores new rows. Outlier detection looks for unusual rows inside data that may already contain them.',
+        'Outliers in the reference inflate the mean and standard deviation, which can shrink their own z-scores below the alert level. The median and the median absolute deviation (MAD), the median of |x - median|, barely move when a few extreme values are present.',
+      ],
+      example: {
+        code: 'import numpy as np\ndata = np.array([10.0, 11.0, 9.0, 10.0, 10.0, 11.0, 9.0, 80.0])\nz = (data - data.mean()) / data.std()\nprint(round(float(z[-1]), 2))\nmedian = np.median(data)\nmad = np.median(np.abs(data - median))\nprint(median, mad, round(float((80.0 - median) / mad), 1))',
+        output: '2.64\n10.0 1.0 70.0',
+        explanation:
+          'The value 80 inflates the standard deviation so much that its own z-score is only 2.64. Measured with the median and MAD, it is 70 typical deviations away.',
+      },
+      questions: [
+        choose(
+          'A factory records a month of sensor data verified as normal, then scores each new reading against it. Which setting is this?',
+          [
+            'Outlier detection in contaminated data',
+            'Novelty detection against a clean reference',
+            'Supervised classification',
+            'Clustering',
+          ],
+          1,
+          'The reference is known to be clean, and only new readings are judged against it.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\ndata = np.array([5.0, 6.0, 5.0, 7.0, 6.0, 5.0, 40.0])\nmedian = np.median(data)\nmad = np.median(np.abs(data - median))\nprint(median, mad, (40.0 - median) / mad)',
+          ['6.0 1.0 34.0', '10.57 11.6 2.54', '6.0 0.0 inf', '5.0 1.0 35.0'],
+          0,
+          'The median is 6, and the median absolute deviation is 1; the extreme value does not affect either, so 40 sits 34 deviations away.',
+        ),
+        choose(
+          'Why can an extreme value escape a z-score rule computed on the same data?',
+          [
+            'z-scores ignore large values',
+            'The value raises the standard deviation, shrinking its own z-score',
+            'Extreme values always have z = 0',
+            'The mean is unaffected by extreme values',
+          ],
+          1,
+          'This masking happens because the mean and standard deviation are pulled toward the outlier.',
+        ),
+        choose(
+          'You must find unusual rows in a year of transactions that has never been cleaned. Which summary should define "typical"?',
+          [
+            'The mean and standard deviation, which no outlier can affect',
+            'The single largest transaction',
+            'The median and MAD, which a few extreme rows barely move',
+            'The most recent transaction',
+          ],
+          2,
+          'In possibly contaminated data, robust statistics keep the outliers from redefining what is normal.',
+        ),
+      ],
+    },
+  ],
 };

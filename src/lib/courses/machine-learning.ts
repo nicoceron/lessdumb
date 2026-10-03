@@ -1134,7 +1134,7 @@ const curriculum = [
     'Reduce numeric dimensions while tracking retained variation.',
     ['ml-preprocessing', 'math-vectors'],
     [
-      'Principal component analysis finds orthogonal directions of large variance in centered numeric data. Keeping the first few components projects observations into a smaller feature space. It is unsupervised: the directions are selected without knowing which target you hope to predict.',
+      'Principal component analysis finds orthogonal directions (perpendicular, with a dot product of zero) of large variance in centered numeric data. Keeping the first few components projects observations into a smaller feature space. It is unsupervised: the directions are selected without knowing which target you hope to predict.',
       "High retained variance does not guarantee high predictive usefulness; a low-variance direction can still matter for a target. Scaling changes the variance geometry, so decide whether raw units or standardized features match your task. Fit PCA on training data, often inside a pipeline. The explained_variance_ratio_ values report each component's share of the total fitted variance.",
     ],
     {
@@ -1280,7 +1280,7 @@ const curriculum = [
     'Use scores and thresholds without equating rarity with wrongdoing.',
     ['ml-classification-metrics'],
     [
-      'An anomaly detector scores how unusual an observation is relative to a learned reference. Isolation forests, density models, or distance-based rules can supply such scores. Different libraries use different score directions: in one API larger means more unusual, while another returns larger values for more normal observations. Read the contract before applying a threshold.',
+      'An anomaly detector scores how unusual an observation is relative to a learned reference. Z-scores, density models, or distance-based rules can supply such scores. Different libraries use different score directions: in one API larger means more unusual, while another returns larger values for more normal observations. Read the contract before applying a threshold.',
       'An unusual row can be a measurement error, a rare legitimate event, or a genuine problem. Detection requires investigation and domain context. A threshold determines alert volume and the false-positive/false-negative trade-off. Evaluate with representative labels when available, and distinguish outlier detection in potentially contaminated training data from novelty detection using a mostly clean reference set.',
     ],
     {
