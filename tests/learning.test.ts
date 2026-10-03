@@ -458,10 +458,12 @@ describe('mastery and the prerequisite frontier', () => {
     expect(P1.questions.map((question) => question.id)).toContain(
       repair.questionId,
     );
+    // Both dependents are due; reviewing numbers also credits variables,
+    // so review compression takes numbers first.
     expect(
       nextTask(retained, NOW + DAY_MS, 'python-foundations'),
     ).toMatchObject({
-      skillId: 'variables',
+      skillId: 'numbers',
       mode: 'review',
     });
     expect(() => recordLesson(lapse, 'numbers', NOW + DAY_MS)).toThrow(

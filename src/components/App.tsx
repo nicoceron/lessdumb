@@ -52,6 +52,7 @@ import {
   skillById,
   units,
   type Skill,
+  encompassedBy,
 } from '../lib/curriculum';
 import { getSkillState, isUnlocked, coursePath } from '../lib/learning';
 import { authClient } from '../lib/account';
@@ -771,6 +772,15 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                   <p className="font-medium">
                     Your next review: {new Date(p.dueAt).toLocaleDateString()}
                   </p>
+                  {p.implicitCredit &&
+                    p.implicitCredit.dueAt === p.dueAt &&
+                    skillById[p.implicitCredit.from] && (
+                      <p className="mt-1 text-muted-foreground">
+                        Moved later by practice in{' '}
+                        {skillById[p.implicitCredit.from].title} on{' '}
+                        {new Date(p.implicitCredit.at).toLocaleDateString()}.
+                      </p>
+                    )}
                   <p className="mt-1 text-muted-foreground">
                     Estimated recall:{' '}
                     {Math.round(
@@ -784,6 +794,18 @@ function KnowledgeGraph({ state }: { state: LearnerState }) {
                 </div>
               );
             })()}
+          {encompassedBy(selected.id).length > 0 && (
+            <>
+              <h3>Also reviewed by</h3>
+              <p className="mb-3 text-sm text-muted-foreground">
+                Succeeding at these skills gives this one partial review credit:{' '}
+                {encompassedBy(selected.id)
+                  .map((item) => item.title)
+                  .join(', ')}
+                .
+              </p>
+            </>
+          )}
           <h3>Builds on</h3>
           {selected.prerequisites.length ? (
             selected.prerequisites.map((id) => (

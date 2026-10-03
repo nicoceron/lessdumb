@@ -16,6 +16,7 @@ import {
   lessonXpAvailable,
   MAX_CONSECUTIVE_REVIEWS,
   nextTask,
+  reviewCoverage,
   reviewsSinceLesson,
   type Attempt,
   type Progress,
@@ -117,6 +118,12 @@ export function taskQueue(
       : b.courseId === courseId && a.courseId !== courseId
         ? 1
         : 0;
+  const coverageCache = new Map<string, number>();
+  const coverage = (item: Skill) => {
+    if (!coverageCache.has(item.id))
+      coverageCache.set(item.id, reviewCoverage(progress, item, at, catalog));
+    return coverageCache.get(item.id)!;
+  };
   const recent = (a: Skill, b: Skill) =>
     (state(b.id).lastPracticedAt ?? 0) - (state(a.id).lastPracticedAt ?? 0);
 
@@ -133,6 +140,9 @@ export function taskQueue(
       if (order) return order;
       if (a.id === lastSkill && b.id !== lastSkill) return 1;
       if (b.id === lastSkill && a.id !== lastSkill) return -1;
+      // Review compression, as in the engine.
+      const covered = coverage(b) - coverage(a);
+      if (covered) return covered;
       const left = state(a.id),
         right = state(b.id);
       return (
@@ -340,9 +350,15 @@ export interface HistoryEntry {
   earned: number;
   /** Base XP for the task, from the XP scale. */
   possible: number;
+  /** Prerequisites this task gave implicit review credit. */
+  credited?: number;
 }
 
 const attemptTime = (attempt: Attempt) => Date.parse(attempt.at);
+const creditedBy = (attempts: Attempt[]) => {
+  const ids = new Set(attempts.flatMap((attempt) => attempt.credited ?? []));
+  return ids.size ? { credited: ids.size } : {};
+};
 
 /**
  * Completed lessons, reviews, and quizzes, newest first. Lessons and reviews
@@ -381,6 +397,7 @@ export function taskHistory(
           at: learnedAt,
           earned: lesson.reduce((sum, attempt) => sum + attempt.xp, 0),
           possible: lessonXp(skill),
+          ...creditedBy(lesson),
         });
     }
     const cycles = new Map<number, Attempt[]>();
@@ -416,6 +433,7 @@ export function taskHistory(
         at: finished,
         earned: cycle.reduce((sum, attempt) => sum + attempt.xp, 0),
         possible: REVIEW_XP,
+        ...creditedBy(cycle),
       });
     });
   }

@@ -6,6 +6,7 @@ import {
 } from './curriculum';
 import {
   activityDay,
+  applyImplicitCredit,
   coursePath,
   getSkillState,
   isMastered,
@@ -245,8 +246,10 @@ export function quizQuestion(
 
 /** A missed skill's review becomes due now; nothing is unlearned yet. */
 function remediate(state: SkillProgress, at: number): SkillProgress {
+  // A miss outweighs any partial credit from dependents.
+  const { implicitCredit: _credit, ...rest } = state;
   return {
-    ...state,
+    ...rest,
     dueAt: Math.min(state.dueAt ?? at, at),
     reviewQuestionIds: [],
     reviewHadHint: false,
@@ -332,13 +335,25 @@ export function answerQuiz(
       position === index ? { ...item, answer, correct, answeredAt: at } : item,
     ),
   };
-  const next: Progress = {
+  const answered: Progress = {
     ...progress,
     skills: { ...progress.skills, [skill.id]: state },
-    attempts: [...progress.attempts, attempt].slice(-MAX_RECENT_ATTEMPTS),
     lastActivityDate: day.today,
     streak: day.streak,
     quizzes: replaceQuiz(progress, updated),
+  };
+  // A correct answer also exercises the skills this one uses.
+  const credit = correct
+    ? applyImplicitCredit(answered, skill, at, catalog)
+    : { progress: answered, credited: [] };
+  const next: Progress = {
+    ...credit.progress,
+    attempts: [
+      ...progress.attempts,
+      credit.credited.length
+        ? { ...attempt, credited: credit.credited }
+        : attempt,
+    ].slice(-MAX_RECENT_ATTEMPTS),
   };
   return updated.questions.every((item) => item.answer !== undefined)
     ? finishQuiz(next, quizId, at, catalog)

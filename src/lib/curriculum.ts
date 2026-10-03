@@ -115,6 +115,12 @@ export interface Skill {
   flashcards: Flashcard[];
   /** Subject-specific evidence needed within a spaced review cycle. */
   assessment?: { requiredTypes: Question['type'][]; reviewAnswers: number };
+  /**
+   * How much practicing this skill also exercises each direct prerequisite,
+   * 0 < weight <= 1. Omitted means every direct prerequisite at
+   * DEFAULT_ENCOMPASS_WEIGHT. Authored heuristics, not fitted to learners.
+   */
+  encompasses?: { id: string; weight: number }[];
 }
 
 export interface CurriculumCatalog {
@@ -3357,6 +3363,37 @@ function assessmentQuestions(item: Skill): Question[] {
  * code runtime. Knowledge-point questions meet a choice requirement; for those
  * skills `reviewAnswers` counts points reviewed, with code asked in addition.
  */
+/**
+ * Conservative default share of a full review that practicing a skill gives
+ * each direct prerequisite it uses. A heuristic, not a fitted parameter.
+ */
+export const DEFAULT_ENCOMPASS_WEIGHT = 0.25;
+
+/** The direct prerequisites a skill exercises, with their weights. */
+export function encompassings(item: Skill): { id: string; weight: number }[] {
+  return (
+    item.encompasses ??
+    item.prerequisites.map((id) => ({ id, weight: DEFAULT_ENCOMPASS_WEIGHT }))
+  );
+}
+
+const encompassingIndex = new WeakMap<Skill[], Map<string, Skill[]>>();
+/** Skills whose practice also exercises `skillId`, in catalog order. */
+export function encompassedBy(
+  skillId: string,
+  registry: Skill[] = skills,
+): Skill[] {
+  let index = encompassingIndex.get(registry);
+  if (!index) {
+    index = new Map();
+    for (const item of registry)
+      for (const { id } of encompassings(item))
+        index.set(id, [...(index.get(id) ?? []), item]);
+    encompassingIndex.set(registry, index);
+  }
+  return index.get(skillId) ?? [];
+}
+
 export function assessmentPolicy(
   item: Skill,
 ): NonNullable<Skill['assessment']> {
@@ -3418,6 +3455,26 @@ export function validateCurriculum(
     for (const prerequisite of item.prerequisites)
       if (!ids.has(prerequisite))
         errors.push(`${item.id}: unknown prerequisite ${prerequisite}.`);
+    if (item.encompasses) {
+      const named = item.encompasses.map((entry) => entry.id);
+      if (new Set(named).size !== named.length)
+        errors.push(`${item.id}: duplicate encompassed skill.`);
+      for (const entry of item.encompasses) {
+        if (!item.prerequisites.includes(entry.id))
+          errors.push(
+            `${item.id}: encompasses ${entry.id}, which is not a direct prerequisite.`,
+          );
+        if (
+          typeof entry.weight !== 'number' ||
+          !Number.isFinite(entry.weight) ||
+          entry.weight <= 0 ||
+          entry.weight > 1
+        )
+          errors.push(
+            `${item.id}: encompassing weight for ${entry.id} must be in (0, 1].`,
+          );
+      }
+    }
     const courseLanguage = catalog.courses.find(
       (course) => course.id === item.courseId,
     )?.language;
