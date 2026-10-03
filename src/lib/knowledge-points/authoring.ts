@@ -192,6 +192,75 @@ export function py(value: unknown): string {
   throw new Error(`No Python form for ${String(value)}.`);
 }
 
+/** A number in plain prose, with a typographic minus: `−3`. */
+export function prose(value: number): string {
+  return value < 0 ? `−${num(-value)}` : num(value);
+}
+
+/** A number in TeX after an operator, negatives in parentheses: `(-3)`. */
+export function paren(value: number): string {
+  return value < 0 ? `(${num(value)})` : num(value);
+}
+
+/** A signed term after another in TeX: ` + 3`, ` - 3`, or nothing for 0. */
+export function plus(value: number): string {
+  if (value === 0) return '';
+  return value < 0 ? ` - ${num(-value)}` : ` + ${num(value)}`;
+}
+
+/** A coefficient written before a variable: `2`, nothing for 1, `-` for −1. */
+export function coef(value: number): string {
+  return value === 1 ? '' : value === -1 ? '-' : num(value);
+}
+
+/**
+ * A sum of terms in TeX, skipping zero coefficients:
+ * `terms([[2, 'x^2'], [-1, 'xy'], [3, '']])` is `2x^2 - xy + 3`.
+ */
+export function terms(parts: [number, string][]): string {
+  let text = '';
+  for (const [coefficient, symbol] of parts) {
+    if (coefficient === 0) continue;
+    const size = Math.abs(coefficient);
+    const body = symbol ? `${size === 1 ? '' : num(size)}${symbol}` : num(size);
+    text += text
+      ? `${coefficient < 0 ? ' - ' : ' + '}${body}`
+      : `${coefficient < 0 ? '-' : ''}${body}`;
+  }
+  return text || '0';
+}
+
+/**
+ * A polynomial in TeX from its coefficients, highest power first:
+ * `poly([2, 0, -3])` is `2x^2 - 3`.
+ */
+export function poly(coefficients: number[], variable = 'x'): string {
+  const degree = coefficients.length - 1;
+  return terms(
+    coefficients.map((coefficient, index) => {
+      const power = degree - index;
+      return [
+        coefficient,
+        power === 0
+          ? ''
+          : `${variable}${power > 1 ? `^${power > 9 ? `{${power}}` : power}` : ''}`,
+      ];
+    }),
+  );
+}
+
+/** The binomial coefficient C(n, k). */
+export function binomial(n: number, k: number): number {
+  let result = 1;
+  for (let i = 1; i <= k; i++) result = (result * (n - k + i)) / i;
+  return Math.round(result);
+}
+
+/** An integer with thousands separators, as prose writes it: `1,000`. */
+export function grouped(value: number): string {
+  return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 /** Items in prose: `3, 5, and 9`. */
 export function series(items: (string | number)[]): string {
   const text = items.map(String);
