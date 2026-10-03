@@ -1345,7 +1345,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each line subtracts training error from validation error. The deep model has by far the largest gap.',
         ),
         choose(
-          'Which model from the previous table generalizes best?',
+          'Training and validation MSE are shallow (5.1, 5.4), medium (2.2, 2.6) and deep (0.1, 7.9). Which model generalizes best?',
           [
             'shallow, because its gap is smallest',
             'deep, because its training error is lowest',
@@ -1383,7 +1383,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Each gap subtracts training error from validation error at the same training size.',
         ),
         choose(
-          'In the previous curve, both errors stay near 7 while the gap is already small. What will doubling the data most likely do?',
+          'A learning curve shows both errors leveling off near 7 with a small gap. What will doubling the data most likely do?',
           [
             'Cut validation error in half',
             'Cause overfitting',
@@ -5530,9 +5530,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'The summary shows 0 trainable parameters after you meant to unfreeze the top layers. What is the likely cause?',
           [
-            'The flags were changed but the model was not recompiled, or the wrong layers were changed',
+            'The flags were set on the wrong layers or not recompiled',
             'The base has no parameters',
-            'Fine-tuning always reports 0',
+            'Summary counts only change after the next fit',
             'The learning rate is too small',
           ],
           0,
@@ -5574,10 +5574,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why are the earliest layers of a pretrained image network often left frozen?',
           [
-            'They detect generic patterns such as edges, useful for most image tasks',
+            'They detect generic patterns such as edges',
             'They have no weights',
             'They cannot be unfrozen',
-            'They contain the class labels',
+            'They hold the class-specific features of the old task',
           ],
           0,
           'Early features transfer broadly; later layers are more specific to the original task.',
@@ -5619,8 +5619,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Fine-tuned accuracy is poor, and you find the new images were scaled to 0–1 while the base was trained on -1 to 1. What should you do?',
           [
-            'Apply the base’s original preprocessing to the new images',
-            'Use a larger learning rate',
+            'Preprocess new images the way the base expects',
+            'Fine-tune with a larger learning rate to adapt',
             'Freeze more layers',
             'Add more classes',
           ],
@@ -5683,7 +5683,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'What is a basic autoencoder trained to do?',
           [
             'Predict a class label for each input',
-            'Encode an input into a smaller code and reconstruct the input from it',
+            'Rebuild its input from a smaller code',
             'Generate labels for unlabelled data',
             'Choose actions in an environment',
           ],
@@ -5733,8 +5733,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'How does a trained VAE generate a new example?',
           [
-            'It copies a training example',
-            'It samples a code from the prior distribution and decodes it',
+            'It decodes the code of a random training example',
+            'It decodes a code sampled from the prior',
             'It averages all training examples',
             'It asks a discriminator for one',
           ],
@@ -5758,7 +5758,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Codes that memorize each input exactly',
             'Codes with no randomness',
-            'Codes whose distribution stays close to a chosen prior, such as a standard normal',
+            'Codes distributed close to a chosen prior',
             'A discriminator that is always correct',
           ],
           2,
@@ -5911,7 +5911,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Why is a small set of attractive samples not enough to evaluate a generator?',
           [
             'It proves the model cannot memorize',
-            'It may hide memorization, missing kinds of data, and failures relevant to the use case',
+            'It can hide memorization and missing kinds of data',
             'It guarantees diversity',
             'Every sample is automatically calibrated',
           ],
@@ -5932,9 +5932,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'An autoencoder reconstructs held-out inputs very well. What does that tell you about samples generated from it?',
           [
-            'They will be diverse and realistic',
+            'They will be realistic, since the decoder works well',
             'They will cover every kind of data',
-            'Nothing directly; reconstruction and sample quality are different measures',
+            'Nothing directly; sampling is a separate test',
             'They will all be memorized copies',
           ],
           2,
@@ -5979,7 +5979,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'How does reinforcement learning differ from supervised learning?',
           [
             'It needs a correct action for every state',
-            'It learns from rewards that follow its own actions, not from labelled answers',
+            'It learns from rewards for its own actions',
             'It cannot use numeric data',
             'It never changes its behaviour',
           ],
@@ -6087,8 +6087,8 @@ export const knowledgePoints: KnowledgePointModule = {
           'What does Q(state, action) estimate?',
           [
             'The immediate reward only',
-            'The probability of reaching the state',
-            'The expected return from taking that action in that state and acting well afterwards',
+            'The probability that the action is the best one',
+            'The expected return of that action, then acting well',
             'The number of times the action was tried',
           ],
           2,
@@ -6153,10 +6153,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A cleaning robot is rewarded for each piece of dirt it collects. It learns to dump dirt and collect it again. What went wrong?',
           [
-            'The reward was a proxy that could be maximized without achieving the real goal',
+            'The reward could be maximized without a clean room',
             'The discount factor was too small',
             'The robot explored too little',
-            'Q-learning cannot learn cleaning',
+            'Q-learning overvalues actions it has repeated often',
           ],
           0,
           'The agent optimized the stated reward, not the intended outcome of a clean room.',
@@ -6200,7 +6200,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A request arrives without the rain feature. What should the serving code do?',
           [
-            'Reject or flag the request, since the model cannot predict reliably without it',
+            'Reject or flag the request as invalid',
             'Fill rain with 0 and predict as usual',
             'Retrain the model without rain',
             'Return the previous request’s prediction',
@@ -6240,8 +6240,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What must stay identical between training and serving?',
           [
-            'Only the model’s file name',
-            'Feature definitions, column order, and the fitted preprocessing',
+            'The hardware and batch size used in training',
+            'Feature definitions, order, and fitted preprocessing',
             'The number of requests per day',
             'The training set’s target values',
           ],
@@ -6263,9 +6263,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which item is most important to store alongside the model weights?',
           [
-            'The fitted preprocessing pipeline and the library versions used',
+            'The fitted preprocessing and library versions',
             'A screenshot of the training loss',
-            'The test-set predictions only',
+            'The final validation scores of every epoch',
             'The developer’s notebook state',
           ],
           0,
@@ -6357,8 +6357,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What is concept drift?',
           [
-            'A change in the relationship between the inputs and the target',
-            'Renaming a model file',
+            'A change in how inputs relate to the target',
+            'A change in the input distribution alone',
             'A change in the number of requests',
             'Repeating a fixed random seed',
           ],
@@ -6371,7 +6371,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'Covariate shift only',
             'A bug in the schema check',
             'A larger test set',
-            'Concept drift: the inputs now relate differently to the outcome',
+            'Concept drift',
           ],
           3,
           'Stable inputs with worsening outcomes point to a changed relationship rather than changed inputs.',

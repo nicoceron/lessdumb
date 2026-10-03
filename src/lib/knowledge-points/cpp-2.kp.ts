@@ -2480,7 +2480,7 @@ int main() {
         ),
         choose(
           'Which operation does std::queue<int> not provide?',
-          ['back', 'operator[]', 'size', 'pop'],
+          ['emplace', 'operator[]', 'size', 'pop'],
           1,
           'A queue exposes only its two ends; there is no access by position.',
         ),
@@ -5970,7 +5970,7 @@ int main() {
           'Only the int instantiation drops the last digit; the double passes through unchanged.',
         ),
         choose(
-          'Which change makes that function with the plain if compile for both int and double?',
+          '`template<class T> T f(T v) { if (std::is_integral_v<T>) return v % 2; else return v; }` fails to compile for double. Which change makes it compile for both int and double?',
           [
             'Make v a reference parameter',
             'Replace if with if constexpr',
@@ -8802,7 +8802,7 @@ int main() {
     std::cout << "no last element\\n";
   }
 }`,
-          ['0', '-1', 'no last element', '1'],
+          ['0', '-1', 'no last element', '18446744073709551615'],
           2,
           'size() - 1 wraps to the largest size_t value on an empty vector, and at() rejects it.',
         ),

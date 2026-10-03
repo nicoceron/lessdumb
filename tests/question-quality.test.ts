@@ -226,11 +226,14 @@ describe('knowledge point question quality', () => {
     expect(flagged).toEqual([]);
   });
 
-  it('never relies on the worked example, which reviews do not show', () => {
+  // A review shows one question alone: no explanation, worked example, or
+  // neighboring question. A prompt that points at any of them is unanswerable.
+  const ELSEWHERE =
+    /\bthe (worked )?example\b|\bthe \w+ above\b|\bthe previous (table|curve|program|code|question|example)\b/i;
+
+  it('never relies on the worked example or another question, which reviews do not show', () => {
     const flagged = items
-      .filter(({ question }) =>
-        /\bthe (worked )?example\b/i.test(question.prompt),
-      )
+      .filter(({ question }) => ELSEWHERE.test(question.prompt))
       .map(({ question }) => question.id);
     expect(flagged).toEqual([]);
   });

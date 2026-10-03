@@ -11986,7 +11986,7 @@ const pipelines: KnowledgePointModule = {
               }
             }
           `),
-          ['10', '6', 'inconsistent snapshot', '0'],
+          ['10', '6', 'inconsistent snapshot', 'inconsistent snapshot\n10'],
           2,
           'Four included events cannot come from a three-event log.',
         ),

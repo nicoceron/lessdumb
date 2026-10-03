@@ -919,7 +919,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Basic is neither Pro nor Plus, so the last branch gives 1 seat.',
         ),
         choose(
-          'Someone adds Signal::Fast to the enum above but leaves the speed chain unchanged. What speed does Signal::Fast get?',
+          'Someone adds Fast to Signal but leaves the speed chain unchanged. What speed does Signal::Fast get?',
           [
             'A compile error',
             '0, from the first branch',
@@ -928,6 +928,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           3,
           'Fast fails the Stop and Slow tests, so it falls into the last branch: the chain must be updated deliberately.',
+          'enum class Signal { Stop, Slow, Go, Fast };\nint speed = s == Signal::Stop ? 0 : s == Signal::Slow ? 30 : 60;',
         ),
       ],
     },
@@ -6612,7 +6613,7 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'Gauge is the class above. What happens with g.level_ = 50; in main?',
+          'What happens with g.level_ = 50; in main?',
           [
             'level_ becomes 50',
             'It does not compile: level_ is private',
@@ -6621,6 +6622,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           1,
           "Only Gauge's own member functions can access its private members.",
+          'class Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(10);\n  g.level_ = 50;\n}',
         ),
         predictOutput(
           'What does this complete C++20 program print?',
@@ -6655,7 +6657,7 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         predictOutput(
-          'This uses the Gauge class from the example. What does the program print?',
+          'What does this program print?',
           '#include <iostream>\nclass Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n    if (level_ < 0) level_ = 0;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};\nint main() {\n  Gauge g(5);\n  g.add(2);\n  g.add(-10);\n  g.add(1);\n  std::cout << g.level() << "\\n";\n}',
           ['-7', '0', '1', '3'],
           2,
@@ -6678,6 +6680,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           3,
           'The state is private, so add is the only way in, and add checks the rule.',
+          'class Gauge {\n public:\n  explicit Gauge(int cap) : cap_(cap), level_(0) {}\n  void add(int amount) {\n    level_ += amount;\n    if (level_ > cap_) level_ = cap_;\n    if (level_ < 0) level_ = 0;\n  }\n  int level() const { return level_; }\n\n private:\n  int cap_;\n  int level_;\n};',
         ),
       ],
     },
@@ -6987,7 +6990,7 @@ export const knowledgePoints: KnowledgePointModule = {
       },
       questions: [
         choose(
-          'Owner is the struct above. What happens with Owner a; Owner b = a;?',
+          'What happens with Owner a; Owner b = a;?',
           [
             'b becomes a second owner of the resource',
             'b starts out empty, owning nothing',
@@ -6996,6 +6999,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           3,
           'Copying needs the copy constructor, which no longer exists.',
+          'struct Owner {\n  Owner() = default;\n  Owner(const Owner&) = delete;\n  Owner& operator=(const Owner&) = delete;\n};',
         ),
         predictOutput(
           'What does this complete C++20 program print?',
@@ -8069,7 +8073,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Move assignment gives b the 3 (its old 4 is freed) and empties a.',
         ),
         choose(
-          'Why does Pack b = a; fail to compile for the Pack above?',
+          'Why does Pack b = a; fail to compile?',
           [
             'Pack has no constructor at all',
             'b must be declared as a reference',
@@ -8078,6 +8082,7 @@ export const knowledgePoints: KnowledgePointModule = {
           ],
           3,
           'The generated copy constructor would have to copy the unique_ptr, which is not allowed.',
+          'struct Pack {\n  std::unique_ptr<int> item;\n};\nPack a{std::make_unique<int>(6)};\nPack b = a;',
         ),
         choose(
           "Which members does Pack's compiler-generated move constructor move?",

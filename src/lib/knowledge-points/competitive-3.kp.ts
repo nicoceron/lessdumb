@@ -3123,7 +3123,12 @@ print(merge_next((1, 6), (7, 8)))`,
     return [current, following]
 
 print(merge_next((-4, -2), (-1, 3)))`,
-          ['[(-4, -2), (-1, 3)]', '[(-4, 3)]', '[(-2, -1)]', '[(-1, 3)]'],
+          [
+            '[(-4, -2), (-1, 3)]',
+            '[(-4, 3)]',
+            '[(-2, -1)]',
+            '[(-1, 3), (-4, -2)]',
+          ],
           0,
           '-1 > -2, so the gap [-2, -1) keeps the intervals separate.',
         ),
@@ -3317,7 +3322,7 @@ print(merge_bookings([(2, 10), (4, 6)]))`,
     return merged
 
 print(merge_strict([(1, 3), (3, 5)]))`,
-          ['[(1, 5)]', '[(1, 3), (3, 5)]', '[(3, 5)]', '[(1, 3)]'],
+          ['[(1, 5)]', '[(1, 3), (3, 5)]', '[(1, 5), (3, 5)]', '[(1, 3)]'],
           1,
           '3 < 3 is False, so the touching booking starts a separate span.',
         ),
@@ -4233,7 +4238,12 @@ print(displacement((10**18, 5), (10**18 + 7, 5)))`,
     return (b[0] - a[0], b[1] - a[1])
 
 print(displacement((0.1, 0), (0.3, 0)))`,
-          ['(0.2, 0)', '(0.3, 0)', '(0.2, 0.0)', '(0.19999999999999998, 0)'],
+          [
+            '(0.2, 0)',
+            '(0.20000000000000001, 0)',
+            '(0.2, 0.0)',
+            '(0.19999999999999998, 0)',
+          ],
           3,
           '0.1 and 0.3 are not stored exactly as floats, so their difference is not exactly 0.2.',
         ),
@@ -8266,7 +8276,7 @@ print(leaf_size(0), leaf_size(2))`,
         ),
         choose(
           'A tree with leaf size 8 stores how many list entries?',
-          ['8', '15', '16, with index 0 unused', '9'],
+          ['8', '15, one per tree node', '16, with index 0 unused', '9'],
           2,
           'Leaves fill indices 8 through 15, internal nodes 1 through 7, and index 0 is spare.',
         ),

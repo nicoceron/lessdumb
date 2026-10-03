@@ -2693,8 +2693,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why must followers apply changes in the leader’s order?',
           [
-            'Applying the same changes in a different order can give a different final state',
-            'Order makes replication faster',
+            'Different orders can produce different final states',
+            'Leader order lets followers skip changes they already have',
             'Order never matters',
             'Followers sort changes alphabetically',
           ],
@@ -2805,10 +2805,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is triggering failover after a very short timeout risky?',
           [
-            'Timeouts are always too long',
-            'Followers cannot be promoted quickly',
+            'Short timeouts make clients wait longer for writes',
+            'A new leader cannot be elected within a short timeout',
             'It is never risky',
-            'A slow but alive leader may be replaced, causing needless failovers or two leaders',
+            'A slow but alive leader may be declared dead',
           ],
           3,
           'A brief slowdown looks the same as a crash from outside.',
@@ -2861,7 +2861,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'The value from before the write',
             'The new value',
-            'An error',
+            'An error saying the follower is stale',
             'Part of the write',
           ],
           0,
@@ -2914,10 +2914,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which routing provides read-your-writes for profile pages?',
           [
-            'Read from a random follower',
+            'Read from whichever follower answers first',
             'Read from the most distant follower',
-            'Cache each profile for an hour',
-            'Serve a user’s own profile from the leader for one minute after they edit it',
+            'Send every read to the follower with the least load',
+            'Read a user’s own profile from the leader just after they edit it',
           ],
           3,
           'The leader always has the user’s latest write.',
@@ -3028,8 +3028,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Replicas sort writes by size',
             'Arrival order is always reversed',
-            'It always can',
-            'Network delays can reorder arrivals regardless of when writes were made or what writers saw',
+            'It can, once replica clocks are in sync',
+            'Network delays can reorder arrivals',
           ],
           3,
           'Arrival order reflects the network, not the writers’ knowledge.',
@@ -3091,9 +3091,9 @@ export const knowledgePoints: KnowledgePointModule = {
           'When is last-write-wins an acceptable rule?',
           [
             'For bank balances',
-            'When losing a concurrent update is acceptable, such as a device’s last known location',
+            'For a device’s last known location',
             'For collaborative documents',
-            'Never',
+            'For counters that many users increment',
           ],
           1,
           'If an occasional lost overwrite does no harm, LWW’s simplicity is fine.',
@@ -3234,8 +3234,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A team sets W = 1 and R = 1 with N = 3 for availability. What do they give up?',
           [
-            'The guarantee that a read reaches the latest confirmed write',
-            'All availability',
+            'The guarantee that reads see the latest write',
+            'Availability whenever one replica is down',
             'The ability to write at all',
             'Nothing',
           ],
@@ -3270,7 +3270,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'A write reaches only 1 of the W = 2 replicas it needs and is reported as failed. What may later reads see?',
           [
-            'Always the old value',
+            'Always the old value, since the write failed',
             'Always the new value',
             'An error',
             'Either value, depending on which replicas they ask',
@@ -3334,9 +3334,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which statement is right?',
           [
-            'Sharding copies all data to every node',
+            'Sharding copies every record to every node for safety',
             'Replication splits data into subsets',
-            'Sharding spreads different records; replication copies the same records',
+            'Shards hold different records; replicas hold the same ones',
             'They are the same mechanism',
           ],
           2,
@@ -3389,8 +3389,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why does a scatter-gather query get more expensive as shards grow from 4 to 40?',
           [
-            'It must contact every shard and merge more partial results',
-            'Each shard becomes slower',
+            'It must ask every shard and merge more results',
+            'Each shard holds more data, so each scan is slower',
             'Keys become longer',
             'It does not',
           ],
@@ -3447,7 +3447,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'One shard would receive most records and traffic',
             'Countries change every day',
             'Country is not a string',
-            'It is a strong key',
+            'Queries by country would need every shard',
           ],
           0,
           'Skewed key values make skewed shards.',
@@ -3533,8 +3533,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Hashing deletes the dates',
             'Hashes are slow to compute',
-            'It is not expensive',
-            'Consecutive dates are scattered, so every shard must be asked',
+            'It is not: one hash locates all seven days',
+            'Consecutive dates scatter, so every shard must be asked',
           ],
           3,
           'Hashing destroys the ordering a range query relies on.',
@@ -3775,9 +3775,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why is splitting fine for a like counter but harder for “remaining seats”, which must never go below 0?',
           [
-            'Each sub-key cannot see the others, so a rule about the total needs coordination',
+            'A rule about the total needs the sub-keys to coordinate',
             'Seats cannot be stored as numbers',
-            'Sub-keys always overflow',
+            'Sub-keys for seats cannot be summed at read time',
             'It is equally easy',
           ],
           0,
@@ -3874,10 +3874,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What is a limit of fixed logical shards?',
           [
-            'Shards can never move',
+            'Shards cannot move without rehashing every key',
             'They require key % N placement',
             'There is no limit',
-            'The count is fixed up front, and one shard cannot be spread over several nodes',
+            'The count is fixed, and a shard cannot span nodes',
           ],
           3,
           'A shard that grows too large for one node needs another remedy.',
@@ -3906,10 +3906,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Routing switches to the new node as soon as the snapshot copy finishes, without replaying later changes. What happens?',
           [
-            'Nothing',
+            'Nothing; the snapshot includes every write',
             'The old node is deleted',
             'Writes made during the copy are missing on the new owner',
-            'Writes are applied twice',
+            'Writes made during the copy are applied twice',
           ],
           2,
           'Those writes exist only on the old node.',
@@ -3918,7 +3918,7 @@ export const knowledgePoints: KnowledgePointModule = {
           'Before deleting the old copy of a moved shard, what should be checked?',
           [
             'That the new copy is complete and routing points to it',
-            'That the old node is slower',
+            'That the old node has fewer shards than the new one',
             'That every client restarted',
             'Nothing',
           ],
@@ -4028,12 +4028,7 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'To be faster, a database confirms COMMIT before writing anything to disk. What does it give up?',
-          [
-            'Atomicity',
-            'Durability, because a crash can lose committed writes',
-            'Nothing',
-            'Read speed',
-          ],
+          ['Atomicity', 'Durability', 'Nothing', 'Read speed'],
           1,
           'The confirmed result exists only in memory until it is saved.',
         ),
@@ -4068,7 +4063,7 @@ export const knowledgePoints: KnowledgePointModule = {
             'It is refunded automatically',
             'It never happened',
             'It is retried',
-            'It stays, because rollback cannot undo external calls',
+            'It stays; rollback cannot undo it',
           ],
           3,
           'The payment provider is outside the transaction.',
@@ -4123,7 +4118,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'Dirty reads are slow',
             'They delete data',
-            'The writer may abort, so the value read never existed',
+            'The writer may still abort',
             'They lock the whole table',
           ],
           2,
@@ -4188,7 +4183,7 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'All their reads reflect one consistent moment',
             'They run faster',
-            'They block all writers',
+            'They block writers until the report finishes',
             'They can write freely',
           ],
           0,
@@ -4298,8 +4293,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Each individual write in a lost update is atomic. Why is an update still lost?',
           [
-            'Each write was computed from a value that had already changed',
-            'Atomic writes can be partial',
+            'Each write used a value that had already changed',
+            'Atomic writes can still be half-applied after a crash',
             'A disk failed',
             'Reads are never atomic',
           ],
@@ -4342,8 +4337,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why can’t “set the title to the edited text” be fixed with an atomic increment-style operation?',
           [
-            'The new title is a replacement, not an operation on the current value',
-            'Titles cannot be updated',
+            'The new title does not depend on the old one',
+            'A title update cannot run inside a transaction',
             'Increments only work on text',
             'It can',
           ],
@@ -4392,9 +4387,9 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Why compare a version number rather than the value itself?',
           [
-            'A version detects any change in between, even one that restored the same value',
+            'It catches changes that restored the same value',
             'Versions are shorter to type',
-            'Values cannot be compared',
+            'Values cannot be compared inside an UPDATE',
             'SQL requires it',
           ],
           0,
@@ -4459,8 +4454,8 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Which rule is vulnerable to write skew?',
           [
-            'A single row’s counter increments by 1',
-            'At most 5 seats sold per row of the theatre, recorded as separate booking rows',
+            'A single counter row that every booking increments',
+            'At most 5 bookings per theatre row, each its own row',
             'An email column must contain @',
             'A primary key must be unique',
           ],
@@ -4484,7 +4479,7 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'Under serializable isolation, two transactions each try to take the last seat. What outcomes are possible?',
           [
-            'Both get the seat',
+            'Both get the seat if they commit at once',
             'One gets it; the other aborts or sees it taken',
             'Neither can ever get it',
             'Both always abort',
@@ -4503,8 +4498,8 @@ export const knowledgePoints: KnowledgePointModule = {
           [
             'It ran too long',
             'It read too few rows',
-            'Aborts happen at random',
-            'Committing it would produce a result no serial order could',
+            'Serializable mode aborts a random share of transactions',
+            'Its commit would match no serial order',
           ],
           3,
           'The abort prevents a combination that breaks serializability.',
@@ -4548,10 +4543,10 @@ export const knowledgePoints: KnowledgePointModule = {
         choose(
           'What can be locked instead, so that concurrent bookings for room 4 conflict?',
           [
-            'Room 4’s own row, which every booking for it must lock first',
+            'Room 4’s own row, locked by every booking',
             'Nothing',
             'Every table in the database',
-            'Only the user’s row',
+            'Only the row of the user making the booking',
           ],
           0,
           'A shared existing row turns the hidden conflict into a visible one.',
