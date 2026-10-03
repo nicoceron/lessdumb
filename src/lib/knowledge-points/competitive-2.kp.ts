@@ -8568,7 +8568,7 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'With parallel edges allowed, which time bound fits the lazy-heap Dijkstra?',
-          ['O(V + E)', 'O(V · E)', 'O(V²)', 'O((V + E) log(V + E))'],
+          ['O(V + E)', 'O(V · E)', 'O(V log V + E)', 'O((V + E) log(V + E))'],
           3,
           'Up to V + E heap entries are pushed and popped, each at logarithmic cost.',
         ),
