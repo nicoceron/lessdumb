@@ -45,5 +45,9 @@ Edges cannot fix content. These items are the backlog for new concept nodes and 
 
 - Rust: `rust-main`, `rust-format`, and `rust-returns` use typed parameters, `&str`, or `&'static str` before the nodes that teach them; `rust-future-ready` uses `pin!` before `rust-future-pin`. `rust-test-contract` and `rust-package-name` do not exercise their stated rules (`#[test]`, package names). Building maps and sets with `collect` puts every collection behind closures and iterators.
 - C++: `cpp-functions` sums a `std::vector` although vectors depend on it; `cpp-while-progress` teaches `while` with a `do-while` example; `cpp-arithmetic` never teaches `%`, which 12 later skills use.
-- Competitive Programming: `cp-grid-component` (flood fill) and `cp-bit-submask-step` are not used by their applications, so they remain leaves. Brute-force solutions passed all 32 application assessments tried, because inputs are small.
 - Machine Learning: `ml-decision-trees` reaches calculus only through the overfitting idea in `ml-regularization`; a separate overfitting node would remove that dependency.
+
+**Closed since the audit:**
+
+- Competitive Programming has no dead-end concepts. `cp-grids` now counts islands by flood-filling each undiscovered land cell (it requires `cp-grid-component`), and `cp-bitmasks` keeps a selection mask with set and clear changes and walks its submasks (it requires `cp-bit-submask-step`). The test exception for these two leaves is removed; every concept stage is an ancestor of its application.
+- Brute force no longer passes Competitive Programming assessments. 37 applications and 4 concept stages end with a hidden deterministic large case that must finish within 3 seconds, and six exercises disable the library shortcut they teach (bisect, itertools combinatorics, `math.gcd`/`lcm`, three-argument `pow`, `math.comb`/`perm`/`factorial`, and `**` for recursive powers). `tests/competitive-assessments.test.ts` runs 48 brute-force and shortcut solutions, mostly from the audit, and requires each to fail.
