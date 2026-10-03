@@ -12,6 +12,7 @@ import {
   getSkillState,
   isUnlocked,
   nextTask,
+  selectQuestion,
   type Progress,
 } from '../src/lib/learning';
 import { createState, recordLearningAnswer } from '../src/lib/state';
@@ -134,10 +135,15 @@ describe('competitive programming in the shared knowledge graph', () => {
     let state = createState();
     for (const prerequisite of skillById['cp-prefix-sums'].prerequisites)
       state.progress = master(state.progress, prerequisite);
-    for (const question of skillById['cp-prefix-sums'].questions)
+    const skill = skillById['cp-prefix-sums'];
+    for (
+      let guard = 0;
+      getSkillState(state.progress, skill.id).mastery < 1 && guard < 64;
+      guard++
+    )
       state = recordLearningAnswer(state, {
-        skillId: 'cp-prefix-sums',
-        questionId: question.id,
+        skillId: skill.id,
+        questionId: selectQuestion(state.progress, skill, 'learn').id,
         correct: true,
         mode: 'learn',
       });
@@ -148,19 +154,25 @@ describe('competitive programming in the shared knowledge graph', () => {
     expect(state.cards.every((card) => card.status === 'pending')).toBe(true);
     const due = getSkillState(state.progress, 'cp-prefix-sums').dueAt!;
     vi.setSystemTime(due);
-    state = recordLearningAnswer(state, {
-      skillId: 'cp-prefix-sums',
-      questionId: 'cp-prefix-sums-q1',
-      correct: true,
-      mode: 'review',
-    });
-    expect(getSkillState(state.progress, 'cp-prefix-sums').dueAt).toBe(due);
-    state = recordLearningAnswer(state, {
-      skillId: 'cp-prefix-sums',
-      questionId: 'cp-prefix-sums-q4',
-      correct: true,
-      mode: 'review',
-    });
+    // The review completes only once both choice and code evidence exist.
+    const answered = new Set<string>();
+    for (
+      let guard = 0;
+      getSkillState(state.progress, skill.id).dueAt === due && guard < 8;
+      guard++
+    ) {
+      const question = selectQuestion(state.progress, skill, 'review');
+      answered.add(question.type);
+      state = recordLearningAnswer(state, {
+        skillId: skill.id,
+        questionId: question.id,
+        correct: true,
+        mode: 'review',
+      });
+      if (guard === 0)
+        expect(getSkillState(state.progress, skill.id).dueAt).toBe(due);
+    }
+    expect([...answered].sort()).toEqual(['choice', 'code']);
     expect(getSkillState(state.progress, 'cp-prefix-sums').dueAt).toBe(
       due + 7 * DAY_MS,
     );
