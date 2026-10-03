@@ -69,6 +69,7 @@ import { recordLearningAnswer, type LearnerState } from '../lib/state';
 import { refreshPending } from '../lib/remediation';
 import { Btn, ContentLoading } from './shared';
 import { pythonExerciseSource, usePythonSpare } from './use-python-spare';
+import { useAnswerTime } from './use-answer-time';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -440,6 +441,24 @@ function LessonPage({
       : courseLanguage;
   // A page whose skill has a Python exercise loads Python before the click.
   usePythonSpare(pythonExerciseSource(currentSkill ?? skill));
+  // Answer time runs from when the live question's card scrolls into view.
+  // Its key names this showing of the question, so a remounted page that
+  // shows the same question again resumes the clock.
+  const answerTime = useAnswerTime(
+    current
+      ? [
+          current.skillId,
+          current.mode,
+          current.questionId,
+          current.presentation,
+          current.variant ?? '',
+        ].join(':')
+      : undefined,
+    () => {
+      const prompt = current && document.getElementById(promptId(current.key));
+      return prompt?.closest('.lesson-question') ?? prompt ?? null;
+    },
+  );
   const pointLesson = !!skill && hasKnowledgePoints(skill);
   const lesson = skill ? lessonState(state.progress, skill) : null;
   const recorded = current?.feedback
@@ -508,7 +527,11 @@ function LessonPage({
       entry && entry.key === key ? { ...entry, ...patch } : entry,
     );
   }
-  function record(correct: boolean, patch: Partial<Entry> = {}) {
+  function record(
+    correct: boolean,
+    patch: Partial<Entry> = {},
+    elapsedMs = answerTime(),
+  ) {
     if (!current || !question || current.feedback || !live.current) return;
     const attemptId = crypto.randomUUID();
     const input = {
@@ -519,6 +542,7 @@ function LessonPage({
       attemptId,
       ...(isTyped(question) ? { response: current.response } : {}),
       ...(current.variant !== undefined ? { variant: current.variant } : {}),
+      ...(elapsedMs !== undefined ? { elapsedMs } : {}),
     };
     update((s) =>
       live.current && isUnlocked(s.progress, input.skillId)
@@ -545,6 +569,8 @@ function LessonPage({
       return;
     const token = Symbol('Code run');
     activeRun.current = token;
+    // The answer is submitted at the click; running it is not answer time.
+    const elapsedMs = answerTime();
     const controller = new AbortController();
     activeController.current = controller;
     const generation = gradingGeneration.current;
@@ -565,7 +591,7 @@ function LessonPage({
     activeController.current = null;
     setRunning(false);
     if (result.infrastructure) patchCurrent(current.key, { output: result });
-    else record(result.passed, { output: result });
+    else record(result.passed, { output: result }, elapsedMs);
   }
   /** Start a new page for another task: a lesson, or reviews after a lesson. */
   function openTask(id: string, nextMode: Mode, entry: Entry) {

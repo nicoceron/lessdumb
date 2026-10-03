@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, Compass, X } from 'lucide-react';
 import { courses } from '../lib/catalog-index';
 import { coursePath } from '../lib/learning';
@@ -21,6 +21,7 @@ import { TypedAnswerInput } from './typed-answer';
 import { gradeTyped } from '../lib/typed-answer';
 import { Btn, ContentLoading } from './shared';
 import { useCourseContent } from './use-content';
+import { useAnswerTime } from './use-answer-time';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -51,7 +52,6 @@ export default function PlacementSession({
   const [selected, setSelected] = useState<number | null>(null);
   const [response, setResponse] = useState('');
   const [invalid, setInvalid] = useState<string | null>(null);
-  const shownAt = useRef(Date.now());
   const running = activeDiagnostic(state.progress);
   const diagnostic: Diagnostic | undefined = diagnosticId
     ? state.progress.diagnostics?.find((item) => item.id === diagnosticId)
@@ -74,8 +74,11 @@ export default function PlacementSession({
   const questionKey = diagnostic?.current
     ? `${diagnostic.current.questionId}-${diagnostic.answers.length}`
     : '';
+  // Answer time runs from when the question is shown (src/lib/answer-time.ts).
+  const answerTime = useAnswerTime(
+    questionKey && content.ready ? questionKey : undefined,
+  );
   useEffect(() => {
-    shownAt.current = Date.now();
     setSelected(null);
     setResponse('');
     setInvalid(null);
@@ -150,7 +153,7 @@ export default function PlacementSession({
       }
       answer = response;
     }
-    const elapsed = Date.now() - shownAt.current;
+    const elapsed = answerTime();
     setSelected(null);
     setResponse('');
     update((s) => ({

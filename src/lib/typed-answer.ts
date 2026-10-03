@@ -1,5 +1,6 @@
 import type {
   AnswerQuestion,
+  ChoiceQuestion,
   NumericQuestion,
   Question,
   QuestionRef,
@@ -12,6 +13,13 @@ import type {
 // runs of spaces, curly quotes from a phone keyboard, and a Unicode minus
 // sign never decide a result. A response that is not a number at all is not a
 // wrong answer; the learner is asked to type a number instead.
+//
+// Output questions (`checksOutput`) accept exactly what the program prints:
+// the output is the skill. Other text questions (a name, a keyword, a term)
+// also accept equivalent forms: any case unless the question is
+// `caseSensitive`, wrapping quotes or backticks, trailing punctuation, and
+// the authored synonyms in `answers`. An `exact` question opts out of all of
+// these, as an output question does.
 
 /** Longest response the input accepts and an attempt stores. */
 export const TYPED_RESPONSE_MAX_LENGTH = 200;
@@ -37,16 +45,45 @@ export const EMPTY_RESPONSE = 'Type an answer first.';
 
 const DECIMAL = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
 const FRACTION = /^([+-]?\d+)\s*\/\s*(\d+)$/;
+/**
+ * An integer part grouped in thousands with one separator throughout: a
+ * comma (`1,000`) or a space, including the no-break and thin spaces some
+ * keyboards insert (`1 000`). Every group after the first has exactly three
+ * digits, so `1,5` or `12,34` (a decimal comma, or a typo) never reads as a
+ * number.
+ */
+const GROUPED =
+  /^([+-]?)(\d{1,3}(?:([, \u00a0\u2009\u202f])\d{3})(?:\3\d{3})*)(\.\d+)?$/;
 
 /**
- * Reads a typed number: an integer, a decimal, a negative number, a simple
- * fraction like `3/4`, or scientific notation like `1e-3`, with surrounding
- * whitespace ignored. Anything else, including thousands separators, is null.
+ * A numeric question's `unit` when it names a unit (`ms`, `%`, `km/h`)
+ * rather than a format hint (`to 3 decimals`): one word without digits. A
+ * response may end with it.
  */
-export function parseNumber(text: string): number | null {
-  const value = text.trim().replace(/−/g, '-');
+export function unitSuffix(unit?: string): string | undefined {
+  const value = unit?.trim();
+  return value && /^[^\s\d]+$/.test(value) ? value : undefined;
+}
+
+/**
+ * Reads a typed number: an integer, a decimal, a negative number, a leading
+ * `+`, a simple fraction like `3/4`, scientific notation like `1e-3`, or
+ * thousands grouped unambiguously (`1,000`, `1 000`), with surrounding
+ * whitespace ignored. When the question declares a unit, the response may end
+ * with it (`250 ms`). Anything else is null.
+ */
+export function parseNumber(text: string, unit?: string): number | null {
+  let value = text.trim().replace(/−/g, '-');
+  const suffix = unitSuffix(unit);
+  if (suffix && value.endsWith(suffix))
+    value = value.slice(0, -suffix.length).trimEnd();
   let result: number;
-  if (DECIMAL.test(value)) result = Number(value);
+  const grouped = GROUPED.exec(value);
+  if (grouped)
+    result = Number(
+      `${grouped[1]}${grouped[2].replace(/[^\d]/g, '')}${grouped[4] ?? ''}`,
+    );
+  else if (DECIMAL.test(value)) result = Number(value);
   else {
     const fraction = FRACTION.exec(value);
     if (!fraction || Number(fraction[2]) === 0) return null;
@@ -75,11 +112,11 @@ export function formatNumber(value: number): string {
  * must equal the answer, allowing only floating-point rounding.
  */
 export function gradeNumeric(
-  question: Pick<NumericQuestion, 'answer' | 'tolerance'>,
+  question: Pick<NumericQuestion, 'answer' | 'tolerance' | 'unit'>,
   response: string,
 ): TypedGrade {
   if (!response.trim()) return { status: 'invalid', message: EMPTY_RESPONSE };
-  const value = parseNumber(response);
+  const value = parseNumber(response, question.unit);
   if (value === null) return { status: 'invalid', message: NOT_A_NUMBER };
   const allowed =
     (question.tolerance ?? 0) + 1e-9 * Math.max(1, Math.abs(question.answer));
@@ -107,16 +144,60 @@ export function normalizeText(text: string, ignoreCase = false): string {
   return ignoreCase ? joined.toLowerCase() : joined;
 }
 
-/** Correct when the response matches one accepted answer after normalizing. */
-export function gradeText(
-  question: Pick<TextQuestion, 'answers' | 'ignoreCase'>,
-  response: string,
-): TypedGrade {
-  const typed = normalizeText(response, question.ignoreCase);
+/** What decides how a text question compares answers. */
+export type TextGrading = Pick<
+  TextQuestion,
+  'answers' | 'ignoreCase' | 'caseSensitive' | 'exact' | 'checksOutput'
+>;
+
+/**
+ * Graded exactly: an output question, or one marked `exact`. Only spacing,
+ * line endings, and curly quotes are normalized, and case only with
+ * `ignoreCase`.
+ */
+export function isExactText(
+  question: Pick<TextQuestion, 'exact' | 'checksOutput'>,
+): boolean {
+  return !!question.checksOutput || !!question.exact;
+}
+
+const WRAPPERS = new Set(['"', "'", '`']);
+const TRAILING_PUNCTUATION = /[.,;:!?]+$/;
+
+/**
+ * The equivalent form of a name, keyword, or term: normalized text without
+ * wrapping quotes or backticks (`"append"`, `` `append` ``) and without
+ * trailing punctuation (`append.`), folded to lower case unless case matters.
+ */
+export function lenientText(text: string, caseSensitive = false): string {
+  let value = normalizeText(text);
+  for (let before = ''; before !== value;) {
+    before = value;
+    value = value.replace(TRAILING_PUNCTUATION, '').trimEnd();
+    if (value.length > 1 && WRAPPERS.has(value[0]) && value.at(-1) === value[0])
+      value = value.slice(1, -1).trim();
+  }
+  return caseSensitive ? value : value.toLowerCase();
+}
+
+/** A text answer in the form a question compares. */
+export function textForm(
+  question: Omit<TextGrading, 'answers'>,
+  text: string,
+): string {
+  return isExactText(question)
+    ? normalizeText(text, question.ignoreCase)
+    : lenientText(text, question.caseSensitive);
+}
+
+/**
+ * Correct when the response matches one accepted answer: exactly for an
+ * output or `exact` question, otherwise in equivalent form (`lenientText`).
+ */
+export function gradeText(question: TextGrading, response: string): TypedGrade {
+  const typed = textForm(question, response);
   if (!typed) return { status: 'invalid', message: EMPTY_RESPONSE };
-  return question.answers.some(
-    (answer) => normalizeText(answer, question.ignoreCase) === typed,
-  )
+  return question.answers.some((answer) => textForm(question, answer) === typed)
     ? { status: 'correct' }
     : { status: 'incorrect' };
 }
@@ -211,12 +292,10 @@ export function typedQuestionErrors(question: Question): string[] {
   if (question.type === 'text') {
     if (!Array.isArray(question.answers) || !question.answers.length)
       return [`${question.id}: needs at least one accepted answer.`];
-    const normalized = question.answers.map((answer) =>
-      normalizeText(answer, question.ignoreCase),
-    );
-    if (normalized.some((answer) => !answer))
+    const forms = question.answers.map((answer) => textForm(question, answer));
+    if (forms.some((answer) => !answer))
       errors.push(`${question.id}: accepted answers must not be blank.`);
-    if (new Set(normalized).size !== normalized.length)
+    if (new Set(forms).size !== forms.length)
       errors.push(`${question.id}: accepted answers must be distinct.`);
     for (const answer of question.answers) {
       const lines = answer.split('\n');
@@ -239,6 +318,93 @@ export function typedQuestionErrors(question: Question): string[] {
         errors.push(
           `${question.id}: typed output must not depend on spacing; keep it a choice question.`,
         );
+      if (question.caseSensitive || question.exact)
+        errors.push(
+          `${question.id}: an output question is always graded exactly; drop caseSensitive and exact.`,
+        );
+    } else if (question.exact) {
+      if (question.caseSensitive)
+        errors.push(
+          `${question.id}: an exact question already keeps case; drop caseSensitive.`,
+        );
+    } else {
+      errors.push(...lenientTextErrors(question));
+    }
+  }
+  return errors;
+}
+
+/** Words in a prompt that ask what a program prints. */
+const OUTPUT_PROMPT =
+  /\b(?:print|prints|printed|output|outputs|display|displays)\b/i;
+
+/**
+ * A text question graded leniently must not lose meaning to it. These are the
+ * questions that should be exact-only, or say whether case matters.
+ */
+function lenientTextErrors(question: TextQuestion): string[] {
+  const errors: string[] = [];
+  if (question.caseSensitive && question.ignoreCase)
+    errors.push(
+      `${question.id}: caseSensitive and ignoreCase contradict each other.`,
+    );
+  // "What does this print?" is an output question: the exact output is the
+  // skill, so it must not accept another case or a quoted form.
+  if (question.code?.trim() && OUTPUT_PROMPT.test(question.prompt))
+    errors.push(
+      `${question.id}: asks what code prints; make it an output question (typeOutput) so it is graded exactly.`,
+    );
+  for (const answer of question.answers) {
+    // A char literal ('a'), a statement (x += 1;), or a bare operator (?)
+    // means something different without its quotes or punctuation.
+    if (lenientText(answer, true) !== normalizeText(answer))
+      errors.push(
+        `${question.id}: "${answer}" changes without its quotes or trailing punctuation; mark the question exact.`,
+      );
+    // Case carries meaning in an identifier such as True or String: the
+    // author decides whether it is part of the answer.
+    if (
+      /\p{Lu}/u.test(answer) &&
+      !question.caseSensitive &&
+      !question.ignoreCase
+    )
+      errors.push(
+        `${question.id}: "${answer}" has capitals; set caseSensitive if case is part of the answer, or ignoreCase if it is not.`,
+      );
+  }
+  return errors;
+}
+
+/**
+ * Synonyms must not accept what a related question counts wrong. When a
+ * leniently graded text question of a skill accepts the correct choice of a
+ * choice question of the same skill, it asks about the same thing, so it must
+ * also reject every distractor of that question: through a synonym, a case
+ * fold, or a stripped quote.
+ */
+export function synonymCollisionErrors(questions: Question[]): string[] {
+  const errors: string[] = [];
+  const choices = questions.filter(
+    (question): question is ChoiceQuestion =>
+      question.type === 'choice' && Array.isArray(question.choices),
+  );
+  for (const question of questions) {
+    if (
+      question.type !== 'text' ||
+      isExactText(question) ||
+      !Array.isArray(question.answers)
+    )
+      continue;
+    const accepts = (text: string) =>
+      gradeText(question, text).status === 'correct';
+    for (const choice of choices) {
+      if (!accepts(choice.choices[choice.answer] ?? '')) continue;
+      choice.choices.forEach((distractor, index) => {
+        if (index !== choice.answer && accepts(distractor))
+          errors.push(
+            `${question.id}: accepts "${distractor}", which ${choice.id} counts wrong; drop that synonym, or mark the question caseSensitive or exact.`,
+          );
+      });
     }
   }
   return errors;
