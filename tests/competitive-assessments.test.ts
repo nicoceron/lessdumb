@@ -131,41 +131,54 @@ async function check(id: string): Promise<Report> {
 }
 
 describe('the scaled time limit', () => {
+  // Each check starts a fresh Pyodide worker.
+  const PYODIDE_RUNS_MS = 60_000;
   const timedCheck = (seconds: number, base?: number) =>
     withLargeCase(
       '',
       `_check_time(${seconds}, "The case", "Use the faster idea."${base ? `, ${base}` : ''})`,
     );
 
-  it('multiplies the limit by the device scale and reports it', async () => {
-    expect(
-      await run('', timedCheck(17.9), 30, { timeScale: 6, slowdown: 1 }),
-    ).toMatchObject({ passed: true, error: null });
-    expect(await run('', timedCheck(17.9), 30)).toMatchObject({
-      passed: false,
-      error:
-        'AssertionError: The case took 17.9 s; the limit on this device is 3 s. Use the faster idea.',
-    });
-    expect(
-      await run('', timedCheck(20), 30, { timeScale: 6, slowdown: 1 }),
-    ).toMatchObject({
-      passed: false,
-      error:
-        'AssertionError: The case took 20.0 s; the limit on this device is 18 s. Use the faster idea.',
-    });
-  });
+  it(
+    'multiplies the limit by the device scale and reports it',
+    async () => {
+      expect(
+        await run('', timedCheck(17.9), 30, { timeScale: 6, slowdown: 1 }),
+      ).toMatchObject({ passed: true, error: null });
+      expect(await run('', timedCheck(17.9), 30)).toMatchObject({
+        passed: false,
+        error:
+          'AssertionError: The case took 17.9 s; the limit on this device is 3 s. Use the faster idea.',
+      });
+      expect(
+        await run('', timedCheck(20), 30, { timeScale: 6, slowdown: 1 }),
+      ).toMatchObject({
+        passed: false,
+        error:
+          'AssertionError: The case took 20.0 s; the limit on this device is 18 s. Use the faster idea.',
+      });
+    },
+    PYODIDE_RUNS_MS,
+  );
 
-  it('scales a case’s own base limit, including below one on a fast device', async () => {
-    expect(
-      await run('', timedCheck(0.8, 1.5), 30, { timeScale: 0.5, slowdown: 1 }),
-    ).toMatchObject({
-      passed: false,
-      error: expect.stringContaining('the limit on this device is 0.75 s.'),
-    });
-    expect(
-      await run('', timedCheck(8.9, 1.5), 30, { timeScale: 6, slowdown: 1 }),
-    ).toMatchObject({ passed: true, error: null });
-  });
+  it(
+    'scales a case’s own base limit, including below one on a fast device',
+    async () => {
+      expect(
+        await run('', timedCheck(0.8, 1.5), 30, {
+          timeScale: 0.5,
+          slowdown: 1,
+        }),
+      ).toMatchObject({
+        passed: false,
+        error: expect.stringContaining('the limit on this device is 0.75 s.'),
+      });
+      expect(
+        await run('', timedCheck(8.9, 1.5), 30, { timeScale: 6, slowdown: 1 }),
+      ).toMatchObject({ passed: true, error: null });
+    },
+    PYODIDE_RUNS_MS,
+  );
 });
 
 describe('competitive assessments reject brute force', () => {
