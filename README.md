@@ -28,7 +28,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 ## What you can do
 
 - **Learn:** see your active course with its progress and estimated completion date (remaining lesson XP ÷ your daily XP goal), total, today's, and this week's XP, up to five next tasks in scheduler order (due reviews and ready lessons, including prerequisites from other courses), and a dated history of completed lessons and reviews with earned/possible XP.
-- **Courses:** choose your active course from eight courses and 710 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
+- **Courses:** choose your active course from eight courses and 720 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
 - **Lessons:** each lesson is one page that grows as you work, as in Math Academy: the introduction, then for each knowledge point its explanation, a worked example, and its questions, then the code exercise. Answered questions stay on the page with their explanations, so you can scroll back and reread while you solve. Reviews stack their questions on one page the same way.
 - **Account menu:** the avatar menu opens the knowledge graph, flashcards, code lab, and settings, and signs you in or out.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
@@ -42,15 +42,15 @@ You can start as a guest. Guest progress is saved on the device; creating a new 
 
 | Course                   |  Skills | Knowledge points | Questions | Executable exercises | Anki cards |
 | ------------------------ | ------: | ---------------: | --------: | -------------------: | ---------: |
-| Python foundations       |      48 |              165 |       682 |                   48 |         96 |
-| Quantitative foundations |      36 |              116 |       464 |                   10 |         72 |
+| Python foundations       |      49 |              168 |       694 |                   49 |         98 |
+| Quantitative foundations |      37 |              119 |       476 |                   11 |         74 |
 | Python for Data Analysis |      24 |               73 |       292 |                   24 |         48 |
 | Machine Learning         |      29 |              116 |       464 |                   21 |         58 |
 | Data Systems             |      28 |               84 |       336 |                    0 |         56 |
 | Competitive Programming  |     192 |              438 |     1,743 |                  192 |        384 |
 | Rust                     |     145 |              398 |     1,597 |                  145 |        290 |
-| C++                      |     208 |              531 |     1,870 |                  208 |        416 |
-| **Total**                | **710** |        **1,921** | **7,448** |              **648** |  **1,420** |
+| C++                      |     216 |              549 |     1,938 |                  216 |        432 |
+| **Total**                | **720** |        **1,945** | **7,540** |              **658** |  **1,440** |
 
 Questions are the knowledge points' practice questions; the four-question lessons they replaced were deleted (CEN-117). The browser keeps only the graph index in memory and downloads a course's lessons when one opens ([how content is loaded](docs/knowledge-graph.md#how-the-browser-loads-the-catalog)).
 
@@ -60,13 +60,13 @@ The three supplied books inform concept coverage; lessons, examples, questions, 
 
 Competitive Programming draws its topic paths from the supplied USACO and NeetCode reference inventories. Its 12 units cover contest reasoning, collections, prefix/window techniques, search, stacks/heaps/tries, recursion/trees, graph traversal, routes/connectivity, dynamic programming, greedy/bitmask/geometry techniques, number theory, and dynamic range queries. Each of its 48 algorithm topics has three individually taught and assessed concepts followed by the original application skill: 192 nodes, each with its own knowledge points and code assessment. Stable application IDs and earned evidence remain; newly added concepts require their own proof. Every node has a real Python function assessment and connects to existing Python foundations; geometry also uses the quantitative vector branch. The course exposes the public USACO Guide and NeetCode roadmap. [Source and graph mapping](docs/sources/competitive-programming.md) records the inspected references and scope.
 
-Rust has 35 topics of two to six skills, covering first programs, Debug output, conversions, Option and Result helpers, queues, ownership and borrowing, UTF-8, data modeling, collections, traits, lifetimes, iterators, Cargo/build concepts, testing, smart pointers, concurrency, async mechanics, unsafe invariants, FFI, algorithms, and a framed-message codec. C++ has 52 four-skill topics, covering values, bits, and control flow, pointers and references, member functions, RAII and moves, pairs, STL, generic code, errors, build/link contracts, concurrency, memory layout, measurement, ring buffers, order books, protocols, and risk checks. Both courses start from zero and have their own explicit prerequisites; Python mastery is not required. Every step has knowledge points with practice questions, one executable assessment, a runnable lesson, and two cards. [Rust scope](docs/sources/rust.md) and [C++ sources and GetCracked mapping](docs/sources/cpp.md) record the course boundaries. GetCracked supplied topic inspiration; its repeated local inventory is not a bank of 700 distinct exercises.
+Rust has 35 topics of two to six skills, covering first programs, Debug output, conversions, Option and Result helpers, queues, ownership and borrowing, UTF-8, data modeling, collections, traits, lifetimes, iterators, Cargo/build concepts, testing, smart pointers, concurrency, async mechanics, unsafe invariants, FFI, algorithms, and a framed-message codec. C++ has 54 four-skill topics, covering values, bits, and control flow, pointers and references, member functions, RAII and moves, pairs, `std::abs`, `std::to_string`, and `std::reverse`, STL, generic and stateful lambdas, generic code, errors, build/link contracts, concurrency, memory layout, measurement, ring buffers, order books, protocols, and risk checks. Both courses start from zero and have their own explicit prerequisites; Python mastery is not required. Every step has knowledge points with practice questions, one executable assessment, a runnable lesson, and two cards. [Rust scope](docs/sources/rust.md) and [C++ sources and GetCracked mapping](docs/sources/cpp.md) record the course boundaries. GetCracked supplied topic inspiration; its repeated local inventory is not a bank of 700 distinct exercises.
 
 The Learn and Courses pages follow the compact course/XP/task/history and course-sequence/unit patterns of [Math Academy’s official public dashboard screenshot](https://www.mathacademy.com/img/screenshots/student-dashboard.png) and its course page, with independent branding and implementation.
 
 ## Python foundations
 
-The curriculum contains **48 original skills, 165 knowledge points with 682 practice questions, 48 runnable code exercises, and 96 mastery flashcards**, plus correction cards generated from mistakes. Each skill teaches two to five knowledge points, then one executable exercise.
+The curriculum contains **49 original skills, 168 knowledge points with 694 practice questions, 49 runnable code exercises, and 98 mastery flashcards**, plus correction cards generated from mistakes. Each skill teaches two to five knowledge points, then one executable exercise.
 
 | Unit                     | Skills                                                                                                                                                                                                                                                     |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -77,7 +77,7 @@ The curriculum contains **48 original skills, 165 knowledge points with 682 prac
 | Organize your code       | Map keys to values; Loop through mappings; Keep unique values in a set; Define a function; Return a result; Return several values; Call a function from itself                                                                                             |
 | Solve real problems      | Design useful inputs; Transform and filter; Build grids safely; Feed a loop into sum, any, and all; Handle expected failures; Build a word counter                                                                                                         |
 | Sort and use bits        | Sort a list; Sort by a key; Work with bits                                                                                                                                                                                                                 |
-| Use the standard library | Import a module; Queue and count with collections; Take the smallest item with heapq; Search a sorted list with bisect                                                                                                                                     |
+| Use the standard library | Import a module; Queue and count with collections; Take the smallest item with heapq; Search a sorted list with bisect; Wrap a function with a decorator                                                                                                   |
 | Model data with classes  | Define a class; Give objects methods                                                                                                                                                                                                                       |
 
 Skills unlock through their graph prerequisites rather than an arbitrary calendar. Mastery requires **passing every knowledge point** (two correct answers on different questions) and the Python exercise. Repeating one question cannot unlock a skill or farm learn XP. Hints support practice but do not count as independent mastery evidence.
@@ -168,7 +168,7 @@ Run the complete checks, including formatting, with:
 npm run verify
 ```
 
-The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python checks the foundation curriculum. Real Pyodide executes all 266 code solutions and 273 executable lesson examples, including scientific packages; all empty submissions must fail. Native compiler batches also run every Rust/C++ reference assessment and lesson example, reject unfinished starters and empty submissions, and verify their documented output. Scenario examples use explicit text presentation rather than code execution.
+The Vitest suites cover curriculum graph integrity and reachability, distinct mastery evidence, hints, remediation, question rotation, spacing, XP replay resistance, timezone/streak boundaries, state merging, account isolation, revision conflicts, Python execution handling, and the Anki integration protocol. Native Python checks the foundation curriculum. Real Pyodide executes all 297 code solutions and 304 executable lesson examples, including scientific packages; all empty submissions must fail. Native compiler batches also run every Rust/C++ reference assessment and lesson example, reject unfinished starters and empty submissions, and verify their documented output. Scenario examples use explicit text presentation rather than code execution.
 
 Browser tests are not part of CI for now; CI runs `npm run verify` and the Cloudflare build before deploying. To run them by hand, install Chromium once, leave the development server running, and use another terminal:
 

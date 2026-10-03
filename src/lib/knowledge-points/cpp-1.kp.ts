@@ -10610,12 +10610,7 @@ int main() {
         ),
         choose(
           'Which expression is never negative for ints a and b whose difference fits in an int?',
-          [
-            'a - b',
-            'std::abs(a) - std::abs(b)',
-            'std::abs(a - b)',
-            '-(a - b)',
-          ],
+          ['a - b', 'std::abs(a) - std::abs(b)', 'std::abs(a - b)', '-(a - b)'],
           2,
           'Only the magnitude of the difference is guaranteed to be at least 0; the other expressions are negative for some inputs.',
         ),

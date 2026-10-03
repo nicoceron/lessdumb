@@ -411,7 +411,12 @@ const curriculum = [
     'ml-models',
     'Turn scores into probabilities',
     'Use logistic scores and thresholds for binary classification.',
-    ['ml-linear-regression', 'math-probability', 'math-sigmoid', 'math-exp-log'],
+    [
+      'ml-linear-regression',
+      'math-probability',
+      'math-sigmoid',
+      'math-exp-log',
+    ],
     [
       'Binary logistic regression forms a linear score and applies the sigmoid: $\\text{probability} = \\frac{1}{1 + \\exp(-\\text{score})}$. A score of zero maps to probability 0.5. Positive scores map above 0.5 and negative scores below it. Despite its name, logistic regression is commonly used for classification.',
       'A probability estimate and a class decision are separate outputs. A threshold converts probabilities into labels, for example positive when $p \\ge 0.7$. Raising the threshold reduces the set of predicted positives; lowering it expands that set. Select a threshold using validation data and error costs. A probability-shaped output also needs calibration checks before being trusted as a frequency estimate.',

@@ -1666,18 +1666,14 @@ const topics: Topic[] = [
     unit: 'cpp-sequences',
     atoms: [
       {
-        key:
-          'abs-value',
-        title:
-          'Measure a distance with std::abs',
+        key: 'abs-value',
+        title: 'Measure a distance with std::abs',
         definition:
           'std::abs returns the magnitude of a number, so std::abs(a - b) is the distance between a and b whichever of them is larger.',
-        rule:
-          'Subtract first and then take std::abs, including <cstdlib> for integers and <cmath> for floating-point values.',
+        rule: 'Subtract first and then take std::abs, including <cstdlib> for integers and <cmath> for floating-point values.',
         violation:
           'Subtract the magnitudes, std::abs(a) - std::abs(b), and report that as the distance.',
-        signature:
-          'int solve(int a, int b)',
+        signature: 'int solve(int a, int b)',
         solution:
           '#include <iostream>\n#include <cassert>\n#include <cstdlib>\nint solve(int a, int b) {\n  return std::abs(a - b);\n}',
         starterCode:
@@ -1689,20 +1685,16 @@ const topics: Topic[] = [
         output: '7 8',
       },
       {
-        key:
-          'to-string',
-        title:
-          'Turn a number into text with std::to_string',
+        key: 'to-string',
+        title: 'Turn a number into text with std::to_string',
         definition:
           'std::to_string (from <string>) converts a number into a std::string of its decimal digits, with a leading minus sign for a negative value.',
-        rule:
-          'Convert a number with std::to_string before appending it to text; += with an int appends a single character code instead.',
+        rule: 'Convert a number with std::to_string before appending it to text; += with an int appends a single character code instead.',
         violation:
           'Append an int count to a std::string with += and expect its decimal digits.',
-        signature:
-          'std::string solve(const std::string& label, int count)',
+        signature: 'std::string solve(const std::string& label, int count)',
         solution:
-          '#include <iostream>\n#include <cassert>\n#include <string>\nstd::string solve(const std::string& label, int count) {\n  std::string text = label;\n  text += \'=\';\n  text += std::to_string(count);\n  return text;\n}',
+          "#include <iostream>\n#include <cassert>\n#include <string>\nstd::string solve(const std::string& label, int count) {\n  std::string text = label;\n  text += '=';\n  text += std::to_string(count);\n  return text;\n}",
         starterCode:
           '#include <iostream>\n#include <cassert>\n#include <string>\nstd::string solve(const std::string& label, int count) {\n  // TODO: implement the operation described above.\n  static_assert(false, "Implement this function");\n}',
         tests:
@@ -1712,18 +1704,14 @@ const topics: Topic[] = [
         output: 'bids=12',
       },
       {
-        key:
-          'reverse-range',
-        title:
-          'Reverse a range in place with std::reverse',
+        key: 'reverse-range',
+        title: 'Reverse a range in place with std::reverse',
         definition:
           'std::reverse(first, last) (from <algorithm>) reverses the elements of [first, last) in place, swapping pairs from both ends inward, and returns nothing.',
-        rule:
-          'Copy the container first when the original order is still needed, then reverse the copy.',
+        rule: 'Copy the container first when the original order is still needed, then reverse the copy.',
         violation:
           'Expect std::reverse to return a reversed copy and leave the original range unchanged.',
-        signature:
-          'std::vector<int> solve(std::vector<int> values)',
+        signature: 'std::vector<int> solve(std::vector<int> values)',
         solution:
           '#include <iostream>\n#include <cassert>\n#include <vector>\n#include <algorithm>\nstd::vector<int> solve(std::vector<int> values) {\n  std::reverse(values.begin(), values.end());\n  return values;\n}',
         starterCode:
@@ -1735,18 +1723,14 @@ const topics: Topic[] = [
         output: '321',
       },
       {
-        key:
-          'digit-palindrome',
-        title:
-          'Check a numeric palindrome',
+        key: 'digit-palindrome',
+        title: 'Check a numeric palindrome',
         definition:
           'An integer is a digit palindrome when the decimal text of its magnitude reads the same reversed: take std::abs, convert with std::to_string, reverse a copy, and compare.',
-        rule:
-          'Remove the sign with std::abs before converting, and reverse a copy so the original text is still there to compare against.',
+        rule: 'Remove the sign with std::abs before converting, and reverse a copy so the original text is still there to compare against.',
         violation:
           'Reverse the text with its minus sign, so a negative palindrome such as -121 becomes "121-" and never matches.',
-        signature:
-          'bool solve(int value)',
+        signature: 'bool solve(int value)',
         solution:
           '#include <iostream>\n#include <cassert>\n#include <string>\n#include <cstdlib>\n#include <algorithm>\nbool solve(int value) {\n  std::string digits = std::to_string(std::abs(value));\n  std::string reversed = digits;\n  std::reverse(reversed.begin(), reversed.end());\n  return digits == reversed;\n}',
         starterCode:
@@ -2172,18 +2156,14 @@ const topics: Topic[] = [
     unit: 'cpp-generic',
     atoms: [
       {
-        key:
-          'auto-parameters',
-        title:
-          'Write a lambda with auto parameters',
+        key: 'auto-parameters',
+        title: 'Write a lambda with auto parameters',
         definition:
           'A lambda whose parameter is declared auto is generic: each call with a new argument type compiles a separate version of its body for that type.',
-        rule:
-          'Let each argument keep its own type, and write const auto& for a read-only parameter that would be costly to copy.',
+        rule: 'Let each argument keep its own type, and write const auto& for a read-only parameter that would be costly to copy.',
         violation:
           'Declare the parameter as int and silently truncate a double argument.',
-        signature:
-          'double solve(int whole, double fraction)',
+        signature: 'double solve(int whole, double fraction)',
         solution:
           '#include <iostream>\n#include <cassert>\ndouble solve(int whole, double fraction) {\n  auto half = [](auto value) { return value / 2; };\n  return half(whole) + half(fraction);\n}',
         starterCode:
@@ -2195,18 +2175,14 @@ const topics: Topic[] = [
         output: '6.5',
       },
       {
-        key:
-          'decltype-decay',
-        title:
-          'Name a deduced type with decltype and std::decay_t',
+        key: 'decltype-decay',
+        title: 'Name a deduced type with decltype and std::decay_t',
         definition:
           'decltype(x) names the declared type of x, references and const included; std::decay_t removes them, so std::decay_t<decltype(x)> is the plain type behind a const auto& parameter.',
-        rule:
-          'Compare std::decay_t<decltype(x)> with a plain type such as int, not decltype(x) itself.',
+        rule: 'Compare std::decay_t<decltype(x)> with a plain type such as int, not decltype(x) itself.',
         violation:
           'Compare decltype(x) of a const auto& parameter directly with int, which is never true.',
-        signature:
-          'long long solve(int cents, double dollars)',
+        signature: 'long long solve(int cents, double dollars)',
         solution:
           '#include <iostream>\n#include <cassert>\n#include <type_traits>\nlong long solve(int cents, double dollars) {\n  auto to_cents = [](const auto& amount) {\n    using T = std::decay_t<decltype(amount)>;\n    long long result = 0;\n    if (std::is_same_v<T, int>) {\n      result = amount;\n    } else {\n      result = static_cast<long long>(amount * 100 + 0.5);\n    }\n    return result;\n  };\n  return to_cents(cents) + to_cents(dollars);\n}',
         starterCode:
@@ -2218,18 +2194,14 @@ const topics: Topic[] = [
         output: '400',
       },
       {
-        key:
-          'mutable-lambda',
-        title:
-          'Keep state in a mutable lambda',
+        key: 'mutable-lambda',
+        title: 'Keep state in a mutable lambda',
         definition:
           'A lambda marked mutable may change its by-value captures: each call updates the closure’s own copy, which persists between calls while the original variable stays unchanged.',
-        rule:
-          'Use mutable for state the closure owns, and capture by reference when the caller must see the change.',
+        rule: 'Use mutable for state the closure owns, and capture by reference when the caller must see the change.',
         violation:
           'Expect a mutable lambda’s changes to its captured copy to update the original variable.',
-        signature:
-          'int solve(int start, int calls)',
+        signature: 'int solve(int start, int calls)',
         solution:
           '#include <iostream>\n#include <cassert>\nint solve(int start, int calls) {\n  int value = start;\n  auto next = [value]() mutable { return ++value; };\n  int last = start;\n  for (int i = 0; i < calls; ++i) last = next();\n  return last;\n}',
         starterCode:
@@ -2241,14 +2213,11 @@ const topics: Topic[] = [
         output: '8',
       },
       {
-        key:
-          'generic-lambdas',
-        title:
-          'Total mixed amounts with one stateful generic lambda',
+        key: 'generic-lambdas',
+        title: 'Total mixed amounts with one stateful generic lambda',
         definition:
           'A generic lambda is one closure: calls with int and double arguments run different compiled bodies but share the same mutable captures, so a running total accumulates across both.',
-        rule:
-          'Declare shared state once in the capture list, mark the lambda mutable, and branch on std::decay_t<decltype(x)> inside the body.',
+        rule: 'Declare shared state once in the capture list, mark the lambda mutable, and branch on std::decay_t<decltype(x)> inside the body.',
         violation:
           'Assume each argument type gets its own separate copy of the captured total.',
         signature:

@@ -11786,7 +11786,12 @@ int main() {
   label(-1);
   std::cout << "\\n";
 }`,
-          ['whole whole whole', 'real real whole', 'whole real real', 'whole real whole'],
+          [
+            'whole whole whole',
+            'real real whole',
+            'whole real real',
+            'whole real whole',
+          ],
           3,
           '3 and -1 are ints, and 3.0 is a double, whatever their values.',
         ),

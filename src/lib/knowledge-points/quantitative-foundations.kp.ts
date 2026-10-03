@@ -5151,12 +5151,7 @@ export const knowledgePoints: KnowledgePointModule = {
         ),
         choose(
           'Which expression computes $e^{-z}$ for a score z?',
-          [
-            'math.e(-z)',
-            '-math.exp(z)',
-            'math.exp(z) ** -z',
-            'math.exp(-z)',
-          ],
+          ['math.e(-z)', '-math.exp(z)', 'math.exp(z) ** -z', 'math.exp(-z)'],
           3,
           'math.exp takes the exponent as its argument. math.e is a number, not a function, and $-e^z$ is negative.',
         ),
