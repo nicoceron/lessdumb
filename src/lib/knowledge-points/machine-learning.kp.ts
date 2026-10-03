@@ -4591,4 +4591,1404 @@ export const knowledgePoints: KnowledgePointModule = {
       ],
     },
   ],
+  'ml-convolution': [
+    {
+      title: 'Slide one shared filter across the input',
+      explanation: [
+        'A convolutional layer slides a small filter along the input and computes a weighted sum at every position. The same weights are reused everywhere, so a pattern the filter detects is found wherever it appears. Each output depends only on a local window, its receptive field.',
+        'Deep-learning libraries compute cross-correlation, without flipping the filter, and still call it convolution. np.correlate(signal, f, mode="valid") does the same in NumPy; a filter of length k over n values gives n - k + 1 outputs.',
+      ],
+      example: {
+        code: 'import numpy as np\nsignal = np.array([1.0, 3.0, 2.0, 5.0, 4.0])\nf = np.array([-1.0, 1.0])\nprint(np.correlate(signal, f, mode="valid").tolist())',
+        output: '[2.0, -1.0, 3.0, -1.0]',
+        explanation:
+          'The filter [-1, 1] measures each step from one value to the next: +2, -1, +3, -1. Five values and a two-wide filter give four outputs.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nsignal = np.array([0.0, 1.0, 4.0, 9.0])\nf = np.array([1.0, 1.0])\nprint(np.correlate(signal, f, mode="valid").tolist())',
+          [
+            '[1.0, 5.0, 13.0, 9.0]',
+            '[1.0, 3.0, 5.0]',
+            '[0.0, 1.0, 4.0, 9.0]',
+            '[1.0, 5.0, 13.0]',
+          ],
+          3,
+          'Each output sums a neighbouring pair: 0+1, 1+4, 4+9. Four values and a two-wide filter give three outputs.',
+        ),
+        choose(
+          'What is weight sharing in a convolutional layer?',
+          [
+            'Each position learns its own unrelated filter',
+            'The same filter weights are applied at every position',
+            'All layers share one set of weights',
+            'Every filter has the same weights as every other filter',
+          ],
+          1,
+          'One filter slides across the input, so it uses far fewer weights and detects a pattern anywhere.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nsignal = np.zeros(10)\nf = np.ones(3)\nprint(len(np.correlate(signal, f, mode="valid")))',
+          ['10', '8', '7', '3'],
+          1,
+          'A filter of width 3 fits in 10 - 3 + 1 = 8 positions.',
+        ),
+        choose(
+          'An output unit is computed from input positions 4, 5, and 6. What are those positions called?',
+          [
+            'Its receptive field',
+            'Its stride',
+            'Its padding',
+            'Its output channel',
+          ],
+          0,
+          'The receptive field is the part of the input that influences a given output.',
+        ),
+      ],
+    },
+    {
+      title: 'Control output size with stride and padding',
+      explanation: [
+        'Stride is how far the filter moves between positions; a stride of 2 computes every other output, roughly halving the size. Padding adds values, usually zeros, around the input so the filter can also be centred at the edges; "same" padding keeps the output as long as the input at stride 1.',
+        'For length n, filter k, padding p on each side, and stride s, the output length is (n + 2*p - k) // s + 1.',
+      ],
+      example: {
+        code: 'import numpy as np\nsignal = np.array([1.0, 3.0, 2.0, 5.0, 4.0])\nf = np.array([-1.0, 1.0])\nfull = np.correlate(signal, f, mode="valid")\nprint(full[::2].tolist())\npadded = np.pad(signal, 1)\nprint(padded.tolist(), len(np.correlate(padded, f, mode="valid")))',
+        output: '[2.0, 3.0]\n[0.0, 1.0, 3.0, 2.0, 5.0, 4.0, 0.0] 6',
+        explanation:
+          'Stride 2 keeps every other response. np.pad adds one zero on each side, so the two-wide filter fits in 6 positions.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'def out_len(n, k, p, s):\n    return (n + 2 * p - k) // s + 1\n\nprint(out_len(32, 3, 0, 1), out_len(32, 3, 1, 1), out_len(32, 3, 1, 2))',
+          ['30 32 16', '30 32 15', '32 32 16', '29 31 16'],
+          0,
+          'No padding loses k - 1 = 2 positions; padding 1 restores them; stride 2 then halves the count.',
+        ),
+        choose(
+          'What does increasing the stride from 1 to 2 usually do?',
+          [
+            'Doubles the number of outputs',
+            'Makes the filter twice as wide',
+            'Spaces the filter positions farther apart, roughly halving the output size',
+            'Adds zeros around the input',
+          ],
+          2,
+          'The filter skips every other position, so fewer outputs are computed.',
+        ),
+        choose(
+          'Why add "same" padding to a convolution?',
+          [
+            'To make the filter learn faster',
+            'To keep the output the same size as the input at stride 1',
+            'To remove the bias',
+            'To share weights between layers',
+          ],
+          1,
+          'Zeros at the edges give the filter enough room at the borders to produce one output per input position.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def out_len(n, k, p, s):\n    return (n + 2 * p - k) // s + 1\n\nprint(out_len(9, 5, 0, 1), out_len(9, 5, 2, 1))',
+          ['4 9', '5 9', '5 5', '5 7'],
+          1,
+          '9 - 5 + 1 = 5 without padding; padding 2 on each side gives 13 - 5 + 1 = 9, the same as the input.',
+        ),
+      ],
+    },
+    {
+      title: 'Apply 2D filters and stack output channels',
+      explanation: [
+        'On an image, a filter is a small grid, such as 3 by 3, that slides over rows and columns. With several input channels, such as red, green, and blue, the filter has one grid per channel. Each filter produces one output channel; a layer with 16 filters produces 16 channels.',
+        'A layer’s parameters are kernel_height * kernel_width * input_channels * filters, plus one bias per filter, independent of image size. That is far fewer than a dense layer connecting every pixel.',
+      ],
+      example: {
+        code: 'import numpy as np\nimage = np.array([[0, 0, 9, 9], [0, 0, 9, 9], [0, 0, 9, 9]], dtype=float)\nkernel = np.array([[-1.0, 1.0], [-1.0, 1.0]])\nout = np.array([[(image[r:r + 2, c:c + 2] * kernel).sum() for c in range(3)] for r in range(2)])\nprint(out.tolist())',
+        output: '[[0.0, 18.0, 0.0], [0.0, 18.0, 0.0]]',
+        explanation:
+          'The nested comprehension slides the 2 by 2 kernel over every position. It responds only where dark changes to bright, so it detects the vertical edge.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nimage = np.array([[1, 1, 1], [5, 5, 5], [5, 5, 5]], dtype=float)\nkernel = np.array([[-1.0, -1.0], [1.0, 1.0]])\nout = np.array([[(image[r:r + 2, c:c + 2] * kernel).sum() for c in range(2)] for r in range(2)])\nprint(out.tolist())',
+          [
+            '[[0.0, 0.0], [8.0, 8.0]]',
+            '[[8.0, 0.0], [8.0, 0.0]]',
+            '[[8.0, 8.0], [0.0, 0.0]]',
+            '[[4.0, 4.0], [0.0, 0.0]]',
+          ],
+          2,
+          'This kernel compares each row with the one below; it fires on the dark-to-bright change in the top rows and stays 0 in the uniform bottom rows.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'k, in_channels, filters = 3, 3, 16\nconv = k * k * in_channels * filters + filters\ndense = 32 * 32 * 3 * 16 + 16\nprint(conv, dense)',
+          ['432 49152', '448 49168', '448 3088', '160 49168'],
+          1,
+          'The convolution reuses 3*3*3 weights per filter at every position; a dense layer needs a weight for every pixel and channel.',
+        ),
+        choose(
+          'A convolutional layer has 32 filters. How many output channels does it produce?',
+          ['1', '3', '32', 'One per pixel'],
+          2,
+          'Each filter produces its own feature map, so 32 filters give 32 channels.',
+        ),
+        choose(
+          'Why does a convolutional layer need far fewer parameters than a dense layer on an image?',
+          [
+            'It ignores most of the pixels',
+            'It works only on grayscale images',
+            'It has no biases',
+            'Its small filters are shared across every position',
+          ],
+          3,
+          'Weight sharing makes the parameter count depend on the filter size, not the image size.',
+        ),
+      ],
+    },
+    {
+      title: 'Pool neighbourhoods and grow the receptive field',
+      explanation: [
+        'Pooling summarizes neighbouring values to shrink the output. Max pooling with window 2 and stride 2 keeps the largest value of each pair, halving the length and keeping the strongest response.',
+        'Stacking layers widens the receptive field: each layer sees a window of the previous layer’s outputs, so deeper units depend on larger regions of the input. With L stacked stride-1 layers of width k, it is 1 + L*(k - 1) inputs wide. Shared filters and pooling help find a pattern in different places, but they do not make a network fully insensitive to position.',
+      ],
+      example: {
+        code: 'import numpy as np\nx = np.array([1.0, 3.0, 2.0, 0.0, 4.0, 6.0])\nprint(x.reshape(-1, 2).max(axis=1).tolist())',
+        output: '[3.0, 2.0, 6.0]',
+        explanation:
+          'reshape(-1, 2) groups the values into pairs, and max(axis=1) keeps the largest in each pair.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nx = np.array([5.0, 1.0, 2.0, 8.0, 0.0, 3.0, 7.0, 7.0])\nprint(x.reshape(-1, 2).max(axis=1).tolist())',
+          [
+            '[5.0, 8.0, 3.0, 7.0]',
+            '[3.0, 5.0, 1.5, 7.0]',
+            '[8.0, 7.0]',
+            '[5.0, 2.0, 0.0, 7.0]',
+          ],
+          0,
+          'Each pair keeps its largest value, halving the length from 8 to 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'def receptive_field(layers, k):\n    return 1 + layers * (k - 1)\n\nprint(receptive_field(1, 3), receptive_field(2, 3), receptive_field(3, 3))',
+          ['3 6 9', '3 5 7', '3 9 27', '1 3 5'],
+          1,
+          'Each extra 3-wide layer adds 2 input positions to what one output unit can see.',
+        ),
+        choose(
+          'What does max pooling keep from each window?',
+          [
+            'The average value',
+            'The first value',
+            'Every value, sorted',
+            'The largest value',
+          ],
+          3,
+          'Max pooling reports the strongest response in each neighbourhood.',
+        ),
+        choose(
+          'Why can deeper convolutional layers detect larger structures?',
+          [
+            'Their filters are always larger',
+            'Their receptive fields cover larger regions of the input',
+            'They use more input channels',
+            'They skip pooling',
+          ],
+          1,
+          'Each layer combines neighbouring outputs of the previous one, so its units depend on wider input regions.',
+        ),
+      ],
+    },
+  ],
+  'ml-sequence-models': [
+    {
+      title: 'Build causal windows of past values',
+      explanation: [
+        'To forecast a sequence, each training example pairs a window of past observations with the value that follows it. The window must end before the target, so the model never sees the value it is predicting or anything later.',
+        'With values in time order, slicing values[i - window:i] gives the window for target values[i].',
+      ],
+      example: {
+        code: 'values = [10, 12, 11, 15, 14]\nwindow = 3\nexamples = []\nfor i in range(window, len(values)):\n    examples.append((values[i - window:i], values[i]))\nprint(examples)',
+        output: '[([10, 12, 11], 15), ([12, 11, 15], 14)]',
+        explanation:
+          'Each target is paired with the three values just before it. Five values with a window of 3 give two examples.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'values = [4, 6, 5, 7, 9, 8]\nwindow = 2\nfor i in range(window, len(values)):\n    print(values[i - window:i], values[i])',
+          [
+            '[4, 6] 6\n[6, 5] 5\n[5, 7] 7\n[7, 9] 9',
+            '[4, 6] 5\n[6, 5] 7\n[5, 7] 9\n[7, 9] 8',
+            '[4, 6, 5] 7\n[6, 5, 7] 9\n[5, 7, 9] 8',
+            '[6, 5] 4\n[5, 7] 6\n[7, 9] 5\n[9, 8] 7',
+          ],
+          1,
+          'Each window holds the two values before its target, so the window never includes the target itself.',
+        ),
+        choose(
+          'Which input window is valid for predicting the value at time 5?',
+          ['Times 6, 7, 8', 'Times 3, 4, 5', 'Times 2, 3, 4', 'Times 4, 5, 6'],
+          2,
+          'A causal window ends before the target time; any window containing time 5 or later leaks the answer.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'values = list(range(100))\nwindow = 7\nprint(len(values) - window)',
+          ['93', '100', '7', '94'],
+          0,
+          'The first target needs 7 earlier values, so targets run from position 7 to 99: 93 examples.',
+        ),
+        choose(
+          'A feature is a centred rolling average over days t - 1, t, and t + 1. Why is it a problem for forecasting day t?',
+          [
+            'Rolling averages are too smooth',
+            'It uses the value at day t and the future day t + 1',
+            'It has too few days',
+            'It ignores day t - 1',
+          ],
+          1,
+          'A centred window reaches forward in time, so it is not available when the forecast is made.',
+        ),
+      ],
+    },
+    {
+      title: 'Carry a hidden state through the steps',
+      explanation: [
+        'A recurrent network reads a sequence one step at a time. At each step it updates a hidden state from the current input and the previous state, h = tanh(w_h * h + w_x * x + b), reusing the same weights at every step. np.tanh squeezes any number into the range -1 to 1.',
+        'The final state summarizes the whole sequence, and the state at each step can also produce a prediction for that step. Information from early inputs fades unless the weights preserve it.',
+      ],
+      example: {
+        code: 'import numpy as np\nh = 0.0\nfor x in [1.0, 0.0, 0.0, 2.0]:\n    h = np.tanh(0.8 * h + x)\n    print(round(float(h), 3))',
+        output: '0.762\n0.544\n0.409\n0.981',
+        explanation:
+          'The first input raises the state; with zero inputs it slowly fades, still remembering the 1; the new input 2 pushes it close to 1.',
+      },
+      questions: [
+        predictOutput(
+          'This simplified recurrence has no activation. What does this program print?',
+          'h = 0.0\nfor x in [4.0, 0.0, 0.0]:\n    h = 0.5 * h + x\nprint(h)',
+          ['4.0', '0.0', '2.0', '1.0'],
+          3,
+          'The 4 enters the state and is halved at each later step: 4, then 2, then 1.',
+        ),
+        choose(
+          'What carries information from earlier steps in a recurrent network?',
+          [
+            'A separate model for each step',
+            'The hidden state passed from step to step',
+            'The test labels',
+            'A copy of every earlier input',
+          ],
+          1,
+          'The state is updated at each step from the previous state and the current input.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nprint(np.tanh(np.array([-10.0, 0.0, 10.0])).round(3).tolist())',
+          [
+            '[-1.0, 0.0, 1.0]',
+            '[0.0, 0.5, 1.0]',
+            '[-10.0, 0.0, 10.0]',
+            '[0.0, 0.0, 10.0]',
+          ],
+          0,
+          'tanh keeps the state between -1 and 1, with 0 mapped to 0.',
+        ),
+        choose(
+          'Why does a recurrent network reuse the same weights at every step?',
+          [
+            'To make every hidden state identical',
+            'Because the sequence has one value',
+            'So one learned update rule applies to sequences of any length',
+            'To avoid computing gradients',
+          ],
+          2,
+          'Sharing weights across time is to sequences what weight sharing across positions is to convolution.',
+        ),
+      ],
+    },
+    {
+      title: 'Control memory with gates',
+      explanation: [
+        'LSTM and GRU cells add gates: learned values between 0 and 1 that decide how much of the old state to keep and how much new information to write. A simplified update is h = g * h_old + (1 - g) * candidate.',
+        'A gate near 1 preserves the old state almost unchanged, which lets information survive many steps; a gate near 0 replaces it with the candidate. This is how gated cells keep long-range information that a plain recurrence would lose.',
+      ],
+      example: {
+        code: 'h_old, candidate = 0.8, -0.4\nfor g in [0.9, 0.1]:\n    print(g, round(g * h_old + (1 - g) * candidate, 3))',
+        output: '0.9 0.68\n0.1 -0.28',
+        explanation:
+          'With g = 0.9 the state stays close to its old value 0.8; with g = 0.1 it moves most of the way to the candidate -0.4.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'h = 1.0\nfor step in range(5):\n    h = 1.0 * h + (1 - 1.0) * 0.0\nprint(h)',
+          ['0.0', '0.5', '5.0', '1.0'],
+          3,
+          'A gate of exactly 1 keeps the whole old state at every step, so the value survives unchanged.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'h_old, candidate, g = 2.0, 6.0, 0.25\nprint(g * h_old + (1 - g) * candidate)',
+          ['2.0', '5.0', '3.0', '8.0'],
+          1,
+          'A quarter of the old state plus three quarters of the candidate: 0.5 + 4.5 = 5.0.',
+        ),
+        choose(
+          'What do LSTM and GRU gates control?',
+          [
+            'How much information is kept, written, and exposed in the state',
+            'How many time steps the sequence has',
+            'Which rows go into the test set',
+            'The learning rate of each layer',
+          ],
+          0,
+          'Gates are learned controls on the flow of information through the state.',
+        ),
+        choose(
+          'Why do gated cells handle long sequences better than a plain recurrence?',
+          [
+            'They read the sequence backwards',
+            'They need no training data',
+            'A gate near 1 can carry information across many steps without it fading',
+            'They use larger hidden states only',
+          ],
+          2,
+          'Keeping the state almost unchanged prevents early information from being overwritten.',
+        ),
+      ],
+    },
+    {
+      title: 'Keep windows inside one entity and score each horizon',
+      explanation: [
+        'With several entities, such as sensors or customers, build windows within each entity’s own series. A window that runs from the end of one sensor into the start of another mixes unrelated histories.',
+        'A one-step forecast predicts the next value; a multi-step forecast predicts several future values, and errors usually grow with the horizon. Report error per horizon and compare it with a naive baseline such as repeating the last observed value.',
+      ],
+      example: {
+        code: 'series = {"A": [1, 2, 3, 4], "B": [10, 20, 30]}\nwindow = 2\nfor name in ["A", "B"]:\n    values = series[name]\n    for i in range(window, len(values)):\n        print(name, values[i - window:i], values[i])',
+        output: 'A [1, 2] 3\nA [2, 3] 4\nB [10, 20] 30',
+        explanation:
+          'Each sensor gets its own windows. Concatenating the lists first would create a window [4, 10] that mixes sensor A with sensor B.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'a = [5, 6, 7]\nb = [50, 60, 70]\njoined = a + b\nwindow = 2\nbad = [joined[i - window:i] for i in range(window, len(joined))]\nprint(bad[1:3])',
+          [
+            '[[5, 6], [6, 7]]',
+            '[[7, 50], [50, 60]]',
+            '[[6, 7], [7, 50]]',
+            '[[50, 60], [60, 70]]',
+          ],
+          2,
+          'After concatenating, the window [7, 50] spans the end of one series and the start of the other.',
+        ),
+        predictOutput(
+          'The naive forecast repeats the last observed value 20 for the next three steps. What does this program print?',
+          'actual = [21, 24, 29]\nlast = 20\nprint([abs(a - last) for a in actual])',
+          ['[1, 4, 9]', '[1, 3, 5]', '[21, 24, 29]', '[9, 4, 1]'],
+          0,
+          'The error grows with the horizon because the series keeps moving away from the last value.',
+        ),
+        choose(
+          'Why report forecast error separately for each horizon?',
+          [
+            'Errors are the same at every horizon',
+            'It allows future values as inputs',
+            'It removes the need for a baseline',
+            'A model can be good one step ahead but poor further out',
+          ],
+          3,
+          'Averaging all horizons together can hide how quickly the forecast degrades.',
+        ),
+        choose(
+          'Readings from 50 machines are stored one machine after another in a single list. How should you build training windows?',
+          [
+            'Slide one window over the whole list',
+            'Build windows within each machine’s readings separately',
+            'Shuffle the list first, then build windows',
+            'Use one window per machine, covering all its readings',
+          ],
+          1,
+          'Windows must not cross from one machine’s history into another’s.',
+        ),
+      ],
+    },
+  ],
+  'ml-attention': [
+    {
+      title: 'Score keys against a query and normalize with softmax',
+      explanation: [
+        'Attention lets each position decide how much to use every other position. A query vector is compared with one key vector per position, usually by a dot product, giving a score per position. Softmax turns the scores into positive weights that sum to 1.',
+        'Keys similar to the query get high scores and therefore most of the weight. In a matrix, K @ q gives one score per key.',
+      ],
+      example: {
+        code: 'import numpy as np\nq = np.array([1.0, 0.0])\nK = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])\nscores = K @ q\nweights = np.exp(scores) / np.exp(scores).sum()\nprint(scores.tolist(), weights.round(3).tolist())',
+        output: '[1.0, 0.0, 1.0] [0.422, 0.155, 0.422]',
+        explanation:
+          'The first and third keys share the query’s direction and score 1; the second scores 0 and gets the smallest weight.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nq = np.array([0.0, 2.0])\nK = np.array([[1.0, 1.0], [0.0, 3.0], [2.0, 0.0]])\nprint((K @ q).tolist())',
+          [
+            '[2.0, 6.0, 0.0]',
+            '[1.0, 3.0, 2.0]',
+            '[0.0, 2.0, 0.0]',
+            '[2.0, 3.0, 2.0]',
+          ],
+          0,
+          'Each score is the dot product of a key with the query: 0*1 + 2*1 = 2, 0*0 + 2*3 = 6, and 2*0 + 0*2 = 0.',
+        ),
+        choose(
+          'What does softmax do to the attention scores?',
+          [
+            'Sorts them from largest to smallest',
+            'Turns them into positive weights that sum to 1',
+            'Removes the largest score',
+            'Rounds them to 0 or 1',
+          ],
+          1,
+          'Normalized weights say what share of attention each position receives.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nscores = np.array([5.0, 5.0])\nweights = np.exp(scores) / np.exp(scores).sum()\nprint(weights.tolist())',
+          ['[1.0, 1.0]', '[5.0, 5.0]', '[0.5, 0.5]', '[1.0, 0.0]'],
+          2,
+          'Equal scores give equal weights, however large the scores are.',
+        ),
+        choose(
+          'Which key receives the most attention?',
+          [
+            'The key stored first',
+            'The key with the largest values overall',
+            'The key whose dot product with the query is largest',
+            'Every key equally, always',
+          ],
+          2,
+          'Weights follow the scores, and the scores measure similarity to the query.',
+        ),
+      ],
+    },
+    {
+      title: 'Combine value vectors into a context',
+      explanation: [
+        'The attention weights mix value vectors: the output is the weighted sum of the values, weights @ V. Queries and keys decide where to look; values supply what is retrieved.',
+        'For many queries at once, the scores are Q @ K.T, and they are divided by the square root of the key size d before softmax. Without that scaling, dot products of long vectors grow large, and softmax puts almost all weight on one position.',
+      ],
+      example: {
+        code: 'import numpy as np\nweights = np.array([0.422, 0.155, 0.422])\nV = np.array([[10.0, 0.0], [0.0, 10.0], [5.0, 5.0]])\nprint((weights @ V).round(2).tolist())',
+        output: '[6.33, 3.66]',
+        explanation:
+          'Most weight falls on the first and third values, so the context leans toward their first coordinate.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nweights = np.array([0.25, 0.75])\nV = np.array([[2.0, 0.0], [0.0, 4.0]])\nprint((weights @ V).tolist())',
+          ['[2.0, 4.0]', '[0.5, 3.0]', '[1.0, 2.0]', '[0.25, 0.75]'],
+          1,
+          '0.25 of the first value contributes 0.5; 0.75 of the second contributes 3.0.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nfor d in [4, 64]:\n    q = np.ones(d)\n    k = np.ones(d)\n    print(d, float(q @ k), float(q @ k / np.sqrt(d)))',
+          [
+            '4 4.0 4.0\n64 64.0 64.0',
+            '4 2.0 1.0\n64 8.0 1.0',
+            '4 4.0 1.0\n64 64.0 1.0',
+            '4 4.0 2.0\n64 64.0 8.0',
+          ],
+          3,
+          'Raw dot products grow with d; dividing by √d keeps them in a smaller range.',
+        ),
+        choose(
+          'In attention, what do the value vectors provide?',
+          [
+            'The content that is mixed into the output',
+            'The scores that decide where to look',
+            'The positions of the tokens',
+            'The softmax normalization',
+          ],
+          0,
+          'Keys and queries produce weights; values are what those weights combine.',
+        ),
+        choose(
+          'Why are attention scores divided by √d before softmax?',
+          [
+            'To make every weight equal',
+            'To keep large dot products from making softmax put nearly all weight on one position',
+            'To remove the need for keys',
+            'To make the scores negative',
+          ],
+          1,
+          'Scaling keeps the scores moderate, so the weights stay spread out and gradients stay useful.',
+        ),
+      ],
+    },
+    {
+      title: 'Mask future positions for causal attention',
+      explanation: [
+        'When a model generates a sequence one token at a time, a position must not attend to later positions, because they do not exist yet at generation time. A causal mask sets their scores to minus infinity before softmax, which gives them weight exactly 0.',
+        'For a whole sequence the allowed pairs form a lower-triangular pattern: position i may attend to positions 0 through i. np.tril builds that pattern, and np.where swaps disallowed scores for -np.inf.',
+      ],
+      example: {
+        code: 'import numpy as np\nscores = np.array([2.0, 1.0, 3.0])\nallowed = np.array([True, True, False])\nmasked = np.where(allowed, scores, -np.inf)\nweights = np.exp(masked) / np.exp(masked).sum()\nprint(weights.round(3).tolist())',
+        output: '[0.731, 0.269, 0.0]',
+        explanation:
+          'The third position is in the future, so it gets weight 0 even though its score was the highest; the others share all the weight.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nprint(np.tril(np.ones((3, 3), dtype=int)).tolist())',
+          [
+            '[[1, 1, 1], [0, 1, 1], [0, 0, 1]]',
+            '[[1, 0, 0], [1, 1, 0], [1, 1, 1]]',
+            '[[1, 1, 1], [1, 1, 1], [1, 1, 1]]',
+            '[[0, 0, 0], [1, 0, 0], [1, 1, 0]]',
+          ],
+          1,
+          'Row i allows columns 0 through i: each position sees itself and the past.',
+        ),
+        predictOutput(
+          'Each row holds one position’s scores. What does this program print?',
+          'import numpy as np\nscores = np.array([[1.0, 2.0, 0.5], [0.0, 1.0, 1.0], [2.0, 0.0, 1.0]])\nallowed = np.tril(np.ones((3, 3), dtype=bool))\nmasked = np.where(allowed, scores, -np.inf)\nweights = np.exp(masked) / np.exp(masked).sum(axis=1, keepdims=True)\nprint(weights.round(3).tolist())',
+          [
+            '[[1.0, 0.0, 0.0], [0.269, 0.731, 0.0], [0.665, 0.09, 0.245]]',
+            '[[0.231, 0.629, 0.14], [0.155, 0.422, 0.422], [0.665, 0.09, 0.245]]',
+            '[[0.0, 0.0, 1.0], [0.0, 0.269, 0.731], [0.665, 0.09, 0.245]]',
+            '[[1.0, 0.0, 0.0], [0.5, 0.5, 0.0], [0.333, 0.333, 0.333]]',
+          ],
+          0,
+          'The first position can only see itself. The second splits weight between positions 0 and 1. The last sees all three.',
+        ),
+        choose(
+          'What does a causal mask prevent?',
+          [
+            'Attending to earlier tokens',
+            'Using value vectors',
+            'A token attending to tokens that come after it',
+            'Normalizing the scores',
+          ],
+          2,
+          'During generation later tokens do not exist yet, so training must not let the model use them.',
+        ),
+        choose(
+          'Why are masked scores set to minus infinity rather than 0?',
+          [
+            'exp(-inf) is 0, so masked positions get exactly zero weight',
+            'A score of 0 is not allowed in attention',
+            'Minus infinity makes softmax faster',
+            'It flips the order of the tokens',
+          ],
+          0,
+          'A score of 0 would still receive positive weight after softmax.',
+        ),
+      ],
+    },
+    {
+      title: 'Add position information; choose self- or cross-attention',
+      explanation: [
+        'Attention by itself ignores order: shuffling the key–value pairs gives the same output, because each pair is scored on its content alone. Transformers therefore add positional information, such as position embeddings, to every token.',
+        'In self-attention, queries, keys, and values all come from the same sequence. In cross-attention, queries come from one sequence and keys and values from another, as when a translation decoder consults the source sentence. Transformer blocks wrap attention with feed-forward layers, residual connections, and normalization.',
+      ],
+      example: {
+        code: 'import numpy as np\nq = np.array([1.0, 1.0])\nK = np.array([[2.0, 0.0], [0.0, 1.0]])\nV = np.array([[1.0], [3.0]])\n\ndef attend(K, V):\n    s = K @ q\n    w = np.exp(s) / np.exp(s).sum()\n    return (w @ V).round(3).tolist()\n\nprint(attend(K, V), attend(K[::-1], V[::-1]))',
+        output: '[1.538] [1.538]',
+        explanation:
+          'Reversing the order of the key–value pairs leaves the output unchanged, so attention alone cannot tell which token came first.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\ntokens = np.array([[1.0, 0.0], [1.0, 0.0]])\npositions = np.array([[0.0, 0.1], [0.0, 0.2]])\nprint((tokens + positions).tolist())',
+          [
+            '[[1.0, 0.0], [1.0, 0.0]]',
+            '[[0.0, 0.1], [0.0, 0.2]]',
+            '[[1.0, 0.1], [1.0, 0.2]]',
+            '[[1.0, 0.3], [1.0, 0.3]]',
+          ],
+          2,
+          'Two identical tokens become different vectors once their positions are added, so attention can tell them apart.',
+        ),
+        choose(
+          'Why do transformers add positional information to tokens?',
+          [
+            'Attention alone does not encode token order',
+            'It makes every token a class label',
+            'It replaces the value vectors',
+            'It masks future tokens',
+          ],
+          0,
+          'Without positions, "dog bites man" and "man bites dog" would look the same to attention.',
+        ),
+        choose(
+          'A translation decoder attends to the encoded source sentence. Which kind of attention is this?',
+          [
+            'Self-attention',
+            'Causal self-attention',
+            'Pooling',
+            'Cross-attention',
+          ],
+          3,
+          'The queries come from the target sequence; the keys and values come from the source.',
+        ),
+        choose(
+          'In self-attention over a sentence, where do the queries, keys, and values come from?',
+          [
+            'Queries from the sentence; keys and values from another sentence',
+            'All three from the same sentence',
+            'Keys only from the sentence',
+            'From the labels',
+          ],
+          1,
+          'Each token compares itself with every token of the same sequence.',
+        ),
+      ],
+    },
+  ],
+  'ml-transfer-learning': [
+    {
+      title: 'Reuse a frozen base as a feature extractor',
+      explanation: [
+        'Transfer learning starts from a network trained on a large related task. Feature extraction keeps that pretrained base frozen, runs the new data through it, and trains only a new head, often a single output layer, on the resulting features.',
+        'This works well when the new labelled dataset is small, because only the few head parameters are learned from it. Here a fixed weight matrix stands in for the pretrained base, and scikit-learn’s LogisticRegression plays the new head.',
+      ],
+      example: {
+        code: 'import numpy as np\nfrom sklearn.linear_model import LogisticRegression\nX = np.array([[1.0, 0.0], [2.0, 1.0], [0.0, 3.0], [1.0, 4.0]])\ny = [0, 0, 1, 1]\nW_base = np.array([[1.0, -1.0, 0.5], [-1.0, 1.0, 0.5]])\nfeatures = np.maximum(0, X @ W_base)\nprint(features.tolist())\nhead = LogisticRegression().fit(features, y)\nprint(head.predict(np.maximum(0, np.array([[0.0, 5.0]]) @ W_base)).tolist())',
+        output:
+          '[[1.0, 0.0, 0.5], [1.0, 0.0, 1.5], [0.0, 3.0, 1.5], [0.0, 3.0, 2.5]]\n[1]',
+        explanation:
+          'The frozen base turns each row into three features. Only the head is fitted, and a new row passes through the same frozen base before the head predicts.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'base_params = 2_000_000\nhead_params = 1_281\nprint(head_params, base_params + head_params)',
+          ['1281 1281', '1281 2001281', '2001281 1281', '2000000 1281'],
+          1,
+          'With the base frozen, only the head’s 1,281 parameters are trained, out of about two million in the model. Underscores in numbers are only digit separators.',
+        ),
+        choose(
+          'Why freeze the pretrained base while training a new head?',
+          [
+            'To preserve its useful features while the randomly initialized head learns',
+            'To erase the pretrained weights',
+            'To make every layer permanently unchangeable',
+            'To avoid needing labels',
+          ],
+          0,
+          'Large early errors from a random head could otherwise damage the pretrained features.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nW_base = np.array([[1.0, 0.0], [0.0, 2.0]])\nrow = np.array([[3.0, -1.0]])\nprint(np.maximum(0, row @ W_base).tolist())',
+          ['[[3.0, -2.0]]', '[[3.0, 2.0]]', '[[0.0, 0.0]]', '[[3.0, 0.0]]'],
+          3,
+          'The frozen base computes [3, -2], and its ReLU clips the negative value, exactly as for the training rows.',
+        ),
+        choose(
+          'You have 300 labelled images and a base pretrained on millions of photos. Which approach is a sensible start?',
+          [
+            'Train a large network from random weights',
+            'Freeze the base and train a new head on its features',
+            'Fine-tune every layer at a large learning rate',
+            'Skip validation because the base is pretrained',
+          ],
+          1,
+          'With few labels, reusing the frozen features and learning only the head is the safest first step.',
+        ),
+      ],
+    },
+    {
+      title: 'Change trainable flags, then recompile',
+      explanation: [
+        'A frozen layer’s weights receive no updates: training applies the update only to trainable parameters. In Keras, set layer.trainable = False or True, then call compile again so the training configuration reflects the new flags.',
+        'The model summary reports trainable and non-trainable parameter counts, a quick check that the right layers are frozen.',
+      ],
+      example: {
+        code: 'import numpy as np\nweights = np.array([0.5, -1.0, 2.0, 0.5])\ntrainable = np.array([False, False, True, True])\ngradient = np.array([1.0, 1.0, 1.0, 1.0])\nweights = weights - 0.1 * gradient * trainable\nprint(weights.tolist())',
+        output: '[0.5, -1.0, 1.9, 0.4]',
+        explanation:
+          'Multiplying by the trainable flags (True = 1, False = 0) applies the update only to the last two weights; the frozen ones are unchanged.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'layers = [{"name": "conv1", "params": 1000, "trainable": False}, {"name": "conv2", "params": 5000, "trainable": True}, {"name": "head", "params": 200, "trainable": True}]\ntrainable_total = sum([layer["params"] for layer in layers if layer["trainable"]])\nprint(trainable_total)',
+          ['6200', '1000', '5200', '200'],
+          2,
+          'Only conv2 and the head are trainable: 5,000 + 200.',
+        ),
+        choose(
+          'After setting base.trainable = True in Keras, what must you do before calling fit again?',
+          [
+            'Nothing; fit notices the change',
+            'Delete the head',
+            'Rename the model',
+            'Compile the model again',
+          ],
+          3,
+          'compile fixes the training configuration, so it must run again after trainable flags change.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nweights = np.array([1.0, 1.0, 1.0])\ntrainable = np.array([True, False, True])\nfor step in range(2):\n    weights = weights - 0.5 * np.array([2.0, 2.0, 2.0]) * trainable\nprint(weights.tolist())',
+          [
+            '[-1.0, -1.0, -1.0]',
+            '[-1.0, 1.0, -1.0]',
+            '[0.0, 1.0, 0.0]',
+            '[1.0, -1.0, 1.0]',
+          ],
+          1,
+          'Each step subtracts 1 from the trainable weights only; the frozen middle weight stays at 1.',
+        ),
+        choose(
+          'The summary shows 0 trainable parameters after you meant to unfreeze the top layers. What is the likely cause?',
+          [
+            'The flags were changed but the model was not recompiled, or the wrong layers were changed',
+            'The base has no parameters',
+            'Fine-tuning always reports 0',
+            'The learning rate is too small',
+          ],
+          0,
+          'Check which layers have trainable = True and recompile so training uses them.',
+        ),
+      ],
+    },
+    {
+      title: 'Fine-tune selected layers at a small learning rate',
+      explanation: [
+        'Once the new head works, fine-tuning unfreezes some of the base, usually its top layers, and continues training so the features adapt to the new task. The early layers, which detect generic patterns, often stay frozen.',
+        'Use a much smaller learning rate than for the head. Large updates can wreck pretrained weights in a few steps; small updates adjust them gently. Watch validation loss to decide how long to fine-tune.',
+      ],
+      example: {
+        code: 'pretrained = 0.80\ngradient = 4.0\nfor lr in [0.1, 0.0001]:\n    print(lr, round(pretrained - lr * gradient, 4))',
+        output: '0.1 0.4\n0.0001 0.7996',
+        explanation:
+          'At 0.1 one step halves the pretrained weight. At 0.0001 the weight barely moves, preserving what it learned.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'w = 1.0\nfor step in range(3):\n    w = w - 0.5 * 2.0\nprint(w)',
+          ['0.0', '-2.0', '1.0', '-0.5'],
+          1,
+          'Each step subtracts 1, so three large steps move the pretrained weight from 1 to -2, far from its learned value.',
+        ),
+        choose(
+          'What is a sound fine-tuning strategy?',
+          [
+            'Unfreeze every layer and use the largest stable learning rate',
+            'Unfreeze the top layers and use a small learning rate, watching validation loss',
+            'Fine-tune before training the new head',
+            'Choose the number of fine-tuning steps from the test set',
+          ],
+          1,
+          'Small, monitored updates adapt the features without destroying them.',
+        ),
+        choose(
+          'Why are the earliest layers of a pretrained image network often left frozen?',
+          [
+            'They detect generic patterns such as edges, useful for most image tasks',
+            'They have no weights',
+            'They cannot be unfrozen',
+            'They contain the class labels',
+          ],
+          0,
+          'Early features transfer broadly; later layers are more specific to the original task.',
+        ),
+        choose(
+          'Validation loss jumps sharply in the first epoch of fine-tuning. What should you try first?',
+          [
+            'Unfreeze more layers',
+            'Raise the learning rate',
+            'Train on the test set',
+            'Lower the fine-tuning learning rate',
+          ],
+          3,
+          'A sudden jump suggests the updates are too large and are disrupting pretrained features.',
+        ),
+      ],
+    },
+    {
+      title:
+        'Match the pretrained preprocessing and judge the fit of the source',
+      explanation: [
+        'A pretrained base expects inputs prepared exactly as during its training, for example pixels scaled to -1 to 1 rather than 0 to 1. Feeding it differently scaled inputs silently degrades its features. Batch-normalization layers in the base also need deliberate handling: they usually stay in inference mode while fine-tuning.',
+        'Transfer helps when the source task resembles the target. Features learned on everyday photos may help with product photos but little with medical scans or audio spectrograms; validation results decide.',
+      ],
+      example: {
+        code: 'pixels = [0, 255]\nprint([p / 255 for p in pixels])\nprint([p / 127.5 - 1 for p in pixels])',
+        output: '[0.0, 1.0]\n[-1.0, 1.0]',
+        explanation:
+          'The same pixels become different numbers under the two conventions. A base trained on the second would receive a shifted input range if fed the first.',
+      },
+      questions: [
+        predictOutput(
+          'The base was trained on inputs scaled with p / 127.5 - 1. What does this program print?',
+          'pixel = 51\nexpected = pixel / 127.5 - 1\nactual = pixel / 255\nprint(round(expected, 2), round(actual, 2))',
+          ['0.2 0.2', '-0.6 -0.6', '0.2 -0.6', '-0.6 0.2'],
+          3,
+          'The base expects -0.6 for this pixel but would receive 0.2 under the wrong convention.',
+        ),
+        choose(
+          'Fine-tuned accuracy is poor, and you find the new images were scaled to 0–1 while the base was trained on -1 to 1. What should you do?',
+          [
+            'Apply the base’s original preprocessing to the new images',
+            'Use a larger learning rate',
+            'Freeze more layers',
+            'Add more classes',
+          ],
+          0,
+          'The base’s features are only meaningful for inputs prepared the way it was trained.',
+        ),
+        choose(
+          'When is transfer learning least likely to help?',
+          [
+            'When the new task closely resembles the source task',
+            'When the source representations poorly match the new domain',
+            'When the new dataset is small',
+            'When the base was trained on many examples',
+          ],
+          1,
+          'Features that do not describe the new data give the head little to work with.',
+        ),
+        choose(
+          'How do you find out whether a pretrained base helps your task?',
+          [
+            'Assume it does, since it was pretrained',
+            'Check its accuracy on the original task',
+            'Compare validation results against a reasonable baseline',
+            'Count its parameters',
+          ],
+          2,
+          'Only held-out performance on the new task shows whether the transfer worked.',
+        ),
+      ],
+    },
+  ],
+  'ml-generative-models': [
+    {
+      title: 'Compress and reconstruct with an autoencoder',
+      explanation: [
+        'An autoencoder has an encoder that maps an input to a smaller code and a decoder that rebuilds the input from that code. It is trained to make the reconstruction match the input, usually with mean squared error.',
+        'Because the code is smaller than the input, the network must keep the most important structure. The simplest example is a linear one: encode by projecting onto a direction, decode by scaling that direction back up.',
+      ],
+      example: {
+        code: 'import numpy as np\nx = np.array([[1.0, 0.0], [0.0, 2.0], [3.0, 1.0]])\nd = np.array([0.6, 0.8])\ncode = x @ d\nrecon = np.outer(code, d)\nprint(code.round(2).tolist())\nprint(recon.round(2).tolist())\nprint(round(float(((x - recon) ** 2).mean()), 3))',
+        output:
+          '[0.6, 1.6, 2.6]\n[[0.36, 0.48], [0.96, 1.28], [1.56, 2.08]]\n0.887',
+        explanation:
+          'Each two-number row is squeezed into one code. np.outer multiplies each code by the direction to rebuild a row; the mean squared error measures what was lost.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nx = np.array([[2.0, 2.0], [1.0, 1.0]])\nd = np.array([1.0, 1.0]) / np.sqrt(2)\nrecon = np.outer(x @ d, d)\nprint(recon.round(3).tolist(), round(float(((x - recon) ** 2).mean()), 3))',
+          [
+            '[[2.0, 2.0], [1.0, 1.0]] 1.0',
+            '[[2.0, 2.0], [1.0, 1.0]] 0.0',
+            '[[2.828, 2.828], [1.414, 1.414]] 0.0',
+            '[[1.0, 1.0], [0.5, 0.5]] 1.25',
+          ],
+          1,
+          'These rows lie exactly along the code direction, so one number per row reconstructs them perfectly.',
+        ),
+        choose(
+          'What is a basic autoencoder trained to do?',
+          [
+            'Predict a class label for each input',
+            'Encode an input into a smaller code and reconstruct the input from it',
+            'Generate labels for unlabelled data',
+            'Choose actions in an environment',
+          ],
+          1,
+          'Its training target is the input itself.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'original = [1.0, 0.0, 2.0]\nreconstructed = [0.8, 0.1, 2.1]\nerrors = [(original[i] - reconstructed[i]) ** 2 for i in range(3)]\nprint(round(sum(errors) / len(errors), 3))',
+          ['0.06', '0.2', '0.02', '0.133'],
+          2,
+          'The squared errors are 0.04, 0.01, and 0.01, which average to 0.02.',
+        ),
+        choose(
+          'Why must an autoencoder’s code be smaller than its input, or otherwise constrained?',
+          [
+            'Otherwise it could copy the input without learning any structure',
+            'Smaller codes always reconstruct perfectly',
+            'The decoder cannot read large codes',
+            'It makes training data unnecessary',
+          ],
+          0,
+          'The bottleneck forces it to keep the most important patterns.',
+        ),
+      ],
+    },
+    {
+      title: 'Sample new codes from a variational autoencoder',
+      explanation: [
+        'A variational autoencoder (VAE) encodes each input as a distribution, a mean mu and a spread sigma, rather than a single code. During training it samples a code as z = mu + sigma * eps, where eps is random noise, and a regularizer keeps the codes close to a standard normal distribution.',
+        'Because the codes fill a smooth, known region, you can generate new data by sampling z from that normal distribution and decoding it; nearby codes decode to similar outputs.',
+      ],
+      example: {
+        code: 'mu, sigma = 2.0, 0.5\nfor eps in [-1.0, 0.0, 2.0]:\n    print(mu + sigma * eps)',
+        output: '1.5\n2.0\n3.0',
+        explanation:
+          'Different noise values give different codes around the mean 2.0; sigma sets how far they spread.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nmu = np.array([1.0, -1.0])\nsigma = np.array([0.1, 2.0])\neps = np.array([1.0, 0.5])\nprint((mu + sigma * eps).tolist())',
+          ['[1.1, 0.0]', '[1.1, -2.0]', '[0.1, 1.0]', '[2.0, -0.5]'],
+          0,
+          'Each coordinate moves from its mean by its own sigma times its noise: 1 + 0.1 and -1 + 1.0.',
+        ),
+        choose(
+          'How does a trained VAE generate a new example?',
+          [
+            'It copies a training example',
+            'It samples a code from the prior distribution and decodes it',
+            'It averages all training examples',
+            'It asks a discriminator for one',
+          ],
+          1,
+          'The regularized code space can be sampled directly, and the decoder turns samples into data.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'mu = 0.0\nfor sigma in [0.1, 3.0]:\n    print(sigma, mu + sigma * 2.0)',
+          [
+            '0.1 0.2\n3.0 6.0',
+            '0.1 2.0\n3.0 2.0',
+            '0.1 0.1\n3.0 3.0',
+            '0.1 2.1\n3.0 5.0',
+          ],
+          0,
+          'The same noise moves the code much farther when sigma is large.',
+        ),
+        choose(
+          'What does a VAE’s regularizer encourage?',
+          [
+            'Codes that memorize each input exactly',
+            'Codes with no randomness',
+            'Codes whose distribution stays close to a chosen prior, such as a standard normal',
+            'A discriminator that is always correct',
+          ],
+          2,
+          'Keeping codes near the prior is what makes sampling from it produce sensible outputs.',
+        ),
+      ],
+    },
+    {
+      title: 'Train a generator against a discriminator',
+      explanation: [
+        'A generative adversarial network (GAN) has two networks. The generator turns random noise into samples; the discriminator outputs the probability that a sample is real. The discriminator is trained with log loss to say real for real data and fake for generated data.',
+        'The generator is trained to make the discriminator call its samples real, for example by minimizing -log(D(fake)). The two improve against each other, which can be unstable, and a generator may collapse onto a few kinds of output.',
+      ],
+      example: {
+        code: 'import math\nd_real, d_fake = 0.9, 0.2\ndisc_loss = -math.log(d_real) - math.log(1 - d_fake)\ngen_loss = -math.log(d_fake)\nprint(round(disc_loss, 3), round(gen_loss, 3))',
+        output: '0.329 1.609',
+        explanation:
+          'The discriminator is doing well (0.9 on real, 0.2 on fake), so its loss is low and the generator’s is high.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import math\nfor d_fake in [0.1, 0.5]:\n    print(d_fake, round(-math.log(d_fake), 3))',
+          [
+            '0.1 0.105\n0.5 0.693',
+            '0.1 2.303\n0.5 0.693',
+            '0.1 0.693\n0.5 2.303',
+            '0.1 2.303\n0.5 0.5',
+          ],
+          1,
+          'The generator’s loss falls as the discriminator gives its samples a higher probability of being real.',
+        ),
+        choose(
+          'Which architecture pairs a generator with a discriminator?',
+          [
+            'A variational autoencoder',
+            'A diffusion model',
+            'A recurrent network',
+            'A generative adversarial network',
+          ],
+          3,
+          'The adversarial game between the two networks defines a GAN.',
+        ),
+        choose(
+          'A GAN produces sharp images, but nearly all of them show the same few faces. What is this failure called?',
+          [
+            'Mode collapse',
+            'Overfitting the discriminator',
+            'Vanishing reconstruction',
+            'A causal mask',
+          ],
+          0,
+          'The generator found a few outputs that fool the discriminator and stopped covering the rest of the data.',
+        ),
+        choose(
+          'What does the discriminator output for a sample?',
+          [
+            'A reconstruction of the sample',
+            'The noise used to create it',
+            'The probability that the sample is real',
+            'The sample’s class label',
+          ],
+          2,
+          'It is a binary classifier between real and generated data.',
+        ),
+      ],
+    },
+    {
+      title: 'Generate by learning to remove noise (diffusion)',
+      explanation: [
+        'A diffusion model corrupts training data step by step with Gaussian noise. At a step with signal level a, the noisy version is x_t = sqrt(a) * x0 + sqrt(1 - a) * noise. A network is trained to predict the noise that was added.',
+        'Knowing the noise lets you recover an estimate of the clean data. Generation starts from pure noise and repeatedly removes the predicted noise, step by step, until a sample emerges.',
+      ],
+      example: {
+        code: 'import numpy as np\nx0 = np.array([2.0, -1.0])\nnoise = np.array([0.5, 1.0])\na = 0.64\nxt = np.sqrt(a) * x0 + np.sqrt(1 - a) * noise\nprint(xt.round(3).tolist())\nprint(((xt - np.sqrt(1 - a) * noise) / np.sqrt(a)).round(3).tolist())',
+        output: '[1.9, -0.2]\n[2.0, -1.0]',
+        explanation:
+          'With a = 0.64 the noisy point is 0.8 parts signal and 0.6 parts noise. Subtracting the noise contribution and rescaling recovers the clean point exactly.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'import numpy as np\nx0 = np.array([1.0])\nnoise = np.array([2.0])\nfor a in [1.0, 0.0]:\n    print(a, (np.sqrt(a) * x0 + np.sqrt(1 - a) * noise).tolist())',
+          [
+            '1.0 [2.0]\n0.0 [1.0]',
+            '1.0 [1.0]\n0.0 [1.0]',
+            '1.0 [1.0]\n0.0 [2.0]',
+            '1.0 [3.0]\n0.0 [3.0]',
+          ],
+          2,
+          'At a = 1 the sample is the clean data; at a = 0 it is pure noise.',
+        ),
+        choose(
+          'What does the network in a diffusion model learn to predict?',
+          [
+            'The noise that was added to a corrupted sample',
+            'Whether a sample is real or fake',
+            'A compressed code of the input',
+            'The next token in a sentence',
+          ],
+          0,
+          'Predicting the noise is what allows it to be removed step by step.',
+        ),
+        predictOutput(
+          'The model predicted the noise exactly. What does this program print?',
+          'import numpy as np\na = 0.36\nxt = np.array([1.4])\npredicted_noise = np.array([1.0])\nprint(((xt - np.sqrt(1 - a) * predicted_noise) / np.sqrt(a)).round(3).tolist())',
+          ['[1.4]', '[0.6]', '[2.333]', '[1.0]'],
+          3,
+          'sqrt(0.64) = 0.8 of noise is removed, leaving 0.6, and dividing by sqrt(0.36) = 0.6 gives 1.0.',
+        ),
+        choose(
+          'Where does a diffusion model start when generating a new sample?',
+          [
+            'From a training example',
+            'From pure random noise',
+            'From a discriminator’s output',
+            'From a compressed code of a real input',
+          ],
+          1,
+          'It reverses the noising process, so generation begins at the fully noisy end.',
+        ),
+      ],
+    },
+    {
+      title: 'Check samples for memorization and coverage',
+      explanation: [
+        'A few attractive samples prove little. A generator can memorize training examples, cover only some kinds of data, or produce plausible but wrong content. Reconstruction error, sample quality, and diversity measure different things.',
+        'One simple memorization check finds each sample’s nearest training example: a distance of 0 means an exact copy. Coverage checks ask whether samples span all the kinds of data in the training set, not just the most common ones.',
+      ],
+      example: {
+        code: 'import numpy as np\ntrain = np.array([[0.0, 0.0], [5.0, 5.0], [9.0, 1.0]])\nsamples = np.array([[5.0, 5.0], [2.0, 3.0]])\nfor s in samples:\n    d = np.sqrt(((train - s) ** 2).sum(axis=1))\n    print(round(float(d.min()), 3))',
+        output: '0.0\n3.606',
+        explanation:
+          'The first sample is an exact copy of a training example. The second is new, at distance √13 ≈ 3.606 from its nearest neighbour.',
+      },
+      questions: [
+        predictOutput(
+          'Each sample is labelled with the kind of data it shows. What does this program print?',
+          'training_kinds = ["cat", "dog", "bird", "fish"]\nsample_kinds = ["cat", "cat", "dog", "cat", "dog"]\ncovered = [k for k in training_kinds if k in sample_kinds]\nprint(covered, len(covered) / len(training_kinds))',
+          [
+            "['cat', 'dog'] 0.4",
+            "['cat', 'dog', 'bird', 'fish'] 1.0",
+            "['cat', 'cat', 'dog'] 0.75",
+            "['cat', 'dog'] 0.5",
+          ],
+          3,
+          'The samples show only two of the four kinds, so half of the training data’s variety is missing.',
+        ),
+        choose(
+          'Why is a small set of attractive samples not enough to evaluate a generator?',
+          [
+            'It proves the model cannot memorize',
+            'It may hide memorization, missing kinds of data, and failures relevant to the use case',
+            'It guarantees diversity',
+            'Every sample is automatically calibrated',
+          ],
+          1,
+          'Hand-picked outputs do not describe the whole distribution of what the model produces.',
+        ),
+        choose(
+          'A sample’s nearest training example is at distance 0. What does that suggest?',
+          [
+            'The model is generating perfectly new data',
+            'The sample is an exact copy of a training example',
+            'The training set is empty',
+            'The sample is pure noise',
+          ],
+          1,
+          'Zero distance means the model reproduced a training item rather than generating a new one.',
+        ),
+        choose(
+          'An autoencoder reconstructs held-out inputs very well. What does that tell you about samples generated from it?',
+          [
+            'They will be diverse and realistic',
+            'They will cover every kind of data',
+            'Nothing directly; reconstruction and sample quality are different measures',
+            'They will all be memorized copies',
+          ],
+          2,
+          'Good reconstruction concerns encoding real inputs, not what decoding new codes produces.',
+        ),
+      ],
+    },
+  ],
+  'ml-reinforcement-learning': [
+    {
+      title: 'Follow the agent–environment loop with a policy',
+      explanation: [
+        'In reinforcement learning, an agent observes the state of an environment, chooses an action, and receives a reward and a new state. A policy is the agent’s rule for choosing actions; the simplest is a dictionary from each state to an action.',
+        'No one supplies the correct action. The agent learns only from the rewards that follow its own choices.',
+      ],
+      example: {
+        code: 'policy = {"low_battery": "recharge", "ok": "explore"}\nreward_for = {"recharge": 0, "explore": 1}\nstates = ["ok", "ok", "low_battery", "ok"]\ntotal = 0\nfor state in states:\n    action = policy[state]\n    total += reward_for[action]\n    print(state, action)\nprint(total)',
+        output: 'ok explore\nok explore\nlow_battery recharge\nok explore\n3',
+        explanation:
+          'The policy maps each observed state to an action, and the rewards for the chosen actions add up to 3.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'policy = {"red": "stop", "green": "go"}\nreward_for = {"stop": 0, "go": 2}\ntotal = 0\nfor state in ["green", "red", "green"]:\n    total += reward_for[policy[state]]\nprint(total)',
+          ['2', '6', '4', '0'],
+          2,
+          'Two green states lead to "go", each earning 2; the red state earns 0.',
+        ),
+        choose(
+          'What does a policy specify?',
+          [
+            'How the agent chooses an action from its state',
+            'The reward for every action',
+            'The correct label for each state',
+            'The number of training rows',
+          ],
+          0,
+          'The policy is the agent’s behaviour: state in, action out.',
+        ),
+        choose(
+          'How does reinforcement learning differ from supervised learning?',
+          [
+            'It needs a correct action for every state',
+            'It learns from rewards that follow its own actions, not from labelled answers',
+            'It cannot use numeric data',
+            'It never changes its behaviour',
+          ],
+          1,
+          'The feedback is a reward signal, and the agent must discover which actions earn it.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'policy = {"hungry": "eat", "tired": "sleep", "fine": "work"}\nactions = [policy[s] for s in ["tired", "fine", "hungry"]]\nprint(actions)',
+          [
+            "['sleep', 'work', 'eat']",
+            "['eat', 'sleep', 'work']",
+            "['tired', 'fine', 'hungry']",
+            "['work', 'work', 'work']",
+          ],
+          0,
+          'The comprehension looks up the policy’s action for each state, in order.',
+        ),
+      ],
+    },
+    {
+      title: 'Discount future rewards into a return',
+      explanation: [
+        'The agent tries to maximize its return, the total of future rewards, not just the next one. A discount factor gamma between 0 and 1 weights a reward t steps away by gamma ** t, so nearer rewards count more.',
+        'Computing the return in a loop, start with weight 1 and multiply it by gamma after each reward. A gamma near 0 makes the agent short-sighted; near 1, patient.',
+      ],
+      example: {
+        code: 'rewards = [1, 2, 4]\ngamma = 0.5\ntotal = 0\nweight = 1\nfor reward in rewards:\n    total += weight * reward\n    weight *= gamma\nprint(total)',
+        output: '3.0',
+        explanation:
+          'The return is 1 + 0.5*2 + 0.25*4 = 3. The weight halves for each step further into the future.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'rewards = [2, 4]\ngamma = 0.5\ntotal = 0\nweight = 1\nfor reward in rewards:\n    total += weight * reward\n    weight *= gamma\nprint(total)',
+          ['6.0', '3.0', '4.0', '2.0'],
+          2,
+          'The immediate reward counts fully and the next one is halved: 2 + 0.5*4 = 4.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'rewards = [0, 0, 10]\nfor gamma in [0.9, 0.1]:\n    total = 0\n    weight = 1\n    for reward in rewards:\n        total += weight * reward\n        weight *= gamma\n    print(gamma, round(total, 3))',
+          [
+            '0.9 10.0\n0.1 10.0',
+            '0.9 9.0\n0.1 1.0',
+            '0.9 8.1\n0.1 0.1',
+            '0.9 0.0\n0.1 0.0',
+          ],
+          2,
+          'The reward arrives two steps away, so it is weighted by gamma ** 2: 0.81 or 0.01.',
+        ),
+        choose(
+          'Why might the action with the best immediate reward be the wrong choice?',
+          [
+            'Future rewards never matter',
+            'Another action can give up a little now for a larger return later',
+            'Every action has the same consequences',
+            'Rewards are only given at the start',
+          ],
+          1,
+          'The objective is the whole discounted return, which includes delayed effects.',
+        ),
+        choose(
+          'An agent with gamma = 0 ignores rewards after the next step. How would raising gamma toward 1 change it?',
+          [
+            'It would value distant rewards almost as much as immediate ones',
+            'It would stop receiving rewards',
+            'It would act randomly',
+            'It would only value the immediate reward',
+          ],
+          0,
+          'A gamma close to 1 shrinks the discount, so long-term consequences count.',
+        ),
+      ],
+    },
+    {
+      title: 'Pick actions with Q-values and update them from experience',
+      explanation: [
+        'A Q-value Q(state, action) estimates the return from taking that action in that state and acting well afterwards. A greedy agent chooses the action with the highest Q-value.',
+        'Q-learning improves the estimates from experience. After taking an action and seeing reward r and next state s2, it moves the old estimate toward the target r + gamma * (best Q-value in s2) by a step alpha: Q = Q + alpha * (target - Q).',
+      ],
+      example: {
+        code: 'q = {"left": 1.5, "right": 2.5, "stay": 0.5}\nbest = "left"\nfor action in ["left", "right", "stay"]:\n    if q[action] > q[best]:\n        best = action\nprint(best)\nold, reward, gamma, best_next, alpha = 2.0, 1.0, 0.9, 5.0, 0.5\ntarget = reward + gamma * best_next\nprint(target, old + alpha * (target - old))',
+        output: 'right\n5.5 3.75',
+        explanation:
+          'The greedy choice is the action with the largest Q-value. The update moves 2.0 halfway toward the target 1 + 0.9*5 = 5.5.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'q = {"up": 0.2, "down": 0.9, "wait": 0.4}\nbest = "up"\nfor action in ["up", "down", "wait"]:\n    if q[action] > q[best]:\n        best = action\nprint(best, q[best])',
+          ['up 0.2', 'wait 0.4', 'down 0.4', 'down 0.9'],
+          3,
+          'The loop keeps the action with the largest Q-value seen so far.',
+        ),
+        predictOutput(
+          'What does this program print?',
+          'old, reward, gamma, best_next, alpha = 0.0, 2.0, 0.5, 4.0, 0.25\ntarget = reward + gamma * best_next\nprint(target, old + alpha * (target - old))',
+          ['4.0 1.0', '6.0 1.5', '4.0 4.0', '2.0 0.5'],
+          0,
+          'The target is 2 + 0.5*4 = 4, and the estimate moves a quarter of the way from 0 toward it.',
+        ),
+        choose(
+          'What does Q(state, action) estimate?',
+          [
+            'The immediate reward only',
+            'The probability of reaching the state',
+            'The expected return from taking that action in that state and acting well afterwards',
+            'The number of times the action was tried',
+          ],
+          2,
+          'A Q-value includes both the immediate reward and discounted future returns.',
+        ),
+        choose(
+          'In the Q-learning update, what does alpha control?',
+          [
+            'How heavily future rewards are discounted',
+            'How far each estimate moves toward its new target',
+            'How often the agent explores',
+            'The number of actions',
+          ],
+          1,
+          'alpha is the step size of the update; gamma is the discount.',
+        ),
+      ],
+    },
+    {
+      title: 'Balance exploration and exploitation; design rewards carefully',
+      explanation: [
+        'Exploiting chooses the action that currently looks best; exploring tries other actions to learn what they are worth. Epsilon-greedy does both: with probability epsilon it picks a random action, otherwise the greedy one. With n actions, the greedy action’s probability is 1 - epsilon + epsilon / n, and each other action’s is epsilon / n.',
+        'The agent maximizes exactly the reward it is given. If the reward is only a proxy for the real goal, the agent may find ways to score highly that miss the goal, so reward design needs care and checking.',
+      ],
+      example: {
+        code: 'epsilon = 0.2\nn_actions = 4\ngreedy = 1 - epsilon + epsilon / n_actions\nother = epsilon / n_actions\nprint(round(greedy, 3), round(other, 3), round(greedy + 3 * other, 3))',
+        output: '0.85 0.05 1.0',
+        explanation:
+          'The greedy action can be chosen deliberately or by the random pick; the other three share only the random pick. The four probabilities add up to 1.',
+      },
+      questions: [
+        predictOutput(
+          'What does this program print?',
+          'epsilon = 0.1\nn_actions = 2\nprint(round(1 - epsilon + epsilon / n_actions, 3), round(epsilon / n_actions, 3))',
+          ['0.9 0.1', '0.95 0.05', '0.9 0.05', '1.0 0.0'],
+          1,
+          'The random pick can also land on the greedy action, adding 0.05 to its 0.9.',
+        ),
+        choose(
+          'What is exploration?',
+          [
+            'Always choosing the highest current estimate',
+            'Removing states from the environment',
+            'Trying actions to learn more about their consequences',
+            'Copying a teacher’s labels',
+          ],
+          2,
+          'Exploration gathers information that a purely greedy agent would never collect.',
+        ),
+        predictOutput(
+          'The greedy action pays 1.0 on average and the other action pays 0.0. What does this program print?',
+          'for epsilon in [0.0, 0.5]:\n    p_greedy = 1 - epsilon + epsilon / 2\n    print(epsilon, p_greedy * 1.0 + (1 - p_greedy) * 0.0)',
+          [
+            '0.0 1.0\n0.5 0.5',
+            '0.0 0.5\n0.5 0.75',
+            '0.0 1.0\n0.5 1.0',
+            '0.0 1.0\n0.5 0.75',
+          ],
+          3,
+          'More exploration costs some immediate reward, which is the price of learning about the other action.',
+        ),
+        choose(
+          'A cleaning robot is rewarded for each piece of dirt it collects. It learns to dump dirt and collect it again. What went wrong?',
+          [
+            'The reward was a proxy that could be maximized without achieving the real goal',
+            'The discount factor was too small',
+            'The robot explored too little',
+            'Q-learning cannot learn cleaning',
+          ],
+          0,
+          'The agent optimized the stated reward, not the intended outcome of a clean room.',
+        ),
+      ],
+    },
+  ],
 };

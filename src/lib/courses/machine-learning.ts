@@ -1707,7 +1707,7 @@ const curriculum = [
     ['ml-neural-layers', 'da-window'],
     [
       'A recurrent network updates a hidden state using the current input and the previous state, reusing its parameters at each step. Its output can summarize an entire sequence or provide a prediction at every step. LSTM and GRU architectures use gates to control how information enters, persists in, and leaves their state.',
-      'Forecasting needs a causal input window: each prediction uses observations available before its forecast time. For multiple entities, group observations by entity before creating windows, so a sequence never crosses from one person or sensor to another. A one-step forecast and a multi-step forecast have different outputs and evaluation demands. Sequence models also include temporal convolution and attention, so recurrence is a design choice rather than a requirement. The Python example creates past-value windows; the assessment does not claim to train an RNN in the browser.',
+      'Forecasting needs a causal input window: each prediction uses observations available before its forecast time. For multiple entities, group observations by entity before creating windows, so a sequence never crosses from one person or sensor to another. A one-step forecast and a multi-step forecast have different outputs and evaluation demands. Non-recurrent sequence architectures also exist, so recurrence is a design choice rather than a requirement. The Python example creates past-value windows; the assessment does not claim to train an RNN in the browser.',
     ],
     {
       code: 'values = [10, 12, 11, 15, 14]\nwindow = 3\nexamples = [(values[i-window:i], values[i]) for i in range(window, len(values))]\nprint(examples)',
