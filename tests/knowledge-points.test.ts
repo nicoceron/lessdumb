@@ -17,7 +17,6 @@ import {
 } from '../src/lib/curriculum';
 import type { PythonResult } from '../src/lib/python';
 
-
 // Every worked example and every "what does this print?" question is run, and
 // its published output must be exactly what the program prints.
 interface Program {

@@ -3,39 +3,53 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { rustCatalog, rustTopicStages } from '../src/lib/courses/rust';
+import { rustTopicStages } from '../src/lib/courses/rust';
 import { rustDefinitions } from '../src/lib/courses/rust/content';
-import { validateCurriculum } from '../src/lib/curriculum';
+// The course with its knowledge points, as a lesson loads it.
+import catalog from '../src/lib/content/rust';
+import { validateCurriculum, type Skill } from '../src/lib/curriculum';
 import {
   applyAttempt,
   emptyProgress,
   getSkillState,
+  isMastered,
   isUnlocked,
   nextTask,
+  selectQuestion,
   type Progress,
 } from '../src/lib/learning';
+import { masterSkill } from './helpers/mastery';
 
 const NOW = Date.parse('2026-10-02T15:00:00Z');
-const catalog = rustCatalog;
+
+/** Pass every knowledge point of the lesson; the code exercise comes last. */
+function passPoints(progress: Progress, skill: Skill): Progress {
+  const exercise = skill.questions[0];
+  for (
+    let question = selectQuestion(progress, skill, 'learn');
+    question.id !== exercise.id;
+    question = selectQuestion(progress, skill, 'learn')
+  )
+    progress = applyAttempt(
+      progress,
+      {
+        skillId: skill.id,
+        questionId: question.id,
+        correct: true,
+        mode: 'learn',
+      },
+      NOW,
+      catalog,
+    );
+  return progress;
+}
 
 function learnAll(): Progress {
   let progress = emptyProgress();
   for (let index = 0; index < catalog.skills.length; index++) {
     const task = nextTask(progress, NOW, 'rust', catalog);
     expect(task?.mode).toBe('learn');
-    const skill = catalog.skills.find((item) => item.id === task!.skillId)!;
-    for (const question of skill.questions)
-      progress = applyAttempt(
-        progress,
-        {
-          skillId: skill.id,
-          questionId: question.id,
-          correct: true,
-          mode: 'learn',
-        },
-        NOW,
-        catalog,
-      );
+    progress = masterSkill(progress, task!.skillId, NOW, catalog);
   }
   expect(nextTask(progress, NOW, 'rust', catalog)).toBeNull();
   return progress;
@@ -47,8 +61,9 @@ describe('atomic Rust course', () => {
     expect(catalog.skills).toHaveLength(145);
     expect(catalog.units).toHaveLength(10);
     expect(Object.keys(rustTopicStages)).toHaveLength(35);
+    // One code exercise per skill; choice practice is in knowledge points.
     expect(catalog.skills.flatMap((skill) => skill.questions)).toHaveLength(
-      580,
+      145,
     );
     expect(catalog.skills.flatMap((skill) => skill.flashcards)).toHaveLength(
       290,
@@ -69,19 +84,17 @@ describe('atomic Rust course', () => {
         expect(skill.stage).toBe(index + 1);
         expect(skill.stageCount).toBe(sequence.length);
         expect(skill.topicTitle).toBeTruthy();
-        expect(skill.questions.map((question) => question.type)).toEqual([
-          'choice',
-          'choice',
-          'choice',
-          'code',
+        expect(skill.knowledgePoints?.length).toBeGreaterThan(0);
+        expect(skill.questions.map((question) => question.id)).toEqual([
+          `${id}-q4`,
         ]);
         expect(skill.lesson.example.language).toBe('rust');
         expect(skill.lesson.example.code).toContain('fn main()');
-        expect(skill.questions[3]).toMatchObject({
+        expect(skill.questions[0]).toMatchObject({
           language: 'rust',
           type: 'code',
         });
-        const exercise = skill.questions[3];
+        const exercise = skill.questions[0];
         if (exercise.type !== 'code')
           throw new Error(`${id} has no code contract`);
         const definition = rustDefinitions.find(
@@ -91,37 +104,21 @@ describe('atomic Rust course', () => {
         expect(exercise.contract).toBe(definition.testCode);
         expect(exercise.contract).toBe(exercise.tests);
         expect(exercise.prompt).not.toContain('```');
-        for (const question of skill.questions)
-          if (question.type === 'choice')
-            expect(new Set(question.choices).size).toBe(
-              question.choices.length,
-            );
       }
     }
   });
 
   it('requires independent code evidence, reaches every skill, and keeps learner review schedules separate', () => {
-    let learner = emptyProgress();
     const first = catalog.skills[0];
-    for (const question of first.questions.slice(0, 3))
-      learner = applyAttempt(
-        learner,
-        {
-          skillId: first.id,
-          questionId: question.id,
-          correct: true,
-          mode: 'learn',
-        },
-        NOW,
-        catalog,
-      );
+    let learner = passPoints(emptyProgress(), first);
+    expect(isMastered(learner, first.id, catalog)).toBe(false);
     expect(getSkillState(learner, first.id).mastery).toBeLessThan(1);
     expect(isUnlocked(learner, 'rust-returns', catalog)).toBe(false);
     learner = applyAttempt(
       learner,
       {
         skillId: first.id,
-        questionId: first.questions[3].id,
+        questionId: first.questions[0].id,
         correct: true,
         mode: 'learn',
       },
@@ -134,30 +131,28 @@ describe('atomic Rust course', () => {
       expect(getSkillState(complete, skill.id).mastery).toBe(1);
     const due = getSkillState(complete, first.id).dueAt!;
     const memory = getSkillState(complete, first.id).memory;
-    let reviewed = applyAttempt(
-      complete,
-      {
-        skillId: first.id,
-        questionId: first.questions[0].id,
-        correct: true,
-        mode: 'review',
-      },
-      due,
-      catalog,
-    );
+    const review = (progress: Progress) =>
+      applyAttempt(
+        progress,
+        {
+          skillId: first.id,
+          questionId: selectQuestion(progress, first, 'review').id,
+          correct: true,
+          mode: 'review',
+        },
+        due,
+        catalog,
+      );
+    let reviewed = review(complete);
     expect(getSkillState(reviewed, first.id).dueAt).toBe(due);
     expect(getSkillState(reviewed, first.id).memory).toEqual(memory);
-    reviewed = applyAttempt(
-      reviewed,
-      {
-        skillId: first.id,
-        questionId: first.questions[3].id,
-        correct: true,
-        mode: 'review',
-      },
-      due,
-      catalog,
-    );
+    // One fresh question per reviewed point, then the code exercise.
+    while (getSkillState(reviewed, first.id).dueAt === due)
+      reviewed = review(reviewed);
+    expect(
+      reviewed.attempts.filter((attempt) => attempt.mode === 'review').at(-1)
+        ?.questionId,
+    ).toBe(first.questions[0].id);
     expect(getSkillState(reviewed, first.id).dueAt).toBeGreaterThan(due);
     expect(getSkillState(reviewed, first.id).memory?.reps).toBe(
       (memory?.reps ?? 0) + 1,
@@ -210,24 +205,12 @@ describe('atomic Rust course', () => {
 
   it('keeps hinted Rust work out of mastery and ignores repeated event delivery', () => {
     const first = catalog.skills[0];
-    let progress = emptyProgress();
-    for (const question of first.questions.slice(0, 3))
-      progress = applyAttempt(
-        progress,
-        {
-          skillId: first.id,
-          questionId: question.id,
-          correct: true,
-          mode: 'learn',
-        },
-        NOW,
-        catalog,
-      );
+    let progress = passPoints(emptyProgress(), first);
     progress = applyAttempt(
       progress,
       {
         skillId: first.id,
-        questionId: first.questions[3].id,
+        questionId: first.questions[0].id,
         correct: true,
         usedHint: true,
         mode: 'learn',
@@ -242,7 +225,7 @@ describe('atomic Rust course', () => {
       progress,
       {
         skillId: first.id,
-        questionId: first.questions[3].id,
+        questionId: first.questions[0].id,
         correct: true,
         mode: 'learn',
         attemptId: 'rust-hinted-answer',
@@ -255,7 +238,7 @@ describe('atomic Rust course', () => {
       progress,
       {
         skillId: first.id,
-        questionId: first.questions[3].id,
+        questionId: first.questions[0].id,
         correct: true,
         mode: 'learn',
         attemptId: 'rust-independent-answer',

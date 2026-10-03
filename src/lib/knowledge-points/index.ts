@@ -1,8 +1,4 @@
-import type {
-  CurriculumCatalog,
-  KnowledgePoint,
-  Skill,
-} from '../curriculum';
+import type { CurriculumCatalog, KnowledgePoint, Skill } from '../curriculum';
 import type { KnowledgePointDraft, KnowledgePointModule } from './authoring';
 
 export * from './authoring';
