@@ -29,7 +29,7 @@ Then open [http://127.0.0.1:4322](http://127.0.0.1:4322). Use the same hostname 
 
 - **Learn:** see your active course with its progress and estimated completion date (remaining lesson XP ÷ your daily XP goal), total, today's, and this week's XP, up to five next tasks in scheduler order (due reviews and ready lessons, including prerequisites from other courses), and a dated history of completed lessons and reviews with earned/possible XP.
 - **Courses:** choose your active course from eight courses and 710 connected skills, see the course sequence it builds on, and browse numbered units and skills (unit.topic.step for staged courses) with mastery status. Each skill opens in the knowledge graph.
-- **Lessons:** move through introduction slides and worked examples, follow labelled subgoals, then practice with a visible evidence checklist. Revisit the teaching material while keeping your pending choice or code; assisted answers remain separate from independent mastery.
+- **Lessons:** each lesson is one page that grows as you work, as in Math Academy: the introduction, then for each knowledge point its explanation, a worked example, and its questions, then the code exercise. Answered questions stay on the page with their explanations, so you can scroll back and reread while you solve. Reviews stack their questions on one page the same way.
 - **Account menu:** the avatar menu opens the knowledge graph, flashcards, code lab, and settings, and signs you in or out.
 - **Knowledge graph:** inspect prerequisites, see mastery and availability, search skills, and explore their connections.
 - **Flashcards:** receive recall cards after mastery and correction cards after mistakes; connect Anki or export a tab-separated deck.
@@ -194,14 +194,12 @@ src/components/App.tsx          Workspace shell, routing, knowledge graph
 src/components/workspace-header.tsx  Learn/Courses tabs and the account menu
 src/components/learn-dashboard.tsx   Learn: course, XP, tasks, and history
 src/components/courses-page.tsx      Courses: course sequence and numbered units
-src/components/learning-session.tsx  Lessons, assessment, language-aware grading
-src/components/lesson-player.tsx     Introduction slides and worked-example player
+src/components/learning-session.tsx  One-page lessons and reviews, language-aware grading
 src/components/secondary-pages.tsx   Flashcards, settings, account Dialog, Code lab
 src/components/ui/              shadcn/ui source components
 src/components/reui/            Free ReUI Stepper and CodeBlock
 src/components/useLearner.ts    Device persistence and account synchronization
 src/lib/curriculum.ts           Original course, unit, skill, question, card registry
-src/lib/lesson-content.ts       Worked-example subgoals and existing-example fallback
 src/lib/learning.ts             Mastery evidence, task selection, review, XP, streaks
 src/lib/dashboard.ts            Task queue, XP summaries, completion estimate, history
 src/lib/xp.ts                   XP scale for lessons and reviews

@@ -3,9 +3,13 @@ import { skillById } from '../src/lib/curriculum';
 import { applyAttempt, getSkillState } from '../src/lib/learning';
 import { createState } from '../src/lib/state';
 import { earnedXp, lessonXp } from '../src/lib/xp';
-import { answerShown, continueLesson, feedback } from './helpers/lesson';
+import {
+  answeredQuestions,
+  answerShown,
+  continueLesson,
+  feedback,
+} from './helpers/lesson';
 import { masterSkill } from './helpers/mastery';
-import { replaceCode } from './helpers/editor';
 import { openFromMenu } from './helpers/navigation';
 
 test('a learner masters a skill point by point with real Python, earns cards, and keeps progress after reload', async ({
@@ -15,10 +19,11 @@ test('a learner masters a skill point by point with real Python, earns cards, an
   const skill = skillById['print-output'];
   const code = skill.questions.find((question) => question.type === 'code')!;
   await page.goto('/learn');
-  await expect(
-    page.getByRole('region', { name: 'Introduction', exact: true }),
-  ).toContainText(skill.lesson.paragraphs[0]);
-  await page.getByRole('button', { name: 'Start lesson', exact: true }).click();
+  const introduction = page.getByRole('region', {
+    name: 'Introduction',
+    exact: true,
+  });
+  await expect(introduction).toContainText(skill.lesson.paragraphs[0]);
   const markers = page.getByRole('list', { name: 'Lesson progress' });
   await expect(markers.getByRole('listitem')).toHaveCount(
     skill.knowledgePoints!.length + 1,
@@ -27,7 +32,13 @@ test('a learner masters a skill point by point with real Python, earns cards, an
     await expect(markers.locator('[aria-current="step"]')).toContainText(
       point.title,
     );
-    await expect(page.locator('.lesson-point h2')).toHaveText(point.title);
+    const section = page.getByRole('region', {
+      name: point.title,
+      exact: true,
+    });
+    await expect(section.getByRole('heading', { level: 2 })).toHaveText(
+      point.title,
+    );
     for (let answer = 0; answer < 2; answer++) {
       const question = await answerShown(page, point.questions);
       await expect(feedback(page)).toContainText('Correct');
@@ -38,6 +49,14 @@ test('a learner masters a skill point by point with real Python, earns cards, an
   await expect(markers.locator('[aria-current="step"]')).toContainText(
     'Write the code',
   );
+  // The code exercise comes last, on the same page as everything before it.
+  await expect(
+    page.getByRole('region', { name: 'Write the code', exact: true }),
+  ).toBeVisible();
+  await expect(introduction).toContainText(skill.lesson.paragraphs[0]);
+  await expect(answeredQuestions(page)).toHaveCount(
+    skill.knowledgePoints!.length * 2,
+  );
   await answerShown(
     page,
     [code],
@@ -47,6 +66,9 @@ test('a learner masters a skill point by point with real Python, earns cards, an
   await expect(feedback(page)).toContainText('Lesson complete', {
     timeout: 40_000,
   });
+  await expect(
+    page.getByRole('region', { name: 'Lesson complete', exact: true }),
+  ).toContainText(`You earned ${earnedXp(lessonXp(skill), 0, true)} XP.`);
   await expect(
     page.getByText(`${earnedXp(lessonXp(skill), 0, true)} XP this session`, {
       exact: true,
