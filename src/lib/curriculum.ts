@@ -1763,16 +1763,29 @@ export const allFlashcards: Flashcard[] = skills.flatMap(
 );
 export const defaultCatalog: CurriculumCatalog = { courses, units, skills };
 
-/** Defaults adapt to the available assessments, so choice-only subjects need no code runtime. */
+/** Every question a skill's lesson or reviews can draw on. */
+function assessmentQuestions(item: Skill): Question[] {
+  return [
+    ...item.questions,
+    ...(item.knowledgePoints ?? []).flatMap((point) => point.questions),
+  ];
+}
+
+/**
+ * Defaults adapt to the available assessments, so choice-only subjects need no
+ * code runtime. Knowledge-point questions meet a choice requirement; for those
+ * skills `reviewAnswers` counts points reviewed, with code asked in addition.
+ */
 export function assessmentPolicy(
   item: Skill,
 ): NonNullable<Skill['assessment']> {
+  const points = item.knowledgePoints?.length ?? 0;
   return (
     item.assessment ?? {
       requiredTypes: [
-        ...new Set(item.questions.map((question) => question.type)),
+        ...new Set(assessmentQuestions(item).map((question) => question.type)),
       ],
-      reviewAnswers: Math.min(2, item.questions.length),
+      reviewAnswers: Math.min(2, points || item.questions.length),
     }
   );
 }
@@ -1869,23 +1882,28 @@ export function validateCurriculum(
       )
         errors.push(`${item.id}: incomplete stage sequence.`);
     }
-    if (!item.questions.length)
+    const points = item.knowledgePoints ?? [];
+    if (!item.questions.length && !points.length)
       errors.push(`${item.id}: missing assessment questions.`);
-    // The launched Python course retains its authored four-question assessment standard.
+    // The launched Python course retains its authored four-question assessment
+    // standard until a skill is taught through knowledge points.
     if (item.courseId === 'python-foundations') {
       if (!item.questions.some((question) => question.type === 'code'))
         errors.push(`${item.id}: missing executable exercise.`);
       if (
+        !points.length &&
         item.questions.filter((question) => question.type === 'choice').length <
-        3
+          3
       )
         errors.push(`${item.id}: needs three choice questions.`);
     }
     const policy = assessmentPolicy(item);
+    // Knowledge-point reviews ask one question per point, plus code.
+    const reviewItems = points.length || item.questions.length;
     if (
       !Number.isInteger(policy.reviewAnswers) ||
       policy.reviewAnswers < 1 ||
-      policy.reviewAnswers > item.questions.length
+      policy.reviewAnswers > reviewItems
     )
       errors.push(`${item.id}: invalid review answer count.`);
     if (
@@ -1895,14 +1913,19 @@ export function validateCurriculum(
       errors.push(
         `${item.id}: assessment types must be nonempty and distinct.`,
       );
-    if (policy.requiredTypes.length > policy.reviewAnswers)
+    if (!points.length && policy.requiredTypes.length > policy.reviewAnswers)
       errors.push(
         `${item.id}: review answer count cannot cover all required types.`,
       );
     for (const type of policy.requiredTypes)
-      if (!item.questions.some((question) => question.type === type))
+      if (
+        !(
+          type === 'code'
+            ? item.questions
+            : [...item.questions, ...points.flatMap((point) => point.questions)]
+        ).some((question) => question.type === type)
+      )
         errors.push(`${item.id}: missing required assessment type ${type}.`);
-    const points = item.knowledgePoints ?? [];
     if (
       item.knowledgePoints !== undefined &&
       (points.length < 2 || points.length > 5)
