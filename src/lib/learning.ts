@@ -616,6 +616,16 @@ function legacyLessonCredit(item: Skill, rewarded: string[]): number {
     .reduce((sum, question) => sum + (question.type === 'code' ? 15 : 10), 0);
 }
 
+/** Base XP a lesson can still pay; zero once its reward has been earned. */
+export function lessonXpAvailable(progress: Progress, item: Skill): number {
+  const state = getSkillState(progress, item.id);
+  if (state.lessonRewarded) return 0;
+  return Math.max(
+    0,
+    lessonXp(item) - legacyLessonCredit(item, state.rewardedQuestionIds),
+  );
+}
+
 export function applyAttempt(
   progress: Progress,
   input: AttemptInput,
