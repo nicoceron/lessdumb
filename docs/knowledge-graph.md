@@ -25,14 +25,14 @@ Engine functions are typed on `SkillOutline` and return content when given a ful
 
 Content chunks are content-addressed `/_astro/` static assets, served by Cloudflare's asset layer with a one-year immutable cache, and they import nothing, so a deploy that does not change a unit keeps its chunk URL and returning learners keep it cached. Editing a unit changes that unit's chunk only, among content chunks. The table of chunk URLs lives in the main shared chunk with the index, so that chunk and the application chunks that import it get new URLs on any content edit; moving the index into its own chunk would not avoid this, because the URL table changes with every content edit anyway.
 
-Gzipped JavaScript (gzip level 9), measured with `npm run build`: the dashboard's first visit (every chunk its entry scripts import), then what opening a lesson downloads beyond it: the lesson session, the lesson's content, and the highlighter with the course language's grammar. None of the first lessons below has math, so KaTeX's 76 KB chunk is not in their rows; the "any lesson" row adds it to each course's largest content download and reports the largest course. "Before" is `main` at af00b5d; CEN-108 had cut the first visit from 1,596 KB.
+Gzipped JavaScript (gzip level 9), measured with `npm run build`: the dashboard's first visit (every chunk its entry scripts import), then what opening a lesson downloads beyond it: the lesson session, the lesson's content, and the highlighter with the course language's grammar. None of the first lessons below has math, so KaTeX's 76 KB chunk is not in their rows; the "any lesson" row adds it to each course's largest content download and reports the largest course. "Before" is `main` at e19c12c; CEN-108 had cut the first visit from 1,596 KB.
 
 | Download                                     |  Before |           After |
 | -------------------------------------------- | ------: | --------------: |
 | First visit to `/` (all JavaScript)          |  248 KB |          250 KB |
 | First Python foundations lesson              | +405 KB |         +100 KB |
-| First Competitive Programming lesson         | +631 KB |         +121 KB |
-| First C++ lesson                             | +649 KB |         +172 KB |
+| First Competitive Programming lesson         | +632 KB |         +121 KB |
+| First C++ lesson                             | +648 KB |         +172 KB |
 | First Rust lesson                            | +550 KB |         +131 KB |
 | Any lesson, at most (C++, with KaTeX)        | +725 KB |         +273 KB |
 | Code editor, added when the exercise appears |  +22 KB | +156 to +171 KB |
