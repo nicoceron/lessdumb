@@ -30,7 +30,7 @@ import type {
 } from '../lib/curriculum';
 import { courses, skills, skillById, units } from '../lib/catalog-index';
 import { loadedSkill, loadSkill } from '../lib/content';
-import { useCourseContent } from './use-content';
+import { useSkillContent } from './use-content';
 import {
   getSkillState,
   isMastered,
@@ -58,11 +58,7 @@ import { choiceLetter, choiceOrder } from '../lib/choice-order';
 import { gradeTyped, isTyped } from '../lib/typed-answer';
 import { type PythonResult } from '../lib/python';
 import { runCode } from '../lib/code-runner';
-import {
-  codeLanguage,
-  codeLanguageLabels,
-  editorLanguage,
-} from '../lib/code-language';
+import { codeLanguage, codeLanguageLabels } from '../lib/code-language';
 import { recordLearningAnswer, type LearnerState } from '../lib/state';
 import { Btn, ContentLoading } from './shared';
 import { Button } from '@/components/ui/button';
@@ -81,18 +77,8 @@ import {
   CodeBlockTitle,
   CodeBlockCopyButton,
 } from '@/components/reui/code-block/code-block';
-import type { ReactCodeMirrorProps } from '@uiw/react-codemirror';
-// The editor wraps long lines, so code stays readable on a phone.
-const CodeMirror = lazy(() =>
-  import('@uiw/react-codemirror').then(({ default: Editor, EditorView }) => ({
-    default: (props: ReactCodeMirrorProps) => (
-      <Editor
-        {...props}
-        extensions={[...(props.extensions ?? []), EditorView.lineWrapping]}
-      />
-    ),
-  })),
-);
+// CodeMirror and its grammar download only once the exercise is on screen.
+const CodeEditor = lazy(() => import('./code-editor'));
 
 type Mode = 'learn' | 'review';
 
@@ -328,14 +314,14 @@ function openingTask(state: LearnerState, params: URLSearchParams) {
 }
 
 /**
- * Loads the opening skill's course content, then shows the page. Lesson
- * content is downloaded per course; the scheduler only needs the graph index.
+ * Loads the opening skill's content, then shows the page. Lesson content is
+ * downloaded per unit; the scheduler only needs the graph index.
  */
 export default function LearningSession(props: SessionProps) {
   const [opening] = useState(() =>
     openingTask(props.state, new URLSearchParams(window.location.search)),
   );
-  const content = useCourseContent([skillById[opening.skillId]?.courseId]);
+  const content = useSkillContent([opening.skillId]);
   if (skillById[opening.skillId] && !content.ready)
     return <ContentLoading error={content.error} retry={content.retry} />;
   return <LessonPage {...props} opening={opening} />;
@@ -1299,9 +1285,10 @@ function QuestionCard({
                   </div>
                 }
               >
-                <CodeMirror
+                <CodeEditor
+                  language={language}
+                  wrap
                   value={code}
-                  extensions={[editorLanguage(language)]}
                   height="230px"
                   onChange={onCode}
                   editable={!answered && !running}
